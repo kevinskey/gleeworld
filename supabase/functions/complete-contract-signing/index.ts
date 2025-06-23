@@ -47,6 +47,17 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Contract not found');
     }
 
+    // Check if there's an existing signature record
+    const { data: existingSignature, error: signatureCheckError } = await supabase
+      .from('contract_signatures_v2')
+      .select('*')
+      .eq('contract_id', contractId)
+      .maybeSingle();
+
+    if (signatureCheckError) {
+      console.error('Error checking existing signature:', signatureCheckError);
+    }
+
     // Get client IP
     const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
 
@@ -54,81 +65,110 @@ const handler = async (req: Request): Promise<Response> => {
     const signedDate = dateSigned || new Date().toLocaleDateString();
     const signedDateTime = new Date().toISOString();
 
-    // Store signature data permanently with the signed date
-    const { data: signatureRecord, error: signatureError } = await supabase
-      .from('contract_signatures_v2')
-      .insert({
-        contract_id: contractId,
-        signature_data: signatureData,
-        signer_ip: clientIP,
-        signed_at: signedDateTime,
-        date_signed: signedDate, // Store the date when contract was signed
-      })
-      .select()
-      .single();
+    let signatureRecord;
 
-    if (signatureError) {
-      throw new Error('Failed to store signature: ' + signatureError.message);
-    }
-
-    console.log("Signature stored with ID:", signatureRecord.id);
-
-    // Generate PDF with signature and signed date
-    const pdfBytes = await generateSignedPDF(contract, signatureData, signedDate);
-    
-    // Upload PDF to storage
-    const pdfFileName = `contract_${contractId}_signed_${Date.now()}.pdf`;
-    const { error: uploadError } = await supabase.storage
-      .from('signed-contracts')
-      .upload(pdfFileName, pdfBytes, {
-        contentType: 'application/pdf',
-        upsert: false
+    if (existingSignature && existingSignature.artist_signature_data) {
+      // This is likely an admin signing completion
+      console.log("Completing admin signature for existing artist signature");
+      
+      // Call the admin-sign-contract function
+      const { data: adminSignData, error: adminSignError } = await supabase.functions.invoke('admin-sign-contract', {
+        body: {
+          contractId,
+          signatureData,
+          recipientEmail,
+          recipientName
+        }
       });
 
-    if (uploadError) {
-      console.error('PDF upload error:', uploadError);
-      throw new Error('Failed to store PDF: ' + uploadError.message);
-    }
+      if (adminSignError) {
+        throw new Error('Failed to complete admin signature: ' + adminSignError.message);
+      }
 
-    // Update signature record with PDF path
-    await supabase
-      .from('contract_signatures_v2')
-      .update({ pdf_storage_path: pdfFileName })
-      .eq('id', signatureRecord.id);
+      return new Response(JSON.stringify(adminSignData), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      });
+    } else {
+      // This is a new single-step signing (legacy support)
+      console.log("Processing single-step contract signing");
 
-    // Update contract status and include the signed date
-    await supabase
-      .from('contracts_v2')
-      .update({ 
-        status: 'completed',
-        updated_at: signedDateTime
-      })
-      .eq('id', contractId);
-
-    console.log("PDF stored at:", pdfFileName);
-
-    // Send email if recipient info provided
-    if (recipientEmail && recipientName) {
-      const { data: pdfUrl } = supabase.storage
+      // Generate PDF with signature and signed date
+      const pdfBytes = await generateSignedPDF(contract, signatureData, signedDate);
+      
+      // Upload PDF to storage
+      const pdfFileName = `contract_${contractId}_signed_${Date.now()}.pdf`;
+      const { error: uploadError } = await supabase.storage
         .from('signed-contracts')
-        .getPublicUrl(pdfFileName);
+        .upload(pdfFileName, pdfBytes, {
+          contentType: 'application/pdf',
+          upsert: false
+        });
 
-      await sendSignedContractEmail({
-        recipientEmail,
-        recipientName,
-        contractTitle: contract.title,
-        pdfUrl: pdfUrl.publicUrl,
-        dateSigned: signedDate,
-      });
+      if (uploadError) {
+        console.error('PDF upload error:', uploadError);
+        throw new Error('Failed to store PDF: ' + uploadError.message);
+      }
 
-      console.log("Email sent to:", recipientEmail);
+      // Store signature data permanently with the signed date
+      const { data: newSignatureRecord, error: signatureError } = await supabase
+        .from('contract_signatures_v2')
+        .insert({
+          contract_id: contractId,
+          artist_signature_data: signatureData,
+          signer_ip: clientIP,
+          artist_signed_at: signedDateTime,
+          date_signed: signedDate,
+          pdf_storage_path: pdfFileName,
+          status: 'completed'
+        })
+        .select()
+        .single();
+
+      if (signatureError) {
+        throw new Error('Failed to store signature: ' + signatureError.message);
+      }
+
+      signatureRecord = newSignatureRecord;
+
+      // Update contract status
+      await supabase
+        .from('contracts_v2')
+        .update({ 
+          status: 'completed',
+          updated_at: signedDateTime
+        })
+        .eq('id', contractId);
+
+      console.log("PDF stored at:", pdfFileName);
+
+      // Send email if recipient info provided
+      if (recipientEmail && recipientName) {
+        const { data: pdfUrl } = supabase.storage
+          .from('signed-contracts')
+          .getPublicUrl(pdfFileName);
+
+        await sendSignedContractEmail({
+          recipientEmail,
+          recipientName,
+          contractTitle: contract.title,
+          pdfUrl: pdfUrl.publicUrl,
+          dateSigned: signedDate,
+        });
+
+        console.log("Email sent to:", recipientEmail);
+      }
     }
 
     return new Response(JSON.stringify({ 
       success: true, 
       signatureId: signatureRecord.id,
-      pdfPath: pdfFileName,
-      dateSigned: signedDate
+      pdfPath: signatureRecord.pdf_storage_path || '',
+      dateSigned: signedDate,
+      status: signatureRecord.status
     }), {
       status: 200,
       headers: {
@@ -191,10 +231,37 @@ async function generateSignedPDF(contract: any, signatureData: string, dateSigne
     color: rgb(0, 0, 0),
   });
 
+  // Convert base64 signature to image and embed it
+  try {
+    if (signatureData && signatureData.startsWith('data:image/png;base64,')) {
+      const base64Data = signatureData.split(',')[1];
+      const signatureImageBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+      const signatureImage = await pdfDoc.embedPng(signatureImageBytes);
+      
+      // Draw the signature image
+      page.drawImage(signatureImage, {
+        x: 50,
+        y: 80,
+        width: 200,
+        height: 50,
+      });
+    }
+  } catch (error) {
+    console.error('Error embedding signature image:', error);
+    // Fallback to text if image embedding fails
+    page.drawText('[Digital Signature Applied]', {
+      x: 50,
+      y: 100,
+      size: 10,
+      font: timesRomanFont,
+      color: rgb(0, 0.5, 0),
+    });
+  }
+
   // Add the actual date when contract was signed
   page.drawText(`Date Signed: ${dateSigned}`, {
     x: 50,
-    y: 80,
+    y: 50,
     size: 12,
     font: timesRomanFont,
     color: rgb(0, 0, 0),
@@ -204,20 +271,10 @@ async function generateSignedPDF(contract: any, signatureData: string, dateSigne
   const signedAt = new Date().toLocaleString();
   page.drawText(`Signed on: ${signedAt}`, {
     x: 50,
-    y: 60,
+    y: 30,
     size: 10,
     font: timesRomanFont,
     color: rgb(0.5, 0.5, 0.5),
-  });
-
-  // Note: In a real implementation, you'd embed the actual signature image
-  // For now, we'll add a placeholder text
-  page.drawText('[Digital Signature Applied]', {
-    x: 50,
-    y: 100,
-    size: 10,
-    font: timesRomanFont,
-    color: rgb(0, 0.5, 0),
   });
 
   return await pdfDoc.save();

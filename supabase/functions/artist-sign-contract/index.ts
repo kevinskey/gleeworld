@@ -1,8 +1,7 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "npm:resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { PDFDocument, rgb, StandardFonts } from "npm:pdf-lib@1.17.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,7 +10,7 @@ const corsHeaders = {
 
 interface ArtistSignRequest {
   contractId: string;
-  artistSignatureData: string;
+  signatureData: string;
   dateSigned?: string;
 }
 
@@ -21,7 +20,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { contractId, artistSignatureData, dateSigned }: ArtistSignRequest = await req.json();
+    const { contractId, signatureData, dateSigned }: ArtistSignRequest = await req.json();
 
     console.log("Processing artist signature for contract:", contractId);
     console.log("Date signed:", dateSigned);
@@ -43,37 +42,53 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Contract not found');
     }
 
-    // Get client IP and clean it up to handle comma-separated values
-    const rawClientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-    const clientIP = rawClientIP.split(',')[0].trim(); // Take first IP from comma-separated list
-    console.log("Client IP:", clientIP);
+    // Get client IP
+    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
 
     // Use provided date or current date as fallback
     const signedDate = dateSigned || new Date().toLocaleDateString();
     const signedDateTime = new Date().toISOString();
 
-    // Store artist signature data
+    // Generate interim PDF with artist signature
+    const pdfBytes = await generateInterimPDF(contract, signatureData, signedDate);
+    
+    // Upload interim PDF to storage
+    const pdfFileName = `contract_${contractId}_artist_signed_${Date.now()}.pdf`;
+    const { error: uploadError } = await supabase.storage
+      .from('signed-contracts')
+      .upload(pdfFileName, pdfBytes, {
+        contentType: 'application/pdf',
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error('PDF upload error:', uploadError);
+      throw new Error('Failed to store interim PDF: ' + uploadError.message);
+    }
+
+    // Create or update signature record
     const { data: signatureRecord, error: signatureError } = await supabase
       .from('contract_signatures_v2')
-      .insert({
+      .upsert({
         contract_id: contractId,
-        artist_signature_data: artistSignatureData,
+        artist_signature_data: signatureData,
         artist_signed_at: signedDateTime,
         date_signed: signedDate,
-        signer_ip: clientIP === 'unknown' ? null : clientIP,
+        signer_ip: clientIP,
+        pdf_storage_path: pdfFileName,
         status: 'pending_admin_signature'
+      }, {
+        onConflict: 'contract_id'
       })
       .select()
       .single();
 
     if (signatureError) {
-      throw new Error('Failed to store artist signature: ' + signatureError.message);
+      throw new Error('Failed to store signature: ' + signatureError.message);
     }
 
-    console.log("Artist signature stored with ID:", signatureRecord.id);
-
-    // Update the main contract status to reflect artist signature
-    const { error: contractUpdateError } = await supabase
+    // Update contract status
+    await supabase
       .from('contracts_v2')
       .update({ 
         status: 'pending_admin_signature',
@@ -81,90 +96,14 @@ const handler = async (req: Request): Promise<Response> => {
       })
       .eq('id', contractId);
 
-    if (contractUpdateError) {
-      console.error('Failed to update contract status:', contractUpdateError);
-    } else {
-      console.log("Contract status updated to pending_admin_signature");
-    }
-
-    // Get admin emails for notifications
-    const { data: adminProfiles, error: adminError } = await supabase
-      .from('profiles')
-      .select('email')
-      .in('role', ['admin', 'super-admin']);
-
-    if (adminError) {
-      console.error('Error fetching admin emails:', adminError);
-    }
-
-    // Send email notifications to admins
-    if (adminProfiles && adminProfiles.length > 0) {
-      for (const admin of adminProfiles) {
-        if (admin.email) {
-          // Store notification in database
-          await supabase
-            .from('admin_contract_notifications')
-            .insert({
-              contract_id: contractId,
-              signature_id: signatureRecord.id,
-              admin_email: admin.email,
-              notification_type: 'contract_ready_for_admin_signature'
-            });
-
-          // Send email notification
-          try {
-            await resend.emails.send({
-              from: "ContractFlow <onboarding@resend.dev>",
-              to: [admin.email],
-              subject: `Contract Ready for Admin Signature: ${contract.title}`,
-              html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                  <h1 style="color: #333;">Contract Ready for Admin Signature</h1>
-                  
-                  <p>Hello Admin,</p>
-                  
-                  <p>A contract has been signed by the artist and is now ready for your admin signature.</p>
-                  
-                  <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                    <h2 style="margin: 0; color: #333;">${contract.title}</h2>
-                    <p style="margin: 10px 0 0 0; color: #666;">Artist signed on: ${signedDate}</p>
-                    <p style="margin: 5px 0 0 0; color: #666;">Signed at: ${new Date().toLocaleString()}</p>
-                  </div>
-                  
-                  <div style="text-align: center; margin: 30px 0;">
-                    <a href="${Deno.env.get("SUPABASE_URL")?.replace('https://', 'https://app.')}/admin/contracts/${contractId}/sign" 
-                       style="background-color: #2563eb; color: white; padding: 12px 24px; 
-                              text-decoration: none; border-radius: 6px; display: inline-block;">
-                      Review and Sign Contract
-                    </a>
-                  </div>
-                  
-                  <p style="color: #666; font-size: 14px;">
-                    Please review and sign this contract to complete the process.
-                  </p>
-                  
-                  <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-                  
-                  <p style="color: #999; font-size: 12px;">
-                    This email was sent by ContractFlow. Please sign the contract to complete the process.
-                  </p>
-                </div>
-              `,
-            });
-            console.log("Admin notification email sent to:", admin.email);
-          } catch (emailError) {
-            console.error("Failed to send admin notification email:", emailError);
-          }
-        }
-      }
-    }
+    console.log("Artist signature processed successfully:", signatureRecord.id);
 
     return new Response(JSON.stringify({ 
       success: true, 
       signatureId: signatureRecord.id,
+      pdfPath: pdfFileName,
       dateSigned: signedDate,
-      status: 'pending_admin_signature',
-      message: 'Artist signature recorded. Admin notification sent.'
+      status: 'pending_admin_signature'
     }), {
       status: 200,
       headers: {
@@ -184,5 +123,105 @@ const handler = async (req: Request): Promise<Response> => {
     );
   }
 };
+
+async function generateInterimPDF(contract: any, artistSignatureData: string, dateSigned: string): Promise<Uint8Array> {
+  // Create a new PDF document
+  const pdfDoc = await PDFDocument.create();
+  const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+  const page = pdfDoc.addPage();
+  const { width, height } = page.getSize();
+
+  // Add contract title
+  page.drawText(contract.title, {
+    x: 50,
+    y: height - 100,
+    size: 20,
+    font: timesRomanFont,
+    color: rgb(0, 0, 0),
+  });
+
+  // Add contract content
+  const contentLines = contract.content.split('\n');
+  let yPosition = height - 150;
+  
+  for (const line of contentLines) {
+    if (yPosition < 200) break; // Leave space for signatures
+    
+    page.drawText(line, {
+      x: 50,
+      y: yPosition,
+      size: 12,
+      font: timesRomanFont,
+      color: rgb(0, 0, 0),
+    });
+    yPosition -= 20;
+  }
+
+  // Add artist signature section
+  page.drawText('Artist Signature:', {
+    x: 50,
+    y: 180,
+    size: 14,
+    font: timesRomanFont,
+    color: rgb(0, 0, 0),
+  });
+
+  // Convert base64 signature to image and embed it
+  try {
+    if (artistSignatureData && artistSignatureData.startsWith('data:image/png;base64,')) {
+      const base64Data = artistSignatureData.split(',')[1];
+      const signatureImageBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+      const signatureImage = await pdfDoc.embedPng(signatureImageBytes);
+      
+      // Draw the signature image
+      page.drawImage(signatureImage, {
+        x: 50,
+        y: 120,
+        width: 200,
+        height: 50,
+      });
+    }
+  } catch (error) {
+    console.error('Error embedding artist signature image:', error);
+    // Fallback to text if image embedding fails
+    page.drawText('[Artist Signature Applied]', {
+      x: 50,
+      y: 140,
+      size: 10,
+      font: timesRomanFont,
+      color: rgb(0, 0.5, 0),
+    });
+  }
+
+  // Add signing date
+  page.drawText(`Date Signed: ${dateSigned}`, {
+    x: 50,
+    y: 80,
+    size: 12,
+    font: timesRomanFont,
+    color: rgb(0, 0, 0),
+  });
+
+  // Add admin signature placeholder
+  page.drawText('Admin/Agent Signature: [Pending]', {
+    x: 300,
+    y: 180,
+    size: 14,
+    font: timesRomanFont,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+
+  // Add signature timestamp for audit trail
+  const signedAt = new Date().toLocaleString();
+  page.drawText(`Artist signed on: ${signedAt}`, {
+    x: 50,
+    y: 40,
+    size: 10,
+    font: timesRomanFont,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+
+  return await pdfDoc.save();
+}
 
 serve(handler);
