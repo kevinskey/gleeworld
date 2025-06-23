@@ -279,14 +279,33 @@ const ContractSigning = () => {
               ✓ Signature completed
             </div>
           ) : (
-            <SignatureCanvas 
-              onSignatureChange={(signature) => {
-                if (signature) {
-                  handleFieldComplete(field.id, signature);
-                }
-              }}
-              disabled={false}
-            />
+            <div className="space-y-3">
+              <SignatureCanvas 
+                onSignatureChange={(signature) => {
+                  // Don't auto-complete, just store the signature data
+                  if (signature) {
+                    console.log('Signature captured for field', field.id);
+                  }
+                }}
+                disabled={false}
+              />
+              <div className="flex justify-end">
+                <button
+                  onClick={() => {
+                    const canvas = document.querySelector('canvas');
+                    if (canvas) {
+                      const signatureData = canvas.toDataURL();
+                      if (signatureData && signatureData !== 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==') {
+                        handleFieldComplete(field.id, signatureData);
+                      }
+                    }
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                >
+                  Complete Signature
+                </button>
+              </div>
+            </div>
           )}
         </div>
       );
@@ -300,18 +319,17 @@ const ContractSigning = () => {
             <div className="text-gray-900 font-medium">{completedFields[field.id]}</div>
           ) : (
             <div className="flex gap-2">
-              <Input
+              <input
                 type="date"
                 onChange={(e) => handleFieldComplete(field.id, e.target.value)}
-                className="flex-1"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded"
               />
-              <Button 
-                variant="outline" 
-                size="sm"
+              <button 
                 onClick={() => handleFieldComplete(field.id, new Date().toLocaleDateString())}
+                className="px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-sm"
               >
                 Today
-              </Button>
+              </button>
             </div>
           )}
         </div>
