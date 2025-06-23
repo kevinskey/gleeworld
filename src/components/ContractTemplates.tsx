@@ -32,6 +32,7 @@ export const ContractTemplates = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      console.log('Image file selected:', file.name, file.size);
       setNewTemplate({ ...newTemplate, header_image: file });
       
       // Create preview
@@ -58,24 +59,66 @@ export const ContractTemplates = () => {
   };
 
   const handleCreateTemplate = async () => {
-    if (!newTemplate.name || !newTemplate.template_content) {
+    console.log('Creating template with data:', {
+      name: newTemplate.name,
+      content_length: newTemplate.template_content.length,
+      has_image: !!newTemplate.header_image
+    });
+
+    if (!newTemplate.name?.trim()) {
+      console.log('Validation failed: Missing template name');
       toast({
         title: "Error",
-        description: "Please fill in both template name and content",
+        description: "Please enter a template name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!newTemplate.template_content?.trim()) {
+      console.log('Validation failed: Missing template content');
+      toast({
+        title: "Error",
+        description: "Please enter template content",
         variant: "destructive",
       });
       return;
     }
 
     setIsCreating(true);
-    const result = await createTemplate(newTemplate);
     
-    if (result) {
-      setNewTemplate({ name: "", template_content: "", header_image: null });
-      setImagePreview(null);
-      setIsCreateOpen(false);
+    try {
+      console.log('Calling createTemplate function...');
+      const result = await createTemplate(newTemplate);
+      console.log('createTemplate result:', result);
+      
+      if (result) {
+        console.log('Template created successfully');
+        setNewTemplate({ name: "", template_content: "", header_image: null });
+        setImagePreview(null);
+        setIsCreateOpen(false);
+        toast({
+          title: "Success",
+          description: "Template created successfully",
+        });
+      } else {
+        console.log('createTemplate returned null/false');
+        toast({
+          title: "Error",
+          description: "Failed to create template. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error in handleCreateTemplate:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while creating the template",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreating(false);
     }
-    setIsCreating(false);
   };
 
   const handleEditTemplate = (template: any) => {
@@ -171,7 +214,7 @@ export const ContractTemplates = () => {
                   type="text"
                   value={newTemplate.name}
                   onChange={(e) => {
-                    console.log('Template name input change:', e.target.value);
+                    console.log('Template name changed to:', e.target.value);
                     setNewTemplate(prev => ({ ...prev, name: e.target.value }));
                   }}
                   placeholder="Enter template name (e.g., Service Agreement Template)"
@@ -218,7 +261,10 @@ export const ContractTemplates = () => {
                 <Textarea
                   id="template-content"
                   value={newTemplate.template_content}
-                  onChange={(e) => setNewTemplate(prev => ({ ...prev, template_content: e.target.value }))}
+                  onChange={(e) => {
+                    console.log('Template content changed, length:', e.target.value.length);
+                    setNewTemplate(prev => ({ ...prev, template_content: e.target.value }));
+                  }}
                   placeholder="Enter your contract template here..."
                   rows={12}
                 />
@@ -232,7 +278,10 @@ export const ContractTemplates = () => {
               }}>
                 Cancel
               </Button>
-              <Button onClick={handleCreateTemplate} disabled={isCreating || !newTemplate.name.trim()}>
+              <Button 
+                onClick={handleCreateTemplate} 
+                disabled={isCreating || !newTemplate.name.trim() || !newTemplate.template_content.trim()}
+              >
                 {isCreating ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -275,7 +324,7 @@ export const ContractTemplates = () => {
                       type="text"
                       value={newTemplate.name}
                       onChange={(e) => {
-                        console.log('Template name input change:', e.target.value);
+                        console.log('Template name changed to (dialog 2):', e.target.value);
                         setNewTemplate(prev => ({ ...prev, name: e.target.value }));
                       }}
                       placeholder="Enter template name (e.g., Service Agreement Template)"
@@ -336,7 +385,10 @@ export const ContractTemplates = () => {
                   }}>
                     Cancel
                   </Button>
-                  <Button onClick={handleCreateTemplate} disabled={isCreating || !newTemplate.name.trim()}>
+                  <Button 
+                    onClick={handleCreateTemplate} 
+                    disabled={isCreating || !newTemplate.name.trim() || !newTemplate.template_content.trim()}
+                  >
                     {isCreating ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
