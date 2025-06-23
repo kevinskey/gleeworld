@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
 import { Input } from "@/components/ui/input";
-import { Calendar, FileSignature, Type, User, UserCheck } from "lucide-react";
+import { Calendar, FileSignature, Type, User, UserCheck, X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SignatureField {
@@ -76,26 +76,9 @@ export const SignatureFieldOverlay = ({
     }
   };
 
-  const handleBackdropClick = () => {
-    console.log('Backdrop clicked, closing modal');
+  const handleClose = () => {
+    console.log('Modal closed manually');
     setIsActive(false);
-  };
-
-  const handleContentClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    e.nativeEvent.stopImmediatePropagation();
-    console.log('Content clicked, preventing close');
-  };
-
-  const handleContentTouchStart = (e: React.TouchEvent) => {
-    e.stopPropagation();
-    console.log('Content touch start, preventing close');
-  };
-
-  const handleContentTouchEnd = (e: React.TouchEvent) => {
-    e.stopPropagation();
-    console.log('Content touch end, preventing close');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -108,18 +91,18 @@ export const SignatureFieldOverlay = ({
     return (
       <div 
         className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
-        onClick={handleBackdropClick}
         onKeyDown={handleKeyDown}
         tabIndex={-1}
       >
-        <div 
-          className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
-          onClick={handleContentClick}
-          onMouseDown={handleContentClick}
-          onMouseUp={handleContentClick}
-          onTouchStart={handleContentTouchStart}
-          onTouchEnd={handleContentTouchEnd}
-        >
+        <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto relative">
+          {/* Close button */}
+          <button
+            onClick={handleClose}
+            className="absolute right-4 top-4 z-10 p-1 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+
           <div className="p-6">
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-2">
@@ -130,16 +113,10 @@ export const SignatureFieldOverlay = ({
             </div>
 
             {field.type === 'signature' && (
-              <div 
-                onClick={handleContentClick}
-                onMouseDown={handleContentClick}
-                onTouchStart={handleContentTouchStart}
-              >
-                <SignatureCanvas 
-                  onSignatureChange={handleSignatureComplete}
-                  disabled={false}
-                />
-              </div>
+              <SignatureCanvas 
+                onSignatureChange={handleSignatureComplete}
+                disabled={false}
+              />
             )}
 
             {field.type === 'date' && (
@@ -150,13 +127,11 @@ export const SignatureFieldOverlay = ({
                   onChange={(e) => setFieldValue(e.target.value)}
                   onBlur={handleTextComplete}
                   className="w-full"
-                  onClick={handleContentClick}
                 />
                 <div className="flex gap-2 justify-end">
                   <Button 
                     variant="outline" 
-                    onClick={(e) => {
-                      handleContentClick(e);
+                    onClick={() => {
                       const today = getCurrentDate();
                       setFieldValue(today);
                       onFieldComplete(field.id, today);
@@ -179,7 +154,6 @@ export const SignatureFieldOverlay = ({
                   placeholder={`Enter ${field.type}`}
                   className="w-full"
                   maxLength={field.type === 'initials' ? 3 : undefined}
-                  onClick={handleContentClick}
                 />
               </div>
             )}
