@@ -20,9 +20,10 @@ import { ContractPreviewDialog } from "./upload/ContractPreviewDialog";
 interface DocumentUploadProps {
   templateContent?: string;
   templateName?: string;
+  headerImageUrl?: string;
 }
 
-export const DocumentUpload = ({ templateContent, templateName }: DocumentUploadProps) => {
+export const DocumentUpload = ({ templateContent, templateName, headerImageUrl: templateHeaderImageUrl }: DocumentUploadProps) => {
   const [dragOver, setDragOver] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [recipientEmail, setRecipientEmail] = useState("");
@@ -49,6 +50,11 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
       setOriginalTemplateContent(templateContent); // Store original template
       setContractContent(templateContent);
       setContractTitle(templateName);
+      
+      // Set header image URL if provided
+      if (templateHeaderImageUrl) {
+        setHeaderImageUrl(templateHeaderImageUrl);
+      }
       
       // Check if template has stipend field and remember it
       if (templateContent.includes('{{stipend}}')) {
@@ -80,10 +86,10 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
       
       toast({
         title: "Template Applied",
-        description: `Template "${templateName}" has been loaded with default signature fields`,
+        description: `Template "${templateName}" has been applied to the upload form`,
       });
     }
-  }, [templateContent, templateName, toast]);
+  }, [templateContent, templateName, templateHeaderImageUrl, toast]);
 
   // Function to update contract content with all current values
   const updateContractContent = (userInfo?: any, currentStipend?: string) => {

@@ -17,7 +17,7 @@ interface TemplateDialogsManagerProps {
   onViewOpenChange: (open: boolean) => void;
   onCreateTemplate: (template: { name: string; template_content: string; header_image: File | null }) => Promise<void>;
   onUpdateTemplate: (template: any) => Promise<void>;
-  onUseTemplate?: (templateContent: string, templateName: string) => void;
+  onUseTemplate?: (templateContent: string, templateName: string, headerImageUrl?: string) => void;
 }
 
 export const TemplateDialogsManager = ({
@@ -38,7 +38,7 @@ export const TemplateDialogsManager = ({
 
   const handleUseTemplate = async (template: ContractTemplate) => {
     if (onUseTemplate) {
-      onUseTemplate(template.template_content, template.name);
+      onUseTemplate(template.template_content, template.name, template.header_image_url);
       toast({
         title: "Template Applied",
         description: `Template "${template.name}" has been applied to the upload form`,
