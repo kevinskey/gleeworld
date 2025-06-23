@@ -172,6 +172,16 @@ const ContractSigning = () => {
     return label.includes('admin') || label.includes('agent');
   };
 
+  const isArtistDateField = (field: SignatureField): boolean => {
+    if (field.type !== 'date') return false;
+    const label = field.label.toLowerCase();
+    return (
+      label.includes('artist') || 
+      label.includes('date signed') || 
+      (field.id === 2 && !isAdminOrAgentField(field)) // Default artist date field
+    );
+  };
+
   const handleFieldComplete = (fieldId: number, value: string) => {
     console.log('Field completed:', fieldId, 'with value type:', typeof value, 'length:', value?.length);
     setCompletedFields(prev => ({
@@ -202,12 +212,11 @@ const ContractSigning = () => {
     const currentDate = new Date().toLocaleDateString();
     const updatedCompletedFields = { ...fieldsToUse };
     
-    // Only auto-fill date fields that are for artists, not admin
+    // Only auto-fill specific artist date fields that are not already completed
     signatureFields.forEach(field => {
-      if (field.type === 'date' && 
+      if (isArtistDateField(field) && 
           field.required && 
-          !updatedCompletedFields[field.id] &&
-          !isAdminOrAgentField(field)) {
+          !updatedCompletedFields[field.id]) {
         updatedCompletedFields[field.id] = currentDate;
         console.log('Auto-filled artist date field', field.id, 'with current date:', currentDate);
       }
@@ -242,10 +251,8 @@ const ContractSigning = () => {
         f.type === 'signature' && !isAdminOrAgentField(f)
       );
       
-      // Only get artist date field, not admin
-      const artistDateField = signatureFields.find(f => 
-        f.type === 'date' && !isAdminOrAgentField(f)
-      );
+      // Only get artist date field, not admin - use the specific artist date field
+      const artistDateField = signatureFields.find(f => isArtistDateField(f));
       
       const signatureData = artistSignatureField ? updatedCompletedFields[artistSignatureField.id] : '';
       const dateSigned = artistDateField ? updatedCompletedFields[artistDateField.id] : currentDate;
@@ -473,11 +480,9 @@ const ContractSigning = () => {
       }
       
       if ((index === lines.length - 1 || line.toLowerCase().includes('date executed')) && 
-          signatureFields.some(f => f.type === 'date' && !isAdminOrAgentField(f))) {
+          signatureFields.some(f => isArtistDateField(f))) {
         
-        const dateField = signatureFields.find(f => 
-          f.type === 'date' && !isAdminOrAgentField(f)
-        );
+        const dateField = signatureFields.find(f => isArtistDateField(f));
         if (dateField) {
           processedLines.push(
             <div key={`date-${dateField.id}`}>
