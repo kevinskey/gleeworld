@@ -2,18 +2,25 @@
 import { useState } from "react";
 import { useContracts } from "@/hooks/useContracts";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import type { ContractTemplate } from "@/hooks/useContractTemplates";
 
 export const useContractFromTemplate = () => {
   const [isCreating, setIsCreating] = useState(false);
   const { createContract, refetch } = useContracts();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { displayName } = useUserProfile(user);
 
   const createContractFromTemplate = async (template: ContractTemplate) => {
     setIsCreating(true);
     try {
+      const username = displayName || user?.email || 'User';
+      const contractTitle = `${username} - ${template.name}`;
+      
       const contractData = await createContract({
-        title: `${template.name} - ${new Date().toLocaleDateString()}`,
+        title: contractTitle,
         content: template.template_content,
         template_id: template.id,
       });
