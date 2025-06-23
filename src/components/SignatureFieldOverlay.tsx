@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
@@ -83,11 +82,20 @@ export const SignatureFieldOverlay = ({
   };
 
   const handleContentClick = (e: React.MouseEvent) => {
-    // Completely prevent any event from leaving the content area
     e.preventDefault();
     e.stopPropagation();
     e.nativeEvent.stopImmediatePropagation();
     console.log('Content clicked, preventing close');
+  };
+
+  const handleContentTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    console.log('Content touch start, preventing close');
+  };
+
+  const handleContentTouchEnd = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    console.log('Content touch end, preventing close');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -109,8 +117,8 @@ export const SignatureFieldOverlay = ({
           onClick={handleContentClick}
           onMouseDown={handleContentClick}
           onMouseUp={handleContentClick}
-          onTouchStart={handleContentClick}
-          onTouchEnd={handleContentClick}
+          onTouchStart={handleContentTouchStart}
+          onTouchEnd={handleContentTouchEnd}
         >
           <div className="p-6">
             <div className="mb-4">
@@ -125,7 +133,7 @@ export const SignatureFieldOverlay = ({
               <div 
                 onClick={handleContentClick}
                 onMouseDown={handleContentClick}
-                onTouchStart={handleContentClick}
+                onTouchStart={handleContentTouchStart}
               >
                 <SignatureCanvas 
                   onSignatureChange={handleSignatureComplete}
