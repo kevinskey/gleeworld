@@ -32,26 +32,7 @@ const ContractSigning = () => {
   const [contract, setContract] = useState<Contract | null>(null);
   const [loading, setLoading] = useState(true);
   const [signing, setSigning] = useState(false);
-  const [signatureFields] = useState<SignatureField[]>([
-    {
-      id: 1,
-      label: "Your Signature",
-      type: 'signature',
-      page: 1,
-      x: 50,
-      y: 400,
-      required: true
-    },
-    {
-      id: 2,
-      label: "Date Signed",
-      type: 'date',
-      page: 1,
-      x: 350,
-      y: 400,
-      required: true
-    }
-  ]);
+  const [signatureFields, setSignatureFields] = useState<SignatureField[]>([]);
   const [completedFields, setCompletedFields] = useState<Record<number, string>>({});
   const [redirectCountdown, setRedirectCountdown] = useState(5);
   const { toast } = useToast();
@@ -87,6 +68,11 @@ const ContractSigning = () => {
         console.log("Contract found:", data);
         setContract(data);
         
+        // Extract signature fields from contract content or use defaults
+        const extractedFields = extractSignatureFieldsFromContract(data.content);
+        console.log("Extracted signature fields:", extractedFields);
+        setSignatureFields(extractedFields);
+        
         // Log contract view activity
         await logActivity({
           actionType: ACTIVITY_TYPES.CONTRACT_VIEWED,
@@ -94,7 +80,8 @@ const ContractSigning = () => {
           resourceId: contractId,
           details: {
             contractTitle: data.title,
-            contractStatus: data.status
+            contractStatus: data.status,
+            signatureFieldsCount: extractedFields.length
           }
         });
       } catch (error) {
@@ -111,6 +98,44 @@ const ContractSigning = () => {
 
     fetchContract();
   }, [contractId]);
+
+  // Function to extract signature fields from contract content
+  const extractSignatureFieldsFromContract = (content: string): SignatureField[] => {
+    try {
+      // Look for signature fields in the content - they might be stored as JSON
+      const signatureFieldsMatch = content.match(/Signature Fields: (\[.*?\])/);
+      if (signatureFieldsMatch) {
+        const fieldsData = JSON.parse(signatureFieldsMatch[1]);
+        console.log("Found signature fields in content:", fieldsData);
+        return fieldsData;
+      }
+    } catch (error) {
+      console.error("Error parsing signature fields from content:", error);
+    }
+
+    // Fallback to default signature fields if none found
+    console.log("Using default signature fields");
+    return [
+      {
+        id: 1,
+        label: "Your Signature",
+        type: 'signature',
+        page: 1,
+        x: 50,
+        y: 400,
+        required: true
+      },
+      {
+        id: 2,
+        label: "Date Signed",
+        type: 'date',
+        page: 1,
+        x: 350,
+        y: 400,
+        required: true
+      }
+    ];
+  };
 
   // Countdown effect for redirect
   useEffect(() => {
@@ -181,18 +206,22 @@ const ContractSigning = () => {
     try {
       console.log("Calling complete-contract-signing function...");
       
-      // Get the signature data from completed fields
-      const signatureData = updatedCompletedFields[1]; // Assuming field ID 1 is the signature
+      // Get the signature data from completed fields - find the first signature field
+      const signatureField = signatureFields.find(f => f.type === 'signature');
+      const dateField = signatureFields.find(f => f.type === 'date');
+      
+      const signatureData = signatureField ? updatedCompletedFields[signatureField.id] : '';
+      const dateSigned = dateField ? updatedCompletedFields[dateField.id] : currentDate;
       
       console.log('Signature data present:', !!signatureData);
       console.log('Signature data length:', signatureData?.length || 0);
-      console.log('Date signed:', updatedCompletedFields[2]); // Assuming field ID 2 is the date
+      console.log('Date signed:', dateSigned);
       
       const { data, error } = await supabase.functions.invoke('complete-contract-signing', {
         body: {
           contractId: contract.id,
           signatureData: signatureData,
-          dateSigned: updatedCompletedFields[2] || currentDate,
+          dateSigned: dateSigned,
         }
       });
 
@@ -210,7 +239,7 @@ const ContractSigning = () => {
         resourceId: contract.id,
         details: {
           contractTitle: contract.title,
-          dateSigned: updatedCompletedFields[2] || currentDate,
+          dateSigned: dateSigned,
           signatureFieldsCompleted: Object.keys(updatedCompletedFields).length
         }
       });
@@ -247,14 +276,26 @@ const ContractSigning = () => {
     const artistSignatureIndex = content.indexOf('AGREED AND ACCEPTED BY: ARTIST');
     
     if (artistSignatureIndex === -1) {
-      // If the text is not found, render normally
+      // If the text is not found, render normally with signature fields overlaid
       return (
         <div 
           className={`whitespace-pre-wrap border rounded-lg p-4 md:p-8 bg-white relative overflow-x-auto ${
             isMobile ? 'min-h-[400px] text-sm' : 'min-h-[600px]'
           }`}
-          dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br>') }}
-        />
+        >
+          <div dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br>') }} />
+          
+          {/* Render signature field overlays */}
+          {contract.status !== 'completed' && signatureFields.map((field) => (
+            <SignatureFieldOverlay
+              key={field.id}
+              field={field}
+              onFieldComplete={handleFieldComplete}
+              isCompleted={!!completedFields[field.id]}
+              value={completedFields[field.id]}
+            />
+          ))}
+        </div>
       );
     }
 
@@ -352,6 +393,7 @@ const ContractSigning = () => {
             <div className="flex flex-col md:flex-row md:items-center md:space-x-4 text-sm text-gray-500 gap-1 md:gap-0">
               <span>Status: <span className="capitalize">{contract?.status}</span></span>
               <span>Created: {contract ? new Date(contract.created_at).toLocaleDateString() : ''}</span>
+              <span>Signature Fields: {signatureFields.length}</span>
             </div>
           </CardHeader>
           <CardContent>
