@@ -1,14 +1,11 @@
+
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, Loader2 } from "lucide-react";
-import { useContractTemplates } from "@/hooks/useContractTemplates";
-import { useContractFromTemplate } from "@/hooks/useContractFromTemplate";
-import { useToast } from "@/hooks/use-toast";
-import { TemplateCard } from "./templates/TemplateCard";
-import { CreateTemplateDialog } from "./templates/CreateTemplateDialog";
-import { ViewTemplateDialog } from "./templates/ViewTemplateDialog";
-import { EditTemplateDialog } from "./templates/EditTemplateDialog";
+import { Plus, Loader2 } from "lucide-react";
+import { useTemplateOperations } from "@/hooks/useTemplateOperations";
+import { TemplatesEmptyState } from "./templates/TemplatesEmptyState";
+import { TemplatesGrid } from "./templates/TemplatesGrid";
+import { TemplateDialogsManager } from "./templates/TemplateDialogsManager";
 
 interface ContractTemplatesProps {
   onUseTemplate?: (templateContent: string, templateName: string) => void;
@@ -16,112 +13,25 @@ interface ContractTemplatesProps {
 }
 
 export const ContractTemplates = ({ onUseTemplate, onContractCreated }: ContractTemplatesProps) => {
-  const { templates, loading, createTemplate, deleteTemplate } = useContractTemplates();
-  const { toast } = useToast();
-  
+  const {
+    templates,
+    loading,
+    isCreatingTemplate,
+    isUpdating,
+    handleCreateTemplate,
+    handleUpdateTemplate,
+    handleCopyTemplate,
+    handleDeleteTemplate,
+  } = useTemplateOperations();
+
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
-  const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  const handleCreateTemplate = async (template: { name: string; template_content: string; header_image: File | null }) => {
-    if (!template.name?.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a template name",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!template.template_content?.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter template content",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsCreatingTemplate(true);
-    
-    try {
-      const result = await createTemplate(template);
-      
-      if (result) {
-        toast({
-          title: "Success",
-          description: "Template created successfully",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to create template. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Error in handleCreateTemplate:', error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred while creating the template",
-        variant: "destructive",
-      });
-    } finally {
-      setIsCreatingTemplate(false);
-    }
-  };
 
   const handleEditTemplate = (template: any) => {
     setSelectedTemplate(template);
     setIsEditOpen(true);
-  };
-
-  const handleUpdateTemplate = async (template: any) => {
-    if (!template.name || !template.template_content) {
-      return;
-    }
-
-    setIsUpdating(true);
-    toast({
-      title: "Coming Soon",
-      description: "Template editing functionality is being developed",
-    });
-    setIsUpdating(false);
-  };
-
-  const handleCopyTemplate = async (template: any) => {
-    const copyTemplate = {
-      name: `${template.name} (Copy)`,
-      template_content: template.template_content,
-      header_image: null
-    };
-
-    const result = await createTemplate(copyTemplate);
-    if (result) {
-      toast({
-        title: "Success",
-        description: "Template copied successfully",
-      });
-    }
-  };
-
-  const handleUseTemplate = async (template: any) => {
-    if (onUseTemplate) {
-      onUseTemplate(template.template_content, template.name);
-      toast({
-        title: "Template Applied",
-        description: `Template "${template.name}" has been applied to the upload form`,
-      });
-    }
-  };
-
-  const handleDeleteTemplate = async (id: string) => {
-    if (confirm("Are you sure you want to delete this template?")) {
-      await deleteTemplate(id);
-    }
   };
 
   if (loading) {
@@ -147,56 +57,34 @@ export const ContractTemplates = ({ onUseTemplate, onContractCreated }: Contract
       </div>
 
       {templates.length === 0 ? (
-        <Card className="text-center py-12">
-          <CardContent>
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No templates yet</h3>
-            <p className="text-gray-500 mb-4">Create your first contract template to get started</p>
-            <Button onClick={() => setIsCreateOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Your First Template
-            </Button>
-          </CardContent>
-        </Card>
+        <TemplatesEmptyState onCreateTemplate={() => setIsCreateOpen(true)} />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {templates.map((template) => (
-            <TemplateCard
-              key={template.id}
-              template={template}
-              onView={() => {
-                setSelectedTemplate(template);
-                setIsViewOpen(true);
-              }}
-              onEdit={handleEditTemplate}
-              onCopy={handleCopyTemplate}
-              onDelete={handleDeleteTemplate}
-              onContractCreated={onContractCreated}
-            />
-          ))}
-        </div>
+        <TemplatesGrid
+          templates={templates}
+          onView={(template) => {
+            setSelectedTemplate(template);
+            setIsViewOpen(true);
+          }}
+          onEdit={handleEditTemplate}
+          onCopy={handleCopyTemplate}
+          onDelete={handleDeleteTemplate}
+          onContractCreated={onContractCreated}
+        />
       )}
 
-      <CreateTemplateDialog
-        isOpen={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
-        onCreate={handleCreateTemplate}
-        isCreating={isCreatingTemplate}
-      />
-
-      <EditTemplateDialog
-        isOpen={isEditOpen}
-        onOpenChange={setIsEditOpen}
-        template={selectedTemplate}
-        onUpdate={handleUpdateTemplate}
+      <TemplateDialogsManager
+        selectedTemplate={selectedTemplate}
+        isCreateOpen={isCreateOpen}
+        isEditOpen={isEditOpen}
+        isViewOpen={isViewOpen}
+        isCreatingTemplate={isCreatingTemplate}
         isUpdating={isUpdating}
-      />
-
-      <ViewTemplateDialog
-        isOpen={isViewOpen}
-        onOpenChange={setIsViewOpen}
-        template={selectedTemplate}
-        onUseTemplate={handleUseTemplate}
+        onCreateOpenChange={setIsCreateOpen}
+        onEditOpenChange={setIsEditOpen}
+        onViewOpenChange={setIsViewOpen}
+        onCreateTemplate={handleCreateTemplate}
+        onUpdateTemplate={handleUpdateTemplate}
+        onUseTemplate={onUseTemplate}
       />
     </div>
   );
