@@ -56,7 +56,7 @@ export const DocumentUpload = ({
   const [creationMode, setCreationMode] = useState<'upload' | 'create' | 'template'>('create');
   const { toast } = useToast();
   const { createContract } = useContracts();
-  const { users, loading: usersLoading } = useUsers();
+  const { users, loading: usersLoading, refetch: refetchUsers } = useUsers();
   const { user } = useAuth();
   const { displayName } = useUserProfile(user);
 
@@ -395,6 +395,7 @@ export const DocumentUpload = ({
             onUserSelect={handleUserSelection}
             usersLoading={usersLoading}
             showSection={showUserSelection}
+            onRefreshUsers={refetchUsers}
           />
 
           <StipendAmountField
