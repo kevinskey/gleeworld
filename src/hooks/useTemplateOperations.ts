@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useContractTemplates } from "@/hooks/useContractTemplates";
 import { useToast } from "@/hooks/use-toast";
@@ -81,7 +80,7 @@ export const useTemplateOperations = () => {
 
   const handleCopyTemplate = async (template: any) => {
     const copyTemplate = {
-      name: `${template.name} 2`,
+      name: `Copy of ${template.name}`,
       template_content: template.template_content,
       header_image: null,
       contract_type: template.contract_type || 'other'
