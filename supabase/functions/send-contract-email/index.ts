@@ -56,7 +56,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Generated signature URL:", signatureUrl);
 
-    // Generate signature fields summary for email
+    // Generate signature fields summary for email - Fixed the logic
     const signatureFieldsSummary = signatureFields && signatureFields.length > 0 ? `
       <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0;">
         <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 16px; font-weight: 600;">📝 Signature Fields Required:</h3>
@@ -109,12 +109,15 @@ const handler = async (req: Request): Promise<Response> => {
         </div>
       </div>
     ` : `
-      <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #bae6fd;">
-        <p style="margin: 0; color: #0369a1; font-size: 14px;">
-          ℹ️ This contract is ready for review and signing.
+      <div style="background-color: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #fecaca;">
+        <p style="margin: 0; color: #dc2626; font-size: 14px;">
+          ⚠️ <strong>No signature fields found:</strong> This contract may require manual review for signing requirements.
         </p>
       </div>
     `;
+
+    // Debug: Log the generated summary
+    console.log("Generated signature fields summary length:", signatureFieldsSummary.length);
 
     const emailResponse = await resend.emails.send({
       from: "ContractFlow <onboarding@resend.dev>",
