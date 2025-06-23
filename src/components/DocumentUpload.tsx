@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, X, Send, Loader2 } from "lucide-react";
+import { Upload, FileText, X, Send, Loader2, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useContracts } from "@/hooks/useContracts";
+import { useUsers } from "@/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { SignatureFieldEditor, SignatureField } from "./SignatureFieldEditor";
 
@@ -26,21 +27,80 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
   const [signatureFields, setSignatureFields] = useState<SignatureField[]>([]);
   const [contractTitle, setContractTitle] = useState("");
   const [contractContent, setContractContent] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [stipendAmount, setStipendAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { createContract } = useContracts();
+  const { users, loading: usersLoading } = useUsers();
 
   // Pre-fill form when template content is provided
   useEffect(() => {
     if (templateContent && templateName) {
       setContractContent(templateContent);
       setContractTitle(templateName);
+      
+      // Create default signature fields for ARTIST and AGENT
+      const defaultSignatureFields: SignatureField[] = [
+        {
+          id: Date.now(),
+          label: "ARTIST Signature",
+          type: 'signature',
+          page: 1,
+          x: 100,
+          y: 400,
+          required: true
+        },
+        {
+          id: Date.now() + 1,
+          label: "AGENT Signature", 
+          type: 'signature',
+          page: 1,
+          x: 400,
+          y: 400,
+          required: true
+        }
+      ];
+      setSignatureFields(defaultSignatureFields);
+      
       toast({
         title: "Template Applied",
-        description: `Template "${templateName}" has been loaded`,
+        description: `Template "${templateName}" has been loaded with default signature fields`,
       });
     }
   }, [templateContent, templateName, toast]);
+
+  // Handle user selection and placeholder replacement
+  const handleUserSelection = (userId: string) => {
+    setSelectedUserId(userId);
+    const selectedUser = users.find(user => user.id === userId);
+    
+    if (selectedUser && contractContent) {
+      let updatedContent = contractContent;
+      
+      // Replace placeholders
+      updatedContent = updatedContent.replace(/\{\{username\}\}/g, selectedUser.full_name || selectedUser.email);
+      updatedContent = updatedContent.replace(/\{\{useremail\}\}/g, selectedUser.email);
+      
+      setContractContent(updatedContent);
+      setRecipientEmail(selectedUser.email);
+      setRecipientName(selectedUser.full_name || selectedUser.email);
+      
+      toast({
+        title: "User Selected",
+        description: `Contract updated for ${selectedUser.full_name || selectedUser.email}`,
+      });
+    }
+  };
+
+  // Handle stipend amount change and update content
+  const handleStipendChange = (amount: string) => {
+    setStipendAmount(amount);
+    if (contractContent) {
+      const updatedContent = contractContent.replace(/\{\{stipend\}\}/g, amount ? `$${amount}` : '{{stipend}}');
+      setContractContent(updatedContent);
+    }
+  };
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -107,13 +167,14 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
     setIsLoading(true);
 
     try {
-      // Use contract content if available, otherwise use file name
-      const content = contractContent || `Contract document: ${uploadedFile?.name}\n\nSignature Fields: ${JSON.stringify(signatureFields)}`;
+      // Replace Date Executed placeholder with current date when signed
+      let finalContent = contractContent || `Contract document: ${uploadedFile?.name}\n\nSignature Fields: ${JSON.stringify(signatureFields)}`;
+      finalContent = finalContent.replace(/Date Executed:/g, `Date Executed: ${new Date().toLocaleDateString()}`);
       
       // Create contract in database with signature fields
       const contractData = await createContract({
         title: contractTitle,
-        content: content,
+        content: finalContent,
       });
 
       if (!contractData) {
@@ -156,6 +217,8 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
       setContractTitle("");
       setContractContent("");
       setSignatureFields([]);
+      setSelectedUserId("");
+      setStipendAmount("");
     } catch (error) {
       console.error("Error sending contract:", error);
       toast({
@@ -178,6 +241,45 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* User Selection Dropdown - only show if template content exists */}
+          {contractContent && (
+            <div className="space-y-2">
+              <Label htmlFor="user-select">Select User for Contract</Label>
+              <Select value={selectedUserId} onValueChange={handleUserSelection} disabled={usersLoading}>
+                <SelectTrigger>
+                  <SelectValue placeholder={usersLoading ? "Loading users..." : "Select a registered user"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      <div className="flex items-center space-x-2">
+                        <User className="h-4 w-4" />
+                        <span>{user.full_name || user.email}</span>
+                        <span className="text-gray-500 text-sm">({user.email})</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Stipend Amount Field - only show if template content contains {{stipend}} */}
+          {contractContent && contractContent.includes('{{stipend}}') && (
+            <div className="space-y-2">
+              <Label htmlFor="stipend-amount">Stipend Amount ($)</Label>
+              <Input
+                id="stipend-amount"
+                type="number"
+                value={stipendAmount}
+                onChange={(e) => handleStipendChange(e.target.value)}
+                placeholder="Enter stipend amount"
+                min="0"
+                step="0.01"
+              />
+            </div>
+          )}
+
           {/* Template Content Section */}
           {contractContent && (
             <div className="space-y-2">
