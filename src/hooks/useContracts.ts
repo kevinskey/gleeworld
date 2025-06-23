@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -105,7 +104,33 @@ export const useContracts = () => {
       console.log('Attempting to delete contract:', contractId);
       console.log('Current user:', user?.id);
 
-      // First, delete any related contract signatures
+      // Check if user is super admin
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user?.id)
+        .single();
+
+      const isSuperAdmin = profile?.role === 'super-admin';
+      console.log('User is super admin:', isSuperAdmin);
+
+      // Delete related records in the correct order for super admins
+      if (isSuperAdmin) {
+        // First, delete admin contract notifications
+        const { error: notificationsError } = await supabase
+          .from('admin_contract_notifications')
+          .delete()
+          .eq('contract_id', contractId);
+
+        if (notificationsError) {
+          console.error('Error deleting admin notifications:', notificationsError);
+          // Continue anyway for super admins
+        } else {
+          console.log('Admin notifications deleted successfully');
+        }
+      }
+
+      // Delete contract signatures
       const { error: signaturesError } = await supabase
         .from('contract_signatures_v2')
         .delete()
@@ -113,13 +138,15 @@ export const useContracts = () => {
 
       if (signaturesError) {
         console.error('Error deleting contract signatures:', signaturesError);
-        // Continue with contract deletion even if signature deletion fails
-        console.log('Continuing with contract deletion despite signature deletion error');
+        if (!isSuperAdmin) {
+          throw new Error(`Failed to delete contract signatures: ${signaturesError.message}`);
+        }
+        console.log('Continuing with contract deletion despite signature deletion error (super admin)');
       } else {
         console.log('Contract signatures deleted successfully');
       }
 
-      // Then delete the contract
+      // Finally delete the contract
       const { error } = await supabase
         .from('contracts_v2')
         .delete()
