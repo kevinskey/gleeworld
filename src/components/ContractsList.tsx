@@ -2,8 +2,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Upload, FileText, Eye, Send, Inbox, Loader2, Trash2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 import type { Contract } from "@/hooks/useContracts";
 
 interface ContractsListProps {
@@ -48,11 +50,52 @@ export const ContractsList = ({
   onRetry
 }: ContractsListProps) => {
   const { toast } = useToast();
+  const [selectedContracts, setSelectedContracts] = useState<Set<string>>(new Set());
 
   const handleDeleteContract = async (contractId: string) => {
     if (confirm("Are you sure you want to delete this contract?")) {
       await onDeleteContract(contractId);
+      setSelectedContracts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(contractId);
+        return newSet;
+      });
     }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedContracts.size === 0) return;
+    
+    if (confirm(`Are you sure you want to delete ${selectedContracts.size} selected contract(s)?`)) {
+      for (const contractId of selectedContracts) {
+        await onDeleteContract(contractId);
+      }
+      setSelectedContracts(new Set());
+      toast({
+        title: "Success",
+        description: `${selectedContracts.size} contract(s) deleted successfully`,
+      });
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedContracts(new Set(contracts.map(contract => contract.id)));
+    } else {
+      setSelectedContracts(new Set());
+    }
+  };
+
+  const handleSelectContract = (contractId: string, checked: boolean) => {
+    setSelectedContracts(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(contractId);
+      } else {
+        newSet.delete(contractId);
+      }
+      return newSet;
+    });
   };
 
   const handleSendContract = (contract: Contract) => {
@@ -62,6 +105,9 @@ export const ContractsList = ({
       description: `Preparing to send "${contract.title}" for signature`,
     });
   };
+
+  const allSelected = contracts.length > 0 && selectedContracts.size === contracts.length;
+  const someSelected = selectedContracts.size > 0 && selectedContracts.size < contracts.length;
 
   return (
     <Card className="w-full">
@@ -102,12 +148,48 @@ export const ContractsList = ({
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Bulk Actions Header */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <Checkbox 
+                  checked={allSelected}
+                  onCheckedChange={handleSelectAll}
+                  ref={(el) => {
+                    if (el) {
+                      el.indeterminate = someSelected;
+                    }
+                  }}
+                />
+                <span className="text-sm font-medium">
+                  {selectedContracts.size === 0 
+                    ? "Select all" 
+                    : `${selectedContracts.size} selected`
+                  }
+                </span>
+              </div>
+              {selectedContracts.size > 0 && (
+                <Button 
+                  onClick={handleDeleteSelected}
+                  variant="destructive"
+                  size="sm"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Selected ({selectedContracts.size})
+                </Button>
+              )}
+            </div>
+
+            {/* Contracts List */}
             {contracts.map((contract) => (
               <div 
                 key={contract.id} 
                 className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors gap-4"
               >
                 <div className="flex items-start sm:items-center space-x-4 min-w-0 flex-1">
+                  <Checkbox 
+                    checked={selectedContracts.has(contract.id)}
+                    onCheckedChange={(checked) => handleSelectContract(contract.id, checked as boolean)}
+                  />
                   <FileText className="h-8 w-8 text-gray-400 flex-shrink-0" />
                   <div className="min-w-0 flex-1">
                     <h3 className="font-medium text-gray-900 truncate">{contract.title}</h3>
