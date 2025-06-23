@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -99,6 +98,25 @@ export const useContracts = () => {
 
   const deleteContract = async (contractId: string) => {
     try {
+      console.log('Attempting to delete contract:', contractId);
+      console.log('Current user:', user?.id);
+      
+      // First, check if the contract exists and who owns it
+      const { data: contractCheck, error: checkError } = await supabase
+        .from('contracts_v2')
+        .select('id, created_by, title')
+        .eq('id', contractId)
+        .single();
+
+      if (checkError) {
+        console.error('Error checking contract:', checkError);
+        throw new Error(`Failed to find contract: ${checkError.message}`);
+      }
+
+      console.log('Contract found:', contractCheck);
+      console.log('Contract owner:', contractCheck.created_by);
+      console.log('Current user matches owner:', contractCheck.created_by === user?.id);
+
       const { error } = await supabase
         .from('contracts_v2')
         .delete()
@@ -106,8 +124,16 @@ export const useContracts = () => {
 
       if (error) {
         console.error('Error deleting contract:', error);
-        throw error;
+        console.error('Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        throw new Error(`Failed to delete contract: ${error.message}`);
       }
+
+      console.log('Contract deleted successfully from database');
 
       // Update local state immediately
       setContracts(prev => prev.filter(contract => contract.id !== contractId));
@@ -120,7 +146,7 @@ export const useContracts = () => {
       console.error('Error deleting contract:', error);
       toast({
         title: "Error",
-        description: "Failed to delete contract",
+        description: error instanceof Error ? error.message : "Failed to delete contract",
         variant: "destructive",
       });
     }
