@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
@@ -67,19 +68,34 @@ export const SignatureFieldOverlay = ({
     return new Date().toLocaleDateString();
   };
 
+  // Handle key events to close modal on Escape
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setIsActive(false);
+    }
+  };
+
   // Prevent any events from bubbling up from modal content
-  const preventEventBubbling = (e: React.MouseEvent | React.TouchEvent) => {
+  const preventEventBubbling = (e: React.MouseEvent | React.TouchEvent | React.KeyboardEvent) => {
     e.stopPropagation();
   };
 
   if (isActive) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
+      <div 
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+        onKeyDown={handleKeyDown}
+        tabIndex={-1}
+      >
         <div 
           className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
           onClick={preventEventBubbling}
           onTouchStart={preventEventBubbling}
           onTouchEnd={preventEventBubbling}
+          onTouchMove={preventEventBubbling}
+          onMouseDown={preventEventBubbling}
+          onMouseUp={preventEventBubbling}
+          onKeyDown={preventEventBubbling}
         >
           <div className="p-6">
             <div className="mb-4">
@@ -95,6 +111,9 @@ export const SignatureFieldOverlay = ({
                 onClick={preventEventBubbling}
                 onTouchStart={preventEventBubbling}
                 onTouchEnd={preventEventBubbling}
+                onTouchMove={preventEventBubbling}
+                onMouseDown={preventEventBubbling}
+                onMouseUp={preventEventBubbling}
                 style={{ isolation: 'isolate' }}
               >
                 <SignatureCanvas 
@@ -110,12 +129,15 @@ export const SignatureFieldOverlay = ({
                   type="date"
                   value={fieldValue}
                   onChange={(e) => setFieldValue(e.target.value)}
+                  onBlur={handleTextComplete}
                   className="w-full"
+                  onClick={preventEventBubbling}
                 />
                 <div className="flex gap-2 justify-end">
                   <Button 
                     variant="outline" 
-                    onClick={() => {
+                    onClick={(e) => {
+                      preventEventBubbling(e);
                       const today = getCurrentDate();
                       setFieldValue(today);
                       onFieldComplete(field.id, today);
@@ -134,9 +156,11 @@ export const SignatureFieldOverlay = ({
                   type="text"
                   value={fieldValue}
                   onChange={(e) => setFieldValue(e.target.value)}
+                  onBlur={handleTextComplete}
                   placeholder={`Enter ${field.type}`}
                   className="w-full"
                   maxLength={field.type === 'initials' ? 3 : undefined}
+                  onClick={preventEventBubbling}
                 />
               </div>
             )}
