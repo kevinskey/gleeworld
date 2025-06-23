@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { logActivity, ACTIVITY_TYPES, RESOURCE_TYPES } from "@/utils/activityLogger";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface Contract {
   id: string;
@@ -10,10 +11,7 @@ export interface Contract {
   status: string;
   created_at: string;
   updated_at: string;
-  created_by: string | null;
-  is_template: boolean;
-  template_id?: string;
-  archived: boolean;
+  created_by: string;
 }
 
 export const useContracts = () => {
@@ -21,131 +19,72 @@ export const useContracts = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const channelRef = useRef<any>(null);
 
-  const fetchContracts = useCallback(async () => {
+  const fetchContracts = async () => {
     try {
       setLoading(true);
       setError(null);
-      
       console.log('Fetching contracts...');
       
       const { data, error } = await supabase
-        .from('contracts_v2')
+        .from('contracts')
         .select('*')
-        .eq('archived', false)
-        .eq('is_template', false)
-        .order('updated_at', { ascending: false }); // Order by updated_at to show recently signed contracts first
+        .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Supabase error:', error);
+        console.error('Error fetching contracts:', error);
         throw error;
       }
-
+      
       console.log('Contracts fetched successfully:', data?.length || 0);
       setContracts(data || []);
     } catch (error) {
       console.error('Error fetching contracts:', error);
       setError('Failed to load contracts');
-      setContracts([]);
-      
-      // Only show toast if it's not a network connectivity issue
-      if (error && typeof error === 'object' && 'message' in error) {
-        const errorMessage = (error as any).message;
-        if (!errorMessage.includes('Failed to fetch')) {
-          toast({
-            title: "Error",
-            description: "Failed to load contracts",
-            variant: "destructive",
-          });
-        }
-      }
+      toast({
+        title: "Error",
+        description: "Failed to load contracts",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  };
 
-  // Set up real-time subscription to listen for contract updates
-  useEffect(() => {
-    const channel = supabase
-      .channel('contracts-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'contracts_v2'
-        },
-        (payload) => {
-          console.log('Contract update received:', payload);
-          fetchContracts(); // Refresh contracts when any change occurs
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [fetchContracts]);
-
-  const createContract = async (contract: {
-    title: string;
-    content: string;
-    template_id?: string;
-  }) => {
+  const createContract = async (contractData: { title: string; content: string }) => {
     try {
-      console.log('Creating contract with data:', contract);
-      
-      // Prepare the contract data - only include template_id if it's provided and valid
-      const contractData: any = {
-        title: contract.title,
-        content: contract.content,
-        created_by: null, // Set to null since we don't have auth yet
-        status: 'draft',
-        is_template: false,
-        archived: false,
-      };
-
-      // Only add template_id if it's provided
-      if (contract.template_id) {
-        // Check if template_id exists if provided
-        const { data: templateExists, error: templateError } = await supabase
-          .from('contract_templates')
-          .select('id')
-          .eq('id', contract.template_id)
-          .single();
-
-        if (!templateError && templateExists) {
-          contractData.template_id = contract.template_id;
-        } else {
-          console.warn('Template not found, creating contract without template_id');
-        }
+      if (!user) {
+        throw new Error("User not authenticated");
       }
 
       const { data, error } = await supabase
-        .from('contracts_v2')
-        .insert([contractData])
+        .from('contracts')
+        .insert([{
+          title: contractData.title,
+          content: contractData.content,
+          created_by: user.id,
+          status: 'draft'
+        }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating contract:', error);
+        throw error;
+      }
 
-      // Log contract creation activity
-      await logActivity({
-        actionType: ACTIVITY_TYPES.CONTRACT_CREATED,
-        resourceType: RESOURCE_TYPES.CONTRACT,
-        resourceId: data.id,
-        details: {
-          contractTitle: contract.title,
-          hasTemplate: !!contract.template_id,
-          templateId: contract.template_id
-        }
-      });
-
+      console.log('Contract created successfully:', data);
+      
+      // Update local state
       setContracts(prev => [data, ...prev]);
+      
       toast({
         title: "Success",
         description: "Contract created successfully",
       });
+
       return data;
     } catch (error) {
       console.error('Error creating contract:', error);
@@ -154,36 +93,25 @@ export const useContracts = () => {
         description: "Failed to create contract",
         variant: "destructive",
       });
-      return null;
+      throw error;
     }
   };
 
-  const deleteContract = async (id: string) => {
+  const deleteContract = async (contractId: string) => {
     try {
-      // Get contract details before deletion for logging
-      const contractToDelete = contracts.find(c => c.id === id);
-      
       const { error } = await supabase
-        .from('contracts_v2')
-        .update({ archived: true })
-        .eq('id', id);
+        .from('contracts')
+        .delete()
+        .eq('id', contractId);
 
-      if (error) throw error;
-
-      // Log contract deletion activity
-      if (contractToDelete) {
-        await logActivity({
-          actionType: ACTIVITY_TYPES.CONTRACT_DELETED,
-          resourceType: RESOURCE_TYPES.CONTRACT,
-          resourceId: id,
-          details: {
-            contractTitle: contractToDelete.title,
-            contractStatus: contractToDelete.status
-          }
-        });
+      if (error) {
+        console.error('Error deleting contract:', error);
+        throw error;
       }
 
-      setContracts(prev => prev.filter(contract => contract.id !== id));
+      // Update local state
+      setContracts(prev => prev.filter(contract => contract.id !== contractId));
+      
       toast({
         title: "Success",
         description: "Contract deleted successfully",
@@ -198,57 +126,57 @@ export const useContracts = () => {
     }
   };
 
-  const updateContractStatus = async (id: string, status: string) => {
-    try {
-      // Get contract details for logging
-      const contractToUpdate = contracts.find(c => c.id === id);
-      const previousStatus = contractToUpdate?.status;
-      
-      const { error } = await supabase
-        .from('contracts_v2')
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      // Log contract update activity
-      if (contractToUpdate) {
-        await logActivity({
-          actionType: ACTIVITY_TYPES.CONTRACT_UPDATED,
-          resourceType: RESOURCE_TYPES.CONTRACT,
-          resourceId: id,
-          details: {
-            contractTitle: contractToUpdate.title,
-            previousStatus,
-            newStatus: status,
-            updateType: 'status_change'
-          }
-        });
-      }
-
-      setContracts(prev => 
-        prev.map(contract => 
-          contract.id === id ? { ...contract, status } : contract
-        )
-      );
-
-      toast({
-        title: "Success",
-        description: "Contract status updated",
-      });
-    } catch (error) {
-      console.error('Error updating contract:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update contract",
-        variant: "destructive",
-      });
-    }
-  };
-
   useEffect(() => {
+    if (!user) return;
+
     fetchContracts();
-  }, [fetchContracts]);
+
+    // Clean up any existing channel
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('contracts-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'contracts'
+        },
+        (payload) => {
+          console.log('Real-time contract update:', payload);
+          
+          if (payload.eventType === 'INSERT') {
+            setContracts(prev => [payload.new as Contract, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            setContracts(prev => 
+              prev.map(contract => 
+                contract.id === payload.new.id ? payload.new as Contract : contract
+              )
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setContracts(prev => 
+              prev.filter(contract => contract.id !== payload.old.id)
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    channelRef.current = channel;
+
+    // Cleanup function
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
+  }, [user]);
 
   return {
     contracts,
@@ -256,7 +184,6 @@ export const useContracts = () => {
     error,
     createContract,
     deleteContract,
-    updateContractStatus,
     refetch: fetchContracts,
   };
 };

@@ -60,12 +60,11 @@ export const DocumentUpload = ({
   const { user } = useAuth();
   const { displayName } = useUserProfile(user);
 
-  // Pre-fill form when template content is provided
+  // Apply template content when provided
   useEffect(() => {
     if (templateContent && templateName) {
       console.log('Applying template to form:', { templateName, templateContent });
       
-      // Set all template-related state in a single update
       setOriginalTemplateContent(templateContent);
       setContractContent(templateContent);
       setCreationMode('template');
@@ -83,7 +82,7 @@ export const DocumentUpload = ({
         setHasStipendField(true);
       }
       
-      // Create default signature fields
+      // Set default signature fields
       const defaultSignatureFields: SignatureField[] = [
         {
           id: Date.now(),
@@ -113,11 +112,32 @@ export const DocumentUpload = ({
     }
   }, [templateContent, templateName, templateHeaderImageUrl, templateContractType, toast]);
 
+  // Function to update contract content with placeholders
+  const updateContractContent = useCallback((userInfo?: any, currentStipend?: string) => {
+    if (!originalTemplateContent) return;
+    
+    let updatedContent = originalTemplateContent;
+    
+    // Replace user placeholders
+    const selectedUser = userInfo || (selectedUserId ? users.find(user => user.id === selectedUserId) : null);
+    if (selectedUser) {
+      updatedContent = updatedContent.replace(/\{\{username\}\}/g, selectedUser.full_name || selectedUser.email);
+      updatedContent = updatedContent.replace(/\{\{useremail\}\}/g, selectedUser.email);
+    }
+    
+    // Replace stipend placeholder
+    const stipend = currentStipend !== undefined ? currentStipend : stipendAmount;
+    if (stipend) {
+      updatedContent = updatedContent.replace(/\{\{stipend\}\}/g, `$${stipend}`);
+    }
+    
+    setContractContent(updatedContent);
+  }, [originalTemplateContent, selectedUserId, users, stipendAmount]);
+
   // Handle creation mode changes
   const handleCreationModeChange = (mode: 'upload' | 'create' | 'template') => {
     setCreationMode(mode);
     
-    // Clear form when switching modes
     if (mode !== 'template') {
       setContractContent("");
       setContractTitle("");
@@ -128,7 +148,6 @@ export const DocumentUpload = ({
       setHeaderImageUrl("");
     }
     
-    // Set up defaults for create mode
     if (mode === 'create') {
       setContractContent("");
       setContractTitle("");
@@ -156,29 +175,7 @@ export const DocumentUpload = ({
     }
   };
 
-  // Function to update contract content with all current values
-  const updateContractContent = useCallback((userInfo?: any, currentStipend?: string) => {
-    if (!originalTemplateContent) return;
-    
-    let updatedContent = originalTemplateContent;
-    
-    // Replace user placeholders
-    const selectedUser = userInfo || (selectedUserId ? users.find(user => user.id === selectedUserId) : null);
-    if (selectedUser) {
-      updatedContent = updatedContent.replace(/\{\{username\}\}/g, selectedUser.full_name || selectedUser.email);
-      updatedContent = updatedContent.replace(/\{\{useremail\}\}/g, selectedUser.email);
-    }
-    
-    // Replace stipend placeholder
-    const stipend = currentStipend !== undefined ? currentStipend : stipendAmount;
-    if (stipend) {
-      updatedContent = updatedContent.replace(/\{\{stipend\}\}/g, `$${stipend}`);
-    }
-    
-    setContractContent(updatedContent);
-  }, [originalTemplateContent, selectedUserId, users, stipendAmount]);
-
-  // Handle user selection and placeholder replacement
+  // Handle user selection
   const handleUserSelection = (userId: string) => {
     setSelectedUserId(userId);
     const selectedUser = users.find(user => user.id === userId);
@@ -187,14 +184,12 @@ export const DocumentUpload = ({
       setRecipientEmail(selectedUser.email);
       setRecipientName(selectedUser.full_name || selectedUser.email);
       
-      // Update contract title with selected user when using template
       if (templateName) {
         const recipientName = selectedUser.full_name || selectedUser.email;
         const generatedTitle = `${recipientName} - ${templateName}`;
         setContractTitle(generatedTitle);
       }
       
-      // Update contract content with user info
       updateContractContent(selectedUser);
       
       toast({
@@ -204,9 +199,7 @@ export const DocumentUpload = ({
     }
   };
 
-  // Handle stipend amount change and update content
   const handleStipendChange = (amount: string) => {
-    console.log('Stipend amount changed to:', amount);
     setStipendAmount(amount);
     updateContractContent(undefined, amount);
   };
@@ -254,7 +247,6 @@ export const DocumentUpload = ({
     }
   };
 
-  // Handle preview and send contract actions
   const handlePreviewContract = () => {
     if ((!uploadedFile && !contractContent) || !recipientEmail || !contractTitle) {
       toast({
@@ -265,61 +257,24 @@ export const DocumentUpload = ({
       return;
     }
 
-    console.log('=== PREVIEW CONTRACT DEBUG ===');
-    console.log('Preview - Signature fields state:', signatureFields);
-    console.log('Preview - Number of signature fields:', signatureFields.length);
-    console.log('Preview - signatureFields type:', typeof signatureFields);
-    console.log('Preview - signatureFields is array:', Array.isArray(signatureFields));
-    
-    signatureFields.forEach((field, index) => {
-      console.log(`Preview - Field ${index}:`, field);
-    });
-    
-    console.log('=== END PREVIEW DEBUG ===');
-
     setShowPreview(true);
   };
 
   const sendContract = async () => {
-    if (!contractTitle.trim()) {
+    if (!contractTitle.trim() || !recipientEmail.trim() || (!contractContent.trim() && !uploadedFile)) {
       toast({
         title: "Missing Information",
-        description: "Please provide a contract title.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!recipientEmail.trim()) {
-      toast({
-        title: "Missing Information", 
-        description: "Please provide recipient email.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!contractContent.trim() && !uploadedFile) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide contract content or upload a file.",
+        description: "Please provide all required fields.",
         variant: "destructive",
       });
       return;
     }
 
     setIsLoading(true);
-    console.log('=== SEND CONTRACT DEBUG ===');
-    console.log('Contract title:', contractTitle);
-    console.log('Recipient email:', recipientEmail);
-    console.log('Signature fields:', signatureFields);
-    console.log('Signature fields count:', signatureFields.length);
 
     try {
       let finalContent = contractContent || `Contract document: ${uploadedFile?.name}\n\nSignature Fields: ${JSON.stringify(signatureFields)}`;
       finalContent = finalContent.replace(/Date Executed:/g, `Date Executed: ${new Date().toLocaleDateString()}`);
-      
-      console.log('Creating contract with final content and no template_id');
       
       const contractData = await createContract({
         title: contractTitle,
@@ -329,8 +284,6 @@ export const DocumentUpload = ({
       if (!contractData) {
         throw new Error("Failed to create contract");
       }
-
-      console.log('Contract created successfully:', contractData.id);
 
       await logActivity({
         actionType: ACTIVITY_TYPES.CONTRACT_SENT,
@@ -347,8 +300,6 @@ export const DocumentUpload = ({
         }
       });
 
-      console.log('Sending email with signature fields:', signatureFields);
-
       try {
         const { data: emailData, error: emailError } = await supabase.functions.invoke('send-contract-email', {
           body: {
@@ -361,8 +312,6 @@ export const DocumentUpload = ({
             signatureFields: signatureFields || []
           }
         });
-
-        console.log('Email function response:', { emailData, emailError });
 
         if (emailError) {
           console.error("Email error:", emailError);
@@ -386,7 +335,7 @@ export const DocumentUpload = ({
         });
       }
 
-      // Reset form and close preview
+      // Reset form
       setUploadedFile(null);
       setRecipientEmail("");
       setRecipientName("");
@@ -480,10 +429,7 @@ export const DocumentUpload = ({
 
           <SignatureFieldEditor 
             fields={signatureFields}
-            onFieldsChange={(newFields) => {
-              console.log('SignatureFieldEditor - Fields changed:', newFields);
-              setSignatureFields(newFields);
-            }}
+            onFieldsChange={setSignatureFields}
           />
 
           {hasContent && (
