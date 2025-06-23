@@ -8,7 +8,7 @@ interface TemplatesGridProps {
   onEdit: (template: ContractTemplate) => void;
   onCopy: (template: ContractTemplate) => void;
   onDelete: (id: string) => void;
-  onContractCreated?: () => void;
+  onUseTemplate?: (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => void;
 }
 
 export const TemplatesGrid = ({
@@ -17,7 +17,7 @@ export const TemplatesGrid = ({
   onEdit,
   onCopy,
   onDelete,
-  onContractCreated
+  onUseTemplate
 }: TemplatesGridProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -25,11 +25,11 @@ export const TemplatesGrid = ({
         <TemplateCard
           key={template.id}
           template={template}
-          onView={() => onView(template)}
+          onView={onView}
           onEdit={onEdit}
           onCopy={onCopy}
           onDelete={onDelete}
-          onContractCreated={onContractCreated}
+          onUseTemplate={onUseTemplate}
         />
       ))}
     </div>

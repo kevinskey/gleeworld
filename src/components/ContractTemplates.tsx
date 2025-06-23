@@ -68,7 +68,7 @@ export const ContractTemplates = ({ onUseTemplate, onContractCreated }: Contract
           onEdit={handleEditTemplate}
           onCopy={handleCopyTemplate}
           onDelete={handleDeleteTemplate}
-          onContractCreated={onContractCreated}
+          onUseTemplate={onUseTemplate}
         />
       )}
 

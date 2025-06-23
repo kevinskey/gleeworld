@@ -2,8 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Eye, Copy, Trash2, Image, FileDown, Loader2 } from "lucide-react";
-import { useContractFromTemplate } from "@/hooks/useContractFromTemplate";
+import { Edit, Eye, Copy, Trash2, Image, FileDown } from "lucide-react";
 import type { ContractTemplate } from "@/hooks/useContractTemplates";
 
 interface TemplateCardProps {
@@ -12,7 +11,7 @@ interface TemplateCardProps {
   onEdit: (template: ContractTemplate) => void;
   onCopy: (template: ContractTemplate) => void;
   onDelete: (id: string) => void;
-  onContractCreated?: () => void;
+  onUseTemplate?: (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => void;
 }
 
 export const TemplateCard = ({
@@ -21,12 +20,17 @@ export const TemplateCard = ({
   onEdit,
   onCopy,
   onDelete,
-  onContractCreated
+  onUseTemplate
 }: TemplateCardProps) => {
-  const { createContractFromTemplate, isCreating } = useContractFromTemplate(onContractCreated);
-
-  const handleUseTemplate = async () => {
-    await createContractFromTemplate(template);
+  const handleUseTemplate = () => {
+    if (onUseTemplate) {
+      onUseTemplate(
+        template.template_content,
+        template.name,
+        template.header_image_url,
+        'other' // Default contract type, can be customized
+      );
+    }
   };
 
   return (
@@ -70,23 +74,13 @@ export const TemplateCard = ({
           </div>
 
           <div className="flex flex-col space-y-2">
-            {/* Primary Use Template Button - Now creates contract directly */}
+            {/* Primary Use Template Button - Now opens upload form with template */}
             <Button 
               onClick={handleUseTemplate}
               className="w-full"
-              disabled={isCreating}
             >
-              {isCreating ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Creating Contract...
-                </>
-              ) : (
-                <>
-                  <FileDown className="h-4 w-4 mr-2" />
-                  Create Contract
-                </>
-              )}
+              <FileDown className="h-4 w-4 mr-2" />
+              Use Template
             </Button>
 
             {/* Secondary Action Buttons */}
