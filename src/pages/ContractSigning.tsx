@@ -167,6 +167,11 @@ const ContractSigning = () => {
     }
   }, [contract?.status, redirectCountdown]);
 
+  const isAdminOrAgentField = (field: SignatureField): boolean => {
+    const label = field.label.toLowerCase();
+    return label.includes('admin') || label.includes('agent');
+  };
+
   const handleFieldComplete = (fieldId: number, value: string) => {
     console.log('Field completed:', fieldId, 'with value type:', typeof value, 'length:', value?.length);
     setCompletedFields(prev => ({
@@ -178,9 +183,7 @@ const ContractSigning = () => {
     
     // Only check artist/user fields for completion - filter out admin fields
     const artistRequiredFields = signatureFields.filter(f => 
-      f.required && 
-      !f.label.toLowerCase().includes('admin') && 
-      !f.label.toLowerCase().includes('agent')
+      f.required && !isAdminOrAgentField(f)
     );
     
     const allArtistFieldsCompleted = artistRequiredFields.every(f => updatedFields[f.id]);
@@ -193,9 +196,7 @@ const ContractSigning = () => {
   const handleArtistSign = async (fieldsToUse = completedFields) => {
     // Only check artist/user required fields, not admin fields
     const artistRequiredFields = signatureFields.filter(f => 
-      f.required && 
-      !f.label.toLowerCase().includes('admin') && 
-      !f.label.toLowerCase().includes('agent')
+      f.required && !isAdminOrAgentField(f)
     );
     
     const currentDate = new Date().toLocaleDateString();
@@ -206,8 +207,7 @@ const ContractSigning = () => {
       if (field.type === 'date' && 
           field.required && 
           !updatedCompletedFields[field.id] &&
-          !field.label.toLowerCase().includes('admin') &&
-          !field.label.toLowerCase().includes('agent')) {
+          !isAdminOrAgentField(field)) {
         updatedCompletedFields[field.id] = currentDate;
         console.log('Auto-filled artist date field', field.id, 'with current date:', currentDate);
       }
@@ -239,16 +239,12 @@ const ContractSigning = () => {
       
       // Only get artist signature field, not admin
       const artistSignatureField = signatureFields.find(f => 
-        f.type === 'signature' && 
-        !f.label.toLowerCase().includes('admin') && 
-        !f.label.toLowerCase().includes('agent')
+        f.type === 'signature' && !isAdminOrAgentField(f)
       );
       
       // Only get artist date field, not admin
       const artistDateField = signatureFields.find(f => 
-        f.type === 'date' && 
-        !f.label.toLowerCase().includes('admin') && 
-        !f.label.toLowerCase().includes('agent')
+        f.type === 'date' && !isAdminOrAgentField(f)
       );
       
       const signatureData = artistSignatureField ? updatedCompletedFields[artistSignatureField.id] : '';
@@ -321,9 +317,7 @@ const ContractSigning = () => {
     
     // Only count artist fields for progress
     const artistRequiredFields = signatureFields.filter(f => 
-      f.required && 
-      !f.label.toLowerCase().includes('admin') && 
-      !f.label.toLowerCase().includes('agent')
+      f.required && !isAdminOrAgentField(f)
     );
     const completed = artistRequiredFields.filter(f => completedFields[f.id]);
     return `${completed.length}/${artistRequiredFields.length} artist fields completed`;
@@ -378,7 +372,7 @@ const ContractSigning = () => {
     }
 
     // Don't show admin fields during artist signing phase
-    if (field.label.toLowerCase().includes('admin') || field.label.toLowerCase().includes('agent')) {
+    if (isAdminOrAgentField(field)) {
       return null;
     }
 
@@ -466,8 +460,7 @@ const ContractSigning = () => {
         const artistSignatureField = signatureFields.find(f => 
           f.type === 'signature' && 
           (f.label.toLowerCase().includes('artist') || f.id === 1) &&
-          !f.label.toLowerCase().includes('admin') &&
-          !f.label.toLowerCase().includes('agent')
+          !isAdminOrAgentField(f)
         );
         
         if (artistSignatureField) {
@@ -480,14 +473,10 @@ const ContractSigning = () => {
       }
       
       if ((index === lines.length - 1 || line.toLowerCase().includes('date executed')) && 
-          signatureFields.some(f => f.type === 'date' && 
-            !f.label.toLowerCase().includes('admin') &&
-            !f.label.toLowerCase().includes('agent'))) {
+          signatureFields.some(f => f.type === 'date' && !isAdminOrAgentField(f))) {
         
         const dateField = signatureFields.find(f => 
-          f.type === 'date' &&
-          !f.label.toLowerCase().includes('admin') &&
-          !f.label.toLowerCase().includes('agent')
+          f.type === 'date' && !isAdminOrAgentField(f)
         );
         if (dateField) {
           processedLines.push(
