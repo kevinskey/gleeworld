@@ -309,7 +309,7 @@ export type Database = {
           archived: boolean
           content: string
           created_at: string
-          created_by: string
+          created_by: string | null
           id: string
           is_template: boolean
           status: string
@@ -321,7 +321,7 @@ export type Database = {
           archived?: boolean
           content: string
           created_at?: string
-          created_by: string
+          created_by?: string | null
           id?: string
           is_template?: boolean
           status?: string
@@ -333,7 +333,7 @@ export type Database = {
           archived?: boolean
           content?: string
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           id?: string
           is_template?: boolean
           status?: string

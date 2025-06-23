@@ -10,7 +10,7 @@ export interface Contract {
   status: string;
   created_at: string;
   updated_at: string;
-  created_by: string;
+  created_by: string | null;
   is_template: boolean;
   template_id?: string;
   archived: boolean;
@@ -51,14 +51,11 @@ export const useContracts = () => {
     template_id?: string;
   }) => {
     try {
-      // Generate a temporary UUID for created_by since we don't have auth yet
-      const tempUserId = crypto.randomUUID();
-      
       const { data, error } = await supabase
         .from('contracts_v2')
         .insert([{
           ...contract,
-          created_by: tempUserId,
+          created_by: null, // Set to null since we don't have auth yet
           status: 'draft',
           is_template: false,
           archived: false,
