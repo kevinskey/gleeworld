@@ -90,7 +90,7 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     console.log('Started drawing signature at:', x, y);
   };
 
-  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasEvent>) => {
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing || disabled) return;
 
     e.preventDefault();
