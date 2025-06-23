@@ -25,7 +25,6 @@ const Index = () => {
   }, [forceRefresh]);
 
   const handleViewContract = (contract: any) => {
-    // Handle contract viewing
     console.log('Viewing contract:', contract);
   };
 
@@ -39,18 +38,20 @@ const Index = () => {
 
   const completedContracts = contracts.filter(c => c.status === 'completed');
   const pendingContracts = contracts.filter(c => c.status !== 'completed');
+  const isAdmin = userProfile?.role === 'super-admin' || userProfile?.role === 'admin';
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div>
+            <div className="flex-1">
               <h1 className="text-2xl font-bold text-gray-900">Contract Manager</h1>
               <p className="text-sm text-gray-500">Welcome back, {userProfile?.display_name || user?.email}</p>
             </div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <Button 
                 onClick={handleUploadContract}
                 className="bg-blue-600 hover:bg-blue-700"
@@ -70,72 +71,112 @@ const Index = () => {
         </div>
       </header>
       
-      <main className="container mx-auto px-4 py-8">
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Title Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Contract Management Dashboard</h1>
-          <p className="text-gray-600">
-            {userProfile?.role === 'super-admin' || userProfile?.role === 'admin' 
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h2>
+          <p className="text-lg text-gray-600">
+            {isAdmin 
               ? 'Manage contracts, templates, and user accounts.' 
               : 'View your contracts and complete required forms.'}
           </p>
         </div>
 
-        <StatsCards 
-          totalContracts={contracts.length}
-          completedCount={completedContracts.length}
-          pendingCount={pendingContracts.length}
-        />
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <ContractsList 
-            contracts={contracts}
-            loading={loading}
-            error={error}
-            onViewContract={handleViewContract}
-            onDeleteContract={handleDeleteContract}
-            onUploadContract={handleUploadContract}
-            onRetry={forceRefresh}
+        {/* Stats Overview */}
+        <div className="mb-8">
+          <StatsCards 
+            totalContracts={contracts.length}
+            completedCount={completedContracts.length}
+            pendingCount={pendingContracts.length}
           />
-          <W9FormsList />
         </div>
 
-        {(userProfile?.role === 'super-admin' || userProfile?.role === 'admin') && (
-          <>
-            <div className="mb-8">
-              <ContractTemplates />
+        {/* Main Content Grid */}
+        <div className="space-y-8">
+          {/* Contracts and Forms Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <ContractsList 
+                contracts={contracts}
+                loading={loading}
+                error={error}
+                onViewContract={handleViewContract}
+                onDeleteContract={handleDeleteContract}
+                onUploadContract={handleUploadContract}
+                onRetry={forceRefresh}
+              />
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calculator className="h-5 w-5" />
-                    Accounting
-                  </CardTitle>
-                  <CardDescription>
-                    Track stipends and contract payments
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 mb-4">
-                    View detailed accounting information for all signed contracts with stipend amounts.
-                  </p>
-                  <Button asChild className="w-full">
-                    <Link to="/accounting">
-                      <DollarSign className="h-4 w-4 mr-2" />
-                      View Accounting
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-              
-              <AdminPanel />
+            <div className="space-y-6">
+              <W9FormsList />
             </div>
-          </>
-        )}
+          </div>
 
+          {/* Admin Only Sections */}
+          {isAdmin && (
+            <>
+              {/* Templates Section */}
+              <div className="bg-white rounded-lg border shadow-sm">
+                <div className="p-6">
+                  <ContractTemplates />
+                </div>
+              </div>
+              
+              {/* Admin Tools Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Accounting Card */}
+                <Card className="h-fit">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calculator className="h-5 w-5 text-blue-600" />
+                      Accounting
+                    </CardTitle>
+                    <CardDescription>
+                      Track stipends and contract payments
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-600 mb-4">
+                      View detailed accounting information for all signed contracts with stipend amounts.
+                    </p>
+                    <Button asChild className="w-full">
+                      <Link to="/accounting">
+                        <DollarSign className="h-4 w-4 mr-2" />
+                        View Accounting
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+                
+                {/* Admin Panel */}
+                <div className="h-fit">
+                  <AdminPanel />
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Upload Modal */}
         {showUpload && (
-          <DocumentUpload onContractCreated={handleContractCreated} />
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">Upload New Contract</h3>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowUpload(false)}
+                    className="ml-4"
+                  >
+                    Close
+                  </Button>
+                </div>
+                <DocumentUpload onContractCreated={handleContractCreated} />
+              </div>
+            </div>
+          </div>
         )}
       </main>
     </div>
