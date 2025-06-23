@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +27,16 @@ interface EmbeddedSignature {
   dateSigned: string;
   ipAddress?: string;
   timestamp: string;
+}
+
+interface SignatureRecord {
+  id: string;
+  status: string;
+  artist_signature_data?: string;
+  admin_signature_data?: string;
+  artist_signed_at?: string;
+  admin_signed_at?: string;
+  date_signed?: string;
 }
 
 export const useContractSigning = (contractId?: string) => {
@@ -209,6 +218,21 @@ export const useContractSigning = (contractId?: string) => {
     }
   };
 
+  // Create a proper signature record based on contract status and embedded signatures
+  const createSignatureRecord = (): SignatureRecord | null => {
+    if (!contract) return null;
+
+    const artistSignature = embeddedSignatures.find(sig => sig.fieldId === 1);
+    
+    return {
+      id: contractId || 'mock-id',
+      status: contract.status,
+      artist_signature_data: artistSignature?.signatureData,
+      artist_signed_at: artistSignature?.timestamp,
+      date_signed: artistSignature?.dateSigned,
+    };
+  };
+
   const isAdminOrAgentField = (field: SignatureField) => {
     return field.label.toLowerCase().includes('admin') || 
            field.label.toLowerCase().includes('agent') ||
@@ -227,7 +251,7 @@ export const useContractSigning = (contractId?: string) => {
 
   return {
     contract,
-    signatureRecord: { status: contract?.status || 'draft' }, // Mock for compatibility
+    signatureRecord: createSignatureRecord(),
     loading,
     signing,
     signatureFields,
