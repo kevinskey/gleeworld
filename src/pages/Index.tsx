@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, FileText, Users, Edit, Loader2 } from "lucide-react";
@@ -32,6 +31,13 @@ const Index = () => {
       navigate("/auth");
     }
   }, [user, authLoading, navigate]);
+
+  // Refresh contracts when switching to dashboard tab
+  useEffect(() => {
+    if (activeTab === "dashboard") {
+      refetch();
+    }
+  }, [activeTab, refetch]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -126,6 +132,7 @@ const Index = () => {
             <DocumentUpload 
               templateContent={templateContent}
               templateName={templateName}
+              onContractCreated={handleContractCreated}
             />
           </TabsContent>
 

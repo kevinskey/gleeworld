@@ -22,9 +22,16 @@ interface DocumentUploadProps {
   templateName?: string;
   headerImageUrl?: string;
   contractType?: string;
+  onContractCreated?: () => void;
 }
 
-export const DocumentUpload = ({ templateContent, templateName, headerImageUrl: templateHeaderImageUrl, contractType: templateContractType }: DocumentUploadProps) => {
+export const DocumentUpload = ({ 
+  templateContent, 
+  templateName, 
+  headerImageUrl: templateHeaderImageUrl, 
+  contractType: templateContractType,
+  onContractCreated
+}: DocumentUploadProps) => {
   const [dragOver, setDragOver] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [recipientEmail, setRecipientEmail] = useState("");
@@ -268,13 +275,18 @@ export const DocumentUpload = ({ templateContent, templateName, headerImageUrl: 
       setContractType("");
       setContractTitle("");
       setContractContent("");
-      setOriginalTemplateContent(""); // Reset original template
+      setOriginalTemplateContent(""); 
       setSignatureFields([]);
       setSelectedUserId("");
       setStipendAmount("");
       setHeaderImageUrl("");
       setHasStipendField(false);
       setShowPreview(false);
+
+      // Trigger contract created callback to refresh the contracts list
+      if (onContractCreated) {
+        onContractCreated();
+      }
     } catch (error) {
       console.error("Error sending contract:", error);
       toast({
