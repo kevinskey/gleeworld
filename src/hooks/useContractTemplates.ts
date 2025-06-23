@@ -92,10 +92,10 @@ export const useContractTemplates = () => {
         try {
           const header_image_url = await uploadHeaderImage(template.header_image, data.id);
           
-          // Update the template with the image URL using raw SQL since the column might not be in types yet
+          // Update the template with the image URL
           const { error: updateError } = await supabase
             .from('contract_templates')
-            .update({ header_image_url } as any)
+            .update({ header_image_url })
             .eq('id', data.id);
 
           if (updateError) throw updateError;
