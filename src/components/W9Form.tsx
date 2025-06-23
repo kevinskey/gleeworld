@@ -57,9 +57,12 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
   });
 
   const onSubmit = async (data: W9FormData) => {
+    console.log('W9 form submission started', { user: user?.id, data: Object.keys(data) });
+    
     if (!user) {
+      console.error('No authenticated user found during W9 submission');
       toast({
-        title: "Error",
+        title: "Authentication Error",
         description: "You must be logged in to submit a W9 form",
         variant: "destructive",
       });
@@ -69,6 +72,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
     setIsSubmitting(true);
 
     try {
+      console.log('Generating W9 content...');
       // Generate PDF content as text (in a real implementation, you'd use a PDF library)
       const pdfContent = generateW9Content(data);
       
@@ -77,13 +81,18 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
       
       // Upload to storage
       const fileName = `${user.id}/w9-form-${Date.now()}.txt`;
+      console.log('Uploading W9 to storage:', fileName);
+      
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('w9-forms')
         .upload(fileName, blob);
 
       if (uploadError) {
+        console.error('Storage upload error:', uploadError);
         throw uploadError;
       }
+
+      console.log('W9 uploaded successfully, saving to database...');
 
       // Save form submission record
       const { error: dbError } = await supabase
@@ -96,8 +105,11 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
         });
 
       if (dbError) {
+        console.error('Database insert error:', dbError);
         throw dbError;
       }
+
+      console.log('W9 form submitted successfully');
 
       toast({
         title: "W9 Form Submitted",
@@ -111,7 +123,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
       console.error("Error submitting W9 form:", error);
       toast({
         title: "Submission Failed",
-        description: "There was an error submitting your W9 form. Please try again.",
+        description: `There was an error submitting your W9 form: ${error.message || 'Unknown error'}`,
         variant: "destructive",
       });
     } finally {
