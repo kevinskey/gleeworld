@@ -372,7 +372,14 @@ export const ContractTemplates = () => {
                       <img 
                         src={template.header_image_url} 
                         alt="Template header" 
-                        className="h-16 w-full object-contain border rounded"
+                        className="h-20 w-full object-contain border rounded bg-gray-50"
+                        onError={(e) => {
+                          console.log('Image failed to load:', template.header_image_url);
+                          e.currentTarget.style.display = 'none';
+                        }}
+                        onLoad={() => {
+                          console.log('Image loaded successfully:', template.header_image_url);
+                        }}
                       />
                     </div>
                   )}
@@ -446,7 +453,11 @@ export const ContractTemplates = () => {
                   <img 
                     src={selectedTemplate.header_image_url} 
                     alt="Template header" 
-                    className="mt-2 max-h-32 mx-auto"
+                    className="mt-2 max-h-40 mx-auto rounded border"
+                    onError={(e) => {
+                      console.log('Header image failed to load in view dialog:', selectedTemplate.header_image_url);
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                 </div>
               )}
