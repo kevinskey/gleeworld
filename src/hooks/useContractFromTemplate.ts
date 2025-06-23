@@ -13,13 +13,14 @@ export const useContractFromTemplate = (onContractCreated?: () => void) => {
   const { user } = useAuth();
   const { displayName } = useUserProfile(user);
 
-  const createContractFromTemplate = async (template: ContractTemplate) => {
+  const createContractFromTemplate = async (template: ContractTemplate, selectedUser?: { full_name?: string; email: string }) => {
     setIsCreating(true);
     try {
-      const username = displayName || user?.email || 'User';
+      // Use selected user name if provided, otherwise fall back to current user
+      const recipientName = selectedUser?.full_name || selectedUser?.email || displayName || user?.email || 'User';
       
-      // Generate contract title with user's name + template name (no "Copy of" prefix removal needed)
-      const contractTitle = `${username} - ${template.name}`;
+      // Generate contract title with recipient's name + template name
+      const contractTitle = `${recipientName} - ${template.name}`;
       
       // Don't pass template_id - we're using template content, not linking to template
       const contractData = await createContract({

@@ -63,10 +63,9 @@ export const DocumentUpload = ({
       setOriginalTemplateContent(templateContent); // Store original template
       setContractContent(templateContent);
       
-      // Generate contract title with user's name + template name
-      const username = displayName || user?.email || 'User';
-      const generatedTitle = `${username} - ${templateName}`;
-      setContractTitle(generatedTitle);
+      // Don't generate title here - wait for user selection
+      // The title will be updated when a user is selected
+      setContractTitle(templateName); // Just use template name as placeholder
       
       // Set contract type from template
       if (templateContractType) {
@@ -108,10 +107,10 @@ export const DocumentUpload = ({
       
       toast({
         title: "Template Applied",
-        description: `Template "${templateName}" has been applied with title "${generatedTitle}"`,
+        description: `Template "${templateName}" has been applied. Select a user to generate the contract title.`,
       });
     }
-  }, [templateContent, templateName, templateHeaderImageUrl, templateContractType, displayName, user?.email, toast]);
+  }, [templateContent, templateName, templateHeaderImageUrl, templateContractType, toast]);
 
   // Function to update contract content with all current values
   const updateContractContent = (userInfo?: any, currentStipend?: string) => {
@@ -143,6 +142,13 @@ export const DocumentUpload = ({
     if (selectedUser) {
       setRecipientEmail(selectedUser.email);
       setRecipientName(selectedUser.full_name || selectedUser.email);
+      
+      // Update contract title with selected user when using template
+      if (templateName) {
+        const recipientName = selectedUser.full_name || selectedUser.email;
+        const generatedTitle = `${recipientName} - ${templateName}`;
+        setContractTitle(generatedTitle);
+      }
       
       // Update contract content with user info
       updateContractContent(selectedUser);
