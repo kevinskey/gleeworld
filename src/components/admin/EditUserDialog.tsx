@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,7 +57,7 @@ export const EditUserDialog = ({ user, open, onOpenChange, onUserUpdated }: Edit
   };
 
   // Reset form when user changes
-  useState(() => {
+  useEffect(() => {
     setFullName(user?.full_name || "");
     setRole(user?.role || "user");
   }, [user]);
