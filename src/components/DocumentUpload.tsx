@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, X, Send, Plus, Loader2 } from "lucide-react";
+import { Upload, FileText, X, Send, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useContracts } from "@/hooks/useContracts";
 import { supabase } from "@/integrations/supabase/client";
+import { SignatureFieldEditor, SignatureField } from "./SignatureFieldEditor";
 
 export const DocumentUpload = () => {
   const [dragOver, setDragOver] = useState(false);
@@ -17,7 +18,7 @@ export const DocumentUpload = () => {
   const [recipientName, setRecipientName] = useState("");
   const [emailMessage, setEmailMessage] = useState("");
   const [contractType, setContractType] = useState("");
-  const [signatureFields, setSignatureFields] = useState<Array<{id: number, label: string, page: number, x: number, y: number}>>([]);
+  const [signatureFields, setSignatureFields] = useState<SignatureField[]>([]);
   const [contractTitle, setContractTitle] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -66,20 +67,6 @@ export const DocumentUpload = () => {
     }
   };
 
-  const addSignatureField = () => {
-    setSignatureFields([...signatureFields, {
-      id: Date.now(),
-      label: `Signature ${signatureFields.length + 1}`,
-      page: 1,
-      x: 100,
-      y: 100
-    }]);
-  };
-
-  const removeSignatureField = (id: number) => {
-    setSignatureFields(signatureFields.filter(field => field.id !== id));
-  };
-
   const sendContract = async () => {
     if (!uploadedFile || !recipientEmail || !contractTitle) {
       toast({
@@ -90,13 +77,22 @@ export const DocumentUpload = () => {
       return;
     }
 
+    if (signatureFields.filter(f => f.required).length === 0) {
+      toast({
+        title: "No signature fields",
+        description: "Please add at least one required signature field.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // Create contract in database
+      // Create contract in database with signature fields
       const contractData = await createContract({
         title: contractTitle,
-        content: `Contract document: ${uploadedFile.name}`, // In a real app, you'd extract text from the file
+        content: `Contract document: ${uploadedFile.name}\n\nSignature Fields: ${JSON.stringify(signatureFields)}`,
       });
 
       if (!contractData) {
@@ -111,7 +107,8 @@ export const DocumentUpload = () => {
           contractTitle,
           contractId: contractData.id,
           senderName: "ContractFlow Team",
-          customMessage: emailMessage
+          customMessage: emailMessage,
+          signatureFields: signatureFields
         }
       });
 
@@ -125,7 +122,7 @@ export const DocumentUpload = () => {
       } else {
         toast({
           title: "Contract sent successfully",
-          description: `Contract has been sent to ${recipientEmail} for signature.`,
+          description: `Contract with ${signatureFields.length} signature fields has been sent to ${recipientEmail}.`,
         });
       }
 
@@ -245,52 +242,11 @@ export const DocumentUpload = () => {
                 </div>
               </div>
 
-              {/* Signature Fields */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>Signature Fields</Label>
-                  <Button variant="outline" size="sm" onClick={addSignatureField}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Field
-                  </Button>
-                </div>
-                
-                {signatureFields.map((field) => (
-                  <div key={field.id} className="flex items-center space-x-4 p-3 border rounded-lg">
-                    <Input
-                      placeholder="Field label"
-                      value={field.label}
-                      onChange={(e) => {
-                        setSignatureFields(signatureFields.map(f => 
-                          f.id === field.id ? {...f, label: e.target.value} : f
-                        ));
-                      }}
-                      className="flex-1"
-                    />
-                    <div className="flex items-center space-x-2">
-                      <Label className="text-sm">Page:</Label>
-                      <Input
-                        type="number"
-                        value={field.page}
-                        onChange={(e) => {
-                          setSignatureFields(signatureFields.map(f => 
-                            f.id === field.id ? {...f, page: parseInt(e.target.value)} : f
-                          ));
-                        }}
-                        className="w-16"
-                        min="1"
-                      />
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeSignatureField(field.id)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
+              {/* Enhanced Signature Fields */}
+              <SignatureFieldEditor 
+                fields={signatureFields}
+                onFieldsChange={setSignatureFields}
+              />
 
               {/* Recipient Information */}
               <div className="space-y-4">
