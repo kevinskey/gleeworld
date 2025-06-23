@@ -68,34 +68,38 @@ export const SignatureFieldOverlay = ({
     return new Date().toLocaleDateString();
   };
 
-  // Handle key events to close modal on Escape
+  const handleFieldClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log('Field clicked:', field.id, 'type:', field.type, 'completed:', isCompleted);
+    if (!isCompleted) {
+      setIsActive(true);
+    }
+  };
+
+  const handleModalBackdropClick = (e: React.MouseEvent) => {
+    // Only close if clicking the backdrop itself, not its children
+    if (e.target === e.currentTarget) {
+      setIsActive(false);
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
       setIsActive(false);
     }
   };
 
-  // Prevent any events from bubbling up from modal content
-  const preventEventBubbling = (e: React.MouseEvent | React.TouchEvent | React.KeyboardEvent) => {
-    e.stopPropagation();
-  };
-
   if (isActive) {
     return (
       <div 
         className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+        onClick={handleModalBackdropClick}
         onKeyDown={handleKeyDown}
         tabIndex={-1}
       >
         <div 
           className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
-          onClick={preventEventBubbling}
-          onTouchStart={preventEventBubbling}
-          onTouchEnd={preventEventBubbling}
-          onTouchMove={preventEventBubbling}
-          onMouseDown={preventEventBubbling}
-          onMouseUp={preventEventBubbling}
-          onKeyDown={preventEventBubbling}
+          onClick={(e) => e.stopPropagation()}
         >
           <div className="p-6">
             <div className="mb-4">
@@ -107,15 +111,7 @@ export const SignatureFieldOverlay = ({
             </div>
 
             {field.type === 'signature' && (
-              <div 
-                onClick={preventEventBubbling}
-                onTouchStart={preventEventBubbling}
-                onTouchEnd={preventEventBubbling}
-                onTouchMove={preventEventBubbling}
-                onMouseDown={preventEventBubbling}
-                onMouseUp={preventEventBubbling}
-                style={{ isolation: 'isolate' }}
-              >
+              <div onClick={(e) => e.stopPropagation()}>
                 <SignatureCanvas 
                   onSignatureChange={handleSignatureComplete}
                   disabled={false}
@@ -131,13 +127,12 @@ export const SignatureFieldOverlay = ({
                   onChange={(e) => setFieldValue(e.target.value)}
                   onBlur={handleTextComplete}
                   className="w-full"
-                  onClick={preventEventBubbling}
                 />
                 <div className="flex gap-2 justify-end">
                   <Button 
                     variant="outline" 
                     onClick={(e) => {
-                      preventEventBubbling(e);
+                      e.stopPropagation();
                       const today = getCurrentDate();
                       setFieldValue(today);
                       onFieldComplete(field.id, today);
@@ -160,7 +155,6 @@ export const SignatureFieldOverlay = ({
                   placeholder={`Enter ${field.type}`}
                   className="w-full"
                   maxLength={field.type === 'initials' ? 3 : undefined}
-                  onClick={preventEventBubbling}
                 />
               </div>
             )}
@@ -182,12 +176,7 @@ export const SignatureFieldOverlay = ({
         top: `${field.y}px`,
         minWidth: isMobile ? '100px' : '120px',
       }}
-      onClick={() => {
-        console.log('Field clicked:', field.id, 'type:', field.type, 'completed:', isCompleted);
-        if (!isCompleted) {
-          setIsActive(true);
-        }
-      }}
+      onClick={handleFieldClick}
     >
       {getFieldIcon()}
       <span className="truncate">
