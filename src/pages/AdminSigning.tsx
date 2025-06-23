@@ -75,6 +75,7 @@ const AdminSigning = () => {
         throw error;
       }
 
+      console.log('Fetched pending contracts:', data?.length || 0);
       setPendingContracts(data || []);
     } catch (error) {
       console.error('Error:', error);
@@ -101,6 +102,7 @@ const AdminSigning = () => {
     setSigning(signatureRecord.id);
     try {
       console.log('Admin signing contract with signature ID:', signatureRecord.id);
+      console.log('Contract ID:', signatureRecord.contract_id);
       
       // Get the current contract content to extract existing embedded signatures
       const { data: contractData, error: contractError } = await supabase
@@ -152,12 +154,14 @@ const AdminSigning = () => {
       const signaturesSection = `\n\n[EMBEDDED_SIGNATURES]${JSON.stringify(updatedSignatures)}[/EMBEDDED_SIGNATURES]`;
       updatedContent += signaturesSection;
 
+      const adminSignedAt = new Date().toISOString();
+
       // Update the signature record with admin signature
       const { error: updateError } = await supabase
         .from('contract_signatures_v2')
         .update({
           admin_signature_data: adminSignature,
-          admin_signed_at: new Date().toISOString(),
+          admin_signed_at: adminSignedAt,
           status: 'completed'
         })
         .eq('id', signatureRecord.id);
@@ -167,32 +171,37 @@ const AdminSigning = () => {
         throw updateError;
       }
 
-      // Update contract status and content
+      console.log('Signature record updated successfully');
+
+      // Update contract status and content in contracts_v2 table
       const { error: contractUpdateError } = await supabase
         .from('contracts_v2')
         .update({
           content: updatedContent,
           status: 'completed',
-          updated_at: new Date().toISOString()
+          updated_at: adminSignedAt
         })
         .eq('id', signatureRecord.contract_id);
 
       if (contractUpdateError) {
-        console.error('Error updating contract:', contractUpdateError);
+        console.error('Error updating contract in contracts_v2:', contractUpdateError);
         throw contractUpdateError;
       }
 
-      console.log('Admin signature embedded successfully in document and contract status updated to completed');
+      console.log('Contract status updated to completed in contracts_v2 table');
 
       toast({
         title: "Contract Completed!",
         description: `"${signatureRecord.contracts_v2.title}" has been fully signed and completed.`,
       });
 
-      // Immediately refresh the list and close the modal
+      // Close modal and clear signature
       setSelectedContract(null);
       setAdminSignature("");
-      await fetchPendingContracts(); // This will update the UI immediately
+      
+      // Refresh the pending contracts list
+      await fetchPendingContracts();
+      
     } catch (error) {
       console.error('Error signing contract:', error);
       toast({
