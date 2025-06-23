@@ -222,14 +222,8 @@ export const DocumentUpload = ({
       return;
     }
 
-    if (signatureFields.filter(f => f.required).length === 0) {
-      toast({
-        title: "No signature fields",
-        description: "Please add at least one required signature field.",
-        variant: "destructive",
-      });
-      return;
-    }
+    console.log('Preview - Signature fields being passed:', signatureFields);
+    console.log('Preview - Number of signature fields:', signatureFields.length);
 
     setShowPreview(true);
   };

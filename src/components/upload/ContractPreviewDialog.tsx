@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -55,7 +54,8 @@ export const ContractPreviewDialog = ({
     }
   };
 
-  console.log('Preview Dialog - Signature Fields:', signatureFields);
+  console.log('ContractPreviewDialog - Received signature fields:', signatureFields);
+  console.log('ContractPreviewDialog - Fields count:', signatureFields?.length || 0);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -94,13 +94,13 @@ export const ContractPreviewDialog = ({
             </div>
           )}
 
-          {/* Signature Fields - Moved to top */}
+          {/* Signature Fields - Enhanced display */}
           <div className="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
             <h3 className="text-sm font-medium text-blue-700 mb-2 flex items-center gap-2">
               <Signature className="h-4 w-4" />
-              Document Fields ({signatureFields?.length || 0})
+              Document Fields ({Array.isArray(signatureFields) ? signatureFields.length : 0})
             </h3>
-            {signatureFields && signatureFields.length > 0 ? (
+            {Array.isArray(signatureFields) && signatureFields.length > 0 ? (
               <div className="space-y-2 max-h-40 overflow-y-auto">
                 {signatureFields.map((field) => (
                   <div key={field.id} className="flex items-center justify-between p-3 bg-white border rounded-lg">
@@ -109,7 +109,7 @@ export const ContractPreviewDialog = ({
                       <div>
                         <p className="font-medium text-sm">{field.label}</p>
                         <p className="text-xs text-gray-500">
-                          {getFieldTypeLabel(field.type)} • Page {field.page} • Position ({field.x}, {field.y})
+                          {getFieldTypeLabel(field.type)} • Page {field.page} • Position ({Math.round(field.x)}, {Math.round(field.y)})
                         </p>
                       </div>
                     </div>
@@ -123,6 +123,9 @@ export const ContractPreviewDialog = ({
               <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-sm text-yellow-800">
                   ⚠️ No signature fields have been added to this contract. Recipients won't be able to sign the document.
+                </p>
+                <p className="text-xs text-yellow-600 mt-1">
+                  Debug: signatureFields = {JSON.stringify(signatureFields)}
                 </p>
               </div>
             )}
