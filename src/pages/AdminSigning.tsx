@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -92,16 +91,36 @@ const AdminSigning = () => {
 
     setSigning(signatureRecord.id);
     try {
-      const { data, error } = await supabase.functions.invoke('complete-contract-signing', {
-        body: {
-          signatureId: signatureRecord.id,
-          adminSignatureData: adminSignature,
-        }
-      });
+      console.log('Signing contract with signature ID:', signatureRecord.id);
+      console.log('Admin signature data length:', adminSignature.length);
+      
+      // Update the signature record with admin signature
+      const { error: updateError } = await supabase
+        .from('contract_signatures_v2')
+        .update({
+          admin_signature_data: adminSignature,
+          admin_signed_at: new Date().toISOString(),
+          status: 'completed'
+        })
+        .eq('id', signatureRecord.id);
 
-      if (error) {
-        console.error('Error completing contract:', error);
-        throw error;
+      if (updateError) {
+        console.error('Error updating signature record:', updateError);
+        throw updateError;
+      }
+
+      // Update contract status to completed
+      const { error: contractError } = await supabase
+        .from('contracts_v2')
+        .update({
+          status: 'completed',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', signatureRecord.contract_id);
+
+      if (contractError) {
+        console.error('Error updating contract:', contractError);
+        throw contractError;
       }
 
       toast({
