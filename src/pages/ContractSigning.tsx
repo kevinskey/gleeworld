@@ -269,36 +269,103 @@ const ContractSigning = () => {
     return `${completed.length}/${requiredFields.length}`;
   };
 
-  const renderContractWithSignatureFields = () => {
+  const renderContractWithInlineSignatureFields = () => {
     const content = contract?.content || '';
     
     // Clean content by removing the signature fields JSON from display
-    const cleanContent = content.replace(/Signature Fields: \[.*?\]/g, '').trim();
+    let cleanContent = content.replace(/Signature Fields: \[.*?\]/g, '').trim();
+    
+    // Split content into lines for inline field insertion
+    const lines = cleanContent.split('\n');
+    const processedLines: (string | JSX.Element)[] = [];
+    
+    lines.forEach((line, index) => {
+      processedLines.push(line);
+      
+      // Look for "ARTIST:" or artist name patterns to insert signature field after
+      if (line.toLowerCase().includes('artist:') || 
+          line.toLowerCase().includes('artist name') ||
+          (selectedUserId && line.includes(signatureFields.find(f => f.type === 'signature')?.label?.toLowerCase() || 'artist'))) {
+        
+        // Find the artist signature field
+        const artistSignatureField = signatureFields.find(f => 
+          f.type === 'signature' && 
+          (f.label.toLowerCase().includes('artist') || f.label.toLowerCase().includes('signature'))
+        );
+        
+        if (artistSignatureField && contract.status !== 'completed') {
+          processedLines.push(
+            <div key={`signature-${artistSignatureField.id}`} className="my-4 p-4 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50">
+              <SignatureFieldOverlay
+                field={artistSignatureField}
+                onFieldComplete={handleFieldComplete}
+                isCompleted={!!completedFields[artistSignatureField.id]}
+                value={completedFields[artistSignatureField.id]}
+              />
+            </div>
+          );
+        }
+      }
+      
+      // Look for "AGENT:" patterns to insert agent signature field
+      if (line.toLowerCase().includes('agent:') || 
+          line.toLowerCase().includes('agent name')) {
+        
+        const agentSignatureField = signatureFields.find(f => 
+          f.type === 'signature' && 
+          f.label.toLowerCase().includes('agent')
+        );
+        
+        if (agentSignatureField && contract.status !== 'completed') {
+          processedLines.push(
+            <div key={`signature-${agentSignatureField.id}`} className="my-4 p-4 border-2 border-dashed border-green-300 rounded-lg bg-green-50">
+              <SignatureFieldOverlay
+                field={agentSignatureField}
+                onFieldComplete={handleFieldComplete}
+                isCompleted={!!completedFields[agentSignatureField.id]}
+                value={completedFields[agentSignatureField.id]}
+              />
+            </div>
+          );
+        }
+      }
+      
+      // Add date field near the end of document
+      if ((index === lines.length - 1 || line.toLowerCase().includes('date executed')) && 
+          signatureFields.some(f => f.type === 'date')) {
+        
+        const dateField = signatureFields.find(f => f.type === 'date');
+        if (dateField && contract.status !== 'completed') {
+          processedLines.push(
+            <div key={`date-${dateField.id}`} className="my-4 p-4 border-2 border-dashed border-purple-300 rounded-lg bg-purple-50">
+              <SignatureFieldOverlay
+                field={dateField}
+                onFieldComplete={handleFieldComplete}
+                isCompleted={!!completedFields[dateField.id]}
+                value={completedFields[dateField.id]}
+              />
+            </div>
+          );
+        }
+      }
+    });
     
     return (
       <div className="space-y-6">
-        {/* Contract content with embedded signature fields */}
         <div 
-          className={`relative whitespace-pre-wrap border rounded-lg p-4 md:p-8 bg-white ${
+          className={`whitespace-pre-wrap border rounded-lg p-4 md:p-8 bg-white ${
             isMobile ? 'min-h-[400px] text-sm' : 'min-h-[600px]'
           }`}
         >
-          <div dangerouslySetInnerHTML={{ __html: cleanContent.replace(/\n/g, '<br>') }} />
-          
-          {/* Embed signature fields directly in the document */}
-          {contract.status !== 'completed' && signatureFields.length > 0 && (
-            <>
-              {signatureFields.map((field) => (
-                <SignatureFieldOverlay
-                  key={field.id}
-                  field={field}
-                  onFieldComplete={handleFieldComplete}
-                  isCompleted={!!completedFields[field.id]}
-                  value={completedFields[field.id]}
-                />
-              ))}
-            </>
-          )}
+          {processedLines.map((item, index) => (
+            <div key={index}>
+              {typeof item === 'string' ? (
+                <div dangerouslySetInnerHTML={{ __html: item.replace(/\n/g, '<br>') }} />
+              ) : (
+                item
+              )}
+            </div>
+          ))}
         </div>
         
         {/* Progress indicator */}
@@ -306,7 +373,7 @@ const ContractSigning = () => {
           <div className="text-center text-sm text-gray-600 bg-gray-50 p-3 rounded">
             Progress: {getCompletionProgress()} fields completed
             <div className="text-xs text-gray-500 mt-1">
-              Click on the blue signature fields in the document above to sign
+              Fill in the signature fields embedded in the document above
             </div>
           </div>
         )}
@@ -378,7 +445,7 @@ const ContractSigning = () => {
           </CardHeader>
           <CardContent>
             <div className="relative">
-              {renderContractWithSignatureFields()}
+              {renderContractWithInlineSignatureFields()}
             </div>
           </CardContent>
         </Card>
