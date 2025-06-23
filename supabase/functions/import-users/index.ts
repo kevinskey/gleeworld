@@ -139,7 +139,32 @@ serve(async (req) => {
       errors: [] as string[]
     }
 
-    // Process each user individually with proper error handling
+    // Get all existing users and profiles upfront for efficient checking
+    const { data: existingAuthUsers } = await supabaseClient.auth.admin.listUsers()
+    const { data: existingProfiles } = await supabaseClient
+      .from('profiles')
+      .select('id, email')
+
+    // Create lookup maps for efficient checking
+    const authUsersByEmail = new Map()
+    const authUsersById = new Map()
+    existingAuthUsers?.users?.forEach(user => {
+      if (user.email) {
+        authUsersByEmail.set(user.email.toLowerCase(), user)
+        authUsersById.set(user.id, user)
+      }
+    })
+
+    const profilesByEmail = new Map()
+    const profilesById = new Map()
+    existingProfiles?.forEach(profile => {
+      if (profile.email) {
+        profilesByEmail.set(profile.email.toLowerCase(), profile)
+        profilesById.set(profile.id, profile)
+      }
+    })
+
+    // Process each user individually with comprehensive error handling
     for (const userData of usersToImport) {
       try {
         if (!userData.email) {
@@ -148,7 +173,7 @@ serve(async (req) => {
           continue
         }
 
-        const normalizedEmail = userData.email.toLowerCase()
+        const normalizedEmail = userData.email.toLowerCase().trim()
         
         // Validate and normalize role value
         let userRole = 'user' // default role
@@ -163,52 +188,59 @@ serve(async (req) => {
 
         console.log(`Processing user ${userData.email} with role: ${userRole}`)
 
-        // Check if user already exists in auth.users by email
-        const { data: existingAuthUsers } = await supabaseClient.auth.admin.listUsers()
-        const existingAuthUser = existingAuthUsers?.users?.find(u => u.email?.toLowerCase() === normalizedEmail)
+        // Check if user already exists in both auth and profiles
+        const existingAuthUser = authUsersByEmail.get(normalizedEmail)
+        const existingProfile = profilesByEmail.get(normalizedEmail)
         
-        if (existingAuthUser) {
-          // User exists in auth, check if profile exists
-          const { data: existingProfile } = await supabaseClient
-            .from('profiles')
-            .select('id')
-            .eq('id', existingAuthUser.id)
-            .maybeSingle()
+        // Case 1: User exists in both auth and profiles - skip
+        if (existingAuthUser && existingProfile) {
+          results.failed++
+          results.errors.push(`User already exists: ${userData.email}`)
+          continue
+        }
+        
+        // Case 2: User exists in auth but not in profiles - create profile only
+        if (existingAuthUser && !existingProfile) {
+          console.log(`User exists in auth but missing profile: ${userData.email}`)
           
-          if (existingProfile) {
+          // Check if profile exists by ID (might have different email)
+          if (profilesById.has(existingAuthUser.id)) {
             results.failed++
-            results.errors.push(`User already exists: ${userData.email}`)
+            results.errors.push(`Profile with ID already exists for ${userData.email}`)
             continue
-          } else {
-            // User exists in auth but no profile, create profile
-            try {
-              const { error: profileError } = await supabaseClient
-                .from('profiles')
-                .insert({
-                  id: existingAuthUser.id,
-                  email: userData.email,
-                  full_name: userData.full_name || '',
-                  role: userRole
-                })
+          }
+          
+          try {
+            const { error: profileError } = await supabaseClient
+              .from('profiles')
+              .insert({
+                id: existingAuthUser.id,
+                email: userData.email,
+                full_name: userData.full_name || '',
+                role: userRole
+              })
 
-              if (profileError) {
-                results.failed++
-                results.errors.push(`Failed to create profile for existing user ${userData.email}: ${profileError.message}`)
-                continue
-              }
-
-              results.success++
-              console.log(`Created profile for existing user: ${userData.email} with role: ${userRole}`)
-              continue
-            } catch (profileCreateError) {
+            if (profileError) {
               results.failed++
-              results.errors.push(`Error creating profile for existing user ${userData.email}: ${profileCreateError.message}`)
+              results.errors.push(`Failed to create profile for existing user ${userData.email}: ${profileError.message}`)
               continue
             }
+
+            // Add to our tracking
+            profilesByEmail.set(normalizedEmail, { id: existingAuthUser.id, email: userData.email })
+            profilesById.set(existingAuthUser.id, { id: existingAuthUser.id, email: userData.email })
+
+            results.success++
+            console.log(`Created profile for existing user: ${userData.email} with role: ${userRole}`)
+            continue
+          } catch (profileCreateError) {
+            results.failed++
+            results.errors.push(`Error creating profile for existing user ${userData.email}: ${profileCreateError.message}`)
+            continue
           }
         }
 
-        // User doesn't exist in auth, create new user and profile
+        // Case 3: User doesn't exist in auth - create both auth user and profile
         console.log(`Creating new user ${userData.email} with role: ${userRole}`)
 
         // Create user in auth.users
@@ -232,8 +264,28 @@ serve(async (req) => {
           continue
         }
 
+        // Add to our tracking immediately
+        authUsersByEmail.set(normalizedEmail, authUser.user)
+        authUsersById.set(authUser.user.id, authUser.user)
+
         // Create profile for the new user
         try {
+          // Double-check profile doesn't exist by ID before creating
+          if (profilesById.has(authUser.user.id)) {
+            results.failed++
+            results.errors.push(`Profile with ID ${authUser.user.id} already exists for ${userData.email}`)
+            
+            // Clean up auth user
+            try {
+              await supabaseClient.auth.admin.deleteUser(authUser.user.id)
+              authUsersByEmail.delete(normalizedEmail)
+              authUsersById.delete(authUser.user.id)
+            } catch (cleanupError) {
+              console.error(`Failed to cleanup auth user ${authUser.user.id}:`, cleanupError)
+            }
+            continue
+          }
+
           const { error: profileError } = await supabaseClient
             .from('profiles')
             .insert({
@@ -250,11 +302,17 @@ serve(async (req) => {
             // Clean up auth user if profile creation failed
             try {
               await supabaseClient.auth.admin.deleteUser(authUser.user.id)
+              authUsersByEmail.delete(normalizedEmail)
+              authUsersById.delete(authUser.user.id)
             } catch (cleanupError) {
               console.error(`Failed to cleanup auth user ${authUser.user.id}:`, cleanupError)
             }
             continue
           }
+
+          // Add to our tracking
+          profilesByEmail.set(normalizedEmail, { id: authUser.user.id, email: userData.email })
+          profilesById.set(authUser.user.id, { id: authUser.user.id, email: userData.email })
 
           results.success++
           console.log(`Successfully imported user: ${userData.email} with role: ${userRole}`)
@@ -266,6 +324,8 @@ serve(async (req) => {
           // Clean up auth user if profile creation failed
           try {
             await supabaseClient.auth.admin.deleteUser(authUser.user.id)
+            authUsersByEmail.delete(normalizedEmail)
+            authUsersById.delete(authUser.user.id)
           } catch (cleanupError) {
             console.error(`Failed to cleanup auth user ${authUser.user.id}:`, cleanupError)
           }
