@@ -70,7 +70,7 @@ export const TemplateCard = ({
           </div>
 
           <div className="flex flex-col space-y-2">
-            {/* Primary Use Template Button */}
+            {/* Primary Use Template Button - Now creates contract directly */}
             <Button 
               onClick={handleUseTemplate}
               className="w-full"
@@ -79,12 +79,12 @@ export const TemplateCard = ({
               {isCreating ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Creating...
+                  Creating Contract...
                 </>
               ) : (
                 <>
                   <FileDown className="h-4 w-4 mr-2" />
-                  Use Template
+                  Create Contract
                 </>
               )}
             </Button>
