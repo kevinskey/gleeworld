@@ -17,7 +17,6 @@ interface ContractTemplatesProps {
 
 export const ContractTemplates = ({ onUseTemplate, onContractCreated }: ContractTemplatesProps) => {
   const { templates, loading, createTemplate, deleteTemplate } = useContractTemplates();
-  const { createContractFromTemplate, isCreating } = useContractFromTemplate();
   const { toast } = useToast();
   
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
@@ -116,11 +115,6 @@ export const ContractTemplates = ({ onUseTemplate, onContractCreated }: Contract
         title: "Template Applied",
         description: `Template "${template.name}" has been applied to the upload form`,
       });
-    } else {
-      const result = await createContractFromTemplate(template);
-      if (result && onContractCreated) {
-        onContractCreated();
-      }
     }
   };
 
@@ -170,8 +164,6 @@ export const ContractTemplates = ({ onUseTemplate, onContractCreated }: Contract
             <TemplateCard
               key={template.id}
               template={template}
-              isCreating={isCreating}
-              onUse={handleUseTemplate}
               onView={() => {
                 setSelectedTemplate(template);
                 setIsViewOpen(true);
@@ -179,6 +171,7 @@ export const ContractTemplates = ({ onUseTemplate, onContractCreated }: Contract
               onEdit={handleEditTemplate}
               onCopy={handleCopyTemplate}
               onDelete={handleDeleteTemplate}
+              onContractCreated={onContractCreated}
             />
           ))}
         </div>
