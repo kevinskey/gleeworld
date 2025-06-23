@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
-import { Download, Upload, Users, AlertCircle, CheckCircle } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Download, Upload, Users, AlertCircle, CheckCircle, ChevronDown, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { CsvUploadSection } from "./CsvUploadSection";
@@ -27,6 +28,9 @@ export const UserImport = () => {
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [manualUsers, setManualUsers] = useState("");
   const [jsonValidationError, setJsonValidationError] = useState<string | null>(null);
+  const [csvSectionOpen, setCsvSectionOpen] = useState(false);
+  const [apiSectionOpen, setApiSectionOpen] = useState(false);
+  const [manualSectionOpen, setManualSectionOpen] = useState(false);
   const { toast } = useToast();
 
   const validateJsonInput = (jsonString: string) => {
@@ -264,119 +268,171 @@ export const UserImport = () => {
   return (
     <div className="space-y-6">
       {/* CSV Import */}
-      <CsvUploadSection 
-        onImportResult={setImportResult}
-        isImporting={isImporting}
-        setIsImporting={setIsImporting}
-        progress={progress}
-        setProgress={setProgress}
-      />
+      <Collapsible open={csvSectionOpen} onOpenChange={setCsvSectionOpen}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Upload className="h-5 w-5" />
+                  <span>CSV Import</span>
+                </div>
+                {csvSectionOpen ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </CardTitle>
+              <CardDescription>
+                Upload a CSV file to import multiple users at once
+              </CardDescription>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent>
+              <CsvUploadSection 
+                onImportResult={setImportResult}
+                isImporting={isImporting}
+                setIsImporting={setIsImporting}
+                progress={progress}
+                setProgress={setProgress}
+              />
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       {/* API Import */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Download className="h-5 w-5" />
-            <span>Import from reader.gleeworld.org</span>
-          </CardTitle>
-          <CardDescription>
-            Import users directly from the reader.gleeworld.org API
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="apiUrl">API URL</Label>
-              <Input
-                id="apiUrl"
-                value={apiUrl}
-                onChange={(e) => setApiUrl(e.target.value)}
-                placeholder="https://reader.gleeworld.org/api/users"
-              />
-            </div>
-            <div>
-              <Label htmlFor="apiKey">API Key</Label>
-              <Input
-                id="apiKey"
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Enter API key"
-              />
-            </div>
-          </div>
-          
-          <Button 
-            onClick={handleApiImport}
-            disabled={isImporting}
-            className="w-full"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            {isImporting ? "Importing..." : "Import Users from API"}
-          </Button>
-        </CardContent>
-      </Card>
+      <Collapsible open={apiSectionOpen} onOpenChange={setApiSectionOpen}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Download className="h-5 w-5" />
+                  <span>Import from reader.gleeworld.org</span>
+                </div>
+                {apiSectionOpen ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </CardTitle>
+              <CardDescription>
+                Import users directly from the reader.gleeworld.org API
+              </CardDescription>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="apiUrl">API URL</Label>
+                  <Input
+                    id="apiUrl"
+                    value={apiUrl}
+                    onChange={(e) => setApiUrl(e.target.value)}
+                    placeholder="https://reader.gleeworld.org/api/users"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="apiKey">API Key</Label>
+                  <Input
+                    id="apiKey"
+                    type="password"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder="Enter API key"
+                  />
+                </div>
+              </div>
+              
+              <Button 
+                onClick={handleApiImport}
+                disabled={isImporting}
+                className="w-full"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {isImporting ? "Importing..." : "Import Users from API"}
+              </Button>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       {/* Manual Import */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Upload className="h-5 w-5" />
-            <span>Manual Import</span>
-          </CardTitle>
-          <CardDescription>
-            Paste user data in JSON format for manual import
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="manualUsers">User Data (JSON)</Label>
-            <Textarea
-              id="manualUsers"
-              value={manualUsers}
-              onChange={(e) => handleJsonChange(e.target.value)}
-              placeholder={exampleJson}
-              rows={10}
-              className={`font-mono ${jsonValidationError ? 'border-red-300' : ''}`}
-            />
-            {jsonValidationError && (
-              <Alert className="mt-2">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="text-red-600">
-                  {jsonValidationError}
-                </AlertDescription>
-              </Alert>
-            )}
-            {manualUsers.trim() && !jsonValidationError && (
-              <Alert className="mt-2">
-                <CheckCircle className="h-4 w-4" />
-                <AlertDescription className="text-green-600">
-                  JSON format is valid. Ready to import {JSON.parse(manualUsers).length} users.
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
-          
-          <div className="text-sm text-gray-600">
-            <p className="font-medium">Required fields:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li><code>email</code> - Valid email address (required)</li>
-              <li><code>full_name</code> - User's full name (optional)</li>
-              <li><code>role</code> - User role: "user", "admin", or "super-admin" (optional, defaults to "user")</li>
-            </ul>
-          </div>
-          
-          <Button 
-            onClick={handleManualImport}
-            disabled={isImporting || !!jsonValidationError || !manualUsers.trim()}
-            variant="outline"
-            className="w-full"
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            {isImporting ? "Importing..." : "Import Users Manually"}
-          </Button>
-        </CardContent>
-      </Card>
+      <Collapsible open={manualSectionOpen} onOpenChange={setManualSectionOpen}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Upload className="h-5 w-5" />
+                  <span>Manual Import</span>
+                </div>
+                {manualSectionOpen ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </CardTitle>
+              <CardDescription>
+                Paste user data in JSON format for manual import
+              </CardDescription>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="manualUsers">User Data (JSON)</Label>
+                <Textarea
+                  id="manualUsers"
+                  value={manualUsers}
+                  onChange={(e) => handleJsonChange(e.target.value)}
+                  placeholder={exampleJson}
+                  rows={10}
+                  className={`font-mono ${jsonValidationError ? 'border-red-300' : ''}`}
+                />
+                {jsonValidationError && (
+                  <Alert className="mt-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-red-600">
+                      {jsonValidationError}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {manualUsers.trim() && !jsonValidationError && (
+                  <Alert className="mt-2">
+                    <CheckCircle className="h-4 w-4" />
+                    <AlertDescription className="text-green-600">
+                      JSON format is valid. Ready to import {JSON.parse(manualUsers).length} users.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+              
+              <div className="text-sm text-gray-600">
+                <p className="font-medium">Required fields:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li><code>email</code> - Valid email address (required)</li>
+                  <li><code>full_name</code> - User's full name (optional)</li>
+                  <li><code>role</code> - User role: "user", "admin", or "super-admin" (optional, defaults to "user")</li>
+                </ul>
+              </div>
+              
+              <Button 
+                onClick={handleManualImport}
+                disabled={isImporting || !!jsonValidationError || !manualUsers.trim()}
+                variant="outline"
+                className="w-full"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {isImporting ? "Importing..." : "Import Users Manually"}
+              </Button>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       {/* Progress */}
       {isImporting && (
