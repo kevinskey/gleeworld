@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Download, Upload, Users, AlertCircle, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { CsvUploadSection } from "./CsvUploadSection";
 
 interface ImportResult {
   success: number;
@@ -263,6 +263,15 @@ export const UserImport = () => {
 
   return (
     <div className="space-y-6">
+      {/* CSV Import */}
+      <CsvUploadSection 
+        onImportResult={setImportResult}
+        isImporting={isImporting}
+        setIsImporting={setIsImporting}
+        progress={progress}
+        setProgress={setProgress}
+      />
+
       {/* API Import */}
       <Card>
         <CardHeader>

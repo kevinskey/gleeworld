@@ -11,6 +11,7 @@ interface ImportUser {
   email: string;
   full_name?: string;
   role?: string;
+  raw_user_meta_data?: any;
 }
 
 interface ImportRequest {
@@ -62,6 +63,8 @@ serve(async (req) => {
     let usersToImport: ImportUser[] = []
 
     if (source === 'manual' && users) {
+      usersToImport = users
+    } else if (source === 'csv' && users) {
       usersToImport = users
     } else if (source === 'reader.gleeworld.org' && apiUrl && apiKey) {
       console.log(`Attempting to fetch from: ${apiUrl}`)
@@ -160,7 +163,15 @@ serve(async (req) => {
           }
         }
 
-        console.log(`Processing user: ${userData.email} with role: ${userRole}`)
+        // Extract full_name from raw_user_meta_data if not directly provided
+        let fullName = userData.full_name || ''
+        if (!fullName && userData.raw_user_meta_data) {
+          fullName = userData.raw_user_meta_data.full_name || 
+                   userData.raw_user_meta_data.name || 
+                   `${userData.raw_user_meta_data.first_name || ''} ${userData.raw_user_meta_data.last_name || ''}`.trim()
+        }
+
+        console.log(`Processing user: ${userData.email} with role: ${userRole} and name: ${fullName}`)
 
         // Check if user already exists in auth
         const { data: existingAuthUsers } = await supabaseClient.auth.admin.listUsers()
@@ -175,7 +186,7 @@ serve(async (req) => {
             .upsert({
               id: existingUser.id,
               email: userData.email,
-              full_name: userData.full_name || '',
+              full_name: fullName,
               role: userRole
             })
 
@@ -191,13 +202,17 @@ serve(async (req) => {
         } else {
           console.log(`Creating new user: ${userData.email}`)
 
+          // Prepare user metadata
+          const userMetadata = {
+            full_name: fullName,
+            ...(userData.raw_user_meta_data || {})
+          }
+
           // Create new user in auth
           const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
             email: userData.email,
             email_confirm: true,
-            user_metadata: {
-              full_name: userData.full_name || '',
-            }
+            user_metadata: userMetadata
           })
 
           if (authError) {
@@ -221,7 +236,7 @@ serve(async (req) => {
             .insert({
               id: authData.user.id,
               email: userData.email,
-              full_name: userData.full_name || '',
+              full_name: fullName,
               role: userRole
             })
 
