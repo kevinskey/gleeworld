@@ -24,7 +24,13 @@ const ContractSigning = () => {
 
   useEffect(() => {
     const fetchContract = async () => {
-      if (!contractId) return;
+      if (!contractId) {
+        console.log("No contract ID provided in URL");
+        setLoading(false);
+        return;
+      }
+
+      console.log("Fetching contract with ID:", contractId);
 
       try {
         const { data, error } = await supabase
@@ -43,6 +49,7 @@ const ContractSigning = () => {
           return;
         }
 
+        console.log("Contract found:", data);
         setContract(data);
       } catch (error) {
         console.error('Error:', error);
@@ -109,7 +116,12 @@ const ContractSigning = () => {
           <CardContent className="pt-6 text-center">
             <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
             <h2 className="text-xl font-semibold mb-2">Contract Not Found</h2>
-            <p className="text-gray-600">The contract you're looking for doesn't exist or has been removed.</p>
+            <p className="text-gray-600 mb-4">
+              The contract you're looking for doesn't exist or has been removed.
+            </p>
+            <p className="text-sm text-gray-500">
+              Contract ID: {contractId}
+            </p>
           </CardContent>
         </Card>
       </div>
