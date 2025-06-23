@@ -84,7 +84,7 @@ export const ContractContentProcessor = ({
     lines.forEach((line, index) => {
       // Check if this line contains "Printed Name: Dr. Kevin P. Johnson"
       if (line.includes('Printed Name:') && line.includes('Dr. Kevin P. Johnson')) {
-        // Add admin signature before this line
+        // Add admin signature BEFORE this line
         if (adminSignature) {
           processedLines.push(
             <div key={`embedded-admin-signature-${adminSignature.fieldId}`} className="mb-4">
