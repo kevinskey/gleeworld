@@ -114,11 +114,10 @@ export const useTemplateOperations = () => {
     try {
       console.log('Starting template update process...', template.id);
       
-      // Prepare update data with explicit field mapping
+      // Prepare update data with only fields that exist in the database
       const updateData: any = {
         name: template.name.trim(),
         template_content: template.template_content.trim(),
-        contract_type: template.contract_type || 'other',
         updated_at: new Date().toISOString(),
       };
 
@@ -133,7 +132,11 @@ export const useTemplateOperations = () => {
           console.log('Header image uploaded successfully:', header_image_url);
         } catch (imageError) {
           console.error('Error uploading header image:', imageError);
-          // Continue with update even if image upload fails
+          toast({
+            title: "Warning",
+            description: "Template will be updated but image upload failed",
+            variant: "destructive",
+          });
         }
       }
 
@@ -158,8 +161,7 @@ export const useTemplateOperations = () => {
           resourceType: RESOURCE_TYPES.TEMPLATE,
           resourceId: template.id,
           details: {
-            templateName: template.name,
-            contractType: template.contract_type || 'other'
+            templateName: template.name
           }
         });
       } catch (logError) {

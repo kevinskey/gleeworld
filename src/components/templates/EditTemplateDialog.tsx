@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Loader2 } from "lucide-react";
 import type { ContractTemplate } from "@/hooks/useContractTemplates";
 
@@ -28,7 +27,6 @@ export const EditTemplateDialog = ({ isOpen, onOpenChange, template, onUpdate, i
         id: template.id,
         name: template.name || '',
         template_content: template.template_content || '',
-        contract_type: template.contract_type || 'other',
         header_image: null
       });
       setImagePreview(template.header_image_url || null);
@@ -72,7 +70,7 @@ export const EditTemplateDialog = ({ isOpen, onOpenChange, template, onUpdate, i
         <DialogHeader>
           <DialogTitle>Edit Template</DialogTitle>
           <DialogDescription>
-            Update the template name, content, contract type, and header image
+            Update the template name, content, and header image
           </DialogDescription>
         </DialogHeader>
         {editingTemplate && (
@@ -85,25 +83,6 @@ export const EditTemplateDialog = ({ isOpen, onOpenChange, template, onUpdate, i
                 onChange={(e) => setEditingTemplate({...editingTemplate, name: e.target.value})}
                 placeholder="Service Agreement Template"
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-contract-type">Contract Type</Label>
-              <Select 
-                value={editingTemplate.contract_type || 'other'} 
-                onValueChange={(value) => setEditingTemplate({...editingTemplate, contract_type: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select contract type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="service">Service Agreement</SelectItem>
-                  <SelectItem value="nda">Non-Disclosure Agreement</SelectItem>
-                  <SelectItem value="employment">Employment Contract</SelectItem>
-                  <SelectItem value="lease">Lease Agreement</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="space-y-2">
