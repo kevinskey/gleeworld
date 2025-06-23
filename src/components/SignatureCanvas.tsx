@@ -73,12 +73,7 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (disabled) return;
     
-    // Completely stop all event propagation
     e.preventDefault();
-    e.stopPropagation();
-    if (e.nativeEvent) {
-      e.nativeEvent.stopImmediatePropagation();
-    }
     
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -96,12 +91,7 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing || disabled) return;
 
-    // Completely stop all event propagation
     e.preventDefault();
-    e.stopPropagation();
-    if (e.nativeEvent) {
-      e.nativeEvent.stopImmediatePropagation();
-    }
     
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -121,28 +111,14 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     }
   };
 
-  const stopDrawing = (e?: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      if (e.nativeEvent) {
-        e.nativeEvent.stopImmediatePropagation();
-      }
-    }
-    
+  const stopDrawing = () => {
     if (isDrawing) {
       setIsDrawing(false);
       console.log('Stopped drawing signature');
     }
   };
 
-  const clearSignature = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.nativeEvent) {
-      e.nativeEvent.stopImmediatePropagation();
-    }
-    
+  const clearSignature = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -157,74 +133,56 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     console.log('Signature cleared');
   };
 
-  // Wrapper function to prevent all event bubbling
-  const handleWrapperEvents = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.nativeEvent) {
-      e.nativeEvent.stopImmediatePropagation();
-    }
-  };
-
   return (
-    <div 
-      onClick={handleWrapperEvents}
-      onMouseDown={handleWrapperEvents}
-      onMouseUp={handleWrapperEvents}
-      onTouchStart={handleWrapperEvents}
-      onTouchEnd={handleWrapperEvents}
-      onTouchMove={handleWrapperEvents}
-    >
-      <Card>
-        <CardHeader className={isMobile ? 'pb-2' : ''}>
-          <CardTitle className={`flex items-center space-x-2 ${isMobile ? 'text-base' : ''}`}>
-            <Check className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
-            <span>Your Signature</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className={`space-y-4 ${isMobile ? 'space-y-3' : ''}`}>
-          <div className="border rounded-lg p-4 bg-gray-50">
-            <canvas
-              ref={canvasRef}
-              className={`border bg-white rounded w-full mx-auto block ${
-                disabled ? 'cursor-not-allowed opacity-50' : 'cursor-crosshair'
-              }`}
-              style={{ touchAction: 'none', maxWidth: '100%' }}
-              onMouseDown={startDrawing}
-              onMouseMove={draw}
-              onMouseUp={stopDrawing}
-              onMouseLeave={stopDrawing}
-              onTouchStart={startDrawing}
-              onTouchMove={draw}
-              onTouchEnd={stopDrawing}
-            />
-          </div>
+    <Card>
+      <CardHeader className={isMobile ? 'pb-2' : ''}>
+        <CardTitle className={`flex items-center space-x-2 ${isMobile ? 'text-base' : ''}`}>
+          <Check className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+          <span>Your Signature</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className={`space-y-4 ${isMobile ? 'space-y-3' : ''}`}>
+        <div className="border rounded-lg p-4 bg-gray-50">
+          <canvas
+            ref={canvasRef}
+            className={`border bg-white rounded w-full mx-auto block ${
+              disabled ? 'cursor-not-allowed opacity-50' : 'cursor-crosshair'
+            }`}
+            style={{ touchAction: 'none', maxWidth: '100%' }}
+            onMouseDown={startDrawing}
+            onMouseMove={draw}
+            onMouseUp={stopDrawing}
+            onMouseLeave={stopDrawing}
+            onTouchStart={startDrawing}
+            onTouchMove={draw}
+            onTouchEnd={stopDrawing}
+          />
+        </div>
+        
+        <div className={`flex justify-between items-center ${isMobile ? 'flex-col gap-2' : ''}`}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={clearSignature}
+            disabled={disabled || !hasSignature}
+            className={isMobile ? 'w-full' : ''}
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Clear Signature
+          </Button>
           
-          <div className={`flex justify-between items-center ${isMobile ? 'flex-col gap-2' : ''}`}>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={clearSignature}
-              disabled={disabled || !hasSignature}
-              className={isMobile ? 'w-full' : ''}
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Clear Signature
-            </Button>
-            
-            {hasSignature && (
-              <span className={`text-sm text-green-600 flex items-center ${isMobile ? 'justify-center' : ''}`}>
-                <Check className="h-4 w-4 mr-1" />
-                Signature captured
-              </span>
-            )}
-          </div>
-          
-          <p className={`text-sm text-gray-600 text-center ${isMobile ? 'text-xs' : ''}`}>
-            Please sign in the box above using your {isMobile ? 'finger or' : 'mouse or'} touchscreen
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+          {hasSignature && (
+            <span className={`text-sm text-green-600 flex items-center ${isMobile ? 'justify-center' : ''}`}>
+              <Check className="h-4 w-4 mr-1" />
+              Signature captured
+            </span>
+          )}
+        </div>
+        
+        <p className={`text-sm text-gray-600 text-center ${isMobile ? 'text-xs' : ''}`}>
+          Please sign in the box above using your {isMobile ? 'finger or' : 'mouse or'} touchscreen
+        </p>
+      </CardContent>
+    </Card>
   );
 };
