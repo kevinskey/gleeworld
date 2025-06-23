@@ -69,19 +69,16 @@ export const SignatureFieldOverlay = ({
     return new Date().toLocaleDateString();
   };
 
-  // Prevent any clicks from bubbling up when modal is active
-  const handleModalOverlayClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // Only close if clicking the overlay, not the content
+  // Handle overlay click - only close if clicking the dark background
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    // Only close if the click target is the overlay itself (dark background)
     if (e.target === e.currentTarget) {
       handleCancel();
     }
   };
 
-  // Completely prevent any events from the modal content
-  const handleModalContentClick = (e: React.MouseEvent) => {
-    e.preventDefault();
+  // Prevent any events from bubbling up from modal content
+  const preventEventBubbling = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
   };
 
@@ -89,15 +86,15 @@ export const SignatureFieldOverlay = ({
     return (
       <div 
         className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
-        onClick={handleModalOverlayClick}
-        onTouchStart={(e) => e.stopPropagation()}
-        onTouchEnd={(e) => e.stopPropagation()}
+        onClick={handleOverlayClick}
+        onMouseDown={handleOverlayClick}
       >
         <div 
           className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
-          onClick={handleModalContentClick}
-          onTouchStart={(e) => e.stopPropagation()}
-          onTouchEnd={(e) => e.stopPropagation()}
+          onClick={preventEventBubbling}
+          onMouseDown={preventEventBubbling}
+          onTouchStart={preventEventBubbling}
+          onTouchEnd={preventEventBubbling}
         >
           <div className="p-6">
             <div className="mb-4">
@@ -111,9 +108,11 @@ export const SignatureFieldOverlay = ({
             {field.type === 'signature' && (
               <div className="space-y-4">
                 <div 
-                  onClick={handleModalContentClick}
-                  onTouchStart={(e) => e.stopPropagation()}
-                  onTouchEnd={(e) => e.stopPropagation()}
+                  onClick={preventEventBubbling}
+                  onMouseDown={preventEventBubbling}
+                  onTouchStart={preventEventBubbling}
+                  onTouchEnd={preventEventBubbling}
+                  style={{ isolation: 'isolate' }}
                 >
                   <SignatureCanvas 
                     onSignatureChange={handleComplete}
