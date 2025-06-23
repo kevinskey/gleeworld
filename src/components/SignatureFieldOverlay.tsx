@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
@@ -52,11 +51,6 @@ export const SignatureFieldOverlay = ({
       onFieldComplete(field.id, fieldValue);
       setIsActive(false);
     }
-  };
-
-  const handleCancel = () => {
-    console.log('Canceling field input for field', field.id);
-    setIsActive(false);
   };
 
   const getFieldIcon = () => {
@@ -130,12 +124,6 @@ export const SignatureFieldOverlay = ({
                   >
                     Use Today
                   </Button>
-                  <Button 
-                    onClick={handleTextComplete}
-                    disabled={!fieldValue}
-                  >
-                    Save
-                  </Button>
                 </div>
               </div>
             )}
@@ -150,14 +138,6 @@ export const SignatureFieldOverlay = ({
                   className="w-full"
                   maxLength={field.type === 'initials' ? 3 : undefined}
                 />
-                <div className="flex gap-2 justify-end">
-                  <Button 
-                    onClick={handleTextComplete}
-                    disabled={!fieldValue.trim()}
-                  >
-                    Save
-                  </Button>
-                </div>
               </div>
             )}
           </div>
