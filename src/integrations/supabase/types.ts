@@ -737,6 +737,10 @@ export type Database = {
         }
         Returns: Json
       }
+      current_user_is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       get_all_user_profiles: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -746,6 +750,10 @@ export type Database = {
           role: string
           created_at: string
         }[]
+      }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       has_role: {
         Args: {
