@@ -284,8 +284,7 @@ const ContractSigning = () => {
       
       // Look for "ARTIST:" or artist name patterns to insert signature field after
       if (line.toLowerCase().includes('artist:') || 
-          line.toLowerCase().includes('artist name') ||
-          (selectedUserId && line.includes(signatureFields.find(f => f.type === 'signature')?.label?.toLowerCase() || 'artist'))) {
+          line.toLowerCase().includes('artist name')) {
         
         // Find the artist signature field
         const artistSignatureField = signatureFields.find(f => 
