@@ -39,10 +39,17 @@ export const SignatureFieldOverlay = ({
 }: SignatureFieldOverlayProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [fieldValue, setFieldValue] = useState(value || "");
+  const [signatureData, setSignatureData] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
-  const handleSignatureComplete = (signatureData: string | null) => {
-    console.log('Signature completion for field', field.id, 'with signature data:', signatureData ? 'present' : 'null');
+  const handleSignatureChange = (signature: string | null) => {
+    console.log('Signature change for field', field.id, 'with signature data:', signature ? 'present' : 'null');
+    setSignatureData(signature);
+    // Don't close immediately, let user finish signing
+  };
+
+  const handleSignatureComplete = () => {
+    console.log('Manual signature completion for field', field.id);
     
     if (signatureData && signatureData.trim()) {
       console.log('Valid signature data received, completing field');
@@ -50,7 +57,7 @@ export const SignatureFieldOverlay = ({
       onFieldComplete(field.id, signatureData);
       setIsOpen(false);
     } else {
-      console.log('No valid signature data received');
+      console.log('No valid signature data to complete');
     }
   };
 
@@ -114,10 +121,21 @@ export const SignatureFieldOverlay = ({
             
             <div className="mt-6">
               {field.type === 'signature' && (
-                <SignatureCanvas 
-                  onSignatureChange={handleSignatureComplete}
-                  disabled={false}
-                />
+                <div className="space-y-4">
+                  <SignatureCanvas 
+                    onSignatureChange={handleSignatureChange}
+                    disabled={false}
+                  />
+                  <div className="flex justify-end">
+                    <Button 
+                      onClick={handleSignatureComplete}
+                      disabled={!signatureData}
+                      className="w-full"
+                    >
+                      Complete Signature
+                    </Button>
+                  </div>
+                </div>
               )}
 
               {field.type === 'date' && (
