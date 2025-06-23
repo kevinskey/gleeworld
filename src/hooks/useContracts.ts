@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -104,6 +105,21 @@ export const useContracts = () => {
       console.log('Attempting to delete contract:', contractId);
       console.log('Current user:', user?.id);
 
+      // First, delete any related contract signatures
+      const { error: signaturesError } = await supabase
+        .from('contract_signatures_v2')
+        .delete()
+        .eq('contract_id', contractId);
+
+      if (signaturesError) {
+        console.error('Error deleting contract signatures:', signaturesError);
+        // Continue with contract deletion even if signature deletion fails
+        console.log('Continuing with contract deletion despite signature deletion error');
+      } else {
+        console.log('Contract signatures deleted successfully');
+      }
+
+      // Then delete the contract
       const { error } = await supabase
         .from('contracts_v2')
         .delete()
