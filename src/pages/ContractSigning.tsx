@@ -79,22 +79,28 @@ const ContractSigning = () => {
 
     setSigning(true);
     try {
-      const { error } = await supabase
-        .from('contracts_v2')
-        .update({ 
-          status: 'completed',
-          // Note: In a real app, you'd want to store the signature data in a separate field
-          // For now, we'll just mark it as completed
-        })
-        .eq('id', contract.id);
+      console.log("Calling complete-contract-signing function...");
+      
+      const { data, error } = await supabase.functions.invoke('complete-contract-signing', {
+        body: {
+          contractId: contract.id,
+          signatureData: signatureData,
+          // You can add recipient email/name here if needed
+          // recipientEmail: "user@example.com",
+          // recipientName: "User Name"
+        }
+      });
 
       if (error) {
+        console.error('Error from edge function:', error);
         throw error;
       }
 
+      console.log('Contract signing completed:', data);
+
       toast({
         title: "Success",
-        description: "Contract signed successfully!",
+        description: "Contract signed successfully! PDF generated and stored.",
       });
 
       setContract({ ...contract, status: 'completed' });
@@ -102,13 +108,13 @@ const ContractSigning = () => {
       // Redirect to reader.gleeworld.org after successful signing
       setTimeout(() => {
         window.location.href = 'https://reader.gleeworld.org';
-      }, 2000); // 2 second delay to show the success message
+      }, 3000); // 3 second delay to show the success message
 
     } catch (error) {
       console.error('Error signing contract:', error);
       toast({
         title: "Error",
-        description: "Failed to sign contract",
+        description: "Failed to sign contract. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -187,7 +193,7 @@ const ContractSigning = () => {
                 {signing ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Signing Contract...
+                    Processing Signature...
                   </>
                 ) : (
                   'Complete Contract Signing'
@@ -200,7 +206,7 @@ const ContractSigning = () => {
         {contract.status === 'completed' && (
           <div className="text-center py-6">
             <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full">
-              ✓ Contract Signed Successfully - Redirecting to reader.gleeworld.org...
+              ✓ Contract Signed Successfully - PDF Generated & Stored - Redirecting to reader.gleeworld.org...
             </div>
           </div>
         )}
