@@ -8,6 +8,8 @@ import { Send, Loader2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useContracts } from "@/hooks/useContracts";
 import { useUsers } from "@/hooks/useUsers";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { SignatureFieldEditor, SignatureField } from "./SignatureFieldEditor";
 import { UserSelectionSection } from "./upload/UserSelectionSection";
@@ -51,6 +53,8 @@ export const DocumentUpload = ({
   const { toast } = useToast();
   const { createContract } = useContracts();
   const { users, loading: usersLoading } = useUsers();
+  const { user } = useAuth();
+  const { displayName } = useUserProfile(user);
 
   // Pre-fill form when template content is provided
   useEffect(() => {
@@ -58,7 +62,11 @@ export const DocumentUpload = ({
       console.log('Applying template to form:', { templateName, templateContent });
       setOriginalTemplateContent(templateContent); // Store original template
       setContractContent(templateContent);
-      setContractTitle(templateName);
+      
+      // Generate contract title with user's name + template name
+      const username = displayName || user?.email || 'User';
+      const generatedTitle = `${username} - ${templateName}`;
+      setContractTitle(generatedTitle);
       
       // Set contract type from template
       if (templateContractType) {
@@ -100,10 +108,10 @@ export const DocumentUpload = ({
       
       toast({
         title: "Template Applied",
-        description: `Template "${templateName}" has been applied to the upload form`,
+        description: `Template "${templateName}" has been applied with title "${generatedTitle}"`,
       });
     }
-  }, [templateContent, templateName, templateHeaderImageUrl, templateContractType, toast]);
+  }, [templateContent, templateName, templateHeaderImageUrl, templateContractType, displayName, user?.email, toast]);
 
   // Function to update contract content with all current values
   const updateContractContent = (userInfo?: any, currentStipend?: string) => {

@@ -18,9 +18,8 @@ export const useContractFromTemplate = (onContractCreated?: () => void) => {
     try {
       const username = displayName || user?.email || 'User';
       
-      // Clean the template name by removing "Copy of" prefix if it exists
-      const cleanTemplateName = template.name.replace(/^Copy of /, '');
-      const contractTitle = `${username} - ${cleanTemplateName}`;
+      // Generate contract title with user's name + template name (no "Copy of" prefix removal needed)
+      const contractTitle = `${username} - ${template.name}`;
       
       // Don't pass template_id - we're using template content, not linking to template
       const contractData = await createContract({
@@ -40,7 +39,7 @@ export const useContractFromTemplate = (onContractCreated?: () => void) => {
         
         toast({
           title: "Success",
-          description: `Contract created from template "${cleanTemplateName}"`,
+          description: `Contract "${contractTitle}" created from template`,
         });
         return contractData;
       }
