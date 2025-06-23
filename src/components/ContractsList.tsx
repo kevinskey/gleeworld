@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -187,19 +188,8 @@ export const ContractsList = ({
 
     setSigningContract(contractToSign.id);
     try {
-      // First get the signature record for this contract
-      const { data: signatureData, error: signatureError } = await supabase
-        .from('contract_signatures_v2')
-        .select('*')
-        .eq('contract_id', contractToSign.id)
-        .eq('status', 'pending_admin_signature')
-        .single();
-
-      if (signatureError) {
-        console.error('Error fetching signature record:', signatureError);
-        throw signatureError;
-      }
-
+      console.log('Admin signing contract:', contractToSign.id);
+      
       // Get the current contract content to extract existing embedded signatures
       const { data: contractData, error: contractError } = await supabase
         .from('contracts_v2')
@@ -247,20 +237,47 @@ export const ContractsList = ({
 
       const adminSignedAt = new Date().toISOString();
 
-      // Update the signature record
-      const { error: updateError } = await supabase
+      // Check if there's an existing signature record, if not create one
+      const { data: existingSignatureRecord } = await supabase
         .from('contract_signatures_v2')
-        .update({
-          admin_signature_data: adminSignature,
-          admin_signed_at: adminSignedAt,
-          status: 'completed'
-        })
-        .eq('id', signatureData.id);
+        .select('*')
+        .eq('contract_id', contractToSign.id)
+        .maybeSingle();
 
-      if (updateError) {
-        console.error('Error updating signature record:', updateError);
-        throw updateError;
+      if (existingSignatureRecord) {
+        // Update existing signature record
+        const { error: updateError } = await supabase
+          .from('contract_signatures_v2')
+          .update({
+            admin_signature_data: adminSignature,
+            admin_signed_at: adminSignedAt,
+            status: 'completed'
+          })
+          .eq('id', existingSignatureRecord.id);
+
+        if (updateError) {
+          console.error('Error updating signature record:', updateError);
+          throw updateError;
+        }
+      } else {
+        // Create new signature record
+        const { error: createError } = await supabase
+          .from('contract_signatures_v2')
+          .insert({
+            contract_id: contractToSign.id,
+            admin_signature_data: adminSignature,
+            admin_signed_at: adminSignedAt,
+            status: 'completed',
+            date_signed: new Date().toLocaleDateString()
+          });
+
+        if (createError) {
+          console.error('Error creating signature record:', createError);
+          throw createError;
+        }
       }
+
+      console.log('Signature record handled successfully');
 
       // Update contract status and content
       const { error: contractUpdateError } = await supabase
@@ -276,6 +293,8 @@ export const ContractsList = ({
         console.error('Error updating contract:', contractUpdateError);
         throw contractUpdateError;
       }
+
+      console.log('Contract updated successfully');
 
       toast({
         title: "Contract Completed!",
