@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,11 +8,20 @@ import { DocumentUpload } from "@/components/DocumentUpload";
 import { ContractTemplates } from "@/components/ContractTemplates";
 import { SigningDashboard } from "@/components/SigningDashboard";
 import { AdminPanel } from "@/components/AdminPanel";
+import { ContractViewer } from "@/components/ContractViewer";
 import { useContracts } from "@/hooks/useContracts";
+import type { Contract } from "@/hooks/useContracts";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
   const { contracts, loading } = useContracts();
+
+  const handleViewContract = (contract: Contract) => {
+    setSelectedContract(contract);
+    setIsViewerOpen(true);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -146,7 +154,11 @@ const Index = () => {
                             {getStatusText(contract.status)}
                           </Badge>
                           <div className="flex space-x-2">
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleViewContract(contract)}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
                             <Button variant="outline" size="sm">
@@ -175,6 +187,13 @@ const Index = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Contract Viewer Dialog */}
+      <ContractViewer 
+        contract={selectedContract}
+        open={isViewerOpen}
+        onOpenChange={setIsViewerOpen}
+      />
     </div>
   );
 };
