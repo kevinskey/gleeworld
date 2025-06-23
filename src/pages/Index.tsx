@@ -21,7 +21,7 @@ const Index = () => {
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [templateContent, setTemplateContent] = useState<string>("");
   const [templateName, setTemplateName] = useState<string>("");
-  const { contracts, loading, deleteContract, refetch } = useContracts();
+  const { contracts, loading, error, deleteContract, refetch } = useContracts();
   const { user, loading: authLoading, signOut } = useAuth();
   const { displayName } = useUserProfile(user);
   const navigate = useNavigate();
@@ -122,9 +122,11 @@ const Index = () => {
             <ContractsList 
               contracts={contracts}
               loading={loading}
+              error={error}
               onViewContract={handleViewContract}
               onDeleteContract={deleteContract}
               onUploadContract={() => setActiveTab("upload")}
+              onRetry={refetch}
             />
           </TabsContent>
 

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -18,11 +19,16 @@ export interface Contract {
 export const useContracts = () => {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchContracts = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
+      console.log('Fetching contracts...');
+      
       const { data, error } = await supabase
         .from('contracts_v2')
         .select('*')
@@ -30,15 +36,29 @@ export const useContracts = () => {
         .eq('is_template', false)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Contracts fetched successfully:', data?.length || 0);
       setContracts(data || []);
     } catch (error) {
       console.error('Error fetching contracts:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load contracts",
-        variant: "destructive",
-      });
+      setError('Failed to load contracts');
+      setContracts([]);
+      
+      // Only show toast if it's not a network connectivity issue
+      if (error && typeof error === 'object' && 'message' in error) {
+        const errorMessage = (error as any).message;
+        if (!errorMessage.includes('Failed to fetch')) {
+          toast({
+            title: "Error",
+            description: "Failed to load contracts",
+            variant: "destructive",
+          });
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -158,11 +178,12 @@ export const useContracts = () => {
 
   useEffect(() => {
     fetchContracts();
-  }, []);
+  }, []); // Remove toast from dependencies to prevent infinite loop
 
   return {
     contracts,
     loading,
+    error,
     createContract,
     deleteContract,
     updateContractStatus,

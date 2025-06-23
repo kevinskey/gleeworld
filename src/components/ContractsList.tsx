@@ -2,16 +2,18 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText, Eye, Send, Inbox, Loader2, Trash2 } from "lucide-react";
+import { Upload, FileText, Eye, Send, Inbox, Loader2, Trash2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Contract } from "@/hooks/useContracts";
 
 interface ContractsListProps {
   contracts: Contract[];
   loading: boolean;
+  error?: string | null;
   onViewContract: (contract: Contract) => void;
   onDeleteContract: (contractId: string) => void;
   onUploadContract: () => void;
+  onRetry?: () => void;
 }
 
 const getStatusColor = (status: string) => {
@@ -37,9 +39,11 @@ const getStatusText = (status: string) => {
 export const ContractsList = ({ 
   contracts, 
   loading, 
+  error,
   onViewContract, 
   onDeleteContract, 
-  onUploadContract 
+  onUploadContract,
+  onRetry
 }: ContractsListProps) => {
   const { toast } = useToast();
 
@@ -64,7 +68,22 @@ export const ContractsList = ({
         <CardDescription>Manage your contract signing workflow</CardDescription>
       </CardHeader>
       <CardContent>
-        {loading ? (
+        {error && !loading ? (
+          <div className="text-center py-12">
+            <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to Load Contracts</h3>
+            <p className="text-gray-500 mb-4">{error}</p>
+            <div className="space-x-2">
+              <Button onClick={onRetry} variant="outline">
+                Try Again
+              </Button>
+              <Button onClick={onUploadContract}>
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Contract
+              </Button>
+            </div>
+          </div>
+        ) : loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin" />
             <span className="ml-2">Loading contracts...</span>
