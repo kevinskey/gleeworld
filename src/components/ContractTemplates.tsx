@@ -60,6 +60,11 @@ export const ContractTemplates = () => {
 
   const handleCreateTemplate = async () => {
     if (!newTemplate.name || !newTemplate.template_content) {
+      toast({
+        title: "Error",
+        description: "Please fill in both template name and content",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -152,8 +157,12 @@ export const ContractTemplates = () => {
           <Input
             id="template-name"
             value={newTemplate.name}
-            onChange={(e) => setNewTemplate({...newTemplate, name: e.target.value})}
-            placeholder="Service Agreement Template"
+            onChange={(e) => {
+              console.log('Template name changed:', e.target.value);
+              setNewTemplate({...newTemplate, name: e.target.value});
+            }}
+            placeholder="Enter template name (e.g., Service Agreement Template)"
+            autoComplete="off"
           />
         </div>
 
@@ -210,7 +219,7 @@ export const ContractTemplates = () => {
         }}>
           Cancel
         </Button>
-        <Button onClick={handleCreateTemplate} disabled={isCreating}>
+        <Button onClick={handleCreateTemplate} disabled={isCreating || !newTemplate.name.trim()}>
           {isCreating ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
