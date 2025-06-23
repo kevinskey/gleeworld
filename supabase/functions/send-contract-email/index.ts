@@ -55,78 +55,103 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Generated signature URL:", signatureUrl);
 
-    // Generate signature fields summary for email
+    // Generate signature fields summary for email with better formatting
     const signatureFieldsSummary = signatureFields.length > 0 ? `
-      <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-        <h3 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">Required Actions:</h3>
-        <ul style="margin: 0; padding-left: 20px; color: #555;">
-          ${signatureFields.map(field => `
-            <li style="margin-bottom: 8px;">
-              <strong>${field.label}</strong> ${field.required ? '(Required)' : '(Optional)'}
-              ${field.type === 'signature' ? '- Please provide your digital signature' : ''}
-              ${field.type === 'date' ? '- Date will be auto-filled when signed' : ''}
-              ${field.type === 'text' ? '- Please enter the required text' : ''}
-              ${field.type === 'initials' ? '- Please provide your initials' : ''}
-              ${field.type === 'username' ? '- Please enter your name' : ''}
+      <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0;">
+        <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 16px; font-weight: 600;">📝 Fields to Complete:</h3>
+        <ul style="margin: 0; padding-left: 20px; color: #475569; list-style-type: disc;">
+          ${signatureFields.map(field => {
+            const getFieldDescription = (type: string) => {
+              switch(type) {
+                case 'signature': return 'Digital signature required';
+                case 'date': return 'Date will be automatically filled';
+                case 'text': return 'Please enter required text';
+                case 'initials': return 'Please provide your initials';
+                case 'username': return 'Please enter your full name';
+                default: return 'Field completion required';
+              }
+            };
+            
+            return `
+            <li style="margin-bottom: 8px; line-height: 1.5;">
+              <strong style="color: #1e293b;">${field.label}</strong>
+              ${field.required ? '<span style="color: #dc2626; font-size: 12px; font-weight: bold;"> (REQUIRED)</span>' : '<span style="color: #059669; font-size: 12px;"> (Optional)</span>'}
+              <br>
+              <span style="color: #64748b; font-size: 14px;">${getFieldDescription(field.type)}</span>
             </li>
-          `).join('')}
+          `}).join('')}
         </ul>
-        <p style="margin: 15px 0 0 0; color: #666; font-size: 14px;">
-          <strong>Total fields to complete: ${signatureFields.filter(f => f.required).length}</strong>
+        <div style="margin-top: 15px; padding: 12px; background-color: #dbeafe; border-radius: 6px; border-left: 4px solid #3b82f6;">
+          <p style="margin: 0; color: #1e40af; font-size: 14px; font-weight: 500;">
+            📋 Total fields: <strong>${signatureFields.length}</strong> | Required: <strong>${signatureFields.filter(f => f.required).length}</strong>
+          </p>
+        </div>
+      </div>
+    ` : `
+      <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #bae6fd;">
+        <p style="margin: 0; color: #0369a1; font-size: 14px;">
+          ℹ️ This contract is ready for review and signing.
         </p>
       </div>
-    ` : '';
+    `;
 
     const emailResponse = await resend.emails.send({
       from: "ContractFlow <onboarding@resend.dev>",
       to: [recipientEmail],
       subject: `Contract for Signature: ${contractTitle}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #333;">Contract Signature Required</h1>
-          
-          <p>Hello ${recipientName},</p>
-          
-          <p>You have been requested to review and sign the following contract:</p>
-          
-          <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h2 style="margin: 0; color: #333;">${contractTitle}</h2>
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px 20px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 600;">Contract Signature Required</h1>
           </div>
           
-          ${signatureFieldsSummary}
-          
-          ${customMessage ? `
-          <div style="background-color: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0;"><strong>Message from ${senderName}:</strong></p>
-            <p style="margin: 10px 0 0 0;">${customMessage}</p>
-          </div>
-          ` : ''}
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${signatureUrl}" 
-               style="background-color: #2563eb; color: white; padding: 12px 24px; 
-                      text-decoration: none; border-radius: 6px; display: inline-block;">
-              Review and Sign Contract
-            </a>
-          </div>
-          
-          <p style="color: #666; font-size: 14px;">
-            If you have any questions about this contract, please contact ${senderName}.
-          </p>
-          
-          ${signatureFields.length > 0 ? `
-          <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
-            <p style="margin: 0; color: #856404; font-size: 14px;">
-              <strong>📝 Note:</strong> This contract requires ${signatureFields.filter(f => f.required).length} signature field(s) to be completed before it can be finalized.
+          <div style="padding: 30px 20px;">
+            <p style="font-size: 16px; color: #374151; margin-bottom: 20px;">Hello ${recipientName},</p>
+            
+            <p style="font-size: 16px; color: #374151; line-height: 1.6;">
+              You have been requested to review and sign the following contract:
+            </p>
+            
+            <div style="background-color: #f9fafb; padding: 25px; border-radius: 8px; margin: 25px 0; border: 1px solid #e5e7eb;">
+              <h2 style="margin: 0; color: #111827; font-size: 18px; font-weight: 600;">${contractTitle}</h2>
+              <p style="margin: 8px 0 0 0; color: #6b7280; font-size: 14px;">Contract ID: ${contractId.slice(0, 8)}...</p>
+            </div>
+            
+            ${signatureFieldsSummary}
+            
+            ${customMessage ? `
+            <div style="background-color: #eff6ff; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #3b82f6;">
+              <p style="margin: 0 0 10px 0; font-weight: 600; color: #1e40af;">💬 Message from ${senderName}:</p>
+              <p style="margin: 0; color: #1e40af; line-height: 1.6;">${customMessage}</p>
+            </div>
+            ` : ''}
+            
+            <div style="text-align: center; margin: 40px 0;">
+              <a href="${signatureUrl}" 
+                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                        color: white; padding: 15px 30px; text-decoration: none; 
+                        border-radius: 8px; display: inline-block; font-weight: 600;
+                        font-size: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                📄 Review and Sign Contract
+              </a>
+            </div>
+            
+            <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #f59e0b;">
+              <p style="margin: 0; color: #92400e; font-size: 14px;">
+                <strong>⚠️ Important:</strong> Please complete all required fields to finalize your signature.
+              </p>
+            </div>
+            
+            <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+              If you have any questions about this contract, please contact <strong>${senderName}</strong>.
             </p>
           </div>
-          ` : ''}
           
-          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-          
-          <p style="color: #999; font-size: 12px;">
-            This email was sent by ContractFlow. If you received this email in error, please ignore it.
-          </p>
+          <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+              This email was sent by ContractFlow. If you received this email in error, please ignore it.
+            </p>
+          </div>
         </div>
       `,
     });
