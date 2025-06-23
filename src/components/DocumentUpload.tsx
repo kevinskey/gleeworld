@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,8 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, X, Send, Plus } from "lucide-react";
+import { Upload, FileText, X, Send, Plus, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useContracts } from "@/hooks/useContracts";
+import { supabase } from "@/integrations/supabase/client";
 
 export const DocumentUpload = () => {
   const [dragOver, setDragOver] = useState(false);
@@ -17,7 +18,10 @@ export const DocumentUpload = () => {
   const [emailMessage, setEmailMessage] = useState("");
   const [contractType, setContractType] = useState("");
   const [signatureFields, setSignatureFields] = useState<Array<{id: number, label: string, page: number, x: number, y: number}>>([]);
+  const [contractTitle, setContractTitle] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { createContract } = useContracts();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -76,28 +80,73 @@ export const DocumentUpload = () => {
     setSignatureFields(signatureFields.filter(field => field.id !== id));
   };
 
-  const sendContract = () => {
-    if (!uploadedFile || !recipientEmail) {
+  const sendContract = async () => {
+    if (!uploadedFile || !recipientEmail || !contractTitle) {
       toast({
         title: "Missing information",
-        description: "Please upload a document and provide recipient details.",
+        description: "Please upload a document, provide a title, and recipient details.",
         variant: "destructive",
       });
       return;
     }
 
-    toast({
-      title: "Contract sent successfully",
-      description: `Contract has been sent to ${recipientEmail} for signature.`,
-    });
+    setIsLoading(true);
 
-    // Reset form
-    setUploadedFile(null);
-    setRecipientEmail("");
-    setRecipientName("");
-    setEmailMessage("");
-    setContractType("");
-    setSignatureFields([]);
+    try {
+      // Create contract in database
+      const contractData = await createContract({
+        title: contractTitle,
+        content: `Contract document: ${uploadedFile.name}`, // In a real app, you'd extract text from the file
+      });
+
+      if (!contractData) {
+        throw new Error("Failed to create contract");
+      }
+
+      // Send email notification
+      const { error: emailError } = await supabase.functions.invoke('send-contract-email', {
+        body: {
+          recipientEmail,
+          recipientName,
+          contractTitle,
+          contractId: contractData.id,
+          senderName: "ContractFlow Team",
+          customMessage: emailMessage
+        }
+      });
+
+      if (emailError) {
+        console.error("Email error:", emailError);
+        toast({
+          title: "Contract created but email failed",
+          description: `Contract was saved but we couldn't send the email to ${recipientEmail}. Please send it manually.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Contract sent successfully",
+          description: `Contract has been sent to ${recipientEmail} for signature.`,
+        });
+      }
+
+      // Reset form
+      setUploadedFile(null);
+      setRecipientEmail("");
+      setRecipientName("");
+      setEmailMessage("");
+      setContractType("");
+      setContractTitle("");
+      setSignatureFields([]);
+    } catch (error) {
+      console.error("Error sending contract:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create and send contract. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -166,6 +215,17 @@ export const DocumentUpload = () => {
 
           {uploadedFile && (
             <>
+              {/* Contract Title */}
+              <div className="space-y-2">
+                <Label htmlFor="contract-title">Contract Title</Label>
+                <Input
+                  id="contract-title"
+                  value={contractTitle}
+                  onChange={(e) => setContractTitle(e.target.value)}
+                  placeholder="Enter contract title"
+                />
+              </div>
+
               {/* Contract Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -270,9 +330,18 @@ export const DocumentUpload = () => {
 
               {/* Send Button */}
               <div className="flex justify-end pt-4">
-                <Button onClick={sendContract} size="lg">
-                  <Send className="h-4 w-4 mr-2" />
-                  Send for Signature
+                <Button onClick={sendContract} size="lg" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Send for Signature
+                    </>
+                  )}
                 </Button>
               </div>
             </>
