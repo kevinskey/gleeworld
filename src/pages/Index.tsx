@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,12 +12,14 @@ import { ContractViewer } from "@/components/ContractViewer";
 import { useContracts } from "@/hooks/useContracts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import type { Contract } from "@/hooks/useContracts";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<{ full_name: string | null } | null>(null);
   const { contracts, loading, deleteContract } = useContracts();
   const { user, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
@@ -28,6 +29,25 @@ const Index = () => {
       navigate("/auth");
     }
   }, [user, authLoading, navigate]);
+
+  // Fetch user profile to get full name
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+        
+        if (data) {
+          setUserProfile(data);
+        }
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -82,6 +102,9 @@ const Index = () => {
   const completedCount = contracts.filter(doc => doc.status === "completed").length;
   const pendingCount = contracts.filter(doc => doc.status !== "completed").length;
 
+  // Get display name - prefer full name, fallback to email
+  const displayName = userProfile?.full_name || user.email;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
@@ -95,7 +118,7 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">Welcome, {user.email}</span>
+              <span className="text-sm text-gray-600">Welcome, {displayName}</span>
               <Button variant="outline" size="sm">
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
