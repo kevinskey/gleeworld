@@ -9,9 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Edit, Eye, FileText, Trash2, Copy, Loader2, Upload, Image } from "lucide-react";
 import { useContractTemplates } from "@/hooks/useContractTemplates";
+import { useToast } from "@/hooks/use-toast";
 
 export const ContractTemplates = () => {
   const { templates, loading, createTemplate, deleteTemplate } = useContractTemplates();
+  const { toast } = useToast();
   
   const [newTemplate, setNewTemplate] = useState({
     name: "",
@@ -19,16 +21,33 @@ export const ContractTemplates = () => {
     header_image: null as File | null,
   });
 
+  const [editingTemplate, setEditingTemplate] = useState<any>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setNewTemplate({ ...newTemplate, header_image: file });
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleEditImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setEditingTemplate({ ...editingTemplate, header_image: file });
       
       // Create preview
       const reader = new FileReader();
@@ -55,8 +74,59 @@ export const ContractTemplates = () => {
     setIsCreating(false);
   };
 
+  const handleEditTemplate = (template: any) => {
+    setEditingTemplate({
+      ...template,
+      header_image: null // Reset file input
+    });
+    setImagePreview(template.header_image_url);
+    setIsEditOpen(true);
+  };
+
+  const handleUpdateTemplate = async () => {
+    if (!editingTemplate.name || !editingTemplate.template_content) {
+      return;
+    }
+
+    setIsUpdating(true);
+    // Note: This would require an updateTemplate function in the hook
+    // For now, we'll show a toast that this feature is coming soon
+    toast({
+      title: "Coming Soon",
+      description: "Template editing functionality is being developed",
+    });
+    setIsUpdating(false);
+    setIsEditOpen(false);
+  };
+
+  const handleCopyTemplate = async (template: any) => {
+    const copyTemplate = {
+      name: `${template.name} (Copy)`,
+      template_content: template.template_content,
+      header_image: null
+    };
+
+    const result = await createTemplate(copyTemplate);
+    if (result) {
+      toast({
+        title: "Success",
+        description: "Template copied successfully",
+      });
+    }
+  };
+
+  const handleUseTemplate = (template: any) => {
+    // This would typically navigate to a contract creation page with the template
+    toast({
+      title: "Coming Soon",
+      description: "Template usage functionality is being developed",
+    });
+  };
+
   const handleDeleteTemplate = async (id: string) => {
-    await deleteTemplate(id);
+    if (confirm("Are you sure you want to delete this template?")) {
+      await deleteTemplate(id);
+    }
   };
 
   if (loading) {
@@ -154,6 +224,93 @@ export const ContractTemplates = () => {
     </DialogContent>
   );
 
+  const EditTemplateDialog = () => (
+    <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Template</DialogTitle>
+          <DialogDescription>
+            Update the template name, content, and header image
+          </DialogDescription>
+        </DialogHeader>
+        {editingTemplate && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-template-name">Template Name</Label>
+              <Input
+                id="edit-template-name"
+                value={editingTemplate.name}
+                onChange={(e) => setEditingTemplate({...editingTemplate, name: e.target.value})}
+                placeholder="Service Agreement Template"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-header-image">Header Image (Optional)</Label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                <input
+                  id="edit-header-image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleEditImageUpload}
+                  className="hidden"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => document.getElementById('edit-header-image')?.click()}
+                  className="w-full"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {editingTemplate.header_image ? 'Change Image' : 'Upload New Header Image'}
+                </Button>
+                
+                {imagePreview && (
+                  <div className="mt-4">
+                    <img 
+                      src={imagePreview} 
+                      alt="Header preview" 
+                      className="max-h-32 mx-auto rounded border"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-template-content">Template Content</Label>
+              <Textarea
+                id="edit-template-content"
+                value={editingTemplate.template_content}
+                onChange={(e) => setEditingTemplate({...editingTemplate, template_content: e.target.value})}
+                placeholder="Enter your contract template here..."
+                rows={12}
+              />
+            </div>
+          </div>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => {
+            setIsEditOpen(false);
+            setImagePreview(null);
+            setEditingTemplate(null);
+          }}>
+            Cancel
+          </Button>
+          <Button onClick={handleUpdateTemplate} disabled={isUpdating}>
+            {isUpdating ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Updating...
+              </>
+            ) : (
+              'Update Template'
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -232,19 +389,32 @@ export const ContractTemplates = () => {
                         setSelectedTemplate(template);
                         setIsViewOpen(true);
                       }}
+                      title="View template"
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEditTemplate(template)}
+                      title="Edit template"
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleCopyTemplate(template)}
+                      title="Copy template"
+                    >
                       <Copy className="h-4 w-4" />
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => handleDeleteTemplate(template.id)}
+                      title="Delete template"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -255,6 +425,9 @@ export const ContractTemplates = () => {
           ))}
         </div>
       )}
+
+      {/* Edit Template Dialog */}
+      <EditTemplateDialog />
 
       {/* View Template Dialog */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
@@ -290,7 +463,7 @@ export const ContractTemplates = () => {
             <Button variant="outline" onClick={() => setIsViewOpen(false)}>
               Close
             </Button>
-            <Button>Use Template</Button>
+            <Button onClick={() => handleUseTemplate(selectedTemplate)}>Use Template</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
