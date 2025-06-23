@@ -73,15 +73,6 @@ export const SignatureFieldOverlay = ({
     return new Date().toLocaleDateString();
   };
 
-  // Handle overlay click - only close if clicking the dark background
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    console.log('Overlay clicked, target:', e.target === e.currentTarget ? 'background' : 'content');
-    // Only close if the click target is the overlay itself (dark background)
-    if (e.target === e.currentTarget) {
-      handleCancel();
-    }
-  };
-
   // Prevent any events from bubbling up from modal content
   const preventEventBubbling = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
@@ -89,10 +80,7 @@ export const SignatureFieldOverlay = ({
 
   if (isActive) {
     return (
-      <div 
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
-        onClick={handleOverlayClick}
-      >
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
         <div 
           className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
           onClick={preventEventBubbling}
@@ -133,12 +121,6 @@ export const SignatureFieldOverlay = ({
                 <div className="flex gap-2 justify-end">
                   <Button 
                     variant="outline" 
-                    onClick={handleCancel}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    variant="outline" 
                     onClick={() => {
                       const today = getCurrentDate();
                       setFieldValue(today);
@@ -169,12 +151,6 @@ export const SignatureFieldOverlay = ({
                   maxLength={field.type === 'initials' ? 3 : undefined}
                 />
                 <div className="flex gap-2 justify-end">
-                  <Button 
-                    variant="outline" 
-                    onClick={handleCancel}
-                  >
-                    Cancel
-                  </Button>
                   <Button 
                     onClick={handleTextComplete}
                     disabled={!fieldValue.trim()}
