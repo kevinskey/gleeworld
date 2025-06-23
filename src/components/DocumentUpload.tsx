@@ -32,6 +32,7 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
   const [signatureFields, setSignatureFields] = useState<SignatureField[]>([]);
   const [contractTitle, setContractTitle] = useState("");
   const [contractContent, setContractContent] = useState("");
+  const [originalTemplateContent, setOriginalTemplateContent] = useState(""); // Store original template
   const [selectedUserId, setSelectedUserId] = useState("");
   const [stipendAmount, setStipendAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -45,6 +46,7 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
   // Pre-fill form when template content is provided
   useEffect(() => {
     if (templateContent && templateName) {
+      setOriginalTemplateContent(templateContent); // Store original template
       setContractContent(templateContent);
       setContractTitle(templateName);
       
@@ -83,21 +85,39 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
     }
   }, [templateContent, templateName, toast]);
 
+  // Function to update contract content with all current values
+  const updateContractContent = (userInfo?: any, currentStipend?: string) => {
+    if (!originalTemplateContent) return;
+    
+    let updatedContent = originalTemplateContent;
+    
+    // Replace user placeholders
+    const selectedUser = userInfo || (selectedUserId ? users.find(user => user.id === selectedUserId) : null);
+    if (selectedUser) {
+      updatedContent = updatedContent.replace(/\{\{username\}\}/g, selectedUser.full_name || selectedUser.email);
+      updatedContent = updatedContent.replace(/\{\{useremail\}\}/g, selectedUser.email);
+    }
+    
+    // Replace stipend placeholder
+    const stipend = currentStipend !== undefined ? currentStipend : stipendAmount;
+    if (stipend) {
+      updatedContent = updatedContent.replace(/\{\{stipend\}\}/g, `$${stipend}`);
+    }
+    
+    setContractContent(updatedContent);
+  };
+
   // Handle user selection and placeholder replacement
   const handleUserSelection = (userId: string) => {
     setSelectedUserId(userId);
     const selectedUser = users.find(user => user.id === userId);
     
-    if (selectedUser && contractContent) {
-      let updatedContent = contractContent;
-      
-      // Replace placeholders
-      updatedContent = updatedContent.replace(/\{\{username\}\}/g, selectedUser.full_name || selectedUser.email);
-      updatedContent = updatedContent.replace(/\{\{useremail\}\}/g, selectedUser.email);
-      
-      setContractContent(updatedContent);
+    if (selectedUser) {
       setRecipientEmail(selectedUser.email);
       setRecipientName(selectedUser.full_name || selectedUser.email);
+      
+      // Update contract content with user info
+      updateContractContent(selectedUser);
       
       toast({
         title: "User Selected",
@@ -108,11 +128,11 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
 
   // Handle stipend amount change and update content
   const handleStipendChange = (amount: string) => {
+    console.log('Stipend amount changed to:', amount);
     setStipendAmount(amount);
-    if (contractContent) {
-      const updatedContent = contractContent.replace(/\{\{stipend\}\}/g, amount ? `$${amount}` : '{{stipend}}');
-      setContractContent(updatedContent);
-    }
+    
+    // Update contract content with new stipend amount
+    updateContractContent(undefined, amount);
   };
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -232,6 +252,7 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
       setContractType("");
       setContractTitle("");
       setContractContent("");
+      setOriginalTemplateContent(""); // Reset original template
       setSignatureFields([]);
       setSelectedUserId("");
       setStipendAmount("");
