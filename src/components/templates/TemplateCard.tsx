@@ -3,27 +3,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Eye, Copy, Trash2, Image, FileDown, Loader2 } from "lucide-react";
+import { useContractFromTemplate } from "@/hooks/useContractFromTemplate";
 import type { ContractTemplate } from "@/hooks/useContractTemplates";
 
 interface TemplateCardProps {
   template: ContractTemplate;
-  isCreating: boolean;
-  onUse: (template: ContractTemplate) => void;
   onView: (template: ContractTemplate) => void;
   onEdit: (template: ContractTemplate) => void;
   onCopy: (template: ContractTemplate) => void;
   onDelete: (id: string) => void;
+  onContractCreated?: () => void;
 }
 
 export const TemplateCard = ({
   template,
-  isCreating,
-  onUse,
   onView,
   onEdit,
   onCopy,
-  onDelete
+  onDelete,
+  onContractCreated
 }: TemplateCardProps) => {
+  const { createContractFromTemplate, isCreating } = useContractFromTemplate(onContractCreated);
+
+  const handleUseTemplate = async () => {
+    await createContractFromTemplate(template);
+  };
+
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader>
@@ -67,7 +72,7 @@ export const TemplateCard = ({
           <div className="flex flex-col space-y-2">
             {/* Primary Use Template Button */}
             <Button 
-              onClick={() => onUse(template)}
+              onClick={handleUseTemplate}
               className="w-full"
               disabled={isCreating}
             >

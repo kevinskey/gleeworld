@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import type { ContractTemplate } from "@/hooks/useContractTemplates";
 
-export const useContractFromTemplate = () => {
+export const useContractFromTemplate = (onContractCreated?: () => void) => {
   const [isCreating, setIsCreating] = useState(false);
   const { createContract, refetch } = useContracts();
   const { toast } = useToast();
@@ -28,6 +28,11 @@ export const useContractFromTemplate = () => {
       if (contractData) {
         // Refresh the contracts list to show the new contract
         await refetch();
+        
+        // Call the callback to update UI (switch to dashboard, etc.)
+        if (onContractCreated) {
+          onContractCreated();
+        }
         
         toast({
           title: "Success",
