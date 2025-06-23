@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -189,10 +190,10 @@ const AdminSigning = () => {
         description: `"${signatureRecord.contracts_v2.title}" has been fully signed and completed.`,
       });
 
-      // Refresh the list and close the modal
-      await fetchPendingContracts();
+      // Immediately refresh the list and close the modal
       setSelectedContract(null);
       setAdminSignature("");
+      await fetchPendingContracts(); // This will update the UI immediately
     } catch (error) {
       console.error('Error signing contract:', error);
       toast({
