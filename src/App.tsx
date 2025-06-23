@@ -10,7 +10,6 @@ import Auth from "./pages/Auth";
 import ContractSigning from "./pages/ContractSigning";
 import AdminSigning from "./pages/AdminSigning";
 import ActivityLogs from "./pages/ActivityLogs";
-import W9FormPage from "./pages/W9FormPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,7 +26,6 @@ const App = () => (
             <Route path="/contract-signing/:contractId" element={<ContractSigning />} />
             <Route path="/admin-signing" element={<AdminSigning />} />
             <Route path="/activity-logs" element={<ActivityLogs />} />
-            <Route path="/w9-form" element={<W9FormPage />} />
             <Route path="/" element={<Index />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
