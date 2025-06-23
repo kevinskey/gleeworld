@@ -82,11 +82,48 @@ export const ContractContentProcessor = ({
     const adminSignature = embeddedSignatures.find(sig => sig.signerType === 'admin');
     
     lines.forEach((line, index) => {
+      // Check if this line contains "Printed Name: Dr. Kevin P. Johnson"
+      if (line.includes('Printed Name:') && line.includes('Dr. Kevin P. Johnson')) {
+        // Add admin signature before this line
+        if (adminSignature) {
+          processedLines.push(
+            <div key={`embedded-admin-signature-${adminSignature.fieldId}`} className="mb-4">
+              <EmbeddedSignatureDisplay signature={adminSignature} />
+            </div>
+          );
+        }
+        
+        // Add the printed name line
+        processedLines.push(line);
+        
+        // Check if the next line contains "Title:" and align date with it
+        if (index + 1 < lines.length && lines[index + 1].includes('Title:')) {
+          const titleLine = lines[index + 1];
+          processedLines.push(titleLine);
+          
+          // Skip the title line in the main loop
+          lines[index + 1] = '';
+          
+          // Add date execution line aligned with title
+          if (index + 2 < lines.length && lines[index + 2].includes('Date Executed:')) {
+            processedLines.push(lines[index + 2]);
+            // Skip this line in the main loop
+            lines[index + 2] = '';
+          }
+        }
+        return;
+      }
+      
+      // Skip empty lines that we've already processed
+      if (line === '') {
+        return;
+      }
+      
       processedLines.push(line);
       
+      // Add artist signature after signature-related lines
       if (line.toLowerCase().includes('artist:') || line.toLowerCase().includes('signature')) {
         if (artistSignature) {
-          // Show the embedded artist signature
           processedLines.push(
             <div key={`embedded-artist-signature-${artistSignature.fieldId}`}>
               <EmbeddedSignatureDisplay signature={artistSignature} />
@@ -134,15 +171,6 @@ export const ContractContentProcessor = ({
         }
       }
     });
-    
-    // Add admin signature at the end if it exists
-    if (adminSignature) {
-      processedLines.push(
-        <div key={`embedded-admin-signature-${adminSignature.fieldId}`}>
-          <EmbeddedSignatureDisplay signature={adminSignature} />
-        </div>
-      );
-    }
     
     return processedLines;
   };
