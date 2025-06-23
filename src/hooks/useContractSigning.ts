@@ -47,7 +47,7 @@ export const useContractSigning = (contractId?: string) => {
   const [signatureFields, setSignatureFields] = useState<SignatureField[]>([]);
   const [completedFields, setCompletedFields] = useState<Record<number, string>>({});
   const [embeddedSignatures, setEmbeddedSignatures] = useState<EmbeddedSignature[]>([]);
-  const [w9Status, setW9Status] = useState<'required' | 'completed' | 'not_required'>('not_required');
+  const [w9Status, setW9Status] = useState<'required' | 'completed' | 'not_required'>('required');
   const [w9Form, setW9Form] = useState<any>(null);
   const { toast } = useToast();
 
@@ -181,8 +181,16 @@ export const useContractSigning = (contractId?: string) => {
 
   const checkW9Requirement = async () => {
     try {
+      console.log('Checking W9 requirement...');
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      
+      if (!user) {
+        console.log('No authenticated user found');
+        setW9Status('required');
+        return;
+      }
+
+      console.log('Checking W9 forms for user:', user.id);
 
       // Check if user has submitted a W9 form
       const { data: w9Forms, error } = await supabase
@@ -195,23 +203,32 @@ export const useContractSigning = (contractId?: string) => {
 
       if (error) {
         console.error('Error checking W9 status:', error);
+        setW9Status('required');
         return;
       }
 
+      console.log('W9 forms found:', w9Forms);
+
       if (w9Forms && w9Forms.length > 0) {
+        console.log('W9 form found, setting status to completed');
         setW9Status('completed');
         setW9Form(w9Forms[0]);
       } else {
+        console.log('No W9 form found, setting status to required');
         setW9Status('required');
       }
     } catch (error) {
       console.error('Error in checkW9Requirement:', error);
+      setW9Status('required');
     }
   };
 
   const handleFieldComplete = async (fieldId: number, value: string) => {
+    console.log('Field completion attempted:', fieldId, 'W9 Status:', w9Status);
+    
     // Check if W9 is required but not completed
     if (w9Status === 'required') {
+      console.log('W9 required but not completed, blocking signature');
       toast({
         title: "W9 Form Required",
         description: "Please complete your W9 form before signing the contract.",
@@ -219,6 +236,8 @@ export const useContractSigning = (contractId?: string) => {
       });
       return;
     }
+
+    console.log('W9 check passed, proceeding with field completion');
 
     setCompletedFields(prev => ({
       ...prev,
