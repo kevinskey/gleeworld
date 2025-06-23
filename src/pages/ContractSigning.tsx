@@ -65,7 +65,7 @@ const ContractSigning = () => {
     };
 
     fetchContract();
-  }, [contractId]); // Removed toast from dependency array to prevent infinite loop
+  }, [contractId]);
 
   const handleSign = async () => {
     if (!contract || !signatureData) {
@@ -98,6 +98,12 @@ const ContractSigning = () => {
       });
 
       setContract({ ...contract, status: 'completed' });
+      
+      // Redirect to reader.gleeworld.org after successful signing
+      setTimeout(() => {
+        window.location.href = 'https://reader.gleeworld.org';
+      }, 2000); // 2 second delay to show the success message
+
     } catch (error) {
       console.error('Error signing contract:', error);
       toast({
@@ -194,7 +200,7 @@ const ContractSigning = () => {
         {contract.status === 'completed' && (
           <div className="text-center py-6">
             <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full">
-              ✓ Contract Signed Successfully
+              ✓ Contract Signed Successfully - Redirecting to reader.gleeworld.org...
             </div>
           </div>
         )}
