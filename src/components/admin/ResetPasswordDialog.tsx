@@ -43,11 +43,29 @@ export const ResetPasswordDialog = ({ user, open, onOpenChange }: ResetPasswordD
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.admin.updateUserById(user.id, {
-        password: newPassword
+      // Get the current session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error("No valid session found");
+      }
+
+      // Call the edge function to reset password
+      const { data, error } = await supabase.functions.invoke('admin-reset-password', {
+        body: {
+          userId: user.id,
+          newPassword: newPassword
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
 
       if (error) throw error;
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
       toast({
         title: "Success",
@@ -61,7 +79,7 @@ export const ResetPasswordDialog = ({ user, open, onOpenChange }: ResetPasswordD
       console.error('Error resetting password:', error);
       toast({
         title: "Error",
-        description: "Failed to reset password. You may need admin privileges.",
+        description: error instanceof Error ? error.message : "Failed to reset password",
         variant: "destructive",
       });
     } finally {
