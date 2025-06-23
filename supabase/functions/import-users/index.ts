@@ -140,6 +140,15 @@ serve(async (req) => {
       errors: [] as string[]
     }
 
+    // Get all existing users and profiles upfront to avoid repeated API calls
+    const { data: allAuthUsers } = await supabaseClient.auth.admin.listUsers()
+    const existingAuthUsers = new Map(allAuthUsers?.users?.map(u => [u.email?.toLowerCase(), u]) || [])
+    
+    const { data: allProfiles } = await supabaseClient
+      .from('profiles')
+      .select('id, email')
+    const existingProfiles = new Set(allProfiles?.map(p => p.id) || [])
+
     // Process each user
     for (const userData of usersToImport) {
       try {
@@ -149,19 +158,12 @@ serve(async (req) => {
           continue
         }
 
-        // Check if user already exists by email
-        const { data: existingUser } = await supabaseClient.auth.admin.listUsers()
-        const userExists = existingUser?.users?.find(u => u.email === userData.email)
+        const normalizedEmail = userData.email.toLowerCase()
+        const existingAuthUser = existingAuthUsers.get(normalizedEmail)
         
-        if (userExists) {
-          // Check if profile exists
-          const { data: existingProfile } = await supabaseClient
-            .from('profiles')
-            .select('id')
-            .eq('id', userExists.id)
-            .single()
-
-          if (existingProfile) {
+        if (existingAuthUser) {
+          // User exists in auth, check if profile exists
+          if (existingProfiles.has(existingAuthUser.id)) {
             results.failed++
             results.errors.push(`User already exists: ${userData.email}`)
             continue
@@ -174,7 +176,7 @@ serve(async (req) => {
             const { error: profileError } = await supabaseClient
               .from('profiles')
               .insert({
-                id: userExists.id,
+                id: existingAuthUser.id,
                 email: userData.email,
                 full_name: userData.full_name || '',
                 role: userRole
