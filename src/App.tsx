@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ContractSigning from "./pages/ContractSigning";
+import AdminSigning from "./pages/AdminSigning";
 import ActivityLogs from "./pages/ActivityLogs";
 import NotFound from "./pages/NotFound";
 
@@ -23,6 +24,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/contract-signing/:contractId" element={<ContractSigning />} />
+            <Route path="/admin-signing" element={<AdminSigning />} />
             <Route path="/activity-logs" element={<ActivityLogs />} />
             <Route path="/" element={<Index />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

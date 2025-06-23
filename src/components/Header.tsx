@@ -1,5 +1,7 @@
+
 import { Button } from "@/components/ui/button";
-import { FileText, Settings, LogOut, Plus } from "lucide-react";
+import { LogOut, Plus, PenTool } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   displayName: string;
@@ -8,37 +10,42 @@ interface HeaderProps {
 }
 
 export const Header = ({ displayName, onSignOut, onNewContract }: HeaderProps) => {
+  const navigate = useNavigate();
+
   return (
     <header className="bg-white shadow-sm border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <FileText className="h-8 w-8 text-blue-600" />
-              <h1 className="text-xl font-bold text-gray-900">ContractFlow</h1>
-            </div>
-            <a 
-              href="https://gleeworld.org" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-sm text-blue-600 hover:text-blue-800 underline"
-            >
-              Visit GleeWorld.org
-            </a>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Contract Manager</h1>
+            <p className="text-sm text-gray-500">Welcome back, {displayName}</p>
           </div>
+          
           <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600">{displayName}</span>
-            <Button variant="outline" size="sm">
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
-            <Button variant="outline" size="sm" onClick={onSignOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
-            <Button size="sm" onClick={onNewContract}>
+            <Button 
+              onClick={onNewContract}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
               <Plus className="h-4 w-4 mr-2" />
               New Contract
+            </Button>
+            
+            <Button 
+              onClick={() => navigate("/admin-signing")}
+              variant="outline"
+              className="border-orange-300 text-orange-700 hover:bg-orange-50"
+            >
+              <PenTool className="h-4 w-4 mr-2" />
+              Admin Signing
+            </Button>
+            
+            <Button 
+              onClick={onSignOut} 
+              variant="outline"
+              className="border-red-300 text-red-700 hover:bg-red-50"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
             </Button>
           </div>
         </div>
