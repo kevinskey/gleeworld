@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
@@ -50,6 +51,10 @@ export const SignatureFieldOverlay = ({
     }
   };
 
+  const handleCancel = () => {
+    setIsActive(false);
+  };
+
   const getFieldIcon = () => {
     switch (field.type) {
       case 'signature': return <FileSignature className="h-4 w-4" />;
@@ -64,122 +69,110 @@ export const SignatureFieldOverlay = ({
     return new Date().toLocaleDateString();
   };
 
+  // Prevent closing when clicking inside the active field
+  const handleModalClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   if (isActive) {
     return (
       <div 
-        className={`absolute bg-white border-2 border-blue-500 rounded-lg shadow-lg z-20 ${
-          isMobile 
-            ? 'inset-x-2 top-4 max-h-[90vh] overflow-y-auto' 
-            : 'p-4'
-        }`}
-        style={isMobile ? {} : {
-          left: `${field.x}px`,
-          top: `${field.y}px`,
-          minWidth: field.type === 'signature' ? '300px' : '200px',
-        }}
+        className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4`}
+        onClick={handleCancel}
       >
-        <div className={isMobile ? 'p-4' : ''}>
-          <div className="mb-2">
-            <div className="flex items-center gap-2 mb-2">
-              {getFieldIcon()}
-              <span className="text-sm font-medium">{field.label}</span>
-              {field.required && <span className="text-red-500">*</span>}
+        <div 
+          className={`bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto`}
+          onClick={handleModalClick}
+        >
+          <div className="p-6">
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                {getFieldIcon()}
+                <span className="text-lg font-medium">{field.label}</span>
+                {field.required && <span className="text-red-500">*</span>}
+              </div>
             </div>
-          </div>
 
-          {field.type === 'signature' && (
-            <div className="space-y-3">
-              <div className={isMobile ? 'max-w-full overflow-hidden' : ''}>
+            {field.type === 'signature' && (
+              <div className="space-y-4">
                 <SignatureCanvas 
                   onSignatureChange={handleComplete}
                   disabled={false}
                 />
+                <div className="flex gap-2 justify-end">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleCancel}
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setIsActive(false)}
-                  className={isMobile ? 'flex-1' : ''}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          )}
+            )}
 
-          {field.type === 'date' && (
-            <div className="space-y-3">
-              <Input
-                type="date"
-                value={fieldValue}
-                onChange={(e) => setFieldValue(e.target.value)}
-                className="w-full"
-              />
-              <div className={`flex gap-2 ${isMobile ? 'flex-col' : ''}`}>
-                <Button 
-                  size="sm" 
-                  onClick={handleTextComplete}
-                  disabled={!fieldValue}
-                  className={isMobile ? 'w-full' : ''}
-                >
-                  Save
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => {
-                    const today = getCurrentDate();
-                    setFieldValue(today);
-                    onFieldComplete(field.id, today);
-                    setIsActive(false);
-                  }}
-                  className={isMobile ? 'w-full' : ''}
-                >
-                  Use Today
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setIsActive(false)}
-                  className={isMobile ? 'w-full' : ''}
-                >
-                  Cancel
-                </Button>
+            {field.type === 'date' && (
+              <div className="space-y-4">
+                <Input
+                  type="date"
+                  value={fieldValue}
+                  onChange={(e) => setFieldValue(e.target.value)}
+                  className="w-full"
+                />
+                <div className="flex gap-2 justify-end">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleCancel}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      const today = getCurrentDate();
+                      setFieldValue(today);
+                      onFieldComplete(field.id, today);
+                      setIsActive(false);
+                    }}
+                  >
+                    Use Today
+                  </Button>
+                  <Button 
+                    onClick={handleTextComplete}
+                    disabled={!fieldValue}
+                  >
+                    Save
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {(field.type === 'text' || field.type === 'initials' || field.type === 'username') && (
-            <div className="space-y-3">
-              <Input
-                type="text"
-                value={fieldValue}
-                onChange={(e) => setFieldValue(e.target.value)}
-                placeholder={`Enter ${field.type}`}
-                className="w-full"
-                maxLength={field.type === 'initials' ? 3 : undefined}
-              />
-              <div className={`flex gap-2 ${isMobile ? 'flex-col' : ''}`}>
-                <Button 
-                  size="sm" 
-                  onClick={handleTextComplete}
-                  disabled={!fieldValue.trim()}
-                  className={isMobile ? 'w-full' : ''}
-                >
-                  Save
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setIsActive(false)}
-                  className={isMobile ? 'w-full' : ''}
-                >
-                  Cancel
-                </Button>
+            {(field.type === 'text' || field.type === 'initials' || field.type === 'username') && (
+              <div className="space-y-4">
+                <Input
+                  type="text"
+                  value={fieldValue}
+                  onChange={(e) => setFieldValue(e.target.value)}
+                  placeholder={`Enter ${field.type}`}
+                  className="w-full"
+                  maxLength={field.type === 'initials' ? 3 : undefined}
+                />
+                <div className="flex gap-2 justify-end">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleCancel}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleTextComplete}
+                    disabled={!fieldValue.trim()}
+                  >
+                    Save
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     );

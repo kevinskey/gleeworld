@@ -74,6 +74,8 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     if (disabled) return;
     
     e.preventDefault();
+    e.stopPropagation();
+    
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -91,6 +93,8 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     if (!isDrawing || disabled) return;
 
     e.preventDefault();
+    e.stopPropagation();
+    
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -109,14 +113,22 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     }
   };
 
-  const stopDrawing = () => {
+  const stopDrawing = (e?: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     if (isDrawing) {
       setIsDrawing(false);
       console.log('Stopped drawing signature');
     }
   };
 
-  const clearSignature = () => {
+  const clearSignature = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     const canvas = canvasRef.current;
     if (!canvas) return;
 
