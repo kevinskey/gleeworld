@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText, Users, Settings, Plus, Eye, Send, Edit, Inbox, Loader2 } from "lucide-react";
+import { Upload, FileText, Users, Settings, Plus, Eye, Send, Edit, Inbox, Loader2, Trash2 } from "lucide-react";
 import { DocumentUpload } from "@/components/DocumentUpload";
 import { ContractTemplates } from "@/components/ContractTemplates";
 import { SigningDashboard } from "@/components/SigningDashboard";
@@ -16,11 +16,17 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
-  const { contracts, loading } = useContracts();
+  const { contracts, loading, deleteContract } = useContracts();
 
   const handleViewContract = (contract: Contract) => {
     setSelectedContract(contract);
     setIsViewerOpen(true);
+  };
+
+  const handleDeleteContract = async (contractId: string) => {
+    if (confirm("Are you sure you want to delete this contract?")) {
+      await deleteContract(contractId);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -163,6 +169,14 @@ const Index = () => {
                             </Button>
                             <Button variant="outline" size="sm">
                               <Send className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleDeleteContract(contract.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>

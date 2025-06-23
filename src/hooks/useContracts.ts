@@ -82,6 +82,30 @@ export const useContracts = () => {
     }
   };
 
+  const deleteContract = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('contracts_v2')
+        .update({ archived: true })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setContracts(prev => prev.filter(contract => contract.id !== id));
+      toast({
+        title: "Success",
+        description: "Contract deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting contract:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete contract",
+        variant: "destructive",
+      });
+    }
+  };
+
   const updateContractStatus = async (id: string, status: string) => {
     try {
       const { error } = await supabase
@@ -119,6 +143,7 @@ export const useContracts = () => {
     contracts,
     loading,
     createContract,
+    deleteContract,
     updateContractStatus,
     refetch: fetchContracts,
   };
