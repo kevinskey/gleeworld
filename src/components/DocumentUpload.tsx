@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useContracts } from "@/hooks/useContracts";
 import { useUsers } from "@/hooks/useUsers";
@@ -15,6 +15,7 @@ import { StipendAmountField } from "./upload/StipendAmountField";
 import { ContractContentSection } from "./upload/ContractContentSection";
 import { FileUploadArea } from "./upload/FileUploadArea";
 import { RecipientInformation } from "./upload/RecipientInformation";
+import { ContractPreviewDialog } from "./upload/ContractPreviewDialog";
 
 interface DocumentUploadProps {
   templateContent?: string;
@@ -34,6 +35,7 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
   const [selectedUserId, setSelectedUserId] = useState("");
   const [stipendAmount, setStipendAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
   const { createContract } = useContracts();
   const { users, loading: usersLoading } = useUsers();
@@ -148,7 +150,7 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
     }
   };
 
-  const sendContract = async () => {
+  const handlePreviewContract = () => {
     if ((!uploadedFile && !contractContent) || !recipientEmail || !contractTitle) {
       toast({
         title: "Missing information",
@@ -167,6 +169,10 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
       return;
     }
 
+    setShowPreview(true);
+  };
+
+  const sendContract = async () => {
     setIsLoading(true);
 
     try {
@@ -211,7 +217,7 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
         });
       }
 
-      // Reset form
+      // Reset form and close preview
       setUploadedFile(null);
       setRecipientEmail("");
       setRecipientName("");
@@ -222,6 +228,7 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
       setSignatureFields([]);
       setSelectedUserId("");
       setStipendAmount("");
+      setShowPreview(false);
     } catch (error) {
       console.error("Error sending contract:", error);
       toast({
@@ -318,7 +325,11 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
                 onEmailMessageChange={setEmailMessage}
               />
 
-              <div className="flex justify-end pt-4">
+              <div className="flex justify-end gap-3 pt-4">
+                <Button onClick={handlePreviewContract} variant="outline" size="lg">
+                  <Eye className="h-4 w-4 mr-2" />
+                  Preview Contract
+                </Button>
                 <Button onClick={sendContract} size="lg" disabled={isLoading}>
                   {isLoading ? (
                     <>
@@ -337,6 +348,19 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
           )}
         </CardContent>
       </Card>
+
+      <ContractPreviewDialog
+        open={showPreview}
+        onOpenChange={setShowPreview}
+        contractTitle={contractTitle}
+        contractContent={contractContent}
+        recipientName={recipientName}
+        recipientEmail={recipientEmail}
+        emailMessage={emailMessage}
+        signatureFields={signatureFields}
+        onConfirmSend={sendContract}
+        isLoading={isLoading}
+      />
     </div>
   );
 };
