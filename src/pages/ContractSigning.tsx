@@ -1,4 +1,3 @@
-
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { SignatureCanvas } from "@/components/SignatureCanvas";
 
 interface Contract {
   id: string;
@@ -20,6 +20,7 @@ const ContractSigning = () => {
   const [contract, setContract] = useState<Contract | null>(null);
   const [loading, setLoading] = useState(true);
   const [signing, setSigning] = useState(false);
+  const [signatureData, setSignatureData] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -67,13 +68,24 @@ const ContractSigning = () => {
   }, [contractId]); // Removed toast from dependency array to prevent infinite loop
 
   const handleSign = async () => {
-    if (!contract) return;
+    if (!contract || !signatureData) {
+      toast({
+        title: "Signature Required",
+        description: "Please provide your signature before signing the contract.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setSigning(true);
     try {
       const { error } = await supabase
         .from('contracts_v2')
-        .update({ status: 'completed' })
+        .update({ 
+          status: 'completed',
+          // Note: In a real app, you'd want to store the signature data in a separate field
+          // For now, we'll just mark it as completed
+        })
         .eq('id', contract.id);
 
       if (error) {
@@ -130,7 +142,7 @@ const ContractSigning = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-4xl mx-auto px-4 space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -149,36 +161,43 @@ const ContractSigning = () => {
                 dangerouslySetInnerHTML={{ __html: contract.content.replace(/\n/g, '<br>') }}
               />
             </div>
-
-            {contract.status !== 'completed' && (
-              <div className="flex justify-center pt-6">
-                <Button 
-                  onClick={handleSign}
-                  disabled={signing}
-                  size="lg"
-                  className="px-8"
-                >
-                  {signing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Signing...
-                    </>
-                  ) : (
-                    'Sign Contract'
-                  )}
-                </Button>
-              </div>
-            )}
-
-            {contract.status === 'completed' && (
-              <div className="text-center py-6">
-                <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full">
-                  ✓ Contract Signed Successfully
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
+
+        {contract.status !== 'completed' && (
+          <>
+            <SignatureCanvas 
+              onSignatureChange={setSignatureData}
+              disabled={signing}
+            />
+            
+            <div className="flex justify-center pt-6">
+              <Button 
+                onClick={handleSign}
+                disabled={signing || !signatureData}
+                size="lg"
+                className="px-8"
+              >
+                {signing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Signing Contract...
+                  </>
+                ) : (
+                  'Complete Contract Signing'
+                )}
+              </Button>
+            </div>
+          </>
+        )}
+
+        {contract.status === 'completed' && (
+          <div className="text-center py-6">
+            <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full">
+              ✓ Contract Signed Successfully
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
