@@ -173,24 +173,39 @@ serve(async (req) => {
               ? userData.role.toLowerCase().trim() 
               : 'user'
 
-            const { error: profileError } = await supabaseClient
-              .from('profiles')
-              .insert({
-                id: existingAuthUser.id,
-                email: userData.email,
-                full_name: userData.full_name || '',
-                role: userRole
-              })
+            try {
+              const { error: profileError } = await supabaseClient
+                .from('profiles')
+                .insert({
+                  id: existingAuthUser.id,
+                  email: userData.email,
+                  full_name: userData.full_name || '',
+                  role: userRole
+                })
 
-            if (profileError) {
+              if (profileError) {
+                // Check if it's a duplicate key error
+                if (profileError.code === '23505') {
+                  results.failed++
+                  results.errors.push(`Profile already exists for user ${userData.email}`)
+                  continue
+                } else {
+                  results.failed++
+                  results.errors.push(`Failed to create profile for existing user ${userData.email}: ${profileError.message}`)
+                  continue
+                }
+              }
+
+              // Add to our tracking set
+              existingProfiles.add(existingAuthUser.id)
+              results.success++
+              console.log(`Created profile for existing user: ${userData.email} with role: ${userRole}`)
+              continue
+            } catch (profileCreateError) {
               results.failed++
-              results.errors.push(`Failed to create profile for existing user ${userData.email}: ${profileError.message}`)
+              results.errors.push(`Error creating profile for existing user ${userData.email}: ${profileCreateError.message}`)
               continue
             }
-
-            results.success++
-            console.log(`Created profile for existing user: ${userData.email} with role: ${userRole}`)
-            continue
           }
         }
 
@@ -217,32 +232,59 @@ serve(async (req) => {
         })
 
         if (authError) {
+          // Check if it's a user already exists error
+          if (authError.message?.includes('already registered')) {
+            results.failed++
+            results.errors.push(`User already registered: ${userData.email}`)
+            continue
+          } else {
+            results.failed++
+            results.errors.push(`Failed to create auth user for ${userData.email}: ${authError.message}`)
+            continue
+          }
+        }
+
+        if (!authUser?.user) {
           results.failed++
-          results.errors.push(`Failed to create auth user for ${userData.email}: ${authError.message}`)
+          results.errors.push(`Failed to create auth user for ${userData.email}: No user returned`)
           continue
         }
 
-        // Create profile with validated role
-        const { error: profileError } = await supabaseClient
-          .from('profiles')
-          .insert({
-            id: authUser.user.id,
-            email: userData.email,
-            full_name: userData.full_name || '',
-            role: userRole
-          })
+        try {
+          // Create profile with validated role
+          const { error: profileError } = await supabaseClient
+            .from('profiles')
+            .insert({
+              id: authUser.user.id,
+              email: userData.email,
+              full_name: userData.full_name || '',
+              role: userRole
+            })
 
-        if (profileError) {
+          if (profileError) {
+            results.failed++
+            results.errors.push(`Failed to create profile for ${userData.email}: ${profileError.message}`)
+            
+            // Clean up auth user if profile creation failed
+            await supabaseClient.auth.admin.deleteUser(authUser.user.id)
+            continue
+          }
+
+          // Add to our tracking sets
+          existingAuthUsers.set(normalizedEmail, authUser.user)
+          existingProfiles.add(authUser.user.id)
+          
+          results.success++
+          console.log(`Successfully imported user: ${userData.email} with role: ${userRole}`)
+
+        } catch (profileCreateError) {
           results.failed++
-          results.errors.push(`Failed to create profile for ${userData.email}: ${profileError.message}`)
+          results.errors.push(`Error creating profile for ${userData.email}: ${profileCreateError.message}`)
           
           // Clean up auth user if profile creation failed
           await supabaseClient.auth.admin.deleteUser(authUser.user.id)
           continue
         }
-
-        results.success++
-        console.log(`Successfully imported user: ${userData.email} with role: ${userRole}`)
 
       } catch (error) {
         results.failed++
