@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -22,7 +21,7 @@ export const useContracts = () => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchContracts = async () => {
+  const fetchContracts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -62,7 +61,7 @@ export const useContracts = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   const createContract = async (contract: {
     title: string;
@@ -178,7 +177,7 @@ export const useContracts = () => {
 
   useEffect(() => {
     fetchContracts();
-  }, []); // Remove toast from dependencies to prevent infinite loop
+  }, [fetchContracts]);
 
   return {
     contracts,
