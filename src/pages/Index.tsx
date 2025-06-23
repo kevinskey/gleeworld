@@ -1,19 +1,19 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText, Users, Settings, Plus, Eye, Send, Edit, Inbox } from "lucide-react";
+import { Upload, FileText, Users, Settings, Plus, Eye, Send, Edit, Inbox, Loader2 } from "lucide-react";
 import { DocumentUpload } from "@/components/DocumentUpload";
 import { ContractTemplates } from "@/components/ContractTemplates";
 import { SigningDashboard } from "@/components/SigningDashboard";
 import { AdminPanel } from "@/components/AdminPanel";
-import { useToast } from "@/hooks/use-toast";
+import { useContracts } from "@/hooks/useContracts";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [documents, setDocuments] = useState([]);
+  const { contracts, loading } = useContracts();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -35,8 +35,8 @@ const Index = () => {
     }
   };
 
-  const completedCount = documents.filter(doc => doc.status === "completed").length;
-  const pendingCount = documents.filter(doc => doc.status !== "completed").length;
+  const completedCount = contracts.filter(doc => doc.status === "completed").length;
+  const pendingCount = contracts.filter(doc => doc.status !== "completed").length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -90,7 +90,7 @@ const Index = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-2xl font-bold">{documents.length}</CardTitle>
+                  <CardTitle className="text-2xl font-bold">{contracts.length}</CardTitle>
                   <CardDescription className="text-blue-100">Total Contracts</CardDescription>
                 </CardHeader>
               </Card>
@@ -114,7 +114,12 @@ const Index = () => {
                 <CardDescription>Manage your contract signing workflow</CardDescription>
               </CardHeader>
               <CardContent>
-                {documents.length === 0 ? (
+                {loading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                    <span className="ml-2">Loading contracts...</span>
+                  </div>
+                ) : contracts.length === 0 ? (
                   <div className="text-center py-12">
                     <Inbox className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No contracts yet</h3>
@@ -126,19 +131,19 @@ const Index = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {documents.map((doc) => (
-                      <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    {contracts.map((contract) => (
+                      <div key={contract.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                         <div className="flex items-center space-x-4">
                           <FileText className="h-8 w-8 text-gray-400" />
                           <div>
-                            <h3 className="font-medium text-gray-900">{doc.name}</h3>
-                            <p className="text-sm text-gray-500">Sent to: {doc.recipient}</p>
-                            <p className="text-xs text-gray-400">Created: {doc.created}</p>
+                            <h3 className="font-medium text-gray-900">{contract.title}</h3>
+                            <p className="text-sm text-gray-500">Status: {contract.status}</p>
+                            <p className="text-xs text-gray-400">Created: {new Date(contract.created_at).toLocaleDateString()}</p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-3">
-                          <Badge className={getStatusColor(doc.status)}>
-                            {getStatusText(doc.status)}
+                          <Badge className={getStatusColor(contract.status)}>
+                            {getStatusText(contract.status)}
                           </Badge>
                           <div className="flex space-x-2">
                             <Button variant="outline" size="sm">

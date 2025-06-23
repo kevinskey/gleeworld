@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,104 +7,49 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Eye, FileText, Trash2, Copy } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-
-interface Template {
-  id: number;
-  name: string;
-  description: string;
-  category: string;
-  content: string;
-  fields: string[];
-  lastModified: string;
-  uses: number;
-}
+import { Plus, Edit, Eye, FileText, Trash2, Copy, Loader2 } from "lucide-react";
+import { useContractTemplates } from "@/hooks/useContractTemplates";
 
 export const ContractTemplates = () => {
-  const [templates, setTemplates] = useState<Template[]>([]);
-
+  const { templates, loading, createTemplate, deleteTemplate } = useContractTemplates();
+  
   const [newTemplate, setNewTemplate] = useState({
     name: "",
-    description: "",
-    category: "",
-    content: "",
-    fields: [] as string[]
+    template_content: "",
   });
 
-  const [fieldInput, setFieldInput] = useState("");
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
-  const { toast } = useToast();
+  const [isCreating, setIsCreating] = useState(false);
 
-  const addField = () => {
-    if (fieldInput.trim() && !newTemplate.fields.includes(fieldInput.trim())) {
-      setNewTemplate({
-        ...newTemplate,
-        fields: [...newTemplate.fields, fieldInput.trim()]
-      });
-      setFieldInput("");
-    }
-  };
-
-  const removeField = (field: string) => {
-    setNewTemplate({
-      ...newTemplate,
-      fields: newTemplate.fields.filter(f => f !== field)
-    });
-  };
-
-  const createTemplate = () => {
-    if (!newTemplate.name || !newTemplate.content) {
-      toast({
-        title: "Missing information",
-        description: "Please provide a name and content for the template.",
-        variant: "destructive",
-      });
+  const handleCreateTemplate = async () => {
+    if (!newTemplate.name || !newTemplate.template_content) {
       return;
     }
 
-    const template: Template = {
-      id: Date.now(),
-      ...newTemplate,
-      lastModified: new Date().toISOString().split('T')[0],
-      uses: 0
-    };
-
-    setTemplates([...templates, template]);
-    setNewTemplate({ name: "", description: "", category: "", content: "", fields: [] });
-    setIsCreateOpen(false);
+    setIsCreating(true);
+    const result = await createTemplate(newTemplate);
     
-    toast({
-      title: "Template created",
-      description: "Your new template has been saved successfully.",
-    });
-  };
-
-  const deleteTemplate = (id: number) => {
-    setTemplates(templates.filter(t => t.id !== id));
-    toast({
-      title: "Template deleted",
-      description: "The template has been removed successfully.",
-    });
-  };
-
-  const useTemplate = (template: Template) => {
-    toast({
-      title: "Template ready",
-      description: `${template.name} is ready for customization.`,
-    });
-  };
-
-  const getCategoryColor = (category: string) => {
-    switch (category.toLowerCase()) {
-      case "service": return "bg-blue-100 text-blue-800";
-      case "legal": return "bg-purple-100 text-purple-800";
-      case "hr": return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
+    if (result) {
+      setNewTemplate({ name: "", template_content: "" });
+      setIsCreateOpen(false);
     }
+    setIsCreating(false);
   };
+
+  const handleDeleteTemplate = async (id: string) => {
+    await deleteTemplate(id);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading templates...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -123,38 +69,17 @@ export const ContractTemplates = () => {
             <DialogHeader>
               <DialogTitle>Create New Template</DialogTitle>
               <DialogDescription>
-                Create a reusable contract template with merge fields
+                Create a reusable contract template
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="template-name">Template Name</Label>
-                  <Input
-                    id="template-name"
-                    value={newTemplate.name}
-                    onChange={(e) => setNewTemplate({...newTemplate, name: e.target.value})}
-                    placeholder="Service Agreement Template"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="template-category">Category</Label>
-                  <Input
-                    id="template-category"
-                    value={newTemplate.category}
-                    onChange={(e) => setNewTemplate({...newTemplate, category: e.target.value})}
-                    placeholder="Service, Legal, HR, etc."
-                  />
-                </div>
-              </div>
-              
               <div className="space-y-2">
-                <Label htmlFor="template-description">Description</Label>
+                <Label htmlFor="template-name">Template Name</Label>
                 <Input
-                  id="template-description"
-                  value={newTemplate.description}
-                  onChange={(e) => setNewTemplate({...newTemplate, description: e.target.value})}
-                  placeholder="Brief description of this template"
+                  id="template-name"
+                  value={newTemplate.name}
+                  onChange={(e) => setNewTemplate({...newTemplate, name: e.target.value})}
+                  placeholder="Service Agreement Template"
                 />
               </div>
 
@@ -162,41 +87,27 @@ export const ContractTemplates = () => {
                 <Label htmlFor="template-content">Template Content</Label>
                 <Textarea
                   id="template-content"
-                  value={newTemplate.content}
-                  onChange={(e) => setNewTemplate({...newTemplate, content: e.target.value})}
-                  placeholder="Enter your contract template here. Use {{field_name}} for merge fields..."
-                  rows={8}
+                  value={newTemplate.template_content}
+                  onChange={(e) => setNewTemplate({...newTemplate, template_content: e.target.value})}
+                  placeholder="Enter your contract template here..."
+                  rows={12}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Merge Fields</Label>
-                <div className="flex space-x-2">
-                  <Input
-                    value={fieldInput}
-                    onChange={(e) => setFieldInput(e.target.value)}
-                    placeholder="field_name"
-                    onKeyPress={(e) => e.key === 'Enter' && addField()}
-                  />
-                  <Button type="button" onClick={addField}>Add</Button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {newTemplate.fields.map((field) => (
-                    <Badge key={field} variant="secondary" className="flex items-center space-x-1">
-                      <span>{`{{${field}}}`}</span>
-                      <button onClick={() => removeField(field)} className="ml-1 text-red-500">
-                        ×
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={createTemplate}>Create Template</Button>
+              <Button onClick={handleCreateTemplate} disabled={isCreating}>
+                {isCreating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Template'
+                )}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -219,38 +130,17 @@ export const ContractTemplates = () => {
                 <DialogHeader>
                   <DialogTitle>Create New Template</DialogTitle>
                   <DialogDescription>
-                    Create a reusable contract template with merge fields
+                    Create a reusable contract template
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="template-name">Template Name</Label>
-                      <Input
-                        id="template-name"
-                        value={newTemplate.name}
-                        onChange={(e) => setNewTemplate({...newTemplate, name: e.target.value})}
-                        placeholder="Service Agreement Template"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="template-category">Category</Label>
-                      <Input
-                        id="template-category"
-                        value={newTemplate.category}
-                        onChange={(e) => setNewTemplate({...newTemplate, category: e.target.value})}
-                        placeholder="Service, Legal, HR, etc."
-                      />
-                    </div>
-                  </div>
-                  
                   <div className="space-y-2">
-                    <Label htmlFor="template-description">Description</Label>
+                    <Label htmlFor="template-name">Template Name</Label>
                     <Input
-                      id="template-description"
-                      value={newTemplate.description}
-                      onChange={(e) => setNewTemplate({...newTemplate, description: e.target.value})}
-                      placeholder="Brief description of this template"
+                      id="template-name"
+                      value={newTemplate.name}
+                      onChange={(e) => setNewTemplate({...newTemplate, name: e.target.value})}
+                      placeholder="Service Agreement Template"
                     />
                   </div>
 
@@ -258,41 +148,27 @@ export const ContractTemplates = () => {
                     <Label htmlFor="template-content">Template Content</Label>
                     <Textarea
                       id="template-content"
-                      value={newTemplate.content}
-                      onChange={(e) => setNewTemplate({...newTemplate, content: e.target.value})}
-                      placeholder="Enter your contract template here. Use {{field_name}} for merge fields..."
-                      rows={8}
+                      value={newTemplate.template_content}
+                      onChange={(e) => setNewTemplate({...newTemplate, template_content: e.target.value})}
+                      placeholder="Enter your contract template here..."
+                      rows={12}
                     />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Merge Fields</Label>
-                    <div className="flex space-x-2">
-                      <Input
-                        value={fieldInput}
-                        onChange={(e) => setFieldInput(e.target.value)}
-                        placeholder="field_name"
-                        onKeyPress={(e) => e.key === 'Enter' && addField()}
-                      />
-                      <Button type="button" onClick={addField}>Add</Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {newTemplate.fields.map((field) => (
-                        <Badge key={field} variant="secondary" className="flex items-center space-x-1">
-                          <span>{`{{${field}}}`}</span>
-                          <button onClick={() => removeField(field)} className="ml-1 text-red-500">
-                            ×
-                          </button>
-                        </Badge>
-                      ))}
-                    </div>
                   </div>
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={createTemplate}>Create Template</Button>
+                  <Button onClick={handleCreateTemplate} disabled={isCreating}>
+                    {isCreating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      'Create Template'
+                    )}
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -306,32 +182,16 @@ export const ContractTemplates = () => {
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
                     <CardTitle className="text-lg">{template.name}</CardTitle>
-                    <CardDescription>{template.description}</CardDescription>
+                    <CardDescription>
+                      Created: {new Date(template.created_at).toLocaleDateString()}
+                    </CardDescription>
                   </div>
-                  <Badge className={getCategoryColor(template.category)}>
-                    {template.category}
-                  </Badge>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="text-sm text-gray-500">
-                    <p>Fields: {template.fields.length}</p>
-                    <p>Used: {template.uses} times</p>
-                    <p>Modified: {template.lastModified}</p>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-1">
-                    {template.fields.slice(0, 3).map((field) => (
-                      <Badge key={field} variant="outline" className="text-xs">
-                        {field}
-                      </Badge>
-                    ))}
-                    {template.fields.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{template.fields.length - 3} more
-                      </Badge>
-                    )}
+                    <p>Last modified: {new Date(template.updated_at).toLocaleDateString()}</p>
                   </div>
 
                   <div className="flex space-x-2">
@@ -348,17 +208,13 @@ export const ContractTemplates = () => {
                     <Button variant="outline" size="sm">
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => useTemplate(template)}
-                    >
+                    <Button variant="outline" size="sm">
                       <Copy className="h-4 w-4" />
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => deleteTemplate(template.id)}
+                      onClick={() => handleDeleteTemplate(template.id)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -375,37 +231,16 @@ export const ContractTemplates = () => {
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedTemplate?.name}</DialogTitle>
-            <DialogDescription>{selectedTemplate?.description}</DialogDescription>
+            <DialogDescription>
+              Created: {selectedTemplate && new Date(selectedTemplate.created_at).toLocaleDateString()}
+            </DialogDescription>
           </DialogHeader>
           {selectedTemplate && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium">Category:</span> 
-                  <Badge className={`ml-2 ${getCategoryColor(selectedTemplate.category)}`}>
-                    {selectedTemplate.category}
-                  </Badge>
-                </div>
-                <div>
-                  <span className="font-medium">Uses:</span> {selectedTemplate.uses} times
-                </div>
-              </div>
-              
-              <div>
-                <Label className="font-medium">Merge Fields:</Label>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {selectedTemplate.fields.map((field) => (
-                    <Badge key={field} variant="secondary">
-                      {`{{${field}}}`}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
               <div>
                 <Label className="font-medium">Template Content:</Label>
                 <div className="mt-2 p-4 bg-gray-50 rounded-lg text-sm whitespace-pre-wrap">
-                  {selectedTemplate.content}
+                  {selectedTemplate.template_content}
                 </div>
               </div>
             </div>
@@ -414,9 +249,7 @@ export const ContractTemplates = () => {
             <Button variant="outline" onClick={() => setIsViewOpen(false)}>
               Close
             </Button>
-            <Button onClick={() => selectedTemplate && useTemplate(selectedTemplate)}>
-              Use Template
-            </Button>
+            <Button>Use Template</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
