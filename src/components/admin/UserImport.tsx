@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
-import { Download, Upload, Users, AlertCircle } from "lucide-react";
+import { Download, Upload, Users, AlertCircle, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -26,7 +26,52 @@ export const UserImport = () => {
   const [progress, setProgress] = useState(0);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [manualUsers, setManualUsers] = useState("");
+  const [jsonValidationError, setJsonValidationError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const validateJsonInput = (jsonString: string) => {
+    try {
+      const parsed = JSON.parse(jsonString);
+      
+      if (!Array.isArray(parsed)) {
+        return "JSON must be an array of user objects";
+      }
+      
+      if (parsed.length === 0) {
+        return "Array cannot be empty";
+      }
+      
+      // Validate each user object
+      for (let i = 0; i < parsed.length; i++) {
+        const user = parsed[i];
+        if (!user.email) {
+          return `User at index ${i} is missing required 'email' field`;
+        }
+        if (typeof user.email !== 'string') {
+          return `User at index ${i} has invalid email field (must be string)`;
+        }
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(user.email)) {
+          return `User at index ${i} has invalid email format: ${user.email}`;
+        }
+      }
+      
+      return null; // No errors
+    } catch (error) {
+      return `Invalid JSON format: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    }
+  };
+
+  const handleJsonChange = (value: string) => {
+    setManualUsers(value);
+    if (value.trim()) {
+      const validationError = validateJsonInput(value);
+      setJsonValidationError(validationError);
+    } else {
+      setJsonValidationError(null);
+    }
+  };
 
   const handleApiImport = async () => {
     if (!apiUrl || !apiKey) {
@@ -42,13 +87,11 @@ export const UserImport = () => {
     setProgress(0);
     setImportResult(null);
 
-    // Simulate progress
     const progressInterval = setInterval(() => {
       setProgress(prev => Math.min(prev + 10, 90));
     }, 200);
 
     try {
-      // Call our edge function to handle the import
       const { data, error } = await supabase.functions.invoke('import-users', {
         body: {
           apiUrl,
@@ -119,6 +162,17 @@ export const UserImport = () => {
       return;
     }
 
+    // Validate JSON before attempting import
+    const validationError = validateJsonInput(manualUsers);
+    if (validationError) {
+      toast({
+        title: "Invalid Data Format",
+        description: validationError,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsImporting(true);
     setProgress(0);
     setImportResult(null);
@@ -128,8 +182,9 @@ export const UserImport = () => {
     }, 200);
 
     try {
-      // Parse manual user data (expecting JSON format)
       const users = JSON.parse(manualUsers);
+      
+      console.log('Sending users to import function:', users);
       
       const { data, error } = await supabase.functions.invoke('import-users', {
         body: {
@@ -140,6 +195,8 @@ export const UserImport = () => {
 
       clearInterval(progressInterval);
       setProgress(100);
+
+      console.log('Import function response:', { data, error });
 
       if (error) {
         console.error('Supabase function error:', error);
@@ -190,6 +247,19 @@ export const UserImport = () => {
       setIsImporting(false);
     }
   };
+
+  const exampleJson = `[
+  {
+    "email": "john.doe@example.com",
+    "full_name": "John Doe",
+    "role": "user"
+  },
+  {
+    "email": "jane.smith@example.com",
+    "full_name": "Jane Smith",
+    "role": "admin"
+  }
+]`;
 
   return (
     <div className="space-y-6">
@@ -255,21 +325,41 @@ export const UserImport = () => {
             <Textarea
               id="manualUsers"
               value={manualUsers}
-              onChange={(e) => setManualUsers(e.target.value)}
-              placeholder={`[
-  {
-    "email": "user@example.com",
-    "full_name": "John Doe",
-    "role": "user"
-  }
-]`}
-              rows={8}
+              onChange={(e) => handleJsonChange(e.target.value)}
+              placeholder={exampleJson}
+              rows={10}
+              className={`font-mono ${jsonValidationError ? 'border-red-300' : ''}`}
             />
+            {jsonValidationError && (
+              <Alert className="mt-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-red-600">
+                  {jsonValidationError}
+                </AlertDescription>
+              </Alert>
+            )}
+            {manualUsers.trim() && !jsonValidationError && (
+              <Alert className="mt-2">
+                <CheckCircle className="h-4 w-4" />
+                <AlertDescription className="text-green-600">
+                  JSON format is valid. Ready to import {JSON.parse(manualUsers).length} users.
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+          
+          <div className="text-sm text-gray-600">
+            <p className="font-medium">Required fields:</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li><code>email</code> - Valid email address (required)</li>
+              <li><code>full_name</code> - User's full name (optional)</li>
+              <li><code>role</code> - User role: "user", "admin", or "super-admin" (optional, defaults to "user")</li>
+            </ul>
           </div>
           
           <Button 
             onClick={handleManualImport}
-            disabled={isImporting}
+            disabled={isImporting || !!jsonValidationError || !manualUsers.trim()}
             variant="outline"
             className="w-full"
           >
