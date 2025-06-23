@@ -85,20 +85,22 @@ export const useContractTemplates = () => {
 
       if (error) throw error;
 
-      let header_image_url = null;
+      let updatedTemplate = { ...data };
       
       // Upload header image if provided
       if (template.header_image) {
         try {
-          header_image_url = await uploadHeaderImage(template.header_image, data.id);
+          const header_image_url = await uploadHeaderImage(template.header_image, data.id);
           
-          // Update the template with the image URL
+          // Update the template with the image URL using raw SQL since the column might not be in types yet
           const { error: updateError } = await supabase
             .from('contract_templates')
-            .update({ header_image_url })
+            .update({ header_image_url } as any)
             .eq('id', data.id);
 
           if (updateError) throw updateError;
+          
+          updatedTemplate = { ...updatedTemplate, header_image_url };
         } catch (imageError) {
           console.error('Error uploading header image:', imageError);
           toast({
@@ -109,7 +111,6 @@ export const useContractTemplates = () => {
         }
       }
 
-      const updatedTemplate = { ...data, header_image_url };
       setTemplates(prev => [updatedTemplate, ...prev]);
       
       toast({
