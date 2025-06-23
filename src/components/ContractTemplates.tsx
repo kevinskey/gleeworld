@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,9 +12,10 @@ import { EditTemplateDialog } from "./templates/EditTemplateDialog";
 
 interface ContractTemplatesProps {
   onUseTemplate?: (templateContent: string, templateName: string) => void;
+  onContractCreated?: () => void;
 }
 
-export const ContractTemplates = ({ onUseTemplate }: ContractTemplatesProps) => {
+export const ContractTemplates = ({ onUseTemplate, onContractCreated }: ContractTemplatesProps) => {
   const { templates, loading, createTemplate, deleteTemplate } = useContractTemplates();
   const { createContractFromTemplate, isCreating } = useContractFromTemplate();
   const { toast } = useToast();
@@ -118,11 +118,8 @@ export const ContractTemplates = ({ onUseTemplate }: ContractTemplatesProps) => 
       });
     } else {
       const result = await createContractFromTemplate(template);
-      if (result) {
-        toast({
-          title: "Contract Created",
-          description: `New contract created from template "${template.name}"`,
-        });
+      if (result && onContractCreated) {
+        onContractCreated();
       }
     }
   };

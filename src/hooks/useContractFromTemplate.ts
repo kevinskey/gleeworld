@@ -6,7 +6,7 @@ import type { ContractTemplate } from "@/hooks/useContractTemplates";
 
 export const useContractFromTemplate = () => {
   const [isCreating, setIsCreating] = useState(false);
-  const { createContract } = useContracts();
+  const { createContract, refetch } = useContracts();
   const { toast } = useToast();
 
   const createContractFromTemplate = async (template: ContractTemplate) => {
@@ -19,6 +19,9 @@ export const useContractFromTemplate = () => {
       });
 
       if (contractData) {
+        // Refresh the contracts list to show the new contract
+        await refetch();
+        
         toast({
           title: "Success",
           description: `Contract created from template "${template.name}"`,

@@ -22,7 +22,7 @@ const Index = () => {
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [templateContent, setTemplateContent] = useState<string>("");
   const [templateName, setTemplateName] = useState<string>("");
-  const { contracts, loading, deleteContract } = useContracts();
+  const { contracts, loading, deleteContract, refetch } = useContracts();
   const { user, loading: authLoading, signOut } = useAuth();
   const { displayName } = useUserProfile(user);
   const navigate = useNavigate();
@@ -61,6 +61,12 @@ const Index = () => {
     setTemplateContent(content);
     setTemplateName(name);
     setActiveTab("upload");
+  };
+
+  const handleContractCreated = () => {
+    // Refresh contracts and switch to dashboard
+    refetch();
+    setActiveTab("dashboard");
   };
 
   const completedCount = contracts.filter(doc => doc.status === "completed").length;
@@ -124,7 +130,10 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="templates">
-            <ContractTemplates onUseTemplate={handleUseTemplate} />
+            <ContractTemplates 
+              onUseTemplate={handleUseTemplate} 
+              onContractCreated={handleContractCreated}
+            />
           </TabsContent>
 
           <TabsContent value="admin">
