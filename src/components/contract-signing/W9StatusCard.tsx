@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { CheckCircle, AlertCircle, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useParams } from "react-router-dom";
 
 interface W9StatusCardProps {
   w9Status: 'required' | 'completed' | 'not_required';
@@ -19,6 +20,8 @@ export const W9StatusCard = ({
   onDownloadCombinedPDF,
   canDownloadPDF 
 }: W9StatusCardProps) => {
+  const { contractId } = useParams();
+
   if (w9Status === 'not_required') return null;
 
   const getStatusIcon = () => {
@@ -40,6 +43,15 @@ export const W9StatusCard = ({
         return <Badge variant="destructive">Required</Badge>;
       default:
         return <Badge variant="outline">Not Required</Badge>;
+    }
+  };
+
+  const handleW9Complete = () => {
+    if (contractId) {
+      // Navigate to W9 form with return parameter
+      window.location.href = `/w9-form?return=${contractId}`;
+    } else if (onW9Complete) {
+      onW9Complete();
     }
   };
 
@@ -78,7 +90,7 @@ export const W9StatusCard = ({
           </div>
         )}
         {w9Status === 'required' && (
-          <Button onClick={onW9Complete} variant="default" size="sm">
+          <Button onClick={handleW9Complete} variant="default" size="sm">
             Complete W9 Form
           </Button>
         )}
