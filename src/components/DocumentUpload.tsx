@@ -83,7 +83,7 @@ export const DocumentUpload = ({
         setHasStipendField(true);
       }
       
-      // Create default signature fields for ARTIST and AGENT
+      // Create default signature fields for ARTIST and AGENT with debugging
       const defaultSignatureFields: SignatureField[] = [
         {
           id: Date.now(),
@@ -104,6 +104,7 @@ export const DocumentUpload = ({
           required: true
         }
       ];
+      console.log('Setting default signature fields:', defaultSignatureFields);
       setSignatureFields(defaultSignatureFields);
       
       toast({
@@ -222,8 +223,18 @@ export const DocumentUpload = ({
       return;
     }
 
-    console.log('Preview - Signature fields being passed:', signatureFields);
+    console.log('=== PREVIEW CONTRACT DEBUG ===');
+    console.log('Preview - Signature fields state:', signatureFields);
     console.log('Preview - Number of signature fields:', signatureFields.length);
+    console.log('Preview - signatureFields type:', typeof signatureFields);
+    console.log('Preview - signatureFields is array:', Array.isArray(signatureFields));
+    
+    // Log each field
+    signatureFields.forEach((field, index) => {
+      console.log(`Preview - Field ${index}:`, field);
+    });
+    
+    console.log('=== END PREVIEW DEBUG ===');
 
     setShowPreview(true);
   };
@@ -398,7 +409,10 @@ export const DocumentUpload = ({
 
               <SignatureFieldEditor 
                 fields={signatureFields}
-                onFieldsChange={setSignatureFields}
+                onFieldsChange={(newFields) => {
+                  console.log('SignatureFieldEditor - Fields changed:', newFields);
+                  setSignatureFields(newFields);
+                }}
               />
 
               <RecipientInformation

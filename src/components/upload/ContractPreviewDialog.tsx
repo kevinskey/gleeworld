@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,8 +55,19 @@ export const ContractPreviewDialog = ({
     }
   };
 
+  // Enhanced debugging
+  console.log('ContractPreviewDialog - Dialog open:', open);
   console.log('ContractPreviewDialog - Received signature fields:', signatureFields);
   console.log('ContractPreviewDialog - Fields count:', signatureFields?.length || 0);
+  console.log('ContractPreviewDialog - Fields type:', typeof signatureFields);
+  console.log('ContractPreviewDialog - Is array?', Array.isArray(signatureFields));
+  
+  // Log each field individually
+  if (Array.isArray(signatureFields)) {
+    signatureFields.forEach((field, index) => {
+      console.log(`Field ${index}:`, field);
+    });
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -94,12 +106,22 @@ export const ContractPreviewDialog = ({
             </div>
           )}
 
-          {/* Signature Fields - Enhanced display */}
+          {/* Signature Fields - Enhanced display with better debugging */}
           <div className="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
             <h3 className="text-sm font-medium text-blue-700 mb-2 flex items-center gap-2">
               <Signature className="h-4 w-4" />
               Document Fields ({Array.isArray(signatureFields) ? signatureFields.length : 0})
             </h3>
+            
+            {/* Debug info - temporary */}
+            <div className="mb-3 p-2 bg-gray-100 rounded text-xs">
+              <p>Debug Info:</p>
+              <p>Type: {typeof signatureFields}</p>
+              <p>Is Array: {Array.isArray(signatureFields) ? 'Yes' : 'No'}</p>
+              <p>Length: {signatureFields?.length || 'undefined'}</p>
+              <p>Raw data: {JSON.stringify(signatureFields)}</p>
+            </div>
+            
             {Array.isArray(signatureFields) && signatureFields.length > 0 ? (
               <div className="space-y-2 max-h-40 overflow-y-auto">
                 {signatureFields.map((field) => (
