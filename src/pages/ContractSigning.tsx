@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Loader2, FileText, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { SignatureFieldOverlay } from "@/components/SignatureFieldOverlay";
+import { SignatureCanvas } from "@/components/SignatureCanvas";
+import { Input } from "@/components/ui/input";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { logActivity, ACTIVITY_TYPES, RESOURCE_TYPES } from "@/utils/activityLogger";
 
@@ -68,12 +69,10 @@ const ContractSigning = () => {
         console.log("Contract found:", data);
         setContract(data);
         
-        // Extract signature fields from contract content
         const extractedFields = extractSignatureFieldsFromContract(data.content);
         console.log("Extracted signature fields:", extractedFields);
         setSignatureFields(extractedFields);
         
-        // Log contract view activity
         await logActivity({
           actionType: ACTIVITY_TYPES.CONTRACT_VIEWED,
           resourceType: RESOURCE_TYPES.CONTRACT,
@@ -99,10 +98,8 @@ const ContractSigning = () => {
     fetchContract();
   }, [contractId]);
 
-  // Function to extract signature fields from contract content
   const extractSignatureFieldsFromContract = (content: string): SignatureField[] => {
     try {
-      // Look for signature fields in the content - they might be stored as JSON
       const signatureFieldsMatch = content.match(/Signature Fields: (\[.*?\])/);
       if (signatureFieldsMatch) {
         const fieldsData = JSON.parse(signatureFieldsMatch[1]);
@@ -113,7 +110,6 @@ const ContractSigning = () => {
       console.error("Error parsing signature fields from content:", error);
     }
 
-    // Fallback to default signature fields if none found
     console.log("Using default signature fields");
     return [
       {
@@ -146,7 +142,6 @@ const ContractSigning = () => {
     ];
   };
 
-  // Countdown effect for redirect
   useEffect(() => {
     if (contract?.status === 'completed' && redirectCountdown > 0) {
       const timer = setTimeout(() => {
@@ -165,7 +160,6 @@ const ContractSigning = () => {
       [fieldId]: value
     }));
     
-    // Auto-complete contract when all required fields are filled
     const updatedFields = { ...completedFields, [fieldId]: value };
     const requiredFields = signatureFields.filter(f => f.required);
     const allFieldsCompleted = requiredFields.every(f => updatedFields[f.id]);
@@ -178,11 +172,9 @@ const ContractSigning = () => {
   const handleSign = async (fieldsToUse = completedFields) => {
     const requiredFields = signatureFields.filter(f => f.required);
     
-    // Automatically set the current date for date fields before validation
     const currentDate = new Date().toLocaleDateString();
     const updatedCompletedFields = { ...fieldsToUse };
     
-    // Auto-fill date fields with current date if not already filled
     signatureFields.forEach(field => {
       if (field.type === 'date' && field.required && !updatedCompletedFields[field.id]) {
         updatedCompletedFields[field.id] = currentDate;
@@ -190,7 +182,6 @@ const ContractSigning = () => {
       }
     });
     
-    // Update state with auto-filled dates
     setCompletedFields(updatedCompletedFields);
     
     const missingFields = requiredFields.filter(f => !updatedCompletedFields[f.id]);
@@ -215,7 +206,6 @@ const ContractSigning = () => {
     try {
       console.log("Calling complete-contract-signing function...");
       
-      // Get the signature data from completed fields - find the first signature field
       const signatureField = signatureFields.find(f => f.type === 'signature');
       const dateField = signatureFields.find(f => f.type === 'date');
       
@@ -241,7 +231,6 @@ const ContractSigning = () => {
 
       console.log('Contract signing completed:', data);
 
-      // Log contract signing activity
       await logActivity({
         actionType: ACTIVITY_TYPES.CONTRACT_SIGNED,
         resourceType: RESOURCE_TYPES.CONTRACT,
@@ -278,23 +267,71 @@ const ContractSigning = () => {
     return `${completed.length}/${requiredFields.length}`;
   };
 
-  const renderContractWithInlineSignatureFields = () => {
-    const content = contract?.content || '';
+  const renderEmbeddedSignatureField = (field: SignatureField) => {
+    const isCompleted = !!completedFields[field.id];
     
-    // Clean content by removing the signature fields JSON from display
+    if (field.type === 'signature') {
+      return (
+        <div className="my-6 p-4 border-2 border-gray-300 rounded-lg bg-gray-50">
+          <div className="mb-2 font-medium text-gray-700">{field.label}</div>
+          {isCompleted ? (
+            <div className="p-4 bg-green-50 border border-green-200 rounded text-green-700">
+              ✓ Signature completed
+            </div>
+          ) : (
+            <SignatureCanvas 
+              onSignatureChange={(signature) => {
+                if (signature) {
+                  handleFieldComplete(field.id, signature);
+                }
+              }}
+              disabled={false}
+            />
+          )}
+        </div>
+      );
+    }
+    
+    if (field.type === 'date') {
+      return (
+        <div className="my-4 p-3 border border-gray-300 rounded bg-gray-50">
+          <div className="mb-2 font-medium text-gray-700">{field.label}</div>
+          {isCompleted ? (
+            <div className="text-gray-900 font-medium">{completedFields[field.id]}</div>
+          ) : (
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                onChange={(e) => handleFieldComplete(field.id, e.target.value)}
+                className="flex-1"
+              />
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleFieldComplete(field.id, new Date().toLocaleDateString())}
+              >
+                Today
+              </Button>
+            </div>
+          )}
+        </div>
+      );
+    }
+    
+    return null;
+  };
+
+  const renderContractWithEmbeddedFields = () => {
+    const content = contract?.content || '';
     let cleanContent = content.replace(/Signature Fields: \[.*?\]/g, '').trim();
     
-    // Split content into lines for inline field insertion
     const lines = cleanContent.split('\n');
     const processedLines: (string | JSX.Element)[] = [];
     
     lines.forEach((line, index) => {
       processedLines.push(line);
       
-      // Look for "ARTIST:" patterns to insert artist signature field after
       if (line.toLowerCase().includes('artist:')) {
-        
-        // Find the artist signature field
         const artistSignatureField = signatureFields.find(f => 
           f.type === 'signature' && 
           (f.label.toLowerCase().includes('artist') || f.id === 1)
@@ -302,21 +339,14 @@ const ContractSigning = () => {
         
         if (artistSignatureField && contract.status !== 'completed') {
           processedLines.push(
-            <div key={`signature-${artistSignatureField.id}`} className="relative my-4">
-              <SignatureFieldOverlay
-                field={artistSignatureField}
-                onFieldComplete={handleFieldComplete}
-                isCompleted={!!completedFields[artistSignatureField.id]}
-                value={completedFields[artistSignatureField.id]}
-              />
+            <div key={`signature-${artistSignatureField.id}`}>
+              {renderEmbeddedSignatureField(artistSignatureField)}
             </div>
           );
         }
       }
       
-      // Look for "AGENT:" patterns to insert agent signature field
       if (line.toLowerCase().includes('agent:')) {
-        
         const agentSignatureField = signatureFields.find(f => 
           f.type === 'signature' && 
           (f.label.toLowerCase().includes('agent') || f.id === 2)
@@ -324,32 +354,21 @@ const ContractSigning = () => {
         
         if (agentSignatureField && contract.status !== 'completed') {
           processedLines.push(
-            <div key={`signature-${agentSignatureField.id}`} className="relative my-4">
-              <SignatureFieldOverlay
-                field={agentSignatureField}
-                onFieldComplete={handleFieldComplete}
-                isCompleted={!!completedFields[agentSignatureField.id]}
-                value={completedFields[agentSignatureField.id]}
-              />
+            <div key={`signature-${agentSignatureField.id}`}>
+              {renderEmbeddedSignatureField(agentSignatureField)}
             </div>
           );
         }
       }
       
-      // Add date field near the end of document
       if ((index === lines.length - 1 || line.toLowerCase().includes('date executed')) && 
           signatureFields.some(f => f.type === 'date')) {
         
         const dateField = signatureFields.find(f => f.type === 'date');
         if (dateField && contract.status !== 'completed') {
           processedLines.push(
-            <div key={`date-${dateField.id}`} className="relative my-4">
-              <SignatureFieldOverlay
-                field={dateField}
-                onFieldComplete={handleFieldComplete}
-                isCompleted={!!completedFields[dateField.id]}
-                value={completedFields[dateField.id]}
-              />
+            <div key={`date-${dateField.id}`}>
+              {renderEmbeddedSignatureField(dateField)}
             </div>
           );
         }
@@ -374,13 +393,9 @@ const ContractSigning = () => {
           ))}
         </div>
         
-        {/* Progress indicator at bottom */}
         {contract.status !== 'completed' && signatureFields.length > 0 && (
           <div className="text-center text-sm text-gray-600 bg-gray-50 p-3 rounded">
             Progress: {getCompletionProgress()} fields completed
-            <div className="text-xs text-gray-500 mt-1">
-              Click on the signature fields embedded in the document above
-            </div>
           </div>
         )}
       </div>
@@ -429,12 +444,11 @@ const ContractSigning = () => {
           </CardHeader>
           <CardContent>
             <div className="relative">
-              {renderContractWithInlineSignatureFields()}
+              {renderContractWithEmbeddedFields()}
             </div>
           </CardContent>
         </Card>
 
-        {/* Show signing in progress indicator */}
         {signing && (
           <div className="text-center py-4">
             <div className="flex items-center justify-center space-x-2">
