@@ -19,10 +19,11 @@ export const useContractFromTemplate = (onContractCreated?: () => void) => {
       const username = displayName || user?.email || 'User';
       const contractTitle = `${username} - ${template.name}`;
       
+      // Don't pass template_id - we're using template content, not linking to template
       const contractData = await createContract({
         title: contractTitle,
         content: template.template_content,
-        template_id: template.id,
+        // Explicitly don't pass template_id to avoid foreign key constraint issues
       });
 
       if (contractData) {
