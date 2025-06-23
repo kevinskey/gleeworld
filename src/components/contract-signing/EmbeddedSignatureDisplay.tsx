@@ -20,12 +20,16 @@ export const EmbeddedSignatureDisplay = ({ signature }: EmbeddedSignatureDisplay
   return (
     <div key={`${signature.fieldId}-${signature.signerType}`} className={`my-4 p-4 border-2 rounded-lg ${borderColor}`}>
       <div className={`mb-2 font-medium ${textColor}`}>✓ {signerLabel} Applied</div>
-      {signature.signatureData.startsWith('data:image') ? (
+      {signature.signatureData && signature.signatureData.startsWith('data:image') ? (
         <img 
           src={signature.signatureData} 
           alt={`${signerLabel} Signature`} 
-          className="max-w-xs h-16 border rounded"
+          className="max-w-xs h-16 border rounded bg-white"
         />
+      ) : signature.signatureData ? (
+        <div className="font-cursive text-2xl text-gray-800 bg-white p-2 border rounded">
+          {signature.signatureData}
+        </div>
       ) : (
         <div className="text-sm text-gray-600">Digital signature applied</div>
       )}
