@@ -64,30 +64,74 @@ serve(async (req) => {
     if (source === 'manual' && users) {
       usersToImport = users
     } else if (source === 'reader.gleeworld.org' && apiUrl && apiKey) {
+      console.log(`Attempting to fetch from: ${apiUrl}`)
+      
       // Fetch users from external API
-      const response = await fetch(apiUrl, {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
+      try {
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          }
+        })
+
+        console.log(`API Response status: ${response.status}`)
+        console.log(`API Response headers:`, Object.fromEntries(response.headers.entries()))
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.log(`API Error response:`, errorText)
+          throw new Error(`API request failed with status ${response.status}: ${response.statusText}. Response: ${errorText.substring(0, 200)}`)
         }
-      })
 
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.statusText}`)
+        const contentType = response.headers.get('content-type')
+        if (!contentType || !contentType.includes('application/json')) {
+          const responseText = await response.text()
+          console.log(`Non-JSON response:`, responseText.substring(0, 200))
+          throw new Error(`API returned non-JSON content. Content-Type: ${contentType}. Response preview: ${responseText.substring(0, 100)}...`)
+        }
+
+        const apiData = await response.json()
+        console.log(`API Data received:`, apiData)
+        
+        // Transform API response to our format
+        // Adjust this based on the actual API response structure
+        usersToImport = Array.isArray(apiData) ? apiData : apiData.users || apiData.data || []
+        
+        if (!Array.isArray(usersToImport)) {
+          throw new Error(`Expected user data to be an array, got: ${typeof usersToImport}`)
+        }
+        
+        // Normalize the user data
+        usersToImport = usersToImport.map((user: any) => ({
+          email: user.email || user.emailAddress,
+          full_name: user.full_name || user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+          role: user.role || 'user'
+        }))
+
+        console.log(`Processed ${usersToImport.length} users for import`)
+
+      } catch (apiError) {
+        console.error('API fetch error:', apiError)
+        return new Response(
+          JSON.stringify({ 
+            error: `Failed to fetch users from API: ${apiError.message}`,
+            details: 'Please check your API URL and key. The API might be returning HTML instead of JSON, which could indicate an authentication issue or incorrect endpoint.'
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
       }
+    }
 
-      const apiData = await response.json()
-      
-      // Transform API response to our format
-      // Adjust this based on the actual API response structure
-      usersToImport = Array.isArray(apiData) ? apiData : apiData.users || []
-      
-      // Normalize the user data
-      usersToImport = usersToImport.map((user: any) => ({
-        email: user.email || user.emailAddress,
-        full_name: user.full_name || user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
-        role: user.role || 'user'
-      }))
+    if (!usersToImport || usersToImport.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'No users to import',
+          details: 'Either no users were provided or the API returned no user data.'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     const results = {
@@ -162,6 +206,8 @@ serve(async (req) => {
       }
     }
 
+    console.log(`Import completed. Success: ${results.success}, Failed: ${results.failed}`)
+
     return new Response(
       JSON.stringify(results),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -170,7 +216,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Import function error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: 'Check the function logs for more details about this error.'
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

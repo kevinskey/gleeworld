@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
-import { Download, Upload, Users } from "lucide-react";
+import { Download, Upload, Users, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -15,6 +15,8 @@ interface ImportResult {
   success: number;
   failed: number;
   errors: string[];
+  error?: string;
+  details?: string;
 }
 
 export const UserImport = () => {
@@ -40,6 +42,11 @@ export const UserImport = () => {
     setProgress(0);
     setImportResult(null);
 
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setProgress(prev => Math.min(prev + 10, 90));
+    }, 200);
+
     try {
       // Call our edge function to handle the import
       const { data, error } = await supabase.functions.invoke('import-users', {
@@ -50,15 +57,48 @@ export const UserImport = () => {
         }
       });
 
-      if (error) throw error;
+      clearInterval(progressInterval);
+      setProgress(100);
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        setImportResult({
+          success: 0,
+          failed: 0,
+          errors: [],
+          error: error.message || 'Unknown error occurred',
+          details: 'Failed to call import function'
+        });
+        return;
+      }
 
       setImportResult(data);
-      toast({
-        title: "Import Completed",
-        description: `Successfully imported ${data.success} users`,
-      });
+      
+      if (data.error) {
+        toast({
+          title: "Import Failed",
+          description: data.details || data.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Import Completed",
+          description: `Successfully imported ${data.success} users`,
+        });
+      }
     } catch (error) {
+      clearInterval(progressInterval);
+      setProgress(100);
       console.error('Import error:', error);
+      
+      setImportResult({
+        success: 0,
+        failed: 0,
+        errors: [],
+        error: error instanceof Error ? error.message : "Failed to import users",
+        details: 'Check the console for more details'
+      });
+      
       toast({
         title: "Import Failed",
         description: error instanceof Error ? error.message : "Failed to import users",
@@ -66,7 +106,6 @@ export const UserImport = () => {
       });
     } finally {
       setIsImporting(false);
-      setProgress(100);
     }
   };
 
@@ -84,6 +123,10 @@ export const UserImport = () => {
     setProgress(0);
     setImportResult(null);
 
+    const progressInterval = setInterval(() => {
+      setProgress(prev => Math.min(prev + 10, 90));
+    }, 200);
+
     try {
       // Parse manual user data (expecting JSON format)
       const users = JSON.parse(manualUsers);
@@ -95,23 +138,56 @@ export const UserImport = () => {
         }
       });
 
-      if (error) throw error;
+      clearInterval(progressInterval);
+      setProgress(100);
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        setImportResult({
+          success: 0,
+          failed: 0,
+          errors: [],
+          error: error.message || 'Unknown error occurred',
+          details: 'Failed to call import function'
+        });
+        return;
+      }
 
       setImportResult(data);
-      toast({
-        title: "Import Completed",
-        description: `Successfully imported ${data.success} users`,
+      
+      if (data.error) {
+        toast({
+          title: "Import Failed",
+          description: data.details || data.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Import Completed",
+          description: `Successfully imported ${data.success} users`,
+        });
+      }
+    } catch (parseError) {
+      clearInterval(progressInterval);
+      setProgress(100);
+      
+      const errorMessage = parseError instanceof Error ? parseError.message : "Invalid JSON format";
+      
+      setImportResult({
+        success: 0,
+        failed: 0,
+        errors: [],
+        error: "JSON Parse Error",
+        details: errorMessage
       });
-    } catch (error) {
-      console.error('Manual import error:', error);
+      
       toast({
         title: "Import Failed",
-        description: error instanceof Error ? error.message : "Failed to import users",
+        description: "Invalid JSON format. Please check your data.",
         variant: "destructive",
       });
     } finally {
       setIsImporting(false);
-      setProgress(100);
     }
   };
 
@@ -228,28 +304,42 @@ export const UserImport = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{importResult.success}</div>
-                <div className="text-sm text-green-700">Successful</div>
-              </div>
-              <div className="text-center p-4 bg-red-50 rounded-lg">
-                <div className="text-2xl font-bold text-red-600">{importResult.failed}</div>
-                <div className="text-sm text-red-700">Failed</div>
-              </div>
-            </div>
-            
-            {importResult.errors.length > 0 && (
-              <Alert>
+            {importResult.error ? (
+              <Alert className="mb-4">
+                <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  <div className="font-medium mb-2">Errors encountered:</div>
-                  <ul className="list-disc list-inside space-y-1">
-                    {importResult.errors.map((error, index) => (
-                      <li key={index} className="text-sm">{error}</li>
-                    ))}
-                  </ul>
+                  <div className="font-medium mb-2">Import Failed: {importResult.error}</div>
+                  {importResult.details && (
+                    <div className="text-sm text-muted-foreground">{importResult.details}</div>
+                  )}
                 </AlertDescription>
               </Alert>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">{importResult.success}</div>
+                    <div className="text-sm text-green-700">Successful</div>
+                  </div>
+                  <div className="text-center p-4 bg-red-50 rounded-lg">
+                    <div className="text-2xl font-bold text-red-600">{importResult.failed}</div>
+                    <div className="text-sm text-red-700">Failed</div>
+                  </div>
+                </div>
+                
+                {importResult.errors.length > 0 && (
+                  <Alert>
+                    <AlertDescription>
+                      <div className="font-medium mb-2">Errors encountered:</div>
+                      <ul className="list-disc list-inside space-y-1 max-h-40 overflow-y-auto">
+                        {importResult.errors.map((error, index) => (
+                          <li key={index} className="text-sm">{error}</li>
+                        ))}
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
