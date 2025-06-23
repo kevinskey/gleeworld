@@ -22,13 +22,20 @@ export const useContractTemplates = () => {
   const fetchTemplates = async () => {
     try {
       setLoading(true);
+      console.log('Fetching templates...');
+      
       const { data, error } = await supabase
         .from('contract_templates')
         .select('*')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching templates:', error);
+        throw error;
+      }
+      
+      console.log('Templates fetched successfully:', data?.length || 0);
       setTemplates(data || []);
     } catch (error) {
       console.error('Error fetching templates:', error);
@@ -44,8 +51,18 @@ export const useContractTemplates = () => {
 
   const uploadHeaderImage = async (file: File, templateId: string) => {
     try {
+      console.log('Uploading header image:', file.name, 'for template:', templateId);
+      
       const fileExt = file.name.split('.').pop();
       const fileName = `${templateId}/header.${fileExt}`;
+      
+      // First, check if user is authenticated
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      
+      console.log('Authenticated user:', user.id);
       
       const { error: uploadError } = await supabase.storage
         .from('template-headers')
@@ -53,12 +70,16 @@ export const useContractTemplates = () => {
           upsert: true
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('template-headers')
         .getPublicUrl(fileName);
 
+      console.log('Image uploaded successfully, public URL:', publicUrl);
       return publicUrl;
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -72,24 +93,52 @@ export const useContractTemplates = () => {
     header_image?: File | null;
   }) => {
     try {
+      console.log('Starting template creation process...');
+      
+      // Check authentication first
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.error('User not authenticated');
+        toast({
+          title: "Error",
+          description: "You must be logged in to create templates",
+          variant: "destructive",
+        });
+        return null;
+      }
+      
+      console.log('User authenticated:', user.id);
+      console.log('Creating template with data:', {
+        name: template.name,
+        content_length: template.template_content.length,
+        has_image: !!template.header_image,
+        user_id: user.id
+      });
+
+      // Create the template with the authenticated user's ID
       const { data, error } = await supabase
         .from('contract_templates')
         .insert([{
           name: template.name,
           template_content: template.template_content,
-          created_by: null,
+          created_by: user.id,
           is_active: true,
         }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database insert error:', error);
+        throw error;
+      }
 
+      console.log('Template created in database:', data);
       let updatedTemplate = { ...data };
       
       // Upload header image if provided
       if (template.header_image) {
         try {
+          console.log('Starting image upload...');
           const header_image_url = await uploadHeaderImage(template.header_image, data.id);
           
           // Update the template with the image URL
@@ -98,8 +147,12 @@ export const useContractTemplates = () => {
             .update({ header_image_url })
             .eq('id', data.id);
 
-          if (updateError) throw updateError;
+          if (updateError) {
+            console.error('Error updating template with image URL:', updateError);
+            throw updateError;
+          }
           
+          console.log('Template updated with image URL');
           updatedTemplate = { ...updatedTemplate, header_image_url };
         } catch (imageError) {
           console.error('Error uploading header image:', imageError);
@@ -113,6 +166,7 @@ export const useContractTemplates = () => {
 
       setTemplates(prev => [updatedTemplate, ...prev]);
       
+      console.log('Template creation completed successfully');
       toast({
         title: "Success",
         description: "Template created successfully",
@@ -120,9 +174,22 @@ export const useContractTemplates = () => {
       return updatedTemplate;
     } catch (error) {
       console.error('Error creating template:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = "Failed to create template";
+      if (error instanceof Error) {
+        if (error.message.includes('auth')) {
+          errorMessage = "Authentication error. Please try logging out and back in.";
+        } else if (error.message.includes('permission')) {
+          errorMessage = "Permission denied. Please check your account permissions.";
+        } else if (error.message.includes('network')) {
+          errorMessage = "Network error. Please check your connection.";
+        }
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to create template",
+        description: errorMessage,
         variant: "destructive",
       });
       return null;
@@ -131,14 +198,20 @@ export const useContractTemplates = () => {
 
   const deleteTemplate = async (id: string) => {
     try {
+      console.log('Deleting template:', id);
+      
       const { error } = await supabase
         .from('contract_templates')
         .update({ is_active: false })
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting template:', error);
+        throw error;
+      }
 
       setTemplates(prev => prev.filter(template => template.id !== id));
+      console.log('Template deleted successfully');
       toast({
         title: "Success",
         description: "Template deleted successfully",
