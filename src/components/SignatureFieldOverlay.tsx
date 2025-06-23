@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
@@ -32,13 +33,16 @@ export const SignatureFieldOverlay = ({
   const [fieldValue, setFieldValue] = useState(value || "");
   const isMobile = useIsMobile();
 
-  const handleComplete = (newValue: string | null) => {
-    console.log('Field completion for field', field.id, 'with value:', newValue ? 'signature data present' : 'no value');
+  const handleSignatureComplete = (signatureData: string | null) => {
+    console.log('Signature completion for field', field.id, 'with signature data:', signatureData ? 'present' : 'null');
     
-    if (newValue) {
-      setFieldValue(newValue);
-      onFieldComplete(field.id, newValue);
+    if (signatureData && signatureData.trim()) {
+      console.log('Valid signature data received, completing field');
+      setFieldValue(signatureData);
+      onFieldComplete(field.id, signatureData);
       setIsActive(false);
+    } else {
+      console.log('No valid signature data received');
     }
   };
 
@@ -51,6 +55,7 @@ export const SignatureFieldOverlay = ({
   };
 
   const handleCancel = () => {
+    console.log('Canceling field input for field', field.id);
     setIsActive(false);
   };
 
@@ -70,6 +75,7 @@ export const SignatureFieldOverlay = ({
 
   // Handle overlay click - only close if clicking the dark background
   const handleOverlayClick = (e: React.MouseEvent) => {
+    console.log('Overlay clicked, target:', e.target === e.currentTarget ? 'background' : 'content');
     // Only close if the click target is the overlay itself (dark background)
     if (e.target === e.currentTarget) {
       handleCancel();
@@ -90,7 +96,6 @@ export const SignatureFieldOverlay = ({
         <div 
           className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
           onClick={preventEventBubbling}
-          onMouseDown={preventEventBubbling}
           onTouchStart={preventEventBubbling}
           onTouchEnd={preventEventBubbling}
         >
@@ -107,13 +112,12 @@ export const SignatureFieldOverlay = ({
               <div className="space-y-4">
                 <div 
                   onClick={preventEventBubbling}
-                  onMouseDown={preventEventBubbling}
                   onTouchStart={preventEventBubbling}
                   onTouchEnd={preventEventBubbling}
                   style={{ isolation: 'isolate' }}
                 >
                   <SignatureCanvas 
-                    onSignatureChange={handleComplete}
+                    onSignatureChange={handleSignatureComplete}
                     disabled={false}
                   />
                 </div>
@@ -208,7 +212,12 @@ export const SignatureFieldOverlay = ({
         top: `${field.y}px`,
         minWidth: isMobile ? '100px' : '120px',
       }}
-      onClick={() => !isCompleted && setIsActive(true)}
+      onClick={() => {
+        console.log('Field clicked:', field.id, 'type:', field.type, 'completed:', isCompleted);
+        if (!isCompleted) {
+          setIsActive(true);
+        }
+      }}
     >
       {getFieldIcon()}
       <span className="truncate">
