@@ -46,13 +46,13 @@ export const DocumentUpload = ({
   const [signatureFields, setSignatureFields] = useState<SignatureField[]>([]);
   const [contractTitle, setContractTitle] = useState("");
   const [contractContent, setContractContent] = useState("");
-  const [originalTemplateContent, setOriginalTemplateContent] = useState(""); // Store original template
+  const [originalTemplateContent, setOriginalTemplateContent] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
   const [stipendAmount, setStipendAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [headerImageUrl, setHeaderImageUrl] = useState<string>(""); // New state
-  const [hasStipendField, setHasStipendField] = useState(false); // Track if template has stipend field
+  const [headerImageUrl, setHeaderImageUrl] = useState<string>("");
+  const [hasStipendField, setHasStipendField] = useState(false);
   const [creationMode, setCreationMode] = useState<'upload' | 'create' | 'template'>('create');
   const { toast } = useToast();
   const { createContract } = useContracts();
@@ -64,30 +64,26 @@ export const DocumentUpload = ({
   useEffect(() => {
     if (templateContent && templateName) {
       console.log('Applying template to form:', { templateName, templateContent });
-      setOriginalTemplateContent(templateContent); // Store original template
+      
+      // Set all template-related state in a single update
+      setOriginalTemplateContent(templateContent);
       setContractContent(templateContent);
       setCreationMode('template');
+      setContractTitle(templateName);
       
-      // Don't generate title here - wait for user selection
-      // The title will be updated when a user is selected
-      setContractTitle(templateName); // Just use template name as placeholder
-      
-      // Set contract type from template
       if (templateContractType) {
         setContractType(templateContractType);
       }
       
-      // Set header image URL if provided
       if (templateHeaderImageUrl) {
         setHeaderImageUrl(templateHeaderImageUrl);
       }
       
-      // Check if template has stipend field and remember it
       if (templateContent.includes('{{stipend}}')) {
         setHasStipendField(true);
       }
       
-      // Create default signature fields for ARTIST and AGENT with debugging
+      // Create default signature fields
       const defaultSignatureFields: SignatureField[] = [
         {
           id: Date.now(),
@@ -108,7 +104,6 @@ export const DocumentUpload = ({
           required: true
         }
       ];
-      console.log('Setting default signature fields:', defaultSignatureFields);
       setSignatureFields(defaultSignatureFields);
       
       toast({
@@ -137,7 +132,6 @@ export const DocumentUpload = ({
     if (mode === 'create') {
       setContractContent("");
       setContractTitle("");
-      // Create default signature fields for new contracts
       const defaultSignatureFields: SignatureField[] = [
         {
           id: Date.now(),
@@ -163,7 +157,7 @@ export const DocumentUpload = ({
   };
 
   // Function to update contract content with all current values
-  const updateContractContent = (userInfo?: any, currentStipend?: string) => {
+  const updateContractContent = useCallback((userInfo?: any, currentStipend?: string) => {
     if (!originalTemplateContent) return;
     
     let updatedContent = originalTemplateContent;
@@ -182,7 +176,7 @@ export const DocumentUpload = ({
     }
     
     setContractContent(updatedContent);
-  };
+  }, [originalTemplateContent, selectedUserId, users, stipendAmount]);
 
   // Handle user selection and placeholder replacement
   const handleUserSelection = (userId: string) => {
@@ -214,11 +208,10 @@ export const DocumentUpload = ({
   const handleStipendChange = (amount: string) => {
     console.log('Stipend amount changed to:', amount);
     setStipendAmount(amount);
-    
-    // Update contract content with new stipend amount
     updateContractContent(undefined, amount);
   };
 
+  // Handle drag and drop events
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(true);
@@ -261,6 +254,7 @@ export const DocumentUpload = ({
     }
   };
 
+  // Handle preview and send contract actions
   const handlePreviewContract = () => {
     if ((!uploadedFile && !contractContent) || !recipientEmail || !contractTitle) {
       toast({
@@ -277,7 +271,6 @@ export const DocumentUpload = ({
     console.log('Preview - signatureFields type:', typeof signatureFields);
     console.log('Preview - signatureFields is array:', Array.isArray(signatureFields));
     
-    // Log each field
     signatureFields.forEach((field, index) => {
       console.log(`Preview - Field ${index}:`, field);
     });
@@ -288,7 +281,6 @@ export const DocumentUpload = ({
   };
 
   const sendContract = async () => {
-    // Validate required fields first
     if (!contractTitle.trim()) {
       toast({
         title: "Missing Information",
@@ -324,17 +316,14 @@ export const DocumentUpload = ({
     console.log('Signature fields count:', signatureFields.length);
 
     try {
-      // Replace Date Executed placeholder with current date when signed
       let finalContent = contractContent || `Contract document: ${uploadedFile?.name}\n\nSignature Fields: ${JSON.stringify(signatureFields)}`;
       finalContent = finalContent.replace(/Date Executed:/g, `Date Executed: ${new Date().toLocaleDateString()}`);
       
       console.log('Creating contract with final content and no template_id');
       
-      // Create contract in database without template_id (we're using template content, not linking to template)
       const contractData = await createContract({
         title: contractTitle,
         content: finalContent,
-        // Explicitly don't pass template_id - we're creating a new contract from template content
       });
 
       if (!contractData) {
@@ -343,7 +332,6 @@ export const DocumentUpload = ({
 
       console.log('Contract created successfully:', contractData.id);
 
-      // Log contract sending activity
       await logActivity({
         actionType: ACTIVITY_TYPES.CONTRACT_SENT,
         resourceType: RESOURCE_TYPES.CONTRACT,
@@ -361,7 +349,6 @@ export const DocumentUpload = ({
 
       console.log('Sending email with signature fields:', signatureFields);
 
-      // Send email notification with proper error handling
       try {
         const { data: emailData, error: emailError } = await supabase.functions.invoke('send-contract-email', {
           body: {
@@ -371,7 +358,7 @@ export const DocumentUpload = ({
             contractId: contractData.id,
             senderName: displayName || "ContractFlow Team",
             customMessage: emailMessage,
-            signatureFields: signatureFields || [] // Ensure it's always an array
+            signatureFields: signatureFields || []
           }
         });
 
@@ -379,7 +366,6 @@ export const DocumentUpload = ({
 
         if (emailError) {
           console.error("Email error:", emailError);
-          // Don't throw here, just show warning
           toast({
             title: "Contract created successfully",
             description: `Contract was created but email sending failed. You may need to send the signing link manually to ${recipientEmail}.`,
@@ -417,7 +403,6 @@ export const DocumentUpload = ({
       setCreationMode('create');
       setShowPreview(false);
 
-      // Trigger contract created callback to refresh the contracts list
       if (onContractCreated) {
         onContractCreated();
       }
@@ -493,7 +478,6 @@ export const DocumentUpload = ({
             showArea={showFileUpload}
           />
 
-          {/* MOVED: SignatureFieldEditor is now outside the hasContent conditional */}
           <SignatureFieldEditor 
             fields={signatureFields}
             onFieldsChange={(newFields) => {
