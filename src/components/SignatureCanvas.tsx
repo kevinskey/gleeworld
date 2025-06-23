@@ -105,17 +105,26 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     ctx.lineTo(x, y);
     ctx.stroke();
     
+    // Mark that we have started drawing but don't capture yet
     if (!hasSignature) {
       setHasSignature(true);
-      const signatureData = canvas.toDataURL();
-      console.log('Signature captured, data length:', signatureData.length);
-      onSignatureChange(signatureData);
     }
   };
 
   const stopDrawing = () => {
     if (isDrawing) {
       setIsDrawing(false);
+      
+      // Capture the signature when drawing stops
+      if (hasSignature) {
+        const canvas = canvasRef.current;
+        if (canvas) {
+          const signatureData = canvas.toDataURL();
+          console.log('Signature completed and captured, data length:', signatureData.length);
+          onSignatureChange(signatureData);
+        }
+      }
+      
       console.log('Stopped drawing signature');
     }
   };

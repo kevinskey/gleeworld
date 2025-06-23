@@ -1,5 +1,6 @@
 
 import { SignatureCanvas } from "@/components/SignatureCanvas";
+import { useState } from "react";
 
 interface SignatureField {
   id: number;
@@ -26,6 +27,8 @@ export const SignatureFieldRenderer = ({
   isAdminOrAgentField, 
   onFieldComplete 
 }: SignatureFieldRendererProps) => {
+  const [currentSignature, setCurrentSignature] = useState<string | null>(null);
+
   // Don't show signature fields if already signed
   if (signatureRecord?.status === 'pending_admin_signature' || signatureRecord?.status === 'completed') {
     return null;
@@ -50,24 +53,27 @@ export const SignatureFieldRenderer = ({
           <div className="space-y-3">
             <SignatureCanvas 
               onSignatureChange={(signature) => {
-                if (signature) {
-                  console.log('Signature captured for field', field.id);
-                }
+                console.log('Signature captured for field', field.id, signature ? 'with data' : 'cleared');
+                setCurrentSignature(signature);
               }}
               disabled={false}
             />
             <div className="flex justify-end">
               <button
                 onClick={() => {
-                  const canvas = document.querySelector('canvas');
-                  if (canvas) {
-                    const signatureData = canvas.toDataURL();
-                    if (signatureData && signatureData !== 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==') {
-                      onFieldComplete(field.id, signatureData);
-                    }
+                  if (currentSignature && currentSignature !== 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==') {
+                    console.log('Completing signature for field', field.id);
+                    onFieldComplete(field.id, currentSignature);
+                  } else {
+                    console.log('No valid signature to complete');
                   }
                 }}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                disabled={!currentSignature}
+                className={`px-4 py-2 rounded transition-colors ${
+                  currentSignature 
+                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
               >
                 Complete Signature
               </button>
