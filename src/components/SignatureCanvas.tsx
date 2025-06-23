@@ -107,13 +107,14 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
         <div className="border rounded-lg p-4 bg-gray-50">
           <canvas
             ref={canvasRef}
-            className="border bg-white rounded cursor-crosshair w-full max-w-md mx-auto block"
+            className={`border bg-white rounded w-full max-w-md mx-auto block ${
+              disabled ? 'cursor-not-allowed opacity-50' : 'cursor-crosshair'
+            }`}
             style={{ touchAction: 'none' }}
             onMouseDown={startDrawing}
             onMouseMove={draw}
             onMouseUp={stopDrawing}
             onMouseLeave={stopDrawing}
-            disabled={disabled}
           />
         </div>
         
