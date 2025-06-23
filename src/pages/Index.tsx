@@ -38,37 +38,20 @@ const Index = () => {
     }
   }, [user, authLoading, navigate]);
 
-  // Add effect to refresh contracts when returning to dashboard
+  // Single effect to handle page visibility changes (only refresh when returning to page)
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden && activeTab === "dashboard") {
-        console.log('Page visible, force refreshing contracts...');
-        forceRefresh();
-      }
-    };
-
-    const handleFocus = () => {
-      if (activeTab === "dashboard") {
-        console.log('Window focused, force refreshing contracts...');
+        console.log('Page became visible, refreshing contracts...');
         forceRefresh();
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
     };
-  }, [activeTab, forceRefresh]);
-
-  // Force refresh when switching to dashboard tab
-  useEffect(() => {
-    if (activeTab === "dashboard") {
-      console.log('Switched to dashboard, force refreshing contracts...');
-      forceRefresh();
-    }
   }, [activeTab, forceRefresh]);
 
   const handleSignOut = async () => {
