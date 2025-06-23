@@ -26,6 +26,7 @@ interface EmbeddedSignature {
   dateSigned: string;
   ipAddress?: string;
   timestamp: string;
+  signerType?: 'artist' | 'admin';
 }
 
 interface ContractContentRendererProps {
@@ -66,17 +67,21 @@ export const ContractContentRenderer = ({
   };
 
   const renderEmbeddedSignatureDisplay = (signature: EmbeddedSignature) => {
+    const signerLabel = signature.signerType === 'admin' ? 'Admin Signature' : 'Artist Signature';
+    const borderColor = signature.signerType === 'admin' ? 'border-blue-300 bg-blue-50' : 'border-green-300 bg-green-50';
+    const textColor = signature.signerType === 'admin' ? 'text-blue-700' : 'text-green-700';
+    
     return (
-      <div key={signature.fieldId} className="my-4 p-4 border-2 border-green-300 rounded-lg bg-green-50">
-        <div className="mb-2 font-medium text-green-700">✓ Signature Applied</div>
+      <div key={`${signature.fieldId}-${signature.signerType}`} className={`my-4 p-4 border-2 rounded-lg ${borderColor}`}>
+        <div className={`mb-2 font-medium ${textColor}`}>✓ {signerLabel} Applied</div>
         {signature.signatureData.startsWith('data:image') ? (
           <img 
             src={signature.signatureData} 
-            alt="Embedded Signature" 
+            alt={`${signerLabel} Signature`} 
             className="max-w-xs h-16 border rounded"
           />
         ) : (
-          <div className="text-sm text-green-600">Digital signature applied</div>
+          <div className="text-sm text-gray-600">Digital signature applied</div>
         )}
         <div className="text-xs text-gray-600 mt-2">
           Signed on: {signature.dateSigned}
@@ -97,18 +102,19 @@ export const ContractContentRenderer = ({
     const lines = cleanContent.split('\n');
     const processedLines: (string | JSX.Element)[] = [];
     
+    // Get signatures by type
+    const artistSignature = embeddedSignatures.find(sig => sig.signerType === 'artist');
+    const adminSignature = embeddedSignatures.find(sig => sig.signerType === 'admin');
+    
     lines.forEach((line, index) => {
       processedLines.push(line);
       
       if (line.toLowerCase().includes('artist:') || line.toLowerCase().includes('signature')) {
-        // Check if we have an embedded signature for this field
-        const embeddedSignature = embeddedSignatures.find(sig => sig.fieldId === 1);
-        
-        if (embeddedSignature) {
-          // Show the embedded signature
+        if (artistSignature) {
+          // Show the embedded artist signature
           processedLines.push(
-            <div key={`embedded-signature-${embeddedSignature.fieldId}`}>
-              {renderEmbeddedSignatureDisplay(embeddedSignature)}
+            <div key={`embedded-artist-signature-${artistSignature.fieldId}`}>
+              {renderEmbeddedSignatureDisplay(artistSignature)}
             </div>
           );
         } else {
@@ -154,6 +160,15 @@ export const ContractContentRenderer = ({
       }
     });
     
+    // Add admin signature at the end if it exists
+    if (adminSignature) {
+      processedLines.push(
+        <div key={`embedded-admin-signature-${adminSignature.fieldId}`}>
+          {renderEmbeddedSignatureDisplay(adminSignature)}
+        </div>
+      );
+    }
+    
     return (
       <div className="space-y-2">
         <div 
@@ -181,6 +196,9 @@ export const ContractContentRenderer = ({
         {embeddedSignatures.length > 0 && (
           <div className="text-center text-sm text-green-600 bg-green-50 p-3 rounded">
             ✓ Document has been signed and signatures are embedded
+            {artistSignature && adminSignature && (
+              <div className="text-xs mt-1">Both artist and admin signatures are present</div>
+            )}
           </div>
         )}
       </div>

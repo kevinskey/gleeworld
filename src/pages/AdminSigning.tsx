@@ -23,6 +23,15 @@ interface ContractSignature {
   };
 }
 
+interface EmbeddedSignature {
+  fieldId: number;
+  signatureData: string;
+  dateSigned: string;
+  ipAddress?: string;
+  timestamp: string;
+  signerType?: 'artist' | 'admin';
+}
+
 const AdminSigning = () => {
   const [pendingContracts, setPendingContracts] = useState<ContractSignature[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,9 +100,58 @@ const AdminSigning = () => {
 
     setSigning(signatureRecord.id);
     try {
-      console.log('Signing contract with signature ID:', signatureRecord.id);
-      console.log('Admin signature data length:', adminSignature.length);
+      console.log('Admin signing contract with signature ID:', signatureRecord.id);
       
+      // Get the current contract content to extract existing embedded signatures
+      const { data: contractData, error: contractError } = await supabase
+        .from('contracts_v2')
+        .select('content')
+        .eq('id', signatureRecord.contract_id)
+        .single();
+
+      if (contractError) {
+        console.error('Error fetching contract:', contractError);
+        throw contractError;
+      }
+
+      // Parse existing embedded signatures
+      let existingSignatures: EmbeddedSignature[] = [];
+      const signatureMatch = contractData.content.match(/\[EMBEDDED_SIGNATURES\](.*?)\[\/EMBEDDED_SIGNATURES\]/s);
+      if (signatureMatch) {
+        try {
+          existingSignatures = JSON.parse(signatureMatch[1]);
+        } catch (e) {
+          console.error('Error parsing existing signatures:', e);
+        }
+      }
+
+      // Create new admin signature
+      const newAdminSignature: EmbeddedSignature = {
+        fieldId: 3, // Different field ID for admin signature
+        signatureData: adminSignature,
+        dateSigned: new Date().toLocaleDateString(),
+        timestamp: new Date().toISOString(),
+        ipAddress: 'unknown',
+        signerType: 'admin'
+      };
+
+      // Combine existing signatures with new admin signature
+      // Keep all existing signatures and add the new admin signature
+      const updatedSignatures = [
+        ...existingSignatures.filter(sig => sig.signerType !== 'admin'), // Remove any existing admin signatures
+        newAdminSignature // Add the new admin signature
+      ];
+
+      // Update contract content with embedded signatures
+      let updatedContent = contractData.content;
+      
+      // Remove existing embedded signatures section if it exists
+      updatedContent = updatedContent.replace(/\[EMBEDDED_SIGNATURES\].*?\[\/EMBEDDED_SIGNATURES\]/s, '');
+      
+      // Add new embedded signatures section
+      const signaturesSection = `\n\n[EMBEDDED_SIGNATURES]${JSON.stringify(updatedSignatures)}[/EMBEDDED_SIGNATURES]`;
+      updatedContent += signaturesSection;
+
       // Update the signature record with admin signature
       const { error: updateError } = await supabase
         .from('contract_signatures_v2')
@@ -109,19 +167,22 @@ const AdminSigning = () => {
         throw updateError;
       }
 
-      // Update contract status to completed
-      const { error: contractError } = await supabase
+      // Update contract status and content
+      const { error: contractUpdateError } = await supabase
         .from('contracts_v2')
         .update({
+          content: updatedContent,
           status: 'completed',
           updated_at: new Date().toISOString()
         })
         .eq('id', signatureRecord.contract_id);
 
-      if (contractError) {
-        console.error('Error updating contract:', contractError);
-        throw contractError;
+      if (contractUpdateError) {
+        console.error('Error updating contract:', contractUpdateError);
+        throw contractUpdateError;
       }
+
+      console.log('Admin signature embedded successfully in document');
 
       toast({
         title: "Contract Completed!",
