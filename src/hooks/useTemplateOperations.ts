@@ -81,7 +81,7 @@ export const useTemplateOperations = () => {
 
   const handleCopyTemplate = async (template: any) => {
     const copyTemplate = {
-      name: `${template.name} (Copy)`,
+      name: `${template.name} 2`,
       template_content: template.template_content,
       header_image: null,
       contract_type: template.contract_type || 'other'
