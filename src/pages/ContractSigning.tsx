@@ -1,3 +1,4 @@
+
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { SignatureCanvas } from "@/components/SignatureCanvas";
+import { SignatureFieldOverlay } from "@/components/SignatureFieldOverlay";
 
 interface Contract {
   id: string;
@@ -15,12 +16,42 @@ interface Contract {
   created_at: string;
 }
 
+interface SignatureField {
+  id: number;
+  label: string;
+  type: 'signature' | 'date' | 'text' | 'initials' | 'username';
+  page: number;
+  x: number;
+  y: number;
+  required: boolean;
+}
+
 const ContractSigning = () => {
   const { contractId } = useParams<{ contractId: string }>();
   const [contract, setContract] = useState<Contract | null>(null);
   const [loading, setLoading] = useState(true);
   const [signing, setSigning] = useState(false);
-  const [signatureData, setSignatureData] = useState<string | null>(null);
+  const [signatureFields] = useState<SignatureField[]>([
+    {
+      id: 1,
+      label: "Your Signature",
+      type: 'signature',
+      page: 1,
+      x: 100,
+      y: 300,
+      required: true
+    },
+    {
+      id: 2,
+      label: "Date Signed",
+      type: 'date',
+      page: 1,
+      x: 400,
+      y: 300,
+      required: true
+    }
+  ]);
+  const [completedFields, setCompletedFields] = useState<Record<number, string>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -67,19 +98,34 @@ const ContractSigning = () => {
     fetchContract();
   }, [contractId]);
 
+  const handleFieldComplete = (fieldId: number, value: string) => {
+    setCompletedFields(prev => ({
+      ...prev,
+      [fieldId]: value
+    }));
+  };
+
   const handleSign = async () => {
-    if (!contract || !signatureData) {
+    const requiredFields = signatureFields.filter(f => f.required);
+    const missingFields = requiredFields.filter(f => !completedFields[f.id]);
+
+    if (missingFields.length > 0) {
       toast({
-        title: "Signature Required",
-        description: "Please provide your signature before signing the contract.",
+        title: "Missing Required Fields",
+        description: `Please complete: ${missingFields.map(f => f.label).join(', ')}`,
         variant: "destructive",
       });
       return;
     }
 
+    if (!contract) return;
+
     setSigning(true);
     try {
       console.log("Calling complete-contract-signing function...");
+      
+      // Get the signature data from completed fields
+      const signatureData = completedFields[1]; // Assuming field ID 1 is the signature
       
       const { data, error } = await supabase.functions.invoke('complete-contract-signing', {
         body: {
@@ -122,6 +168,12 @@ const ContractSigning = () => {
     }
   };
 
+  const getCompletionProgress = () => {
+    const requiredFields = signatureFields.filter(f => f.required);
+    const completed = requiredFields.filter(f => completedFields[f.id]);
+    return `${completed.length}/${requiredFields.length}`;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -157,50 +209,61 @@ const ContractSigning = () => {
       <div className="max-w-4xl mx-auto px-4 space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <FileText className="h-6 w-6" />
-              <span>{contract.title}</span>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <FileText className="h-6 w-6" />
+                <span>{contract.title}</span>
+              </div>
+              {contract.status !== 'completed' && (
+                <div className="text-sm text-gray-500">
+                  Progress: {getCompletionProgress()} fields completed
+                </div>
+              )}
             </CardTitle>
             <div className="flex items-center space-x-4 text-sm text-gray-500">
               <span>Status: {contract.status}</span>
               <span>Created: {new Date(contract.created_at).toLocaleDateString()}</span>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="prose max-w-none">
+          <CardContent>
+            <div className="relative">
               <div 
-                className="whitespace-pre-wrap border rounded-lg p-4 bg-white"
+                className="whitespace-pre-wrap border rounded-lg p-8 bg-white min-h-[600px] relative"
                 dangerouslySetInnerHTML={{ __html: contract.content.replace(/\n/g, '<br>') }}
               />
+              
+              {/* Render signature field overlays */}
+              {contract.status !== 'completed' && signatureFields.map((field) => (
+                <SignatureFieldOverlay
+                  key={field.id}
+                  field={field}
+                  onFieldComplete={handleFieldComplete}
+                  isCompleted={!!completedFields[field.id]}
+                  value={completedFields[field.id]}
+                />
+              ))}
             </div>
           </CardContent>
         </Card>
 
         {contract.status !== 'completed' && (
-          <>
-            <SignatureCanvas 
-              onSignatureChange={setSignatureData}
+          <div className="flex justify-center pt-6">
+            <Button 
+              onClick={handleSign}
               disabled={signing}
-            />
-            
-            <div className="flex justify-center pt-6">
-              <Button 
-                onClick={handleSign}
-                disabled={signing || !signatureData}
-                size="lg"
-                className="px-8"
-              >
-                {signing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Processing Signature...
-                  </>
-                ) : (
-                  'Complete Contract Signing'
-                )}
-              </Button>
-            </div>
-          </>
+              size="lg"
+              className="px-8"
+            >
+              {signing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processing Signature...
+                </>
+              ) : (
+                'Complete Contract Signing'
+              )}
+            </Button>
+          </div>
         )}
 
         {contract.status === 'completed' && (
