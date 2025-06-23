@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
@@ -72,6 +71,21 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log("Artist signature stored with ID:", signatureRecord.id);
+
+    // Update the main contract status to reflect artist signature
+    const { error: contractUpdateError } = await supabase
+      .from('contracts_v2')
+      .update({ 
+        status: 'pending_admin_signature',
+        updated_at: signedDateTime
+      })
+      .eq('id', contractId);
+
+    if (contractUpdateError) {
+      console.error('Failed to update contract status:', contractUpdateError);
+    } else {
+      console.log("Contract status updated to pending_admin_signature");
+    }
 
     // Get admin emails for notifications
     const { data: adminProfiles, error: adminError } = await supabase

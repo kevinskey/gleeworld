@@ -34,7 +34,7 @@ export const useContracts = () => {
         .select('*')
         .eq('archived', false)
         .eq('is_template', false)
-        .order('created_at', { ascending: false });
+        .order('updated_at', { ascending: false }); // Order by updated_at to show recently signed contracts first
 
       if (error) {
         console.error('Supabase error:', error);
@@ -63,6 +63,29 @@ export const useContracts = () => {
       setLoading(false);
     }
   }, [toast]);
+
+  // Set up real-time subscription to listen for contract updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('contracts-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'contracts_v2'
+        },
+        (payload) => {
+          console.log('Contract update received:', payload);
+          fetchContracts(); // Refresh contracts when any change occurs
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchContracts]);
 
   const createContract = async (contract: {
     title: string;

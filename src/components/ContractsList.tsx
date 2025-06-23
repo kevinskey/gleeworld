@@ -19,7 +19,8 @@ interface ContractsListProps {
 const getStatusColor = (status: string) => {
   switch (status) {
     case "completed": return "bg-green-100 text-green-800";
-    case "pending_recipient": return "bg-red-100 text-red-800";
+    case "pending_admin_signature": return "bg-yellow-100 text-yellow-800";
+    case "pending_recipient": return "bg-orange-100 text-orange-800";
     case "pending_sender": return "bg-red-100 text-red-800";
     case "draft": return "bg-gray-100 text-gray-800";
     default: return "bg-gray-100 text-gray-800";
@@ -29,6 +30,7 @@ const getStatusColor = (status: string) => {
 const getStatusText = (status: string) => {
   switch (status) {
     case "completed": return "Completed";
+    case "pending_admin_signature": return "Pending Admin Signature";
     case "pending_recipient": return "Pending Recipient";
     case "pending_sender": return "Pending Your Signature";
     case "draft": return "Draft";
@@ -109,8 +111,15 @@ export const ContractsList = ({
                   <FileText className="h-8 w-8 text-gray-400 flex-shrink-0" />
                   <div className="min-w-0 flex-1">
                     <h3 className="font-medium text-gray-900 truncate">{contract.title}</h3>
-                    <p className="text-sm text-gray-500">Status: {contract.status}</p>
-                    <p className="text-xs text-gray-400">Created: {new Date(contract.created_at).toLocaleDateString()}</p>
+                    <p className="text-sm text-gray-500">Status: {getStatusText(contract.status)}</p>
+                    <p className="text-xs text-gray-400">
+                      Created: {new Date(contract.created_at).toLocaleDateString()}
+                      {contract.updated_at !== contract.created_at && (
+                        <span className="ml-2">
+                          • Updated: {new Date(contract.updated_at).toLocaleDateString()}
+                        </span>
+                      )}
+                    </p>
                   </div>
                 </div>
                 
