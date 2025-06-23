@@ -68,7 +68,7 @@ const ContractSigning = () => {
         console.log("Contract found:", data);
         setContract(data);
         
-        // Extract signature fields from contract content or use defaults
+        // Extract signature fields from contract content
         const extractedFields = extractSignatureFieldsFromContract(data.content);
         console.log("Extracted signature fields:", extractedFields);
         setSignatureFields(extractedFields);
@@ -122,7 +122,7 @@ const ContractSigning = () => {
         type: 'signature',
         page: 1,
         x: 50,
-        y: 400,
+        y: 50,
         required: true
       },
       {
@@ -131,7 +131,7 @@ const ContractSigning = () => {
         type: 'date',
         page: 1,
         x: 350,
-        y: 400,
+        y: 50,
         required: true
       }
     ];
@@ -272,64 +272,45 @@ const ContractSigning = () => {
   const renderContractWithSignatureFields = () => {
     const content = contract?.content || '';
     
-    // Find the position of "AGREED AND ACCEPTED BY: ARTIST"
-    const artistSignatureIndex = content.indexOf('AGREED AND ACCEPTED BY: ARTIST');
+    // Clean content by removing the signature fields JSON from display
+    const cleanContent = content.replace(/Signature Fields: \[.*?\]/g, '').trim();
     
-    if (artistSignatureIndex === -1) {
-      // If the text is not found, render normally with signature fields overlaid
-      return (
+    return (
+      <div className="space-y-6">
+        {/* Contract content */}
         <div 
-          className={`whitespace-pre-wrap border rounded-lg p-4 md:p-8 bg-white relative overflow-x-auto ${
+          className={`whitespace-pre-wrap border rounded-lg p-4 md:p-8 bg-white ${
             isMobile ? 'min-h-[400px] text-sm' : 'min-h-[600px]'
           }`}
         >
-          <div dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br>') }} />
-          
-          {/* Render signature field overlays */}
-          {contract.status !== 'completed' && signatureFields.map((field) => (
-            <SignatureFieldOverlay
-              key={field.id}
-              field={field}
-              onFieldComplete={handleFieldComplete}
-              isCompleted={!!completedFields[field.id]}
-              value={completedFields[field.id]}
-            />
-          ))}
+          <div dangerouslySetInnerHTML={{ __html: cleanContent.replace(/\n/g, '<br>') }} />
         </div>
-      );
-    }
-
-    // Split content at the artist signature line
-    const beforeArtist = content.substring(0, artistSignatureIndex);
-    const artistLine = 'AGREED AND ACCEPTED BY: ARTIST';
-    const afterArtist = content.substring(artistSignatureIndex + artistLine.length);
-
-    return (
-      <div 
-        className={`whitespace-pre-wrap border rounded-lg p-4 md:p-8 bg-white relative overflow-x-auto ${
-          isMobile ? 'min-h-[400px] text-sm' : 'min-h-[600px]'
-        }`}
-      >
-        <div dangerouslySetInnerHTML={{ __html: beforeArtist.replace(/\n/g, '<br>') }} />
-        <div>{artistLine}</div>
-        <div style={{ height: '120px', position: 'relative', margin: '20px 0' }}>
-          {/* Render signature field overlays in this dedicated space */}
-          {contract.status !== 'completed' && signatureFields.map((field) => (
-            <SignatureFieldOverlay
-              key={field.id}
-              field={{
-                ...field,
-                // Position fields within this signature area
-                x: field.type === 'signature' ? (isMobile ? 20 : 50) : (isMobile ? 200 : 350),
-                y: 20, // Fixed position within the signature area
-              }}
-              onFieldComplete={handleFieldComplete}
-              isCompleted={!!completedFields[field.id]}
-              value={completedFields[field.id]}
-            />
-          ))}
-        </div>
-        <div dangerouslySetInnerHTML={{ __html: afterArtist.replace(/\n/g, '<br>') }} />
+        
+        {/* Signature fields area at the bottom */}
+        {contract.status !== 'completed' && signatureFields.length > 0 && (
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
+            <h3 className="text-lg font-semibold mb-4 text-center">Signature Required</h3>
+            <div className="relative min-h-[200px] bg-white rounded border">
+              {signatureFields.map((field, index) => (
+                <SignatureFieldOverlay
+                  key={field.id}
+                  field={{
+                    ...field,
+                    // Position fields in a row at the bottom
+                    x: isMobile ? 20 + (index * 160) : 50 + (index * 300),
+                    y: 50,
+                  }}
+                  onFieldComplete={handleFieldComplete}
+                  isCompleted={!!completedFields[field.id]}
+                  value={completedFields[field.id]}
+                />
+              ))}
+            </div>
+            <div className="mt-4 text-center text-sm text-gray-600">
+              Progress: {getCompletionProgress()} fields completed
+            </div>
+          </div>
+        )}
       </div>
     );
   };
