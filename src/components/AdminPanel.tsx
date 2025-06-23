@@ -20,7 +20,7 @@ interface ActivityLog {
 
 export const AdminPanel = () => {
   const [activityLogs] = useState<ActivityLog[]>([]);
-  const { users, loading, error } = useUsers();
+  const { users, loading, error, refetch } = useUsers();
 
   return (
     <div className="space-y-6">
@@ -40,7 +40,7 @@ export const AdminPanel = () => {
         </TabsList>
 
         <TabsContent value="users" className="space-y-4">
-          <UserManagement users={users} loading={loading} error={error} />
+          <UserManagement users={users} loading={loading} error={error} onRefetch={refetch} />
         </TabsContent>
 
         <TabsContent value="import" className="space-y-4">
