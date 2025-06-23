@@ -17,6 +17,8 @@ interface SignatureStatusProps {
 }
 
 export const SignatureStatus = ({ signatureRecord }: SignatureStatusProps) => {
+  console.log('SignatureStatus - signatureRecord:', signatureRecord);
+  
   if (signatureRecord?.status === 'pending_admin_signature') {
     return (
       <Card className="mb-6 bg-yellow-50 border-yellow-200">
@@ -26,8 +28,10 @@ export const SignatureStatus = ({ signatureRecord }: SignatureStatusProps) => {
             <div>
               <h3 className="font-semibold text-yellow-800">Artist Signature Complete</h3>
               <p className="text-yellow-700">
-                Your signature has been recorded on {new Date(signatureRecord.artist_signed_at!).toLocaleDateString()}. 
-                The contract is now pending admin approval.
+                {signatureRecord.artist_signed_at 
+                  ? `Your signature has been recorded on ${new Date(signatureRecord.artist_signed_at).toLocaleDateString()}.`
+                  : 'Your signature has been recorded.'
+                } The contract is now pending admin approval.
               </p>
             </div>
           </div>
@@ -45,8 +49,10 @@ export const SignatureStatus = ({ signatureRecord }: SignatureStatusProps) => {
             <div>
               <h3 className="font-semibold text-green-800">Contract Fully Signed</h3>
               <p className="text-green-700">
-                This contract was completed on {new Date(signatureRecord.admin_signed_at!).toLocaleDateString()}. 
-                A copy has been sent to your email.
+                This contract was completed on {signatureRecord.admin_signed_at 
+                  ? new Date(signatureRecord.admin_signed_at).toLocaleDateString()
+                  : 'recently'
+                }. A copy has been sent to your email.
               </p>
             </div>
           </div>

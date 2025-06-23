@@ -78,6 +78,51 @@ export const useContractSigning = (contractId?: string) => {
     }
   }, [contractId]);
 
+  // Set up real-time subscription to listen for contract updates
+  useEffect(() => {
+    if (!contractId) return;
+
+    const channel = supabase
+      .channel(`contract-${contractId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'contracts_v2',
+          filter: `id=eq.${contractId}`
+        },
+        (payload) => {
+          console.log('Contract updated via real-time:', payload);
+          const updatedContract = payload.new as Contract;
+          setContract(updatedContract);
+          
+          // Re-parse embedded signatures from updated content
+          const signatureMatch = updatedContract.content.match(/\[EMBEDDED_SIGNATURES\](.*?)\[\/EMBEDDED_SIGNATURES\]/s);
+          if (signatureMatch) {
+            try {
+              const signatures = JSON.parse(signatureMatch[1]);
+              setEmbeddedSignatures(signatures);
+              
+              // Update completed fields
+              const completed: Record<number, string> = {};
+              signatures.forEach((sig: EmbeddedSignature) => {
+                completed[sig.fieldId] = sig.signatureData;
+              });
+              setCompletedFields(completed);
+            } catch (e) {
+              console.error('Error parsing embedded signatures:', e);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [contractId]);
+
   const fetchContractData = async () => {
     try {
       setLoading(true);
@@ -171,7 +216,6 @@ export const useContractSigning = (contractId?: string) => {
 
       // Preserve existing admin signatures and only add/update artist signature
       const existingAdminSignatures = embeddedSignatures.filter(sig => sig.signerType === 'admin');
-      const existingArtistSignatures = embeddedSignatures.filter(sig => sig.signerType !== 'admin');
       
       // Replace artist signatures with the new one, keep admin signatures unchanged
       const updatedSignatures = [
@@ -191,8 +235,11 @@ export const useContractSigning = (contractId?: string) => {
       const signaturesSection = `\n\n[EMBEDDED_SIGNATURES]${JSON.stringify(updatedSignatures)}[/EMBEDDED_SIGNATURES]`;
       updatedContent += signaturesSection;
 
-      // Only update status to pending_admin_signature if not already completed
-      const newStatus = contract.status === 'completed' ? 'completed' : 'pending_admin_signature';
+      // Determine the correct status based on admin signatures
+      const hasAdminSignature = existingAdminSignatures.length > 0;
+      const newStatus = hasAdminSignature ? 'completed' : 'pending_admin_signature';
+
+      console.log('Updating contract status to:', newStatus);
 
       // Update contract status and content
       const { error: updateError } = await supabase
@@ -209,14 +256,16 @@ export const useContractSigning = (contractId?: string) => {
         throw updateError;
       }
 
-      console.log('Artist signature embedded successfully in document');
+      console.log('Artist signature embedded successfully in document with status:', newStatus);
 
-      // Refresh the contract data
-      await fetchContractData();
+      // Update local state immediately
+      setContract(prev => prev ? { ...prev, status: newStatus, content: updatedContent } : null);
 
       toast({
         title: "Success",
-        description: "Your signature has been embedded in the contract document. Pending admin approval.",
+        description: hasAdminSignature 
+          ? "Contract is now fully completed!" 
+          : "Your signature has been embedded in the contract document. Pending admin approval.",
       });
 
     } catch (error) {
