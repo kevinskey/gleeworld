@@ -41,7 +41,7 @@ const Index = () => {
   // Show loading while checking auth
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#55bbee' }}>
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
@@ -73,7 +73,7 @@ const Index = () => {
   const pendingCount = contracts.filter(doc => doc.status !== "completed").length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen" style={{ backgroundColor: '#55bbee' }}>
       <Header 
         displayName={displayName || 'User'}
         onSignOut={handleSignOut}
