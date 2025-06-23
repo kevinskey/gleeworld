@@ -1,8 +1,9 @@
+
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileText, CheckCircle2, Download } from "lucide-react";
+import { Loader2, FileText, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SignatureFieldOverlay } from "@/components/SignatureFieldOverlay";
@@ -118,7 +119,7 @@ const ContractSigning = () => {
     return [
       {
         id: 1,
-        label: "Your Signature",
+        label: "Artist Signature",
         type: 'signature',
         page: 1,
         x: 50,
@@ -127,6 +128,15 @@ const ContractSigning = () => {
       },
       {
         id: 2,
+        label: "Agent Signature",
+        type: 'signature',
+        page: 1,
+        x: 50,
+        y: 150,
+        required: true
+      },
+      {
+        id: 3,
         label: "Date Signed",
         type: 'date',
         page: 1,
@@ -282,14 +292,13 @@ const ContractSigning = () => {
     lines.forEach((line, index) => {
       processedLines.push(line);
       
-      // Look for "ARTIST:" or artist name patterns to insert signature field after
-      if (line.toLowerCase().includes('artist:') || 
-          line.toLowerCase().includes('artist name')) {
+      // Look for "ARTIST:" patterns to insert artist signature field after
+      if (line.toLowerCase().includes('artist:')) {
         
         // Find the artist signature field
         const artistSignatureField = signatureFields.find(f => 
           f.type === 'signature' && 
-          (f.label.toLowerCase().includes('artist') || f.label.toLowerCase().includes('signature'))
+          (f.label.toLowerCase().includes('artist') || f.id === 1)
         );
         
         if (artistSignatureField && contract.status !== 'completed') {
@@ -307,12 +316,11 @@ const ContractSigning = () => {
       }
       
       // Look for "AGENT:" patterns to insert agent signature field
-      if (line.toLowerCase().includes('agent:') || 
-          line.toLowerCase().includes('agent name')) {
+      if (line.toLowerCase().includes('agent:')) {
         
         const agentSignatureField = signatureFields.find(f => 
           f.type === 'signature' && 
-          f.label.toLowerCase().includes('agent')
+          (f.label.toLowerCase().includes('agent') || f.id === 2)
         );
         
         if (agentSignatureField && contract.status !== 'completed') {
@@ -350,7 +358,7 @@ const ContractSigning = () => {
     });
     
     return (
-      <div className="space-y-6">
+      <div className="space-y-2">
         <div 
           className={`whitespace-pre-wrap border rounded-lg p-4 md:p-8 bg-white ${
             isMobile ? 'min-h-[400px] text-sm' : 'min-h-[600px]'
@@ -367,7 +375,7 @@ const ContractSigning = () => {
           ))}
         </div>
         
-        {/* Progress indicator */}
+        {/* Progress indicator at bottom */}
         {contract.status !== 'completed' && signatureFields.length > 0 && (
           <div className="text-center text-sm text-gray-600 bg-gray-50 p-3 rounded">
             Progress: {getCompletionProgress()} fields completed
@@ -413,34 +421,12 @@ const ContractSigning = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-4 md:py-8">
       <div className="max-w-4xl mx-auto px-2 md:px-4 space-y-4 md:space-y-6">
-        {/* Mobile-optimized progress indicator */}
-        {contract?.status !== 'completed' && isMobile && (
-          <div className="bg-white rounded-lg p-4 shadow-sm border">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">Progress:</span>
-              <span className="text-blue-600">{getCompletionProgress()} fields completed</span>
-            </div>
-          </div>
-        )}
-
         <Card>
           <CardHeader className="pb-4">
-            <CardTitle className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-              <div className="flex items-center space-x-2">
-                <FileText className="h-6 w-6" />
-                <span className="text-lg md:text-xl truncate">{contract?.title}</span>
-              </div>
-              {contract?.status !== 'completed' && !isMobile && (
-                <div className="text-sm text-gray-500">
-                  Progress: {getCompletionProgress()} fields completed
-                </div>
-              )}
+            <CardTitle className="flex items-center space-x-2">
+              <FileText className="h-6 w-6" />
+              <span className="text-lg md:text-xl truncate">{contract?.title}</span>
             </CardTitle>
-            <div className="flex flex-col md:flex-row md:items-center md:space-x-4 text-sm text-gray-500 gap-1 md:gap-0">
-              <span>Status: <span className="capitalize">{contract?.status}</span></span>
-              <span>Created: {contract ? new Date(contract.created_at).toLocaleDateString() : ''}</span>
-              <span>Signature Fields: {signatureFields.length}</span>
-            </div>
           </CardHeader>
           <CardContent>
             <div className="relative">
