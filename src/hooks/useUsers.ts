@@ -18,10 +18,10 @@ export const useUsers = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, role, created_at')
-        .order('created_at', { ascending: false });
+      setError(null);
+      
+      // Use the get_all_user_profiles function which handles RLS properly
+      const { data, error } = await supabase.rpc('get_all_user_profiles');
 
       if (error) throw error;
 
