@@ -52,33 +52,35 @@ export const useContracts = () => {
     try {
       console.log('Creating contract with data:', contract);
       
-      // Check if template_id exists if provided
+      // Prepare the contract data - only include template_id if it's provided and valid
+      const contractData: any = {
+        title: contract.title,
+        content: contract.content,
+        created_by: null, // Set to null since we don't have auth yet
+        status: 'draft',
+        is_template: false,
+        archived: false,
+      };
+
+      // Only add template_id if it's provided
       if (contract.template_id) {
+        // Check if template_id exists if provided
         const { data: templateExists, error: templateError } = await supabase
           .from('contract_templates')
           .select('id')
           .eq('id', contract.template_id)
           .single();
 
-        if (templateError || !templateExists) {
+        if (!templateError && templateExists) {
+          contractData.template_id = contract.template_id;
+        } else {
           console.warn('Template not found, creating contract without template_id');
-          // Remove template_id if template doesn't exist
-          const { template_id, ...contractWithoutTemplate } = contract;
-          return await createContract(contractWithoutTemplate);
         }
       }
 
       const { data, error } = await supabase
         .from('contracts_v2')
-        .insert([{
-          title: contract.title,
-          content: contract.content,
-          template_id: contract.template_id || null,
-          created_by: null, // Set to null since we don't have auth yet
-          status: 'draft',
-          is_template: false,
-          archived: false,
-        }])
+        .insert([contractData])
         .select()
         .single();
 

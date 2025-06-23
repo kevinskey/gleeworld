@@ -226,7 +226,7 @@ export const DocumentUpload = ({ templateContent, templateName, headerImageUrl: 
       const contractData = await createContract({
         title: contractTitle,
         content: finalContent,
-        // Don't pass template_id - we're creating a new contract from template content
+        // Explicitly don't pass template_id - we're creating a new contract from template content
       });
 
       if (!contractData) {
