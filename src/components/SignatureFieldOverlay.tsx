@@ -69,20 +69,35 @@ export const SignatureFieldOverlay = ({
     return new Date().toLocaleDateString();
   };
 
-  // Prevent closing when clicking inside the active field
-  const handleModalClick = (e: React.MouseEvent) => {
+  // Prevent any clicks from bubbling up when modal is active
+  const handleModalOverlayClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only close if clicking the overlay, not the content
+    if (e.target === e.currentTarget) {
+      handleCancel();
+    }
+  };
+
+  // Completely prevent any events from the modal content
+  const handleModalContentClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
   };
 
   if (isActive) {
     return (
       <div 
-        className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4`}
-        onClick={handleCancel}
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+        onClick={handleModalOverlayClick}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
       >
         <div 
-          className={`bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto`}
-          onClick={handleModalClick}
+          className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+          onClick={handleModalContentClick}
+          onTouchStart={(e) => e.stopPropagation()}
+          onTouchEnd={(e) => e.stopPropagation()}
         >
           <div className="p-6">
             <div className="mb-4">
@@ -95,10 +110,16 @@ export const SignatureFieldOverlay = ({
 
             {field.type === 'signature' && (
               <div className="space-y-4">
-                <SignatureCanvas 
-                  onSignatureChange={handleComplete}
-                  disabled={false}
-                />
+                <div 
+                  onClick={handleModalContentClick}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onTouchEnd={(e) => e.stopPropagation()}
+                >
+                  <SignatureCanvas 
+                    onSignatureChange={handleComplete}
+                    disabled={false}
+                  />
+                </div>
                 <div className="flex gap-2 justify-end">
                   <Button 
                     variant="outline" 

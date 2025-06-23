@@ -73,7 +73,7 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (disabled) return;
     
-    e.preventDefault();
+    // Prevent event bubbling but don't prevent default for touch events
     e.stopPropagation();
     
     const canvas = canvasRef.current;
@@ -92,7 +92,7 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing || disabled) return;
 
-    e.preventDefault();
+    // Prevent event bubbling but don't prevent default for touch events
     e.stopPropagation();
     
     const canvas = canvasRef.current;
@@ -115,7 +115,6 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
 
   const stopDrawing = (e?: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (e) {
-      e.preventDefault();
       e.stopPropagation();
     }
     
