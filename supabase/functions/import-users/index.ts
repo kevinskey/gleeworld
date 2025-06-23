@@ -139,9 +139,13 @@ serve(async (req) => {
       errors: [] as string[]
     }
 
-    console.log(`Starting import of ${usersToImport.length} users with overwrite mode`)
+    console.log(`Starting import of ${usersToImport.length} users`)
 
-    // Process each user with overwrite logic
+    // First, get all existing auth users to check for duplicates
+    const { data: existingAuthUsers } = await supabaseClient.auth.admin.listUsers()
+    const existingEmails = new Set(existingAuthUsers?.users?.map(u => u.email?.toLowerCase()) || [])
+
+    // Process each user
     for (const userData of usersToImport) {
       try {
         if (!userData.email) {
@@ -173,32 +177,36 @@ serve(async (req) => {
 
         console.log(`Processing user: ${userData.email} with role: ${userRole} and name: ${fullName}`)
 
-        // Check if user already exists in auth
-        const { data: existingAuthUsers } = await supabaseClient.auth.admin.listUsers()
-        const existingUser = existingAuthUsers?.users?.find(u => u.email?.toLowerCase() === normalizedEmail)
-
-        if (existingUser) {
+        if (existingEmails.has(normalizedEmail)) {
           console.log(`User ${userData.email} already exists in auth, updating profile`)
           
-          // Update or create profile for existing user
-          const { error: profileError } = await supabaseClient
-            .from('profiles')
-            .upsert({
-              id: existingUser.id,
-              email: userData.email,
-              full_name: fullName,
-              role: userRole
-            })
+          // Find the existing user
+          const existingUser = existingAuthUsers?.users?.find(u => u.email?.toLowerCase() === normalizedEmail)
+          
+          if (existingUser) {
+            // Update or create profile for existing user
+            const { error: profileError } = await supabaseClient
+              .from('profiles')
+              .upsert({
+                id: existingUser.id,
+                email: userData.email,
+                full_name: fullName,
+                role: userRole
+              })
 
-          if (profileError) {
-            console.error(`Failed to update profile for ${userData.email}:`, profileError)
+            if (profileError) {
+              console.error(`Failed to update profile for ${userData.email}:`, profileError)
+              results.failed++
+              results.errors.push(`Failed to update profile for ${userData.email}: ${profileError.message}`)
+              continue
+            }
+
+            results.success++
+            console.log(`Successfully updated user: ${userData.email}`)
+          } else {
             results.failed++
-            results.errors.push(`Failed to update profile for ${userData.email}: ${profileError.message}`)
-            continue
+            results.errors.push(`Could not find existing user for ${userData.email}`)
           }
-
-          results.success++
-          console.log(`Successfully updated user: ${userData.email}`)
         } else {
           console.log(`Creating new user: ${userData.email}`)
 
