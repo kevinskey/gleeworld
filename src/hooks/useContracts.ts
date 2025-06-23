@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -193,7 +194,7 @@ export const useContracts = () => {
       channelRef.current = null;
     }
 
-    // Set up real-time subscription
+    // Set up real-time subscription with improved handling
     const channel = supabase
       .channel('contracts-changes')
       .on(
@@ -216,6 +217,7 @@ export const useContracts = () => {
             });
           } else if (payload.eventType === 'UPDATE') {
             const updatedContract = payload.new as Contract;
+            console.log('Contract updated via real-time:', updatedContract.id, 'Status:', updatedContract.status);
             setContracts(prev => 
               prev.map(contract => 
                 contract.id === updatedContract.id ? updatedContract : contract
@@ -229,7 +231,9 @@ export const useContracts = () => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Real-time subscription status:', status);
+      });
 
     channelRef.current = channel;
 
@@ -242,6 +246,12 @@ export const useContracts = () => {
     };
   }, [user]);
 
+  // Add a method to force refresh contracts
+  const forceRefresh = async () => {
+    console.log('Force refreshing contracts...');
+    await fetchContracts();
+  };
+
   return {
     contracts,
     loading,
@@ -249,5 +259,6 @@ export const useContracts = () => {
     createContract,
     deleteContract,
     refetch: fetchContracts,
+    forceRefresh,
   };
 };
