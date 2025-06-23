@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText, Users, Settings, Plus, Eye, Send, Edit } from "lucide-react";
+import { Upload, FileText, Users, Settings, Plus, Eye, Send, Edit, Inbox } from "lucide-react";
 import { DocumentUpload } from "@/components/DocumentUpload";
 import { ContractTemplates } from "@/components/ContractTemplates";
 import { SigningDashboard } from "@/components/SigningDashboard";
@@ -13,32 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [documents, setDocuments] = useState([
-    {
-      id: 1,
-      name: "Service Agreement - Client ABC",
-      status: "pending_recipient",
-      recipient: "client@company.com",
-      created: "2024-06-20",
-      type: "contract"
-    },
-    {
-      id: 2,
-      name: "NDA - Project Phoenix",
-      status: "completed",
-      recipient: "partner@business.com",
-      created: "2024-06-18",
-      type: "nda"
-    },
-    {
-      id: 3,
-      name: "Employment Contract - John Doe",
-      status: "pending_sender",
-      recipient: "john.doe@email.com",
-      created: "2024-06-22",
-      type: "employment"
-    }
-  ]);
+  const [documents, setDocuments] = useState([]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -60,6 +35,9 @@ const Index = () => {
     }
   };
 
+  const completedCount = documents.filter(doc => doc.status === "completed").length;
+  const pendingCount = documents.filter(doc => doc.status !== "completed").length;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
@@ -77,7 +55,7 @@ const Index = () => {
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
               </Button>
-              <Button size="sm">
+              <Button size="sm" onClick={() => setActiveTab("upload")}>
                 <Plus className="h-4 w-4 mr-2" />
                 New Contract
               </Button>
@@ -112,19 +90,19 @@ const Index = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-2xl font-bold">12</CardTitle>
+                  <CardTitle className="text-2xl font-bold">{documents.length}</CardTitle>
                   <CardDescription className="text-blue-100">Total Contracts</CardDescription>
                 </CardHeader>
               </Card>
               <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-2xl font-bold">8</CardTitle>
+                  <CardTitle className="text-2xl font-bold">{completedCount}</CardTitle>
                   <CardDescription className="text-green-100">Completed</CardDescription>
                 </CardHeader>
               </Card>
               <Card className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-2xl font-bold">4</CardTitle>
+                  <CardTitle className="text-2xl font-bold">{pendingCount}</CardTitle>
                   <CardDescription className="text-yellow-100">Pending</CardDescription>
                 </CardHeader>
               </Card>
@@ -136,33 +114,45 @@ const Index = () => {
                 <CardDescription>Manage your contract signing workflow</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {documents.map((doc) => (
-                    <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center space-x-4">
-                        <FileText className="h-8 w-8 text-gray-400" />
-                        <div>
-                          <h3 className="font-medium text-gray-900">{doc.name}</h3>
-                          <p className="text-sm text-gray-500">Sent to: {doc.recipient}</p>
-                          <p className="text-xs text-gray-400">Created: {doc.created}</p>
+                {documents.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Inbox className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No contracts yet</h3>
+                    <p className="text-gray-500 mb-4">Upload your first contract to get started</p>
+                    <Button onClick={() => setActiveTab("upload")}>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Contract
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {documents.map((doc) => (
+                      <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center space-x-4">
+                          <FileText className="h-8 w-8 text-gray-400" />
+                          <div>
+                            <h3 className="font-medium text-gray-900">{doc.name}</h3>
+                            <p className="text-sm text-gray-500">Sent to: {doc.recipient}</p>
+                            <p className="text-xs text-gray-400">Created: {doc.created}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <Badge className={getStatusColor(doc.status)}>
+                            {getStatusText(doc.status)}
+                          </Badge>
+                          <div className="flex space-x-2">
+                            <Button variant="outline" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              <Send className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <Badge className={getStatusColor(doc.status)}>
-                          {getStatusText(doc.status)}
-                        </Badge>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Send className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

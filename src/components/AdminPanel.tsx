@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, FileText, Activity, Settings, Search, Download, Filter } from "lucide-react";
+import { Users, FileText, Activity, Settings, Search, Download, Filter, Database } from "lucide-react";
 
 interface ActivityLog {
   id: number;
@@ -31,78 +30,8 @@ interface UserActivity {
 
 export const AdminPanel = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  
-  const [activityLogs] = useState<ActivityLog[]>([
-    {
-      id: 1,
-      timestamp: "2024-06-23 10:30:00",
-      user: "john@company.com",
-      action: "Document Signed",
-      document: "Service Agreement - Client ABC",
-      ip: "192.168.1.100",
-      status: "success"
-    },
-    {
-      id: 2,
-      timestamp: "2024-06-23 09:15:00",
-      user: "jane@company.com", 
-      action: "Document Created",
-      document: "NDA - Project Phoenix",
-      ip: "192.168.1.101",
-      status: "success"
-    },
-    {
-      id: 3,
-      timestamp: "2024-06-23 08:45:00",
-      user: "admin@company.com",
-      action: "Template Modified",
-      document: "Employment Contract Template",
-      ip: "192.168.1.102",
-      status: "success"
-    },
-    {
-      id: 4,
-      timestamp: "2024-06-22 16:20:00",
-      user: "client@external.com",
-      action: "Signature Failed",
-      document: "Service Agreement - Client XYZ",
-      ip: "203.0.113.45",
-      status: "error"
-    }
-  ]);
-
-  const [users] = useState<UserActivity[]>([
-    {
-      id: 1,
-      name: "John Smith",
-      email: "john@company.com",
-      role: "Manager",
-      documentsCreated: 25,
-      documentsSigned: 18,
-      lastActive: "2024-06-23",
-      status: "active"
-    },
-    {
-      id: 2,
-      name: "Jane Doe",
-      email: "jane@company.com",
-      role: "Admin",
-      documentsCreated: 42,
-      documentsSigned: 35,
-      lastActive: "2024-06-23",
-      status: "active"
-    },
-    {
-      id: 3,
-      name: "Bob Wilson",
-      email: "bob@company.com",
-      role: "User",
-      documentsCreated: 8,
-      documentsSigned: 12,
-      lastActive: "2024-06-20",
-      status: "inactive"
-    }
-  ]);
+  const [activityLogs] = useState<ActivityLog[]>([]);
+  const [users] = useState<UserActivity[]>([]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -164,7 +93,7 @@ export const AdminPanel = () => {
               Today's Activity
             </CardTitle>
             <div className="text-2xl font-bold text-purple-600">
-              {activityLogs.filter(log => log.timestamp.includes("2024-06-23")).length}
+              {activityLogs.filter(log => log.timestamp.includes(new Date().toISOString().split('T')[0])).length}
             </div>
           </CardHeader>
         </Card>
@@ -216,34 +145,41 @@ export const AdminPanel = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Timestamp</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>Document</TableHead>
-                    <TableHead>IP Address</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredLogs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="font-mono text-sm">{log.timestamp}</TableCell>
-                      <TableCell>{log.user}</TableCell>
-                      <TableCell>{log.action}</TableCell>
-                      <TableCell className="max-w-xs truncate">{log.document}</TableCell>
-                      <TableCell className="font-mono text-sm">{log.ip}</TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(log.status)}>
-                          {log.status}
-                        </Badge>
-                      </TableCell>
+              {activityLogs.length === 0 ? (
+                <div className="text-center py-8">
+                  <Database className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500">No activity logs yet</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Timestamp</TableHead>
+                      <TableHead>User</TableHead>
+                      <TableHead>Action</TableHead>
+                      <TableHead>Document</TableHead>
+                      <TableHead>IP Address</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredLogs.map((log) => (
+                      <TableRow key={log.id}>
+                        <TableCell className="font-mono text-sm">{log.timestamp}</TableCell>
+                        <TableCell>{log.user}</TableCell>
+                        <TableCell>{log.action}</TableCell>
+                        <TableCell className="max-w-xs truncate">{log.document}</TableCell>
+                        <TableCell className="font-mono text-sm">{log.ip}</TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(log.status)}>
+                            {log.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -271,45 +207,52 @@ export const AdminPanel = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Documents Created</TableHead>
-                    <TableHead>Documents Signed</TableHead>
-                    <TableHead>Last Active</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.name}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{user.role}</Badge>
-                      </TableCell>
-                      <TableCell>{user.documentsCreated}</TableCell>
-                      <TableCell>{user.documentsSigned}</TableCell>
-                      <TableCell>{user.lastActive}</TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(user.status)}>
-                          {user.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">Edit</Button>
-                          <Button variant="outline" size="sm">Reset</Button>
-                        </div>
-                      </TableCell>
+              {users.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500">No users found</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Documents Created</TableHead>
+                      <TableHead>Documents Signed</TableHead>
+                      <TableHead>Last Active</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.name}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{user.role}</Badge>
+                        </TableCell>
+                        <TableCell>{user.documentsCreated}</TableCell>
+                        <TableCell>{user.documentsSigned}</TableCell>
+                        <TableCell>{user.lastActive}</TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(user.status)}>
+                            {user.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button variant="outline" size="sm">Edit</Button>
+                            <Button variant="outline" size="sm">Reset</Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
