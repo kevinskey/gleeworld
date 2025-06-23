@@ -240,7 +240,40 @@ export const DocumentUpload = ({
   };
 
   const sendContract = async () => {
+    // Validate required fields first
+    if (!contractTitle.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide a contract title.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!recipientEmail.trim()) {
+      toast({
+        title: "Missing Information", 
+        description: "Please provide recipient email.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!contractContent.trim() && !uploadedFile) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide contract content or upload a file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
+    console.log('=== SEND CONTRACT DEBUG ===');
+    console.log('Contract title:', contractTitle);
+    console.log('Recipient email:', recipientEmail);
+    console.log('Signature fields:', signatureFields);
+    console.log('Signature fields count:', signatureFields.length);
 
     try {
       // Replace Date Executed placeholder with current date when signed
@@ -260,6 +293,8 @@ export const DocumentUpload = ({
         throw new Error("Failed to create contract");
       }
 
+      console.log('Contract created successfully:', contractData.id);
+
       // Log contract sending activity
       await logActivity({
         actionType: ACTIVITY_TYPES.CONTRACT_SENT,
@@ -275,18 +310,22 @@ export const DocumentUpload = ({
         }
       });
 
+      console.log('Sending email with signature fields:', signatureFields);
+
       // Send email notification
-      const { error: emailError } = await supabase.functions.invoke('send-contract-email', {
+      const { data: emailData, error: emailError } = await supabase.functions.invoke('send-contract-email', {
         body: {
           recipientEmail,
           recipientName,
           contractTitle,
           contractId: contractData.id,
-          senderName: "ContractFlow Team",
+          senderName: displayName || "ContractFlow Team",
           customMessage: emailMessage,
-          signatureFields: signatureFields
+          signatureFields: signatureFields || [] // Ensure it's always an array
         }
       });
+
+      console.log('Email function response:', { emailData, emailError });
 
       if (emailError) {
         console.error("Email error:", emailError);
@@ -429,7 +468,11 @@ export const DocumentUpload = ({
                   <Eye className="h-4 w-4 mr-2" />
                   Preview Contract
                 </Button>
-                <Button onClick={sendContract} size="lg" disabled={isLoading}>
+                <Button 
+                  onClick={sendContract} 
+                  size="lg" 
+                  disabled={isLoading || !contractTitle.trim() || !recipientEmail.trim()}
+                >
                   {isLoading ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
