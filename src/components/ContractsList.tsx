@@ -58,7 +58,7 @@ export const ContractsList = ({
   };
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Recent Contracts</CardTitle>
         <CardDescription>Manage your contract signing workflow</CardDescription>
@@ -82,19 +82,24 @@ export const ContractsList = ({
         ) : (
           <div className="space-y-4">
             {contracts.map((contract) => (
-              <div key={contract.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="flex items-center space-x-4">
-                  <FileText className="h-8 w-8 text-gray-400" />
-                  <div>
-                    <h3 className="font-medium text-gray-900">{contract.title}</h3>
+              <div 
+                key={contract.id} 
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors gap-4"
+              >
+                <div className="flex items-start sm:items-center space-x-4 min-w-0 flex-1">
+                  <FileText className="h-8 w-8 text-gray-400 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-medium text-gray-900 truncate">{contract.title}</h3>
                     <p className="text-sm text-gray-500">Status: {contract.status}</p>
                     <p className="text-xs text-gray-400">Created: {new Date(contract.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
+                
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-shrink-0">
                   <Badge className={getStatusColor(contract.status)}>
                     {getStatusText(contract.status)}
                   </Badge>
+                  
                   <div className="flex space-x-2">
                     <Button 
                       variant="outline" 
