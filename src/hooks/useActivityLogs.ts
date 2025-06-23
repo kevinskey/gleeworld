@@ -59,7 +59,7 @@ export const useActivityLogs = () => {
         resource_type: log.resource_type,
         resource_id: log.resource_id,
         details: typeof log.details === 'object' && log.details !== null ? log.details as Record<string, any> : {},
-        ip_address: log.ip_address,
+        ip_address: log.ip_address as string | null,
         user_agent: log.user_agent,
         created_at: log.created_at,
         user_profile: log.profiles ? {
