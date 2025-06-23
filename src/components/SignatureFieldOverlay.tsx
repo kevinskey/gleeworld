@@ -109,26 +109,16 @@ export const SignatureFieldOverlay = ({
             </div>
 
             {field.type === 'signature' && (
-              <div className="space-y-4">
-                <div 
-                  onClick={preventEventBubbling}
-                  onTouchStart={preventEventBubbling}
-                  onTouchEnd={preventEventBubbling}
-                  style={{ isolation: 'isolate' }}
-                >
-                  <SignatureCanvas 
-                    onSignatureChange={handleSignatureComplete}
-                    disabled={false}
-                  />
-                </div>
-                <div className="flex gap-2 justify-end">
-                  <Button 
-                    variant="outline" 
-                    onClick={handleCancel}
-                  >
-                    Cancel
-                  </Button>
-                </div>
+              <div 
+                onClick={preventEventBubbling}
+                onTouchStart={preventEventBubbling}
+                onTouchEnd={preventEventBubbling}
+                style={{ isolation: 'isolate' }}
+              >
+                <SignatureCanvas 
+                  onSignatureChange={handleSignatureComplete}
+                  disabled={false}
+                />
               </div>
             )}
 
