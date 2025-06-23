@@ -5,6 +5,8 @@ import { User } from "@supabase/supabase-js";
 
 interface UserProfile {
   full_name: string | null;
+  role: string | null;
+  display_name: string;
 }
 
 export const useUserProfile = (user: User | null) => {
@@ -15,12 +17,23 @@ export const useUserProfile = (user: User | null) => {
       if (user) {
         const { data, error } = await supabase
           .from('profiles')
-          .select('full_name')
+          .select('full_name, role')
           .eq('id', user.id)
           .single();
         
         if (data) {
-          setUserProfile(data);
+          // Prioritize full_name from profile, then from user metadata, then fall back to email
+          const displayName = data.full_name || 
+                             user?.user_metadata?.full_name || 
+                             user?.user_metadata?.name || 
+                             user?.email || 
+                             'User';
+
+          setUserProfile({
+            full_name: data.full_name,
+            role: data.role,
+            display_name: displayName
+          });
         }
       }
     };
@@ -29,7 +42,7 @@ export const useUserProfile = (user: User | null) => {
   }, [user]);
 
   // Prioritize full_name from profile, then from user metadata, then fall back to email
-  const displayName = userProfile?.full_name || 
+  const displayName = userProfile?.display_name || 
                      user?.user_metadata?.full_name || 
                      user?.user_metadata?.name || 
                      user?.email || 
