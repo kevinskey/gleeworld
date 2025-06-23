@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Filter, Download, Database, User, FileText, Calendar, ArrowLeft } from "lucide-react";
+import { Search, Download, Database, User, FileText, Calendar, ArrowLeft } from "lucide-react";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";

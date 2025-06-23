@@ -32,8 +32,16 @@ export const useActivityLogs = () => {
       const { data, error } = await supabase
         .from('activity_logs')
         .select(`
-          *,
-          user_profile:profiles!user_id (
+          id,
+          user_id,
+          action_type,
+          resource_type,
+          resource_id,
+          details,
+          ip_address,
+          user_agent,
+          created_at,
+          profiles!user_id (
             full_name,
             email
           )
@@ -43,7 +51,24 @@ export const useActivityLogs = () => {
 
       if (error) throw error;
 
-      setLogs(data || []);
+      // Transform the data to match our interface
+      const transformedData: ActivityLog[] = (data || []).map(log => ({
+        id: log.id,
+        user_id: log.user_id,
+        action_type: log.action_type,
+        resource_type: log.resource_type,
+        resource_id: log.resource_id,
+        details: typeof log.details === 'object' && log.details !== null ? log.details as Record<string, any> : {},
+        ip_address: log.ip_address,
+        user_agent: log.user_agent,
+        created_at: log.created_at,
+        user_profile: log.profiles ? {
+          full_name: log.profiles.full_name,
+          email: log.profiles.email
+        } : undefined
+      }));
+
+      setLogs(transformedData);
     } catch (err) {
       console.error('Error fetching activity logs:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch activity logs');
