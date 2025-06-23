@@ -198,7 +198,7 @@ export type Database = {
       contract_templates: {
         Row: {
           created_at: string
-          created_by: string
+          created_by: string | null
           id: string
           is_active: boolean
           name: string
@@ -207,7 +207,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          created_by: string
+          created_by?: string | null
           id?: string
           is_active?: boolean
           name: string
@@ -216,7 +216,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           id?: string
           is_active?: boolean
           name?: string
