@@ -162,6 +162,19 @@ serve(async (req) => {
           continue
         }
 
+        // Validate and normalize role value
+        let userRole = 'user' // default role
+        if (userData.role) {
+          const normalizedRole = userData.role.toLowerCase().trim()
+          if (['user', 'admin', 'super-admin'].includes(normalizedRole)) {
+            userRole = normalizedRole
+          } else {
+            console.log(`Invalid role "${userData.role}" for ${userData.email}, defaulting to "user"`)
+          }
+        }
+
+        console.log(`Creating user ${userData.email} with role: ${userRole}`)
+
         // Create user in auth.users
         const { data: authUser, error: authError } = await supabaseClient.auth.admin.createUser({
           email: userData.email,
@@ -177,14 +190,14 @@ serve(async (req) => {
           continue
         }
 
-        // Create profile
+        // Create profile with validated role
         const { error: profileError } = await supabaseClient
           .from('profiles')
           .insert({
             id: authUser.user.id,
             email: userData.email,
             full_name: userData.full_name || '',
-            role: userData.role || 'user'
+            role: userRole
           })
 
         if (profileError) {
@@ -197,7 +210,7 @@ serve(async (req) => {
         }
 
         results.success++
-        console.log(`Successfully imported user: ${userData.email}`)
+        console.log(`Successfully imported user: ${userData.email} with role: ${userRole}`)
 
       } catch (error) {
         results.failed++
