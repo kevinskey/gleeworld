@@ -4,6 +4,7 @@ import { useContractTemplates } from "@/hooks/useContractTemplates";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useTemplateImageUpload } from "./templates/useTemplateImageUpload";
+import { logActivity, ACTIVITY_TYPES, RESOURCE_TYPES } from "@/utils/activityLogger";
 
 export const useTemplateOperations = () => {
   const { templates, loading, createTemplate, deleteTemplate, refetch } = useContractTemplates();
@@ -46,6 +47,17 @@ export const useTemplateOperations = () => {
       const result = await createTemplate(template);
       
       if (result) {
+        // Log activity
+        await logActivity({
+          actionType: ACTIVITY_TYPES.TEMPLATE_CREATED,
+          resourceType: RESOURCE_TYPES.TEMPLATE,
+          resourceId: result.id,
+          details: {
+            templateName: template.name,
+            contractType: template.contract_type
+          }
+        });
+
         toast({
           title: "Success",
           description: "Template created successfully",
@@ -122,6 +134,17 @@ export const useTemplateOperations = () => {
 
       console.log('Template updated successfully');
       
+      // Log activity
+      await logActivity({
+        actionType: ACTIVITY_TYPES.TEMPLATE_UPDATED,
+        resourceType: RESOURCE_TYPES.TEMPLATE,
+        resourceId: template.id,
+        details: {
+          templateName: template.name,
+          contractType: template.contract_type || 'other'
+        }
+      });
+      
       // Refresh templates list
       await refetch();
       
@@ -152,6 +175,18 @@ export const useTemplateOperations = () => {
 
     const result = await createTemplate(copyTemplate);
     if (result) {
+      // Log activity
+      await logActivity({
+        actionType: ACTIVITY_TYPES.TEMPLATE_CREATED,
+        resourceType: RESOURCE_TYPES.TEMPLATE,
+        resourceId: result.id,
+        details: {
+          templateName: copyTemplate.name,
+          contractType: copyTemplate.contract_type,
+          copiedFrom: template.id
+        }
+      });
+
       toast({
         title: "Success",
         description: "Template copied successfully",
@@ -161,7 +196,20 @@ export const useTemplateOperations = () => {
 
   const handleDeleteTemplate = async (id: string) => {
     if (confirm("Are you sure you want to delete this template?")) {
+      const templateToDelete = templates.find(t => t.id === id);
       await deleteTemplate(id);
+      
+      // Log activity
+      if (templateToDelete) {
+        await logActivity({
+          actionType: ACTIVITY_TYPES.TEMPLATE_DELETED,
+          resourceType: RESOURCE_TYPES.TEMPLATE,
+          resourceId: id,
+          details: {
+            templateName: templateToDelete.name
+          }
+        });
+      }
     }
   };
 
