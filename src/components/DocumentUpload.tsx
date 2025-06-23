@@ -37,6 +37,7 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
   const [isLoading, setIsLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [headerImageUrl, setHeaderImageUrl] = useState<string>(""); // New state
+  const [hasStipendField, setHasStipendField] = useState(false); // Track if template has stipend field
   const { toast } = useToast();
   const { createContract } = useContracts();
   const { users, loading: usersLoading } = useUsers();
@@ -46,6 +47,11 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
     if (templateContent && templateName) {
       setContractContent(templateContent);
       setContractTitle(templateName);
+      
+      // Check if template has stipend field and remember it
+      if (templateContent.includes('{{stipend}}')) {
+        setHasStipendField(true);
+      }
       
       // Create default signature fields for ARTIST and AGENT
       const defaultSignatureFields: SignatureField[] = [
@@ -230,6 +236,7 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
       setSelectedUserId("");
       setStipendAmount("");
       setHeaderImageUrl("");
+      setHasStipendField(false);
       setShowPreview(false);
     } catch (error) {
       console.error("Error sending contract:", error);
@@ -264,7 +271,7 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
           <StipendAmountField
             stipendAmount={stipendAmount}
             onStipendChange={handleStipendChange}
-            showField={contractContent?.includes('{{stipend}}') || false}
+            showField={hasStipendField}
           />
 
           <ContractContentSection
