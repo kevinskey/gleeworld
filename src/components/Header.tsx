@@ -20,7 +20,7 @@ export const Header = ({ displayName, onSignOut, onNewContract }: HeaderProps) =
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600">Welcome, {displayName}</span>
+            <span className="text-sm text-gray-600">{displayName}</span>
             <Button variant="outline" size="sm">
               <Settings className="h-4 w-4 mr-2" />
               Settings
