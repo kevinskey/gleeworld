@@ -361,32 +361,42 @@ export const DocumentUpload = ({
 
       console.log('Sending email with signature fields:', signatureFields);
 
-      // Send email notification
-      const { data: emailData, error: emailError } = await supabase.functions.invoke('send-contract-email', {
-        body: {
-          recipientEmail,
-          recipientName,
-          contractTitle,
-          contractId: contractData.id,
-          senderName: displayName || "ContractFlow Team",
-          customMessage: emailMessage,
-          signatureFields: signatureFields || [] // Ensure it's always an array
-        }
-      });
-
-      console.log('Email function response:', { emailData, emailError });
-
-      if (emailError) {
-        console.error("Email error:", emailError);
-        toast({
-          title: "Contract created but email failed",
-          description: `Contract was saved but we couldn't send the email to ${recipientEmail}. Please send it manually.`,
-          variant: "destructive",
+      // Send email notification with proper error handling
+      try {
+        const { data: emailData, error: emailError } = await supabase.functions.invoke('send-contract-email', {
+          body: {
+            recipientEmail,
+            recipientName,
+            contractTitle,
+            contractId: contractData.id,
+            senderName: displayName || "ContractFlow Team",
+            customMessage: emailMessage,
+            signatureFields: signatureFields || [] // Ensure it's always an array
+          }
         });
-      } else {
+
+        console.log('Email function response:', { emailData, emailError });
+
+        if (emailError) {
+          console.error("Email error:", emailError);
+          // Don't throw here, just show warning
+          toast({
+            title: "Contract created successfully",
+            description: `Contract was created but email sending failed. You may need to send the signing link manually to ${recipientEmail}.`,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Contract sent successfully",
+            description: `Contract with ${signatureFields.length} signature fields has been sent to ${recipientEmail}.`,
+          });
+        }
+      } catch (emailErr) {
+        console.error("Email sending error:", emailErr);
         toast({
-          title: "Contract sent successfully",
-          description: `Contract with ${signatureFields.length} signature fields has been sent to ${recipientEmail}.`,
+          title: "Contract created successfully",
+          description: `Contract was created but email sending failed. Please check your email configuration.`,
+          variant: "destructive",
         });
       }
 
