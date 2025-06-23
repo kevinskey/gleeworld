@@ -103,22 +103,6 @@ export const useContracts = () => {
     try {
       console.log('Attempting to delete contract:', contractId);
       console.log('Current user:', user?.id);
-      
-      // First, check if the contract exists and who owns it
-      const { data: contractCheck, error: checkError } = await supabase
-        .from('contracts_v2')
-        .select('id, created_by, title')
-        .eq('id', contractId)
-        .single();
-
-      if (checkError) {
-        console.error('Error checking contract:', checkError);
-        throw new Error(`Failed to find contract: ${checkError.message}`);
-      }
-
-      console.log('Contract found:', contractCheck);
-      console.log('Contract owner:', contractCheck.created_by);
-      console.log('Current user matches owner:', contractCheck.created_by === user?.id);
 
       const { error } = await supabase
         .from('contracts_v2')
