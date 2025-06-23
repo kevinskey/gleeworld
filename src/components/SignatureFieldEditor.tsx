@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, X, FileSignature, Calendar, Type, User } from "lucide-react";
+import { Plus, X, FileSignature, Calendar, Type, User, UserCheck } from "lucide-react";
 
 export interface SignatureField {
   id: number;
   label: string;
-  type: 'signature' | 'date' | 'text' | 'initials';
+  type: 'signature' | 'date' | 'text' | 'initials' | 'username';
   page: number;
   x: number;
   y: number;
@@ -58,6 +58,7 @@ export const SignatureFieldEditor = ({ fields, onFieldsChange }: SignatureFieldE
       case 'initials': return `Initials ${fields.filter(f => f.type === 'initials').length + 1}`;
       case 'date': return `Date ${fields.filter(f => f.type === 'date').length + 1}`;
       case 'text': return `Text Field ${fields.filter(f => f.type === 'text').length + 1}`;
+      case 'username': return `Username ${fields.filter(f => f.type === 'username').length + 1}`;
     }
   };
 
@@ -67,6 +68,7 @@ export const SignatureFieldEditor = ({ fields, onFieldsChange }: SignatureFieldE
       case 'initials': return <User className="h-4 w-4" />;
       case 'date': return <Calendar className="h-4 w-4" />;
       case 'text': return <Type className="h-4 w-4" />;
+      case 'username': return <UserCheck className="h-4 w-4" />;
     }
   };
 
@@ -111,6 +113,15 @@ export const SignatureFieldEditor = ({ fields, onFieldsChange }: SignatureFieldE
             <Type className="h-3 w-3 mr-1" />
             Text
           </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => addField('username')}
+            className="text-xs"
+          >
+            <UserCheck className="h-3 w-3 mr-1" />
+            Username
+          </Button>
         </div>
       </div>
 
@@ -119,7 +130,7 @@ export const SignatureFieldEditor = ({ fields, onFieldsChange }: SignatureFieldE
           <CardContent className="flex flex-col items-center justify-center py-8">
             <FileSignature className="h-12 w-12 text-gray-400 mb-4" />
             <p className="text-gray-500 text-center mb-4">
-              No fields added yet. Add signature fields, date fields, or text fields to your document.
+              No fields added yet. Add signature fields, date fields, text fields, or username fields to your document.
             </p>
             <div className="flex gap-2">
               <Button 
