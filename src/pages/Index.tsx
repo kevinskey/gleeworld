@@ -22,6 +22,8 @@ const Index = () => {
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [templateContent, setTemplateContent] = useState<string>("");
   const [templateName, setTemplateName] = useState<string>("");
+  const [templateHeaderImageUrl, setTemplateHeaderImageUrl] = useState<string>("");
+  const [templateContractType, setTemplateContractType] = useState<string>("");
   const { contracts, loading, error, deleteContract, refetch } = useContracts();
   const { user, loading: authLoading, signOut } = useAuth();
   const { displayName } = useUserProfile(user);
@@ -57,9 +59,11 @@ const Index = () => {
     setIsViewerOpen(true);
   };
 
-  const handleUseTemplate = (content: string, name: string) => {
+  const handleUseTemplate = (content: string, name: string, headerImageUrl?: string, contractType?: string) => {
     setTemplateContent(content);
     setTemplateName(name);
+    setTemplateHeaderImageUrl(headerImageUrl || "");
+    setTemplateContractType(contractType || "");
     setActiveTab("upload");
   };
 
@@ -80,6 +84,8 @@ const Index = () => {
         onNewContract={() => {
           setTemplateContent("");
           setTemplateName("");
+          setTemplateHeaderImageUrl("");
+          setTemplateContractType("");
           setActiveTab("upload");
         }}
       />
@@ -128,6 +134,8 @@ const Index = () => {
             <DocumentUpload 
               templateContent={templateContent}
               templateName={templateName}
+              headerImageUrl={templateHeaderImageUrl}
+              contractType={templateContractType}
               onContractCreated={handleContractCreated}
             />
           </TabsContent>
