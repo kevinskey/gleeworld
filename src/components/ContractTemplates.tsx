@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,18 +28,19 @@ export const ContractTemplates = () => {
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [createImagePreview, setCreateImagePreview] = useState<string | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      console.log('Image file selected:', file.name, file.size);
+      console.log('Create dialog - Image file selected:', file.name, file.size);
       setNewTemplate({ ...newTemplate, header_image: file });
       
       // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
+        setCreateImagePreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -47,15 +49,28 @@ export const ContractTemplates = () => {
   const handleEditImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      console.log('Edit dialog - Image file selected:', file.name, file.size);
       setEditingTemplate({ ...editingTemplate, header_image: file });
       
       // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
+        setEditImagePreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const resetCreateDialog = () => {
+    setNewTemplate({ name: "", template_content: "", header_image: null });
+    setCreateImagePreview(null);
+    setIsCreateOpen(false);
+  };
+
+  const resetEditDialog = () => {
+    setEditingTemplate(null);
+    setEditImagePreview(null);
+    setIsEditOpen(false);
   };
 
   const handleCreateTemplate = async () => {
@@ -94,9 +109,7 @@ export const ContractTemplates = () => {
       
       if (result) {
         console.log('Template created successfully');
-        setNewTemplate({ name: "", template_content: "", header_image: null });
-        setImagePreview(null);
-        setIsCreateOpen(false);
+        resetCreateDialog();
         toast({
           title: "Success",
           description: "Template created successfully",
@@ -126,7 +139,7 @@ export const ContractTemplates = () => {
       ...template,
       header_image: null // Reset file input
     });
-    setImagePreview(template.header_image_url);
+    setEditImagePreview(template.header_image_url || null);
     setIsEditOpen(true);
   };
 
@@ -143,7 +156,7 @@ export const ContractTemplates = () => {
       description: "Template editing functionality is being developed",
     });
     setIsUpdating(false);
-    setIsEditOpen(false);
+    resetEditDialog();
   };
 
   const handleCopyTemplate = async (template: any) => {
@@ -241,10 +254,10 @@ export const ContractTemplates = () => {
                     {newTemplate.header_image ? 'Change Image' : 'Upload Header Image'}
                   </Button>
                   
-                  {imagePreview && (
+                  {createImagePreview && (
                     <div className="mt-4">
                       <img 
-                        src={imagePreview} 
+                        src={createImagePreview} 
                         alt="Header preview" 
                         className="max-h-32 mx-auto rounded border"
                       />
@@ -271,11 +284,7 @@ export const ContractTemplates = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => {
-                setIsCreateOpen(false);
-                setImagePreview(null);
-                setNewTemplate({ name: "", template_content: "", header_image: null });
-              }}>
+              <Button variant="outline" onClick={resetCreateDialog}>
                 Cancel
               </Button>
               <Button 
@@ -351,10 +360,10 @@ export const ContractTemplates = () => {
                         {newTemplate.header_image ? 'Change Image' : 'Upload Header Image'}
                       </Button>
                       
-                      {imagePreview && (
+                      {createImagePreview && (
                         <div className="mt-4">
                           <img 
-                            src={imagePreview} 
+                            src={createImagePreview} 
                             alt="Header preview" 
                             className="max-h-32 mx-auto rounded border"
                           />
@@ -378,11 +387,7 @@ export const ContractTemplates = () => {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => {
-                    setIsCreateOpen(false);
-                    setImagePreview(null);
-                    setNewTemplate({ name: "", template_content: "", header_image: null });
-                  }}>
+                  <Button variant="outline" onClick={resetCreateDialog}>
                     Cancel
                   </Button>
                   <Button 
@@ -523,17 +528,23 @@ export const ContractTemplates = () => {
                   />
                   <Button
                     variant="outline"
-                    onClick={() => document.getElementById('edit-header-image')?.click()}
+                    onClick={() => {
+                      const input = document.getElementById('edit-header-image') as HTMLInputElement;
+                      if (input) {
+                        input.value = ''; // Reset input value to allow selecting the same file again
+                        input.click();
+                      }
+                    }}
                     className="w-full"
                   >
                     <Upload className="h-4 w-4 mr-2" />
-                    {editingTemplate.header_image ? 'Change Image' : 'Upload New Header Image'}
+                    {editingTemplate.header_image || editImagePreview ? 'Change Image' : 'Upload New Header Image'}
                   </Button>
                   
-                  {imagePreview && (
+                  {editImagePreview && (
                     <div className="mt-4">
                       <img 
-                        src={imagePreview} 
+                        src={editImagePreview} 
                         alt="Header preview" 
                         className="max-h-32 mx-auto rounded border"
                       />
@@ -555,11 +566,7 @@ export const ContractTemplates = () => {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setIsEditOpen(false);
-              setImagePreview(null);
-              setEditingTemplate(null);
-            }}>
+            <Button variant="outline" onClick={resetEditDialog}>
               Cancel
             </Button>
             <Button onClick={handleUpdateTemplate} disabled={isUpdating}>
