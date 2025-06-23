@@ -45,6 +45,51 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_contract_notifications: {
+        Row: {
+          admin_email: string
+          contract_id: string
+          created_at: string
+          id: string
+          is_read: boolean
+          notification_type: string
+          signature_id: string
+        }
+        Insert: {
+          admin_email: string
+          contract_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          notification_type?: string
+          signature_id: string
+        }
+        Update: {
+          admin_email?: string
+          contract_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          notification_type?: string
+          signature_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_contract_notifications_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_contract_notifications_signature_id_fkey"
+            columns: ["signature_id"]
+            isOneToOne: false
+            referencedRelation: "contract_signatures_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_notifications: {
         Row: {
           admin_id: string
@@ -227,6 +272,59 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_signatures_v2: {
+        Row: {
+          admin_signature_data: string | null
+          admin_signed_at: string | null
+          artist_signature_data: string | null
+          artist_signed_at: string | null
+          contract_id: string
+          created_at: string
+          date_signed: string | null
+          id: string
+          pdf_storage_path: string | null
+          signer_ip: unknown | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_signature_data?: string | null
+          admin_signed_at?: string | null
+          artist_signature_data?: string | null
+          artist_signed_at?: string | null
+          contract_id: string
+          created_at?: string
+          date_signed?: string | null
+          id?: string
+          pdf_storage_path?: string | null
+          signer_ip?: unknown | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_signature_data?: string | null
+          admin_signed_at?: string | null
+          artist_signature_data?: string | null
+          artist_signed_at?: string | null
+          contract_id?: string
+          created_at?: string
+          date_signed?: string | null
+          id?: string
+          pdf_storage_path?: string | null
+          signer_ip?: unknown | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_signatures_v2_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts_v2"
             referencedColumns: ["id"]
           },
         ]

@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileText, CheckCircle2 } from "lucide-react";
+import { Loader2, FileText, CheckCircle2, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
@@ -28,9 +28,20 @@ interface SignatureField {
   required: boolean;
 }
 
+interface SignatureRecord {
+  id: string;
+  status: string;
+  artist_signature_data?: string;
+  admin_signature_data?: string;
+  artist_signed_at?: string;
+  admin_signed_at?: string;
+  date_signed?: string;
+}
+
 const ContractSigning = () => {
   const { contractId } = useParams<{ contractId: string }>();
   const [contract, setContract] = useState<Contract | null>(null);
+  const [signatureRecord, setSignatureRecord] = useState<SignatureRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [signing, setSigning] = useState(false);
   const [signatureFields, setSignatureFields] = useState<SignatureField[]>([]);
@@ -68,6 +79,18 @@ const ContractSigning = () => {
 
         console.log("Contract found:", data);
         setContract(data);
+        
+        // Check for existing signature record
+        const { data: sigData } = await supabase
+          .from('contract_signatures_v2')
+          .select('*')
+          .eq('contract_id', contractId)
+          .single();
+
+        if (sigData) {
+          console.log("Found existing signature record:", sigData);
+          setSignatureRecord(sigData);
+        }
         
         const extractedFields = extractSignatureFieldsFromContract(data.content);
         console.log("Extracted signature fields:", extractedFields);
@@ -123,15 +146,6 @@ const ContractSigning = () => {
       },
       {
         id: 2,
-        label: "Agent Signature",
-        type: 'signature',
-        page: 1,
-        x: 50,
-        y: 150,
-        required: true
-      },
-      {
-        id: 3,
         label: "Date Signed",
         type: 'date',
         page: 1,
@@ -165,11 +179,11 @@ const ContractSigning = () => {
     const allFieldsCompleted = requiredFields.every(f => updatedFields[f.id]);
     
     if (allFieldsCompleted && !signing) {
-      handleSign(updatedFields);
+      handleArtistSign(updatedFields);
     }
   };
 
-  const handleSign = async (fieldsToUse = completedFields) => {
+  const handleArtistSign = async (fieldsToUse = completedFields) => {
     const requiredFields = signatureFields.filter(f => f.required);
     
     const currentDate = new Date().toLocaleDateString();
@@ -186,7 +200,7 @@ const ContractSigning = () => {
     
     const missingFields = requiredFields.filter(f => !updatedCompletedFields[f.id]);
 
-    console.log('Attempting to sign contract');
+    console.log('Attempting to sign contract (Artist phase)');
     console.log('Required fields:', requiredFields.map(f => f.id));
     console.log('Completed fields:', Object.keys(updatedCompletedFields));
     console.log('Missing fields:', missingFields.map(f => f.id));
@@ -204,7 +218,7 @@ const ContractSigning = () => {
 
     setSigning(true);
     try {
-      console.log("Calling complete-contract-signing function...");
+      console.log("Calling artist-sign-contract function...");
       
       const signatureField = signatureFields.find(f => f.type === 'signature');
       const dateField = signatureFields.find(f => f.type === 'date');
@@ -212,14 +226,14 @@ const ContractSigning = () => {
       const signatureData = signatureField ? updatedCompletedFields[signatureField.id] : '';
       const dateSigned = dateField ? updatedCompletedFields[dateField.id] : currentDate;
       
-      console.log('Signature data present:', !!signatureData);
-      console.log('Signature data length:', signatureData?.length || 0);
+      console.log('Artist signature data present:', !!signatureData);
+      console.log('Artist signature data length:', signatureData?.length || 0);
       console.log('Date signed:', dateSigned);
       
-      const { data, error } = await supabase.functions.invoke('complete-contract-signing', {
+      const { data, error } = await supabase.functions.invoke('artist-sign-contract', {
         body: {
           contractId: contract.id,
-          signatureData: signatureData,
+          artistSignatureData: signatureData,
           dateSigned: dateSigned,
         }
       });
@@ -229,7 +243,7 @@ const ContractSigning = () => {
         throw error;
       }
 
-      console.log('Contract signing completed:', data);
+      console.log('Artist contract signing completed:', data);
 
       await logActivity({
         actionType: ACTIVITY_TYPES.CONTRACT_SIGNED,
@@ -238,16 +252,24 @@ const ContractSigning = () => {
         details: {
           contractTitle: contract.title,
           dateSigned: dateSigned,
+          signaturePhase: 'artist',
           signatureFieldsCompleted: Object.keys(updatedCompletedFields).length
         }
       });
 
       toast({
-        title: "Success!",
-        description: "Your contract has been signed and saved successfully.",
+        title: "Artist Signature Complete!",
+        description: "Your signature has been recorded. The contract is now pending admin approval.",
       });
 
-      setContract({ ...contract, status: 'completed' });
+      // Update signature record to show pending admin status
+      setSignatureRecord({
+        id: data.signatureId,
+        status: 'pending_admin_signature',
+        artist_signature_data: signatureData,
+        artist_signed_at: new Date().toISOString(),
+        date_signed: dateSigned
+      });
       
     } catch (error) {
       console.error('Error signing contract:', error);
@@ -262,12 +284,65 @@ const ContractSigning = () => {
   };
 
   const getCompletionProgress = () => {
+    if (signatureRecord?.status === 'pending_admin_signature') {
+      return "Artist signed - Pending admin approval";
+    }
+    if (signatureRecord?.status === 'completed') {
+      return "Fully completed";
+    }
     const requiredFields = signatureFields.filter(f => f.required);
     const completed = requiredFields.filter(f => completedFields[f.id]);
-    return `${completed.length}/${requiredFields.length}`;
+    return `${completed.length}/${requiredFields.length} fields completed`;
+  };
+
+  const renderSignatureStatus = () => {
+    if (signatureRecord?.status === 'pending_admin_signature') {
+      return (
+        <Card className="mb-6 bg-yellow-50 border-yellow-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center space-x-3">
+              <Clock className="h-6 w-6 text-yellow-600" />
+              <div>
+                <h3 className="font-semibold text-yellow-800">Artist Signature Complete</h3>
+                <p className="text-yellow-700">
+                  Your signature has been recorded on {new Date(signatureRecord.artist_signed_at!).toLocaleDateString()}. 
+                  The contract is now pending admin approval.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+    
+    if (signatureRecord?.status === 'completed') {
+      return (
+        <Card className="mb-6 bg-green-50 border-green-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center space-x-3">
+              <CheckCircle2 className="h-6 w-6 text-green-600" />
+              <div>
+                <h3 className="font-semibold text-green-800">Contract Fully Signed</h3>
+                <p className="text-green-700">
+                  This contract was completed on {new Date(signatureRecord.admin_signed_at!).toLocaleDateString()}. 
+                  A copy has been sent to your email.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return null;
   };
 
   const renderEmbeddedSignatureField = (field: SignatureField) => {
+    // Don't show signature fields if already signed
+    if (signatureRecord?.status === 'pending_admin_signature' || signatureRecord?.status === 'completed') {
+      return null;
+    }
+
     const isCompleted = !!completedFields[field.id];
     
     if (field.type === 'signature') {
@@ -282,7 +357,6 @@ const ContractSigning = () => {
             <div className="space-y-3">
               <SignatureCanvas 
                 onSignatureChange={(signature) => {
-                  // Don't auto-complete, just store the signature data
                   if (signature) {
                     console.log('Signature captured for field', field.id);
                   }
@@ -355,25 +429,10 @@ const ContractSigning = () => {
           (f.label.toLowerCase().includes('artist') || f.id === 1)
         );
         
-        if (artistSignatureField && contract.status !== 'completed') {
+        if (artistSignatureField) {
           processedLines.push(
             <div key={`signature-${artistSignatureField.id}`}>
               {renderEmbeddedSignatureField(artistSignatureField)}
-            </div>
-          );
-        }
-      }
-      
-      if (line.toLowerCase().includes('agent:')) {
-        const agentSignatureField = signatureFields.find(f => 
-          f.type === 'signature' && 
-          (f.label.toLowerCase().includes('agent') || f.id === 2)
-        );
-        
-        if (agentSignatureField && contract.status !== 'completed') {
-          processedLines.push(
-            <div key={`signature-${agentSignatureField.id}`}>
-              {renderEmbeddedSignatureField(agentSignatureField)}
             </div>
           );
         }
@@ -383,7 +442,7 @@ const ContractSigning = () => {
           signatureFields.some(f => f.type === 'date')) {
         
         const dateField = signatureFields.find(f => f.type === 'date');
-        if (dateField && contract.status !== 'completed') {
+        if (dateField) {
           processedLines.push(
             <div key={`date-${dateField.id}`}>
               {renderEmbeddedSignatureField(dateField)}
@@ -411,9 +470,9 @@ const ContractSigning = () => {
           ))}
         </div>
         
-        {contract.status !== 'completed' && signatureFields.length > 0 && (
+        {!signatureRecord && signatureFields.length > 0 && (
           <div className="text-center text-sm text-gray-600 bg-gray-50 p-3 rounded">
-            Progress: {getCompletionProgress()} fields completed
+            Progress: {getCompletionProgress()}
           </div>
         )}
       </div>
@@ -461,6 +520,7 @@ const ContractSigning = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {renderSignatureStatus()}
             <div className="relative">
               {renderContractWithEmbeddedFields()}
             </div>
