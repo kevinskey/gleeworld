@@ -41,6 +41,28 @@ export const CsvUploadSection = ({
     return null;
   };
 
+  const parseCsvLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    
+    result.push(current.trim());
+    return result.map(field => field.replace(/^"|"$/g, ''));
+  };
+
   const parseCsvFile = (file: File): Promise<any[]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -49,16 +71,19 @@ export const CsvUploadSection = ({
           const text = e.target?.result as string;
           const lines = text.split('\n').filter(line => line.trim());
           
+          console.log('CSV lines found:', lines.length);
+          
           if (lines.length < 2) {
             reject(new Error("CSV file must have at least a header row and one data row"));
             return;
           }
           
-          const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-          const requiredColumns = ['email'];
+          const headers = parseCsvLine(lines[0]).map(h => h.toLowerCase().trim());
+          console.log('CSV headers:', headers);
           
+          const requiredColumns = ['email'];
           const missingColumns = requiredColumns.filter(col => 
-            !headers.some(header => header.toLowerCase() === col.toLowerCase())
+            !headers.includes(col)
           );
           
           if (missingColumns.length > 0) {
@@ -67,46 +92,59 @@ export const CsvUploadSection = ({
           }
           
           const users = [];
+          const emailIndex = headers.indexOf('email');
+          const fullNameIndex = headers.indexOf('full_name') >= 0 ? headers.indexOf('full_name') : headers.indexOf('name');
+          const roleIndex = headers.indexOf('role');
+          
+          console.log('Column indices - email:', emailIndex, 'full_name:', fullNameIndex, 'role:', roleIndex);
+          
           for (let i = 1; i < lines.length; i++) {
-            const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-            if (values.length !== headers.length) {
-              continue; // Skip malformed rows
+            const values = parseCsvLine(lines[i]);
+            console.log(`Row ${i} values:`, values);
+            
+            if (values.length < headers.length) {
+              console.log(`Skipping row ${i} - insufficient columns`);
+              continue;
             }
             
-            const user: any = {};
-            headers.forEach((header, index) => {
-              const value = values[index];
-              switch (header.toLowerCase()) {
-                case 'email':
-                  user.email = value;
-                  break;
-                case 'raw_user_meta_data':
-                  try {
-                    user.raw_user_meta_data = value ? JSON.parse(value) : {};
-                  } catch {
-                    user.raw_user_meta_data = { full_name: value };
-                  }
-                  break;
-                case 'role':
-                  user.role = value || 'user';
-                  break;
-                default:
-                  // Store other columns in metadata
-                  if (!user.raw_user_meta_data) user.raw_user_meta_data = {};
-                  user.raw_user_meta_data[header] = value;
-              }
-            });
-            
-            // Extract full_name from raw_user_meta_data if available
-            if (user.raw_user_meta_data && user.raw_user_meta_data.full_name) {
-              user.full_name = user.raw_user_meta_data.full_name;
+            const email = values[emailIndex]?.trim();
+            if (!email) {
+              console.log(`Skipping row ${i} - no email`);
+              continue;
             }
             
+            // Basic email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+              console.log(`Skipping row ${i} - invalid email format: ${email}`);
+              continue;
+            }
+            
+            const user: any = {
+              email: email,
+              full_name: fullNameIndex >= 0 ? values[fullNameIndex]?.trim() || '' : '',
+              role: roleIndex >= 0 ? values[roleIndex]?.trim() || 'user' : 'user'
+            };
+            
+            // Validate role
+            if (!['user', 'admin', 'super-admin'].includes(user.role)) {
+              user.role = 'user';
+            }
+            
+            console.log(`Adding user:`, user);
             users.push(user);
+          }
+          
+          console.log(`Total valid users parsed: ${users.length}`);
+          
+          if (users.length === 0) {
+            reject(new Error("No valid users found in CSV. Please check that your CSV has valid email addresses and proper formatting."));
+            return;
           }
           
           resolve(users);
         } catch (error) {
+          console.error('CSV parsing error:', error);
           reject(new Error(`Failed to parse CSV: ${error instanceof Error ? error.message : 'Unknown error'}`));
         }
       };
@@ -257,10 +295,11 @@ export const CsvUploadSection = ({
           <p className="font-medium mb-2">CSV Format Requirements:</p>
           <ul className="list-disc list-inside space-y-1">
             <li><strong>Required column:</strong> email</li>
-            <li><strong>Optional columns:</strong> role, raw_user_meta_data (JSON), or any other user fields</li>
+            <li><strong>Optional columns:</strong> full_name (or name), role</li>
             <li>First row must contain column headers</li>
             <li>Roles should be: "user", "admin", or "super-admin" (defaults to "user")</li>
             <li>Maximum file size: 5MB</li>
+            <li>Supports quoted fields and commas within quotes</li>
           </ul>
         </div>
         
