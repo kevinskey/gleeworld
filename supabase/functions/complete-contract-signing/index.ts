@@ -14,6 +14,7 @@ const corsHeaders = {
 interface CompleteSigningRequest {
   contractId: string;
   signatureData: string;
+  dateSigned?: string;
   recipientEmail?: string;
   recipientName?: string;
 }
@@ -24,9 +25,10 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { contractId, signatureData, recipientEmail, recipientName }: CompleteSigningRequest = await req.json();
+    const { contractId, signatureData, dateSigned, recipientEmail, recipientName }: CompleteSigningRequest = await req.json();
 
     console.log("Processing contract signing for:", contractId);
+    console.log("Date signed:", dateSigned);
 
     // Initialize Supabase client
     const supabase = createClient(
@@ -48,13 +50,19 @@ const handler = async (req: Request): Promise<Response> => {
     // Get client IP
     const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
 
-    // Store signature data permanently
+    // Use provided date or current date as fallback
+    const signedDate = dateSigned || new Date().toLocaleDateString();
+    const signedDateTime = new Date().toISOString();
+
+    // Store signature data permanently with the signed date
     const { data: signatureRecord, error: signatureError } = await supabase
       .from('contract_signatures_v2')
       .insert({
         contract_id: contractId,
         signature_data: signatureData,
         signer_ip: clientIP,
+        signed_at: signedDateTime,
+        date_signed: signedDate, // Store the date when contract was signed
       })
       .select()
       .single();
@@ -65,8 +73,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Signature stored with ID:", signatureRecord.id);
 
-    // Generate PDF with signature
-    const pdfBytes = await generateSignedPDF(contract, signatureData);
+    // Generate PDF with signature and signed date
+    const pdfBytes = await generateSignedPDF(contract, signatureData, signedDate);
     
     // Upload PDF to storage
     const pdfFileName = `contract_${contractId}_signed_${Date.now()}.pdf`;
@@ -88,10 +96,13 @@ const handler = async (req: Request): Promise<Response> => {
       .update({ pdf_storage_path: pdfFileName })
       .eq('id', signatureRecord.id);
 
-    // Update contract status
+    // Update contract status and include the signed date
     await supabase
       .from('contracts_v2')
-      .update({ status: 'completed' })
+      .update({ 
+        status: 'completed',
+        updated_at: signedDateTime
+      })
       .eq('id', contractId);
 
     console.log("PDF stored at:", pdfFileName);
@@ -107,6 +118,7 @@ const handler = async (req: Request): Promise<Response> => {
         recipientName,
         contractTitle: contract.title,
         pdfUrl: pdfUrl.publicUrl,
+        dateSigned: signedDate,
       });
 
       console.log("Email sent to:", recipientEmail);
@@ -115,7 +127,8 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(JSON.stringify({ 
       success: true, 
       signatureId: signatureRecord.id,
-      pdfPath: pdfFileName
+      pdfPath: pdfFileName,
+      dateSigned: signedDate
     }), {
       status: 200,
       headers: {
@@ -136,7 +149,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-async function generateSignedPDF(contract: any, signatureData: string): Promise<Uint8Array> {
+async function generateSignedPDF(contract: any, signatureData: string, dateSigned: string): Promise<Uint8Array> {
   // Create a new PDF document
   const pdfDoc = await PDFDocument.create();
   const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
@@ -178,11 +191,20 @@ async function generateSignedPDF(contract: any, signatureData: string): Promise<
     color: rgb(0, 0, 0),
   });
 
-  // Add signature timestamp
+  // Add the actual date when contract was signed
+  page.drawText(`Date Signed: ${dateSigned}`, {
+    x: 50,
+    y: 80,
+    size: 12,
+    font: timesRomanFont,
+    color: rgb(0, 0, 0),
+  });
+
+  // Add signature timestamp for audit trail
   const signedAt = new Date().toLocaleString();
   page.drawText(`Signed on: ${signedAt}`, {
     x: 50,
-    y: 80,
+    y: 60,
     size: 10,
     font: timesRomanFont,
     color: rgb(0.5, 0.5, 0.5),
@@ -206,11 +228,13 @@ async function sendSignedContractEmail({
   recipientName,
   contractTitle,
   pdfUrl,
+  dateSigned,
 }: {
   recipientEmail: string;
   recipientName: string;
   contractTitle: string;
   pdfUrl: string;
+  dateSigned: string;
 }) {
   const emailResponse = await resend.emails.send({
     from: "ContractFlow <onboarding@resend.dev>",
@@ -226,7 +250,8 @@ async function sendSignedContractEmail({
         
         <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h2 style="margin: 0; color: #333;">${contractTitle}</h2>
-          <p style="margin: 10px 0 0 0; color: #666;">Signed on: ${new Date().toLocaleString()}</p>
+          <p style="margin: 10px 0 0 0; color: #666;">Date Signed: ${dateSigned}</p>
+          <p style="margin: 5px 0 0 0; color: #666;">Completed on: ${new Date().toLocaleString()}</p>
         </div>
         
         <div style="text-align: center; margin: 30px 0;">

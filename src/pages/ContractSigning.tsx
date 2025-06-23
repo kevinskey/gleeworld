@@ -1,3 +1,4 @@
+
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -122,11 +123,27 @@ const ContractSigning = () => {
 
   const handleSign = async () => {
     const requiredFields = signatureFields.filter(f => f.required);
-    const missingFields = requiredFields.filter(f => !completedFields[f.id]);
+    
+    // Automatically set the current date for date fields before validation
+    const currentDate = new Date().toLocaleDateString();
+    const updatedCompletedFields = { ...completedFields };
+    
+    // Auto-fill date fields with current date if not already filled
+    signatureFields.forEach(field => {
+      if (field.type === 'date' && field.required && !updatedCompletedFields[field.id]) {
+        updatedCompletedFields[field.id] = currentDate;
+        console.log('Auto-filled date field', field.id, 'with current date:', currentDate);
+      }
+    });
+    
+    // Update state with auto-filled dates
+    setCompletedFields(updatedCompletedFields);
+    
+    const missingFields = requiredFields.filter(f => !updatedCompletedFields[f.id]);
 
     console.log('Attempting to sign contract');
     console.log('Required fields:', requiredFields.map(f => f.id));
-    console.log('Completed fields:', Object.keys(completedFields));
+    console.log('Completed fields:', Object.keys(updatedCompletedFields));
     console.log('Missing fields:', missingFields.map(f => f.id));
 
     if (missingFields.length > 0) {
@@ -145,15 +162,17 @@ const ContractSigning = () => {
       console.log("Calling complete-contract-signing function...");
       
       // Get the signature data from completed fields
-      const signatureData = completedFields[1]; // Assuming field ID 1 is the signature
+      const signatureData = updatedCompletedFields[1]; // Assuming field ID 1 is the signature
       
       console.log('Signature data present:', !!signatureData);
       console.log('Signature data length:', signatureData?.length || 0);
+      console.log('Date signed:', updatedCompletedFields[2]); // Assuming field ID 2 is the date
       
       const { data, error } = await supabase.functions.invoke('complete-contract-signing', {
         body: {
           contractId: contract.id,
           signatureData: signatureData,
+          dateSigned: updatedCompletedFields[2] || currentDate, // Pass the date signed
           // You can add recipient email/name here if needed
           // recipientEmail: "user@example.com",
           // recipientName: "User Name"
