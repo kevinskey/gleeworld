@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { FileText, Settings, LogOut, Plus } from "lucide-react";
 
@@ -18,6 +17,14 @@ export const Header = ({ displayName, onSignOut, onNewContract }: HeaderProps) =
               <FileText className="h-8 w-8 text-blue-600" />
               <h1 className="text-xl font-bold text-gray-900">ContractFlow</h1>
             </div>
+            <a 
+              href="https://gleeworld.org" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:text-blue-800 underline"
+            >
+              Visit GleeWorld.org
+            </a>
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-600">{displayName}</span>
