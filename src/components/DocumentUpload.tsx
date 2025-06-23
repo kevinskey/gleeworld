@@ -3,14 +3,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, X, Send, Loader2, User } from "lucide-react";
+import { Send, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useContracts } from "@/hooks/useContracts";
 import { useUsers } from "@/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { SignatureFieldEditor, SignatureField } from "./SignatureFieldEditor";
+import { UserSelectionSection } from "./upload/UserSelectionSection";
+import { StipendAmountField } from "./upload/StipendAmountField";
+import { ContractContentSection } from "./upload/ContractContentSection";
+import { FileUploadArea } from "./upload/FileUploadArea";
+import { RecipientInformation } from "./upload/RecipientInformation";
 
 interface DocumentUploadProps {
   templateContent?: string;
@@ -134,10 +138,9 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
     }
   }, [toast]);
 
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileUpload = (file: File | null) => {
+    setUploadedFile(file);
     if (file) {
-      setUploadedFile(file);
       toast({
         title: "File uploaded successfully",
         description: `${file.name} is ready for processing.`,
@@ -241,122 +244,38 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* User Selection Dropdown - only show if template content exists */}
-          {contractContent && (
-            <div className="space-y-2">
-              <Label htmlFor="user-select">Select User for Contract</Label>
-              <Select value={selectedUserId} onValueChange={handleUserSelection} disabled={usersLoading}>
-                <SelectTrigger>
-                  <SelectValue placeholder={usersLoading ? "Loading users..." : "Select a registered user"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {users.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      <div className="flex items-center space-x-2">
-                        <User className="h-4 w-4" />
-                        <span>{user.full_name || user.email}</span>
-                        <span className="text-gray-500 text-sm">({user.email})</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <UserSelectionSection
+            users={users}
+            selectedUserId={selectedUserId}
+            onUserSelect={handleUserSelection}
+            usersLoading={usersLoading}
+            showSection={!!contractContent}
+          />
 
-          {/* Stipend Amount Field - only show if template content contains {{stipend}} */}
-          {contractContent && contractContent.includes('{{stipend}}') && (
-            <div className="space-y-2">
-              <Label htmlFor="stipend-amount">Stipend Amount ($)</Label>
-              <Input
-                id="stipend-amount"
-                type="number"
-                value={stipendAmount}
-                onChange={(e) => handleStipendChange(e.target.value)}
-                placeholder="Enter stipend amount"
-                min="0"
-                step="0.01"
-              />
-            </div>
-          )}
+          <StipendAmountField
+            stipendAmount={stipendAmount}
+            onStipendChange={handleStipendChange}
+            showField={contractContent?.includes('{{stipend}}') || false}
+          />
 
-          {/* Template Content Section */}
-          {contractContent && (
-            <div className="space-y-2">
-              <Label htmlFor="contract-content">Contract Content (from template)</Label>
-              <Textarea
-                id="contract-content"
-                value={contractContent}
-                onChange={(e) => setContractContent(e.target.value)}
-                placeholder="Contract content will appear here..."
-                rows={8}
-                className="font-mono text-sm"
-              />
-              <p className="text-sm text-gray-500">
-                You can edit this content before sending the contract.
-              </p>
-            </div>
-          )}
+          <ContractContentSection
+            contractContent={contractContent}
+            onContentChange={setContractContent}
+            showSection={!!contractContent}
+          />
 
-          {/* File Upload Area - only show if no template content */}
-          {!contractContent && (
-            <div
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                dragOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300'
-              }`}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              {uploadedFile ? (
-                <div className="space-y-4">
-                  <FileText className="h-16 w-16 text-green-600 mx-auto" />
-                  <div>
-                    <p className="text-lg font-medium text-gray-900">{uploadedFile.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => setUploadedFile(null)}
-                    className="mt-2"
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    Remove File
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <Upload className="h-16 w-16 text-gray-400 mx-auto" />
-                  <div>
-                    <p className="text-lg font-medium text-gray-900">
-                      Drop your document here, or click to browse
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Supports PDF and Word documents (max 10MB)
-                    </p>
-                  </div>
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={handleFileInput}
-                    className="hidden"
-                    id="file-upload"
-                  />
-                  <Button asChild className="mt-4">
-                    <label htmlFor="file-upload" className="cursor-pointer">
-                      Choose File
-                    </label>
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
+          <FileUploadArea
+            uploadedFile={uploadedFile}
+            onFileUpload={handleFileUpload}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            dragOver={dragOver}
+            showArea={!contractContent}
+          />
 
           {(uploadedFile || contractContent) && (
             <>
-              {/* Contract Title */}
               <div className="space-y-2">
                 <Label htmlFor="contract-title">Contract Title</Label>
                 <Input
@@ -367,7 +286,6 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
                 />
               </div>
 
-              {/* Contract Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="contract-type">Contract Type</Label>
@@ -386,49 +304,20 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
                 </div>
               </div>
 
-              {/* Enhanced Signature Fields */}
               <SignatureFieldEditor 
                 fields={signatureFields}
                 onFieldsChange={setSignatureFields}
               />
 
-              {/* Recipient Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Recipient Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="recipient-name">Recipient Name</Label>
-                    <Input
-                      id="recipient-name"
-                      value={recipientName}
-                      onChange={(e) => setRecipientName(e.target.value)}
-                      placeholder="John Doe"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="recipient-email">Recipient Email</Label>
-                    <Input
-                      id="recipient-email"
-                      type="email"
-                      value={recipientEmail}
-                      onChange={(e) => setRecipientEmail(e.target.value)}
-                      placeholder="john@company.com"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email-message">Custom Message (Optional)</Label>
-                  <Textarea
-                    id="email-message"
-                    value={emailMessage}
-                    onChange={(e) => setEmailMessage(e.target.value)}
-                    placeholder="Please review and sign the attached contract..."
-                    rows={3}
-                  />
-                </div>
-              </div>
+              <RecipientInformation
+                recipientName={recipientName}
+                recipientEmail={recipientEmail}
+                emailMessage={emailMessage}
+                onRecipientNameChange={setRecipientName}
+                onRecipientEmailChange={setRecipientEmail}
+                onEmailMessageChange={setEmailMessage}
+              />
 
-              {/* Send Button */}
               <div className="flex justify-end pt-4">
                 <Button onClick={sendContract} size="lg" disabled={isLoading}>
                   {isLoading ? (

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTemplateImageUpload } from "./templates/useTemplateImageUpload";
 
 export interface ContractTemplate {
   id: string;
@@ -18,6 +19,7 @@ export const useContractTemplates = () => {
   const [templates, setTemplates] = useState<ContractTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { uploadHeaderImage } = useTemplateImageUpload();
 
   const fetchTemplates = async () => {
     try {
@@ -49,44 +51,6 @@ export const useContractTemplates = () => {
     }
   };
 
-  const uploadHeaderImage = async (file: File, templateId: string) => {
-    try {
-      console.log('Uploading header image:', file.name, 'for template:', templateId);
-      
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${templateId}/header.${fileExt}`;
-      
-      // First, check if user is authenticated
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-      
-      console.log('Authenticated user:', user.id);
-      
-      const { error: uploadError } = await supabase.storage
-        .from('template-headers')
-        .upload(fileName, file, {
-          upsert: true
-        });
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw uploadError;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('template-headers')
-        .getPublicUrl(fileName);
-
-      console.log('Image uploaded successfully, public URL:', publicUrl);
-      return publicUrl;
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      throw error;
-    }
-  };
-
   const createTemplate = async (template: {
     name: string;
     template_content: string;
@@ -108,12 +72,6 @@ export const useContractTemplates = () => {
       }
       
       console.log('User authenticated:', user.id);
-      console.log('Creating template with data:', {
-        name: template.name,
-        content_length: template.template_content.length,
-        has_image: !!template.header_image,
-        user_id: user.id
-      });
 
       // Create the template with the authenticated user's ID
       const { data, error } = await supabase
@@ -167,10 +125,6 @@ export const useContractTemplates = () => {
       setTemplates(prev => [updatedTemplate, ...prev]);
       
       console.log('Template creation completed successfully');
-      toast({
-        title: "Success",
-        description: "Template created successfully",
-      });
       return updatedTemplate;
     } catch (error) {
       console.error('Error creating template:', error);

@@ -1,15 +1,15 @@
+
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Eye, FileText, Trash2, Copy, Loader2, Upload, Image, FileDown } from "lucide-react";
+import { Plus, FileText, Loader2 } from "lucide-react";
 import { useContractTemplates } from "@/hooks/useContractTemplates";
 import { useContractFromTemplate } from "@/hooks/useContractFromTemplate";
 import { useToast } from "@/hooks/use-toast";
+import { TemplateCard } from "./templates/TemplateCard";
+import { CreateTemplateDialog } from "./templates/CreateTemplateDialog";
+import { ViewTemplateDialog } from "./templates/ViewTemplateDialog";
+import { EditTemplateDialog } from "./templates/EditTemplateDialog";
 
 interface ContractTemplatesProps {
   onUseTemplate?: (templateContent: string, templateName: string) => void;
@@ -20,73 +20,15 @@ export const ContractTemplates = ({ onUseTemplate }: ContractTemplatesProps) => 
   const { createContractFromTemplate, isCreating } = useContractFromTemplate();
   const { toast } = useToast();
   
-  const [newTemplate, setNewTemplate] = useState({
-    name: "",
-    template_content: "",
-    header_image: null as File | null,
-  });
-
-  const [editingTemplate, setEditingTemplate] = useState<any>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [createImagePreview, setCreateImagePreview] = useState<string | null>(null);
-  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      console.log('Create dialog - Image file selected:', file.name, file.size);
-      setNewTemplate({ ...newTemplate, header_image: file });
-      
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setCreateImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleEditImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      console.log('Edit dialog - Image file selected:', file.name, file.size);
-      setEditingTemplate({ ...editingTemplate, header_image: file });
-      
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setEditImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const resetCreateDialog = () => {
-    setNewTemplate({ name: "", template_content: "", header_image: null });
-    setCreateImagePreview(null);
-    setIsCreateOpen(false);
-  };
-
-  const resetEditDialog = () => {
-    setEditingTemplate(null);
-    setEditImagePreview(null);
-    setIsEditOpen(false);
-  };
-
-  const handleCreateTemplate = async () => {
-    console.log('Creating template with data:', {
-      name: newTemplate.name,
-      content_length: newTemplate.template_content.length,
-      has_image: !!newTemplate.header_image
-    });
-
-    if (!newTemplate.name?.trim()) {
-      console.log('Validation failed: Missing template name');
+  const handleCreateTemplate = async (template: { name: string; template_content: string; header_image: File | null }) => {
+    if (!template.name?.trim()) {
       toast({
         title: "Error",
         description: "Please enter a template name",
@@ -95,8 +37,7 @@ export const ContractTemplates = ({ onUseTemplate }: ContractTemplatesProps) => 
       return;
     }
 
-    if (!newTemplate.template_content?.trim()) {
-      console.log('Validation failed: Missing template content');
+    if (!template.template_content?.trim()) {
       toast({
         title: "Error",
         description: "Please enter template content",
@@ -108,19 +49,14 @@ export const ContractTemplates = ({ onUseTemplate }: ContractTemplatesProps) => 
     setIsCreatingTemplate(true);
     
     try {
-      console.log('Calling createTemplate function...');
-      const result = await createTemplate(newTemplate);
-      console.log('createTemplate result:', result);
+      const result = await createTemplate(template);
       
       if (result) {
-        console.log('Template created successfully');
-        resetCreateDialog();
         toast({
           title: "Success",
           description: "Template created successfully",
         });
       } else {
-        console.log('createTemplate returned null/false');
         toast({
           title: "Error",
           description: "Failed to create template. Please try again.",
@@ -140,28 +76,21 @@ export const ContractTemplates = ({ onUseTemplate }: ContractTemplatesProps) => 
   };
 
   const handleEditTemplate = (template: any) => {
-    setEditingTemplate({
-      ...template,
-      header_image: null // Reset file input
-    });
-    setEditImagePreview(template.header_image_url || null);
+    setSelectedTemplate(template);
     setIsEditOpen(true);
   };
 
-  const handleUpdateTemplate = async () => {
-    if (!editingTemplate.name || !editingTemplate.template_content) {
+  const handleUpdateTemplate = async (template: any) => {
+    if (!template.name || !template.template_content) {
       return;
     }
 
     setIsUpdating(true);
-    // Note: This would require an updateTemplate function in the hook
-    // For now, we'll show a toast that this feature is coming soon
     toast({
       title: "Coming Soon",
       description: "Template editing functionality is being developed",
     });
     setIsUpdating(false);
-    resetEditDialog();
   };
 
   const handleCopyTemplate = async (template: any) => {
@@ -182,14 +111,12 @@ export const ContractTemplates = ({ onUseTemplate }: ContractTemplatesProps) => 
 
   const handleUseTemplate = async (template: any) => {
     if (onUseTemplate) {
-      // If we're in a context that can handle template usage directly (like upload form)
       onUseTemplate(template.template_content, template.name);
       toast({
         title: "Template Applied",
         description: `Template "${template.name}" has been applied to the upload form`,
       });
     } else {
-      // Create a new contract from the template
       const result = await createContractFromTemplate(template);
       if (result) {
         toast({
@@ -222,104 +149,10 @@ export const ContractTemplates = ({ onUseTemplate }: ContractTemplatesProps) => 
           <h2 className="text-2xl font-bold text-gray-900">Contract Templates</h2>
           <p className="text-gray-600">Create and manage reusable contract templates with custom headers</p>
         </div>
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Template
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Create New Template</DialogTitle>
-              <DialogDescription>
-                Create a reusable contract template with optional header image
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="template-name">Template Name</Label>
-                <Input
-                  id="template-name"
-                  type="text"
-                  value={newTemplate.name}
-                  onChange={(e) => {
-                    console.log('Template name changed to:', e.target.value);
-                    setNewTemplate(prev => ({ ...prev, name: e.target.value }));
-                  }}
-                  placeholder="Enter template name (e.g., Service Agreement Template)"
-                  className="w-full"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="header-image">Header Image (Optional)</Label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                  <input
-                    id="header-image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={() => document.getElementById('header-image')?.click()}
-                    className="w-full"
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    {newTemplate.header_image ? 'Change Image' : 'Upload Header Image'}
-                  </Button>
-                  
-                  {createImagePreview && (
-                    <div className="mt-4">
-                      <img 
-                        src={createImagePreview} 
-                        alt="Header preview" 
-                        className="max-h-32 mx-auto rounded border"
-                      />
-                    </div>
-                  )}
-                </div>
-                <p className="text-sm text-gray-500">
-                  Recommended: Company logo or letterhead (PNG, JPG, max 2MB)
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="template-content">Template Content</Label>
-                <Textarea
-                  id="template-content"
-                  value={newTemplate.template_content}
-                  onChange={(e) => {
-                    console.log('Template content changed, length:', e.target.value.length);
-                    setNewTemplate(prev => ({ ...prev, template_content: e.target.value }));
-                  }}
-                  placeholder="Enter your contract template here..."
-                  rows={12}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={resetCreateDialog}>
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleCreateTemplate} 
-                disabled={isCreatingTemplate || !newTemplate.name.trim() || !newTemplate.template_content.trim()}
-              >
-                {isCreatingTemplate ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  'Create Template'
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => setIsCreateOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Template
+        </Button>
       </div>
 
       {templates.length === 0 ? (
@@ -328,342 +161,53 @@ export const ContractTemplates = ({ onUseTemplate }: ContractTemplatesProps) => 
             <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No templates yet</h3>
             <p className="text-gray-500 mb-4">Create your first contract template to get started</p>
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Template
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Create New Template</DialogTitle>
-                  <DialogDescription>
-                    Create a reusable contract template with optional header image
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="template-name-2">Template Name</Label>
-                    <Input
-                      id="template-name-2"
-                      type="text"
-                      value={newTemplate.name}
-                      onChange={(e) => {
-                        console.log('Template name changed to (dialog 2):', e.target.value);
-                        setNewTemplate(prev => ({ ...prev, name: e.target.value }));
-                      }}
-                      placeholder="Enter template name (e.g., Service Agreement Template)"
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="header-image-2">Header Image (Optional)</Label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                      <input
-                        id="header-image-2"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
-                      <Button
-                        variant="outline"
-                        onClick={() => document.getElementById('header-image-2')?.click()}
-                        className="w-full"
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        {newTemplate.header_image ? 'Change Image' : 'Upload Header Image'}
-                      </Button>
-                      
-                      {createImagePreview && (
-                        <div className="mt-4">
-                          <img 
-                            src={createImagePreview} 
-                            alt="Header preview" 
-                            className="max-h-32 mx-auto rounded border"
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-500">
-                      Recommended: Company logo or letterhead (PNG, JPG, max 2MB)
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="template-content-2">Template Content</Label>
-                    <Textarea
-                      id="template-content-2"
-                      value={newTemplate.template_content}
-                      onChange={(e) => setNewTemplate(prev => ({ ...prev, template_content: e.target.value }))}
-                      placeholder="Enter your contract template here..."
-                      rows={12}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={resetCreateDialog}>
-                    Cancel
-                  </Button>
-                  <Button 
-                    onClick={handleCreateTemplate} 
-                    disabled={isCreatingTemplate || !newTemplate.name.trim() || !newTemplate.template_content.trim()}
-                  >
-                    {isCreatingTemplate ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Creating...
-                      </>
-                    ) : (
-                      'Create Template'
-                    )}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => setIsCreateOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Your First Template
+            </Button>
           </CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {templates.map((template) => (
-            <Card key={template.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      {template.header_image_url && (
-                        <Image className="h-4 w-4 text-blue-600" />
-                      )}
-                      {template.name}
-                    </CardTitle>
-                    <CardDescription>
-                      Created: {new Date(template.created_at).toLocaleDateString()}
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {template.header_image_url && (
-                    <div className="mb-2">
-                      <img 
-                        src={template.header_image_url} 
-                        alt="Template header" 
-                        className="h-20 w-full object-contain border rounded bg-gray-50"
-                        onError={(e) => {
-                          console.log('Image failed to load:', template.header_image_url);
-                          e.currentTarget.style.display = 'none';
-                        }}
-                        onLoad={() => {
-                          console.log('Image loaded successfully:', template.header_image_url);
-                        }}
-                      />
-                    </div>
-                  )}
-                  
-                  <div className="text-sm text-gray-500">
-                    <p>Last modified: {new Date(template.updated_at).toLocaleDateString()}</p>
-                  </div>
-
-                  <div className="flex flex-col space-y-2">
-                    {/* Primary Use Template Button */}
-                    <Button 
-                      onClick={() => handleUseTemplate(template)}
-                      className="w-full"
-                      disabled={isCreating}
-                    >
-                      {isCreating ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Creating...
-                        </>
-                      ) : (
-                        <>
-                          <FileDown className="h-4 w-4 mr-2" />
-                          Use Template
-                        </>
-                      )}
-                    </Button>
-
-                    {/* Secondary Action Buttons */}
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => {
-                          setSelectedTemplate(template);
-                          setIsViewOpen(true);
-                        }}
-                        title="View template"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleEditTemplate(template)}
-                        title="Edit template"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleCopyTemplate(template)}
-                        title="Copy template"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDeleteTemplate(template.id)}
-                        title="Delete template"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <TemplateCard
+              key={template.id}
+              template={template}
+              isCreating={isCreating}
+              onUse={handleUseTemplate}
+              onView={() => {
+                setSelectedTemplate(template);
+                setIsViewOpen(true);
+              }}
+              onEdit={handleEditTemplate}
+              onCopy={handleCopyTemplate}
+              onDelete={handleDeleteTemplate}
+            />
           ))}
         </div>
       )}
 
-      {/* Edit Template Dialog */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Template</DialogTitle>
-            <DialogDescription>
-              Update the template name, content, and header image
-            </DialogDescription>
-          </DialogHeader>
-          {editingTemplate && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-template-name">Template Name</Label>
-                <Input
-                  id="edit-template-name"
-                  value={editingTemplate.name}
-                  onChange={(e) => setEditingTemplate({...editingTemplate, name: e.target.value})}
-                  placeholder="Service Agreement Template"
-                />
-              </div>
+      <CreateTemplateDialog
+        isOpen={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+        onCreate={handleCreateTemplate}
+        isCreating={isCreatingTemplate}
+      />
 
-              <div className="space-y-2">
-                <Label htmlFor="edit-header-image">Header Image (Optional)</Label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                  <input
-                    id="edit-header-image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleEditImageUpload}
-                    className="hidden"
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      const input = document.getElementById('edit-header-image') as HTMLInputElement;
-                      if (input) {
-                        input.value = ''; // Reset input value to allow selecting the same file again
-                        input.click();
-                      }
-                    }}
-                    className="w-full"
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    {editingTemplate.header_image || editImagePreview ? 'Change Image' : 'Upload New Header Image'}
-                  </Button>
-                  
-                  {editImagePreview && (
-                    <div className="mt-4">
-                      <img 
-                        src={editImagePreview} 
-                        alt="Header preview" 
-                        className="max-h-32 mx-auto rounded border"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
+      <EditTemplateDialog
+        isOpen={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        template={selectedTemplate}
+        onUpdate={handleUpdateTemplate}
+        isUpdating={isUpdating}
+      />
 
-              <div className="space-y-2">
-                <Label htmlFor="edit-template-content">Template Content</Label>
-                <Textarea
-                  id="edit-template-content"
-                  value={editingTemplate.template_content}
-                  onChange={(e) => setEditingTemplate({...editingTemplate, template_content: e.target.value})}
-                  placeholder="Enter your contract template here..."
-                  rows={12}
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={resetEditDialog}>
-              Cancel
-            </Button>
-            <Button onClick={handleUpdateTemplate} disabled={isUpdating}>
-              {isUpdating ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                'Update Template'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* View Template Dialog */}
-      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{selectedTemplate?.name}</DialogTitle>
-            <DialogDescription>
-              Created: {selectedTemplate && new Date(selectedTemplate.created_at).toLocaleDateString()}
-            </DialogDescription>
-          </DialogHeader>
-          {selectedTemplate && (
-            <div className="space-y-4">
-              {selectedTemplate.header_image_url && (
-                <div className="border rounded-lg p-4 bg-gray-50">
-                  <Label className="font-medium">Header Image:</Label>
-                  <img 
-                    src={selectedTemplate.header_image_url} 
-                    alt="Template header" 
-                    className="mt-2 max-h-40 mx-auto rounded border"
-                    onError={(e) => {
-                      console.log('Header image failed to load in view dialog:', selectedTemplate.header_image_url);
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                </div>
-              )}
-              
-              <div>
-                <Label className="font-medium">Template Content:</Label>
-                <div className="mt-2 p-4 bg-gray-50 rounded-lg text-sm whitespace-pre-wrap">
-                  {selectedTemplate.template_content}
-                </div>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewOpen(false)}>
-              Close
-            </Button>
-            <Button onClick={() => handleUseTemplate(selectedTemplate)}>Use Template</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ViewTemplateDialog
+        isOpen={isViewOpen}
+        onOpenChange={setIsViewOpen}
+        template={selectedTemplate}
+        onUseTemplate={handleUseTemplate}
+      />
     </div>
   );
 };
