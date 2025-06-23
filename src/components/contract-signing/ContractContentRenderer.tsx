@@ -20,6 +20,14 @@ interface Contract {
   created_at: string;
 }
 
+interface EmbeddedSignature {
+  fieldId: number;
+  signatureData: string;
+  dateSigned: string;
+  ipAddress?: string;
+  timestamp: string;
+}
+
 interface ContractContentRendererProps {
   contract: Contract;
   signatureFields: SignatureField[];
@@ -29,6 +37,7 @@ interface ContractContentRendererProps {
   isArtistDateField: (field: SignatureField) => boolean;
   onFieldComplete: (fieldId: number, value: string) => void;
   getCompletionProgress: () => string;
+  embeddedSignatures?: EmbeddedSignature[];
 }
 
 export const ContractContentRenderer = ({ 
@@ -39,7 +48,8 @@ export const ContractContentRenderer = ({
   isAdminOrAgentField, 
   isArtistDateField, 
   onFieldComplete,
-  getCompletionProgress
+  getCompletionProgress,
+  embeddedSignatures = []
 }: ContractContentRendererProps) => {
   const isMobile = useIsMobile();
 
@@ -55,9 +65,34 @@ export const ContractContentRenderer = ({
     );
   };
 
+  const renderEmbeddedSignatureDisplay = (signature: EmbeddedSignature) => {
+    return (
+      <div key={signature.fieldId} className="my-4 p-4 border-2 border-green-300 rounded-lg bg-green-50">
+        <div className="mb-2 font-medium text-green-700">✓ Signature Applied</div>
+        {signature.signatureData.startsWith('data:image') ? (
+          <img 
+            src={signature.signatureData} 
+            alt="Embedded Signature" 
+            className="max-w-xs h-16 border rounded"
+          />
+        ) : (
+          <div className="text-sm text-green-600">Digital signature applied</div>
+        )}
+        <div className="text-xs text-gray-600 mt-2">
+          Signed on: {signature.dateSigned}
+          <br />
+          Timestamp: {new Date(signature.timestamp).toLocaleString()}
+        </div>
+      </div>
+    );
+  };
+
   const renderContractWithEmbeddedFields = () => {
     const content = contract?.content || '';
-    let cleanContent = content.replace(/Signature Fields: \[.*?\]/g, '').trim();
+    
+    // Remove embedded signatures section from display
+    let cleanContent = content.replace(/\[EMBEDDED_SIGNATURES\].*?\[\/EMBEDDED_SIGNATURES\]/s, '').trim();
+    cleanContent = cleanContent.replace(/Signature Fields: \[.*?\]/g, '').trim();
     
     const lines = cleanContent.split('\n');
     const processedLines: (string | JSX.Element)[] = [];
@@ -65,32 +100,56 @@ export const ContractContentRenderer = ({
     lines.forEach((line, index) => {
       processedLines.push(line);
       
-      if (line.toLowerCase().includes('artist:')) {
-        const artistSignatureField = signatureFields.find(f => 
-          f.type === 'signature' && 
-          (f.label.toLowerCase().includes('artist') || f.id === 1) &&
-          !isAdminOrAgentField(f)
-        );
+      if (line.toLowerCase().includes('artist:') || line.toLowerCase().includes('signature')) {
+        // Check if we have an embedded signature for this field
+        const embeddedSignature = embeddedSignatures.find(sig => sig.fieldId === 1);
         
-        if (artistSignatureField) {
+        if (embeddedSignature) {
+          // Show the embedded signature
           processedLines.push(
-            <div key={`signature-${artistSignatureField.id}`}>
-              {renderEmbeddedSignatureField(artistSignatureField)}
+            <div key={`embedded-signature-${embeddedSignature.fieldId}`}>
+              {renderEmbeddedSignatureDisplay(embeddedSignature)}
             </div>
           );
+        } else {
+          // Show signature field for signing
+          const artistSignatureField = signatureFields.find(f => 
+            f.type === 'signature' && 
+            (f.label.toLowerCase().includes('artist') || f.id === 1) &&
+            !isAdminOrAgentField(f)
+          );
+          
+          if (artistSignatureField) {
+            processedLines.push(
+              <div key={`signature-${artistSignatureField.id}`}>
+                {renderEmbeddedSignatureField(artistSignatureField)}
+              </div>
+            );
+          }
         }
       }
       
       if ((index === lines.length - 1 || line.toLowerCase().includes('date executed')) && 
           signatureFields.some(f => isArtistDateField(f))) {
         
-        const dateField = signatureFields.find(f => isArtistDateField(f));
-        if (dateField) {
+        // Check if we have an embedded date signature
+        const embeddedDateSignature = embeddedSignatures.find(sig => sig.fieldId === 2);
+        
+        if (embeddedDateSignature) {
           processedLines.push(
-            <div key={`date-${dateField.id}`}>
-              {renderEmbeddedSignatureField(dateField)}
+            <div key={`embedded-date-${embeddedDateSignature.fieldId}`} className="my-2 p-2 bg-blue-50 rounded">
+              <span className="text-sm font-medium text-blue-700">Date Signed: {embeddedDateSignature.dateSigned}</span>
             </div>
           );
+        } else {
+          const dateField = signatureFields.find(f => isArtistDateField(f));
+          if (dateField && !embeddedSignatures.some(sig => sig.fieldId === 1)) {
+            processedLines.push(
+              <div key={`date-${dateField.id}`}>
+                {renderEmbeddedSignatureField(dateField)}
+              </div>
+            );
+          }
         }
       }
     });
@@ -113,9 +172,15 @@ export const ContractContentRenderer = ({
           ))}
         </div>
         
-        {!signatureRecord && signatureFields.length > 0 && (
+        {!signatureRecord && signatureFields.length > 0 && embeddedSignatures.length === 0 && (
           <div className="text-center text-sm text-gray-600 bg-gray-50 p-3 rounded">
             Progress: {getCompletionProgress()}
+          </div>
+        )}
+
+        {embeddedSignatures.length > 0 && (
+          <div className="text-center text-sm text-green-600 bg-green-50 p-3 rounded">
+            ✓ Document has been signed and signatures are embedded
           </div>
         )}
       </div>

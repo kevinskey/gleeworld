@@ -18,10 +18,15 @@ const ContractSigning = () => {
     completedFields,
     handleFieldComplete,
     isAdminOrAgentField,
-    isArtistDateField
+    isArtistDateField,
+    isContractSigned,
+    embeddedSignatures
   } = useContractSigning(contractId);
 
   const getCompletionProgress = () => {
+    if (isContractSigned()) {
+      return "Contract signed with embedded signatures";
+    }
     if (signatureRecord?.status === 'pending_admin_signature') {
       return "Artist signed - Pending admin approval";
     }
@@ -88,6 +93,7 @@ const ContractSigning = () => {
                 isArtistDateField={isArtistDateField}
                 onFieldComplete={handleFieldComplete}
                 getCompletionProgress={getCompletionProgress}
+                embeddedSignatures={embeddedSignatures}
               />
             </div>
           </CardContent>
@@ -97,7 +103,7 @@ const ContractSigning = () => {
           <div className="text-center py-4">
             <div className="flex items-center justify-center space-x-2">
               <Loader2 className="h-5 w-5 animate-spin" />
-              <span>Processing your signature...</span>
+              <span>Embedding your signature in the document...</span>
             </div>
           </div>
         )}
