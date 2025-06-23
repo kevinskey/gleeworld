@@ -1,11 +1,10 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Upload, FileText, Eye, Send, Inbox, Loader2, Trash2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { Contract } from "@/hooks/useContracts";
 
 interface ContractsListProps {
@@ -51,6 +50,7 @@ export const ContractsList = ({
 }: ContractsListProps) => {
   const { toast } = useToast();
   const [selectedContracts, setSelectedContracts] = useState<Set<string>>(new Set());
+  const selectAllCheckboxRef = useRef<HTMLButtonElement>(null);
 
   const handleDeleteContract = async (contractId: string) => {
     if (confirm("Are you sure you want to delete this contract?")) {
@@ -109,6 +109,15 @@ export const ContractsList = ({
   const allSelected = contracts.length > 0 && selectedContracts.size === contracts.length;
   const someSelected = selectedContracts.size > 0 && selectedContracts.size < contracts.length;
 
+  useEffect(() => {
+    if (selectAllCheckboxRef.current) {
+      const checkboxElement = selectAllCheckboxRef.current.querySelector('input[type="checkbox"]') as HTMLInputElement;
+      if (checkboxElement) {
+        checkboxElement.indeterminate = someSelected;
+      }
+    }
+  }, [someSelected]);
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -152,13 +161,9 @@ export const ContractsList = ({
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center space-x-3">
                 <Checkbox 
+                  ref={selectAllCheckboxRef}
                   checked={allSelected}
                   onCheckedChange={handleSelectAll}
-                  ref={(el) => {
-                    if (el) {
-                      el.indeterminate = someSelected;
-                    }
-                  }}
                 />
                 <span className="text-sm font-medium">
                   {selectedContracts.size === 0 
