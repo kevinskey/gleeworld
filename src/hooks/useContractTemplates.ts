@@ -7,9 +7,10 @@ export interface ContractTemplate {
   id: string;
   name: string;
   template_content: string;
+  header_image_url?: string;
   created_at: string;
   updated_at: string;
-  created_by: string;
+  created_by: string | null;
   is_active: boolean;
 }
 
@@ -41,16 +42,42 @@ export const useContractTemplates = () => {
     }
   };
 
+  const uploadHeaderImage = async (file: File, templateId: string) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${templateId}/header.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('template-headers')
+        .upload(fileName, file, {
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('template-headers')
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
+  };
+
   const createTemplate = async (template: {
     name: string;
     template_content: string;
+    header_image?: File | null;
   }) => {
     try {
       const { data, error } = await supabase
         .from('contract_templates')
         .insert([{
-          ...template,
-          created_by: null, // Set to null since we don't have auth yet
+          name: template.name,
+          template_content: template.template_content,
+          created_by: null,
           is_active: true,
         }])
         .select()
@@ -58,12 +85,38 @@ export const useContractTemplates = () => {
 
       if (error) throw error;
 
-      setTemplates(prev => [data, ...prev]);
+      let header_image_url = null;
+      
+      // Upload header image if provided
+      if (template.header_image) {
+        try {
+          header_image_url = await uploadHeaderImage(template.header_image, data.id);
+          
+          // Update the template with the image URL
+          const { error: updateError } = await supabase
+            .from('contract_templates')
+            .update({ header_image_url })
+            .eq('id', data.id);
+
+          if (updateError) throw updateError;
+        } catch (imageError) {
+          console.error('Error uploading header image:', imageError);
+          toast({
+            title: "Warning",
+            description: "Template created but header image upload failed",
+            variant: "destructive",
+          });
+        }
+      }
+
+      const updatedTemplate = { ...data, header_image_url };
+      setTemplates(prev => [updatedTemplate, ...prev]);
+      
       toast({
         title: "Success",
         description: "Template created successfully",
       });
-      return data;
+      return updatedTemplate;
     } catch (error) {
       console.error('Error creating template:', error);
       toast({
