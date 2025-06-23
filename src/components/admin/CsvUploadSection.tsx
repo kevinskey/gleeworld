@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -142,8 +143,10 @@ export const CsvUploadSection = ({
     setProgress(0);
     onImportResult(null);
 
+    let currentProgress = 0;
     const progressInterval = setInterval(() => {
-      setProgress(Math.min(progress + 10, 90));
+      currentProgress += 10;
+      setProgress(Math.min(currentProgress, 90));
     }, 200);
 
     try {
