@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Upload, Loader2 } from "lucide-react";
 
 interface CreateTemplateDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreate: (template: { name: string; template_content: string; header_image: File | null }) => Promise<void>;
+  onCreate: (template: { name: string; template_content: string; header_image: File | null; contract_type: string }) => Promise<void>;
   isCreating: boolean;
 }
 
@@ -19,6 +20,7 @@ export const CreateTemplateDialog = ({ isOpen, onOpenChange, onCreate, isCreatin
     name: "",
     template_content: "",
     header_image: null as File | null,
+    contract_type: "",
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -38,7 +40,7 @@ export const CreateTemplateDialog = ({ isOpen, onOpenChange, onCreate, isCreatin
   };
 
   const resetDialog = () => {
-    setNewTemplate({ name: "", template_content: "", header_image: null });
+    setNewTemplate({ name: "", template_content: "", header_image: null, contract_type: "" });
     setImagePreview(null);
     onOpenChange(false);
   };
@@ -68,6 +70,22 @@ export const CreateTemplateDialog = ({ isOpen, onOpenChange, onCreate, isCreatin
               placeholder="Enter template name (e.g., Service Agreement Template)"
               className="w-full"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="contract-type">Contract Type</Label>
+            <Select value={newTemplate.contract_type} onValueChange={(value) => setNewTemplate(prev => ({ ...prev, contract_type: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select contract type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="service">Service Agreement</SelectItem>
+                <SelectItem value="nda">Non-Disclosure Agreement</SelectItem>
+                <SelectItem value="employment">Employment Contract</SelectItem>
+                <SelectItem value="lease">Lease Agreement</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -121,7 +139,7 @@ export const CreateTemplateDialog = ({ isOpen, onOpenChange, onCreate, isCreatin
           </Button>
           <Button 
             onClick={handleCreate} 
-            disabled={isCreating || !newTemplate.name.trim() || !newTemplate.template_content.trim()}
+            disabled={isCreating || !newTemplate.name.trim() || !newTemplate.template_content.trim() || !newTemplate.contract_type.trim()}
           >
             {isCreating ? (
               <>

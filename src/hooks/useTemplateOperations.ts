@@ -9,7 +9,7 @@ export const useTemplateOperations = () => {
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const handleCreateTemplate = async (template: { name: string; template_content: string; header_image: File | null }) => {
+  const handleCreateTemplate = async (template: { name: string; template_content: string; header_image: File | null; contract_type: string }) => {
     if (!template.name?.trim()) {
       toast({
         title: "Error",
@@ -23,6 +23,15 @@ export const useTemplateOperations = () => {
       toast({
         title: "Error",
         description: "Please enter template content",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!template.contract_type?.trim()) {
+      toast({
+        title: "Error",
+        description: "Please select a contract type",
         variant: "destructive",
       });
       return;
@@ -74,7 +83,8 @@ export const useTemplateOperations = () => {
     const copyTemplate = {
       name: `${template.name} (Copy)`,
       template_content: template.template_content,
-      header_image: null
+      header_image: null,
+      contract_type: template.contract_type || 'other'
     };
 
     const result = await createTemplate(copyTemplate);

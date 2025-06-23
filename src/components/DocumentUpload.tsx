@@ -21,9 +21,10 @@ interface DocumentUploadProps {
   templateContent?: string;
   templateName?: string;
   headerImageUrl?: string;
+  contractType?: string;
 }
 
-export const DocumentUpload = ({ templateContent, templateName, headerImageUrl: templateHeaderImageUrl }: DocumentUploadProps) => {
+export const DocumentUpload = ({ templateContent, templateName, headerImageUrl: templateHeaderImageUrl, contractType: templateContractType }: DocumentUploadProps) => {
   const [dragOver, setDragOver] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [recipientEmail, setRecipientEmail] = useState("");
@@ -50,6 +51,11 @@ export const DocumentUpload = ({ templateContent, templateName, headerImageUrl: 
       setOriginalTemplateContent(templateContent); // Store original template
       setContractContent(templateContent);
       setContractTitle(templateName);
+      
+      // Set contract type from template
+      if (templateContractType) {
+        setContractType(templateContractType);
+      }
       
       // Set header image URL if provided
       if (templateHeaderImageUrl) {
@@ -89,7 +95,7 @@ export const DocumentUpload = ({ templateContent, templateName, headerImageUrl: 
         description: `Template "${templateName}" has been applied to the upload form`,
       });
     }
-  }, [templateContent, templateName, templateHeaderImageUrl, toast]);
+  }, [templateContent, templateName, templateHeaderImageUrl, templateContractType, toast]);
 
   // Function to update contract content with all current values
   const updateContractContent = (userInfo?: any, currentStipend?: string) => {
@@ -332,7 +338,7 @@ export const DocumentUpload = ({ templateContent, templateName, headerImageUrl: 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="contract-type">Contract Type</Label>
-                  <Select value={contractType} onValueChange={setContractType}>
+                  <Select value={contractType} onValueChange={setContractType} disabled={!!templateContractType}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select contract type" />
                     </SelectTrigger>
@@ -344,6 +350,9 @@ export const DocumentUpload = ({ templateContent, templateName, headerImageUrl: 
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
+                  {templateContractType && (
+                    <p className="text-sm text-gray-500">Contract type set by template</p>
+                  )}
                 </div>
               </div>
 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -9,6 +8,7 @@ export interface ContractTemplate {
   name: string;
   template_content: string;
   header_image_url?: string;
+  contract_type?: string;
   created_at: string;
   updated_at: string;
   created_by: string | null;
@@ -55,6 +55,7 @@ export const useContractTemplates = () => {
     name: string;
     template_content: string;
     header_image?: File | null;
+    contract_type: string;
   }) => {
     try {
       console.log('Starting template creation process...');
@@ -79,6 +80,7 @@ export const useContractTemplates = () => {
         .insert([{
           name: template.name,
           template_content: template.template_content,
+          contract_type: template.contract_type,
           created_by: user.id,
           is_active: true,
         }])

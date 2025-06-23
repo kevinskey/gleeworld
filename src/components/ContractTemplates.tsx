@@ -8,7 +8,7 @@ import { TemplatesGrid } from "./templates/TemplatesGrid";
 import { TemplateDialogsManager } from "./templates/TemplateDialogsManager";
 
 interface ContractTemplatesProps {
-  onUseTemplate?: (templateContent: string, templateName: string) => void;
+  onUseTemplate?: (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => void;
   onContractCreated?: () => void;
 }
 
