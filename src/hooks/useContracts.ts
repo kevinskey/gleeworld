@@ -29,7 +29,7 @@ export const useContracts = () => {
       console.log('Fetching contracts...');
       
       const { data, error } = await supabase
-        .from('contracts')
+        .from('contracts_v2')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -60,7 +60,7 @@ export const useContracts = () => {
       }
 
       const { data, error } = await supabase
-        .from('contracts')
+        .from('contracts_v2')
         .insert([{
           title: contractData.title,
           content: contractData.content,
@@ -100,7 +100,7 @@ export const useContracts = () => {
   const deleteContract = async (contractId: string) => {
     try {
       const { error } = await supabase
-        .from('contracts')
+        .from('contracts_v2')
         .delete()
         .eq('id', contractId);
 
@@ -145,7 +145,7 @@ export const useContracts = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'contracts'
+          table: 'contracts_v2'
         },
         (payload) => {
           console.log('Real-time contract update:', payload);
