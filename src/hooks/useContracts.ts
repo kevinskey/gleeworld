@@ -51,11 +51,14 @@ export const useContracts = () => {
     template_id?: string;
   }) => {
     try {
+      // Generate a temporary UUID for created_by since we don't have auth yet
+      const tempUserId = crypto.randomUUID();
+      
       const { data, error } = await supabase
         .from('contracts_v2')
         .insert([{
           ...contract,
-          created_by: 'current-user', // Will be replaced with actual auth later
+          created_by: tempUserId,
           status: 'draft',
           is_template: false,
           archived: false,
