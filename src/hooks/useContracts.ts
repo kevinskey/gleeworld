@@ -109,7 +109,7 @@ export const useContracts = () => {
         throw error;
       }
 
-      // Update local state
+      // Update local state immediately
       setContracts(prev => prev.filter(contract => contract.id !== contractId));
       
       toast({
@@ -151,16 +151,24 @@ export const useContracts = () => {
           console.log('Real-time contract update:', payload);
           
           if (payload.eventType === 'INSERT') {
-            setContracts(prev => [payload.new as Contract, ...prev]);
+            const newContract = payload.new as Contract;
+            setContracts(prev => {
+              // Check if contract already exists to prevent duplicates
+              const exists = prev.some(contract => contract.id === newContract.id);
+              if (exists) return prev;
+              return [newContract, ...prev];
+            });
           } else if (payload.eventType === 'UPDATE') {
+            const updatedContract = payload.new as Contract;
             setContracts(prev => 
               prev.map(contract => 
-                contract.id === payload.new.id ? payload.new as Contract : contract
+                contract.id === updatedContract.id ? updatedContract : contract
               )
             );
           } else if (payload.eventType === 'DELETE') {
+            const deletedId = payload.old.id;
             setContracts(prev => 
-              prev.filter(contract => contract.id !== payload.old.id)
+              prev.filter(contract => contract.id !== deletedId)
             );
           }
         }
