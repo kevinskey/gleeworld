@@ -94,23 +94,9 @@ export const ContractPreviewDialog = ({
             </div>
           )}
 
-          {/* Recipient Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-gray-500" />
-              <span className="text-sm font-medium">Recipient:</span>
-              <span className="text-sm">{recipientName}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-gray-500" />
-              <span className="text-sm font-medium">Email:</span>
-              <span className="text-sm">{recipientEmail}</span>
-            </div>
-          </div>
-
-          {/* Signature Fields - Always show this section */}
-          <div>
-            <h3 className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2">
+          {/* Signature Fields - Moved to top */}
+          <div className="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
+            <h3 className="text-sm font-medium text-blue-700 mb-2 flex items-center gap-2">
               <Signature className="h-4 w-4" />
               Document Fields ({signatureFields?.length || 0})
             </h3>
@@ -140,6 +126,20 @@ export const ContractPreviewDialog = ({
                 </p>
               </div>
             )}
+          </div>
+
+          {/* Recipient Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-gray-500" />
+              <span className="text-sm font-medium">Recipient:</span>
+              <span className="text-sm">{recipientName}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Mail className="h-4 w-4 text-gray-500" />
+              <span className="text-sm font-medium">Email:</span>
+              <span className="text-sm">{recipientEmail}</span>
+            </div>
           </div>
 
           {/* Email Message */}
