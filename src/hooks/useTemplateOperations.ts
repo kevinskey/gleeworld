@@ -1,10 +1,14 @@
+
 import { useState } from "react";
 import { useContractTemplates } from "@/hooks/useContractTemplates";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useTemplateImageUpload } from "./templates/useTemplateImageUpload";
 
 export const useTemplateOperations = () => {
-  const { templates, loading, createTemplate, deleteTemplate } = useContractTemplates();
+  const { templates, loading, createTemplate, deleteTemplate, refetch } = useContractTemplates();
   const { toast } = useToast();
+  const { uploadHeaderImage } = useTemplateImageUpload();
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -66,16 +70,76 @@ export const useTemplateOperations = () => {
   };
 
   const handleUpdateTemplate = async (template: any) => {
-    if (!template.name || !template.template_content) {
+    if (!template.name?.trim() || !template.template_content?.trim()) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
       return;
     }
 
     setIsUpdating(true);
-    toast({
-      title: "Coming Soon",
-      description: "Template editing functionality is being developed",
-    });
-    setIsUpdating(false);
+    
+    try {
+      console.log('Starting template update process...', template.id);
+      
+      // Prepare update data
+      const updateData: any = {
+        name: template.name,
+        template_content: template.template_content,
+        contract_type: template.contract_type || 'other',
+        updated_at: new Date().toISOString(),
+      };
+
+      // Handle header image upload if provided
+      if (template.header_image) {
+        try {
+          console.log('Uploading new header image...');
+          const header_image_url = await uploadHeaderImage(template.header_image, template.id);
+          updateData.header_image_url = header_image_url;
+          console.log('Header image uploaded successfully:', header_image_url);
+        } catch (imageError) {
+          console.error('Error uploading header image:', imageError);
+          toast({
+            title: "Warning",
+            description: "Template updated but header image upload failed",
+            variant: "destructive",
+          });
+        }
+      }
+
+      // Update the template in the database
+      const { error } = await supabase
+        .from('contract_templates')
+        .update(updateData)
+        .eq('id', template.id);
+
+      if (error) {
+        console.error('Database update error:', error);
+        throw error;
+      }
+
+      console.log('Template updated successfully');
+      
+      // Refresh templates list
+      await refetch();
+      
+      toast({
+        title: "Success",
+        description: "Template updated successfully",
+      });
+      
+    } catch (error) {
+      console.error('Error updating template:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update template. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const handleCopyTemplate = async (template: any) => {
