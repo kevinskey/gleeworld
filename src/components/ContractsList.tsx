@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -5,6 +6,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Upload, FileText, Eye, Send, Inbox, Loader2, Trash2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import type { Contract } from "@/hooks/useContracts";
 
 interface ContractsListProps {
@@ -49,7 +53,10 @@ export const ContractsList = ({
   onRetry
 }: ContractsListProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { displayName } = useUserProfile(user);
   const [selectedContracts, setSelectedContracts] = useState<Set<string>>(new Set());
+  const [sendingContract, setSendingContract] = useState<string | null>(null);
   const selectAllCheckboxRef = useRef<HTMLButtonElement>(null);
 
   const handleDeleteContract = async (contractId: string) => {
@@ -98,12 +105,65 @@ export const ContractsList = ({
     });
   };
 
-  const handleSendContract = (contract: Contract) => {
-    // Show toast for send action - this would typically open a send dialog
-    toast({
-      title: "Send Contract",
-      description: `Preparing to send "${contract.title}" for signature`,
-    });
+  const handleSendContract = async (contract: Contract) => {
+    setSendingContract(contract.id);
+    
+    try {
+      // For now, we'll just show a placeholder dialog
+      // In a real implementation, you'd open a send dialog with recipient details
+      const recipientEmail = prompt("Enter recipient email:");
+      const recipientName = prompt("Enter recipient name:");
+      
+      if (!recipientEmail || !recipientName) {
+        toast({
+          title: "Send Cancelled",
+          description: "Contract sending was cancelled",
+        });
+        return;
+      }
+
+      // Call the send-contract-email edge function
+      const { data, error } = await supabase.functions.invoke('send-contract-email', {
+        body: {
+          recipientEmail,
+          recipientName,
+          contractTitle: contract.title,
+          contractId: contract.id,
+          senderName: displayName || "ContractFlow Team",
+          customMessage: "",
+          signatureFields: []
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Contract Sent",
+        description: `"${contract.title}" has been sent to ${recipientEmail}`,
+      });
+
+      // Update contract status to pending_recipient (this would typically be done on the server)
+      const { error: updateError } = await supabase
+        .from('contracts_v2')
+        .update({ status: 'pending_recipient' })
+        .eq('id', contract.id);
+
+      if (updateError) {
+        console.error('Error updating contract status:', updateError);
+      }
+
+    } catch (error) {
+      console.error('Error sending contract:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send contract. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingContract(null);
+    }
   };
 
   const allSelected = contracts.length > 0 && selectedContracts.size === contracts.length;
@@ -229,8 +289,13 @@ export const ContractsList = ({
                       size="sm"
                       onClick={() => handleSendContract(contract)}
                       title="Send for Signature"
+                      disabled={sendingContract === contract.id}
                     >
-                      <Send className="h-4 w-4" />
+                      {sendingContract === contract.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
                     </Button>
                     <Button 
                       variant="outline" 

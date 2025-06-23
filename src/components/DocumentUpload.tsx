@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -253,16 +252,92 @@ export const DocumentUpload = ({
   };
 
   const handlePreviewContract = () => {
-    if ((!uploadedFile && !contractContent) || !recipientEmail || !contractTitle) {
+    if ((!uploadedFile && !contractContent) || !contractTitle) {
       toast({
         title: "Missing information",
-        description: "Please upload a document or provide contract content, title, and recipient details.",
+        description: "Please provide contract content and title.",
         variant: "destructive",
       });
       return;
     }
 
     setShowPreview(true);
+  };
+
+  const saveAsDraft = async () => {
+    if (!contractTitle.trim() || (!contractContent.trim() && !uploadedFile)) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide contract title and content.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      let finalContent = contractContent || `Contract document: ${uploadedFile?.name}\n\nSignature Fields: ${JSON.stringify(signatureFields)}`;
+      finalContent = finalContent.replace(/Date Executed:/g, `Date Executed: ${new Date().toLocaleDateString()}`);
+      
+      const contractData = await createContract({
+        title: contractTitle,
+        content: finalContent,
+      });
+
+      if (!contractData) {
+        throw new Error("Failed to create contract");
+      }
+
+      await logActivity({
+        actionType: ACTIVITY_TYPES.CONTRACT_CREATED,
+        resourceType: RESOURCE_TYPES.CONTRACT,
+        resourceId: contractData.id,
+        details: {
+          contractTitle,
+          status: 'draft',
+          signatureFieldsCount: signatureFields.length,
+          contractType,
+          creationMode
+        }
+      });
+
+      toast({
+        title: "Draft saved successfully",
+        description: `Contract "${contractTitle}" has been saved as a draft.`,
+      });
+
+      // Reset form
+      setUploadedFile(null);
+      setRecipientEmail("");
+      setRecipientName("");
+      setEmailMessage("");
+      setContractType("");
+      setContractTitle("");
+      setContractContent("");
+      setOriginalTemplateContent(""); 
+      setSignatureFields([]);
+      setSelectedUserId("");
+      setStipendAmount("");
+      setHeaderImageUrl("");
+      setHasStipendField(false);
+      setCreationMode('create');
+      setShowPreview(false);
+      setTemplateApplied(false);
+
+      if (onContractCreated) {
+        onContractCreated();
+      }
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save draft. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const sendContract = async () => {
@@ -484,6 +559,21 @@ export const DocumentUpload = ({
               />
 
               <div className="flex justify-end gap-3 pt-4">
+                <Button 
+                  onClick={saveAsDraft} 
+                  variant="outline" 
+                  size="lg"
+                  disabled={isLoading || !contractTitle.trim()}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save as Draft"
+                  )}
+                </Button>
                 <Button onClick={handlePreviewContract} variant="outline" size="lg">
                   <Eye className="h-4 w-4 mr-2" />
                   Preview Contract
