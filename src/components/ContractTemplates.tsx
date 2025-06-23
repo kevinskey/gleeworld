@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,12 +6,18 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Eye, FileText, Trash2, Copy, Loader2, Upload, Image } from "lucide-react";
+import { Plus, Edit, Eye, FileText, Trash2, Copy, Loader2, Upload, Image, FileDown } from "lucide-react";
 import { useContractTemplates } from "@/hooks/useContractTemplates";
+import { useContractFromTemplate } from "@/hooks/useContractFromTemplate";
 import { useToast } from "@/hooks/use-toast";
 
-export const ContractTemplates = () => {
+interface ContractTemplatesProps {
+  onUseTemplate?: (templateContent: string, templateName: string) => void;
+}
+
+export const ContractTemplates = ({ onUseTemplate }: ContractTemplatesProps) => {
   const { templates, loading, createTemplate, deleteTemplate } = useContractTemplates();
+  const { createContractFromTemplate, isCreating } = useContractFromTemplate();
   const { toast } = useToast();
   
   const [newTemplate, setNewTemplate] = useState({
@@ -26,7 +31,7 @@ export const ContractTemplates = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
+  const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [createImagePreview, setCreateImagePreview] = useState<string | null>(null);
   const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
@@ -100,7 +105,7 @@ export const ContractTemplates = () => {
       return;
     }
 
-    setIsCreating(true);
+    setIsCreatingTemplate(true);
     
     try {
       console.log('Calling createTemplate function...');
@@ -130,7 +135,7 @@ export const ContractTemplates = () => {
         variant: "destructive",
       });
     } finally {
-      setIsCreating(false);
+      setIsCreatingTemplate(false);
     }
   };
 
@@ -175,12 +180,24 @@ export const ContractTemplates = () => {
     }
   };
 
-  const handleUseTemplate = (template: any) => {
-    // This would typically navigate to a contract creation page with the template
-    toast({
-      title: "Coming Soon",
-      description: "Template usage functionality is being developed",
-    });
+  const handleUseTemplate = async (template: any) => {
+    if (onUseTemplate) {
+      // If we're in a context that can handle template usage directly (like upload form)
+      onUseTemplate(template.template_content, template.name);
+      toast({
+        title: "Template Applied",
+        description: `Template "${template.name}" has been applied to the upload form`,
+      });
+    } else {
+      // Create a new contract from the template
+      const result = await createContractFromTemplate(template);
+      if (result) {
+        toast({
+          title: "Contract Created",
+          description: `New contract created from template "${template.name}"`,
+        });
+      }
+    }
   };
 
   const handleDeleteTemplate = async (id: string) => {
@@ -289,9 +306,9 @@ export const ContractTemplates = () => {
               </Button>
               <Button 
                 onClick={handleCreateTemplate} 
-                disabled={isCreating || !newTemplate.name.trim() || !newTemplate.template_content.trim()}
+                disabled={isCreatingTemplate || !newTemplate.name.trim() || !newTemplate.template_content.trim()}
               >
-                {isCreating ? (
+                {isCreatingTemplate ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Creating...
@@ -392,9 +409,9 @@ export const ContractTemplates = () => {
                   </Button>
                   <Button 
                     onClick={handleCreateTemplate} 
-                    disabled={isCreating || !newTemplate.name.trim() || !newTemplate.template_content.trim()}
+                    disabled={isCreatingTemplate || !newTemplate.name.trim() || !newTemplate.template_content.trim()}
                   >
-                    {isCreating ? (
+                    {isCreatingTemplate ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         Creating...
@@ -450,43 +467,65 @@ export const ContractTemplates = () => {
                     <p>Last modified: {new Date(template.updated_at).toLocaleDateString()}</p>
                   </div>
 
-                  <div className="flex space-x-2">
+                  <div className="flex flex-col space-y-2">
+                    {/* Primary Use Template Button */}
                     <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => {
-                        setSelectedTemplate(template);
-                        setIsViewOpen(true);
-                      }}
-                      title="View template"
+                      onClick={() => handleUseTemplate(template)}
+                      className="w-full"
+                      disabled={isCreating}
                     >
-                      <Eye className="h-4 w-4" />
+                      {isCreating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        <>
+                          <FileDown className="h-4 w-4 mr-2" />
+                          Use Template
+                        </>
+                      )}
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleEditTemplate(template)}
-                      title="Edit template"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleCopyTemplate(template)}
-                      title="Copy template"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleDeleteTemplate(template.id)}
-                      title="Delete template"
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+
+                    {/* Secondary Action Buttons */}
+                    <div className="flex space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          setSelectedTemplate(template);
+                          setIsViewOpen(true);
+                        }}
+                        title="View template"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEditTemplate(template)}
+                        title="Edit template"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleCopyTemplate(template)}
+                        title="Copy template"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDeleteTemplate(template.id)}
+                        title="Delete template"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,12 @@ import { useContracts } from "@/hooks/useContracts";
 import { supabase } from "@/integrations/supabase/client";
 import { SignatureFieldEditor, SignatureField } from "./SignatureFieldEditor";
 
-export const DocumentUpload = () => {
+interface DocumentUploadProps {
+  templateContent?: string;
+  templateName?: string;
+}
+
+export const DocumentUpload = ({ templateContent, templateName }: DocumentUploadProps) => {
   const [dragOver, setDragOver] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [recipientEmail, setRecipientEmail] = useState("");
@@ -20,9 +25,22 @@ export const DocumentUpload = () => {
   const [contractType, setContractType] = useState("");
   const [signatureFields, setSignatureFields] = useState<SignatureField[]>([]);
   const [contractTitle, setContractTitle] = useState("");
+  const [contractContent, setContractContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { createContract } = useContracts();
+
+  // Pre-fill form when template content is provided
+  useEffect(() => {
+    if (templateContent && templateName) {
+      setContractContent(templateContent);
+      setContractTitle(templateName);
+      toast({
+        title: "Template Applied",
+        description: `Template "${templateName}" has been loaded`,
+      });
+    }
+  }, [templateContent, templateName, toast]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -68,10 +86,10 @@ export const DocumentUpload = () => {
   };
 
   const sendContract = async () => {
-    if (!uploadedFile || !recipientEmail || !contractTitle) {
+    if ((!uploadedFile && !contractContent) || !recipientEmail || !contractTitle) {
       toast({
         title: "Missing information",
-        description: "Please upload a document, provide a title, and recipient details.",
+        description: "Please upload a document or provide contract content, title, and recipient details.",
         variant: "destructive",
       });
       return;
@@ -89,10 +107,13 @@ export const DocumentUpload = () => {
     setIsLoading(true);
 
     try {
+      // Use contract content if available, otherwise use file name
+      const content = contractContent || `Contract document: ${uploadedFile?.name}\n\nSignature Fields: ${JSON.stringify(signatureFields)}`;
+      
       // Create contract in database with signature fields
       const contractData = await createContract({
         title: contractTitle,
-        content: `Contract document: ${uploadedFile.name}\n\nSignature Fields: ${JSON.stringify(signatureFields)}`,
+        content: content,
       });
 
       if (!contractData) {
@@ -133,6 +154,7 @@ export const DocumentUpload = () => {
       setEmailMessage("");
       setContractType("");
       setContractTitle("");
+      setContractContent("");
       setSignatureFields([]);
     } catch (error) {
       console.error("Error sending contract:", error);
@@ -150,67 +172,87 @@ export const DocumentUpload = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Upload Contract Document</CardTitle>
+          <CardTitle>Create Contract</CardTitle>
           <CardDescription>
-            Upload a PDF or Word document to begin the signing process
+            Upload a document or use template content to begin the signing process
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* File Upload Area */}
-          <div
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-              dragOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300'
-            }`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            {uploadedFile ? (
-              <div className="space-y-4">
-                <FileText className="h-16 w-16 text-green-600 mx-auto" />
-                <div>
-                  <p className="text-lg font-medium text-gray-900">{uploadedFile.name}</p>
-                  <p className="text-sm text-gray-500">
-                    {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => setUploadedFile(null)}
-                  className="mt-2"
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Remove File
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <Upload className="h-16 w-16 text-gray-400 mx-auto" />
-                <div>
-                  <p className="text-lg font-medium text-gray-900">
-                    Drop your document here, or click to browse
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Supports PDF and Word documents (max 10MB)
-                  </p>
-                </div>
-                <input
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  onChange={handleFileInput}
-                  className="hidden"
-                  id="file-upload"
-                />
-                <Button asChild className="mt-4">
-                  <label htmlFor="file-upload" className="cursor-pointer">
-                    Choose File
-                  </label>
-                </Button>
-              </div>
-            )}
-          </div>
+          {/* Template Content Section */}
+          {contractContent && (
+            <div className="space-y-2">
+              <Label htmlFor="contract-content">Contract Content (from template)</Label>
+              <Textarea
+                id="contract-content"
+                value={contractContent}
+                onChange={(e) => setContractContent(e.target.value)}
+                placeholder="Contract content will appear here..."
+                rows={8}
+                className="font-mono text-sm"
+              />
+              <p className="text-sm text-gray-500">
+                You can edit this content before sending the contract.
+              </p>
+            </div>
+          )}
 
-          {uploadedFile && (
+          {/* File Upload Area - only show if no template content */}
+          {!contractContent && (
+            <div
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                dragOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300'
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              {uploadedFile ? (
+                <div className="space-y-4">
+                  <FileText className="h-16 w-16 text-green-600 mx-auto" />
+                  <div>
+                    <p className="text-lg font-medium text-gray-900">{uploadedFile.name}</p>
+                    <p className="text-sm text-gray-500">
+                      {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => setUploadedFile(null)}
+                    className="mt-2"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Remove File
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <Upload className="h-16 w-16 text-gray-400 mx-auto" />
+                  <div>
+                    <p className="text-lg font-medium text-gray-900">
+                      Drop your document here, or click to browse
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Supports PDF and Word documents (max 10MB)
+                    </p>
+                  </div>
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleFileInput}
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <Button asChild className="mt-4">
+                    <label htmlFor="file-upload" className="cursor-pointer">
+                      Choose File
+                    </label>
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {(uploadedFile || contractContent) && (
             <>
               {/* Contract Title */}
               <div className="space-y-2">

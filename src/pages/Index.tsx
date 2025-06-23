@@ -20,6 +20,8 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [templateContent, setTemplateContent] = useState<string>("");
+  const [templateName, setTemplateName] = useState<string>("");
   const { contracts, loading, deleteContract } = useContracts();
   const { user, loading: authLoading, signOut } = useAuth();
   const { displayName } = useUserProfile(user);
@@ -55,6 +57,12 @@ const Index = () => {
     setIsViewerOpen(true);
   };
 
+  const handleUseTemplate = (content: string, name: string) => {
+    setTemplateContent(content);
+    setTemplateName(name);
+    setActiveTab("upload");
+  };
+
   const completedCount = contracts.filter(doc => doc.status === "completed").length;
   const pendingCount = contracts.filter(doc => doc.status !== "completed").length;
 
@@ -63,7 +71,11 @@ const Index = () => {
       <Header 
         displayName={displayName || 'User'}
         onSignOut={handleSignOut}
-        onNewContract={() => setActiveTab("upload")}
+        onNewContract={() => {
+          setTemplateContent("");
+          setTemplateName("");
+          setActiveTab("upload");
+        }}
       />
 
       {/* Main Content */}
@@ -105,11 +117,14 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="upload">
-            <DocumentUpload />
+            <DocumentUpload 
+              templateContent={templateContent}
+              templateName={templateName}
+            />
           </TabsContent>
 
           <TabsContent value="templates">
-            <ContractTemplates />
+            <ContractTemplates onUseTemplate={handleUseTemplate} />
           </TabsContent>
 
           <TabsContent value="admin">
