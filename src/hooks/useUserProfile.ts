@@ -28,7 +28,12 @@ export const useUserProfile = (user: User | null) => {
     fetchUserProfile();
   }, [user]);
 
-  const displayName = userProfile?.full_name || user?.email;
+  // Prioritize full_name from profile, then from user metadata, then fall back to email
+  const displayName = userProfile?.full_name || 
+                     user?.user_metadata?.full_name || 
+                     user?.user_metadata?.name || 
+                     user?.email || 
+                     'User';
 
   return { userProfile, displayName };
 };
