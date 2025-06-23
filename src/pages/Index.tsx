@@ -1,15 +1,18 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText, Users, Settings, Plus, Eye, Send, Edit, Inbox, Loader2, Trash2 } from "lucide-react";
+import { Upload, FileText, Users, Settings, Plus, Eye, Send, Edit, Inbox, Loader2, Trash2, LogOut } from "lucide-react";
 import { DocumentUpload } from "@/components/DocumentUpload";
 import { ContractTemplates } from "@/components/ContractTemplates";
 import { SigningDashboard } from "@/components/SigningDashboard";
 import { AdminPanel } from "@/components/AdminPanel";
 import { ContractViewer } from "@/components/ContractViewer";
 import { useContracts } from "@/hooks/useContracts";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import type { Contract } from "@/hooks/useContracts";
 
 const Index = () => {
@@ -17,6 +20,33 @@ const Index = () => {
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const { contracts, loading, deleteContract } = useContracts();
+  const { user, loading: authLoading, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  // Redirect to auth if not logged in
+  if (!user) {
+    return null;
+  }
 
   const handleViewContract = (contract: Contract) => {
     setSelectedContract(contract);
@@ -65,9 +95,14 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">Welcome, {user.email}</span>
               <Button variant="outline" size="sm">
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
               </Button>
               <Button size="sm" onClick={() => setActiveTab("upload")}>
                 <Plus className="h-4 w-4 mr-2" />
