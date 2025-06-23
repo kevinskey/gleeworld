@@ -1,322 +1,246 @@
+
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, FileText } from "lucide-react";
-
-const w9Schema = z.object({
-  name: z.string().min(1, "Name is required"),
-  businessName: z.string().optional(),
-  federalTaxClassification: z.enum([
-    "individual",
-    "c-corporation",
-    "s-corporation",
-    "partnership",
-    "trust-estate",
-    "llc",
-    "other"
-  ]),
-  otherClassification: z.string().optional(),
-  payeesAccountNumber: z.string().optional(),
-  address: z.string().min(1, "Address is required"),
-  city: z.string().min(1, "City is required"),
-  state: z.string().min(1, "State is required"),
-  zipCode: z.string().min(5, "ZIP code is required"),
-  requestersAccountNumber: z.string().optional(),
-  taxpayerIdNumber: z.string().min(9, "Taxpayer ID number is required"),
-  certificationSigned: z.boolean().refine(val => val === true, "You must sign the certification"),
-});
-
-type W9FormData = z.infer<typeof w9Schema>;
 
 interface W9FormProps {
   onSuccess?: () => void;
 }
 
 export const W9Form = ({ onSuccess }: W9FormProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user } = useAuth();
-  const { toast } = useToast();
-
-  const form = useForm<W9FormData>({
-    resolver: zodResolver(w9Schema),
-    defaultValues: {
-      federalTaxClassification: "individual",
-      certificationSigned: false,
-    },
+  const [formData, setFormData] = useState({
+    name: '',
+    businessName: '',
+    taxClassification: 'individual',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    accountNumbers: '',
+    requestersName: '',
+    requestersAddress: '',
+    tin: '',
+    certification: false
   });
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+  const { user } = useAuth();
 
-  const onSubmit = async (data: W9FormData) => {
-    console.log('W9 form submission started', { user: user?.id, data: Object.keys(data) });
+  const handleInputChange = (field: string, value: string | boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
     if (!user) {
-      console.error('No authenticated user found during W9 submission');
       toast({
-        title: "Authentication Error",
-        description: "You must be logged in to submit a W9 form",
+        title: "Error",
+        description: "You must be logged in to submit a W9 form.",
         variant: "destructive",
       });
       return;
     }
 
-    setIsSubmitting(true);
+    if (!formData.certification) {
+      toast({
+        title: "Certification Required",
+        description: "You must certify the accuracy of the information under penalties of perjury.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
-      console.log('Generating W9 content...');
-      // Generate PDF content as text (in a real implementation, you'd use a PDF library)
-      const pdfContent = generateW9Content(data);
-      
-      // Create a blob from the content
-      const blob = new Blob([pdfContent], { type: 'text/plain' });
+      setLoading(true);
+
+      // Create form data as text content
+      const formContent = `
+W9 Form Submission
+Date: ${new Date().toISOString()}
+Name: ${formData.name}
+Business Name: ${formData.businessName}
+Tax Classification: ${formData.taxClassification}
+Address: ${formData.address}
+City: ${formData.city}
+State: ${formData.state}
+ZIP Code: ${formData.zipCode}
+Account Numbers: ${formData.accountNumbers}
+Requester's Name: ${formData.requestersName}
+Requester's Address: ${formData.requestersAddress}
+TIN: ${formData.tin}
+Certified: ${formData.certification ? 'Yes' : 'No'}
+      `;
+
+      // Generate unique file path
+      const fileName = `w9-${user.id}-${Date.now()}.txt`;
       
       // Upload to storage
-      const fileName = `${user.id}/w9-form-${Date.now()}.txt`;
-      console.log('Uploading W9 to storage:', fileName);
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('w9-forms')
-        .upload(fileName, blob);
+        .upload(fileName, formContent, {
+          contentType: 'text/plain'
+        });
 
       if (uploadError) {
-        console.error('Storage upload error:', uploadError);
         throw uploadError;
       }
 
-      console.log('W9 uploaded successfully, saving to database...');
-
-      // Save form submission record
+      // Save form record to database
       const { error: dbError } = await supabase
         .from('w9_forms')
         .insert({
           user_id: user.id,
-          storage_path: uploadData.path,
-          form_data: data,
+          storage_path: fileName,
+          form_data: formData,
           status: 'submitted'
         });
 
       if (dbError) {
-        console.error('Database insert error:', dbError);
         throw dbError;
       }
 
-      console.log('W9 form submitted successfully');
-
       toast({
         title: "W9 Form Submitted",
-        description: "Your W9 form has been successfully submitted and saved.",
+        description: "Your W9 form has been submitted successfully.",
       });
 
-      form.reset();
-      onSuccess?.();
+      if (onSuccess) {
+        onSuccess();
+      }
 
     } catch (error) {
-      console.error("Error submitting W9 form:", error);
+      console.error('Error submitting W9 form:', error);
       toast({
-        title: "Submission Failed",
-        description: `There was an error submitting your W9 form: ${error.message || 'Unknown error'}`,
+        title: "Error",
+        description: "Failed to submit W9 form. Please try again.",
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
     <Card className="max-w-4xl mx-auto">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-6 w-6" />
-          Form W-9: Request for Taxpayer Identification Number
-        </CardTitle>
+        <CardTitle>W9 Tax Form</CardTitle>
         <CardDescription>
-          Please fill out this form to provide your taxpayer identification information.
+          Request for Taxpayer Identification Number and Certification
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Name */}
-          <div className="space-y-2">
-            <Label htmlFor="name">Name (as shown on your income tax return) *</Label>
-            <Input
-              id="name"
-              {...form.register("name")}
-              placeholder="Enter your full name"
-            />
-            {form.formState.errors.name && (
-              <p className="text-sm text-red-600">{form.formState.errors.name.message}</p>
-            )}
-          </div>
-
-          {/* Business Name */}
-          <div className="space-y-2">
-            <Label htmlFor="businessName">Business name/disregarded entity name (if different from above)</Label>
-            <Input
-              id="businessName"
-              {...form.register("businessName")}
-              placeholder="Enter business name if applicable"
-            />
-          </div>
-
-          {/* Federal Tax Classification */}
-          <div className="space-y-2">
-            <Label>Federal Tax Classification *</Label>
-            <Select
-              value={form.watch("federalTaxClassification")}
-              onValueChange={(value) => form.setValue("federalTaxClassification", value as any)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="individual">Individual/sole proprietor or single-member LLC</SelectItem>
-                <SelectItem value="c-corporation">C Corporation</SelectItem>
-                <SelectItem value="s-corporation">S Corporation</SelectItem>
-                <SelectItem value="partnership">Partnership</SelectItem>
-                <SelectItem value="trust-estate">Trust/estate</SelectItem>
-                <SelectItem value="llc">Limited liability company</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Other Classification */}
-          {form.watch("federalTaxClassification") === "other" && (
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="otherClassification">Other Classification (specify)</Label>
+              <Label htmlFor="name">Name *</Label>
               <Input
-                id="otherClassification"
-                {...form.register("otherClassification")}
-                placeholder="Specify other classification"
+                id="name"
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                required
               />
             </div>
-          )}
 
-          {/* Address */}
+            <div className="space-y-2">
+              <Label htmlFor="businessName">Business Name (if different from above)</Label>
+              <Input
+                id="businessName"
+                value={formData.businessName}
+                onChange={(e) => handleInputChange('businessName', e.target.value)}
+              />
+            </div>
+
+            <div className="md:col-span-2 space-y-2">
+              <Label htmlFor="address">Address *</Label>
+              <Input
+                id="address"
+                value={formData.address}
+                onChange={(e) => handleInputChange('address', e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="city">City *</Label>
+              <Input
+                id="city"
+                value={formData.city}
+                onChange={(e) => handleInputChange('city', e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="state">State *</Label>
+              <Input
+                id="state"
+                value={formData.state}
+                onChange={(e) => handleInputChange('state', e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="zipCode">ZIP Code *</Label>
+              <Input
+                id="zipCode"
+                value={formData.zipCode}
+                onChange={(e) => handleInputChange('zipCode', e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tin">Taxpayer Identification Number (SSN or EIN) *</Label>
+              <Input
+                id="tin"
+                value={formData.tin}
+                onChange={(e) => handleInputChange('tin', e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
           <div className="space-y-4">
-            <Label>Address *</Label>
-            <div className="space-y-2">
-              <Input
-                {...form.register("address")}
-                placeholder="Street address"
-              />
-              {form.formState.errors.address && (
-                <p className="text-sm text-red-600">{form.formState.errors.address.message}</p>
-              )}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-              <div>
-                <Input
-                  {...form.register("city")}
-                  placeholder="City"
-                />
-                {form.formState.errors.city && (
-                  <p className="text-sm text-red-600">{form.formState.errors.city.message}</p>
-                )}
-              </div>
-              <div>
-                <Input
-                  {...form.register("state")}
-                  placeholder="State"
-                />
-                {form.formState.errors.state && (
-                  <p className="text-sm text-red-600">{form.formState.errors.state.message}</p>
-                )}
-              </div>
-              <div>
-                <Input
-                  {...form.register("zipCode")}
-                  placeholder="ZIP code"
-                />
-                {form.formState.errors.zipCode && (
-                  <p className="text-sm text-red-600">{form.formState.errors.zipCode.message}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Account Numbers */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="payeesAccountNumber">List account number(s) here (optional)</Label>
-              <Input
-                id="payeesAccountNumber"
-                {...form.register("payeesAccountNumber")}
-                placeholder="Account number"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="requestersAccountNumber">Requester's name and address (optional)</Label>
-              <Input
-                id="requestersAccountNumber"
-                {...form.register("requestersAccountNumber")}
-                placeholder="Requester info"
-              />
-            </div>
-          </div>
-
-          {/* Taxpayer ID Number */}
-          <div className="space-y-2">
-            <Label htmlFor="taxpayerIdNumber">Taxpayer Identification Number (SSN or EIN) *</Label>
-            <Input
-              id="taxpayerIdNumber"
-              {...form.register("taxpayerIdNumber")}
-              placeholder="XXX-XX-XXXX or XX-XXXXXXX"
-              maxLength={11}
-            />
-            {form.formState.errors.taxpayerIdNumber && (
-              <p className="text-sm text-red-600">{form.formState.errors.taxpayerIdNumber.message}</p>
-            )}
-          </div>
-
-          {/* Certification */}
-          <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-            <h3 className="font-semibold">Certification</h3>
-            <p className="text-sm text-gray-700">
-              Under penalties of perjury, I certify that:
-            </p>
-            <ul className="text-sm text-gray-700 space-y-1 ml-4">
-              <li>1. The number shown on this form is my correct taxpayer identification number (or I am waiting for a number to be issued to me);</li>
-              <li>2. I am not subject to backup withholding because: (a) I am exempt from backup withholding, or (b) I have not been notified by the Internal Revenue Service (IRS) that I am subject to backup withholding;</li>
-              <li>3. I am a U.S. citizen or other U.S. person;</li>
-              <li>4. The FATCA code(s) entered on this form (if any) indicating that I am exempt from FATCA reporting is correct.</li>
-            </ul>
-            
-            <div className="flex items-center space-x-2">
+            <div className="flex items-start space-x-2">
               <Checkbox
-                id="certificationSigned"
-                checked={form.watch("certificationSigned")}
-                onCheckedChange={(checked) => form.setValue("certificationSigned", checked as boolean)}
+                id="certification"
+                checked={formData.certification}
+                onCheckedChange={(checked) => handleInputChange('certification', checked as boolean)}
               />
-              <Label htmlFor="certificationSigned" className="text-sm">
-                I certify that the information provided above is true, correct, and complete *
+              <Label htmlFor="certification" className="text-sm leading-relaxed">
+                Under penalties of perjury, I certify that:
+                <br />
+                1. The number shown on this form is my correct taxpayer identification number, and
+                <br />
+                2. I am not subject to backup withholding because: (a) I am exempt from backup withholding, or (b) I have not been notified by the Internal Revenue Service (IRS) that I am subject to backup withholding as a result of a failure to report all interest or dividends, or (c) the IRS has notified me that I am no longer subject to backup withholding, and
+                <br />
+                3. I am a U.S. citizen or other U.S. person, and
+                <br />
+                4. The FATCA code(s) entered on this form (if any) indicating that I am exempt from FATCA reporting is correct.
+                <br />
+                <br />
+                <strong>Certification instructions:</strong> You must cross out item 2 above if you have been notified by the IRS that you are currently subject to backup withholding.
               </Label>
             </div>
-            {form.formState.errors.certificationSigned && (
-              <p className="text-sm text-red-600">{form.formState.errors.certificationSigned.message}</p>
-            )}
           </div>
 
-          {/* Submit Button */}
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isSubmitting} className="min-w-32">
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                "Submit W9 Form"
-              )}
+          <div className="flex justify-end space-x-2">
+            <Button
+              type="submit"
+              disabled={loading || !formData.certification}
+            >
+              {loading ? "Submitting..." : "Submit W9 Form"}
             </Button>
           </div>
         </form>
@@ -324,27 +248,3 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
     </Card>
   );
 };
-
-// Helper function to generate W9 content (simplified version)
-function generateW9Content(data: W9FormData): string {
-  return `
-FORM W-9: REQUEST FOR TAXPAYER IDENTIFICATION NUMBER AND CERTIFICATION
-
-Name: ${data.name}
-Business Name: ${data.businessName || 'N/A'}
-Federal Tax Classification: ${data.federalTaxClassification}
-${data.otherClassification ? `Other Classification: ${data.otherClassification}` : ''}
-
-Address: ${data.address}
-City, State, ZIP: ${data.city}, ${data.state} ${data.zipCode}
-
-Payee's Account Number: ${data.payeesAccountNumber || 'N/A'}
-Requester's Account Number: ${data.requestersAccountNumber || 'N/A'}
-
-Taxpayer Identification Number: ${data.taxpayerIdNumber}
-
-Certification: ${data.certificationSigned ? 'SIGNED' : 'NOT SIGNED'}
-
-Submitted on: ${new Date().toLocaleDateString()}
-  `.trim();
-}
