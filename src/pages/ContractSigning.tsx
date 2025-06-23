@@ -64,7 +64,7 @@ const ContractSigning = () => {
     };
 
     fetchContract();
-  }, [contractId, toast]);
+  }, [contractId]); // Removed toast from dependency array to prevent infinite loop
 
   const handleSign = async () => {
     if (!contract) return;
