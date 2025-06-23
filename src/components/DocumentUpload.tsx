@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,15 +55,17 @@ export const DocumentUpload = ({
   const [headerImageUrl, setHeaderImageUrl] = useState<string>("");
   const [hasStipendField, setHasStipendField] = useState(false);
   const [creationMode, setCreationMode] = useState<'upload' | 'create' | 'template'>('create');
+  const [templateApplied, setTemplateApplied] = useState(false);
+
   const { toast } = useToast();
   const { createContract } = useContracts();
   const { users, loading: usersLoading, refetch: refetchUsers } = useUsers();
   const { user } = useAuth();
   const { displayName } = useUserProfile(user);
 
-  // Apply template content when provided
+  // Apply template content when provided - only run once
   useEffect(() => {
-    if (templateContent && templateName) {
+    if (templateContent && templateName && !templateApplied) {
       console.log('Applying template to form:', { templateName, templateContent });
       
       setOriginalTemplateContent(templateContent);
@@ -104,13 +107,14 @@ export const DocumentUpload = ({
         }
       ];
       setSignatureFields(defaultSignatureFields);
+      setTemplateApplied(true);
       
       toast({
         title: "Template Applied",
         description: `Template "${templateName}" has been applied. Select a user to generate the contract title.`,
       });
     }
-  }, [templateContent, templateName, templateHeaderImageUrl, templateContractType, toast]);
+  }, [templateContent, templateName, templateHeaderImageUrl, templateContractType, templateApplied, toast]);
 
   // Function to update contract content with placeholders
   const updateContractContent = useCallback((userInfo?: any, currentStipend?: string) => {
@@ -146,6 +150,7 @@ export const DocumentUpload = ({
       setOriginalTemplateContent("");
       setHasStipendField(false);
       setHeaderImageUrl("");
+      setTemplateApplied(false);
     }
     
     if (mode === 'create') {
@@ -351,6 +356,7 @@ export const DocumentUpload = ({
       setHasStipendField(false);
       setCreationMode('create');
       setShowPreview(false);
+      setTemplateApplied(false);
 
       if (onContractCreated) {
         onContractCreated();
