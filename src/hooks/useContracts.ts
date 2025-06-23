@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -51,10 +50,30 @@ export const useContracts = () => {
     template_id?: string;
   }) => {
     try {
+      console.log('Creating contract with data:', contract);
+      
+      // Check if template_id exists if provided
+      if (contract.template_id) {
+        const { data: templateExists, error: templateError } = await supabase
+          .from('contract_templates')
+          .select('id')
+          .eq('id', contract.template_id)
+          .single();
+
+        if (templateError || !templateExists) {
+          console.warn('Template not found, creating contract without template_id');
+          // Remove template_id if template doesn't exist
+          const { template_id, ...contractWithoutTemplate } = contract;
+          return await createContract(contractWithoutTemplate);
+        }
+      }
+
       const { data, error } = await supabase
         .from('contracts_v2')
         .insert([{
-          ...contract,
+          title: contract.title,
+          content: contract.content,
+          template_id: contract.template_id || null,
           created_by: null, // Set to null since we don't have auth yet
           status: 'draft',
           is_template: false,
