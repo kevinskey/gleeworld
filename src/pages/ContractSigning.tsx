@@ -1,14 +1,17 @@
-
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, FileText } from "lucide-react";
 import { useContractSigning } from "@/hooks/useContractSigning";
 import { SignatureStatus } from "@/components/contract-signing/SignatureStatus";
 import { ContractContentRenderer } from "@/components/contract-signing/ContractContentRenderer";
 import { CompletionStatus } from "@/components/contract-signing/CompletionStatus";
+import { W9StatusCard } from "@/components/contract-signing/W9StatusCard";
+import { useToast } from "@/hooks/use-toast";
 
 const ContractSigning = () => {
   const { contractId } = useParams<{ contractId: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const {
     contract,
     signatureRecord,
@@ -20,8 +23,30 @@ const ContractSigning = () => {
     isAdminOrAgentField,
     isArtistDateField,
     isContractSigned,
-    embeddedSignatures
+    embeddedSignatures,
+    w9Status,
+    w9Form,
+    generateCombinedPDF
   } = useContractSigning(contractId);
+
+  const handleW9Complete = () => {
+    navigate('/w9-form');
+  };
+
+  const handleDownloadCombinedPDF = async () => {
+    try {
+      const pdfData = await generateCombinedPDF();
+      if (pdfData && pdfData.downloadUrl) {
+        window.open(pdfData.downloadUrl, '_blank');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate combined PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getCompletionProgress = () => {
     if (isContractSigned()) {
@@ -40,6 +65,8 @@ const ContractSigning = () => {
     const completed = artistRequiredFields.filter(f => completedFields[f.id]);
     return `${completed.length}/${artistRequiredFields.length} artist fields completed`;
   };
+
+  const canDownloadPDF = isContractSigned() && w9Status === 'completed';
 
   if (loading) {
     return (
@@ -82,6 +109,14 @@ const ContractSigning = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            <W9StatusCard
+              w9Status={w9Status}
+              w9Form={w9Form}
+              onW9Complete={handleW9Complete}
+              onDownloadCombinedPDF={handleDownloadCombinedPDF}
+              canDownloadPDF={canDownloadPDF}
+            />
+            
             <SignatureStatus signatureRecord={signatureRecord} />
             <div className="relative">
               <ContractContentRenderer
