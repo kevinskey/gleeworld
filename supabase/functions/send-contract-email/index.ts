@@ -36,7 +36,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending contract email to:", recipientEmail);
 
-    const signatureUrl = `${Deno.env.get("SUPABASE_URL")?.replace("/rest/v1", "")}/contract-signing/${contractId}`;
+    // Get the current origin from the request headers
+    const origin = req.headers.get("origin") || "https://68e737ff-b69d-444d-8896-ed604144004c.lovableproject.com";
+    const signatureUrl = `${origin}/contract-signing/${contractId}`;
+
+    console.log("Generated signature URL:", signatureUrl);
 
     const emailResponse = await resend.emails.send({
       from: "ContractFlow <onboarding@resend.dev>",
