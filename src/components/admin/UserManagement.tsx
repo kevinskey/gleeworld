@@ -1,14 +1,14 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, Search, Loader2, Edit, RotateCcw, AlertCircle } from "lucide-react";
+import { Users, Search, Loader2, Edit, RotateCcw, AlertCircle, UserPlus } from "lucide-react";
 import { User } from "@/hooks/useUsers";
 import { EditUserDialog } from "./EditUserDialog";
 import { ResetPasswordDialog } from "./ResetPasswordDialog";
+import { AddUserDialog } from "./AddUserDialog";
 
 interface UserManagementProps {
   users: User[];
@@ -23,6 +23,7 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
   const [resetUser, setResetUser] = useState<User | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -69,6 +70,17 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
     }
   };
 
+  const handleAddUser = () => {
+    setAddUserDialogOpen(true);
+  };
+
+  const handleUserAdded = () => {
+    console.log('User added, refreshing list');
+    if (onRefetch) {
+      onRefetch();
+    }
+  };
+
   return (
     <>
       <Card>
@@ -84,6 +96,13 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
               </CardDescription>
             </div>
             <div className="flex space-x-2">
+              <Button 
+                onClick={handleAddUser}
+                size="sm"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add User
+              </Button>
               <Button 
                 variant="outline" 
                 size="sm"
@@ -226,6 +245,12 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
         user={resetUser}
         open={resetDialogOpen}
         onOpenChange={setResetDialogOpen}
+      />
+
+      <AddUserDialog
+        open={addUserDialogOpen}
+        onOpenChange={setAddUserDialogOpen}
+        onUserAdded={handleUserAdded}
       />
     </>
   );
