@@ -50,7 +50,7 @@ export const useContractTemplates = () => {
         .from('contract_templates')
         .insert([{
           ...template,
-          created_by: 'temp-user', // Temporary until auth is implemented
+          created_by: null, // Set to null since we don't have auth yet
           is_active: true,
         }])
         .select()
