@@ -1,9 +1,9 @@
+
 import { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calculator, DollarSign } from "lucide-react";
-import { Header } from "@/components/Header";
 import { DocumentUpload } from "@/components/DocumentUpload";
 import { ContractsList } from "@/components/ContractsList";
 import { AdminPanel } from "@/components/AdminPanel";
@@ -15,18 +15,61 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useContracts } from "@/hooks/useContracts";
 
 const Index = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { userProfile } = useUserProfile(user);
-  const { forceRefresh } = useContracts();
+  const { contracts, loading, error, forceRefresh, deleteContract } = useContracts();
+  const [showUpload, setShowUpload] = useState(false);
 
   const handleContractCreated = useCallback(() => {
-    // Refresh contracts and templates after a new contract is created
     forceRefresh();
   }, [forceRefresh]);
 
+  const handleViewContract = (contract: any) => {
+    // Handle contract viewing
+    console.log('Viewing contract:', contract);
+  };
+
+  const handleDeleteContract = async (contractId: string) => {
+    await deleteContract(contractId);
+  };
+
+  const handleUploadContract = () => {
+    setShowUpload(true);
+  };
+
+  const completedContracts = contracts.filter(c => c.status === 'completed');
+  const pendingContracts = contracts.filter(c => c.status !== 'completed');
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Contract Manager</h1>
+              <p className="text-sm text-gray-500">Welcome back, {userProfile?.display_name || user?.email}</p>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <Button 
+                onClick={handleUploadContract}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                New Contract
+              </Button>
+              
+              <Button 
+                onClick={signOut} 
+                variant="outline"
+                className="border-red-300 text-red-700 hover:bg-red-50"
+              >
+                Sign Out
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+      
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Contract Management Dashboard</h1>
@@ -37,10 +80,22 @@ const Index = () => {
           </p>
         </div>
 
-        <StatsCards />
+        <StatsCards 
+          totalContracts={contracts.length}
+          completedCount={completedContracts.length}
+          pendingCount={pendingContracts.length}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <ContractsList />
+          <ContractsList 
+            contracts={contracts}
+            loading={loading}
+            error={error}
+            onViewContract={handleViewContract}
+            onDeleteContract={handleDeleteContract}
+            onUploadContract={handleUploadContract}
+            onRetry={forceRefresh}
+          />
           <W9FormsList />
         </div>
 
@@ -79,7 +134,9 @@ const Index = () => {
           </>
         )}
 
-        <DocumentUpload onContractCreated={handleContractCreated} />
+        {showUpload && (
+          <DocumentUpload onContractCreated={handleContractCreated} />
+        )}
       </main>
     </div>
   );
