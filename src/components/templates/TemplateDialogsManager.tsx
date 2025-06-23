@@ -37,8 +37,11 @@ export const TemplateDialogsManager = ({
   const { toast } = useToast();
 
   const handleUseTemplate = async (template: ContractTemplate) => {
+    console.log('Using template:', template);
     if (onUseTemplate) {
+      // Don't pass template.id as template_id since we're not creating from template, just using content
       onUseTemplate(template.template_content, template.name, template.header_image_url, template.contract_type);
+      onViewOpenChange(false);
       toast({
         title: "Template Applied",
         description: `Template "${template.name}" has been applied to the upload form`,

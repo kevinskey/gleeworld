@@ -48,6 +48,7 @@ export const DocumentUpload = ({ templateContent, templateName, headerImageUrl: 
   // Pre-fill form when template content is provided
   useEffect(() => {
     if (templateContent && templateName) {
+      console.log('Applying template to form:', { templateName, templateContent });
       setOriginalTemplateContent(templateContent); // Store original template
       setContractContent(templateContent);
       setContractTitle(templateName);
@@ -219,10 +220,13 @@ export const DocumentUpload = ({ templateContent, templateName, headerImageUrl: 
       let finalContent = contractContent || `Contract document: ${uploadedFile?.name}\n\nSignature Fields: ${JSON.stringify(signatureFields)}`;
       finalContent = finalContent.replace(/Date Executed:/g, `Date Executed: ${new Date().toLocaleDateString()}`);
       
-      // Create contract in database with signature fields
+      console.log('Creating contract with final content and no template_id');
+      
+      // Create contract in database without template_id (we're using template content, not linking to template)
       const contractData = await createContract({
         title: contractTitle,
         content: finalContent,
+        // Don't pass template_id - we're creating a new contract from template content
       });
 
       if (!contractData) {
