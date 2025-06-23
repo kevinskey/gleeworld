@@ -49,6 +49,23 @@ export const useW9Forms = () => {
     }
   };
 
+  const getTotalW9Count = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('w9_forms')
+        .select('*', { count: 'exact', head: true });
+
+      if (error) {
+        throw error;
+      }
+
+      return count || 0;
+    } catch (err) {
+      console.error('Error fetching W9 count:', err);
+      return 0;
+    }
+  };
+
   const downloadForm = async (storagePath: string) => {
     try {
       const { data, error } = await supabase.storage
@@ -84,5 +101,6 @@ export const useW9Forms = () => {
     error,
     refetch: fetchForms,
     downloadForm,
+    getTotalW9Count,
   };
 };

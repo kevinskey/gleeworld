@@ -1,5 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { useW9Forms } from "@/hooks/useW9Forms";
 
 interface StatsCardsProps {
   totalContracts: number;
@@ -8,8 +10,20 @@ interface StatsCardsProps {
 }
 
 export const StatsCards = ({ totalContracts, completedCount, pendingCount }: StatsCardsProps) => {
+  const [w9Count, setW9Count] = useState(0);
+  const { getTotalW9Count } = useW9Forms();
+
+  useEffect(() => {
+    const fetchW9Count = async () => {
+      const count = await getTotalW9Count();
+      setW9Count(count);
+    };
+
+    fetchW9Count();
+  }, [getTotalW9Count]);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
       <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
         <CardHeader className="pb-2">
           <CardTitle className="text-2xl font-bold">{totalContracts}</CardTitle>
@@ -26,6 +40,12 @@ export const StatsCards = ({ totalContracts, completedCount, pendingCount }: Sta
         <CardHeader className="pb-2">
           <CardTitle className="text-2xl font-bold">{pendingCount}</CardTitle>
           <CardDescription className="text-yellow-100">Pending</CardDescription>
+        </CardHeader>
+      </Card>
+      <Card className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-2xl font-bold">{w9Count}</CardTitle>
+          <CardDescription className="text-yellow-100">W9 Forms</CardDescription>
         </CardHeader>
       </Card>
     </div>
