@@ -483,6 +483,15 @@ export const DocumentUpload = ({
             showArea={showFileUpload}
           />
 
+          {/* MOVED: SignatureFieldEditor is now outside the hasContent conditional */}
+          <SignatureFieldEditor 
+            fields={signatureFields}
+            onFieldsChange={(newFields) => {
+              console.log('SignatureFieldEditor - Fields changed:', newFields);
+              setSignatureFields(newFields);
+            }}
+          />
+
           {hasContent && (
             <>
               {creationMode !== 'create' && (
@@ -517,14 +526,6 @@ export const DocumentUpload = ({
                   )}
                 </div>
               </div>
-
-              <SignatureFieldEditor 
-                fields={signatureFields}
-                onFieldsChange={(newFields) => {
-                  console.log('SignatureFieldEditor - Fields changed:', newFields);
-                  setSignatureFields(newFields);
-                }}
-              />
 
               <RecipientInformation
                 recipientName={recipientName}
