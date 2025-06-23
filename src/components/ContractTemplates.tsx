@@ -236,93 +236,6 @@ export const ContractTemplates = () => {
     </DialogContent>
   );
 
-  const EditTemplateDialog = () => (
-    <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Edit Template</DialogTitle>
-          <DialogDescription>
-            Update the template name, content, and header image
-          </DialogDescription>
-        </DialogHeader>
-        {editingTemplate && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-template-name">Template Name</Label>
-              <Input
-                id="edit-template-name"
-                value={editingTemplate.name}
-                onChange={(e) => setEditingTemplate({...editingTemplate, name: e.target.value})}
-                placeholder="Service Agreement Template"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-header-image">Header Image (Optional)</Label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                <input
-                  id="edit-header-image"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleEditImageUpload}
-                  className="hidden"
-                />
-                <Button
-                  variant="outline"
-                  onClick={() => document.getElementById('edit-header-image')?.click()}
-                  className="w-full"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  {editingTemplate.header_image ? 'Change Image' : 'Upload New Header Image'}
-                </Button>
-                
-                {imagePreview && (
-                  <div className="mt-4">
-                    <img 
-                      src={imagePreview} 
-                      alt="Header preview" 
-                      className="max-h-32 mx-auto rounded border"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-template-content">Template Content</Label>
-              <Textarea
-                id="edit-template-content"
-                value={editingTemplate.template_content}
-                onChange={(e) => setEditingTemplate({...editingTemplate, template_content: e.target.value})}
-                placeholder="Enter your contract template here..."
-                rows={12}
-              />
-            </div>
-          </div>
-        )}
-        <DialogFooter>
-          <Button variant="outline" onClick={() => {
-            setIsEditOpen(false);
-            setImagePreview(null);
-            setEditingTemplate(null);
-          }}>
-            Cancel
-          </Button>
-          <Button onClick={handleUpdateTemplate} disabled={isUpdating}>
-            {isUpdating ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Updating...
-              </>
-            ) : (
-              'Update Template'
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -528,7 +441,7 @@ export const ContractTemplates = () => {
               )}
             </Button>
           </DialogFooter>
-        </Dialog>
+        </DialogContent>
       </Dialog>
 
       {/* View Template Dialog */}
