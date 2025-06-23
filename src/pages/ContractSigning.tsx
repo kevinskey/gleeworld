@@ -6,6 +6,7 @@ import { Loader2, FileText, CheckCircle2, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SignatureFieldOverlay } from "@/components/SignatureFieldOverlay";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Contract {
   id: string;
@@ -36,8 +37,8 @@ const ContractSigning = () => {
       label: "Your Signature",
       type: 'signature',
       page: 1,
-      x: 100,
-      y: 300,
+      x: 50,
+      y: 400,
       required: true
     },
     {
@@ -45,14 +46,15 @@ const ContractSigning = () => {
       label: "Date Signed",
       type: 'date',
       page: 1,
-      x: 400,
-      y: 300,
+      x: 50,
+      y: 500,
       required: true
     }
   ]);
   const [completedFields, setCompletedFields] = useState<Record<number, string>>({});
   const [redirectCountdown, setRedirectCountdown] = useState(5);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const fetchContract = async () => {
@@ -192,7 +194,7 @@ const ContractSigning = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="flex items-center space-x-2">
           <Loader2 className="h-6 w-6 animate-spin" />
           <span>Loading contract...</span>
@@ -203,7 +205,7 @@ const ContractSigning = () => {
 
   if (!contract) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6 text-center">
             <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
@@ -221,30 +223,42 @@ const ContractSigning = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 space-y-6">
+    <div className="min-h-screen bg-gray-50 py-4 md:py-8">
+      <div className="max-w-4xl mx-auto px-2 md:px-4 space-y-4 md:space-y-6">
+        {/* Mobile-optimized progress indicator */}
+        {contract.status !== 'completed' && isMobile && (
+          <div className="bg-white rounded-lg p-4 shadow-sm border">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium">Progress:</span>
+              <span className="text-blue-600">{getCompletionProgress()} fields completed</span>
+            </div>
+          </div>
+        )}
+
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
               <div className="flex items-center space-x-2">
                 <FileText className="h-6 w-6" />
-                <span>{contract.title}</span>
+                <span className="text-lg md:text-xl truncate">{contract.title}</span>
               </div>
-              {contract.status !== 'completed' && (
+              {contract.status !== 'completed' && !isMobile && (
                 <div className="text-sm text-gray-500">
                   Progress: {getCompletionProgress()} fields completed
                 </div>
               )}
             </CardTitle>
-            <div className="flex items-center space-x-4 text-sm text-gray-500">
-              <span>Status: {contract.status}</span>
+            <div className="flex flex-col md:flex-row md:items-center md:space-x-4 text-sm text-gray-500 gap-1 md:gap-0">
+              <span>Status: <span className="capitalize">{contract.status}</span></span>
               <span>Created: {new Date(contract.created_at).toLocaleDateString()}</span>
             </div>
           </CardHeader>
           <CardContent>
             <div className="relative">
               <div 
-                className="whitespace-pre-wrap border rounded-lg p-8 bg-white min-h-[600px] relative"
+                className={`whitespace-pre-wrap border rounded-lg p-4 md:p-8 bg-white relative overflow-x-auto ${
+                  isMobile ? 'min-h-[400px] text-sm' : 'min-h-[600px]'
+                }`}
                 dangerouslySetInnerHTML={{ __html: contract.content.replace(/\n/g, '<br>') }}
               />
               
@@ -252,7 +266,12 @@ const ContractSigning = () => {
               {contract.status !== 'completed' && signatureFields.map((field) => (
                 <SignatureFieldOverlay
                   key={field.id}
-                  field={field}
+                  field={{
+                    ...field,
+                    // Adjust positioning for mobile
+                    x: isMobile ? 20 : field.x,
+                    y: isMobile ? field.y - 50 : field.y,
+                  }}
                   onFieldComplete={handleFieldComplete}
                   isCompleted={!!completedFields[field.id]}
                   value={completedFields[field.id]}
@@ -262,23 +281,33 @@ const ContractSigning = () => {
           </CardContent>
         </Card>
 
+        {/* Mobile-optimized signing section */}
         {contract.status !== 'completed' && (
-          <div className="flex justify-center pt-6">
-            <Button 
-              onClick={handleSign}
-              disabled={signing}
-              size="lg"
-              className="px-8"
-            >
-              {signing ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Processing Signature...
-                </>
-              ) : (
-                'Complete Contract Signing'
-              )}
-            </Button>
+          <div className="sticky bottom-4 z-10">
+            <div className="bg-white rounded-lg shadow-lg border p-4">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-center gap-3">
+                {isMobile && (
+                  <div className="text-center text-sm text-gray-600">
+                    Complete all required fields above to sign
+                  </div>
+                )}
+                <Button 
+                  onClick={handleSign}
+                  disabled={signing}
+                  size={isMobile ? "default" : "lg"}
+                  className={`w-full md:w-auto ${isMobile ? 'py-3' : 'px-8'}`}
+                >
+                  {signing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Processing Signature...
+                    </>
+                  ) : (
+                    'Complete Contract Signing'
+                  )}
+                </Button>
+              </div>
+            </div>
           </div>
         )}
 
