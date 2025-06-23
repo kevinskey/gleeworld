@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@/hooks/useUsers";
+import { AlertCircle } from "lucide-react";
 
 interface EditUserDialogProps {
   user: User | null;
@@ -25,21 +26,48 @@ export const EditUserDialog = ({ user, open, onOpenChange, onUserUpdated }: Edit
   const handleSave = async () => {
     if (!user) return;
 
+    // Validate inputs
+    if (!fullName.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Full name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!["user", "admin", "super-admin"].includes(role)) {
+      toast({
+        title: "Validation Error", 
+        description: "Invalid role selected",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      const { error } = await supabase
+      console.log('Updating user profile:', { userId: user.id, fullName, role });
+
+      // Update the user's profile in the profiles table
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          full_name: fullName,
+          full_name: fullName.trim(),
           role: role
         })
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        throw new Error(`Failed to update profile: ${profileError.message}`);
+      }
+
+      console.log('User profile updated successfully');
 
       toast({
         title: "Success",
-        description: "User updated successfully",
+        description: "User profile updated successfully",
       });
 
       onUserUpdated();
@@ -48,7 +76,7 @@ export const EditUserDialog = ({ user, open, onOpenChange, onUserUpdated }: Edit
       console.error('Error updating user:', error);
       toast({
         title: "Error",
-        description: "Failed to update user",
+        description: error instanceof Error ? error.message : "Failed to update user",
         variant: "destructive",
       });
     } finally {
@@ -58,46 +86,65 @@ export const EditUserDialog = ({ user, open, onOpenChange, onUserUpdated }: Edit
 
   // Reset form when user changes
   useEffect(() => {
-    setFullName(user?.full_name || "");
-    setRole(user?.role || "user");
+    if (user) {
+      setFullName(user.full_name || "");
+      setRole(user.role || "user");
+    }
   }, [user]);
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open && user) {
+      setFullName(user.full_name || "");
+      setRole(user.role || "user");
+    }
+  }, [open, user]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Edit User</DialogTitle>
+          <DialogTitle>Edit User Profile</DialogTitle>
           <DialogDescription>
-            Update user information and role
+            Update user information and role. Email addresses cannot be changed through this interface.
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input 
-              id="email" 
-              value={user?.email || ""} 
-              disabled 
-              className="bg-gray-100"
-            />
+          <div className="space-y-2">
+            <Label htmlFor="email">Email Address</Label>
+            <div className="relative">
+              <Input 
+                id="email" 
+                value={user?.email || ""} 
+                disabled 
+                className="bg-gray-50 text-gray-500 cursor-not-allowed"
+              />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <AlertCircle className="h-4 w-4 text-gray-400" />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500">
+              Email addresses are managed by Supabase Auth and cannot be changed here.
+            </p>
           </div>
           
-          <div>
-            <Label htmlFor="fullName">Full Name</Label>
+          <div className="space-y-2">
+            <Label htmlFor="fullName">Full Name *</Label>
             <Input
               id="fullName"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Enter full name"
+              className="w-full"
             />
           </div>
           
-          <div>
-            <Label htmlFor="role">Role</Label>
+          <div className="space-y-2">
+            <Label htmlFor="role">Role *</Label>
             <Select value={role} onValueChange={setRole}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="user">User</SelectItem>
@@ -106,13 +153,25 @@ export const EditUserDialog = ({ user, open, onOpenChange, onUserUpdated }: Edit
               </SelectContent>
             </Select>
           </div>
+
+          <div className="text-xs text-gray-500 bg-blue-50 p-3 rounded-md">
+            <strong>Note:</strong> Only profile information stored in our database can be edited here. 
+            For email changes or account deletion, users must use the account settings or contact support.
+          </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={loading}>
+          <Button 
+            onClick={handleSave} 
+            disabled={loading || !fullName.trim()}
+          >
             {loading ? "Saving..." : "Save Changes"}
           </Button>
         </DialogFooter>
