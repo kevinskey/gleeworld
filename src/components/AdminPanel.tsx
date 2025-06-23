@@ -6,6 +6,7 @@ import { AdminSummaryStats } from "@/components/admin/AdminSummaryStats";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { ActivityLogs } from "@/components/admin/ActivityLogs";
 import { SystemSettings } from "@/components/admin/SystemSettings";
+import { UserImport } from "@/components/admin/UserImport";
 
 interface ActivityLog {
   id: number;
@@ -33,12 +34,17 @@ export const AdminPanel = () => {
       <Tabs defaultValue="users" className="space-y-4">
         <TabsList>
           <TabsTrigger value="users">User Management</TabsTrigger>
+          <TabsTrigger value="import">Import Users</TabsTrigger>
           <TabsTrigger value="activity">Activity Logs</TabsTrigger>
           <TabsTrigger value="settings">System Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="space-y-4">
           <UserManagement users={users} loading={loading} error={error} />
+        </TabsContent>
+
+        <TabsContent value="import" className="space-y-4">
+          <UserImport />
         </TabsContent>
 
         <TabsContent value="activity" className="space-y-4">
