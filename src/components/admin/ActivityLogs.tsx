@@ -1,55 +1,97 @@
 
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Filter, Download, Database, RefreshCw } from "lucide-react";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Activity, User, FileText, Settings, Eye, Edit, Trash2, Send, PenTool } from "lucide-react";
 
-export const ActivityLogs = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const { logs, loading, error, refetch } = useActivityLogs();
+interface ActivityLog {
+  id: string;
+  user_id: string | null;
+  action_type: string;
+  resource_type: string;
+  resource_id: string | null;
+  details: any;
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: string;
+}
 
-  const getStatusColor = (actionType: string) => {
+interface ActivityLogsProps {
+  activityLogs?: ActivityLog[];
+}
+
+export const ActivityLogs = ({ activityLogs: propActivityLogs }: ActivityLogsProps) => {
+  const { activityLogs: fetchedActivityLogs, loading, error } = useActivityLogs();
+  
+  // Use prop logs if provided, otherwise use fetched logs
+  const logs = propActivityLogs || fetchedActivityLogs;
+
+  const getActionIcon = (actionType: string) => {
     switch (actionType) {
-      case "contract_signed": return "bg-green-100 text-green-800";
-      case "contract_created": return "bg-blue-100 text-blue-800";
-      case "contract_deleted": return "bg-red-100 text-red-800";
-      case "template_created": return "bg-purple-100 text-purple-800";
-      case "template_used": return "bg-yellow-100 text-yellow-800";
-      default: return "bg-gray-100 text-gray-800";
+      case 'login':
+      case 'logout':
+        return <User className="h-4 w-4" />;
+      case 'contract_created':
+      case 'contract_updated':
+      case 'contract_deleted':
+      case 'contract_viewed':
+      case 'contract_signed':
+      case 'contract_sent':
+        return <FileText className="h-4 w-4" />;
+      case 'template_created':
+      case 'template_updated':
+      case 'template_deleted':
+      case 'template_used':
+        return <PenTool className="h-4 w-4" />;
+      case 'settings_updated':
+        return <Settings className="h-4 w-4" />;
+      default:
+        return <Activity className="h-4 w-4" />;
     }
   };
 
-  const formatActionType = (actionType: string) => {
-    return actionType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  const getActionColor = (actionType: string) => {
+    if (actionType.includes('created') || actionType.includes('signed')) return 'bg-green-100 text-green-800';
+    if (actionType.includes('deleted')) return 'bg-red-100 text-red-800';
+    if (actionType.includes('updated') || actionType.includes('sent')) return 'bg-blue-100 text-blue-800';
+    if (actionType.includes('viewed') || actionType.includes('used')) return 'bg-purple-100 text-purple-800';
+    return 'bg-gray-100 text-gray-800';
   };
 
-  const filteredLogs = logs.filter(log => 
-    log.user_profile?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.user_profile?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.action_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.resource_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (log.details && JSON.stringify(log.details).toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const formatActionType = (actionType: string) => {
+    return actionType.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Activity Logs
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Loading activity logs...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (error) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Activity Logs</CardTitle>
-          <CardDescription>Error loading activity logs</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Activity Logs
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
-            <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={refetch} variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Retry
-            </Button>
-          </div>
+          <p className="text-red-600">Error loading activity logs: {error}</p>
         </CardContent>
       </Card>
     );
@@ -58,112 +100,57 @@ export const ActivityLogs = () => {
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle>Activity Logs</CardTitle>
-            <CardDescription>Recent system activity and user actions</CardDescription>
-          </div>
-          <div className="flex space-x-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search activity..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-64"
-              />
-            </div>
-            <Button onClick={refetch} variant="outline" size="sm" disabled={loading}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Filter
-            </Button>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-          </div>
-        </div>
+        <CardTitle className="flex items-center gap-2">
+          <Activity className="h-5 w-5" />
+          Activity Logs
+        </CardTitle>
+        <p className="text-sm text-gray-600">Recent system activities and user actions</p>
       </CardHeader>
       <CardContent>
-        {loading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-            <p className="text-gray-500">Loading activity logs...</p>
-          </div>
-        ) : filteredLogs.length === 0 ? (
-          <div className="text-center py-8">
-            <Database className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-gray-500">
-              {logs.length === 0 ? "No activity logs yet" : "No matching activity logs found"}
-            </p>
-            {logs.length === 0 && (
-              <p className="text-sm text-gray-400 mt-2">
-                Activity logs will appear here as users interact with the system
-              </p>
-            )}
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Timestamp</TableHead>
-                <TableHead>User</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Resource</TableHead>
-                <TableHead>Details</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredLogs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell className="font-mono text-sm">
-                    {new Date(log.created_at).toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">
-                        {log.user_profile?.full_name || 'Unknown User'}
-                      </div>
-                      {log.user_profile?.email && (
-                        <div className="text-sm text-gray-500">
-                          {log.user_profile.email}
-                        </div>
-                      )}
+        <ScrollArea className="h-96">
+          {logs.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No activity logs found</p>
+              <p className="text-sm">User actions will appear here once they start using the system</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {logs.map((log) => (
+                <div key={log.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50">
+                  <div className="flex-shrink-0 mt-1">
+                    {getActionIcon(log.action_type)}
+                  </div>
+                  <div className="flex-grow min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge className={getActionColor(log.action_type)}>
+                        {formatActionType(log.action_type)}
+                      </Badge>
+                      <span className="text-sm text-gray-500">
+                        {new Date(log.created_at).toLocaleString()}
+                      </span>
                     </div>
-                  </TableCell>
-                  <TableCell>{formatActionType(log.action_type)}</TableCell>
-                  <TableCell className="capitalize">{log.resource_type}</TableCell>
-                  <TableCell className="max-w-xs">
+                    <p className="text-sm text-gray-700 mb-1">
+                      Resource: <span className="font-medium">{log.resource_type}</span>
+                      {log.resource_id && (
+                        <span className="text-gray-500"> (ID: {log.resource_id.slice(0, 8)}...)</span>
+                      )}
+                    </p>
                     {log.details && Object.keys(log.details).length > 0 && (
-                      <div className="text-sm">
-                        {Object.entries(log.details).slice(0, 2).map(([key, value]) => (
-                          <div key={key} className="truncate">
+                      <div className="text-xs text-gray-600 bg-gray-100 p-2 rounded mt-2">
+                        {Object.entries(log.details).map(([key, value]) => (
+                          <div key={key}>
                             <span className="font-medium">{key}:</span> {String(value)}
                           </div>
                         ))}
-                        {Object.keys(log.details).length > 2 && (
-                          <div className="text-xs text-gray-400">
-                            +{Object.keys(log.details).length - 2} more
-                          </div>
-                        )}
                       </div>
                     )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(log.action_type)}>
-                      {formatActionType(log.action_type)}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
+                  </div>
+                </div>
               ))}
-            </TableBody>
-          </Table>
-        )}
+            </div>
+          )}
+        </ScrollArea>
       </CardContent>
     </Card>
   );
