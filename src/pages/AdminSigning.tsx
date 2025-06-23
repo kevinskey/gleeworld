@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -183,7 +182,7 @@ const AdminSigning = () => {
         throw contractUpdateError;
       }
 
-      console.log('Admin signature embedded successfully in document');
+      console.log('Admin signature embedded successfully in document and contract status updated to completed');
 
       toast({
         title: "Contract Completed!",
