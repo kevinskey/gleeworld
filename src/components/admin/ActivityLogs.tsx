@@ -1,4 +1,3 @@
-
 import { useActivityLogs } from "@/hooks/useActivityLogs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +21,7 @@ interface ActivityLogsProps {
 }
 
 export const ActivityLogs = ({ activityLogs: propActivityLogs }: ActivityLogsProps) => {
-  const { activityLogs: fetchedActivityLogs, loading, error } = useActivityLogs();
+  const { logs: fetchedActivityLogs, loading, error } = useActivityLogs();
   
   // Use prop logs if provided, otherwise use fetched logs
   const logs = propActivityLogs || fetchedActivityLogs;

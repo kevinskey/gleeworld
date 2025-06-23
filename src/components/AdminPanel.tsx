@@ -11,18 +11,7 @@ import { ActivityLogs } from "@/components/admin/ActivityLogs";
 import { SystemSettings } from "@/components/admin/SystemSettings";
 import { UserImport } from "@/components/admin/UserImport";
 
-interface ActivityLog {
-  id: number;
-  timestamp: string;
-  user: string;
-  action: string;
-  document: string;
-  ip: string;
-  status: "success" | "error" | "warning";
-}
-
 export const AdminPanel = () => {
-  const [activityLogs] = useState<ActivityLog[]>([]);
   const { users, loading, error, refetch } = useUsers();
   const navigate = useNavigate();
 
@@ -42,7 +31,7 @@ export const AdminPanel = () => {
         </Button>
       </div>
 
-      <AdminSummaryStats users={users} loading={loading} activityLogs={activityLogs} />
+      <AdminSummaryStats users={users} loading={loading} activityLogs={[]} />
 
       <Tabs defaultValue="users" className="space-y-4">
         <TabsList>
@@ -61,7 +50,7 @@ export const AdminPanel = () => {
         </TabsContent>
 
         <TabsContent value="activity" className="space-y-4">
-          <ActivityLogs activityLogs={activityLogs} />
+          <ActivityLogs />
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-4">
