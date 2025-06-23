@@ -28,31 +28,36 @@ export const useActivityLogs = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch activity logs with user profile information
-      const { data, error } = await supabase
+      // First fetch activity logs
+      const { data: logsData, error: logsError } = await supabase
         .from('activity_logs')
-        .select(`
-          id,
-          user_id,
-          action_type,
-          resource_type,
-          resource_id,
-          details,
-          ip_address,
-          user_agent,
-          created_at,
-          profiles!user_id (
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(100);
 
-      if (error) throw error;
+      if (logsError) {
+        console.error('Error fetching activity logs:', logsError);
+        throw logsError;
+      }
+
+      // Then fetch user profiles separately
+      const userIds = [...new Set(logsData?.map(log => log.user_id).filter(Boolean))];
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.warn('Error fetching profiles:', profilesError);
+      }
+
+      // Create a map of profiles by user_id
+      const profilesMap = new Map(
+        profilesData?.map(profile => [profile.id, profile]) || []
+      );
 
       // Transform the data to match our interface
-      const transformedData: ActivityLog[] = (data || []).map(log => ({
+      const transformedData: ActivityLog[] = (logsData || []).map(log => ({
         id: log.id,
         user_id: log.user_id,
         action_type: log.action_type,
@@ -62,9 +67,9 @@ export const useActivityLogs = () => {
         ip_address: log.ip_address as string | null,
         user_agent: log.user_agent,
         created_at: log.created_at,
-        user_profile: log.profiles ? {
-          full_name: log.profiles.full_name,
-          email: log.profiles.email
+        user_profile: profilesMap.get(log.user_id) ? {
+          full_name: profilesMap.get(log.user_id)!.full_name,
+          email: profilesMap.get(log.user_id)!.email
         } : undefined
       }));
 
