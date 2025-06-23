@@ -149,17 +149,47 @@ serve(async (req) => {
           continue
         }
 
-        // Check if user already exists
-        const { data: existingProfile } = await supabaseClient
-          .from('profiles')
-          .select('id')
-          .eq('email', userData.email)
-          .single()
+        // Check if user already exists by email
+        const { data: existingUser } = await supabaseClient.auth.admin.listUsers()
+        const userExists = existingUser?.users?.find(u => u.email === userData.email)
+        
+        if (userExists) {
+          // Check if profile exists
+          const { data: existingProfile } = await supabaseClient
+            .from('profiles')
+            .select('id')
+            .eq('id', userExists.id)
+            .single()
 
-        if (existingProfile) {
-          results.failed++
-          results.errors.push(`User already exists: ${userData.email}`)
-          continue
+          if (existingProfile) {
+            results.failed++
+            results.errors.push(`User already exists: ${userData.email}`)
+            continue
+          } else {
+            // User exists in auth but no profile, create profile
+            const userRole = userData.role && ['user', 'admin', 'super-admin'].includes(userData.role.toLowerCase().trim()) 
+              ? userData.role.toLowerCase().trim() 
+              : 'user'
+
+            const { error: profileError } = await supabaseClient
+              .from('profiles')
+              .insert({
+                id: userExists.id,
+                email: userData.email,
+                full_name: userData.full_name || '',
+                role: userRole
+              })
+
+            if (profileError) {
+              results.failed++
+              results.errors.push(`Failed to create profile for existing user ${userData.email}: ${profileError.message}`)
+              continue
+            }
+
+            results.success++
+            console.log(`Created profile for existing user: ${userData.email} with role: ${userRole}`)
+            continue
+          }
         }
 
         // Validate and normalize role value
