@@ -141,9 +141,16 @@ serve(async (req) => {
 
     console.log(`Starting import of ${usersToImport.length} users`)
 
-    // First, get all existing auth users to check for duplicates
+    // Get all existing auth users and profiles in one go
     const { data: existingAuthUsers } = await supabaseClient.auth.admin.listUsers()
-    const existingEmails = new Set(existingAuthUsers?.users?.map(u => u.email?.toLowerCase()) || [])
+    const { data: existingProfiles } = await supabaseClient
+      .from('profiles')
+      .select('id, email')
+
+    // Create sets for fast lookup
+    const existingAuthEmails = new Set(existingAuthUsers?.users?.map(u => u.email?.toLowerCase()) || [])
+    const existingProfileIds = new Set(existingProfiles?.map(p => p.id) || [])
+    const authUserMap = new Map(existingAuthUsers?.users?.map(u => [u.email?.toLowerCase(), u]) || [])
 
     // Process each user
     for (const userData of usersToImport) {
@@ -177,11 +184,11 @@ serve(async (req) => {
 
         console.log(`Processing user: ${userData.email} with role: ${userRole} and name: ${fullName}`)
 
-        if (existingEmails.has(normalizedEmail)) {
+        if (existingAuthEmails.has(normalizedEmail)) {
           console.log(`User ${userData.email} already exists in auth, updating profile`)
           
           // Find the existing user
-          const existingUser = existingAuthUsers?.users?.find(u => u.email?.toLowerCase() === normalizedEmail)
+          const existingUser = authUserMap.get(normalizedEmail)
           
           if (existingUser) {
             // Update or create profile for existing user
@@ -192,6 +199,8 @@ serve(async (req) => {
                 email: userData.email,
                 full_name: fullName,
                 role: userRole
+              }, {
+                onConflict: 'id'
               })
 
             if (profileError) {
@@ -238,30 +247,49 @@ serve(async (req) => {
 
           console.log(`Created auth user for ${userData.email} with ID: ${authData.user.id}`)
 
-          // Create profile for new user
-          const { error: profileError } = await supabaseClient
-            .from('profiles')
-            .insert({
-              id: authData.user.id,
-              email: userData.email,
-              full_name: fullName,
-              role: userRole
-            })
+          // Create profile for new user (only if it doesn't already exist)
+          if (!existingProfileIds.has(authData.user.id)) {
+            const { error: profileError } = await supabaseClient
+              .from('profiles')
+              .insert({
+                id: authData.user.id,
+                email: userData.email,
+                full_name: fullName,
+                role: userRole
+              })
 
-          if (profileError) {
-            console.error(`Profile creation failed for ${userData.email}:`, profileError)
-            
-            // Clean up auth user if profile creation failed
-            try {
-              await supabaseClient.auth.admin.deleteUser(authData.user.id)
-              console.log(`Cleaned up auth user after profile failure: ${authData.user.id}`)
-            } catch (cleanupError) {
-              console.error(`Failed to cleanup auth user ${authData.user.id}:`, cleanupError)
+            if (profileError) {
+              console.error(`Profile creation failed for ${userData.email}:`, profileError)
+              
+              // Clean up auth user if profile creation failed
+              try {
+                await supabaseClient.auth.admin.deleteUser(authData.user.id)
+                console.log(`Cleaned up auth user after profile failure: ${authData.user.id}`)
+              } catch (cleanupError) {
+                console.error(`Failed to cleanup auth user ${authData.user.id}:`, cleanupError)
+              }
+              
+              results.failed++
+              results.errors.push(`Failed to create profile for ${userData.email}: ${profileError.message}`)
+              continue
             }
-            
-            results.failed++
-            results.errors.push(`Failed to create profile for ${userData.email}: ${profileError.message}`)
-            continue
+          } else {
+            // Profile already exists, just update it
+            const { error: profileError } = await supabaseClient
+              .from('profiles')
+              .update({
+                email: userData.email,
+                full_name: fullName,
+                role: userRole
+              })
+              .eq('id', authData.user.id)
+
+            if (profileError) {
+              console.error(`Profile update failed for ${userData.email}:`, profileError)
+              results.failed++
+              results.errors.push(`Failed to update profile for ${userData.email}: ${profileError.message}`)
+              continue
+            }
           }
 
           results.success++
