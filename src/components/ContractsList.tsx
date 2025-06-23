@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Upload, FileText, Eye, Send, Inbox, Loader2, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import type { Contract } from "@/hooks/useContracts";
 
 interface ContractsListProps {
@@ -40,10 +41,20 @@ export const ContractsList = ({
   onDeleteContract, 
   onUploadContract 
 }: ContractsListProps) => {
+  const { toast } = useToast();
+
   const handleDeleteContract = async (contractId: string) => {
     if (confirm("Are you sure you want to delete this contract?")) {
       await onDeleteContract(contractId);
     }
+  };
+
+  const handleSendContract = (contract: Contract) => {
+    // Show toast for send action - this would typically open a send dialog
+    toast({
+      title: "Send Contract",
+      description: `Preparing to send "${contract.title}" for signature`,
+    });
   };
 
   return (
@@ -89,10 +100,16 @@ export const ContractsList = ({
                       variant="outline" 
                       size="sm"
                       onClick={() => onViewContract(contract)}
+                      title="View Contract"
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleSendContract(contract)}
+                      title="Send for Signature"
+                    >
                       <Send className="h-4 w-4" />
                     </Button>
                     <Button 
@@ -100,6 +117,7 @@ export const ContractsList = ({
                       size="sm"
                       onClick={() => handleDeleteContract(contract.id)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      title="Delete Contract"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
