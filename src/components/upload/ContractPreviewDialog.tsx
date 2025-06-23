@@ -55,6 +55,8 @@ export const ContractPreviewDialog = ({
     }
   };
 
+  console.log('Preview Dialog - Signature Fields:', signatureFields);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh]">
@@ -106,14 +108,14 @@ export const ContractPreviewDialog = ({
             </div>
           </div>
 
-          {/* Signature Fields */}
+          {/* Signature Fields - Always show this section */}
           <div>
             <h3 className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2">
               <Signature className="h-4 w-4" />
-              Document Fields ({signatureFields.length})
+              Document Fields ({signatureFields?.length || 0})
             </h3>
-            {signatureFields.length > 0 ? (
-              <div className="space-y-2">
+            {signatureFields && signatureFields.length > 0 ? (
+              <div className="space-y-2 max-h-40 overflow-y-auto">
                 {signatureFields.map((field) => (
                   <div key={field.id} className="flex items-center justify-between p-3 bg-white border rounded-lg">
                     <div className="flex items-center gap-3">
@@ -133,7 +135,9 @@ export const ContractPreviewDialog = ({
               </div>
             ) : (
               <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p className="text-sm text-yellow-800">No signature fields have been added to this contract.</p>
+                <p className="text-sm text-yellow-800">
+                  ⚠️ No signature fields have been added to this contract. Recipients won't be able to sign the document.
+                </p>
               </div>
             )}
           </div>
