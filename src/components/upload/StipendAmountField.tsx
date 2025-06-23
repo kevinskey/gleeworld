@@ -13,9 +13,14 @@ export const StipendAmountField = ({ stipendAmount, onStipendChange, showField }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Allow empty string, numbers, and decimal points
+    console.log('Stipend input value:', value);
+    
+    // Allow empty string, numbers, and one decimal point
     if (value === '' || /^\d*\.?\d*$/.test(value)) {
+      console.log('Valid stipend value, calling onStipendChange:', value);
       onStipendChange(value);
+    } else {
+      console.log('Invalid stipend value rejected:', value);
     }
   };
 
@@ -29,6 +34,7 @@ export const StipendAmountField = ({ stipendAmount, onStipendChange, showField }
         onChange={handleInputChange}
         placeholder="Enter stipend amount"
         inputMode="decimal"
+        autoComplete="off"
       />
     </div>
   );
