@@ -50,7 +50,8 @@ export const useContractTemplates = () => {
         .from('contract_templates')
         .insert([{
           ...template,
-          created_by: 'current-user', // Will be replaced with actual auth later
+          created_by: 'temp-user', // Temporary until auth is implemented
+          is_active: true,
         }])
         .select()
         .single();
@@ -83,7 +84,7 @@ export const useContractTemplates = () => {
 
       if (error) throw error;
 
-      setTemplates(prev => prev.filter(t => t.id !== id));
+      setTemplates(prev => prev.filter(template => template.id !== id));
       toast({
         title: "Success",
         description: "Template deleted successfully",
