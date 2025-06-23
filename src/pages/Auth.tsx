@@ -6,15 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetSuccess, setResetSuccess] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     // Check if user is already authenticated
@@ -76,6 +81,30 @@ const Auth = () => {
     }
   };
 
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+
+      if (error) throw error;
+
+      setResetSuccess(true);
+      toast({
+        title: "Password reset email sent",
+        description: "Check your email for the password reset link.",
+      });
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Failed to send reset email");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -89,9 +118,10 @@ const Auth = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsTrigger value="reset">Reset Password</TabsTrigger>
             </TabsList>
 
             <TabsContent value="signin">
@@ -176,6 +206,60 @@ const Auth = () => {
                   )}
                 </Button>
               </form>
+            </TabsContent>
+
+            <TabsContent value="reset">
+              {resetSuccess ? (
+                <div className="text-center space-y-4">
+                  <Mail className="h-12 w-12 text-green-500 mx-auto" />
+                  <h3 className="text-lg font-semibold text-gray-900">Check your email</h3>
+                  <p className="text-gray-600">
+                    We've sent a password reset link to {resetEmail}
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setResetSuccess(false);
+                      setResetEmail("");
+                    }}
+                    className="w-full"
+                  >
+                    Send another email
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handlePasswordReset} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email">Email</Label>
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Enter your email address and we'll send you a link to reset your password.
+                  </p>
+                  {error && (
+                    <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
+                      {error}
+                    </div>
+                  )}
+                  <Button type="submit" className="w-full" disabled={resetLoading}>
+                    {resetLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sending reset email...
+                      </>
+                    ) : (
+                      "Send Reset Email"
+                    )}
+                  </Button>
+                </form>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
