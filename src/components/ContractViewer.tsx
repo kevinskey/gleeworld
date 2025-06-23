@@ -34,6 +34,10 @@ export const ContractViewer = ({ contract, open, onOpenChange }: ContractViewerP
     }
   };
 
+  const handleClose = () => {
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -75,14 +79,9 @@ export const ContractViewer = ({ contract, open, onOpenChange }: ContractViewerP
             <div className="text-sm text-gray-500">
               Last updated: {new Date(contract.updated_at).toLocaleDateString()}
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Close
-              </Button>
-              <Button>
-                Edit Contract
-              </Button>
-            </div>
+            <Button variant="outline" onClick={handleClose}>
+              Close
+            </Button>
           </div>
         </div>
       </DialogContent>
