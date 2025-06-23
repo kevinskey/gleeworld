@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileText } from "lucide-react";
+import { Loader2, FileText, CheckCircle2, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SignatureFieldOverlay } from "@/components/SignatureFieldOverlay";
@@ -52,6 +52,7 @@ const ContractSigning = () => {
     }
   ]);
   const [completedFields, setCompletedFields] = useState<Record<number, string>>({});
+  const [redirectCountdown, setRedirectCountdown] = useState(5);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -97,6 +98,18 @@ const ContractSigning = () => {
 
     fetchContract();
   }, [contractId]);
+
+  // Countdown effect for redirect
+  useEffect(() => {
+    if (contract?.status === 'completed' && redirectCountdown > 0) {
+      const timer = setTimeout(() => {
+        setRedirectCountdown(prev => prev - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (contract?.status === 'completed' && redirectCountdown === 0) {
+      window.location.href = 'https://reader.gleeworld.org';
+    }
+  }, [contract?.status, redirectCountdown]);
 
   const handleFieldComplete = (fieldId: number, value: string) => {
     setCompletedFields(prev => ({
@@ -145,17 +158,12 @@ const ContractSigning = () => {
       console.log('Contract signing completed:', data);
 
       toast({
-        title: "Success",
-        description: "Contract signed successfully! PDF generated and stored.",
+        title: "Success!",
+        description: "Your contract has been signed and saved successfully.",
       });
 
       setContract({ ...contract, status: 'completed' });
       
-      // Redirect to reader.gleeworld.org after successful signing
-      setTimeout(() => {
-        window.location.href = 'https://reader.gleeworld.org';
-      }, 3000); // 3 second delay to show the success message
-
     } catch (error) {
       console.error('Error signing contract:', error);
       toast({
@@ -267,10 +275,37 @@ const ContractSigning = () => {
         )}
 
         {contract.status === 'completed' && (
-          <div className="text-center py-6">
-            <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full">
-              ✓ Contract Signed Successfully - PDF Generated & Stored - Redirecting to reader.gleeworld.org...
-            </div>
+          <div className="text-center py-8">
+            <Card className="max-w-md mx-auto bg-green-50 border-green-200">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full">
+                    <CheckCircle2 className="h-8 w-8 text-green-600" />
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold text-green-800 mb-2">
+                      Contract Signed Successfully!
+                    </h3>
+                    <p className="text-green-700 mb-4">
+                      Your signed contract has been generated and stored securely.
+                    </p>
+                    <div className="space-y-2">
+                      <p className="text-sm text-green-600">
+                        Redirecting to reader.gleeworld.org in {redirectCountdown} seconds...
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => window.location.href = 'https://reader.gleeworld.org'}
+                        className="border-green-300 text-green-700 hover:bg-green-100"
+                      >
+                        Go Now
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>
