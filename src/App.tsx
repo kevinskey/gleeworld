@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +11,7 @@ import AdminSigning from "./pages/AdminSigning";
 import ActivityLogs from "./pages/ActivityLogs";
 import W9FormPage from "./pages/W9FormPage";
 import NotFound from "./pages/NotFound";
+import Accounting from "./pages/Accounting";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +28,7 @@ const App = () => (
             <Route path="/admin-signing" element={<AdminSigning />} />
             <Route path="/activity-logs" element={<ActivityLogs />} />
             <Route path="/w9-form" element={<W9FormPage />} />
+            <Route path="/accounting" element={<Accounting />} />
             <Route path="/" element={<Index />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
