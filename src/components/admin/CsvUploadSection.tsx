@@ -144,13 +144,20 @@ export const CsvUploadSection = ({
     onImportResult(null);
 
     const progressInterval = setInterval(() => {
-      setProgress(prev => Math.min(prev + 10, 90));
+      setProgress(prev => {
+        const newProgress = prev + 10;
+        return Math.min(newProgress, 90);
+      });
     }, 200);
 
     try {
       const users = await parseCsvFile(csvFile);
       
       console.log('Parsed CSV users:', users);
+      
+      if (users.length === 0) {
+        throw new Error("No valid users found in CSV file");
+      }
       
       const { data, error } = await supabase.functions.invoke('import-users', {
         body: {
@@ -166,14 +173,7 @@ export const CsvUploadSection = ({
 
       if (error) {
         console.error('Supabase function error:', error);
-        onImportResult({
-          success: 0,
-          failed: 0,
-          errors: [],
-          error: error.message || 'Unknown error occurred',
-          details: 'Failed to call import function'
-        });
-        return;
+        throw new Error(error.message || 'Unknown error occurred');
       }
 
       onImportResult(data);
