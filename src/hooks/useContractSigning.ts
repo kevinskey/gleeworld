@@ -27,6 +27,7 @@ interface EmbeddedSignature {
   dateSigned: string;
   ipAddress?: string;
   timestamp: string;
+  signerType?: 'artist' | 'admin';
 }
 
 interface SignatureRecord {
@@ -158,17 +159,26 @@ export const useContractSigning = (contractId?: string) => {
       setSigning(true);
       console.log('Embedding signature in document for contract:', contractId);
 
-      // Create new embedded signature
-      const newSignature: EmbeddedSignature = {
+      // Create new embedded signature for artist
+      const newArtistSignature: EmbeddedSignature = {
         fieldId: 1,
         signatureData,
         dateSigned,
         timestamp: new Date().toISOString(),
-        ipAddress: 'unknown' // Could be obtained from headers in production
+        ipAddress: 'unknown',
+        signerType: 'artist'
       };
 
-      // Update embedded signatures
-      const updatedSignatures = [...embeddedSignatures, newSignature];
+      // Preserve existing admin signatures and only add/update artist signature
+      const existingAdminSignatures = embeddedSignatures.filter(sig => sig.signerType === 'admin');
+      const existingArtistSignatures = embeddedSignatures.filter(sig => sig.signerType !== 'admin');
+      
+      // Replace artist signatures with the new one, keep admin signatures unchanged
+      const updatedSignatures = [
+        ...existingAdminSignatures, // Keep all admin signatures
+        newArtistSignature // Add/replace artist signature
+      ];
+      
       setEmbeddedSignatures(updatedSignatures);
 
       // Embed signatures in contract content
@@ -181,12 +191,15 @@ export const useContractSigning = (contractId?: string) => {
       const signaturesSection = `\n\n[EMBEDDED_SIGNATURES]${JSON.stringify(updatedSignatures)}[/EMBEDDED_SIGNATURES]`;
       updatedContent += signaturesSection;
 
+      // Only update status to pending_admin_signature if not already completed
+      const newStatus = contract.status === 'completed' ? 'completed' : 'pending_admin_signature';
+
       // Update contract status and content
       const { error: updateError } = await supabase
         .from('contracts_v2')
         .update({ 
           content: updatedContent,
-          status: 'pending_admin_signature',
+          status: newStatus,
           updated_at: new Date().toISOString()
         })
         .eq('id', contractId);
@@ -196,7 +209,7 @@ export const useContractSigning = (contractId?: string) => {
         throw updateError;
       }
 
-      console.log('Signature embedded successfully in document');
+      console.log('Artist signature embedded successfully in document');
 
       // Refresh the contract data
       await fetchContractData();
@@ -222,7 +235,8 @@ export const useContractSigning = (contractId?: string) => {
   const createSignatureRecord = (): SignatureRecord | null => {
     if (!contract) return null;
 
-    const artistSignature = embeddedSignatures.find(sig => sig.fieldId === 1);
+    const artistSignature = embeddedSignatures.find(sig => sig.fieldId === 1 && sig.signerType === 'artist');
+    const adminSignature = embeddedSignatures.find(sig => sig.signerType === 'admin');
     
     return {
       id: contractId || 'mock-id',
@@ -230,6 +244,8 @@ export const useContractSigning = (contractId?: string) => {
       artist_signature_data: artistSignature?.signatureData,
       artist_signed_at: artistSignature?.timestamp,
       date_signed: artistSignature?.dateSigned,
+      admin_signature_data: adminSignature?.signatureData,
+      admin_signed_at: adminSignature?.timestamp,
     };
   };
 
