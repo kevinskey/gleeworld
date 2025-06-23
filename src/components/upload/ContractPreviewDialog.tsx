@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Eye, User, Mail, FileText, Signature } from "lucide-react";
+import { Send, Eye, User, Mail, FileText, Signature, Image } from "lucide-react";
 import { SignatureField } from "../SignatureFieldEditor";
 
 interface ContractPreviewDialogProps {
@@ -17,6 +17,7 @@ interface ContractPreviewDialogProps {
   signatureFields: SignatureField[];
   onConfirmSend: () => void;
   isLoading: boolean;
+  headerImageUrl?: string;
 }
 
 export const ContractPreviewDialog = ({
@@ -29,8 +30,31 @@ export const ContractPreviewDialog = ({
   emailMessage,
   signatureFields,
   onConfirmSend,
-  isLoading
+  isLoading,
+  headerImageUrl
 }: ContractPreviewDialogProps) => {
+  const getFieldTypeIcon = (type: SignatureField['type']) => {
+    switch (type) {
+      case 'signature': return <Signature className="h-3 w-3" />;
+      case 'initials': return <User className="h-3 w-3" />;
+      case 'date': return <FileText className="h-3 w-3" />;
+      case 'text': return <FileText className="h-3 w-3" />;
+      case 'username': return <User className="h-3 w-3" />;
+      default: return <FileText className="h-3 w-3" />;
+    }
+  };
+
+  const getFieldTypeLabel = (type: SignatureField['type']) => {
+    switch (type) {
+      case 'signature': return 'Signature';
+      case 'initials': return 'Initials';
+      case 'date': return 'Date';
+      case 'text': return 'Text';
+      case 'username': return 'Username';
+      default: return 'Field';
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh]">
@@ -51,6 +75,23 @@ export const ContractPreviewDialog = ({
             <p className="text-lg font-semibold">{contractTitle}</p>
           </div>
 
+          {/* Header Image */}
+          {headerImageUrl && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2">
+                <Image className="h-4 w-4" />
+                Header Image
+              </h3>
+              <div className="border rounded-lg p-4 bg-gray-50">
+                <img 
+                  src={headerImageUrl} 
+                  alt="Contract Header" 
+                  className="max-h-32 w-auto rounded border"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Recipient Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center gap-2">
@@ -69,17 +110,32 @@ export const ContractPreviewDialog = ({
           <div>
             <h3 className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2">
               <Signature className="h-4 w-4" />
-              Signature Fields ({signatureFields.length})
+              Document Fields ({signatureFields.length})
             </h3>
-            <div className="flex flex-wrap gap-2">
-              {signatureFields.map((field) => (
-                <Badge key={field.id} variant="outline" className="flex items-center gap-1">
-                  <Signature className="h-3 w-3" />
-                  {field.label}
-                  {field.required && <span className="text-red-500">*</span>}
-                </Badge>
-              ))}
-            </div>
+            {signatureFields.length > 0 ? (
+              <div className="space-y-2">
+                {signatureFields.map((field) => (
+                  <div key={field.id} className="flex items-center justify-between p-3 bg-white border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      {getFieldTypeIcon(field.type)}
+                      <div>
+                        <p className="font-medium text-sm">{field.label}</p>
+                        <p className="text-xs text-gray-500">
+                          {getFieldTypeLabel(field.type)} • Page {field.page} • Position ({field.x}, {field.y})
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant={field.required ? "default" : "secondary"} className="text-xs">
+                      {field.required ? "Required" : "Optional"}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">No signature fields have been added to this contract.</p>
+              </div>
+            )}
           </div>
 
           {/* Email Message */}

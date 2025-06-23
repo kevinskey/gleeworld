@@ -36,6 +36,7 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
   const [stipendAmount, setStipendAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [headerImageUrl, setHeaderImageUrl] = useState<string>(""); // New state
   const { toast } = useToast();
   const { createContract } = useContracts();
   const { users, loading: usersLoading } = useUsers();
@@ -228,6 +229,7 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
       setSignatureFields([]);
       setSelectedUserId("");
       setStipendAmount("");
+      setHeaderImageUrl("");
       setShowPreview(false);
     } catch (error) {
       console.error("Error sending contract:", error);
@@ -360,6 +362,7 @@ export const DocumentUpload = ({ templateContent, templateName }: DocumentUpload
         signatureFields={signatureFields}
         onConfirmSend={sendContract}
         isLoading={isLoading}
+        headerImageUrl={headerImageUrl}
       />
     </div>
   );
