@@ -44,8 +44,10 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Contract not found');
     }
 
-    // Get client IP
-    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    // Get client IP and clean it up to handle comma-separated values
+    const rawClientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const clientIP = rawClientIP.split(',')[0].trim(); // Take first IP from comma-separated list
+    console.log("Client IP:", clientIP);
 
     // Use provided date or current date as fallback
     const signedDate = dateSigned || new Date().toLocaleDateString();
@@ -59,7 +61,7 @@ const handler = async (req: Request): Promise<Response> => {
         artist_signature_data: artistSignatureData,
         artist_signed_at: signedDateTime,
         date_signed: signedDate,
-        signer_ip: clientIP,
+        signer_ip: clientIP === 'unknown' ? null : clientIP,
         status: 'pending_admin_signature'
       })
       .select()
