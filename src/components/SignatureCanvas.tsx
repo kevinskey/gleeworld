@@ -37,6 +37,8 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     // Fill with white background
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    console.log('SignatureCanvas initialized');
   }, []);
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -55,6 +57,7 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     setIsDrawing(true);
     ctx.beginPath();
     ctx.moveTo(x, y);
+    console.log('Started drawing signature');
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -73,12 +76,19 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     ctx.lineTo(x, y);
     ctx.stroke();
     
-    setHasSignature(true);
-    onSignatureChange(canvas.toDataURL());
+    if (!hasSignature) {
+      setHasSignature(true);
+      const signatureData = canvas.toDataURL();
+      console.log('Signature captured, data length:', signatureData.length);
+      onSignatureChange(signatureData);
+    }
   };
 
   const stopDrawing = () => {
-    setIsDrawing(false);
+    if (isDrawing) {
+      setIsDrawing(false);
+      console.log('Stopped drawing signature');
+    }
   };
 
   const clearSignature = () => {
@@ -93,6 +103,7 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     
     setHasSignature(false);
     onSignatureChange(null);
+    console.log('Signature cleared');
   };
 
   return (

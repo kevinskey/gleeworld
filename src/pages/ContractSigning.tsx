@@ -1,4 +1,3 @@
-
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -112,6 +111,7 @@ const ContractSigning = () => {
   }, [contract?.status, redirectCountdown]);
 
   const handleFieldComplete = (fieldId: number, value: string) => {
+    console.log('Field completed:', fieldId, 'with value type:', typeof value, 'length:', value?.length);
     setCompletedFields(prev => ({
       ...prev,
       [fieldId]: value
@@ -121,6 +121,11 @@ const ContractSigning = () => {
   const handleSign = async () => {
     const requiredFields = signatureFields.filter(f => f.required);
     const missingFields = requiredFields.filter(f => !completedFields[f.id]);
+
+    console.log('Attempting to sign contract');
+    console.log('Required fields:', requiredFields.map(f => f.id));
+    console.log('Completed fields:', Object.keys(completedFields));
+    console.log('Missing fields:', missingFields.map(f => f.id));
 
     if (missingFields.length > 0) {
       toast({
@@ -139,6 +144,9 @@ const ContractSigning = () => {
       
       // Get the signature data from completed fields
       const signatureData = completedFields[1]; // Assuming field ID 1 is the signature
+      
+      console.log('Signature data present:', !!signatureData);
+      console.log('Signature data length:', signatureData?.length || 0);
       
       const { data, error } = await supabase.functions.invoke('complete-contract-signing', {
         body: {

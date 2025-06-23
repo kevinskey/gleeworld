@@ -31,10 +31,22 @@ export const SignatureFieldOverlay = ({
   const [isActive, setIsActive] = useState(false);
   const [fieldValue, setFieldValue] = useState(value || "");
 
-  const handleComplete = (newValue: string) => {
-    setFieldValue(newValue);
-    onFieldComplete(field.id, newValue);
-    setIsActive(false);
+  const handleComplete = (newValue: string | null) => {
+    console.log('Field completion for field', field.id, 'with value:', newValue ? 'signature data present' : 'no value');
+    
+    if (newValue) {
+      setFieldValue(newValue);
+      onFieldComplete(field.id, newValue);
+      setIsActive(false);
+    }
+  };
+
+  const handleTextComplete = () => {
+    if (fieldValue.trim()) {
+      console.log('Text field completion for field', field.id, 'with value:', fieldValue);
+      onFieldComplete(field.id, fieldValue);
+      setIsActive(false);
+    }
   };
 
   const getFieldIcon = () => {
@@ -98,7 +110,7 @@ export const SignatureFieldOverlay = ({
             <div className="flex gap-2">
               <Button 
                 size="sm" 
-                onClick={() => handleComplete(fieldValue)}
+                onClick={handleTextComplete}
                 disabled={!fieldValue}
               >
                 Save
@@ -106,7 +118,12 @@ export const SignatureFieldOverlay = ({
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => handleComplete(getCurrentDate())}
+                onClick={() => {
+                  const today = getCurrentDate();
+                  setFieldValue(today);
+                  onFieldComplete(field.id, today);
+                  setIsActive(false);
+                }}
               >
                 Use Today
               </Button>
@@ -134,8 +151,8 @@ export const SignatureFieldOverlay = ({
             <div className="flex gap-2">
               <Button 
                 size="sm" 
-                onClick={() => handleComplete(fieldValue)}
-                disabled={!fieldValue}
+                onClick={handleTextComplete}
+                disabled={!fieldValue.trim()}
               >
                 Save
               </Button>
