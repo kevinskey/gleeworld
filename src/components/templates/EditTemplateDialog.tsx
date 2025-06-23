@@ -22,14 +22,18 @@ export const EditTemplateDialog = ({ isOpen, onOpenChange, template, onUpdate, i
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
-    if (template) {
+    if (template && isOpen) {
+      console.log('Setting editing template:', template);
       setEditingTemplate({
-        ...template,
+        id: template.id,
+        name: template.name || '',
+        template_content: template.template_content || '',
+        contract_type: template.contract_type || 'other',
         header_image: null
       });
       setImagePreview(template.header_image_url || null);
     }
-  }, [template]);
+  }, [template, isOpen]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -54,10 +58,13 @@ export const EditTemplateDialog = ({ isOpen, onOpenChange, template, onUpdate, i
 
   const handleUpdate = async () => {
     if (editingTemplate) {
+      console.log('Submitting template update:', editingTemplate);
       await onUpdate(editingTemplate);
       resetDialog();
     }
   };
+
+  const isFormValid = editingTemplate?.name?.trim() && editingTemplate?.template_content?.trim();
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -71,10 +78,10 @@ export const EditTemplateDialog = ({ isOpen, onOpenChange, template, onUpdate, i
         {editingTemplate && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-template-name">Template Name</Label>
+              <Label htmlFor="edit-template-name">Template Name *</Label>
               <Input
                 id="edit-template-name"
-                value={editingTemplate.name}
+                value={editingTemplate.name || ''}
                 onChange={(e) => setEditingTemplate({...editingTemplate, name: e.target.value})}
                 placeholder="Service Agreement Template"
               />
@@ -137,10 +144,10 @@ export const EditTemplateDialog = ({ isOpen, onOpenChange, template, onUpdate, i
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-template-content">Template Content</Label>
+              <Label htmlFor="edit-template-content">Template Content *</Label>
               <Textarea
                 id="edit-template-content"
-                value={editingTemplate.template_content}
+                value={editingTemplate.template_content || ''}
                 onChange={(e) => setEditingTemplate({...editingTemplate, template_content: e.target.value})}
                 placeholder="Enter your contract template here..."
                 rows={12}
@@ -154,7 +161,7 @@ export const EditTemplateDialog = ({ isOpen, onOpenChange, template, onUpdate, i
           </Button>
           <Button 
             onClick={handleUpdate} 
-            disabled={isUpdating || !editingTemplate?.name?.trim() || !editingTemplate?.template_content?.trim()}
+            disabled={isUpdating || !isFormValid}
           >
             {isUpdating ? (
               <>

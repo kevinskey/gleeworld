@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useContractTemplates } from "@/hooks/useContractTemplates";
 import { useToast } from "@/hooks/use-toast";
@@ -82,10 +81,29 @@ export const useTemplateOperations = () => {
   };
 
   const handleUpdateTemplate = async (template: any) => {
-    if (!template.name?.trim() || !template.template_content?.trim()) {
+    if (!template.id) {
+      console.error('Template ID is missing');
       toast({
         title: "Error",
-        description: "Please fill in all required fields",
+        description: "Template ID is missing",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!template.name?.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a template name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!template.template_content?.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter template content",
         variant: "destructive",
       });
       return;
@@ -96,16 +114,18 @@ export const useTemplateOperations = () => {
     try {
       console.log('Starting template update process...', template.id);
       
-      // Prepare update data
+      // Prepare update data with explicit field mapping
       const updateData: any = {
-        name: template.name,
-        template_content: template.template_content,
+        name: template.name.trim(),
+        template_content: template.template_content.trim(),
         contract_type: template.contract_type || 'other',
         updated_at: new Date().toISOString(),
       };
 
+      console.log('Update data prepared:', updateData);
+
       // Handle header image upload if provided
-      if (template.header_image) {
+      if (template.header_image && template.header_image instanceof File) {
         try {
           console.log('Uploading new header image...');
           const header_image_url = await uploadHeaderImage(template.header_image, template.id);
@@ -113,37 +133,38 @@ export const useTemplateOperations = () => {
           console.log('Header image uploaded successfully:', header_image_url);
         } catch (imageError) {
           console.error('Error uploading header image:', imageError);
-          toast({
-            title: "Warning",
-            description: "Template updated but header image upload failed",
-            variant: "destructive",
-          });
+          // Continue with update even if image upload fails
         }
       }
 
       // Update the template in the database
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('contract_templates')
         .update(updateData)
-        .eq('id', template.id);
+        .eq('id', template.id)
+        .select();
 
       if (error) {
         console.error('Database update error:', error);
         throw error;
       }
 
-      console.log('Template updated successfully');
+      console.log('Template updated successfully:', data);
       
       // Log activity
-      await logActivity({
-        actionType: ACTIVITY_TYPES.TEMPLATE_UPDATED,
-        resourceType: RESOURCE_TYPES.TEMPLATE,
-        resourceId: template.id,
-        details: {
-          templateName: template.name,
-          contractType: template.contract_type || 'other'
-        }
-      });
+      try {
+        await logActivity({
+          actionType: ACTIVITY_TYPES.TEMPLATE_UPDATED,
+          resourceType: RESOURCE_TYPES.TEMPLATE,
+          resourceId: template.id,
+          details: {
+            templateName: template.name,
+            contractType: template.contract_type || 'other'
+          }
+        });
+      } catch (logError) {
+        console.warn('Failed to log activity:', logError);
+      }
       
       // Refresh templates list
       await refetch();
@@ -155,9 +176,10 @@ export const useTemplateOperations = () => {
       
     } catch (error) {
       console.error('Error updating template:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
         title: "Error",
-        description: "Failed to update template. Please try again.",
+        description: `Failed to update template: ${errorMessage}`,
         variant: "destructive",
       });
     } finally {
