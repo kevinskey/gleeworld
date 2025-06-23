@@ -1,0 +1,71 @@
+
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, Settings, Activity, FileText, Loader2 } from "lucide-react";
+import { User } from "@/hooks/useUsers";
+
+interface ActivityLog {
+  id: number;
+  timestamp: string;
+  user: string;
+  action: string;
+  document: string;
+  ip: string;
+  status: "success" | "error" | "warning";
+}
+
+interface AdminSummaryStatsProps {
+  users: User[];
+  loading: boolean;
+  activityLogs: ActivityLog[];
+}
+
+export const AdminSummaryStats = ({ users, loading, activityLogs }: AdminSummaryStatsProps) => {
+  const adminUsersCount = users.filter(u => u.role === "admin" || u.role === "super-admin").length;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center">
+            <Users className="h-5 w-5 mr-2 text-blue-600" />
+            Registered Users
+          </CardTitle>
+          <div className="text-2xl font-bold text-blue-600">
+            {loading ? "..." : users.length}
+          </div>
+        </CardHeader>
+      </Card>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center">
+            <Settings className="h-5 w-5 mr-2 text-purple-600" />
+            Admin Users
+          </CardTitle>
+          <div className="text-2xl font-bold text-purple-600">
+            {loading ? "..." : adminUsersCount}
+          </div>
+        </CardHeader>
+      </Card>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center">
+            <Activity className="h-5 w-5 mr-2 text-green-600" />
+            Today's Activity
+          </CardTitle>
+          <div className="text-2xl font-bold text-green-600">
+            {activityLogs.filter(log => log.timestamp.includes(new Date().toISOString().split('T')[0])).length}
+          </div>
+        </CardHeader>
+      </Card>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center">
+            <FileText className="h-5 w-5 mr-2 text-orange-600" />
+            System Health
+          </CardTitle>
+          <div className="text-2xl font-bold text-green-600">Good</div>
+        </CardHeader>
+      </Card>
+    </div>
+  );
+};
