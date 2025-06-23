@@ -77,19 +77,18 @@ serve(async (req) => {
         })
 
         console.log(`API Response status: ${response.status}`)
-        console.log(`API Response headers:`, Object.fromEntries(response.headers.entries()))
 
         if (!response.ok) {
           const errorText = await response.text()
           console.log(`API Error response:`, errorText)
-          throw new Error(`API request failed with status ${response.status}: ${response.statusText}. Response: ${errorText.substring(0, 200)}`)
+          throw new Error(`API request failed with status ${response.status}: ${response.statusText}`)
         }
 
         const contentType = response.headers.get('content-type')
         if (!contentType || !contentType.includes('application/json')) {
           const responseText = await response.text()
           console.log(`Non-JSON response:`, responseText.substring(0, 200))
-          throw new Error(`API returned non-JSON content. Content-Type: ${contentType}. Response preview: ${responseText.substring(0, 100)}...`)
+          throw new Error(`API returned non-JSON content`)
         }
 
         const apiData = await response.json()
@@ -99,7 +98,7 @@ serve(async (req) => {
         usersToImport = Array.isArray(apiData) ? apiData : apiData.users || apiData.data || []
         
         if (!Array.isArray(usersToImport)) {
-          throw new Error(`Expected user data to be an array, got: ${typeof usersToImport}`)
+          throw new Error(`Expected user data to be an array`)
         }
         
         // Normalize the user data
@@ -115,8 +114,7 @@ serve(async (req) => {
         console.error('API fetch error:', apiError)
         return new Response(
           JSON.stringify({ 
-            error: `Failed to fetch users from API: ${apiError.message}`,
-            details: 'Please check your API URL and key. The API might be returning HTML instead of JSON, which could indicate an authentication issue or incorrect endpoint.'
+            error: `Failed to fetch users from API: ${apiError.message}`
           }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
@@ -126,8 +124,7 @@ serve(async (req) => {
     if (!usersToImport || usersToImport.length === 0) {
       return new Response(
         JSON.stringify({ 
-          error: 'No users to import',
-          details: 'Either no users were provided or the API returned no user data.'
+          error: 'No users to import'
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
@@ -139,32 +136,37 @@ serve(async (req) => {
       errors: [] as string[]
     }
 
-    // Get all existing users and profiles upfront for efficient checking
+    console.log(`Starting import of ${usersToImport.length} users`)
+
+    // Get all existing users and profiles upfront to avoid duplicates
     const { data: existingAuthUsers } = await supabaseClient.auth.admin.listUsers()
     const { data: existingProfiles } = await supabaseClient
       .from('profiles')
       .select('id, email')
 
-    // Create lookup maps for efficient checking
-    const authUsersByEmail = new Map()
-    const authUsersById = new Map()
-    existingAuthUsers?.users?.forEach(user => {
-      if (user.email) {
-        authUsersByEmail.set(user.email.toLowerCase(), user)
-        authUsersById.set(user.id, user)
+    // Create comprehensive lookup maps
+    const existingEmails = new Set()
+    const existingUserIds = new Set()
+
+    // Track existing auth users
+    existingAuthUsers?.users?.forEach(authUser => {
+      if (authUser.email) {
+        existingEmails.add(authUser.email.toLowerCase().trim())
+        existingUserIds.add(authUser.id)
       }
     })
 
-    const profilesByEmail = new Map()
-    const profilesById = new Map()
+    // Track existing profiles
     existingProfiles?.forEach(profile => {
       if (profile.email) {
-        profilesByEmail.set(profile.email.toLowerCase(), profile)
-        profilesById.set(profile.id, profile)
+        existingEmails.add(profile.email.toLowerCase().trim())
       }
+      existingUserIds.add(profile.id)
     })
 
-    // Process each user individually with comprehensive error handling
+    console.log(`Found ${existingEmails.size} existing emails and ${existingUserIds.size} existing user IDs`)
+
+    // Process each user with comprehensive duplicate prevention
     for (const userData of usersToImport) {
       try {
         if (!userData.email) {
@@ -175,8 +177,8 @@ serve(async (req) => {
 
         const normalizedEmail = userData.email.toLowerCase().trim()
         
-        // Validate and normalize role value
-        let userRole = 'user' // default role
+        // Validate and normalize role
+        let userRole = 'user'
         if (userData.role) {
           const normalizedRole = userData.role.toLowerCase().trim()
           if (['user', 'admin', 'super-admin'].includes(normalizedRole)) {
@@ -186,149 +188,141 @@ serve(async (req) => {
           }
         }
 
-        console.log(`Processing user ${userData.email} with role: ${userRole}`)
-
-        // Check if user already exists in both auth and profiles
-        const existingAuthUser = authUsersByEmail.get(normalizedEmail)
-        const existingProfile = profilesByEmail.get(normalizedEmail)
-        
-        // Case 1: User exists in both auth and profiles - skip
-        if (existingAuthUser && existingProfile) {
+        // Skip if email already exists in system
+        if (existingEmails.has(normalizedEmail)) {
           results.failed++
           results.errors.push(`User already exists: ${userData.email}`)
+          console.log(`Skipping existing user: ${userData.email}`)
           continue
         }
-        
-        // Case 2: User exists in auth but not in profiles - create profile only
-        if (existingAuthUser && !existingProfile) {
-          console.log(`User exists in auth but missing profile: ${userData.email}`)
-          
-          // Check if profile exists by ID (might have different email)
-          if (profilesById.has(existingAuthUser.id)) {
-            results.failed++
-            results.errors.push(`Profile with ID already exists for ${userData.email}`)
-            continue
-          }
+
+        console.log(`Creating new user: ${userData.email} with role: ${userRole}`)
+
+        // Create user in auth.users with retry logic
+        let authUser = null
+        let createAttempts = 0
+        const maxAttempts = 3
+
+        while (createAttempts < maxAttempts && !authUser) {
+          createAttempts++
           
           try {
-            const { error: profileError } = await supabaseClient
-              .from('profiles')
-              .insert({
-                id: existingAuthUser.id,
-                email: userData.email,
+            const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
+              email: userData.email,
+              email_confirm: true,
+              user_metadata: {
                 full_name: userData.full_name || '',
-                role: userRole
-              })
+              }
+            })
 
-            if (profileError) {
-              results.failed++
-              results.errors.push(`Failed to create profile for existing user ${userData.email}: ${profileError.message}`)
-              continue
+            if (authError) {
+              if (authError.message.includes('already registered') || authError.message.includes('already exists')) {
+                console.log(`User ${userData.email} already exists in auth, skipping`)
+                results.failed++
+                results.errors.push(`User already exists in auth: ${userData.email}`)
+                break
+              }
+              throw authError
             }
 
-            // Add to our tracking
-            profilesByEmail.set(normalizedEmail, { id: existingAuthUser.id, email: userData.email })
-            profilesById.set(existingAuthUser.id, { id: existingAuthUser.id, email: userData.email })
+            if (!authData?.user) {
+              throw new Error('No user returned from auth creation')
+            }
 
-            results.success++
-            console.log(`Created profile for existing user: ${userData.email} with role: ${userRole}`)
-            continue
-          } catch (profileCreateError) {
-            results.failed++
-            results.errors.push(`Error creating profile for existing user ${userData.email}: ${profileCreateError.message}`)
-            continue
-          }
-        }
+            authUser = authData.user
+            console.log(`Created auth user for ${userData.email} with ID: ${authUser.id}`)
 
-        // Case 3: User doesn't exist in auth - create both auth user and profile
-        console.log(`Creating new user ${userData.email} with role: ${userRole}`)
-
-        // Create user in auth.users
-        const { data: authUser, error: authError } = await supabaseClient.auth.admin.createUser({
-          email: userData.email,
-          email_confirm: true,
-          user_metadata: {
-            full_name: userData.full_name || '',
-          }
-        })
-
-        if (authError) {
-          results.failed++
-          results.errors.push(`Failed to create auth user for ${userData.email}: ${authError.message}`)
-          continue
-        }
-
-        if (!authUser?.user) {
-          results.failed++
-          results.errors.push(`Failed to create auth user for ${userData.email}: No user returned`)
-          continue
-        }
-
-        // Add to our tracking immediately
-        authUsersByEmail.set(normalizedEmail, authUser.user)
-        authUsersById.set(authUser.user.id, authUser.user)
-
-        // Create profile for the new user
-        try {
-          // Double-check profile doesn't exist by ID before creating
-          if (profilesById.has(authUser.user.id)) {
-            results.failed++
-            results.errors.push(`Profile with ID ${authUser.user.id} already exists for ${userData.email}`)
+          } catch (authCreateError) {
+            console.error(`Attempt ${createAttempts} failed for ${userData.email}:`, authCreateError)
             
-            // Clean up auth user
-            try {
-              await supabaseClient.auth.admin.deleteUser(authUser.user.id)
-              authUsersByEmail.delete(normalizedEmail)
-              authUsersById.delete(authUser.user.id)
-            } catch (cleanupError) {
-              console.error(`Failed to cleanup auth user ${authUser.user.id}:`, cleanupError)
+            if (createAttempts >= maxAttempts) {
+              results.failed++
+              results.errors.push(`Failed to create auth user for ${userData.email} after ${maxAttempts} attempts: ${authCreateError.message}`)
+              break
             }
-            continue
+            
+            // Wait before retry
+            await new Promise(resolve => setTimeout(resolve, 1000))
           }
+        }
 
+        // If auth user creation failed, continue to next user
+        if (!authUser) {
+          continue
+        }
+
+        // Check if this user ID already exists in our tracking
+        if (existingUserIds.has(authUser.id)) {
+          console.log(`User ID ${authUser.id} already exists, cleaning up and skipping`)
+          
+          // Clean up the auth user we just created
+          try {
+            await supabaseClient.auth.admin.deleteUser(authUser.id)
+            console.log(`Cleaned up duplicate auth user: ${authUser.id}`)
+          } catch (cleanupError) {
+            console.error(`Failed to cleanup auth user ${authUser.id}:`, cleanupError)
+          }
+          
+          results.failed++
+          results.errors.push(`User ID already exists for ${userData.email}`)
+          continue
+        }
+
+        // Add to our tracking immediately to prevent within-batch duplicates
+        existingEmails.add(normalizedEmail)
+        existingUserIds.add(authUser.id)
+
+        // Create profile with comprehensive error handling
+        try {
           const { error: profileError } = await supabaseClient
             .from('profiles')
             .insert({
-              id: authUser.user.id,
+              id: authUser.id,
               email: userData.email,
               full_name: userData.full_name || '',
               role: userRole
             })
 
           if (profileError) {
-            results.failed++
-            results.errors.push(`Failed to create profile for ${userData.email}: ${profileError.message}`)
+            console.error(`Profile creation failed for ${userData.email}:`, profileError)
             
             // Clean up auth user if profile creation failed
             try {
-              await supabaseClient.auth.admin.deleteUser(authUser.user.id)
-              authUsersByEmail.delete(normalizedEmail)
-              authUsersById.delete(authUser.user.id)
+              await supabaseClient.auth.admin.deleteUser(authUser.id)
+              console.log(`Cleaned up auth user after profile failure: ${authUser.id}`)
             } catch (cleanupError) {
-              console.error(`Failed to cleanup auth user ${authUser.user.id}:`, cleanupError)
+              console.error(`Failed to cleanup auth user ${authUser.id}:`, cleanupError)
             }
+            
+            // Remove from tracking since we cleaned up
+            existingEmails.delete(normalizedEmail)
+            existingUserIds.delete(authUser.id)
+            
+            results.failed++
+            results.errors.push(`Failed to create profile for ${userData.email}: ${profileError.message}`)
             continue
           }
-
-          // Add to our tracking
-          profilesByEmail.set(normalizedEmail, { id: authUser.user.id, email: userData.email })
-          profilesById.set(authUser.user.id, { id: authUser.user.id, email: userData.email })
 
           results.success++
           console.log(`Successfully imported user: ${userData.email} with role: ${userRole}`)
 
         } catch (profileCreateError) {
+          console.error(`Profile creation error for ${userData.email}:`, profileCreateError)
+          
+          // Clean up auth user
+          try {
+            await supabaseClient.auth.admin.deleteUser(authUser.id)
+            console.log(`Cleaned up auth user after profile error: ${authUser.id}`)
+          } catch (cleanupError) {
+            console.error(`Failed to cleanup auth user ${authUser.id}:`, cleanupError)
+          }
+          
+          // Remove from tracking since we cleaned up
+          existingEmails.delete(normalizedEmail)
+          existingUserIds.delete(authUser.id)
+          
           results.failed++
           results.errors.push(`Error creating profile for ${userData.email}: ${profileCreateError.message}`)
-          
-          // Clean up auth user if profile creation failed
-          try {
-            await supabaseClient.auth.admin.deleteUser(authUser.user.id)
-            authUsersByEmail.delete(normalizedEmail)
-            authUsersById.delete(authUser.user.id)
-          } catch (cleanupError) {
-            console.error(`Failed to cleanup auth user ${authUser.user.id}:`, cleanupError)
-          }
           continue
         }
 
