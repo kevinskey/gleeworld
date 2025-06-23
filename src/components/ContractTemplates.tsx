@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -143,99 +142,6 @@ export const ContractTemplates = () => {
     );
   }
 
-  const CreateTemplateDialog = () => (
-    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-      <DialogHeader>
-        <DialogTitle>Create New Template</DialogTitle>
-        <DialogDescription>
-          Create a reusable contract template with optional header image
-        </DialogDescription>
-      </DialogHeader>
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="template-name">Template Name</Label>
-          <Input
-            id="template-name"
-            type="text"
-            value={newTemplate.name}
-            onChange={(e) => {
-              console.log('Template name input change:', e.target.value);
-              setNewTemplate(prev => ({ ...prev, name: e.target.value }));
-            }}
-            placeholder="Enter template name (e.g., Service Agreement Template)"
-            className="w-full"
-            disabled={false}
-            readOnly={false}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="header-image">Header Image (Optional)</Label>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-            <input
-              id="header-image"
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-            <Button
-              variant="outline"
-              onClick={() => document.getElementById('header-image')?.click()}
-              className="w-full"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              {newTemplate.header_image ? 'Change Image' : 'Upload Header Image'}
-            </Button>
-            
-            {imagePreview && (
-              <div className="mt-4">
-                <img 
-                  src={imagePreview} 
-                  alt="Header preview" 
-                  className="max-h-32 mx-auto rounded border"
-                />
-              </div>
-            )}
-          </div>
-          <p className="text-sm text-gray-500">
-            Recommended: Company logo or letterhead (PNG, JPG, max 2MB)
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="template-content">Template Content</Label>
-          <Textarea
-            id="template-content"
-            value={newTemplate.template_content}
-            onChange={(e) => setNewTemplate(prev => ({ ...prev, template_content: e.target.value }))}
-            placeholder="Enter your contract template here..."
-            rows={12}
-          />
-        </div>
-      </div>
-      <DialogFooter>
-        <Button variant="outline" onClick={() => {
-          setIsCreateOpen(false);
-          setImagePreview(null);
-          setNewTemplate({ name: "", template_content: "", header_image: null });
-        }}>
-          Cancel
-        </Button>
-        <Button onClick={handleCreateTemplate} disabled={isCreating || !newTemplate.name.trim()}>
-          {isCreating ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Creating...
-            </>
-          ) : (
-            'Create Template'
-          )}
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  );
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -250,7 +156,94 @@ export const ContractTemplates = () => {
               Create Template
             </Button>
           </DialogTrigger>
-          <CreateTemplateDialog />
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create New Template</DialogTitle>
+              <DialogDescription>
+                Create a reusable contract template with optional header image
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="template-name">Template Name</Label>
+                <Input
+                  id="template-name"
+                  type="text"
+                  value={newTemplate.name}
+                  onChange={(e) => {
+                    console.log('Template name input change:', e.target.value);
+                    setNewTemplate(prev => ({ ...prev, name: e.target.value }));
+                  }}
+                  placeholder="Enter template name (e.g., Service Agreement Template)"
+                  className="w-full"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="header-image">Header Image (Optional)</Label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                  <input
+                    id="header-image"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => document.getElementById('header-image')?.click()}
+                    className="w-full"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {newTemplate.header_image ? 'Change Image' : 'Upload Header Image'}
+                  </Button>
+                  
+                  {imagePreview && (
+                    <div className="mt-4">
+                      <img 
+                        src={imagePreview} 
+                        alt="Header preview" 
+                        className="max-h-32 mx-auto rounded border"
+                      />
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm text-gray-500">
+                  Recommended: Company logo or letterhead (PNG, JPG, max 2MB)
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="template-content">Template Content</Label>
+                <Textarea
+                  id="template-content"
+                  value={newTemplate.template_content}
+                  onChange={(e) => setNewTemplate(prev => ({ ...prev, template_content: e.target.value }))}
+                  placeholder="Enter your contract template here..."
+                  rows={12}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => {
+                setIsCreateOpen(false);
+                setImagePreview(null);
+                setNewTemplate({ name: "", template_content: "", header_image: null });
+              }}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateTemplate} disabled={isCreating || !newTemplate.name.trim()}>
+                {isCreating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Template'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
         </Dialog>
       </div>
 
@@ -267,7 +260,94 @@ export const ContractTemplates = () => {
                   Create Your First Template
                 </Button>
               </DialogTrigger>
-              <CreateTemplateDialog />
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Create New Template</DialogTitle>
+                  <DialogDescription>
+                    Create a reusable contract template with optional header image
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="template-name-2">Template Name</Label>
+                    <Input
+                      id="template-name-2"
+                      type="text"
+                      value={newTemplate.name}
+                      onChange={(e) => {
+                        console.log('Template name input change:', e.target.value);
+                        setNewTemplate(prev => ({ ...prev, name: e.target.value }));
+                      }}
+                      placeholder="Enter template name (e.g., Service Agreement Template)"
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="header-image-2">Header Image (Optional)</Label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                      <input
+                        id="header-image-2"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() => document.getElementById('header-image-2')?.click()}
+                        className="w-full"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        {newTemplate.header_image ? 'Change Image' : 'Upload Header Image'}
+                      </Button>
+                      
+                      {imagePreview && (
+                        <div className="mt-4">
+                          <img 
+                            src={imagePreview} 
+                            alt="Header preview" 
+                            className="max-h-32 mx-auto rounded border"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500">
+                      Recommended: Company logo or letterhead (PNG, JPG, max 2MB)
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="template-content-2">Template Content</Label>
+                    <Textarea
+                      id="template-content-2"
+                      value={newTemplate.template_content}
+                      onChange={(e) => setNewTemplate(prev => ({ ...prev, template_content: e.target.value }))}
+                      placeholder="Enter your contract template here..."
+                      rows={12}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => {
+                    setIsCreateOpen(false);
+                    setImagePreview(null);
+                    setNewTemplate({ name: "", template_content: "", header_image: null });
+                  }}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreateTemplate} disabled={isCreating || !newTemplate.name.trim()}>
+                    {isCreating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      'Create Template'
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
             </Dialog>
           </CardContent>
         </Card>
