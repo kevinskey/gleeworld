@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import type { Contract } from "@/hooks/useContracts";
 
 const Index = () => {
+  // Always call all hooks at the top level - never conditionally
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
@@ -24,9 +25,10 @@ const Index = () => {
   const [templateName, setTemplateName] = useState<string>("");
   const [templateHeaderImageUrl, setTemplateHeaderImageUrl] = useState<string>("");
   const [templateContractType, setTemplateContractType] = useState<string>("");
-  const { contracts, loading, error, deleteContract, refetch } = useContracts();
+  
   const { user, loading: authLoading, signOut } = useAuth();
   const { displayName } = useUserProfile(user);
+  const { contracts, loading, error, deleteContract, refetch } = useContracts();
   const navigate = useNavigate();
 
   useEffect(() => {
