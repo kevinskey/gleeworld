@@ -1,4 +1,3 @@
-
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -303,7 +302,7 @@ const ContractSigning = () => {
         
         if (artistSignatureField && contract.status !== 'completed') {
           processedLines.push(
-            <div key={`signature-${artistSignatureField.id}`} className="my-4 p-4 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50">
+            <div key={`signature-${artistSignatureField.id}`} className="relative my-4">
               <SignatureFieldOverlay
                 field={artistSignatureField}
                 onFieldComplete={handleFieldComplete}
@@ -325,7 +324,7 @@ const ContractSigning = () => {
         
         if (agentSignatureField && contract.status !== 'completed') {
           processedLines.push(
-            <div key={`signature-${agentSignatureField.id}`} className="my-4 p-4 border-2 border-dashed border-green-300 rounded-lg bg-green-50">
+            <div key={`signature-${agentSignatureField.id}`} className="relative my-4">
               <SignatureFieldOverlay
                 field={agentSignatureField}
                 onFieldComplete={handleFieldComplete}
@@ -344,7 +343,7 @@ const ContractSigning = () => {
         const dateField = signatureFields.find(f => f.type === 'date');
         if (dateField && contract.status !== 'completed') {
           processedLines.push(
-            <div key={`date-${dateField.id}`} className="my-4 p-4 border-2 border-dashed border-purple-300 rounded-lg bg-purple-50">
+            <div key={`date-${dateField.id}`} className="relative my-4">
               <SignatureFieldOverlay
                 field={dateField}
                 onFieldComplete={handleFieldComplete}
@@ -380,7 +379,7 @@ const ContractSigning = () => {
           <div className="text-center text-sm text-gray-600 bg-gray-50 p-3 rounded">
             Progress: {getCompletionProgress()} fields completed
             <div className="text-xs text-gray-500 mt-1">
-              Fill in the signature fields embedded in the document above
+              Click on the signature fields embedded in the document above
             </div>
           </div>
         )}
