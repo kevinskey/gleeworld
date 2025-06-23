@@ -69,6 +69,7 @@ export const SignatureFieldOverlay = ({
   };
 
   const handleFieldClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     console.log('Field clicked:', field.id, 'type:', field.type, 'completed:', isCompleted);
     if (!isCompleted) {
@@ -76,11 +77,17 @@ export const SignatureFieldOverlay = ({
     }
   };
 
-  const handleModalBackdropClick = (e: React.MouseEvent) => {
-    // Only close if clicking the backdrop itself, not its children
-    if (e.target === e.currentTarget) {
-      setIsActive(false);
-    }
+  const handleBackdropClick = () => {
+    console.log('Backdrop clicked, closing modal');
+    setIsActive(false);
+  };
+
+  const handleContentClick = (e: React.MouseEvent) => {
+    // Completely prevent any event from leaving the content area
+    e.preventDefault();
+    e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
+    console.log('Content clicked, preventing close');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -93,13 +100,17 @@ export const SignatureFieldOverlay = ({
     return (
       <div 
         className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
-        onClick={handleModalBackdropClick}
+        onClick={handleBackdropClick}
         onKeyDown={handleKeyDown}
         tabIndex={-1}
       >
         <div 
           className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
-          onClick={(e) => e.stopPropagation()}
+          onClick={handleContentClick}
+          onMouseDown={handleContentClick}
+          onMouseUp={handleContentClick}
+          onTouchStart={handleContentClick}
+          onTouchEnd={handleContentClick}
         >
           <div className="p-6">
             <div className="mb-4">
@@ -111,7 +122,11 @@ export const SignatureFieldOverlay = ({
             </div>
 
             {field.type === 'signature' && (
-              <div onClick={(e) => e.stopPropagation()}>
+              <div 
+                onClick={handleContentClick}
+                onMouseDown={handleContentClick}
+                onTouchStart={handleContentClick}
+              >
                 <SignatureCanvas 
                   onSignatureChange={handleSignatureComplete}
                   disabled={false}
@@ -127,12 +142,13 @@ export const SignatureFieldOverlay = ({
                   onChange={(e) => setFieldValue(e.target.value)}
                   onBlur={handleTextComplete}
                   className="w-full"
+                  onClick={handleContentClick}
                 />
                 <div className="flex gap-2 justify-end">
                   <Button 
                     variant="outline" 
                     onClick={(e) => {
-                      e.stopPropagation();
+                      handleContentClick(e);
                       const today = getCurrentDate();
                       setFieldValue(today);
                       onFieldComplete(field.id, today);
@@ -155,6 +171,7 @@ export const SignatureFieldOverlay = ({
                   placeholder={`Enter ${field.type}`}
                   className="w-full"
                   maxLength={field.type === 'initials' ? 3 : undefined}
+                  onClick={handleContentClick}
                 />
               </div>
             )}
