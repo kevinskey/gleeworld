@@ -215,7 +215,7 @@ export const ContractTemplates = () => {
                 <div className="flex flex-wrap gap-2 mt-2">
                   {newTemplate.fields.map((field) => (
                     <Badge key={field} variant="secondary" className="flex items-center space-x-1">
-                      <span>{{field}}</span>
+                      <span>{`{{${field}}}`}</span>
                       <button onClick={() => removeField(field)} className="ml-1 text-red-500">
                         ×
                       </button>
@@ -330,7 +330,7 @@ export const ContractTemplates = () => {
                 <div className="flex flex-wrap gap-2 mt-1">
                   {selectedTemplate.fields.map((field) => (
                     <Badge key={field} variant="secondary">
-                      {{{field}}}
+                      {`{{${field}}}`}
                     </Badge>
                   ))}
                 </div>
