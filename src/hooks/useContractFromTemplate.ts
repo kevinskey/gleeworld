@@ -4,6 +4,7 @@ import { useContracts } from "@/hooks/useContracts";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { logActivity, ACTIVITY_TYPES, RESOURCE_TYPES } from "@/utils/activityLogger";
 import type { ContractTemplate } from "@/hooks/useContractTemplates";
 
 export const useContractFromTemplate = (onContractCreated?: () => void) => {
@@ -30,6 +31,20 @@ export const useContractFromTemplate = (onContractCreated?: () => void) => {
       });
 
       if (contractData) {
+        // Log template usage activity
+        await logActivity({
+          actionType: ACTIVITY_TYPES.TEMPLATE_USED,
+          resourceType: RESOURCE_TYPES.TEMPLATE,
+          resourceId: template.id,
+          details: {
+            templateName: template.name,
+            contractId: contractData.id,
+            contractTitle,
+            recipientName,
+            recipientEmail: selectedUser?.email
+          }
+        });
+
         // Refresh the contracts list to show the new contract
         await refetch();
         

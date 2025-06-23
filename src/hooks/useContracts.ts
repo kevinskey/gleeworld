@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { logActivity, ACTIVITY_TYPES, RESOURCE_TYPES } from "@/utils/activityLogger";
 
 export interface Contract {
   id: string;
@@ -105,6 +106,18 @@ export const useContracts = () => {
 
       if (error) throw error;
 
+      // Log contract creation activity
+      await logActivity({
+        actionType: ACTIVITY_TYPES.CONTRACT_CREATED,
+        resourceType: RESOURCE_TYPES.CONTRACT,
+        resourceId: data.id,
+        details: {
+          contractTitle: contract.title,
+          hasTemplate: !!contract.template_id,
+          templateId: contract.template_id
+        }
+      });
+
       setContracts(prev => [data, ...prev]);
       toast({
         title: "Success",
@@ -124,12 +137,28 @@ export const useContracts = () => {
 
   const deleteContract = async (id: string) => {
     try {
+      // Get contract details before deletion for logging
+      const contractToDelete = contracts.find(c => c.id === id);
+      
       const { error } = await supabase
         .from('contracts_v2')
         .update({ archived: true })
         .eq('id', id);
 
       if (error) throw error;
+
+      // Log contract deletion activity
+      if (contractToDelete) {
+        await logActivity({
+          actionType: ACTIVITY_TYPES.CONTRACT_DELETED,
+          resourceType: RESOURCE_TYPES.CONTRACT,
+          resourceId: id,
+          details: {
+            contractTitle: contractToDelete.title,
+            contractStatus: contractToDelete.status
+          }
+        });
+      }
 
       setContracts(prev => prev.filter(contract => contract.id !== id));
       toast({
@@ -148,12 +177,31 @@ export const useContracts = () => {
 
   const updateContractStatus = async (id: string, status: string) => {
     try {
+      // Get contract details for logging
+      const contractToUpdate = contracts.find(c => c.id === id);
+      const previousStatus = contractToUpdate?.status;
+      
       const { error } = await supabase
         .from('contracts_v2')
         .update({ status, updated_at: new Date().toISOString() })
         .eq('id', id);
 
       if (error) throw error;
+
+      // Log contract update activity
+      if (contractToUpdate) {
+        await logActivity({
+          actionType: ACTIVITY_TYPES.CONTRACT_UPDATED,
+          resourceType: RESOURCE_TYPES.CONTRACT,
+          resourceId: id,
+          details: {
+            contractTitle: contractToUpdate.title,
+            previousStatus,
+            newStatus: status,
+            updateType: 'status_change'
+          }
+        });
+      }
 
       setContracts(prev => 
         prev.map(contract => 

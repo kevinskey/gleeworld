@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SignatureFieldOverlay } from "@/components/SignatureFieldOverlay";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { logActivity, ACTIVITY_TYPES, RESOURCE_TYPES } from "@/utils/activityLogger";
 
 interface Contract {
   id: string;
@@ -85,6 +86,17 @@ const ContractSigning = () => {
 
         console.log("Contract found:", data);
         setContract(data);
+        
+        // Log contract view activity
+        await logActivity({
+          actionType: ACTIVITY_TYPES.CONTRACT_VIEWED,
+          resourceType: RESOURCE_TYPES.CONTRACT,
+          resourceId: contractId,
+          details: {
+            contractTitle: data.title,
+            contractStatus: data.status
+          }
+        });
       } catch (error) {
         console.error('Error:', error);
         toast({
@@ -180,10 +192,7 @@ const ContractSigning = () => {
         body: {
           contractId: contract.id,
           signatureData: signatureData,
-          dateSigned: updatedCompletedFields[2] || currentDate, // Pass the date signed
-          // You can add recipient email/name here if needed
-          // recipientEmail: "user@example.com",
-          // recipientName: "User Name"
+          dateSigned: updatedCompletedFields[2] || currentDate,
         }
       });
 
@@ -193,6 +202,18 @@ const ContractSigning = () => {
       }
 
       console.log('Contract signing completed:', data);
+
+      // Log contract signing activity
+      await logActivity({
+        actionType: ACTIVITY_TYPES.CONTRACT_SIGNED,
+        resourceType: RESOURCE_TYPES.CONTRACT,
+        resourceId: contract.id,
+        details: {
+          contractTitle: contract.title,
+          dateSigned: updatedCompletedFields[2] || currentDate,
+          signatureFieldsCompleted: Object.keys(updatedCompletedFields).length
+        }
+      });
 
       toast({
         title: "Success!",

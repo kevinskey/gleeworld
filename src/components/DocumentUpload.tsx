@@ -18,6 +18,7 @@ import { ContractContentSection } from "./upload/ContractContentSection";
 import { FileUploadArea } from "./upload/FileUploadArea";
 import { RecipientInformation } from "./upload/RecipientInformation";
 import { ContractPreviewDialog } from "./upload/ContractPreviewDialog";
+import { logActivity, ACTIVITY_TYPES, RESOURCE_TYPES } from "@/utils/activityLogger";
 
 interface DocumentUploadProps {
   templateContent?: string;
@@ -253,6 +254,21 @@ export const DocumentUpload = ({
       if (!contractData) {
         throw new Error("Failed to create contract");
       }
+
+      // Log contract sending activity
+      await logActivity({
+        actionType: ACTIVITY_TYPES.CONTRACT_SENT,
+        resourceType: RESOURCE_TYPES.CONTRACT,
+        resourceId: contractData.id,
+        details: {
+          contractTitle,
+          recipientEmail,
+          recipientName,
+          signatureFieldsCount: signatureFields.length,
+          hasCustomMessage: !!emailMessage,
+          contractType
+        }
+      });
 
       // Send email notification
       const { error: emailError } = await supabase.functions.invoke('send-contract-email', {

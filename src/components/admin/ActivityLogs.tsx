@@ -5,39 +5,55 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Filter, Download, Database } from "lucide-react";
+import { Search, Filter, Download, Database, RefreshCw } from "lucide-react";
+import { useActivityLogs } from "@/hooks/useActivityLogs";
 
-interface ActivityLog {
-  id: number;
-  timestamp: string;
-  user: string;
-  action: string;
-  document: string;
-  ip: string;
-  status: "success" | "error" | "warning";
-}
-
-interface ActivityLogsProps {
-  activityLogs: ActivityLog[];
-}
-
-export const ActivityLogs = ({ activityLogs }: ActivityLogsProps) => {
+export const ActivityLogs = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const { logs, loading, error, refetch } = useActivityLogs();
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "success": return "bg-green-100 text-green-800";
-      case "error": return "bg-red-100 text-red-800";
-      case "warning": return "bg-yellow-100 text-yellow-800";
+  const getStatusColor = (actionType: string) => {
+    switch (actionType) {
+      case "contract_signed": return "bg-green-100 text-green-800";
+      case "contract_created": return "bg-blue-100 text-blue-800";
+      case "contract_deleted": return "bg-red-100 text-red-800";
+      case "template_created": return "bg-purple-100 text-purple-800";
+      case "template_used": return "bg-yellow-100 text-yellow-800";
       default: return "bg-gray-100 text-gray-800";
     }
   };
 
-  const filteredLogs = activityLogs.filter(log => 
-    log.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.document.toLowerCase().includes(searchTerm.toLowerCase())
+  const formatActionType = (actionType: string) => {
+    return actionType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  const filteredLogs = logs.filter(log => 
+    log.user_profile?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    log.user_profile?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    log.action_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    log.resource_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (log.details && JSON.stringify(log.details).toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Activity Logs</CardTitle>
+          <CardDescription>Error loading activity logs</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button onClick={refetch} variant="outline">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Retry
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -57,6 +73,10 @@ export const ActivityLogs = ({ activityLogs }: ActivityLogsProps) => {
                 className="pl-10 w-64"
               />
             </div>
+            <Button onClick={refetch} variant="outline" size="sm" disabled={loading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
             <Button variant="outline" size="sm">
               <Filter className="h-4 w-4 mr-2" />
               Filter
@@ -69,10 +89,22 @@ export const ActivityLogs = ({ activityLogs }: ActivityLogsProps) => {
         </div>
       </CardHeader>
       <CardContent>
-        {activityLogs.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+            <p className="text-gray-500">Loading activity logs...</p>
+          </div>
+        ) : filteredLogs.length === 0 ? (
           <div className="text-center py-8">
             <Database className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-gray-500">No activity logs yet</p>
+            <p className="text-gray-500">
+              {logs.length === 0 ? "No activity logs yet" : "No matching activity logs found"}
+            </p>
+            {logs.length === 0 && (
+              <p className="text-sm text-gray-400 mt-2">
+                Activity logs will appear here as users interact with the system
+              </p>
+            )}
           </div>
         ) : (
           <Table>
@@ -81,22 +113,50 @@ export const ActivityLogs = ({ activityLogs }: ActivityLogsProps) => {
                 <TableHead>Timestamp</TableHead>
                 <TableHead>User</TableHead>
                 <TableHead>Action</TableHead>
-                <TableHead>Document</TableHead>
-                <TableHead>IP Address</TableHead>
+                <TableHead>Resource</TableHead>
+                <TableHead>Details</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredLogs.map((log) => (
                 <TableRow key={log.id}>
-                  <TableCell className="font-mono text-sm">{log.timestamp}</TableCell>
-                  <TableCell>{log.user}</TableCell>
-                  <TableCell>{log.action}</TableCell>
-                  <TableCell className="max-w-xs truncate">{log.document}</TableCell>
-                  <TableCell className="font-mono text-sm">{log.ip}</TableCell>
+                  <TableCell className="font-mono text-sm">
+                    {new Date(log.created_at).toLocaleString()}
+                  </TableCell>
                   <TableCell>
-                    <Badge className={getStatusColor(log.status)}>
-                      {log.status}
+                    <div>
+                      <div className="font-medium">
+                        {log.user_profile?.full_name || 'Unknown User'}
+                      </div>
+                      {log.user_profile?.email && (
+                        <div className="text-sm text-gray-500">
+                          {log.user_profile.email}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>{formatActionType(log.action_type)}</TableCell>
+                  <TableCell className="capitalize">{log.resource_type}</TableCell>
+                  <TableCell className="max-w-xs">
+                    {log.details && Object.keys(log.details).length > 0 && (
+                      <div className="text-sm">
+                        {Object.entries(log.details).slice(0, 2).map(([key, value]) => (
+                          <div key={key} className="truncate">
+                            <span className="font-medium">{key}:</span> {String(value)}
+                          </div>
+                        ))}
+                        {Object.keys(log.details).length > 2 && (
+                          <div className="text-xs text-gray-400">
+                            +{Object.keys(log.details).length - 2} more
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={getStatusColor(log.action_type)}>
+                      {formatActionType(log.action_type)}
                     </Badge>
                   </TableCell>
                 </TableRow>
