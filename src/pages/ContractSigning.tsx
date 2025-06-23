@@ -277,37 +277,36 @@ const ContractSigning = () => {
     
     return (
       <div className="space-y-6">
-        {/* Contract content */}
+        {/* Contract content with embedded signature fields */}
         <div 
-          className={`whitespace-pre-wrap border rounded-lg p-4 md:p-8 bg-white ${
+          className={`relative whitespace-pre-wrap border rounded-lg p-4 md:p-8 bg-white ${
             isMobile ? 'min-h-[400px] text-sm' : 'min-h-[600px]'
           }`}
         >
           <div dangerouslySetInnerHTML={{ __html: cleanContent.replace(/\n/g, '<br>') }} />
-        </div>
-        
-        {/* Signature fields area at the bottom */}
-        {contract.status !== 'completed' && signatureFields.length > 0 && (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
-            <h3 className="text-lg font-semibold mb-4 text-center">Signature Required</h3>
-            <div className="relative min-h-[200px] bg-white rounded border">
-              {signatureFields.map((field, index) => (
+          
+          {/* Embed signature fields directly in the document */}
+          {contract.status !== 'completed' && signatureFields.length > 0 && (
+            <>
+              {signatureFields.map((field) => (
                 <SignatureFieldOverlay
                   key={field.id}
-                  field={{
-                    ...field,
-                    // Position fields in a row at the bottom
-                    x: isMobile ? 20 + (index * 160) : 50 + (index * 300),
-                    y: 50,
-                  }}
+                  field={field}
                   onFieldComplete={handleFieldComplete}
                   isCompleted={!!completedFields[field.id]}
                   value={completedFields[field.id]}
                 />
               ))}
-            </div>
-            <div className="mt-4 text-center text-sm text-gray-600">
-              Progress: {getCompletionProgress()} fields completed
+            </>
+          )}
+        </div>
+        
+        {/* Progress indicator */}
+        {contract.status !== 'completed' && signatureFields.length > 0 && (
+          <div className="text-center text-sm text-gray-600 bg-gray-50 p-3 rounded">
+            Progress: {getCompletionProgress()} fields completed
+            <div className="text-xs text-gray-500 mt-1">
+              Click on the blue signature fields in the document above to sign
             </div>
           </div>
         )}
