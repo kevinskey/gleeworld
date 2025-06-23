@@ -34,7 +34,7 @@ const ContractSigning = () => {
 
       try {
         const { data, error } = await supabase
-          .from('contracts')
+          .from('contracts_v2')
           .select('*')
           .eq('id', contractId)
           .single();
@@ -72,7 +72,7 @@ const ContractSigning = () => {
     setSigning(true);
     try {
       const { error } = await supabase
-        .from('contracts')
+        .from('contracts_v2')
         .update({ status: 'completed' })
         .eq('id', contract.id);
 
