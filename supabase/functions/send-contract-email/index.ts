@@ -47,7 +47,8 @@ const handler = async (req: Request): Promise<Response> => {
     }: ContractEmailRequest = await req.json();
 
     console.log("Sending contract email to:", recipientEmail);
-    console.log("Signature fields:", signatureFields?.length || 0);
+    console.log("Signature fields received:", signatureFields);
+    console.log("Number of signature fields:", signatureFields?.length || 0);
 
     // Get the current origin from the request headers
     const origin = req.headers.get("origin") || "https://68e737ff-b69d-444d-8896-ed604144004c.lovableproject.com";
@@ -55,35 +56,55 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Generated signature URL:", signatureUrl);
 
-    // Generate signature fields summary for email with better formatting
-    const signatureFieldsSummary = signatureFields.length > 0 ? `
+    // Generate signature fields summary for email
+    const signatureFieldsSummary = signatureFields && signatureFields.length > 0 ? `
       <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0;">
-        <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 16px; font-weight: 600;">📝 Fields to Complete:</h3>
+        <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 16px; font-weight: 600;">📝 Signature Fields Required:</h3>
+        <div style="background-color: #dbeafe; padding: 12px; border-radius: 6px; border-left: 4px solid #3b82f6; margin-bottom: 15px;">
+          <p style="margin: 0; color: #1e40af; font-size: 14px; font-weight: 500;">
+            📋 Total fields: <strong>${signatureFields.length}</strong> | Required: <strong>${signatureFields.filter(f => f.required).length}</strong>
+          </p>
+        </div>
         <ul style="margin: 0; padding-left: 20px; color: #475569; list-style-type: disc;">
           ${signatureFields.map(field => {
+            const getFieldIcon = (type: string) => {
+              switch(type) {
+                case 'signature': return '✍️';
+                case 'date': return '📅';
+                case 'text': return '📝';
+                case 'initials': return '👤';
+                case 'username': return '👥';
+                default: return '📄';
+              }
+            };
+            
             const getFieldDescription = (type: string) => {
               switch(type) {
                 case 'signature': return 'Digital signature required';
-                case 'date': return 'Date will be automatically filled';
-                case 'text': return 'Please enter required text';
-                case 'initials': return 'Please provide your initials';
-                case 'username': return 'Please enter your full name';
+                case 'date': return 'Date selection (auto-fillable)';
+                case 'text': return 'Text input required';
+                case 'initials': return 'Your initials required';
+                case 'username': return 'Full name required';
                 default: return 'Field completion required';
               }
             };
             
             return `
-            <li style="margin-bottom: 8px; line-height: 1.5;">
-              <strong style="color: #1e293b;">${field.label}</strong>
-              ${field.required ? '<span style="color: #dc2626; font-size: 12px; font-weight: bold;"> (REQUIRED)</span>' : '<span style="color: #059669; font-size: 12px;"> (Optional)</span>'}
-              <br>
-              <span style="color: #64748b; font-size: 14px;">${getFieldDescription(field.type)}</span>
+            <li style="margin-bottom: 10px; line-height: 1.6;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 16px;">${getFieldIcon(field.type)}</span>
+                <strong style="color: #1e293b;">${field.label}</strong>
+                ${field.required ? '<span style="color: #dc2626; font-size: 12px; font-weight: bold; background-color: #fef2f2; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">REQUIRED</span>' : '<span style="color: #059669; font-size: 12px; background-color: #f0fdf4; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Optional</span>'}
+              </div>
+              <div style="margin-top: 4px; margin-left: 24px;">
+                <span style="color: #64748b; font-size: 13px;">${getFieldDescription(field.type)}</span>
+              </div>
             </li>
           `}).join('')}
         </ul>
-        <div style="margin-top: 15px; padding: 12px; background-color: #dbeafe; border-radius: 6px; border-left: 4px solid #3b82f6;">
-          <p style="margin: 0; color: #1e40af; font-size: 14px; font-weight: 500;">
-            📋 Total fields: <strong>${signatureFields.length}</strong> | Required: <strong>${signatureFields.filter(f => f.required).length}</strong>
+        <div style="margin-top: 15px; padding: 12px; background-color: #fef3c7; border-radius: 6px; border-left: 4px solid #f59e0b;">
+          <p style="margin: 0; color: #92400e; font-size: 13px;">
+            <strong>⚠️ Important:</strong> You must complete all required signature fields to finalize the contract.
           </p>
         </div>
       </div>
@@ -134,12 +155,6 @@ const handler = async (req: Request): Promise<Response> => {
                         font-size: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                 📄 Review and Sign Contract
               </a>
-            </div>
-            
-            <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #f59e0b;">
-              <p style="margin: 0; color: #92400e; font-size: 14px;">
-                <strong>⚠️ Important:</strong> Please complete all required fields to finalize your signature.
-              </p>
             </div>
             
             <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
