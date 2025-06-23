@@ -18,6 +18,8 @@ import { ContractContentSection } from "./upload/ContractContentSection";
 import { FileUploadArea } from "./upload/FileUploadArea";
 import { RecipientInformation } from "./upload/RecipientInformation";
 import { ContractPreviewDialog } from "./upload/ContractPreviewDialog";
+import { ContractCreationMode } from "./upload/ContractCreationMode";
+import { CreateNewContractSection } from "./upload/CreateNewContractSection";
 import { logActivity, ACTIVITY_TYPES, RESOURCE_TYPES } from "@/utils/activityLogger";
 
 interface DocumentUploadProps {
@@ -51,6 +53,7 @@ export const DocumentUpload = ({
   const [showPreview, setShowPreview] = useState(false);
   const [headerImageUrl, setHeaderImageUrl] = useState<string>(""); // New state
   const [hasStipendField, setHasStipendField] = useState(false); // Track if template has stipend field
+  const [creationMode, setCreationMode] = useState<'upload' | 'create' | 'template'>('create');
   const { toast } = useToast();
   const { createContract } = useContracts();
   const { users, loading: usersLoading } = useUsers();
@@ -63,6 +66,7 @@ export const DocumentUpload = ({
       console.log('Applying template to form:', { templateName, templateContent });
       setOriginalTemplateContent(templateContent); // Store original template
       setContractContent(templateContent);
+      setCreationMode('template');
       
       // Don't generate title here - wait for user selection
       // The title will be updated when a user is selected
@@ -113,6 +117,50 @@ export const DocumentUpload = ({
       });
     }
   }, [templateContent, templateName, templateHeaderImageUrl, templateContractType, toast]);
+
+  // Handle creation mode changes
+  const handleCreationModeChange = (mode: 'upload' | 'create' | 'template') => {
+    setCreationMode(mode);
+    
+    // Clear form when switching modes
+    if (mode !== 'template') {
+      setContractContent("");
+      setContractTitle("");
+      setUploadedFile(null);
+      setSignatureFields([]);
+      setOriginalTemplateContent("");
+      setHasStipendField(false);
+      setHeaderImageUrl("");
+    }
+    
+    // Set up defaults for create mode
+    if (mode === 'create') {
+      setContractContent("");
+      setContractTitle("");
+      // Create default signature fields for new contracts
+      const defaultSignatureFields: SignatureField[] = [
+        {
+          id: Date.now(),
+          label: "Company Signature",
+          type: 'signature',
+          page: 1,
+          x: 100,
+          y: 400,
+          required: true
+        },
+        {
+          id: Date.now() + 1,
+          label: "Client Signature", 
+          type: 'signature',
+          page: 1,
+          x: 400,
+          y: 400,
+          required: true
+        }
+      ];
+      setSignatureFields(defaultSignatureFields);
+    }
+  };
 
   // Function to update contract content with all current values
   const updateContractContent = (userInfo?: any, currentStipend?: string) => {
@@ -306,7 +354,8 @@ export const DocumentUpload = ({
           recipientName,
           signatureFieldsCount: signatureFields.length,
           hasCustomMessage: !!emailMessage,
-          contractType
+          contractType,
+          creationMode
         }
       });
 
@@ -355,6 +404,7 @@ export const DocumentUpload = ({
       setStipendAmount("");
       setHeaderImageUrl("");
       setHasStipendField(false);
+      setCreationMode('create');
       setShowPreview(false);
 
       // Trigger contract created callback to refresh the contracts list
@@ -373,22 +423,34 @@ export const DocumentUpload = ({
     }
   };
 
+  const showUserSelection = creationMode === 'template' && !!contractContent;
+  const showContractContent = creationMode === 'template' && !!contractContent;
+  const showFileUpload = creationMode === 'upload';
+  const showCreateNew = creationMode === 'create';
+  const hasContent = contractContent || uploadedFile;
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Create Contract</CardTitle>
           <CardDescription>
-            Upload a document or use template content to begin the signing process
+            Choose how you'd like to create your contract
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          <ContractCreationMode
+            mode={creationMode}
+            onModeChange={handleCreationModeChange}
+            hasTemplate={!!templateContent}
+          />
+
           <UserSelectionSection
             users={users}
             selectedUserId={selectedUserId}
             onUserSelect={handleUserSelection}
             usersLoading={usersLoading}
-            showSection={!!contractContent}
+            showSection={showUserSelection}
           />
 
           <StipendAmountField
@@ -400,7 +462,15 @@ export const DocumentUpload = ({
           <ContractContentSection
             contractContent={contractContent}
             onContentChange={setContractContent}
-            showSection={!!contractContent}
+            showSection={showContractContent}
+          />
+
+          <CreateNewContractSection
+            contractTitle={contractTitle}
+            contractContent={contractContent}
+            onTitleChange={setContractTitle}
+            onContentChange={setContractContent}
+            showSection={showCreateNew}
           />
 
           <FileUploadArea
@@ -410,20 +480,22 @@ export const DocumentUpload = ({
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             dragOver={dragOver}
-            showArea={!contractContent}
+            showArea={showFileUpload}
           />
 
-          {(uploadedFile || contractContent) && (
+          {hasContent && (
             <>
-              <div className="space-y-2">
-                <Label htmlFor="contract-title">Contract Title</Label>
-                <Input
-                  id="contract-title"
-                  value={contractTitle}
-                  onChange={(e) => setContractTitle(e.target.value)}
-                  placeholder="Enter contract title"
-                />
-              </div>
+              {creationMode !== 'create' && (
+                <div className="space-y-2">
+                  <Label htmlFor="contract-title">Contract Title</Label>
+                  <Input
+                    id="contract-title"
+                    value={contractTitle}
+                    onChange={(e) => setContractTitle(e.target.value)}
+                    placeholder="Enter contract title"
+                  />
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
