@@ -58,6 +58,8 @@ export const useContracts = () => {
         throw new Error("User not authenticated");
       }
 
+      console.log('Creating contract with user ID:', user.id);
+
       const { data, error } = await supabase
         .from('contracts_v2')
         .insert([{
@@ -75,6 +77,7 @@ export const useContracts = () => {
       }
 
       console.log('Contract created successfully:', data);
+      console.log('Contract created_by field:', data.created_by);
       
       // Update local state
       setContracts(prev => [data, ...prev]);
