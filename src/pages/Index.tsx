@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, FileText, Users, Edit, Loader2 } from "lucide-react";
+import { Upload, FileText, Users, Edit, Loader2, Receipt } from "lucide-react";
 import { DocumentUpload } from "@/components/DocumentUpload";
 import { ContractTemplates } from "@/components/ContractTemplates";
 import { SigningDashboard } from "@/components/SigningDashboard";
@@ -10,6 +10,7 @@ import { ContractViewer } from "@/components/ContractViewer";
 import { Header } from "@/components/Header";
 import { StatsCards } from "@/components/StatsCards";
 import { ContractsList } from "@/components/ContractsList";
+import { W9FormsList } from "@/components/W9FormsList";
 import { useContracts } from "@/hooks/useContracts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -95,7 +96,7 @@ const Index = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-[400px]">
+          <TabsList className="grid w-full grid-cols-5 lg:w-[500px]">
             <TabsTrigger value="dashboard" className="flex items-center space-x-2">
               <FileText className="h-4 w-4" />
               <span>Dashboard</span>
@@ -107,6 +108,10 @@ const Index = () => {
             <TabsTrigger value="templates" className="flex items-center space-x-2">
               <Edit className="h-4 w-4" />
               <span>Templates</span>
+            </TabsTrigger>
+            <TabsTrigger value="w9-forms" className="flex items-center space-x-2">
+              <Receipt className="h-4 w-4" />
+              <span>W9 Forms</span>
             </TabsTrigger>
             <TabsTrigger value="admin" className="flex items-center space-x-2">
               <Users className="h-4 w-4" />
@@ -147,6 +152,10 @@ const Index = () => {
               onUseTemplate={handleUseTemplate} 
               onContractCreated={handleContractCreated}
             />
+          </TabsContent>
+
+          <TabsContent value="w9-forms">
+            <W9FormsList />
           </TabsContent>
 
           <TabsContent value="admin">

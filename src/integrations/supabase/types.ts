@@ -822,6 +822,39 @@ export type Database = {
         }
         Relationships: []
       }
+      w9_forms: {
+        Row: {
+          created_at: string
+          form_data: Json
+          id: string
+          status: string
+          storage_path: string
+          submitted_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          form_data?: Json
+          id?: string
+          status?: string
+          storage_path: string
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          form_data?: Json
+          id?: string
+          status?: string
+          storage_path?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
