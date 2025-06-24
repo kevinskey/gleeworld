@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +31,7 @@ export const W9FormsList = () => {
       console.log('Delete completed, refreshing forms list');
       
       // Force refresh the forms list after successful deletion
-      refetch();
+      await refetch();
       
       toast({
         title: "W9 Form Deleted",
