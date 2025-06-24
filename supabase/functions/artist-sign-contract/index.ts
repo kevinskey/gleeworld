@@ -42,8 +42,21 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Contract not found');
     }
 
-    // Get client IP
-    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    // Get client IP and parse it properly
+    const rawIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    console.log("Raw IP from headers:", rawIP);
+    
+    // Parse the first valid IP address from comma-separated list
+    let clientIP = 'unknown';
+    if (rawIP && rawIP !== 'unknown') {
+      const ipList = rawIP.split(',').map(ip => ip.trim());
+      // Take the first IP that looks valid (not empty and contains dots or colons)
+      const firstValidIP = ipList.find(ip => ip && (ip.includes('.') || ip.includes(':')));
+      if (firstValidIP) {
+        clientIP = firstValidIP;
+      }
+    }
+    console.log("Parsed client IP:", clientIP);
 
     // Use provided date or current date as fallback
     const signedDate = dateSigned || new Date().toLocaleDateString();
@@ -83,7 +96,7 @@ const handler = async (req: Request): Promise<Response> => {
           artist_signature_data: signatureData,
           artist_signed_at: signedDateTime,
           date_signed: signedDate,
-          signer_ip: clientIP,
+          signer_ip: clientIP !== 'unknown' ? clientIP : null,
           pdf_storage_path: pdfFileName,
           status: 'pending_admin_signature'
         })
@@ -92,6 +105,7 @@ const handler = async (req: Request): Promise<Response> => {
         .single();
 
       if (updateError) {
+        console.error('Update signature error:', updateError);
         throw new Error('Failed to update signature: ' + updateError.message);
       }
       signatureRecord = updatedRecord;
@@ -104,7 +118,7 @@ const handler = async (req: Request): Promise<Response> => {
           artist_signature_data: signatureData,
           artist_signed_at: signedDateTime,
           date_signed: signedDate,
-          signer_ip: clientIP,
+          signer_ip: clientIP !== 'unknown' ? clientIP : null,
           pdf_storage_path: pdfFileName,
           status: 'pending_admin_signature'
         })
@@ -112,6 +126,7 @@ const handler = async (req: Request): Promise<Response> => {
         .single();
 
       if (insertError) {
+        console.error('Insert signature error:', insertError);
         throw new Error('Failed to store signature: ' + insertError.message);
       }
       signatureRecord = newRecord;
