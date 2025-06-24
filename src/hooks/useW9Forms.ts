@@ -22,6 +22,7 @@ export const useW9Forms = () => {
 
   const fetchForms = async () => {
     if (!user) {
+      console.log('useW9Forms - No user, clearing forms');
       setForms([]);
       setLoading(false);
       return;
@@ -29,7 +30,7 @@ export const useW9Forms = () => {
 
     try {
       setLoading(true);
-      console.log('Fetching W9 forms for user:', user.id);
+      console.log('useW9Forms - Fetching W9 forms for user:', user.id);
       const { data, error } = await supabase
         .from('w9_forms')
         .select('*')
@@ -40,11 +41,12 @@ export const useW9Forms = () => {
         throw error;
       }
 
-      console.log('Fetched W9 forms:', data);
+      console.log('useW9Forms - Raw database response:', data);
+      console.log('useW9Forms - Forms count from database:', data?.length || 0);
       setForms(data || []);
       setError(null);
     } catch (err) {
-      console.error('Error fetching W9 forms:', err);
+      console.error('useW9Forms - Error fetching W9 forms:', err);
       setError('Failed to fetch W9 forms');
     } finally {
       setLoading(false);
@@ -95,7 +97,7 @@ export const useW9Forms = () => {
 
   const deleteForm = async (formId: string) => {
     try {
-      console.log('Starting delete process for form:', formId);
+      console.log('useW9Forms - Starting delete process for form:', formId);
       
       // First get the form to find the storage path
       const { data: form, error: fetchError } = await supabase
@@ -105,11 +107,11 @@ export const useW9Forms = () => {
         .single();
 
       if (fetchError) {
-        console.error('Error fetching form for deletion:', fetchError);
+        console.error('useW9Forms - Error fetching form for deletion:', fetchError);
         throw fetchError;
       }
 
-      console.log('Form found for deletion:', form);
+      console.log('useW9Forms - Form found for deletion:', form);
 
       // Delete from database first
       const { error: dbError } = await supabase
@@ -118,46 +120,64 @@ export const useW9Forms = () => {
         .eq('id', formId);
 
       if (dbError) {
-        console.error('Error deleting from database:', dbError);
+        console.error('useW9Forms - Error deleting from database:', dbError);
         throw dbError;
       }
 
-      console.log('Successfully deleted from database');
+      console.log('useW9Forms - Successfully deleted from database');
 
       // Then delete from storage bucket if path exists
       if (form?.storage_path) {
-        console.log('Attempting to delete from storage:', form.storage_path);
+        console.log('useW9Forms - Attempting to delete from storage:', form.storage_path);
         const { error: storageError } = await supabase.storage
           .from('w9-forms')
           .remove([form.storage_path]);
 
         if (storageError) {
-          console.error('Error deleting from storage (non-critical):', storageError);
+          console.error('useW9Forms - Error deleting from storage (non-critical):', storageError);
           // Don't throw here since database deletion succeeded
         } else {
-          console.log('Successfully deleted from storage');
+          console.log('useW9Forms - Successfully deleted from storage');
         }
       }
 
       // Immediately update the local state to remove the deleted form
-      console.log('Updating local state to remove deleted form');
+      console.log('useW9Forms - Updating local state to remove deleted form');
       setForms(currentForms => {
         const updatedForms = currentForms.filter(form => form.id !== formId);
-        console.log('Forms after deletion:', updatedForms);
+        console.log('useW9Forms - Forms after deletion:', updatedForms);
+        console.log('useW9Forms - Forms count after deletion:', updatedForms.length);
         return updatedForms;
       });
 
-      console.log('Delete process completed successfully');
+      // Also trigger a fresh fetch to ensure sync with database
+      console.log('useW9Forms - Triggering fresh fetch from database');
+      setTimeout(() => {
+        fetchForms();
+      }, 500);
+
+      console.log('useW9Forms - Delete process completed successfully');
 
     } catch (err) {
-      console.error('Error deleting W9 form:', err);
+      console.error('useW9Forms - Error deleting W9 form:', err);
       throw new Error('Failed to delete W9 form');
     }
   };
 
   useEffect(() => {
+    console.log('useW9Forms - useEffect triggered, user:', user?.id);
     fetchForms();
   }, [user]);
+
+  // Debug log whenever forms state changes
+  useEffect(() => {
+    console.log('useW9Forms - Forms state changed:', {
+      count: forms.length,
+      formIds: forms.map(f => f.id),
+      loading,
+      error
+    });
+  }, [forms, loading, error]);
 
   return {
     forms,

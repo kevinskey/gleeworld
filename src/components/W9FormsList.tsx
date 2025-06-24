@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -5,7 +6,7 @@ import { FileText, Download, Plus, Trash2 } from "lucide-react";
 import { useW9Forms } from "@/hooks/useW9Forms";
 import { useNavigate } from "react-router-dom";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 export const W9FormsList = () => {
@@ -13,6 +14,16 @@ export const W9FormsList = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [deletingFormId, setDeletingFormId] = useState<string | null>(null);
+
+  // Debug logging to see what forms we have
+  useEffect(() => {
+    console.log('W9FormsList - Forms state updated:', {
+      formsCount: forms.length,
+      forms: forms,
+      loading,
+      error
+    });
+  }, [forms, loading, error]);
 
   const handleDownload = async (storagePath: string) => {
     try {
@@ -25,16 +36,16 @@ export const W9FormsList = () => {
   const handleDelete = async (formId: string) => {
     try {
       setDeletingFormId(formId);
-      console.log('Starting delete for form:', formId);
+      console.log('W9FormsList - Starting delete for form:', formId);
       await deleteForm(formId);
-      console.log('Delete completed successfully');
+      console.log('W9FormsList - Delete completed successfully');
       
       toast({
         title: "W9 Form Deleted",
         description: "The W9 form has been permanently deleted.",
       });
     } catch (error) {
-      console.error('Error deleting form:', error);
+      console.error('W9FormsList - Error deleting form:', error);
       toast({
         title: "Error",
         description: "Failed to delete the W9 form. Please try again.",
@@ -46,6 +57,7 @@ export const W9FormsList = () => {
   };
 
   if (loading) {
+    console.log('W9FormsList - Showing loading state');
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
@@ -57,6 +69,7 @@ export const W9FormsList = () => {
   }
 
   if (error) {
+    console.log('W9FormsList - Showing error state:', error);
     return (
       <Card>
         <CardContent className="pt-6">
@@ -67,6 +80,8 @@ export const W9FormsList = () => {
       </Card>
     );
   }
+
+  console.log('W9FormsList - Rendering with forms:', forms.length);
 
   return (
     <div className="space-y-6">
