@@ -29,6 +29,7 @@ interface DocumentUploadProps {
   headerImageUrl?: string;
   contractType?: string;
   onContractCreated?: () => void;
+  onClose?: () => void;
 }
 
 export const DocumentUpload = ({ 
@@ -36,7 +37,8 @@ export const DocumentUpload = ({
   templateName, 
   headerImageUrl: templateHeaderImageUrl, 
   contractType: templateContractType,
-  onContractCreated
+  onContractCreated,
+  onClose
 }: DocumentUploadProps) => {
   const [dragOver, setDragOver] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -502,6 +504,11 @@ export const DocumentUpload = ({
       setSignatureFields(defaultSignatureFields);
       setShowTemplateSelection(false);
       
+      // Close the upload modal when template is selected
+      if (onClose) {
+        onClose();
+      }
+      
       toast({
         title: "Template Selected",
         description: `Template "${template.name}" has been applied.`,
@@ -534,6 +541,11 @@ export const DocumentUpload = ({
       }
     ];
     setSignatureFields(defaultSignatureFields);
+    
+    // Close the upload modal when starting blank
+    if (onClose) {
+      onClose();
+    }
   };
 
   // Show template selection screen first
