@@ -77,12 +77,35 @@ export const useContractSigning = (contractId: string | undefined) => {
       console.log('useContractSigning - Fetching contract:', contractId);
       setLoading(true);
 
-      // Try to fetch from contracts table first
-      const { data: contractData, error: contractError } = await supabase
-        .from('contracts')
+      // Try multiple tables to find the contract
+      let contractData = null;
+      let contractError = null;
+
+      // First try contracts_v2 table
+      const { data: contractsV2Data, error: contractsV2Error } = await supabase
+        .from('contracts_v2')
         .select('*')
         .eq('id', contractId)
-        .single();
+        .maybeSingle();
+
+      if (contractsV2Data) {
+        contractData = contractsV2Data;
+      } else if (!contractsV2Error || contractsV2Error.code === 'PGRST116') {
+        // If not found in contracts_v2, try contracts table
+        const { data: contractsData, error: contractsError2 } = await supabase
+          .from('contracts')
+          .select('*')
+          .eq('id', contractId)
+          .maybeSingle();
+
+        if (contractsData) {
+          contractData = contractsData;
+        } else {
+          contractError = contractsError2;
+        }
+      } else {
+        contractError = contractsV2Error;
+      }
 
       if (contractError && contractError.code !== 'PGRST116') {
         console.error('useContractSigning - Error fetching contract:', contractError);
@@ -90,17 +113,16 @@ export const useContractSigning = (contractId: string | undefined) => {
       }
 
       if (!contractData) {
-        console.log('useContractSigning - Contract not found:', contractId);
+        console.log('useContractSigning - Contract not found in any table:', contractId);
         setContract(null);
         setLoading(false);
         return;
       }
 
-      console.log('useContractSigning - Contract data:', contractData);
+      console.log('useContractSigning - Contract data found:', contractData);
       setContract(contractData);
 
-      // Since signature_fields table doesn't exist, we'll create mock fields for now
-      // This should be replaced with actual signature field management
+      // Create mock signature fields since we don't have a signature_fields table
       const mockSignatureFields: SignatureField[] = [
         {
           id: 1,
@@ -131,17 +153,16 @@ export const useContractSigning = (contractId: string | undefined) => {
       console.log('useContractSigning - Using mock signature fields');
       setSignatureFields(mockSignatureFields);
 
-      // Since signature_records table doesn't exist, we'll check contract_signatures table
+      // Check for signature record in contract_signatures table
       const { data: signatureRecordData, error: signatureRecordError } = await supabase
         .from('contract_signatures')
         .select('*')
         .eq('contract_id', contractId)
         .eq('user_id', user?.id)
-        .single();
+        .maybeSingle();
 
       if (signatureRecordError && signatureRecordError.code !== 'PGRST116') {
         console.error('useContractSigning - Error fetching signature record:', signatureRecordError);
-        // Do not throw error, as signature record might not exist yet
       }
 
       console.log('useContractSigning - Signature record data:', signatureRecordData);
