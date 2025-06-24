@@ -29,6 +29,7 @@ export const useW9Forms = () => {
 
     try {
       setLoading(true);
+      console.log('Fetching W9 forms for user:', user.id);
       const { data, error } = await supabase
         .from('w9_forms')
         .select('*')
@@ -39,6 +40,7 @@ export const useW9Forms = () => {
         throw error;
       }
 
+      console.log('Fetched W9 forms:', data);
       setForms(data || []);
       setError(null);
     } catch (err) {
@@ -136,6 +138,14 @@ export const useW9Forms = () => {
           console.log('Successfully deleted from storage');
         }
       }
+
+      // Immediately update the local state to remove the deleted form
+      console.log('Updating local state to remove deleted form');
+      setForms(currentForms => {
+        const updatedForms = currentForms.filter(form => form.id !== formId);
+        console.log('Forms after deletion:', updatedForms);
+        return updatedForms;
+      });
 
       console.log('Delete process completed successfully');
 

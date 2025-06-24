@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +9,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 export const W9FormsList = () => {
-  const { forms, loading, error, downloadForm, deleteForm, refetch } = useW9Forms();
+  const { forms, loading, error, downloadForm, deleteForm } = useW9Forms();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [deletingFormId, setDeletingFormId] = useState<string | null>(null);
@@ -28,10 +27,7 @@ export const W9FormsList = () => {
       setDeletingFormId(formId);
       console.log('Starting delete for form:', formId);
       await deleteForm(formId);
-      console.log('Delete completed, refreshing forms list');
-      
-      // Force refresh the forms list after successful deletion
-      await refetch();
+      console.log('Delete completed successfully');
       
       toast({
         title: "W9 Form Deleted",
