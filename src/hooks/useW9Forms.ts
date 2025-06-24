@@ -93,6 +93,8 @@ export const useW9Forms = () => {
 
   const deleteForm = async (formId: string) => {
     try {
+      console.log('Starting delete process for form:', formId);
+      
       // First get the form to find the storage path
       const { data: form, error: fetchError } = await supabase
         .from('w9_forms')
@@ -101,30 +103,41 @@ export const useW9Forms = () => {
         .single();
 
       if (fetchError) {
+        console.error('Error fetching form for deletion:', fetchError);
         throw fetchError;
       }
 
-      // Delete from storage bucket
-      if (form?.storage_path) {
-        const { error: storageError } = await supabase.storage
-          .from('w9-forms')
-          .remove([form.storage_path]);
+      console.log('Form found for deletion:', form);
 
-        if (storageError) {
-          console.error('Error deleting from storage:', storageError);
-          // Continue with database deletion even if storage deletion fails
-        }
-      }
-
-      // Delete from database
+      // Delete from database first
       const { error: dbError } = await supabase
         .from('w9_forms')
         .delete()
         .eq('id', formId);
 
       if (dbError) {
+        console.error('Error deleting from database:', dbError);
         throw dbError;
       }
+
+      console.log('Successfully deleted from database');
+
+      // Then delete from storage bucket if path exists
+      if (form?.storage_path) {
+        console.log('Attempting to delete from storage:', form.storage_path);
+        const { error: storageError } = await supabase.storage
+          .from('w9-forms')
+          .remove([form.storage_path]);
+
+        if (storageError) {
+          console.error('Error deleting from storage (non-critical):', storageError);
+          // Don't throw here since database deletion succeeded
+        } else {
+          console.log('Successfully deleted from storage');
+        }
+      }
+
+      console.log('Delete process completed successfully');
 
     } catch (err) {
       console.error('Error deleting W9 form:', err);
