@@ -1,91 +1,129 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 
 export interface W9Form {
   id: string;
   user_id: string;
-  storage_path: string;
-  submitted_at: string;
-  status: string;
   form_data: any;
+  status: string;
   created_at: string;
   updated_at: string;
+  submitted_at: string;
+  storage_path: string;
 }
 
 export const useW9Forms = () => {
-  const [forms, setForms] = useState<W9Form[]>([]);
+  const [w9Forms, setW9Forms] = useState<W9Form[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
 
-  const fetchForms = async () => {
-    if (!user) {
-      console.log('useW9Forms - No user, clearing forms and resetting state');
-      setForms([]);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-
+  const fetchW9Forms = async () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('useW9Forms - Fetching W9 forms for user:', user.id);
-      
+      console.log('Fetching W9 forms...');
+      console.log('Current user:', user?.id);
+      console.log('Auth loading:', authLoading);
+
       const { data, error } = await supabase
         .from('w9_forms')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
+      console.log('W9 forms query result:', { data, error });
+      console.log('W9 forms count:', data?.length || 0);
+
       if (error) {
+        console.error('Error fetching W9 forms:', error);
+        console.error('Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         throw error;
       }
-
-      console.log('useW9Forms - Database query result:', data);
-      console.log('useW9Forms - Forms count from database:', data?.length || 0);
       
-      // Ensure we always set an array, even if data is null
-      const formsData = data || [];
-      setForms(formsData);
-      
-      console.log('useW9Forms - State updated with forms:', formsData);
-      
-    } catch (err) {
-      console.error('useW9Forms - Error fetching W9 forms:', err);
-      setError('Failed to fetch W9 forms');
-      setForms([]); // Ensure forms is empty on error
+      console.log('W9 forms fetched successfully:', data?.length || 0);
+      setW9Forms(data || []);
+    } catch (error) {
+      console.error('Error fetching W9 forms:', error);
+      setError('Failed to load W9 forms');
+      toast({
+        title: "Error",
+        description: "Failed to load W9 forms",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const getTotalW9Count = async () => {
+  const deleteW9Form = async (formId: string) => {
     try {
-      const { count, error } = await supabase
+      console.log('Attempting to delete W9 form:', formId);
+      console.log('Current user:', user?.id);
+
+      const { error } = await supabase
         .from('w9_forms')
-        .select('*', { count: 'exact', head: true });
+        .delete()
+        .eq('id', formId);
 
       if (error) {
-        throw error;
+        console.error('Error deleting W9 form:', error);
+        console.error('Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        throw new Error(`Failed to delete W9 form: ${error.message}`);
       }
 
-      return count || 0;
-    } catch (err) {
-      console.error('Error fetching W9 count:', err);
-      return 0;
+      console.log('W9 form deleted successfully from database');
+      
+      // Update local state
+      setW9Forms(prev => prev.filter(form => form.id !== formId));
+      
+      toast({
+        title: "Success",
+        description: "W9 form deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting W9 form:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete W9 form",
+        variant: "destructive",
+      });
     }
   };
 
-  const downloadForm = async (storagePath: string) => {
+  const downloadW9Form = async (form: W9Form) => {
     try {
+      console.log('Attempting to download W9 form:', form.id);
+      
+      if (!form.storage_path) {
+        console.error('No storage path found for form:', form.id);
+        toast({
+          title: "Error",
+          description: "No file path found for this form",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { data, error } = await supabase.storage
         .from('w9-forms')
-        .download(storagePath);
+        .download(form.storage_path);
 
       if (error) {
+        console.error('Error downloading W9 form:', error);
         throw error;
       }
 
@@ -93,103 +131,57 @@ export const useW9Forms = () => {
       const url = URL.createObjectURL(data);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `w9-form-${Date.now()}.txt`;
+      a.download = `w9-form-${form.created_at.split('T')[0]}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Error downloading W9 form:', err);
-      throw new Error('Failed to download W9 form');
-    }
-  };
 
-  const deleteForm = async (formId: string) => {
-    try {
-      console.log('useW9Forms - Starting delete process for form:', formId);
+      console.log('W9 form downloaded successfully');
       
-      // First get the form to find the storage path
-      const { data: form, error: fetchError } = await supabase
-        .from('w9_forms')
-        .select('storage_path')
-        .eq('id', formId)
-        .single();
-
-      if (fetchError) {
-        console.error('useW9Forms - Error fetching form for deletion:', fetchError);
-        throw fetchError;
-      }
-
-      console.log('useW9Forms - Form found for deletion:', form);
-
-      // Delete from database first
-      const { error: dbError } = await supabase
-        .from('w9_forms')
-        .delete()
-        .eq('id', formId);
-
-      if (dbError) {
-        console.error('useW9Forms - Error deleting from database:', dbError);
-        throw dbError;
-      }
-
-      console.log('useW9Forms - Successfully deleted from database');
-
-      // Then delete from storage bucket if path exists
-      if (form?.storage_path) {
-        console.log('useW9Forms - Attempting to delete from storage:', form.storage_path);
-        const { error: storageError } = await supabase.storage
-          .from('w9-forms')
-          .remove([form.storage_path]);
-
-        if (storageError) {
-          console.error('useW9Forms - Error deleting from storage (non-critical):', storageError);
-          // Don't throw here since database deletion succeeded
-        } else {
-          console.log('useW9Forms - Successfully deleted from storage');
-        }
-      }
-
-      // Update the local state to remove the deleted form
-      console.log('useW9Forms - Updating local state to remove deleted form');
-      setForms(currentForms => {
-        const updatedForms = currentForms.filter(form => form.id !== formId);
-        console.log('useW9Forms - Forms after deletion:', updatedForms);
-        console.log('useW9Forms - Forms count after deletion:', updatedForms.length);
-        return updatedForms;
+      toast({
+        title: "Success",
+        description: "W9 form downloaded successfully",
       });
-
-      console.log('useW9Forms - Delete process completed successfully');
-
-    } catch (err) {
-      console.error('useW9Forms - Error deleting W9 form:', err);
-      throw new Error('Failed to delete W9 form');
+    } catch (error) {
+      console.error('Error downloading W9 form:', error);
+      toast({
+        title: "Error",
+        description: "Failed to download W9 form",
+        variant: "destructive",
+      });
     }
   };
 
   useEffect(() => {
-    console.log('useW9Forms - useEffect triggered, user:', user?.id);
-    fetchForms();
-  }, [user]);
+    console.log('useW9Forms effect triggered');
+    console.log('Auth loading:', authLoading);
+    console.log('User:', user?.id);
+    
+    // Wait for auth to complete loading before making decisions
+    if (authLoading) {
+      console.log('Auth still loading, waiting...');
+      return;
+    }
 
-  // Debug log whenever forms state changes
-  useEffect(() => {
-    console.log('useW9Forms - Forms state changed:', {
-      count: forms.length,
-      formIds: forms.map(f => f.id),
-      loading,
-      error,
-      formsArray: forms
-    });
-  }, [forms, loading, error]);
+    if (!user) {
+      console.log('No authenticated user, clearing W9 forms');
+      setW9Forms([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    console.log('User authenticated, fetching W9 forms for:', user.id);
+    fetchW9Forms();
+  }, [user, authLoading]);
 
   return {
-    forms,
-    loading,
+    w9Forms,
+    loading: authLoading || loading,
     error,
-    refetch: fetchForms,
-    downloadForm,
-    deleteForm,
-    getTotalW9Count,
+    deleteW9Form,
+    downloadW9Form,
+    refetch: fetchW9Forms,
   };
 };

@@ -27,14 +27,25 @@ export const useContracts = () => {
       setLoading(true);
       setError(null);
       console.log('Fetching contracts...');
+      console.log('Current user:', user?.id);
+      console.log('Auth loading:', authLoading);
       
       const { data, error } = await supabase
         .from('contracts_v2')
         .select('*')
         .order('created_at', { ascending: false });
 
+      console.log('Contracts query result:', { data, error });
+      console.log('Contracts count:', data?.length || 0);
+
       if (error) {
         console.error('Error fetching contracts:', error);
+        console.error('Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         throw error;
       }
       
@@ -184,6 +195,10 @@ export const useContracts = () => {
   };
 
   useEffect(() => {
+    console.log('useContracts effect triggered');
+    console.log('Auth loading:', authLoading);
+    console.log('User:', user?.id);
+    
     // Wait for auth to complete loading before making decisions
     if (authLoading) {
       console.log('Auth still loading, waiting...');
