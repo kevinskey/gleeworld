@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, AlertCircle, FileText, Loader2 } from "lucide-react";
+import { CheckCircle, AlertCircle, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "react-router-dom";
 
@@ -11,7 +11,6 @@ interface W9StatusCardProps {
   onW9Complete?: () => void;
   onDownloadCombinedPDF?: () => void;
   canDownloadPDF: boolean;
-  w9CheckCompleted?: boolean;
 }
 
 export const W9StatusCard = ({ 
@@ -19,18 +18,13 @@ export const W9StatusCard = ({
   w9Form, 
   onW9Complete, 
   onDownloadCombinedPDF,
-  canDownloadPDF,
-  w9CheckCompleted = true
+  canDownloadPDF 
 }: W9StatusCardProps) => {
   const { contractId } = useParams();
 
   if (w9Status === 'not_required') return null;
 
   const getStatusIcon = () => {
-    if (!w9CheckCompleted) {
-      return <Loader2 className="h-5 w-5 animate-spin text-gray-600" />;
-    }
-    
     switch (w9Status) {
       case 'completed':
         return <CheckCircle className="h-5 w-5 text-green-600" />;
@@ -42,10 +36,6 @@ export const W9StatusCard = ({
   };
 
   const getStatusBadge = () => {
-    if (!w9CheckCompleted) {
-      return <Badge variant="outline">Checking...</Badge>;
-    }
-    
     switch (w9Status) {
       case 'completed':
         return <Badge variant="secondary" className="bg-green-100 text-green-800">Completed</Badge>;
@@ -54,16 +44,6 @@ export const W9StatusCard = ({
       default:
         return <Badge variant="outline">Not Required</Badge>;
     }
-  };
-
-  const getDescription = () => {
-    if (!w9CheckCompleted) {
-      return "Checking W9 form requirements...";
-    }
-    
-    return w9Status === 'completed' 
-      ? "Your W9 form is on file and will be included with your contract."
-      : "You must complete a W9 form before proceeding with this contract.";
   };
 
   const handleW9Complete = () => {
@@ -76,7 +56,7 @@ export const W9StatusCard = ({
   };
 
   return (
-    <Card className="mb-4 border-l-4 border-l-orange-500">
+    <Card className="mb-4">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
           {getStatusIcon()}
@@ -84,7 +64,10 @@ export const W9StatusCard = ({
           {getStatusBadge()}
         </CardTitle>
         <CardDescription>
-          {getDescription()}
+          {w9Status === 'completed' 
+            ? "Your W9 form is on file and will be included with your contract."
+            : "You must complete a W9 form before signing this contract."
+          }
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -106,7 +89,7 @@ export const W9StatusCard = ({
             )}
           </div>
         )}
-        {w9Status === 'required' && w9CheckCompleted && (
+        {w9Status === 'required' && (
           <Button onClick={handleW9Complete} variant="default" size="sm">
             Complete W9 Form
           </Button>
