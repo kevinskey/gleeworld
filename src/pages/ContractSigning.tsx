@@ -32,8 +32,21 @@ const ContractSigning = () => {
   console.log('ContractSigning - Hook results:', {
     contract: contract?.id || 'null',
     loading,
-    signatureRecord: signatureRecord?.id || 'null'
+    signatureRecord: signatureRecord?.id || 'null',
+    signatureRecordStatus: signatureRecord?.status || 'null',
+    embeddedSignatures: embeddedSignatures || 'null'
   });
+
+  // Add more detailed logging for signature record
+  if (signatureRecord) {
+    console.log('ContractSigning - Signature Record Details:', {
+      id: signatureRecord.id,
+      status: signatureRecord.status,
+      signed_by_artist_at: signatureRecord.signed_by_artist_at,
+      signed_by_admin_at: signatureRecord.signed_by_admin_at,
+      embedded_signatures: signatureRecord.embedded_signatures
+    });
+  }
 
   const getCompletionProgress = () => {
     if (!signatureFields.length) return "No signature fields";
@@ -84,6 +97,8 @@ const ContractSigning = () => {
   if (!contract) {
     return null;
   }
+
+  console.log('ContractSigning - About to render with signature status:', signatureRecord?.status);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
