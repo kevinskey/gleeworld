@@ -55,17 +55,25 @@ export const ContractPreviewDialog = ({
     }
   };
 
-  // Enhanced debugging
+  // Enhanced debugging for signature fields
   console.log('ContractPreviewDialog - Dialog open:', open);
   console.log('ContractPreviewDialog - Received signature fields:', signatureFields);
   console.log('ContractPreviewDialog - Fields count:', signatureFields?.length || 0);
   console.log('ContractPreviewDialog - Fields type:', typeof signatureFields);
   console.log('ContractPreviewDialog - Is array?', Array.isArray(signatureFields));
   
-  // Log each field individually
+  // Log each field individually with more details
   if (Array.isArray(signatureFields)) {
     signatureFields.forEach((field, index) => {
-      console.log(`Field ${index}:`, field);
+      console.log(`ContractPreviewDialog - Field ${index}:`, {
+        id: field.id,
+        label: field.label,
+        type: field.type,
+        required: field.required,
+        page: field.page,
+        x: field.x,
+        y: field.y
+      });
     });
   }
 
@@ -106,21 +114,12 @@ export const ContractPreviewDialog = ({
             </div>
           )}
 
-          {/* Signature Fields - Enhanced display with better debugging */}
+          {/* Signature Fields - Fixed display with better validation */}
           <div className="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
             <h3 className="text-sm font-medium text-blue-700 mb-2 flex items-center gap-2">
               <Signature className="h-4 w-4" />
               Document Fields ({Array.isArray(signatureFields) ? signatureFields.length : 0})
             </h3>
-            
-            {/* Debug info - temporary */}
-            <div className="mb-3 p-2 bg-gray-100 rounded text-xs">
-              <p>Debug Info:</p>
-              <p>Type: {typeof signatureFields}</p>
-              <p>Is Array: {Array.isArray(signatureFields) ? 'Yes' : 'No'}</p>
-              <p>Length: {signatureFields?.length || 'undefined'}</p>
-              <p>Raw data: {JSON.stringify(signatureFields)}</p>
-            </div>
             
             {Array.isArray(signatureFields) && signatureFields.length > 0 ? (
               <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -143,11 +142,11 @@ export const ContractPreviewDialog = ({
               </div>
             ) : (
               <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p className="text-sm text-yellow-800">
-                  ⚠️ No signature fields have been added to this contract. Recipients won't be able to sign the document.
+                <p className="text-sm text-yellow-800 font-medium">
+                  ⚠️ No signature fields have been added to this contract.
                 </p>
                 <p className="text-xs text-yellow-600 mt-1">
-                  Debug: signatureFields = {JSON.stringify(signatureFields)}
+                  Recipients won't be able to sign the document without signature fields. Please go back and add signature fields before sending.
                 </p>
               </div>
             )}
@@ -195,7 +194,10 @@ export const ContractPreviewDialog = ({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Back to Edit
             </Button>
-            <Button onClick={onConfirmSend} disabled={isLoading}>
+            <Button 
+              onClick={onConfirmSend} 
+              disabled={isLoading || !Array.isArray(signatureFields) || signatureFields.length === 0}
+            >
               {isLoading ? (
                 <>
                   <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -204,7 +206,10 @@ export const ContractPreviewDialog = ({
               ) : (
                 <>
                   <Send className="h-4 w-4 mr-2" />
-                  Send Contract
+                  {!Array.isArray(signatureFields) || signatureFields.length === 0 
+                    ? "Add Signature Fields First" 
+                    : "Send Contract"
+                  }
                 </>
               )}
             </Button>
