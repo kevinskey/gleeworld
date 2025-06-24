@@ -1,150 +1,100 @@
 
-import { useParams, useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, FileText } from "lucide-react";
-import { useContractSigning } from "@/hooks/contract-signing/useContractSigning";
-import { SignatureStatus } from "@/components/contract-signing/SignatureStatus";
+import { useParams } from "react-router-dom";
+import { ContractNotFound } from "@/components/contract-signing/ContractNotFound";
 import { ContractContentRenderer } from "@/components/contract-signing/ContractContentRenderer";
+import { SignatureStatus } from "@/components/contract-signing/SignatureStatus";
 import { CompletionStatus } from "@/components/contract-signing/CompletionStatus";
 import { W9StatusCard } from "@/components/contract-signing/W9StatusCard";
-import { useToast } from "@/hooks/use-toast";
+import { useContractSigning } from "@/hooks/contract-signing/useContractSigning";
 
 const ContractSigning = () => {
   const { contractId } = useParams<{ contractId: string }>();
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  
+  console.log('ContractSigning - Contract ID from params:', contractId);
+
   const {
     contract,
+    signatureFields,
     signatureRecord,
+    completedFields,
     loading,
     signing,
-    signatureFields,
-    completedFields,
+    embeddedSignatures,
     handleFieldComplete,
     isAdminOrAgentField,
     isArtistDateField,
     isContractSigned,
-    embeddedSignatures,
     w9Status,
     w9Form,
-    generateCombinedPDF
+    generateCombinedPDF,
   } = useContractSigning(contractId);
 
-  const handleW9Complete = () => {
-    navigate('/w9-form');
-  };
-
-  const handleDownloadCombinedPDF = async () => {
-    try {
-      const pdfData = await generateCombinedPDF();
-      if (pdfData && pdfData.downloadUrl) {
-        window.open(pdfData.downloadUrl, '_blank');
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to generate combined PDF. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
+  console.log('ContractSigning - Hook results:', {
+    contract: contract?.id || 'null',
+    loading,
+    signatureRecord: signatureRecord?.id || 'null'
+  });
 
   const getCompletionProgress = () => {
-    if (isContractSigned()) {
-      return "Contract signed with embedded signatures";
-    }
-    if (signatureRecord?.status === 'pending_admin_signature') {
-      return "Artist signed - Pending admin approval";
-    }
-    if (signatureRecord?.status === 'completed') {
-      return "Fully completed";
-    }
+    if (!signatureFields.length) return "No signature fields";
     
-    const artistRequiredFields = signatureFields.filter(f => 
-      f.required && !isAdminOrAgentField(f)
-    );
-    const completed = artistRequiredFields.filter(f => completedFields[f.id]);
-    return `${completed.length}/${artistRequiredFields.length} artist fields completed`;
+    const totalFields = signatureFields.filter(f => !isAdminOrAgentField(f)).length;
+    const completedCount = Object.keys(completedFields).filter(fieldId => 
+      !isAdminOrAgentField(signatureFields.find(f => f.id === parseInt(fieldId)) || signatureFields[0])
+    ).length;
+    
+    return `${completedCount}/${totalFields} fields completed`;
   };
-
-  const canDownloadPDF = isContractSigned() && w9Status === 'completed';
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="flex items-center space-x-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading contract...</span>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading contract...</p>
         </div>
       </div>
     );
   }
 
+  // Show contract not found if no contract is loaded and not loading
+  if (!contract && !loading) {
+    return <ContractNotFound contractId={contractId || 'unknown'} />;
+  }
+
+  // Don't render anything if still loading or no contract
   if (!contract) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6 text-center">
-            <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Contract Not Found</h2>
-            <p className="text-gray-600 mb-4">
-              The contract you're looking for doesn't exist or has been removed.
-            </p>
-            <p className="text-sm text-gray-500">
-              Contract ID: {contractId}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return null;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4 md:py-8">
-      <div className="max-w-4xl mx-auto px-2 md:px-4 space-y-4 md:space-y-6">
-        <Card>
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center space-x-2">
-              <FileText className="h-6 w-6" />
-              <span className="text-lg md:text-xl truncate">{contract?.title}</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <W9StatusCard
-              w9Status={w9Status}
-              w9Form={w9Form}
-              onW9Complete={handleW9Complete}
-              onDownloadCombinedPDF={handleDownloadCombinedPDF}
-              canDownloadPDF={canDownloadPDF}
-            />
-            
-            <SignatureStatus signatureRecord={signatureRecord} />
-            <div className="relative">
-              <ContractContentRenderer
-                contract={contract}
-                signatureFields={signatureFields}
-                completedFields={completedFields}
-                signatureRecord={signatureRecord}
-                isAdminOrAgentField={isAdminOrAgentField}
-                isArtistDateField={isArtistDateField}
-                onFieldComplete={handleFieldComplete}
-                getCompletionProgress={getCompletionProgress}
-                embeddedSignatures={embeddedSignatures}
-              />
-            </div>
-          </CardContent>
-        </Card>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">{contract.title}</h1>
+          <p className="text-gray-600">Please review and sign the contract below.</p>
+        </div>
 
-        {signing && (
-          <div className="text-center py-4">
-            <div className="flex items-center justify-center space-x-2">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              <span>Embedding your signature in the document...</span>
-            </div>
-          </div>
-        )}
-
-        <CompletionStatus contract={contract} />
+        {/* Status Cards */}
+        <div className="space-y-6">
+          <SignatureStatus signatureRecord={signatureRecord} />
+          <CompletionStatus contract={contract} />
+          <W9StatusCard w9Status={w9Status} w9Form={w9Form} />
+          
+          {/* Contract Content */}
+          <ContractContentRenderer
+            contract={contract}
+            signatureFields={signatureFields}
+            completedFields={completedFields}
+            signatureRecord={signatureRecord}
+            isAdminOrAgentField={isAdminOrAgentField}
+            isArtistDateField={isArtistDateField}
+            onFieldComplete={handleFieldComplete}
+            getCompletionProgress={getCompletionProgress}
+            embeddedSignatures={embeddedSignatures || []}
+          />
+        </div>
       </div>
     </div>
   );
