@@ -22,15 +22,18 @@ export const useW9Forms = () => {
 
   const fetchForms = async () => {
     if (!user) {
-      console.log('useW9Forms - No user, clearing forms');
+      console.log('useW9Forms - No user, clearing forms and resetting state');
       setForms([]);
       setLoading(false);
+      setError(null);
       return;
     }
 
     try {
       setLoading(true);
+      setError(null);
       console.log('useW9Forms - Fetching W9 forms for user:', user.id);
+      
       const { data, error } = await supabase
         .from('w9_forms')
         .select('*')
@@ -41,13 +44,19 @@ export const useW9Forms = () => {
         throw error;
       }
 
-      console.log('useW9Forms - Raw database response:', data);
+      console.log('useW9Forms - Database query result:', data);
       console.log('useW9Forms - Forms count from database:', data?.length || 0);
-      setForms(data || []);
-      setError(null);
+      
+      // Ensure we always set an array, even if data is null
+      const formsData = data || [];
+      setForms(formsData);
+      
+      console.log('useW9Forms - State updated with forms:', formsData);
+      
     } catch (err) {
       console.error('useW9Forms - Error fetching W9 forms:', err);
       setError('Failed to fetch W9 forms');
+      setForms([]); // Ensure forms is empty on error
     } finally {
       setLoading(false);
     }
@@ -169,7 +178,8 @@ export const useW9Forms = () => {
       count: forms.length,
       formIds: forms.map(f => f.id),
       loading,
-      error
+      error,
+      formsArray: forms
     });
   }, [forms, loading, error]);
 
