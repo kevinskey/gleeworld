@@ -46,6 +46,24 @@ const ContractSigning = () => {
     return `${completedCount}/${totalFields} fields completed`;
   };
 
+  const handleW9Complete = () => {
+    // Navigate to W9 form with return parameter
+    if (contractId) {
+      window.location.href = `/w9-form?return=${contractId}`;
+    }
+  };
+
+  const handleDownloadCombinedPDF = async () => {
+    try {
+      await generateCombinedPDF();
+    } catch (error) {
+      console.error('Error downloading combined PDF:', error);
+    }
+  };
+
+  // Determine if user can download PDF (when contract is signed and W9 is completed)
+  const canDownloadPDF = isContractSigned() && w9Status === 'completed';
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -80,7 +98,13 @@ const ContractSigning = () => {
         <div className="space-y-6">
           <SignatureStatus signatureRecord={signatureRecord} />
           <CompletionStatus contract={contract} />
-          <W9StatusCard w9Status={w9Status} w9Form={w9Form} />
+          <W9StatusCard 
+            w9Status={w9Status} 
+            w9Form={w9Form} 
+            onW9Complete={handleW9Complete}
+            onDownloadCombinedPDF={handleDownloadCombinedPDF}
+            canDownloadPDF={canDownloadPDF}
+          />
           
           {/* Contract Content */}
           <ContractContentRenderer
