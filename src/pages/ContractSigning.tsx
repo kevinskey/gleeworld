@@ -2,7 +2,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, FileText } from "lucide-react";
-import { useContractSigning } from "@/hooks/useContractSigning";
+import { useContractSigning } from "@/hooks/contract-signing/useContractSigning";
 import { SignatureStatus } from "@/components/contract-signing/SignatureStatus";
 import { ContractContentRenderer } from "@/components/contract-signing/ContractContentRenderer";
 import { CompletionStatus } from "@/components/contract-signing/CompletionStatus";
