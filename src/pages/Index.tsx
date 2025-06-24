@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Calculator, DollarSign } from "lucide-react";
 import { DocumentUpload } from "@/components/DocumentUpload";
 import { ContractsList } from "@/components/ContractsList";
+import { ContractViewer } from "@/components/ContractViewer";
 import { AdminPanel } from "@/components/AdminPanel";
 import { StatsCards } from "@/components/StatsCards";
 import { ContractTemplates } from "@/components/ContractTemplates";
@@ -13,12 +14,15 @@ import { W9FormsList } from "@/components/W9FormsList";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useContracts } from "@/hooks/useContracts";
+import type { Contract } from "@/hooks/useContracts";
 
 const Index = () => {
   const { user, signOut } = useAuth();
   const { userProfile } = useUserProfile(user);
   const { contracts, loading, error, forceRefresh, deleteContract } = useContracts();
   const [showUpload, setShowUpload] = useState(false);
+  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [showContractViewer, setShowContractViewer] = useState(false);
   const [templateData, setTemplateData] = useState<{
     content: string;
     name: string;
@@ -32,8 +36,10 @@ const Index = () => {
     setTemplateData(null);
   }, [forceRefresh]);
 
-  const handleViewContract = (contract: any) => {
+  const handleViewContract = (contract: Contract) => {
     console.log('Viewing contract:', contract);
+    setSelectedContract(contract);
+    setShowContractViewer(true);
   };
 
   const handleDeleteContract = async (contractId: string) => {
@@ -208,6 +214,13 @@ const Index = () => {
             </div>
           </div>
         )}
+
+        {/* Contract Viewer Modal */}
+        <ContractViewer
+          contract={selectedContract}
+          open={showContractViewer}
+          onOpenChange={setShowContractViewer}
+        />
       </main>
     </div>
   );
