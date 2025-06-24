@@ -15,8 +15,13 @@ export const StatsCards = ({ totalContracts, completedCount, pendingCount }: Sta
 
   useEffect(() => {
     const fetchW9Count = async () => {
-      const count = await getTotalW9Count();
-      setW9Count(count);
+      try {
+        const count = await getTotalW9Count();
+        setW9Count(count);
+      } catch (error) {
+        console.error('Error fetching W9 count:', error);
+        setW9Count(0);
+      }
     };
 
     fetchW9Count();
