@@ -8,7 +8,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface W9FormProps {
   onSuccess?: () => void;
@@ -32,7 +31,6 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
-  const { displayName } = useUserProfile(user);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
@@ -83,10 +81,8 @@ TIN: ${formData.tin}
 Certified: ${formData.certification ? 'Yes' : 'No'}
       `;
 
-      // Generate unique file path with user name
-      const userName = formData.name || displayName || 'Unknown';
-      const sanitizedUserName = userName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
-      const fileName = `w9-${sanitizedUserName}-${user.id}-${Date.now()}.txt`;
+      // Generate unique file path
+      const fileName = `w9-${user.id}-${Date.now()}.txt`;
       
       // Upload to storage
       const { error: uploadError } = await supabase.storage
@@ -99,16 +95,13 @@ Certified: ${formData.certification ? 'Yes' : 'No'}
         throw uploadError;
       }
 
-      // Save form record to database with user name in form_data
+      // Save form record to database
       const { error: dbError } = await supabase
         .from('w9_forms')
         .insert({
           user_id: user.id,
           storage_path: fileName,
-          form_data: {
-            ...formData,
-            submittedByName: userName
-          },
+          form_data: formData,
           status: 'submitted'
         });
 
@@ -154,7 +147,6 @@ Certified: ${formData.certification ? 'Yes' : 'No'}
                 id="name"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder={displayName}
                 required
               />
             </div>

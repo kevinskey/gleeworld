@@ -18,11 +18,6 @@ export const W9FormsList = () => {
     }
   };
 
-  const getFormTitle = (form: any) => {
-    const userName = form.form_data?.submittedByName || form.form_data?.name || 'Unknown User';
-    return `W9 Form - ${userName}`;
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -82,7 +77,7 @@ export const W9FormsList = () => {
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <FileText className="h-5 w-5" />
-                      {getFormTitle(form)}
+                      W9 Form
                     </CardTitle>
                     <CardDescription>
                       Submitted on {new Date(form.submitted_at).toLocaleDateString()}
