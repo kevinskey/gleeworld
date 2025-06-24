@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { LogOut, Plus, PenTool } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { LogOut, Plus } from "lucide-react";
 
 interface HeaderProps {
   displayName: string;
@@ -10,8 +9,6 @@ interface HeaderProps {
 }
 
 export const Header = ({ displayName, onSignOut, onNewContract }: HeaderProps) => {
-  const navigate = useNavigate();
-
   return (
     <header className="bg-white shadow-sm border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -28,15 +25,6 @@ export const Header = ({ displayName, onSignOut, onNewContract }: HeaderProps) =
             >
               <Plus className="h-4 w-4 mr-2" />
               New Contract
-            </Button>
-            
-            <Button 
-              onClick={() => navigate("/admin-signing")}
-              variant="outline"
-              className="border-orange-300 text-orange-700 hover:bg-orange-50"
-            >
-              <PenTool className="h-4 w-4 mr-2" />
-              Admin Signing
             </Button>
             
             <Button 
