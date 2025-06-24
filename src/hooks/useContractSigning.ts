@@ -49,6 +49,7 @@ export const useContractSigning = (contractId?: string) => {
   const [embeddedSignatures, setEmbeddedSignatures] = useState<EmbeddedSignature[]>([]);
   const [w9Status, setW9Status] = useState<'required' | 'completed' | 'not_required'>('required');
   const [w9Form, setW9Form] = useState<any>(null);
+  const [w9CheckCompleted, setW9CheckCompleted] = useState(false);
   const { toast } = useToast();
 
   // Default signature fields for the contract
@@ -76,10 +77,16 @@ export const useContractSigning = (contractId?: string) => {
   useEffect(() => {
     if (contractId) {
       fetchContractData();
-      checkW9Requirement();
       setSignatureFields(defaultSignatureFields);
     }
   }, [contractId]);
+
+  // Check W9 requirement immediately after contract is loaded
+  useEffect(() => {
+    if (contract && !w9CheckCompleted) {
+      checkW9Requirement();
+    }
+  }, [contract, w9CheckCompleted]);
 
   // Set up real-time subscription to listen for contract updates
   useEffect(() => {
@@ -181,12 +188,13 @@ export const useContractSigning = (contractId?: string) => {
 
   const checkW9Requirement = async () => {
     try {
-      console.log('Checking W9 requirement...');
+      console.log('Checking W9 requirement immediately for contract...');
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
         console.log('No authenticated user found');
         setW9Status('required');
+        setW9CheckCompleted(true);
         return;
       }
 
@@ -204,6 +212,7 @@ export const useContractSigning = (contractId?: string) => {
       if (error) {
         console.error('Error checking W9 status:', error);
         setW9Status('required');
+        setW9CheckCompleted(true);
         return;
       }
 
@@ -216,10 +225,20 @@ export const useContractSigning = (contractId?: string) => {
       } else {
         console.log('No W9 form found, setting status to required');
         setW9Status('required');
+        
+        // Show immediate notification about W9 requirement
+        toast({
+          title: "W9 Form Required",
+          description: "Please complete your W9 form before proceeding with this contract.",
+          variant: "destructive",
+        });
       }
+      
+      setW9CheckCompleted(true);
     } catch (error) {
       console.error('Error in checkW9Requirement:', error);
       setW9Status('required');
+      setW9CheckCompleted(true);
     }
   };
 
@@ -413,6 +432,7 @@ export const useContractSigning = (contractId?: string) => {
     embeddedSignatures,
     w9Status,
     w9Form,
-    generateCombinedPDF
+    generateCombinedPDF,
+    w9CheckCompleted
   };
 };

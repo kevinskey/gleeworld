@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, FileText } from "lucide-react";
@@ -26,7 +27,8 @@ const ContractSigning = () => {
     embeddedSignatures,
     w9Status,
     w9Form,
-    generateCombinedPDF
+    generateCombinedPDF,
+    w9CheckCompleted
   } = useContractSigning(contractId);
 
   const handleW9Complete = () => {
@@ -115,6 +117,7 @@ const ContractSigning = () => {
               onW9Complete={handleW9Complete}
               onDownloadCombinedPDF={handleDownloadCombinedPDF}
               canDownloadPDF={canDownloadPDF}
+              w9CheckCompleted={w9CheckCompleted}
             />
             
             <SignatureStatus signatureRecord={signatureRecord} />
