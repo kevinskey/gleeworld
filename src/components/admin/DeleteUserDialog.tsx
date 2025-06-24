@@ -37,7 +37,7 @@ export const DeleteUserDialog = ({ user, open, onOpenChange, onUserDeleted }: De
     try {
       console.log('Deleting user:', user.id);
 
-      const { error } = await supabase.functions.invoke('delete-user', {
+      const { data, error } = await supabase.functions.invoke('delete-user', {
         body: { userId: user.id }
       });
 
@@ -46,11 +46,11 @@ export const DeleteUserDialog = ({ user, open, onOpenChange, onUserDeleted }: De
         throw new Error(error.message || 'Failed to delete user');
       }
 
-      console.log('User deleted successfully');
+      console.log('User deleted successfully:', data);
 
       toast({
-        title: "Success",
-        description: "User and all associated data have been permanently deleted",
+        title: "Success", 
+        description: `User ${user.full_name || user.email} and all associated data have been permanently deleted`,
       });
 
       onUserDeleted();

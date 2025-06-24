@@ -56,6 +56,35 @@ serve(async (req) => {
 
     console.log('Deleting user:', userId);
 
+    // Create admin client to get user information before deletion
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+
+    // Get user information before deletion
+    const { data: userProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', userId)
+      .single();
+
+    if (profileError) {
+      console.error('Error fetching user profile:', profileError);
+    }
+
+    // Get user auth information
+    const { data: authUser, error: authUserError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    
+    if (authUserError) {
+      console.error('Error fetching auth user:', authUserError);
+    }
+
+    const userEmail = userProfile?.email || authUser.user?.email;
+    const userName = userProfile?.full_name || userEmail;
+
     // First delete all user data using our database function
     const { data: deleteResult, error: deleteError } = await supabase
       .rpc('delete_user_and_data', { target_user_id: userId });
@@ -70,14 +99,6 @@ serve(async (req) => {
         }
       );
     }
-
-    // Create admin client for auth.users deletion
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
 
     // Then delete from auth.users table
     const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
@@ -95,8 +116,29 @@ serve(async (req) => {
 
     console.log('User deleted successfully:', userId);
 
+    // Send notification email to the user if we have their email
+    if (userEmail) {
+      console.log('Sending deletion notification to:', userEmail);
+      
+      try {
+        // Here you could add email sending logic if needed
+        // For now, we'll just log that we would send an email
+        console.log(`Would send deletion notification to ${userName} (${userEmail})`);
+      } catch (emailError) {
+        console.error('Error sending notification email:', emailError);
+        // Don't fail the deletion if email fails
+      }
+    }
+
     return new Response(
-      JSON.stringify({ success: true, message: 'User deleted successfully' }),
+      JSON.stringify({ 
+        success: true, 
+        message: 'User deleted successfully',
+        deletedUser: {
+          email: userEmail,
+          name: userName
+        }
+      }),
       { 
         status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
