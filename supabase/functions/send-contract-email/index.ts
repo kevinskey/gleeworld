@@ -56,68 +56,74 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Generated signature URL:", signatureUrl);
 
-    // Generate signature fields summary for email - Fixed the logic
-    const signatureFieldsSummary = signatureFields && signatureFields.length > 0 ? `
-      <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0;">
-        <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 16px; font-weight: 600;">📝 Signature Fields Required:</h3>
-        <div style="background-color: #dbeafe; padding: 12px; border-radius: 6px; border-left: 4px solid #3b82f6; margin-bottom: 15px;">
-          <p style="margin: 0; color: #1e40af; font-size: 14px; font-weight: 500;">
-            📋 Total fields: <strong>${signatureFields.length}</strong> | Required: <strong>${signatureFields.filter(f => f.required).length}</strong>
-          </p>
-        </div>
-        <ul style="margin: 0; padding-left: 20px; color: #475569; list-style-type: disc;">
-          ${signatureFields.map(field => {
-            const getFieldIcon = (type: string) => {
-              switch(type) {
-                case 'signature': return '✍️';
-                case 'date': return '📅';
-                case 'text': return '📝';
-                case 'initials': return '👤';
-                case 'username': return '👥';
-                default: return '📄';
-              }
-            };
-            
-            const getFieldDescription = (type: string) => {
-              switch(type) {
-                case 'signature': return 'Digital signature required';
-                case 'date': return 'Date selection (auto-fillable)';
-                case 'text': return 'Text input required';
-                case 'initials': return 'Your initials required';
-                case 'username': return 'Full name required';
-                default: return 'Field completion required';
-              }
-            };
-            
-            return `
-            <li style="margin-bottom: 10px; line-height: 1.6;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 16px;">${getFieldIcon(field.type)}</span>
-                <strong style="color: #1e293b;">${field.label}</strong>
-                ${field.required ? '<span style="color: #dc2626; font-size: 12px; font-weight: bold; background-color: #fef2f2; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">REQUIRED</span>' : '<span style="color: #059669; font-size: 12px; background-color: #f0fdf4; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Optional</span>'}
-              </div>
-              <div style="margin-top: 4px; margin-left: 24px;">
-                <span style="color: #64748b; font-size: 13px;">${getFieldDescription(field.type)}</span>
-              </div>
-            </li>
-          `}).join('')}
-        </ul>
-        <div style="margin-top: 15px; padding: 12px; background-color: #fef3c7; border-radius: 6px; border-left: 4px solid #f59e0b;">
-          <p style="margin: 0; color: #92400e; font-size: 13px;">
-            <strong>⚠️ Important:</strong> You must complete all required signature fields to finalize the contract.
-          </p>
-        </div>
-      </div>
-    ` : `
-      <div style="background-color: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #fecaca;">
-        <p style="margin: 0; color: #dc2626; font-size: 14px;">
-          ⚠️ <strong>No signature fields found:</strong> This contract may require manual review for signing requirements.
-        </p>
-      </div>
-    `;
+    // Generate signature fields summary for email
+    let signatureFieldsSummary = "";
+    
+    if (signatureFields && signatureFields.length > 0) {
+      const getFieldIcon = (type: string) => {
+        switch(type) {
+          case 'signature': return '✍️';
+          case 'date': return '📅';
+          case 'text': return '📝';
+          case 'initials': return '👤';
+          case 'username': return '👥';
+          default: return '📄';
+        }
+      };
+      
+      const getFieldDescription = (type: string) => {
+        switch(type) {
+          case 'signature': return 'Digital signature required';
+          case 'date': return 'Date selection (auto-fillable)';
+          case 'text': return 'Text input required';
+          case 'initials': return 'Your initials required';
+          case 'username': return 'Full name required';
+          default: return 'Field completion required';
+        }
+      };
 
-    // Debug: Log the generated summary
-    console.log("Generated signature fields summary length:", signatureFieldsSummary.length);
+      const fieldsList = signatureFields.map(field => `
+        <li style="margin-bottom: 10px; line-height: 1.6;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 16px;">${getFieldIcon(field.type)}</span>
+            <strong style="color: #1e293b;">${field.label}</strong>
+            ${field.required ? '<span style="color: #dc2626; font-size: 12px; font-weight: bold; background-color: #fef2f2; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">REQUIRED</span>' : '<span style="color: #059669; font-size: 12px; background-color: #f0fdf4; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Optional</span>'}
+          </div>
+          <div style="margin-top: 4px; margin-left: 24px;">
+            <span style="color: #64748b; font-size: 13px;">${getFieldDescription(field.type)}</span>
+          </div>
+        </li>
+      `).join('');
+
+      signatureFieldsSummary = `
+        <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0;">
+          <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 16px; font-weight: 600;">📝 Signature Fields Required:</h3>
+          <div style="background-color: #dbeafe; padding: 12px; border-radius: 6px; border-left: 4px solid #3b82f6; margin-bottom: 15px;">
+            <p style="margin: 0; color: #1e40af; font-size: 14px; font-weight: 500;">
+              📋 Total fields: <strong>${signatureFields.length}</strong> | Required: <strong>${signatureFields.filter(f => f.required).length}</strong>
+            </p>
+          </div>
+          <ul style="margin: 0; padding-left: 20px; color: #475569; list-style-type: disc;">
+            ${fieldsList}
+          </ul>
+          <div style="margin-top: 15px; padding: 12px; background-color: #fef3c7; border-radius: 6px; border-left: 4px solid #f59e0b;">
+            <p style="margin: 0; color: #92400e; font-size: 13px;">
+              <strong>⚠️ Important:</strong> You must complete all required signature fields to finalize the contract.
+            </p>
+          </div>
+        </div>
+      `;
+    } else {
+      signatureFieldsSummary = `
+        <div style="background-color: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #fecaca;">
+          <p style="margin: 0; color: #dc2626; font-size: 14px;">
+            ⚠️ <strong>No signature fields found:</strong> This contract may require manual review for signing requirements.
+          </p>
+        </div>
+      `;
+    }
+
+    console.log("Generated signature fields summary");
 
     const emailResponse = await resend.emails.send({
       from: "ContractFlow <onboarding@resend.dev>",
