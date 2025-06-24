@@ -872,10 +872,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
-      delete_user_and_data: {
-        Args: { target_user_id: string }
-        Returns: boolean
-      }
       get_all_user_profiles: {
         Args: Record<PropertyKey, never>
         Returns: {

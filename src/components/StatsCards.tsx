@@ -14,27 +14,17 @@ export const StatsCards = ({ totalContracts, completedCount, pendingCount }: Sta
   const { getTotalW9Count } = useW9Forms();
 
   useEffect(() => {
-    let isMounted = true;
-    
     const fetchW9Count = async () => {
       try {
         const count = await getTotalW9Count();
-        if (isMounted) {
-          setW9Count(count);
-        }
+        setW9Count(count);
       } catch (error) {
         console.error('Error fetching W9 count:', error);
-        if (isMounted) {
-          setW9Count(0);
-        }
+        setW9Count(0);
       }
     };
 
     fetchW9Count();
-
-    return () => {
-      isMounted = false;
-    };
   }, [getTotalW9Count]);
 
   return (
