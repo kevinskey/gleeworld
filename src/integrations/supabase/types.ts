@@ -331,6 +331,7 @@ export type Database = {
       }
       contract_templates: {
         Row: {
+          contract_type: string | null
           created_at: string
           created_by: string | null
           header_image_url: string | null
@@ -341,6 +342,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          contract_type?: string | null
           created_at?: string
           created_by?: string | null
           header_image_url?: string | null
@@ -351,6 +353,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          contract_type?: string | null
           created_at?: string
           created_by?: string | null
           header_image_url?: string | null
@@ -870,6 +873,10 @@ export type Database = {
       }
       current_user_is_admin: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      delete_user_and_data: {
+        Args: { target_user_id: string }
         Returns: boolean
       }
       get_all_user_profiles: {

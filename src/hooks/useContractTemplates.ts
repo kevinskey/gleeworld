@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -73,6 +74,12 @@ export const useContractTemplates = () => {
       }
       
       console.log('User authenticated:', user.id);
+      console.log('Template data:', {
+        name: template.name,
+        contract_type: template.contract_type,
+        content_length: template.template_content.length,
+        has_image: !!template.header_image
+      });
 
       // Create the template with the authenticated user's ID
       const { data, error } = await supabase
@@ -80,7 +87,7 @@ export const useContractTemplates = () => {
         .insert([{
           name: template.name,
           template_content: template.template_content,
-          contract_type: template.contract_type,
+          contract_type: template.contract_type || 'other',
           created_by: user.id,
           is_active: true,
         }])
@@ -127,6 +134,11 @@ export const useContractTemplates = () => {
       setTemplates(prev => [updatedTemplate, ...prev]);
       
       console.log('Template creation completed successfully');
+      toast({
+        title: "Success",
+        description: "Template created successfully",
+      });
+      
       return updatedTemplate;
     } catch (error) {
       console.error('Error creating template:', error);
@@ -140,6 +152,8 @@ export const useContractTemplates = () => {
           errorMessage = "Permission denied. Please check your account permissions.";
         } else if (error.message.includes('network')) {
           errorMessage = "Network error. Please check your connection.";
+        } else {
+          errorMessage = `Failed to create template: ${error.message}`;
         }
       }
       
