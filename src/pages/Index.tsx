@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -123,9 +122,13 @@ const Index = () => {
                 </div>
               </div>
               
-              {/* Admin Tools Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Accounting Card */}
+              {/* Admin Panel - Full Width */}
+              <div className="w-full">
+                <AdminPanel />
+              </div>
+              
+              {/* Accounting Card - Separate */}
+              <div className="max-w-md">
                 <Card className="h-fit">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -148,11 +151,6 @@ const Index = () => {
                     </Button>
                   </CardContent>
                 </Card>
-                
-                {/* Admin Panel */}
-                <div className="h-fit">
-                  <AdminPanel />
-                </div>
               </div>
             </>
           )}

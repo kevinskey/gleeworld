@@ -16,7 +16,7 @@ export const AdminPanel = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="space-y-6">
+    <div className="w-full max-w-none space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Admin Panel</h2>
@@ -33,7 +33,7 @@ export const AdminPanel = () => {
 
       <AdminSummaryStats users={users} loading={loading} activityLogs={[]} />
 
-      <Tabs defaultValue="users" className="space-y-4">
+      <Tabs defaultValue="users" className="w-full space-y-4">
         <TabsList>
           <TabsTrigger value="users">User Management</TabsTrigger>
           <TabsTrigger value="import">Import Users</TabsTrigger>
@@ -41,20 +41,28 @@ export const AdminPanel = () => {
           <TabsTrigger value="settings">System Settings</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="users" className="space-y-4">
-          <UserManagement users={users} loading={loading} error={error} onRefetch={refetch} />
+        <TabsContent value="users" className="w-full">
+          <div className="max-w-none">
+            <UserManagement users={users} loading={loading} error={error} onRefetch={refetch} />
+          </div>
         </TabsContent>
 
-        <TabsContent value="import" className="space-y-4">
-          <UserImport />
+        <TabsContent value="import" className="w-full">
+          <div className="max-w-none">
+            <UserImport />
+          </div>
         </TabsContent>
 
-        <TabsContent value="activity" className="space-y-4">
-          <ActivityLogs />
+        <TabsContent value="activity" className="w-full">
+          <div className="max-w-none">
+            <ActivityLogs />
+          </div>
         </TabsContent>
 
-        <TabsContent value="settings" className="space-y-4">
-          <SystemSettings />
+        <TabsContent value="settings" className="w-full">
+          <div className="max-w-none">
+            <SystemSettings />
+          </div>
         </TabsContent>
       </Tabs>
     </div>
