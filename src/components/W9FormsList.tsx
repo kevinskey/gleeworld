@@ -10,7 +10,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 export const W9FormsList = () => {
-  const { forms, loading, error, downloadForm, deleteForm } = useW9Forms();
+  const { w9Forms, loading, error, downloadW9Form, deleteW9Form } = useW9Forms();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [deletingFormId, setDeletingFormId] = useState<string | null>(null);
@@ -18,16 +18,16 @@ export const W9FormsList = () => {
   // Debug logging to see what forms we have
   useEffect(() => {
     console.log('W9FormsList - Forms state updated:', {
-      formsCount: forms.length,
-      forms: forms,
+      formsCount: w9Forms.length,
+      forms: w9Forms,
       loading,
       error
     });
-  }, [forms, loading, error]);
+  }, [w9Forms, loading, error]);
 
-  const handleDownload = async (storagePath: string) => {
+  const handleDownload = async (form: any) => {
     try {
-      await downloadForm(storagePath);
+      await downloadW9Form(form);
     } catch (error) {
       console.error('Error downloading form:', error);
     }
@@ -37,7 +37,7 @@ export const W9FormsList = () => {
     try {
       setDeletingFormId(formId);
       console.log('W9FormsList - Starting delete for form:', formId);
-      await deleteForm(formId);
+      await deleteW9Form(formId);
       console.log('W9FormsList - Delete completed successfully');
       
       toast({
@@ -81,7 +81,7 @@ export const W9FormsList = () => {
     );
   }
 
-  console.log('W9FormsList - Rendering with forms:', forms.length);
+  console.log('W9FormsList - Rendering with forms:', w9Forms.length);
 
   return (
     <div className="space-y-6">
@@ -96,7 +96,7 @@ export const W9FormsList = () => {
         </Button>
       </div>
 
-      {forms.length === 0 ? (
+      {w9Forms.length === 0 ? (
         <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8">
@@ -112,7 +112,7 @@ export const W9FormsList = () => {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {forms.map((form) => (
+          {w9Forms.map((form) => (
             <Card key={form.id}>
               <CardHeader>
                 <div className="flex justify-between items-start">
@@ -140,7 +140,7 @@ export const W9FormsList = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleDownload(form.storage_path)}
+                      onClick={() => handleDownload(form)}
                     >
                       <Download className="h-4 w-4 mr-2" />
                       Download

@@ -1,6 +1,5 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useEffect, useState } from "react";
 import { useW9Forms } from "@/hooks/useW9Forms";
 
 interface StatsCardsProps {
@@ -10,22 +9,7 @@ interface StatsCardsProps {
 }
 
 export const StatsCards = ({ totalContracts, completedCount, pendingCount }: StatsCardsProps) => {
-  const [w9Count, setW9Count] = useState(0);
-  const { getTotalW9Count } = useW9Forms();
-
-  useEffect(() => {
-    const fetchW9Count = async () => {
-      try {
-        const count = await getTotalW9Count();
-        setW9Count(count);
-      } catch (error) {
-        console.error('Error fetching W9 count:', error);
-        setW9Count(0);
-      }
-    };
-
-    fetchW9Count();
-  }, [getTotalW9Count]);
+  const { w9Forms } = useW9Forms();
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -49,7 +33,7 @@ export const StatsCards = ({ totalContracts, completedCount, pendingCount }: Sta
       </Card>
       <Card className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white">
         <CardHeader className="pb-2">
-          <CardTitle className="text-2xl font-bold">{w9Count}</CardTitle>
+          <CardTitle className="text-2xl font-bold">{w9Forms.length}</CardTitle>
           <CardDescription className="text-yellow-100">W9 Forms</CardDescription>
         </CardHeader>
       </Card>
