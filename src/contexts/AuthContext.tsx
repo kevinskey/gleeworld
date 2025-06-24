@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { cleanupAuthState } from "@/utils/authCleanup";
 
 interface AuthContextType {
   user: User | null;
@@ -28,32 +29,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     let mounted = true;
 
-    // Initialize auth state
-    const initializeAuth = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error getting session:', error);
-        }
-        
-        if (mounted) {
-          console.log('Initial session check:', session?.user?.id || 'no user');
-          setSession(session);
-          setUser(session?.user ?? null);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Failed to initialize auth:', error);
-        if (mounted) {
-          setSession(null);
-          setUser(null);
-          setLoading(false);
-        }
-      }
-    };
-
-    // Set up auth state listener
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id || 'no user');
@@ -65,6 +41,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
     );
+
+    // THEN initialize auth state
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          // Clean up potentially corrupted auth state
+          cleanupAuthState();
+        }
+        
+        if (mounted) {
+          console.log('Initial session check:', session?.user?.id || 'no user');
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Failed to initialize auth:', error);
+        if (mounted) {
+          // Clean up on error and reset state
+          cleanupAuthState();
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+        }
+      }
+    };
 
     // Initialize on mount
     initializeAuth();
@@ -79,12 +84,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       console.log('Starting sign out process...');
       
+      // Clean up auth state first
+      cleanupAuthState();
+      
       // Clear local state immediately
       setUser(null);
       setSession(null);
       
-      // Sign out from Supabase
-      const { error } = await supabase.auth.signOut();
+      // Sign out from Supabase with global scope
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
       
       if (error) {
         console.error('Error signing out:', error);
@@ -93,11 +101,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       console.log('Sign out successful');
       
-      // Redirect to auth page
+      // Force page reload for clean state
       window.location.href = '/auth';
     } catch (error) {
       console.error('Sign out failed:', error);
       // Even if there's an error, clear local state and redirect
+      cleanupAuthState();
       setUser(null);
       setSession(null);
       window.location.href = '/auth';
