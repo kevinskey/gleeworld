@@ -120,7 +120,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Generated signature fields summary length:", signatureFieldsSummary.length);
 
     const emailResponse = await resend.emails.send({
-      from: "ContractFlow <noreply@kevinskey.com>",
+      from: "ContractFlow <noreply@contract.gleeworld.org>",
       to: [recipientEmail],
       subject: `Contract for Signature: ${contractTitle}`,
       html: `
