@@ -120,32 +120,36 @@ const Index = () => {
 
         {/* Main Content Grid */}
         <div className="space-y-8">
-          {/* Contracts and Forms Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <ContractsList 
-                contracts={contracts}
-                loading={loading}
-                error={error}
-                onViewContract={handleViewContract}
-                onDeleteContract={handleDeleteContract}
-                onUploadContract={handleUploadContract}
-                onRetry={forceRefresh}
-              />
-            </div>
-            
-            <div className="space-y-6">
-              <W9FormsList />
-            </div>
+          {/* Contracts Section */}
+          <div>
+            <ContractsList 
+              contracts={contracts}
+              loading={loading}
+              error={error}
+              onViewContract={handleViewContract}
+              onDeleteContract={handleDeleteContract}
+              onUploadContract={handleUploadContract}
+              onRetry={forceRefresh}
+            />
           </div>
 
           {/* Admin Only Sections */}
           {isAdmin && (
             <>
-              {/* Templates Section */}
-              <div className="bg-white rounded-lg border shadow-sm">
-                <div className="p-6">
-                  <ContractTemplates onUseTemplate={handleUseTemplate} />
+              {/* Templates and W9 Forms - 50/50 Split */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Contract Templates - Left Side */}
+                <div className="bg-white rounded-lg border shadow-sm">
+                  <div className="p-6">
+                    <ContractTemplates onUseTemplate={handleUseTemplate} />
+                  </div>
+                </div>
+                
+                {/* W9 Forms - Right Side */}
+                <div className="bg-white rounded-lg border shadow-sm">
+                  <div className="p-6">
+                    <W9FormsList />
+                  </div>
                 </div>
               </div>
               
@@ -180,6 +184,15 @@ const Index = () => {
                 </Card>
               </div>
             </>
+          )}
+
+          {/* Non-Admin Users - Show W9 Forms Only */}
+          {!isAdmin && (
+            <div className="bg-white rounded-lg border shadow-sm">
+              <div className="p-6">
+                <W9FormsList />
+              </div>
+            </div>
           )}
         </div>
 
