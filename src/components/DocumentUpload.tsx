@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Loader2, Eye } from "lucide-react";
+import { Send, Loader2, Eye, FileText, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useContracts } from "@/hooks/useContracts";
 import { useUsers } from "@/hooks/useUsers";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useContractTemplates } from "@/hooks/useContractTemplates";
 import { supabase } from "@/integrations/supabase/client";
 import { SignatureFieldEditor, SignatureField } from "./SignatureFieldEditor";
 import { UserSelectionSection } from "./upload/UserSelectionSection";
@@ -55,12 +56,15 @@ export const DocumentUpload = ({
   const [hasStipendField, setHasStipendField] = useState(false);
   const [creationMode, setCreationMode] = useState<'upload' | 'create' | 'template'>('create');
   const [templateApplied, setTemplateApplied] = useState(false);
+  const [showTemplateSelection, setShowTemplateSelection] = useState(true);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
 
   const { toast } = useToast();
   const { createContract } = useContracts();
   const { users, loading: usersLoading, refetch: refetchUsers } = useUsers();
   const { user } = useAuth();
   const { displayName } = useUserProfile(user);
+  const { templates, loading: templatesLoading } = useContractTemplates();
 
   // Apply template content when provided - only run once
   useEffect(() => {
@@ -107,6 +111,7 @@ export const DocumentUpload = ({
       ];
       setSignatureFields(defaultSignatureFields);
       setTemplateApplied(true);
+      setShowTemplateSelection(false);
       
       toast({
         title: "Template Applied",
@@ -188,9 +193,10 @@ export const DocumentUpload = ({
       setRecipientEmail(selectedUser.email);
       setRecipientName(selectedUser.full_name || selectedUser.email);
       
-      if (templateName) {
+      if (selectedTemplate?.name || templateName) {
         const recipientName = selectedUser.full_name || selectedUser.email;
-        const generatedTitle = `${recipientName} - ${templateName}`;
+        const templateNameToUse = selectedTemplate?.name || templateName;
+        const generatedTitle = `${recipientName} - ${templateNameToUse}`;
         setContractTitle(generatedTitle);
       }
       
@@ -324,6 +330,8 @@ export const DocumentUpload = ({
       setCreationMode('create');
       setShowPreview(false);
       setTemplateApplied(false);
+      setShowTemplateSelection(true);
+      setSelectedTemplate(null);
 
       if (onContractCreated) {
         onContractCreated();
@@ -432,6 +440,8 @@ export const DocumentUpload = ({
       setCreationMode('create');
       setShowPreview(false);
       setTemplateApplied(false);
+      setShowTemplateSelection(true);
+      setSelectedTemplate(null);
 
       if (onContractCreated) {
         onContractCreated();
@@ -448,6 +458,164 @@ export const DocumentUpload = ({
     }
   };
 
+  const handleTemplateSelect = (templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      setSelectedTemplate(template);
+      setOriginalTemplateContent(template.template_content);
+      setContractContent(template.template_content);
+      setContractTitle(template.name);
+      setCreationMode('template');
+      
+      if (template.contract_type) {
+        setContractType(template.contract_type);
+      }
+      
+      if (template.header_image_url) {
+        setHeaderImageUrl(template.header_image_url);
+      }
+      
+      if (template.template_content.includes('{{stipend}}')) {
+        setHasStipendField(true);
+      }
+      
+      const defaultSignatureFields: SignatureField[] = [
+        {
+          id: Date.now(),
+          label: "ARTIST Signature",
+          type: 'signature',
+          page: 1,
+          x: 100,
+          y: 400,
+          required: true
+        },
+        {
+          id: Date.now() + 1,
+          label: "AGENT Signature", 
+          type: 'signature',
+          page: 1,
+          x: 400,
+          y: 400,
+          required: true
+        }
+      ];
+      setSignatureFields(defaultSignatureFields);
+      setShowTemplateSelection(false);
+      
+      toast({
+        title: "Template Selected",
+        description: `Template "${template.name}" has been applied.`,
+      });
+    }
+  };
+
+  const handleStartBlank = () => {
+    setCreationMode('create');
+    setShowTemplateSelection(false);
+    
+    const defaultSignatureFields: SignatureField[] = [
+      {
+        id: Date.now(),
+        label: "Company Signature",
+        type: 'signature',
+        page: 1,
+        x: 100,
+        y: 400,
+        required: true
+      },
+      {
+        id: Date.now() + 1,
+        label: "Client Signature", 
+        type: 'signature',
+        page: 1,
+        x: 400,
+        y: 400,
+        required: true
+      }
+    ];
+    setSignatureFields(defaultSignatureFields);
+  };
+
+  // Show template selection screen first
+  if (showTemplateSelection && !templateContent) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Create New Contract</CardTitle>
+            <CardDescription>
+              Choose how you'd like to start creating your contract
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Start from Blank */}
+            <Card className="border-green-200 bg-green-50 cursor-pointer hover:bg-green-100 transition-colors" 
+                  onClick={handleStartBlank}>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <Plus className="h-8 w-8 text-green-600" />
+                  <div>
+                    <h3 className="font-semibold text-green-800">Start from Blank</h3>
+                    <p className="text-sm text-green-600">Create a contract from scratch</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Use Template */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-blue-600" />
+                <h3 className="font-semibold text-blue-800">Use Template</h3>
+              </div>
+              
+              {templatesLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                  <span className="ml-2">Loading templates...</span>
+                </div>
+              ) : templates.length === 0 ? (
+                <Card className="border-gray-200">
+                  <CardContent className="pt-6">
+                    <p className="text-gray-500 text-center">No templates available</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {templates.map((template) => (
+                    <Card key={template.id} 
+                          className="border-blue-200 bg-blue-50 cursor-pointer hover:bg-blue-100 transition-colors"
+                          onClick={() => handleTemplateSelect(template.id)}>
+                      <CardContent className="pt-4">
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-blue-800">{template.name}</h4>
+                          <p className="text-sm text-blue-600">
+                            {template.contract_type && (
+                              <span className="capitalize">{template.contract_type}</span>
+                            )}
+                          </p>
+                          {template.header_image_url && (
+                            <div className="w-full h-20 bg-gray-100 rounded overflow-hidden">
+                              <img 
+                                src={template.header_image_url} 
+                                alt="Template header" 
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const showUserSelection = creationMode === 'template' && !!contractContent;
   const showContractContent = creationMode === 'template' && !!contractContent;
   const showFileUpload = creationMode === 'upload';
@@ -458,16 +626,36 @@ export const DocumentUpload = ({
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Create Contract</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            Create Contract
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                setShowTemplateSelection(true);
+                setCreationMode('create');
+                setContractContent("");
+                setContractTitle("");
+                setSelectedTemplate(null);
+                setTemplateApplied(false);
+              }}
+            >
+              Change Method
+            </Button>
+          </CardTitle>
           <CardDescription>
-            Choose how you'd like to create your contract
+            {creationMode === 'template' && selectedTemplate 
+              ? `Using template: ${selectedTemplate.name}`
+              : creationMode === 'template' && templateName
+              ? `Using template: ${templateName}`
+              : "Creating a new contract"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <ContractCreationMode
             mode={creationMode}
             onModeChange={handleCreationModeChange}
-            hasTemplate={!!templateContent}
+            hasTemplate={!!templateContent || !!selectedTemplate}
           />
 
           <UserSelectionSection
