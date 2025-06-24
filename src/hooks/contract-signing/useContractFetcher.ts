@@ -38,7 +38,8 @@ export const useContractFetcher = (contractId: string | undefined) => {
 
       console.log('useContractFetcher - contracts_v2 query result:', {
         data: contractsV2Data,
-        error: contractsV2Error
+        error: contractsV2Error,
+        contractId: contractId
       });
 
       if (contractsV2Data) {
@@ -56,7 +57,8 @@ export const useContractFetcher = (contractId: string | undefined) => {
 
         console.log('useContractFetcher - contracts query result:', {
           data: contractsData,
-          error: contractsError2
+          error: contractsError2,
+          contractId: contractId
         });
 
         if (contractsData) {
@@ -69,6 +71,35 @@ export const useContractFetcher = (contractId: string | undefined) => {
         contractError = contractsV2Error;
       }
 
+      // Also try generated_contracts table as a fallback
+      if (!contractData) {
+        console.log('useContractFetcher - Trying generated_contracts table as fallback...');
+        const { data: generatedData, error: generatedError } = await supabase
+          .from('generated_contracts')
+          .select('*')
+          .eq('id', contractId)
+          .maybeSingle();
+
+        console.log('useContractFetcher - generated_contracts query result:', {
+          data: generatedData,
+          error: generatedError,
+          contractId: contractId
+        });
+
+        if (generatedData) {
+          // Transform generated_contracts data to match Contract interface
+          contractData = {
+            id: generatedData.id,
+            title: generatedData.event_name || 'Generated Contract',
+            content: generatedData.contract_content || '',
+            status: generatedData.status || 'draft',
+            created_at: generatedData.created_at,
+            updated_at: generatedData.updated_at
+          };
+          console.log('useContractFetcher - Found and transformed contract from generated_contracts');
+        }
+      }
+
       if (contractError && contractError.code !== 'PGRST116') {
         console.error('useContractFetcher - Error fetching contract:', contractError);
         throw contractError;
@@ -76,6 +107,7 @@ export const useContractFetcher = (contractId: string | undefined) => {
 
       if (!contractData) {
         console.log('useContractFetcher - Contract not found in any table with ID:', contractId);
+        console.log('useContractFetcher - Searched tables: contracts_v2, contracts, generated_contracts');
         setContract(null);
         setLoading(false);
         return;
@@ -131,6 +163,12 @@ export const useContractFetcher = (contractId: string | undefined) => {
       console.log('useContractFetcher - Contract fetch completed successfully');
     } catch (error) {
       console.error('useContractFetcher - Error in fetchContract:', error);
+      console.error('useContractFetcher - Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
       setContract(null);
       setSignatureRecord(null);
       setLoading(false);
