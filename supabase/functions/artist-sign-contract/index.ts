@@ -66,25 +66,55 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Failed to store interim PDF: ' + uploadError.message);
     }
 
-    // Create or update signature record
-    const { data: signatureRecord, error: signatureError } = await supabase
+    // Check if signature record already exists
+    const { data: existingSignature } = await supabase
       .from('contract_signatures_v2')
-      .upsert({
-        contract_id: contractId,
-        artist_signature_data: signatureData,
-        artist_signed_at: signedDateTime,
-        date_signed: signedDate,
-        signer_ip: clientIP,
-        pdf_storage_path: pdfFileName,
-        status: 'pending_admin_signature'
-      }, {
-        onConflict: 'contract_id'
-      })
-      .select()
-      .single();
+      .select('*')
+      .eq('contract_id', contractId)
+      .maybeSingle();
 
-    if (signatureError) {
-      throw new Error('Failed to store signature: ' + signatureError.message);
+    let signatureRecord;
+
+    if (existingSignature) {
+      // Update existing signature record
+      const { data: updatedRecord, error: updateError } = await supabase
+        .from('contract_signatures_v2')
+        .update({
+          artist_signature_data: signatureData,
+          artist_signed_at: signedDateTime,
+          date_signed: signedDate,
+          signer_ip: clientIP,
+          pdf_storage_path: pdfFileName,
+          status: 'pending_admin_signature'
+        })
+        .eq('id', existingSignature.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        throw new Error('Failed to update signature: ' + updateError.message);
+      }
+      signatureRecord = updatedRecord;
+    } else {
+      // Create new signature record
+      const { data: newRecord, error: insertError } = await supabase
+        .from('contract_signatures_v2')
+        .insert({
+          contract_id: contractId,
+          artist_signature_data: signatureData,
+          artist_signed_at: signedDateTime,
+          date_signed: signedDate,
+          signer_ip: clientIP,
+          pdf_storage_path: pdfFileName,
+          status: 'pending_admin_signature'
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        throw new Error('Failed to store signature: ' + insertError.message);
+      }
+      signatureRecord = newRecord;
     }
 
     // Update contract status
