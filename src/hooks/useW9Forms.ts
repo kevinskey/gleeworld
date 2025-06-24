@@ -91,6 +91,47 @@ export const useW9Forms = () => {
     }
   };
 
+  const deleteForm = async (formId: string) => {
+    try {
+      // First get the form to find the storage path
+      const { data: form, error: fetchError } = await supabase
+        .from('w9_forms')
+        .select('storage_path')
+        .eq('id', formId)
+        .single();
+
+      if (fetchError) {
+        throw fetchError;
+      }
+
+      // Delete from storage bucket
+      if (form?.storage_path) {
+        const { error: storageError } = await supabase.storage
+          .from('w9-forms')
+          .remove([form.storage_path]);
+
+        if (storageError) {
+          console.error('Error deleting from storage:', storageError);
+          // Continue with database deletion even if storage deletion fails
+        }
+      }
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('w9_forms')
+        .delete()
+        .eq('id', formId);
+
+      if (dbError) {
+        throw dbError;
+      }
+
+    } catch (err) {
+      console.error('Error deleting W9 form:', err);
+      throw new Error('Failed to delete W9 form');
+    }
+  };
+
   useEffect(() => {
     fetchForms();
   }, [user]);
@@ -101,6 +142,7 @@ export const useW9Forms = () => {
     error,
     refetch: fetchForms,
     downloadForm,
+    deleteForm,
     getTotalW9Count,
   };
 };
