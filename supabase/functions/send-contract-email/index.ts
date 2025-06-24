@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
@@ -55,11 +56,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Generated signature URL:", signatureUrl);
 
-    // Get verified domain from environment or use default for testing
+    // Get verified domain from environment variable
     const verifiedDomain = Deno.env.get("VERIFIED_EMAIL_DOMAIN");
+    console.log("Verified domain from env:", verifiedDomain);
+    
+    // Use verified domain or fall back to Resend's testing domain
     const fromEmail = verifiedDomain 
       ? `ContractFlow <noreply@${verifiedDomain}>`
-      : "ContractFlow <onboarding@resend.dev>"; // Resend's default testing domain
+      : "ContractFlow <onboarding@resend.dev>";
 
     console.log("Using from email:", fromEmail);
 
@@ -189,6 +193,27 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Email sent successfully:", emailResponse);
 
+    // Check if there's an error in the response
+    if (emailResponse.error) {
+      console.error("Resend API error:", emailResponse.error);
+      return new Response(
+        JSON.stringify({ 
+          error: "Email sending failed", 
+          details: emailResponse.error,
+          suggestion: !verifiedDomain 
+            ? "Please set VERIFIED_EMAIL_DOMAIN environment variable with your verified domain" 
+            : "Check that your domain is properly verified in Resend"
+        }),
+        {
+          status: 500,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          },
+        }
+      );
+    }
+
     return new Response(JSON.stringify({ success: true, emailId: emailResponse.data?.id }), {
       status: 200,
       headers: {
@@ -199,7 +224,10 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error sending contract email:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        suggestion: "Make sure RESEND_API_KEY and VERIFIED_EMAIL_DOMAIN environment variables are properly set"
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
