@@ -34,6 +34,15 @@ export const ContractTemplates = ({ onUseTemplate, onContractCreated }: Contract
     setIsEditOpen(true);
   };
 
+  const handleUseTemplateWrapper = (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => {
+    console.log('Template use triggered:', { templateName, templateContent });
+    if (onUseTemplate) {
+      onUseTemplate(templateContent, templateName, headerImageUrl, contractType);
+    } else {
+      console.warn('onUseTemplate callback not provided to ContractTemplates');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -68,7 +77,7 @@ export const ContractTemplates = ({ onUseTemplate, onContractCreated }: Contract
           onEdit={handleEditTemplate}
           onCopy={handleCopyTemplate}
           onDelete={handleDeleteTemplate}
-          onUseTemplate={onUseTemplate}
+          onUseTemplate={handleUseTemplateWrapper}
         />
       )}
 
@@ -84,7 +93,7 @@ export const ContractTemplates = ({ onUseTemplate, onContractCreated }: Contract
         onViewOpenChange={setIsViewOpen}
         onCreateTemplate={handleCreateTemplate}
         onUpdateTemplate={handleUpdateTemplate}
-        onUseTemplate={onUseTemplate}
+        onUseTemplate={handleUseTemplateWrapper}
       />
     </div>
   );

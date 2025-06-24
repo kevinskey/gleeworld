@@ -23,13 +23,16 @@ export const TemplateCard = ({
   onUseTemplate
 }: TemplateCardProps) => {
   const handleUseTemplate = () => {
+    console.log('Using template:', template.name);
     if (onUseTemplate) {
       onUseTemplate(
         template.template_content,
         template.name,
         template.header_image_url,
-        'other' // Default contract type, can be customized
+        template.contract_type || 'other'
       );
+    } else {
+      console.warn('onUseTemplate callback not provided');
     }
   };
 
@@ -74,10 +77,11 @@ export const TemplateCard = ({
           </div>
 
           <div className="flex flex-col space-y-2">
-            {/* Primary Use Template Button - Now opens upload form with template */}
+            {/* Primary Use Template Button */}
             <Button 
               onClick={handleUseTemplate}
               className="w-full"
+              disabled={!onUseTemplate}
             >
               <FileDown className="h-4 w-4 mr-2" />
               Use Template

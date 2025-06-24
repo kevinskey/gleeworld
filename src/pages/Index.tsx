@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,9 +19,17 @@ const Index = () => {
   const { userProfile } = useUserProfile(user);
   const { contracts, loading, error, forceRefresh, deleteContract } = useContracts();
   const [showUpload, setShowUpload] = useState(false);
+  const [templateData, setTemplateData] = useState<{
+    content: string;
+    name: string;
+    headerImageUrl?: string;
+    contractType?: string;
+  } | null>(null);
 
   const handleContractCreated = useCallback(() => {
     forceRefresh();
+    setShowUpload(false);
+    setTemplateData(null);
   }, [forceRefresh]);
 
   const handleViewContract = (contract: any) => {
@@ -32,6 +41,18 @@ const Index = () => {
   };
 
   const handleUploadContract = () => {
+    setTemplateData(null);
+    setShowUpload(true);
+  };
+
+  const handleUseTemplate = (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => {
+    console.log('Using template in Index:', { templateName, templateContent });
+    setTemplateData({
+      content: templateContent,
+      name: templateName,
+      headerImageUrl,
+      contractType
+    });
     setShowUpload(true);
   };
 
@@ -118,7 +139,7 @@ const Index = () => {
               {/* Templates Section */}
               <div className="bg-white rounded-lg border shadow-sm">
                 <div className="p-6">
-                  <ContractTemplates />
+                  <ContractTemplates onUseTemplate={handleUseTemplate} />
                 </div>
               </div>
               
@@ -162,16 +183,27 @@ const Index = () => {
             <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold">Upload New Contract</h3>
+                  <h3 className="text-lg font-semibold">
+                    {templateData ? `Create Contract from Template: ${templateData.name}` : 'Upload New Contract'}
+                  </h3>
                   <Button 
                     variant="outline" 
-                    onClick={() => setShowUpload(false)}
+                    onClick={() => {
+                      setShowUpload(false);
+                      setTemplateData(null);
+                    }}
                     className="ml-4"
                   >
                     Close
                   </Button>
                 </div>
-                <DocumentUpload onContractCreated={handleContractCreated} />
+                <DocumentUpload 
+                  onContractCreated={handleContractCreated}
+                  templateContent={templateData?.content}
+                  templateName={templateData?.name}
+                  headerImageUrl={templateData?.headerImageUrl}
+                  contractType={templateData?.contractType}
+                />
               </div>
             </div>
           </div>
