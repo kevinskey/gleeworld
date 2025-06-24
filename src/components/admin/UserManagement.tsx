@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, Search, Loader2, Edit, RotateCcw, AlertCircle, UserPlus } from "lucide-react";
+import { Users, Search, Loader2, Edit, RotateCcw, AlertCircle, UserPlus, Trash2 } from "lucide-react";
 import { User } from "@/hooks/useUsers";
 import { EditUserDialog } from "./EditUserDialog";
 import { ResetPasswordDialog } from "./ResetPasswordDialog";
 import { AddUserDialog } from "./AddUserDialog";
+import { DeleteUserDialog } from "./DeleteUserDialog";
 
 interface UserManagementProps {
   users: User[];
@@ -21,9 +22,11 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
   const [searchTerm, setSearchTerm] = useState("");
   const [editUser, setEditUser] = useState<User | null>(null);
   const [resetUser, setResetUser] = useState<User | null>(null);
+  const [deleteUser, setDeleteUser] = useState<User | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -56,6 +59,12 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
     setResetDialogOpen(true);
   };
 
+  const handleDelete = (user: User) => {
+    console.log('Opening delete dialog for user:', user.id);
+    setDeleteUser(user);
+    setDeleteDialogOpen(true);
+  };
+
   const handleUserUpdated = () => {
     console.log('User updated, refreshing list');
     if (onRefetch) {
@@ -76,6 +85,13 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
 
   const handleUserAdded = () => {
     console.log('User added, refreshing list');
+    if (onRefetch) {
+      onRefetch();
+    }
+  };
+
+  const handleUserDeleted = () => {
+    console.log('User deleted, refreshing list');
     if (onRefetch) {
       onRefetch();
     }
@@ -223,6 +239,15 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
                             <RotateCcw className="h-4 w-4 mr-1" />
                             Reset
                           </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleDelete(user)}
+                            className="hover:bg-red-50 text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Delete
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -251,6 +276,13 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
         open={addUserDialogOpen}
         onOpenChange={setAddUserDialogOpen}
         onUserAdded={handleUserAdded}
+      />
+
+      <DeleteUserDialog
+        user={deleteUser}
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onUserDeleted={handleUserDeleted}
       />
     </>
   );
