@@ -18,7 +18,7 @@ export const W9FormsList = () => {
   // Debug logging to see what forms we have
   useEffect(() => {
     console.log('W9FormsList - Forms state updated:', {
-      formsCount: w9Forms.length,
+      formsCount: w9Forms?.length || 0,
       forms: w9Forms,
       loading,
       error
@@ -81,7 +81,7 @@ export const W9FormsList = () => {
     );
   }
 
-  console.log('W9FormsList - Rendering with forms:', w9Forms.length);
+  console.log('W9FormsList - Rendering with forms:', w9Forms?.length || 0);
 
   return (
     <div className="space-y-6">
@@ -96,7 +96,7 @@ export const W9FormsList = () => {
         </Button>
       </div>
 
-      {w9Forms.length === 0 ? (
+      {!w9Forms || w9Forms.length === 0 ? (
         <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8">
