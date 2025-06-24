@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
@@ -55,6 +54,14 @@ const handler = async (req: Request): Promise<Response> => {
     const signatureUrl = `${origin}/contract-signing/${contractId}`;
 
     console.log("Generated signature URL:", signatureUrl);
+
+    // Get verified domain from environment or use default for testing
+    const verifiedDomain = Deno.env.get("VERIFIED_EMAIL_DOMAIN");
+    const fromEmail = verifiedDomain 
+      ? `ContractFlow <noreply@${verifiedDomain}>`
+      : "ContractFlow <onboarding@resend.dev>"; // Resend's default testing domain
+
+    console.log("Using from email:", fromEmail);
 
     // Generate signature fields summary for email
     let signatureFieldsSummary = "";
@@ -126,7 +133,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Generated signature fields summary");
 
     const emailResponse = await resend.emails.send({
-      from: "ContractFlow <onboarding@resend.dev>",
+      from: fromEmail,
       to: [recipientEmail],
       subject: `Contract for Signature: ${contractTitle}`,
       html: `
