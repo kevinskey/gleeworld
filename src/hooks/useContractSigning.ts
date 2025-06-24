@@ -1,418 +1,260 @@
-import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SignatureField {
-  id: number;
+  id: string;
   label: string;
-  type: 'signature' | 'date' | 'text' | 'initials' | 'username';
+  type: 'signature' | 'initials' | 'date' | 'text' | 'username';
+  required: boolean;
   page: number;
   x: number;
   y: number;
-  required: boolean;
+  width: number;
+  height: number;
+  font_size: number;
+  font?: string;
+  text_align?: 'left' | 'center' | 'right';
+  default_value?: string;
 }
 
 interface Contract {
   id: string;
   title: string;
   content: string;
-  status: string;
   created_at: string;
-}
-
-interface EmbeddedSignature {
-  fieldId: number;
-  signatureData: string;
-  dateSigned: string;
-  ipAddress?: string;
-  timestamp: string;
-  signerType?: 'artist' | 'admin';
+  header_image_url?: string;
+  email_message?: string;
+  recipient_email?: string;
+  recipient_name?: string;
 }
 
 interface SignatureRecord {
   id: string;
-  status: string;
-  artist_signature_data?: string;
-  admin_signature_data?: string;
-  artist_signed_at?: string;
-  admin_signed_at?: string;
-  date_signed?: string;
+  contract_id: string;
+  artist_id: string;
+  status: 'pending_artist_signature' | 'pending_admin_signature' | 'completed';
+  created_at: string;
+  updated_at: string;
+  signed_by_artist_at: string | null;
+  signed_by_admin_at: string | null;
+  embedded_signatures: any;
 }
 
-export const useContractSigning = (contractId?: string) => {
+interface W9Form {
+  id: string;
+  user_id: string;
+  storage_path: string;
+  submitted_at: string;
+  status: string;
+  form_data: any;
+  created_at: string;
+  updated_at: string;
+}
+
+export const useContractSigning = (contractId: string | undefined) => {
   const [contract, setContract] = useState<Contract | null>(null);
+  const [signatureFields, setSignatureFields] = useState<SignatureField[]>([]);
+  const [signatureRecord, setSignatureRecord] = useState<SignatureRecord | null>(null);
+  const [completedFields, setCompletedFields] = useState<{ [fieldId: string]: string }>({});
   const [loading, setLoading] = useState(true);
   const [signing, setSigning] = useState(false);
-  const [signatureFields, setSignatureFields] = useState<SignatureField[]>([]);
-  const [completedFields, setCompletedFields] = useState<Record<number, string>>({});
-  const [embeddedSignatures, setEmbeddedSignatures] = useState<EmbeddedSignature[]>([]);
-  const [w9Status, setW9Status] = useState<'required' | 'completed' | 'not_required'>('required');
-  const [w9Form, setW9Form] = useState<any>(null);
-  const { toast } = useToast();
+  const [embeddedSignatures, setEmbeddedSignatures] = useState<any>(null);
+  const [w9Status, setW9Status] = useState<'required' | 'completed' | 'not_required'>('not_required');
+  const [w9Form, setW9Form] = useState<W9Form | null>(null);
+  const { user } = useAuth();
 
-  // Default signature fields for the contract
-  const defaultSignatureFields: SignatureField[] = [
-    {
-      id: 1,
-      label: "Artist Signature",
-      type: "signature",
-      page: 1,
-      x: 50,
-      y: 100,
-      required: true
-    },
-    {
-      id: 2,
-      label: "Date Signed",
-      type: "date",
-      page: 1,
-      x: 50,
-      y: 60,
-      required: true
+  const fetchContract = useCallback(async () => {
+    if (!contractId) {
+      console.log('useContractSigning - No contract ID provided.');
+      setLoading(false);
+      return;
     }
-  ];
 
-  useEffect(() => {
-    if (contractId) {
-      fetchContractData();
-      checkW9Requirement();
-      setSignatureFields(defaultSignatureFields);
-    }
-  }, [contractId]);
-
-  // Set up real-time subscription to listen for contract updates
-  useEffect(() => {
-    if (!contractId) return;
-
-    const channel = supabase
-      .channel(`contract-${contractId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'contracts_v2',
-          filter: `id=eq.${contractId}`
-        },
-        (payload) => {
-          console.log('Contract updated via real-time:', payload);
-          const updatedContract = payload.new as Contract;
-          setContract(updatedContract);
-          
-          // Re-parse embedded signatures from updated content
-          const signatureMatch = updatedContract.content.match(/\[EMBEDDED_SIGNATURES\](.*?)\[\/EMBEDDED_SIGNATURES\]/s);
-          if (signatureMatch) {
-            try {
-              const signatures = JSON.parse(signatureMatch[1]);
-              setEmbeddedSignatures(signatures);
-              
-              // Update completed fields
-              const completed: Record<number, string> = {};
-              signatures.forEach((sig: EmbeddedSignature) => {
-                completed[sig.fieldId] = sig.signatureData;
-              });
-              setCompletedFields(completed);
-            } catch (e) {
-              console.error('Error parsing embedded signatures:', e);
-            }
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [contractId]);
-
-  const fetchContractData = async () => {
     try {
+      console.log('useContractSigning - Fetching contract:', contractId);
       setLoading(true);
-      
-      // Fetch contract details
+
       const { data: contractData, error: contractError } = await supabase
-        .from('contracts_v2')
+        .from('contracts')
         .select('*')
         .eq('id', contractId)
         .single();
 
       if (contractError) {
-        console.error('Error fetching contract:', contractError);
-        toast({
-          title: "Error",
-          description: "Failed to load contract",
-          variant: "destructive",
-        });
+        console.error('useContractSigning - Error fetching contract:', contractError);
+        throw contractError;
+      }
+
+      if (!contractData) {
+        console.log('useContractSigning - Contract not found:', contractId);
+        setContract(null);
+        setLoading(false);
         return;
       }
 
+      console.log('useContractSigning - Contract data:', contractData);
       setContract(contractData);
 
-      // Parse embedded signatures from contract content
-      const signatureMatch = contractData.content.match(/\[EMBEDDED_SIGNATURES\](.*?)\[\/EMBEDDED_SIGNATURES\]/s);
-      if (signatureMatch) {
-        try {
-          const signatures = JSON.parse(signatureMatch[1]);
-          setEmbeddedSignatures(signatures);
-          
-          // Populate completed fields based on embedded signatures
-          const completed: Record<number, string> = {};
-          signatures.forEach((sig: EmbeddedSignature) => {
-            completed[sig.fieldId] = sig.signatureData;
-          });
-          setCompletedFields(completed);
-        } catch (e) {
-          console.error('Error parsing embedded signatures:', e);
-        }
+      const { data: signatureFieldsData, error: signatureFieldsError } = await supabase
+        .from('signature_fields')
+        .select('*')
+        .eq('contract_id', contractId);
+
+      if (signatureFieldsError) {
+        console.error('useContractSigning - Error fetching signature fields:', signatureFieldsError);
+        throw signatureFieldsError;
       }
 
+      console.log('useContractSigning - Signature fields data:', signatureFieldsData);
+      setSignatureFields(signatureFieldsData || []);
+
+      // Fetch signature record
+      const { data: signatureRecordData, error: signatureRecordError } = await supabase
+        .from('signature_records')
+        .select('*')
+        .eq('contract_id', contractId)
+        .eq('artist_id', user?.id)
+        .single();
+
+      if (signatureRecordError) {
+        console.error('useContractSigning - Error fetching signature record:', signatureRecordError);
+        // Do not throw error, as signature record might not exist yet
+      }
+
+      console.log('useContractSigning - Signature record data:', signatureRecordData);
+      setSignatureRecord(signatureRecordData || null);
+
+      setLoading(false);
     } catch (error) {
-      console.error('Error in fetchContractData:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load contract data",
-        variant: "destructive",
-      });
-    } finally {
+      console.error('useContractSigning - Error in fetchContract:', error);
+      setContract(null);
+      setSignatureFields([]);
+      setSignatureRecord(null);
       setLoading(false);
     }
-  };
+  }, [contractId, user?.id]);
 
-  const checkW9Requirement = async () => {
+  const checkW9Status = useCallback(async () => {
+    if (!user?.id) {
+      console.log('useContractSigning - No user for W9 check, setting not_required');
+      setW9Status('not_required');
+      setW9Form(null);
+      return;
+    }
+
     try {
-      console.log('Checking W9 requirement...');
-      const { data: { user } } = await supabase.auth.getUser();
+      console.log('useContractSigning - Checking W9 status for user:', user.id);
       
-      if (!user) {
-        console.log('No authenticated user found');
-        setW9Status('required');
-        return;
-      }
-
-      console.log('Checking W9 forms for user:', user.id);
-
-      // Check if user has submitted a W9 form
+      // Force a fresh query by adding a timestamp to avoid any caching
       const { data: w9Forms, error } = await supabase
         .from('w9_forms')
         .select('*')
         .eq('user_id', user.id)
-        .eq('status', 'submitted')
         .order('created_at', { ascending: false })
         .limit(1);
 
       if (error) {
-        console.error('Error checking W9 status:', error);
-        setW9Status('required');
+        console.error('useContractSigning - Error checking W9 status:', error);
+        setW9Status('required'); // Default to required if there's an error
+        setW9Form(null);
         return;
       }
 
-      console.log('W9 forms found:', w9Forms);
+      console.log('useContractSigning - W9 forms query result:', w9Forms);
+      console.log('useContractSigning - W9 forms count:', w9Forms?.length || 0);
 
-      if (w9Forms && w9Forms.length > 0) {
-        console.log('W9 form found, setting status to completed');
+      if (!w9Forms || w9Forms.length === 0) {
+        console.log('useContractSigning - No W9 forms found, status: required');
+        setW9Status('required');
+        setW9Form(null);
+      } else {
+        console.log('useContractSigning - W9 form found, status: completed');
         setW9Status('completed');
         setW9Form(w9Forms[0]);
-      } else {
-        console.log('No W9 form found, setting status to required');
-        setW9Status('required');
       }
     } catch (error) {
-      console.error('Error in checkW9Requirement:', error);
+      console.error('useContractSigning - Unexpected error in W9 check:', error);
       setW9Status('required');
+      setW9Form(null);
     }
+  }, [user?.id]);
+
+  const handleFieldComplete = (fieldId: string, value: string) => {
+    console.log(`useContractSigning - Field ${fieldId} completed with value:`, value);
+    setCompletedFields(prev => ({ ...prev, [fieldId]: value }));
   };
 
-  const handleFieldComplete = async (fieldId: number, value: string) => {
-    console.log('Field completion attempted:', fieldId, 'W9 Status:', w9Status);
-    
-    // Check if W9 is required but not completed
-    if (w9Status === 'required') {
-      console.log('W9 required but not completed, blocking signature');
-      toast({
-        title: "W9 Form Required",
-        description: "Please complete your W9 form before signing the contract.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    console.log('W9 check passed, proceeding with field completion');
-
-    setCompletedFields(prev => ({
-      ...prev,
-      [fieldId]: value
-    }));
-
-    // If this is the signature field, embed it in the document
-    if (fieldId === 1) { // Signature field
-      const updatedFields = { ...completedFields, [fieldId]: value };
-      
-      // Auto-set date if not provided
-      if (!updatedFields[2]) {
-        const today = new Date().toLocaleDateString();
-        setCompletedFields(prev => ({ ...prev, 2: today }));
-        updatedFields[2] = today;
-      }
-      
-      await embedSignatureInDocument(value, updatedFields[2]);
-    }
+  const isAdminOrAgentField = (field: SignatureField) => {
+    const adminOrAgentFieldTypes = ['date', 'text', 'username'];
+    return adminOrAgentFieldTypes.includes(field.type);
   };
 
-  const embedSignatureInDocument = async (signatureData: string, dateSigned: string) => {
-    if (!contractId || !contract) return;
+  const isArtistDateField = (field: SignatureField) => {
+    return field.type === 'date' && !isAdminOrAgentField(field);
+  };
 
-    try {
-      setSigning(true);
-      console.log('Embedding signature in document for contract:', contractId);
-
-      // Create new embedded signature for artist
-      const newArtistSignature: EmbeddedSignature = {
-        fieldId: 1,
-        signatureData,
-        dateSigned,
-        timestamp: new Date().toISOString(),
-        ipAddress: 'unknown',
-        signerType: 'artist'
-      };
-
-      // Preserve existing admin signatures and only add/update artist signature
-      const existingAdminSignatures = embeddedSignatures.filter(sig => sig.signerType === 'admin');
-      
-      // Replace artist signatures with the new one, keep admin signatures unchanged
-      const updatedSignatures = [
-        ...existingAdminSignatures, // Keep all admin signatures
-        newArtistSignature // Add/replace artist signature
-      ];
-      
-      setEmbeddedSignatures(updatedSignatures);
-
-      // Embed signatures in contract content
-      let updatedContent = contract.content;
-      
-      // Remove existing embedded signatures section if it exists
-      updatedContent = updatedContent.replace(/\[EMBEDDED_SIGNATURES\].*?\[\/EMBEDDED_SIGNATURES\]/s, '');
-      
-      // Add new embedded signatures section
-      const signaturesSection = `\n\n[EMBEDDED_SIGNATURES]${JSON.stringify(updatedSignatures)}[/EMBEDDED_SIGNATURES]`;
-      updatedContent += signaturesSection;
-
-      // Determine the correct status based on admin signatures
-      const hasAdminSignature = existingAdminSignatures.length > 0;
-      const newStatus = hasAdminSignature ? 'completed' : 'pending_admin_signature';
-
-      console.log('Updating contract status to:', newStatus);
-
-      // Update contract status and content
-      const { error: updateError } = await supabase
-        .from('contracts_v2')
-        .update({ 
-          content: updatedContent,
-          status: newStatus,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', contractId);
-
-      if (updateError) {
-        console.error('Error updating contract with embedded signature:', updateError);
-        throw updateError;
-      }
-
-      console.log('Artist signature embedded successfully in document with status:', newStatus);
-
-      // Update local state immediately
-      setContract(prev => prev ? { ...prev, status: newStatus, content: updatedContent } : null);
-
-      toast({
-        title: "Success",
-        description: hasAdminSignature 
-          ? "Contract is now fully completed!" 
-          : "Your signature has been embedded in the contract document. Pending admin approval.",
-      });
-
-    } catch (error) {
-      console.error('Error embedding signature in document:', error);
-      toast({
-        title: "Error",
-        description: "Failed to embed signature. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setSigning(false);
-    }
+  const isContractSigned = () => {
+    return signatureRecord?.status === 'completed' && signatureRecord?.embedded_signatures;
   };
 
   const generateCombinedPDF = async () => {
-    if (!contract || !w9Form) return null;
+    if (!contractId || !user?.id) {
+      console.error('useContractSigning - Contract ID or User ID is missing');
+      return null;
+    }
 
     try {
-      const response = await supabase.functions.invoke('generate-combined-pdf', {
+      const { data, error } = await supabase.functions.invoke('generate-combined-pdf', {
         body: {
-          contractContent: contract.content,
-          contractTitle: contract.title,
-          w9FormData: w9Form.form_data,
-          embeddedSignatures
-        }
+          contractId: contractId,
+          userId: user.id,
+        },
       });
 
-      if (response.error) {
-        throw response.error;
+      if (error) {
+        console.error('useContractSigning - Error generating combined PDF:', error);
+        throw error;
       }
 
-      return response.data;
+      console.log('useContractSigning - Combined PDF generation successful:', data);
+      return data;
     } catch (error) {
-      console.error('Error generating combined PDF:', error);
+      console.error('useContractSigning - Failed to generate combined PDF:', error);
       throw error;
     }
   };
 
-  const createSignatureRecord = (): SignatureRecord | null => {
-    if (!contract) return null;
+  useEffect(() => {
+    if (contract && user) {
+      console.log('useContractSigning - Contract and user available, checking W9 status');
+      checkW9Status();
+    } else {
+      console.log('useContractSigning - No contract or user, resetting W9 status');
+      setW9Status('not_required');
+      setW9Form(null);
+    }
+  }, [contract, user, checkW9Status]);
 
-    const artistSignature = embeddedSignatures.find(sig => sig.fieldId === 1 && sig.signerType === 'artist');
-    const adminSignature = embeddedSignatures.find(sig => sig.signerType === 'admin');
-    
-    return {
-      id: contractId || 'mock-id',
-      status: contract.status,
-      artist_signature_data: artistSignature?.signatureData,
-      artist_signed_at: artistSignature?.timestamp,
-      date_signed: artistSignature?.dateSigned,
-      admin_signature_data: adminSignature?.signatureData,
-      admin_signed_at: adminSignature?.timestamp,
-    };
-  };
-
-  const isAdminOrAgentField = (field: SignatureField) => {
-    return field.label.toLowerCase().includes('admin') || 
-           field.label.toLowerCase().includes('agent') ||
-           field.label.toLowerCase().includes('manager');
-  };
-
-  const isArtistDateField = (field: SignatureField) => {
-    return field.type === 'date' && 
-           (field.label.toLowerCase().includes('artist') || 
-            field.label.toLowerCase().includes('date'));
-  };
-
-  const isContractSigned = () => {
-    return contract?.status === 'completed' || embeddedSignatures.length > 0;
-  };
+  useEffect(() => {
+    console.log('useContractSigning - Auth state changed, fetching contract and signature record.');
+    fetchContract();
+  }, [fetchContract]);
 
   return {
     contract,
-    signatureRecord: createSignatureRecord(),
+    signatureFields,
+    signatureRecord,
+    completedFields,
     loading,
     signing,
-    signatureFields,
-    completedFields,
+    embeddedSignatures,
     handleFieldComplete,
     isAdminOrAgentField,
     isArtistDateField,
     isContractSigned,
-    embeddedSignatures,
     w9Status,
     w9Form,
-    generateCombinedPDF
+    generateCombinedPDF,
   };
 };

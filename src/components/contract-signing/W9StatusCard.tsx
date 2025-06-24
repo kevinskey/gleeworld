@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, AlertCircle, FileText } from "lucide-react";
@@ -22,7 +21,17 @@ export const W9StatusCard = ({
 }: W9StatusCardProps) => {
   const { contractId } = useParams();
 
-  if (w9Status === 'not_required') return null;
+  // Add debug logging to see what props we're receiving
+  console.log('W9StatusCard - Props received:', {
+    w9Status,
+    w9Form: w9Form ? { id: w9Form.id, submitted_at: w9Form.submitted_at } : null,
+    canDownloadPDF
+  });
+
+  if (w9Status === 'not_required') {
+    console.log('W9StatusCard - W9 not required, not rendering card');
+    return null;
+  }
 
   const getStatusIcon = () => {
     switch (w9Status) {
