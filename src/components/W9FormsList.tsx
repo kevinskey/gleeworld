@@ -26,12 +26,17 @@ export const W9FormsList = () => {
   const handleDelete = async (formId: string) => {
     try {
       setDeletingFormId(formId);
+      console.log('Starting delete for form:', formId);
       await deleteForm(formId);
+      console.log('Delete completed, refreshing forms list');
+      
+      // Force refresh the forms list after successful deletion
+      await refetch();
+      
       toast({
         title: "W9 Form Deleted",
         description: "The W9 form has been permanently deleted.",
       });
-      refetch();
     } catch (error) {
       console.error('Error deleting form:', error);
       toast({
