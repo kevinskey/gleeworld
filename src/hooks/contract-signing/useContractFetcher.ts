@@ -100,6 +100,27 @@ export const useContractFetcher = (contractId: string | undefined) => {
         }
       }
 
+      // Let's also check all tables to see what contracts actually exist
+      console.log('useContractFetcher - DEBUG: Checking all contract tables for existing contracts...');
+      
+      const { data: allContractsV2 } = await supabase
+        .from('contracts_v2')
+        .select('id, title')
+        .limit(10);
+      console.log('useContractFetcher - DEBUG: Sample contracts_v2:', allContractsV2);
+
+      const { data: allContracts } = await supabase
+        .from('contracts')
+        .select('id, title')
+        .limit(10);
+      console.log('useContractFetcher - DEBUG: Sample contracts:', allContracts);
+
+      const { data: allGenerated } = await supabase
+        .from('generated_contracts')
+        .select('id, event_name')
+        .limit(10);
+      console.log('useContractFetcher - DEBUG: Sample generated_contracts:', allGenerated);
+
       if (contractError && contractError.code !== 'PGRST116') {
         console.error('useContractFetcher - Error fetching contract:', contractError);
         throw contractError;
