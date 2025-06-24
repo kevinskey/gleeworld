@@ -19,7 +19,7 @@ export const useContracts = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const channelRef = useRef<any>(null);
 
   const fetchContracts = async () => {
@@ -184,8 +184,21 @@ export const useContracts = () => {
   };
 
   useEffect(() => {
-    if (!user) return;
+    // Wait for auth to complete loading before making decisions
+    if (authLoading) {
+      console.log('Auth still loading, waiting...');
+      return;
+    }
 
+    if (!user) {
+      console.log('No authenticated user, clearing contracts');
+      setContracts([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    console.log('User authenticated, fetching contracts for:', user.id);
     fetchContracts();
 
     // Clean up any existing channel
@@ -244,7 +257,7 @@ export const useContracts = () => {
         channelRef.current = null;
       }
     };
-  }, [user]);
+  }, [user, authLoading]);
 
   // Add a method to force refresh contracts
   const forceRefresh = async () => {
@@ -254,7 +267,7 @@ export const useContracts = () => {
 
   return {
     contracts,
-    loading,
+    loading: authLoading || loading,
     error,
     createContract,
     deleteContract,
