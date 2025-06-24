@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
+import { ContractViewer } from "@/components/ContractViewer";
 import type { Contract } from "@/hooks/useContracts";
 
 interface ContractsListProps {
@@ -62,7 +62,14 @@ export const ContractsList = ({
   const [adminSignature, setAdminSignature] = useState<string>("");
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [contractToSign, setContractToSign] = useState<Contract | null>(null);
+  const [viewingContract, setViewingContract] = useState<Contract | null>(null);
+  const [showContractViewer, setShowContractViewer] = useState(false);
   const selectAllCheckboxRef = useRef<HTMLButtonElement>(null);
+
+  const handleViewContract = (contract: Contract) => {
+    setViewingContract(contract);
+    setShowContractViewer(true);
+  };
 
   const handleDeleteContract = async (contractId: string) => {
     if (confirm("Are you sure you want to delete this contract?")) {
@@ -435,7 +442,7 @@ export const ContractsList = ({
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => onViewContract(contract)}
+                        onClick={() => handleViewContract(contract)}
                         title="View Contract"
                       >
                         <Eye className="h-4 w-4" />
@@ -483,6 +490,13 @@ export const ContractsList = ({
           )}
         </CardContent>
       </Card>
+
+      {/* Contract Viewer Modal */}
+      <ContractViewer
+        contract={viewingContract}
+        open={showContractViewer}
+        onOpenChange={setShowContractViewer}
+      />
 
       {/* Admin Signature Modal */}
       {showSignatureModal && contractToSign && (
