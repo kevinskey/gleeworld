@@ -141,7 +141,7 @@ export const useW9Forms = () => {
         }
       }
 
-      // Immediately update the local state to remove the deleted form
+      // Update the local state to remove the deleted form
       console.log('useW9Forms - Updating local state to remove deleted form');
       setForms(currentForms => {
         const updatedForms = currentForms.filter(form => form.id !== formId);
@@ -149,12 +149,6 @@ export const useW9Forms = () => {
         console.log('useW9Forms - Forms count after deletion:', updatedForms.length);
         return updatedForms;
       });
-
-      // Also trigger a fresh fetch to ensure sync with database
-      console.log('useW9Forms - Triggering fresh fetch from database');
-      setTimeout(() => {
-        fetchForms();
-      }, 500);
 
       console.log('useW9Forms - Delete process completed successfully');
 
