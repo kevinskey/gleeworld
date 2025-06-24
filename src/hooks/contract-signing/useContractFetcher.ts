@@ -116,43 +116,73 @@ export const useContractFetcher = (contractId: string | undefined) => {
       console.log('useContractFetcher - Contract data found:', contractData);
       setContract(contractData);
 
-      // Check for signature record in contract_signatures table
+      // Check for signature record with enhanced logging
       if (user?.id) {
         console.log('useContractFetcher - Checking for signature record...');
         
-        const { data: signatureRecordData, error: signatureRecordError } = await supabase
-          .from('contract_signatures')
+        // Check both contract_signatures_v2 and contract_signatures tables
+        const { data: signaturesV2Data, error: signaturesV2Error } = await supabase
+          .from('contract_signatures_v2')
           .select('*')
           .eq('contract_id', contractId)
-          .eq('user_id', user.id)
           .maybeSingle();
 
-        console.log('useContractFetcher - Signature record query result:', {
-          data: signatureRecordData,
-          error: signatureRecordError
+        console.log('useContractFetcher - contract_signatures_v2 query result:', {
+          data: signaturesV2Data,
+          error: signaturesV2Error
         });
 
-        if (signatureRecordError && signatureRecordError.code !== 'PGRST116') {
-          console.error('useContractFetcher - Error fetching signature record:', signatureRecordError);
-        }
-
-        // Transform the contract_signatures data to match SignatureRecord interface
-        if (signatureRecordData) {
+        if (signaturesV2Data) {
+          // Transform the contract_signatures_v2 data to match SignatureRecord interface
           const transformedRecord: SignatureRecord = {
-            id: signatureRecordData.id,
-            contract_id: signatureRecordData.contract_id,
-            artist_id: signatureRecordData.user_id,
-            status: signatureRecordData.status as 'pending_artist_signature' | 'pending_admin_signature' | 'completed',
-            created_at: signatureRecordData.created_at,
-            updated_at: signatureRecordData.updated_at,
-            signed_by_artist_at: signatureRecordData.user_signed_at,
-            signed_by_admin_at: signatureRecordData.admin_signed_at,
+            id: signaturesV2Data.id,
+            contract_id: signaturesV2Data.contract_id,
+            artist_id: user.id,
+            status: signaturesV2Data.status as 'pending_artist_signature' | 'pending_admin_signature' | 'completed',
+            created_at: signaturesV2Data.created_at,
+            updated_at: signaturesV2Data.updated_at,
+            signed_by_artist_at: signaturesV2Data.artist_signed_at,
+            signed_by_admin_at: signaturesV2Data.admin_signed_at,
             embedded_signatures: null
           };
           setSignatureRecord(transformedRecord);
-          console.log('useContractFetcher - Signature record set:', transformedRecord);
+          console.log('useContractFetcher - Signature record from v2 table:', transformedRecord);
         } else {
-          setSignatureRecord(null);
+          // Also check original contract_signatures table
+          const { data: signaturesData, error: signaturesError } = await supabase
+            .from('contract_signatures')
+            .select('*')
+            .eq('contract_id', contractId)
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          console.log('useContractFetcher - contract_signatures query result:', {
+            data: signaturesData,
+            error: signaturesError
+          });
+
+          if (signaturesData) {
+            const transformedRecord: SignatureRecord = {
+              id: signaturesData.id,
+              contract_id: signaturesData.contract_id,
+              artist_id: signaturesData.user_id,
+              status: signaturesData.status as 'pending_artist_signature' | 'pending_admin_signature' | 'completed',
+              created_at: signaturesData.created_at,
+              updated_at: signaturesData.updated_at,
+              signed_by_artist_at: signaturesData.user_signed_at,
+              signed_by_admin_at: signaturesData.admin_signed_at,
+              embedded_signatures: null
+            };
+            setSignatureRecord(transformedRecord);
+            console.log('useContractFetcher - Signature record from original table:', transformedRecord);
+          } else {
+            setSignatureRecord(null);
+            console.log('useContractFetcher - No signature record found in either table');
+          }
+        }
+
+        if (signaturesV2Error && signaturesV2Error.code !== 'PGRST116') {
+          console.error('useContractFetcher - Error fetching signature record:', signaturesV2Error);
         }
       } else {
         console.log('useContractFetcher - No user ID, skipping signature record check');

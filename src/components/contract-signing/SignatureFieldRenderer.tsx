@@ -1,6 +1,8 @@
 
 import { SignatureCanvas } from "@/components/SignatureCanvas";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface SignatureField {
   id: number;
@@ -28,6 +30,8 @@ export const SignatureFieldRenderer = ({
   onFieldComplete 
 }: SignatureFieldRendererProps) => {
   const [currentSignature, setCurrentSignature] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   // Don't show signature fields if already signed
   if (signatureRecord?.status === 'pending_admin_signature' || signatureRecord?.status === 'completed') {
@@ -40,6 +44,72 @@ export const SignatureFieldRenderer = ({
   }
 
   const isCompleted = !!completedFields[field.id];
+  
+  const handleSignatureSubmit = async () => {
+    if (!currentSignature || currentSignature === 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==') {
+      console.log('No valid signature to submit');
+      toast({
+        title: "No Signature",
+        description: "Please provide a signature before submitting",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    console.log('Starting signature submission for field', field.id);
+
+    try {
+      // Complete the field locally first
+      onFieldComplete(field.id, currentSignature);
+      
+      // Get contract ID from URL
+      const pathParts = window.location.pathname.split('/');
+      const contractId = pathParts[pathParts.length - 1];
+      
+      if (!contractId || contractId === 'contract-signing') {
+        throw new Error('No contract ID found in URL');
+      }
+
+      console.log('Attempting to submit signature for contract:', contractId);
+
+      // Call the artist-sign-contract function
+      const { data, error } = await supabase.functions.invoke('artist-sign-contract', {
+        body: {
+          contractId: contractId,
+          signatureData: currentSignature,
+          dateSigned: new Date().toLocaleDateString()
+        }
+      });
+
+      if (error) {
+        console.error('Error submitting signature:', error);
+        throw error;
+      }
+
+      console.log('Signature submitted successfully:', data);
+      
+      toast({
+        title: "Signature Submitted!",
+        description: "Your signature has been successfully recorded.",
+      });
+
+      // Reload the page to show updated status
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+
+    } catch (error) {
+      console.error('Failed to submit signature:', error);
+      toast({
+        title: "Signature Failed",
+        description: error.message || "Failed to submit signature. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   
   if (field.type === 'signature') {
     return (
@@ -56,26 +126,26 @@ export const SignatureFieldRenderer = ({
                 console.log('Signature captured for field', field.id, signature ? 'with data' : 'cleared');
                 setCurrentSignature(signature);
               }}
-              disabled={false}
+              disabled={isSubmitting}
             />
-            <div className="flex justify-end">
+            <div className="flex justify-end space-x-2">
               <button
-                onClick={() => {
-                  if (currentSignature && currentSignature !== 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==') {
-                    console.log('Completing signature for field', field.id);
-                    onFieldComplete(field.id, currentSignature);
-                  } else {
-                    console.log('No valid signature to complete');
-                  }
-                }}
-                disabled={!currentSignature}
+                onClick={() => setCurrentSignature(null)}
+                disabled={isSubmitting || !currentSignature}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors disabled:opacity-50"
+              >
+                Clear
+              </button>
+              <button
+                onClick={handleSignatureSubmit}
+                disabled={!currentSignature || isSubmitting}
                 className={`px-4 py-2 rounded transition-colors ${
-                  currentSignature 
+                  currentSignature && !isSubmitting
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
-                Complete Signature
+                {isSubmitting ? 'Submitting...' : 'Submit Signature'}
               </button>
             </div>
           </div>
