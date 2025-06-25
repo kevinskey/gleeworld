@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Eye, User, Mail, FileText, Signature, Image } from "lucide-react";
-import { SignatureField } from "../SignatureFieldEditor";
+import type { SignatureField } from "@/types/signatureField";
 
 interface ContractPreviewDialogProps {
   open: boolean;
