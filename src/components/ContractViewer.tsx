@@ -2,6 +2,8 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ContractViewerContent } from "./ContractViewerContent";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Contract {
   id: string;
@@ -41,29 +43,75 @@ const getStatusText = (status: string) => {
 };
 
 export const ContractViewer = ({ contract, open, onOpenChange }: ContractViewerProps) => {
-  if (!contract) return null;
+  const [enhancedContract, setEnhancedContract] = useState<Contract | null>(null);
+
+  useEffect(() => {
+    const fetchSignatureData = async () => {
+      if (!contract || !open) {
+        setEnhancedContract(contract);
+        return;
+      }
+
+      // If contract is completed, try to fetch embedded signatures from signature record
+      if (contract.status === 'completed') {
+        try {
+          const { data: signatureRecord, error } = await supabase
+            .from('contract_signatures_v2')
+            .select('embedded_signatures')
+            .eq('contract_id', contract.id)
+            .eq('status', 'completed')
+            .maybeSingle();
+
+          if (!error && signatureRecord?.embedded_signatures) {
+            // Check if contract content already has embedded signatures
+            const hasEmbeddedSignatures = contract.content.includes('[EMBEDDED_SIGNATURES]');
+            
+            if (!hasEmbeddedSignatures) {
+              // Add embedded signatures to contract content for display
+              const signaturesSection = `\n\n[EMBEDDED_SIGNATURES]${JSON.stringify(signatureRecord.embedded_signatures)}[/EMBEDDED_SIGNATURES]`;
+              const enhancedContent = contract.content + signaturesSection;
+              
+              setEnhancedContract({
+                ...contract,
+                content: enhancedContent
+              });
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching signature data for contract viewer:', error);
+        }
+      }
+
+      setEnhancedContract(contract);
+    };
+
+    fetchSignatureData();
+  }, [contract, open]);
+
+  if (!enhancedContract) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl">{contract.title}</DialogTitle>
-            <Badge className={getStatusColor(contract.status)}>
-              {getStatusText(contract.status)}
+            <DialogTitle className="text-xl">{enhancedContract.title}</DialogTitle>
+            <Badge className={getStatusColor(enhancedContract.status)}>
+              {getStatusText(enhancedContract.status)}
             </Badge>
           </div>
           <DialogDescription>
-            Created: {new Date(contract.created_at).toLocaleDateString()}
-            {contract.updated_at && contract.updated_at !== contract.created_at && (
+            Created: {new Date(enhancedContract.created_at).toLocaleDateString()}
+            {enhancedContract.updated_at && enhancedContract.updated_at !== enhancedContract.created_at && (
               <span className="ml-4">
-                • Updated: {new Date(contract.updated_at).toLocaleDateString()}
+                • Updated: {new Date(enhancedContract.updated_at).toLocaleDateString()}
               </span>
             )}
           </DialogDescription>
         </DialogHeader>
         
-        <ContractViewerContent contract={contract} />
+        <ContractViewerContent contract={enhancedContract} />
       </DialogContent>
     </Dialog>
   );

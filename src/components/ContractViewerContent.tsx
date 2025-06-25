@@ -8,6 +8,7 @@ interface EmbeddedSignature {
   ipAddress?: string;
   timestamp: string;
   signerType?: 'artist' | 'admin';
+  signerName?: string;
 }
 
 interface Contract {
@@ -26,7 +27,7 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
   const processContractContent = () => {
     const content = contract?.content || '';
     
-    // Extract embedded signatures
+    // Extract embedded signatures from contract content
     let embeddedSignatures: EmbeddedSignature[] = [];
     const signatureMatch = content.match(/\[EMBEDDED_SIGNATURES\](.*?)\[\/EMBEDDED_SIGNATURES\]/s);
     if (signatureMatch) {
@@ -35,6 +36,12 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
       } catch (e) {
         console.error('Error parsing embedded signatures in viewer:', e);
       }
+    }
+    
+    // If no embedded signatures in content, check if we need to fetch from signature record
+    if (embeddedSignatures.length === 0 && contract.status === 'completed') {
+      // This will be handled by fetching signature record data in the parent component
+      console.log('No embedded signatures found in content for completed contract');
     }
     
     // Remove embedded signatures section from display and clean up signature fields text
@@ -50,7 +57,50 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
     const artistSignature = embeddedSignatures.find(sig => sig.signerType === 'artist');
     const adminSignature = embeddedSignatures.find(sig => sig.signerType === 'admin');
     
+    console.log('ContractViewerContent - Processing signatures:', {
+      totalSignatures: embeddedSignatures.length,
+      artistSignature: !!artistSignature,
+      adminSignature: !!adminSignature
+    });
+    
     lines.forEach((line, index) => {
+      // Check if this line contains "Printed Name: Dr. Kevin P. Johnson"
+      if (line.includes('Printed Name:') && line.includes('Dr. Kevin P. Johnson')) {
+        // Add admin signature BEFORE this line
+        if (adminSignature) {
+          processedLines.push(
+            <div key={`embedded-admin-signature-${adminSignature.fieldId}`} className="mb-4">
+              <EmbeddedSignatureDisplay signature={adminSignature} />
+            </div>
+          );
+        }
+        
+        // Add the printed name line
+        processedLines.push(line);
+        
+        // Check if the next line contains "Title:" and align date with it
+        if (index + 1 < lines.length && lines[index + 1].includes('Title:')) {
+          const titleLine = lines[index + 1];
+          processedLines.push(titleLine);
+          
+          // Skip the title line in the main loop
+          lines[index + 1] = '';
+          
+          // Add date execution line aligned with title
+          if (index + 2 < lines.length && lines[index + 2].includes('Date Executed:')) {
+            processedLines.push(lines[index + 2]);
+            // Skip this line in the main loop
+            lines[index + 2] = '';
+          }
+        }
+        return;
+      }
+      
+      // Skip empty lines that we've already processed
+      if (line === '') {
+        return;
+      }
+      
       processedLines.push(line);
       
       // Add artist signature after signature-related lines
@@ -77,10 +127,12 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
       }
     });
     
-    // Add admin signature at the end if it exists
-    if (adminSignature) {
+    // If admin signature exists but wasn't placed above, add it at the end
+    if (adminSignature && !processedLines.some(line => 
+      typeof line === 'object' && line.key && line.key.includes('admin-signature')
+    )) {
       processedLines.push(
-        <div key={`embedded-admin-signature-${adminSignature.fieldId}`}>
+        <div key={`embedded-admin-signature-fallback-${adminSignature.fieldId}`} className="mt-6">
           <EmbeddedSignatureDisplay signature={adminSignature} />
         </div>
       );
