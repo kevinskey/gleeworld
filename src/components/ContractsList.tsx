@@ -99,6 +99,9 @@ export const ContractsList = ({
 
   const handleOpenSendDialog = (contract: Contract, isResend: boolean = false) => {
     console.log('Opening send dialog for contract:', contract.id, 'isResend:', isResend);
+    console.log('Current lastRecipient before opening:', lastRecipient);
+    console.log('lastRecipientLoading:', lastRecipientLoading);
+    
     setSendDialogContract(contract);
     setIsResendMode(isResend);
   };
@@ -111,6 +114,9 @@ export const ContractsList = ({
   const handleContractSent = () => {
     reloadSendHistory();
   };
+
+  // Debug the lastRecipient data when it changes
+  console.log('ContractsList render - lastRecipient:', lastRecipient, 'loading:', lastRecipientLoading);
 
   return (
     <>
@@ -170,9 +176,10 @@ export const ContractsList = ({
           isOpen={!!sendDialogContract}
           onClose={handleSendDialogClose}
           onSent={handleContractSent}
-          initialRecipientEmail={isResendMode && lastRecipient ? lastRecipient.recipientEmail : ""}
-          initialRecipientName={isResendMode && lastRecipient ? lastRecipient.recipientName : ""}
+          initialRecipientEmail={isResendMode && lastRecipient && !lastRecipientLoading ? lastRecipient.recipientEmail : ""}
+          initialRecipientName={isResendMode && lastRecipient && !lastRecipientLoading ? lastRecipient.recipientName : ""}
           isResend={isResendMode}
+          lastRecipientLoading={lastRecipientLoading}
         />
       )}
 

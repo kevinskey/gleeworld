@@ -14,14 +14,15 @@ export const useLastRecipient = (contractId: string | null) => {
   useEffect(() => {
     if (!contractId) {
       setLastRecipient(null);
+      setLoading(false);
       return;
     }
 
     const fetchLastRecipient = async () => {
       setLoading(true);
+      console.log('useLastRecipient: Starting fetch for contract:', contractId);
+      
       try {
-        console.log('Fetching last recipient for contract:', contractId);
-        
         const { data, error } = await supabase
           .from('contract_recipients_v2')
           .select('recipient_email, recipient_name')
@@ -31,32 +32,44 @@ export const useLastRecipient = (contractId: string | null) => {
           .maybeSingle();
 
         if (error) {
-          console.error('Error fetching last recipient:', error);
+          console.error('useLastRecipient: Error fetching last recipient:', error);
           setLastRecipient(null);
           return;
         }
 
-        console.log('Last recipient data:', data);
+        console.log('useLastRecipient: Query result:', data);
 
         if (data) {
-          setLastRecipient({
+          const recipient = {
             recipientEmail: data.recipient_email || '',
             recipientName: data.recipient_name || ''
-          });
+          };
+          console.log('useLastRecipient: Setting recipient:', recipient);
+          setLastRecipient(recipient);
         } else {
-          console.log('No previous recipient found for contract:', contractId);
+          console.log('useLastRecipient: No previous recipient found for contract:', contractId);
           setLastRecipient(null);
         }
       } catch (error) {
-        console.error('Error fetching last recipient:', error);
+        console.error('useLastRecipient: Catch block error:', error);
         setLastRecipient(null);
       } finally {
+        console.log('useLastRecipient: Fetch complete for contract:', contractId);
         setLoading(false);
       }
     };
 
     fetchLastRecipient();
   }, [contractId]);
+
+  // Debug log whenever values change
+  useEffect(() => {
+    console.log('useLastRecipient: State changed:', {
+      contractId,
+      lastRecipient,
+      loading
+    });
+  }, [contractId, lastRecipient, loading]);
 
   return { lastRecipient, loading };
 };

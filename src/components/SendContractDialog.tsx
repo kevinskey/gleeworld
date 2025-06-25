@@ -24,6 +24,7 @@ interface SendContractDialogProps {
   initialRecipientEmail?: string;
   initialRecipientName?: string;
   isResend?: boolean;
+  lastRecipientLoading?: boolean;
 }
 
 export const SendContractDialog = ({ 
@@ -33,7 +34,8 @@ export const SendContractDialog = ({
   onSent,
   initialRecipientEmail = "",
   initialRecipientName = "",
-  isResend = false
+  isResend = false,
+  lastRecipientLoading = false
 }: SendContractDialogProps) => {
   const [recipientEmail, setRecipientEmail] = useState("");
   const [recipientName, setRecipientName] = useState("");
@@ -48,16 +50,22 @@ export const SendContractDialog = ({
       isOpen,
       initialRecipientEmail,
       initialRecipientName,
-      isResend
+      isResend,
+      lastRecipientLoading
     });
     
-    if (isOpen) {
+    if (isOpen && !lastRecipientLoading) {
+      console.log('Setting recipient fields:', {
+        email: initialRecipientEmail || "",
+        name: initialRecipientName || ""
+      });
+      
       setRecipientEmail(initialRecipientEmail || "");
       setRecipientName(initialRecipientName || "");
       setCustomMessage("");
       setAutoEnrolled(false);
     }
-  }, [isOpen, initialRecipientEmail, initialRecipientName, isResend]);
+  }, [isOpen, initialRecipientEmail, initialRecipientName, isResend, lastRecipientLoading]);
 
   const handleSend = async () => {
     if (!contract || !recipientEmail) {
@@ -173,7 +181,15 @@ export const SendContractDialog = ({
               </div>
             )}
 
-            {isResend && (
+            {isResend && lastRecipientLoading && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  🔄 Loading last recipient information...
+                </p>
+              </div>
+            )}
+
+            {isResend && !lastRecipientLoading && (
               <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                 <p className="text-sm text-orange-800">
                   📧 Resending contract - fields auto-populated from last recipient
@@ -191,6 +207,7 @@ export const SendContractDialog = ({
                 placeholder="Enter recipient's email address"
                 required
                 autoComplete="off"
+                disabled={lastRecipientLoading}
               />
             </div>
 
@@ -203,6 +220,7 @@ export const SendContractDialog = ({
                 onChange={(e) => setRecipientName(e.target.value)}
                 placeholder="Enter recipient's full name (optional)"
                 autoComplete="off"
+                disabled={lastRecipientLoading}
               />
             </div>
 
@@ -229,7 +247,10 @@ export const SendContractDialog = ({
               <Button variant="outline" onClick={handleClose} disabled={sending}>
                 Cancel
               </Button>
-              <Button onClick={handleSend} disabled={sending || !recipientEmail}>
+              <Button 
+                onClick={handleSend} 
+                disabled={sending || !recipientEmail || lastRecipientLoading}
+              >
                 {sending ? (isResend ? "Resending..." : "Sending...") : (isResend ? "Resend Contract" : "Send Contract")}
               </Button>
             </div>
