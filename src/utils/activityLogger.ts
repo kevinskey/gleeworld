@@ -14,40 +14,43 @@ export const logActivity = async ({
   resourceId,
   details = {}
 }: LogActivityParams) => {
-  try {
-    // Check if we have a session first
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError) {
-      console.warn('Session error when trying to log activity:', sessionError);
-      return;
-    }
-    
-    if (!session?.user) {
-      console.warn('No authenticated user found for activity logging');
-      return;
-    }
+  // Don't block the main thread or cause errors - run in background
+  setTimeout(async () => {
+    try {
+      // Quick session check without causing auth state changes
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.warn('Session error when trying to log activity:', sessionError);
+        return;
+      }
+      
+      if (!session?.user) {
+        // Don't log if no user - this is normal and not an error
+        return;
+      }
 
-    // Get client IP and user agent (simplified for demo)
-    const userAgent = navigator.userAgent;
-    
-    const { error } = await supabase.rpc('log_activity', {
-      p_user_id: session.user.id,
-      p_action_type: actionType,
-      p_resource_type: resourceType,
-      p_resource_id: resourceId || null,
-      p_details: details,
-      p_ip_address: null, // Would need server-side implementation for real IP
-      p_user_agent: userAgent
-    });
+      // Get client IP and user agent (simplified for demo)
+      const userAgent = navigator.userAgent;
+      
+      const { error } = await supabase.rpc('log_activity', {
+        p_user_id: session.user.id,
+        p_action_type: actionType,
+        p_resource_type: resourceType,
+        p_resource_id: resourceId || null,
+        p_details: details,
+        p_ip_address: null, // Would need server-side implementation for real IP
+        p_user_agent: userAgent
+      });
 
-    if (error) {
+      if (error) {
+        console.warn('Failed to log activity:', error);
+      }
+    } catch (error) {
       console.warn('Failed to log activity:', error);
+      // Don't throw error to avoid breaking main functionality
     }
-  } catch (error) {
-    console.warn('Failed to log activity:', error);
-    // Don't throw error to avoid breaking main functionality
-  }
+  }, 0);
 };
 
 // Common activity types
