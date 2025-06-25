@@ -173,10 +173,27 @@ const handler = async (req: Request): Promise<Response> => {
       console.log("✅ Recipient record stored successfully");
     }
 
-    // Get the contract signing URL
-    const baseUrl = Deno.env.get("SUPABASE_URL")?.replace('supabase.co', 'lovable.app') || 
-                   req.headers.get('origin') || 
-                   'https://your-app.lovable.app';
+    // Get the contract signing URL - Use the origin from request headers for published domain
+    const requestOrigin = req.headers.get('origin');
+    const refererHeader = req.headers.get('referer');
+    
+    // Determine the correct base URL for the contract signing link
+    let baseUrl;
+    if (requestOrigin && !requestOrigin.includes('lovable.app')) {
+      // Use the custom domain if available
+      baseUrl = requestOrigin;
+    } else if (refererHeader && !refererHeader.includes('lovable.app')) {
+      // Extract domain from referer if it's a custom domain
+      try {
+        const refererUrl = new URL(refererHeader);
+        baseUrl = `${refererUrl.protocol}//${refererUrl.host}`;
+      } catch {
+        baseUrl = 'https://contract.gleeworld.org';
+      }
+    } else {
+      // Fallback to your published domain
+      baseUrl = 'https://contract.gleeworld.org';
+    }
     
     const contractUrl = `${baseUrl}/contract-signing/${contractId}`;
     console.log("Contract signing URL:", contractUrl);
