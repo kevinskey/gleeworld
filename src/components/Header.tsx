@@ -1,14 +1,15 @@
 
 import { Button } from "@/components/ui/button";
-import { LogOut, Plus } from "lucide-react";
+import { LogOut, Plus, RotateCcw } from "lucide-react";
 
 interface HeaderProps {
   displayName: string;
   onSignOut: () => void;
   onNewContract: () => void;
+  onResetAuth?: () => void;
 }
 
-export const Header = ({ displayName, onSignOut, onNewContract }: HeaderProps) => {
+export const Header = ({ displayName, onSignOut, onNewContract, onResetAuth }: HeaderProps) => {
   return (
     <header className="bg-white shadow-sm border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -26,6 +27,17 @@ export const Header = ({ displayName, onSignOut, onNewContract }: HeaderProps) =
               <Plus className="h-4 w-4 mr-2" />
               New Contract
             </Button>
+            
+            {onResetAuth && (
+              <Button 
+                onClick={onResetAuth}
+                variant="outline"
+                className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Reset Auth
+              </Button>
+            )}
             
             <Button 
               onClick={onSignOut} 

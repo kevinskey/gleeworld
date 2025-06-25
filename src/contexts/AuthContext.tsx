@@ -2,13 +2,14 @@
 import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { cleanupAuthState } from "@/utils/authCleanup";
+import { cleanupAuthState, resetAuthState } from "@/utils/authCleanup";
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  resetAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,6 +44,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (error) {
           console.error('Error getting session:', error);
+          // Clear corrupted state and redirect to auth
+          await resetAuthState();
+          return;
         }
         
         if (mountedRef.current) {
@@ -129,11 +133,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const resetAuth = async () => {
+    console.log('Resetting auth from context...');
+    setLoading(true);
+    setUser(null);
+    setSession(null);
+    await resetAuthState();
+  };
+
   const value = {
     user,
     session,
     loading,
     signOut,
+    resetAuth,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
