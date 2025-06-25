@@ -19,15 +19,68 @@ export const useAccountingData = () => {
   const [contractCount, setContractCount] = useState(0);
   const { toast } = useToast();
 
+  const extractStipendFromContent = (content: string): number => {
+    console.log('Extracting stipend from content:', content.substring(0, 200) + '...');
+    
+    // Multiple patterns to match different stipend formats
+    const stipendPatterns = [
+      /\$(\d+(?:,\d{3})*(?:\.\d{2})?)/g, // $1,000.00 or $500
+      /stipend[:\s]*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)/i, // stipend: $500 or stipend 500
+      /amount[:\s]*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)/i, // amount: $500
+      /payment[:\s]*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)/i, // payment: $500
+      /compensation[:\s]*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)/i // compensation: $500
+    ];
+
+    const amounts: number[] = [];
+    
+    for (const pattern of stipendPatterns) {
+      let match;
+      while ((match = pattern.exec(content)) !== null) {
+        const amount = parseFloat(match[1].replace(/,/g, ''));
+        if (amount > 0 && amount <= 100000) { // Reasonable stipend range
+          amounts.push(amount);
+        }
+      }
+    }
+
+    // Return the largest reasonable amount found
+    const stipend = amounts.length > 0 ? Math.max(...amounts) : 0;
+    console.log('Extracted stipend amount:', stipend);
+    return stipend;
+  };
+
+  const extractNameFromTitle = (title: string): string => {
+    // Try to extract name from common title patterns
+    const patterns = [
+      /^([^-]+)\s*-/, // "John Doe - Contract"
+      /contract[:\s]*([^-\n]+)/i, // "Contract: John Doe"
+      /for[:\s]*([^-\n]+)/i, // "Contract for John Doe"
+      /^([A-Za-z\s]+)/, // First words as name
+    ];
+
+    for (const pattern of patterns) {
+      const match = title.match(pattern);
+      if (match) {
+        const name = match[1].trim();
+        if (name && name.length > 1 && name !== 'Contract') {
+          return name;
+        }
+      }
+    }
+
+    return 'Unknown Artist';
+  };
+
   const fetchAccountingData = async () => {
     try {
       setLoading(true);
+      console.log('Fetching contracts for accounting...');
       
-      // Query contracts with embedded signatures and extract stipend information
+      // Query all contracts that are completed or have signatures
       const { data: contracts, error } = await supabase
         .from('contracts_v2')
         .select('*')
-        .in('status', ['completed', 'pending_admin_signature'])
+        .or('status.eq.completed,status.eq.pending_admin_signature')
         .order('updated_at', { ascending: false });
 
       if (error) {
@@ -35,44 +88,61 @@ export const useAccountingData = () => {
         throw error;
       }
 
+      console.log('Found contracts:', contracts?.length || 0);
+
       const entries: AccountingEntry[] = [];
       let total = 0;
 
       contracts?.forEach(contract => {
-        // Parse embedded signatures to get signer info
-        const signatureMatch = contract.content.match(/\[EMBEDDED_SIGNATURES\](.*?)\[\/EMBEDDED_SIGNATURES\]/s);
+        console.log('Processing contract:', contract.title, 'Status:', contract.status);
         
         // Extract stipend from contract content
-        const stipendMatch = contract.content.match(/\$(\d+(?:,\d{3})*(?:\.\d{2})?)/);
-        const stipendAmount = stipendMatch ? parseFloat(stipendMatch[1].replace(/,/g, '')) : 0;
+        const stipendAmount = extractStipendFromContent(contract.content);
         
-        if (signatureMatch && stipendAmount > 0) {
+        if (stipendAmount > 0) {
+          console.log('Found stipend in contract:', contract.title, 'Amount:', stipendAmount);
+          
+          // Check for embedded signatures or use status
+          let dateSigned = new Date().toLocaleDateString();
+          let hasSignature = false;
+          
           try {
-            const signatures = JSON.parse(signatureMatch[1]);
-            const artistSignature = signatures.find((sig: any) => sig.signerType === 'artist');
-            
-            if (artistSignature) {
-              // Extract name from contract title or use default
-              const nameMatch = contract.title.match(/^([^-]+)/);
-              const name = nameMatch ? nameMatch[1].trim() : 'Unknown';
+            const signatureMatch = contract.content.match(/\[EMBEDDED_SIGNATURES\](.*?)\[\/EMBEDDED_SIGNATURES\]/s);
+            if (signatureMatch) {
+              const signatures = JSON.parse(signatureMatch[1]);
+              const artistSignature = signatures.find((sig: any) => sig.signerType === 'artist');
               
-              entries.push({
-                id: contract.id,
-                name,
-                contractTitle: contract.title,
-                dateSigned: artistSignature.dateSigned || new Date(artistSignature.timestamp).toLocaleDateString(),
-                stipend: stipendAmount,
-                status: contract.status
-              });
-              
-              total += stipendAmount;
+              if (artistSignature) {
+                dateSigned = artistSignature.dateSigned || new Date(artistSignature.timestamp).toLocaleDateString();
+                hasSignature = true;
+              }
             }
           } catch (e) {
-            console.error('Error parsing embedded signatures:', e);
+            console.log('No embedded signatures found, using status-based logic');
           }
+
+          // Include contracts with stipends that are completed or have signatures
+          if (hasSignature || contract.status === 'completed') {
+            const name = extractNameFromTitle(contract.title);
+            
+            entries.push({
+              id: contract.id,
+              name,
+              contractTitle: contract.title,
+              dateSigned,
+              stipend: stipendAmount,
+              status: contract.status
+            });
+            
+            total += stipendAmount;
+            console.log('Added contract to accounting:', contract.title, 'Stipend:', stipendAmount);
+          }
+        } else {
+          console.log('No stipend found in contract:', contract.title);
         }
       });
 
+      console.log('Final accounting data:', entries.length, 'contracts, Total:', total);
       setAccountingData(entries);
       setTotalStipends(total);
       setContractCount(entries.length);
