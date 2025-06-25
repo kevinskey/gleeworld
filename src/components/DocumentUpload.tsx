@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -546,6 +547,25 @@ export const DocumentUpload = ({
                   {templateContractType && (
                     <p className="text-sm text-gray-500">Contract type set by template</p>
                   )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="recipient-select">Send to User</Label>
+                  <Select value={selectedUserId} onValueChange={handleUserSelection} disabled={usersLoading}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={usersLoading ? "Loading users..." : "Select a user to send the contract to"} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border shadow-lg z-50">
+                      {users.map((user) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{user.full_name || user.email}</span>
+                            <span className="text-sm text-gray-500">{user.email}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
