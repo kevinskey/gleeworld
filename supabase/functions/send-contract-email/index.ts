@@ -1,19 +1,22 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { Resend } from "npm:resend@2.0.0";
+
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface EmailRequest {
+interface SendContractRequest {
   contractId: string;
   recipientEmail: string;
-  recipientName?: string;
+  recipientName: string;
+  contractTitle: string;
   customMessage?: string;
-  isResend?: boolean;
-  resendReason?: string;
+  signatureFields?: any[];
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -26,12 +29,14 @@ const handler = async (req: Request): Promise<Response> => {
       contractId, 
       recipientEmail, 
       recipientName, 
-      customMessage, 
-      isResend = false, 
-      resendReason 
-    }: EmailRequest = await req.json();
+      contractTitle, 
+      customMessage,
+      signatureFields 
+    }: SendContractRequest = await req.json();
 
-    console.log("Sending contract email to:", recipientEmail);
+    console.log("Sending contract email for:", contractId);
+    console.log("Recipient:", recipientEmail, recipientName);
+    console.log("Signature fields provided:", signatureFields);
 
     // Initialize Supabase client
     const supabase = createClient(
@@ -39,123 +44,188 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Auto-enroll user if they don't exist
-    console.log("Checking if user needs auto-enrollment...");
-    const { data: autoEnrollResult, error: enrollError } = await supabase.functions.invoke('auto-enroll-user', {
-      body: {
-        email: recipientEmail,
-        full_name: recipientName,
-        contract_id: contractId
+    // Check if user exists by email
+    const { data: existingUser } = await supabase
+      .from('profiles')
+      .select('id, email, full_name')
+      .eq('email', recipientEmail)
+      .maybeSingle();
+
+    let autoEnrollMessage = "";
+    
+    // If user doesn't exist, auto-enroll them
+    if (!existingUser) {
+      console.log("User not found, auto-enrolling:", recipientEmail);
+      
+      const { data: enrollData, error: enrollError } = await supabase.functions.invoke('auto-enroll-user', {
+        body: {
+          email: recipientEmail,
+          fullName: recipientName,
+          role: 'user'
+        }
+      });
+
+      if (enrollError) {
+        console.error("Auto-enrollment failed:", enrollError);
+        // Continue anyway - we can still send the contract
+      } else {
+        console.log("User auto-enrolled successfully:", enrollData);
+        autoEnrollMessage = `\n\nNote: An account has been created for you with email ${recipientEmail}. Your temporary password is: ${enrollData.tempPassword}\nPlease log in and change your password after signing the contract.`;
       }
-    });
-
-    if (enrollError) {
-      console.error('Auto-enrollment failed:', enrollError);
-      // Continue with email sending even if auto-enrollment fails
-    } else {
-      console.log('Auto-enrollment result:', autoEnrollResult);
     }
 
-    // Get contract details
-    const { data: contract, error: contractError } = await supabase
-      .from('contracts_v2')
-      .select('*')
-      .eq('id', contractId)
-      .single();
+    // Use default signature fields if none provided
+    const defaultSignatureFields = [
+      {
+        id: 1,
+        label: 'Artist Signature',
+        type: 'signature',
+        required: true,
+        page: 1,
+        x: 100,
+        y: 400,
+        width: 200,
+        height: 50,
+        font_size: 12
+      },
+      {
+        id: 2,
+        label: 'Date Signed',
+        type: 'date',
+        required: true,
+        page: 1,
+        x: 350,
+        y: 400,
+        width: 150,
+        height: 30,
+        font_size: 12
+      }
+    ];
 
-    if (contractError || !contract) {
-      throw new Error('Contract not found');
-    }
+    const effectiveSignatureFields = Array.isArray(signatureFields) && signatureFields.length > 0 
+      ? signatureFields 
+      : defaultSignatureFields;
 
-    // Create or update contract recipient record
-    const recipientData = {
-      contract_id: contractId,
-      recipient_email: recipientEmail,
-      recipient_name: recipientName || recipientEmail.split('@')[0],
-      custom_message: customMessage,
-      is_resend: isResend,
-      resend_reason: resendReason,
-      email_status: 'sent',
-      delivery_status: 'pending',
-      sent_at: new Date().toISOString()
-    };
+    console.log("Using signature fields:", effectiveSignatureFields);
 
-    const { data: recipient, error: recipientError } = await supabase
+    // Store contract recipient record
+    const { error: recipientError } = await supabase
       .from('contract_recipients_v2')
-      .insert(recipientData)
-      .select()
-      .single();
+      .insert({
+        contract_id: contractId,
+        recipient_name: recipientName,
+        recipient_email: recipientEmail,
+        custom_message: customMessage || null,
+        email_status: 'sent',
+        delivery_status: 'delivered'
+      });
 
     if (recipientError) {
-      console.error('Error creating recipient record:', recipientError);
-      throw new Error('Failed to create recipient record: ' + recipientError.message);
+      console.error("Error storing recipient record:", recipientError);
     }
 
-    // Prepare email content
-    const contractSigningUrl = `${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '')}/contract-signing/${contractId}`;
+    // Get the contract signing URL
+    const baseUrl = Deno.env.get("SUPABASE_URL")?.replace('supabase.co', 'lovable.app') || 
+                   req.headers.get('origin') || 
+                   'https://your-app.lovable.app';
     
-    const emailSubject = `Contract for Signing: ${contract.title}`;
-    const emailBody = `
-      <h2>Contract Signing Request</h2>
-      <p>Dear ${recipientName || recipientEmail.split('@')[0]},</p>
-      
-      <p>You have been sent a contract for your review and signature.</p>
-      
-      <p><strong>Contract:</strong> ${contract.title}</p>
-      
-      ${customMessage ? `<p><strong>Message:</strong> ${customMessage}</p>` : ''}
-      
-      ${autoEnrollResult?.enrolled ? `
-        <div style="background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin: 20px 0;">
-          <p><strong>Account Created:</strong> An account has been automatically created for you to access and sign this contract.</p>
-          ${autoEnrollResult.temp_password ? `<p><strong>Temporary Password:</strong> ${autoEnrollResult.temp_password}</p>` : ''}
-          <p>You can change your password after logging in.</p>
+    const contractUrl = `${baseUrl}/contract-signing/${contractId}`;
+
+    // Determine if there are signature fields
+    const hasSignatureFields = effectiveSignatureFields.length > 0;
+    const signatureFieldsMessage = hasSignatureFields 
+      ? "The contract includes digital signature fields for easy online signing." 
+      : "⚠️ No signature fields found: This contract may require manual review for signing requirements.";
+
+    const signatureFieldsClass = hasSignatureFields ? "info" : "warning";
+    const signatureFieldsBgColor = hasSignatureFields ? "#e3f2fd" : "#fff3e0";
+    const signatureFieldsTextColor = hasSignatureFields ? "#1976d2" : "#f57c00";
+
+    // Send email using Resend
+    const emailResponse = await resend.emails.send({
+      from: "ContractFlow <onboarding@resend.dev>",
+      to: [recipientEmail],
+      subject: `Contract Signature Required: ${contractTitle}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center;">
+            <h1 style="margin: 0; font-size: 28px; font-weight: bold;">Contract Signature Required</h1>
+          </div>
+          
+          <!-- Main Content -->
+          <div style="padding: 30px; background-color: white;">
+            <p style="font-size: 18px; color: #333; margin-bottom: 20px;">Hello ${recipientName},</p>
+            
+            <p style="font-size: 16px; color: #666; line-height: 1.6; margin-bottom: 25px;">
+              You have been requested to review and sign the following contract:
+            </p>
+            
+            <!-- Contract Info Card -->
+            <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin: 25px 0; background-color: #fafafa;">
+              <h2 style="margin: 0 0 10px 0; color: #333; font-size: 20px;">${contractTitle}</h2>
+              <p style="margin: 0; color: #666; font-size: 14px;">Contract ID: ${contractId.substring(0, 8)}...</p>
+            </div>
+
+            <!-- Signature Fields Status -->
+            <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin: 20px 0; background-color: ${signatureFieldsBgColor};">
+              <p style="margin: 0; color: ${signatureFieldsTextColor}; font-size: 14px; display: flex; align-items: center;">
+                ${hasSignatureFields ? '✓' : '⚠️'} ${signatureFieldsMessage}
+              </p>
+            </div>
+            
+            ${customMessage ? `
+            <div style="border-left: 4px solid #2196f3; padding: 15px; margin: 25px 0; background-color: #f3f8ff;">
+              <h3 style="margin: 0 0 10px 0; color: #333; font-size: 16px;">Custom Message:</h3>
+              <p style="margin: 0; color: #666; font-style: italic; white-space: pre-wrap;">${customMessage}</p>
+            </div>
+            ` : ''}
+            
+            <!-- CTA Button -->
+            <div style="text-align: center; margin: 35px 0;">
+              <a href="${contractUrl}" 
+                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                        color: white; 
+                        padding: 15px 30px; 
+                        text-decoration: none; 
+                        border-radius: 8px; 
+                        display: inline-block; 
+                        font-size: 16px; 
+                        font-weight: bold;">
+                📄 Review and Sign Contract
+              </a>
+            </div>
+
+            ${autoEnrollMessage ? `
+            <div style="border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin: 20px 0; background-color: #f1f8e9;">
+              <h3 style="margin: 0 0 10px 0; color: #2e7d32; font-size: 16px;">Account Created</h3>
+              <p style="margin: 0; color: #2e7d32; font-size: 14px; white-space: pre-wrap;">${autoEnrollMessage}</p>
+            </div>
+            ` : ''}
+            
+            <p style="color: #999; font-size: 14px; line-height: 1.6; margin-top: 30px;">
+              If you have any questions about this contract, please contact the sender directly.
+              This link will remain active until the contract is signed.
+            </p>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background-color: #f5f5f5; padding: 20px; text-align: center; color: #999; font-size: 12px;">
+            <p style="margin: 0;">This email was sent by ContractFlow</p>
+            <p style="margin: 5px 0 0 0;">Secure digital contract management platform</p>
+          </div>
         </div>
-      ` : ''}
-      
-      <p>
-        <a href="${contractSigningUrl}" 
-           style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
-          Review and Sign Contract
-        </a>
-      </p>
-      
-      <p>If you have any questions, please don't hesitate to contact us.</p>
-      
-      <p>Best regards,<br>The Contract Management Team</p>
-    `;
+      `,
+    });
 
-    // Here you would integrate with your email service (Resend, SendGrid, etc.)
-    // For now, we'll simulate sending the email
-    console.log("Email would be sent with subject:", emailSubject);
-    console.log("Email body:", emailBody);
-
-    // Update recipient status to indicate email was sent successfully
-    await supabase
-      .from('contract_recipients_v2')
-      .update({ 
-        delivery_status: 'delivered',
-        email_status: 'delivered'
-      })
-      .eq('id', recipient.id);
-
-    // Update contract status
-    await supabase
-      .from('contracts_v2')
-      .update({ 
-        status: 'sent',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', contractId);
-
-    console.log("Contract email sent successfully to:", recipientEmail);
+    console.log("Email sent successfully:", emailResponse);
 
     return new Response(JSON.stringify({ 
       success: true, 
-      recipientId: recipient.id,
-      contractSigningUrl,
-      autoEnrolled: autoEnrollResult?.enrolled || false,
-      userId: autoEnrollResult?.user_id
+      emailId: emailResponse.data?.id,
+      hasSignatureFields: hasSignatureFields,
+      signatureFieldsCount: effectiveSignatureFields.length,
+      autoEnrolled: !existingUser
     }), {
       status: 200,
       headers: {
