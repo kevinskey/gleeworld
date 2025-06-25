@@ -28,6 +28,7 @@ interface EmbeddedSignature {
   ipAddress?: string;
   timestamp: string;
   signerType?: 'artist' | 'admin';
+  signerName?: string;
 }
 
 interface ContractContentProcessorProps {
@@ -81,11 +82,18 @@ export const ContractContentProcessor = ({
     const artistSignature = embeddedSignatures.find(sig => sig.signerType === 'artist');
     const adminSignature = embeddedSignatures.find(sig => sig.signerType === 'admin');
     
+    console.log('Processing contract content with signatures:', {
+      artistSignature: !!artistSignature,
+      adminSignature: !!adminSignature,
+      totalEmbedded: embeddedSignatures.length
+    });
+    
     lines.forEach((line, index) => {
       // Check if this line contains "Printed Name: Dr. Kevin P. Johnson"
       if (line.includes('Printed Name:') && line.includes('Dr. Kevin P. Johnson')) {
         // Add admin signature BEFORE this line
         if (adminSignature) {
+          console.log('Adding admin signature before printed name line');
           processedLines.push(
             <div key={`embedded-admin-signature-${adminSignature.fieldId}`} className="mb-4">
               <EmbeddedSignatureDisplay signature={adminSignature} />
@@ -124,6 +132,7 @@ export const ContractContentProcessor = ({
       // Add artist signature after signature-related lines
       if (line.toLowerCase().includes('artist:') || line.toLowerCase().includes('signature')) {
         if (artistSignature) {
+          console.log('Adding artist signature after artist line');
           processedLines.push(
             <div key={`embedded-artist-signature-${artistSignature.fieldId}`}>
               <EmbeddedSignatureDisplay signature={artistSignature} />
@@ -171,6 +180,18 @@ export const ContractContentProcessor = ({
         }
       }
     });
+    
+    // If admin signature exists but wasn't placed above, add it at the end
+    if (adminSignature && !processedLines.some(line => 
+      typeof line === 'object' && line.key && line.key.includes('admin-signature')
+    )) {
+      console.log('Adding admin signature at the end');
+      processedLines.push(
+        <div key={`embedded-admin-signature-fallback-${adminSignature.fieldId}`} className="mt-6">
+          <EmbeddedSignatureDisplay signature={adminSignature} />
+        </div>
+      );
+    }
     
     return processedLines;
   };

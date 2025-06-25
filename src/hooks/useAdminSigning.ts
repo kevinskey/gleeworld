@@ -48,26 +48,30 @@ export const useAdminSigning = () => {
       if (signatureMatch) {
         try {
           existingSignatures = JSON.parse(signatureMatch[1]);
+          console.log('Existing signatures found:', existingSignatures);
         } catch (e) {
           console.error('Error parsing existing signatures:', e);
         }
       }
 
-      // Create new admin signature
+      // Create new admin signature with proper signer identification
       const newAdminSignature = {
-        fieldId: 3,
+        fieldId: 999, // Unique ID for admin signature
         signatureData: adminSignature,
         dateSigned: new Date().toLocaleDateString(),
         timestamp: new Date().toISOString(),
-        ipAddress: 'unknown',
-        signerType: 'admin'
+        ipAddress: 'admin-portal',
+        signerType: 'admin',
+        signerName: 'Dr. Kevin P. Johnson' // Admin name for display
       };
 
-      // Combine existing signatures with new admin signature
+      // Remove any existing admin signatures and add the new one
       const updatedSignatures = [
         ...existingSignatures.filter((sig: any) => sig.signerType !== 'admin'),
         newAdminSignature
       ];
+
+      console.log('Updated signatures with admin:', updatedSignatures);
 
       // Update contract content with embedded signatures
       let updatedContent = contractData.content;
@@ -134,7 +138,7 @@ export const useAdminSigning = () => {
         throw contractUpdateError;
       }
 
-      console.log('Contract updated successfully');
+      console.log('Contract updated successfully with embedded admin signature');
 
       toast({
         title: "Contract Completed!",
