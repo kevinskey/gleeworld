@@ -351,6 +351,7 @@ export type Database = {
           contract_id: string
           created_at: string
           date_signed: string | null
+          embedded_signatures: Json | null
           id: string
           pdf_storage_path: string | null
           signer_ip: unknown | null
@@ -365,6 +366,7 @@ export type Database = {
           contract_id: string
           created_at?: string
           date_signed?: string | null
+          embedded_signatures?: Json | null
           id?: string
           pdf_storage_path?: string | null
           signer_ip?: unknown | null
@@ -379,6 +381,7 @@ export type Database = {
           contract_id?: string
           created_at?: string
           date_signed?: string | null
+          embedded_signatures?: Json | null
           id?: string
           pdf_storage_path?: string | null
           signer_ip?: unknown | null

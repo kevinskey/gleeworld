@@ -1,468 +1,177 @@
-import React, { useState, useEffect } from "react";
+
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { Loader2, Send, RotateCcw, History, Mail, User, MessageSquare } from "lucide-react";
-import type { Contract } from "@/hooks/useContracts";
+import { AutoEnrollHandler } from "@/components/contracts/AutoEnrollHandler";
 
-interface ContractRecipient {
+interface Contract {
   id: string;
-  recipient_email: string;
-  recipient_name: string;
-  custom_message?: string;
-  sent_at: string;
-  is_resend: boolean;
-  resend_reason?: string;
-  email_status: string;
-  delivery_status: string;
+  title: string;
+  content: string;
+  status: string;
+  created_at: string;
 }
 
 interface SendContractDialogProps {
-  contract: Contract;
   isOpen: boolean;
   onClose: () => void;
-  onSent: () => void;
+  contract: Contract | null;
+  onSent?: () => void;
 }
 
-export const SendContractDialog = ({ contract, isOpen, onClose, onSent }: SendContractDialogProps) => {
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const { displayName } = useUserProfile(user);
-  
+export const SendContractDialog = ({ isOpen, onClose, contract, onSent }: SendContractDialogProps) => {
   const [recipientEmail, setRecipientEmail] = useState("");
   const [recipientName, setRecipientName] = useState("");
   const [customMessage, setCustomMessage] = useState("");
-  const [isResend, setIsResend] = useState(false);
-  const [resendReason, setResendReason] = useState("");
-  const [sendHistory, setSendHistory] = useState<ContractRecipient[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingHistory, setLoadingHistory] = useState(false);
-
-  useEffect(() => {
-    if (isOpen && contract) {
-      loadSendHistory();
-      extractRecipientFromContract();
-    }
-  }, [isOpen, contract]);
-
-  const extractRecipientFromContract = () => {
-    // Try to extract recipient info from contract content
-    const content = contract.content || '';
-    
-    // Look for email patterns in the contract content
-    const emailMatch = content.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
-    
-    // Focus on first paragraph and prioritize "Artist:" pattern
-    const firstParagraph = content.split('\n\n')[0] || content.split('\n').slice(0, 5).join('\n');
-    
-    // Enhanced name patterns specifically targeting first paragraph artist listing
-    const namePatterns = [
-      // Prioritize "Artist:" pattern in first paragraph
-      /Artist[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,|\.)/i,
-      // Then try other variations
-      /Artist Name[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,|\.)/i,
-      /Performer[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,|\.)/i,
-      /Singer[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,|\.)/i,
-      /Musician[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,|\.)/i,
-      /Contractor[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,|\.)/i,
-      /Name[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,|\.)/i,
-      /Recipient[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,|\.)/i,
-      /To[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,|\.)/i
-    ];
-    
-    let extractedName = '';
-    
-    // First try to find artist name in the first paragraph
-    for (const pattern of namePatterns) {
-      const nameMatch = firstParagraph.match(pattern);
-      if (nameMatch && nameMatch[1]) {
-        extractedName = nameMatch[1].trim();
-        // Clean up common suffixes/prefixes that might be captured
-        extractedName = extractedName.replace(/^(Mr|Ms|Mrs|Dr)\.?\s*/i, '');
-        extractedName = extractedName.replace(/\s+(will|shall|hereby|agrees?|is|was|and).*$/i, '');
-        extractedName = extractedName.replace(/\s*,.*$/, ''); // Remove everything after comma
-        if (extractedName.length > 2 && extractedName.length < 50) { // Reasonable name length
-          break;
-        }
-      }
-    }
-    
-    // If no name found in first paragraph, try the entire content
-    if (!extractedName) {
-      for (const pattern of namePatterns) {
-        const nameMatch = content.match(pattern);
-        if (nameMatch && nameMatch[1]) {
-          extractedName = nameMatch[1].trim();
-          extractedName = extractedName.replace(/^(Mr|Ms|Mrs|Dr)\.?\s*/i, '');
-          extractedName = extractedName.replace(/\s+(will|shall|hereby|agrees?|is|was|and).*$/i, '');
-          extractedName = extractedName.replace(/\s*,.*$/, '');
-          if (extractedName.length > 2 && extractedName.length < 50) {
-            break;
-          }
-        }
-      }
-    }
-    
-    // Set the extracted values
-    if (emailMatch && emailMatch[1]) {
-      setRecipientEmail(emailMatch[1]);
-    }
-    
-    if (extractedName) {
-      setRecipientName(extractedName);
-    }
-  };
-
-  const loadSendHistory = async () => {
-    setLoadingHistory(true);
-    try {
-      const { data, error } = await supabase
-        .from('contract_recipients_v2')
-        .select('*')
-        .eq('contract_id', contract.id)
-        .order('sent_at', { ascending: false });
-
-      if (error) throw error;
-      setSendHistory(data || []);
-    } catch (error) {
-      console.error('Error loading send history:', error);
-    } finally {
-      setLoadingHistory(false);
-    }
-  };
-
-  const handleResendToRecipient = (recipient: ContractRecipient) => {
-    setRecipientEmail(recipient.recipient_email);
-    setRecipientName(recipient.recipient_name);
-    setIsResend(true);
-    setCustomMessage(`Resending as requested - Original sent on ${new Date(recipient.sent_at).toLocaleDateString()}`);
-  };
+  const [sending, setSending] = useState(false);
+  const [autoEnrolled, setAutoEnrolled] = useState(false);
+  const { toast } = useToast();
 
   const handleSend = async () => {
-    if (!recipientEmail || !recipientName) {
+    if (!contract || !recipientEmail) {
       toast({
-        title: "Missing Information",
-        description: "Please provide recipient email and name",
+        title: "Error",
+        description: "Please provide recipient email",
         variant: "destructive",
       });
       return;
     }
 
-    setLoading(true);
+    setSending(true);
     try {
-      // Get signature fields from contract content
-      const signatureFields = extractSignatureFields(contract.content);
-
-      // Send the email
+      console.log('Sending contract via edge function...');
+      
       const { data, error } = await supabase.functions.invoke('send-contract-email', {
         body: {
-          recipientEmail,
-          recipientName,
-          contractTitle: contract.title,
           contractId: contract.id,
-          senderName: displayName || "ContractFlow Team",
-          customMessage: isResend ? `${customMessage}${resendReason ? ` - Reason: ${resendReason}` : ''}` : customMessage,
-          signatureFields: signatureFields,
-          isResend
+          recipientEmail,
+          recipientName: recipientName || recipientEmail.split('@')[0],
+          customMessage
         }
       });
 
-      if (error) throw error;
-
-      // Record the send in our tracking table
-      const { error: recordError } = await supabase
-        .from('contract_recipients_v2')
-        .insert({
-          contract_id: contract.id,
-          recipient_email: recipientEmail,
-          recipient_name: recipientName,
-          custom_message: customMessage,
-          sent_by: user?.id,
-          is_resend: isResend,
-          resend_reason: resendReason || null,
-          email_status: 'sent'
-        });
-
-      if (recordError) {
-        console.error('Error recording send:', recordError);
-        // Don't fail the whole operation for tracking errors
+      if (error) {
+        console.error('Error sending contract:', error);
+        throw new Error(error.message || 'Failed to send contract');
       }
 
-      // Update contract status if first send
-      if (!isResend && sendHistory.length === 0) {
-        const { error: updateError } = await supabase
-          .from('contracts_v2')
-          .update({ status: 'pending_recipient' })
-          .eq('id', contract.id);
-
-        if (updateError) {
-          console.error('Error updating contract status:', updateError);
-        }
-      }
+      console.log('Contract sent successfully:', data);
 
       toast({
-        title: isResend ? "Contract Resent" : "Contract Sent",
-        description: `"${contract.title}" has been ${isResend ? 'resent' : 'sent'} to ${recipientEmail}`,
+        title: "Contract Sent!",
+        description: `Contract has been sent to ${recipientEmail}${data.autoEnrolled ? ' (user was automatically enrolled)' : ''}`,
       });
 
       // Reset form
       setRecipientEmail("");
       setRecipientName("");
       setCustomMessage("");
-      setIsResend(false);
-      setResendReason("");
+      setAutoEnrolled(false);
       
-      // Reload history and notify parent
-      await loadSendHistory();
-      onSent();
       onClose();
-
-    } catch (error) {
-      console.error('Error sending contract:', error);
+      if (onSent) onSent();
+    } catch (error: any) {
+      console.error('Send contract error:', error);
       toast({
         title: "Error",
-        description: "Failed to send contract. Please try again.",
+        description: error.message || "Failed to send contract",
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setSending(false);
     }
   };
 
-  const extractSignatureFields = (content: string) => {
-    // Extract signature fields from contract content
-    // This is a simplified version - you might want to enhance this based on your contract format
-    const signatureMatches = content.match(/\[SIGNATURE_FIELD:([^\]]+)\]/g) || [];
-    return signatureMatches.map((match, index) => {
-      const fieldName = match.replace('[SIGNATURE_FIELD:', '').replace(']', '');
-      return {
-        id: index + 1,
-        label: fieldName,
-        type: 'signature' as const,
-        page: 1,
-        x: 100,
-        y: 100 + (index * 50),
-        required: true
-      };
-    });
-  };
-
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case 'sent': return 'bg-blue-100 text-blue-800';
-      case 'delivered': return 'bg-green-100 text-green-800';
-      case 'opened': return 'bg-purple-100 text-purple-800';
-      case 'failed': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const handleEnrollmentComplete = (enrolled: boolean, userId?: string) => {
+    if (enrolled) {
+      setAutoEnrolled(true);
+      console.log('User auto-enrolled with ID:', userId);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Send className="h-5 w-5" />
-            Send Contract: {contract.title}
-          </DialogTitle>
-          <DialogDescription>
-            Send this contract to a recipient or resend to a previous recipient
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Send Form */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                {isResend ? <RotateCcw className="h-4 w-4" /> : <Send className="h-4 w-4" />}
-                {isResend ? 'Resend Contract' : 'Send Contract'}
-              </CardTitle>
-              <CardDescription>
-                {isResend ? 'Resend this contract to a recipient' : 'Send this contract to a new recipient'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="recipientEmail" className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  Recipient Email
-                </Label>
-                <Input
-                  id="recipientEmail"
-                  type="email"
-                  value={recipientEmail}
-                  onChange={(e) => setRecipientEmail(e.target.value)}
-                  placeholder="recipient@example.com"
-                />
+    <>
+      {recipientEmail && (
+        <AutoEnrollHandler
+          recipientEmail={recipientEmail}
+          recipientName={recipientName}
+          contractId={contract?.id}
+          onEnrollmentComplete={handleEnrollmentComplete}
+        />
+      )}
+      
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Send Contract for Signing</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {contract && (
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="font-medium">{contract.title}</p>
+                <p className="text-sm text-gray-600">Created: {new Date(contract.created_at).toLocaleDateString()}</p>
               </div>
+            )}
 
-              <div className="space-y-2">
-                <Label htmlFor="recipientName" className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Recipient Name
-                </Label>
-                <Input
-                  id="recipientName"
-                  value={recipientName}
-                  onChange={(e) => setRecipientName(e.target.value)}
-                  placeholder="Recipient's full name"
-                />
+            <div className="space-y-2">
+              <Label htmlFor="recipient-email">Recipient Email *</Label>
+              <Input
+                id="recipient-email"
+                type="email"
+                value={recipientEmail}
+                onChange={(e) => setRecipientEmail(e.target.value)}
+                placeholder="Enter recipient's email address"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="recipient-name">Recipient Name</Label>
+              <Input
+                id="recipient-name"
+                type="text"
+                value={recipientName}
+                onChange={(e) => setRecipientName(e.target.value)}
+                placeholder="Enter recipient's full name (optional)"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="custom-message">Custom Message</Label>
+              <Textarea
+                id="custom-message"
+                value={customMessage}
+                onChange={(e) => setCustomMessage(e.target.value)}
+                placeholder="Add a personal message (optional)"
+                rows={3}
+              />
+            </div>
+
+            {autoEnrolled && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  ✓ This user will be automatically enrolled in the system
+                </p>
               </div>
+            )}
 
-              <div className="space-y-2">
-                <Label htmlFor="customMessage" className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4" />
-                  Custom Message (Optional)
-                </Label>
-                <Textarea
-                  id="customMessage"
-                  value={customMessage}
-                  onChange={(e) => setCustomMessage(e.target.value)}
-                  placeholder="Add a personal message to include in the email..."
-                  rows={3}
-                />
-              </div>
-
-              {isResend && (
-                <div className="space-y-2">
-                  <Label htmlFor="resendReason">Resend Reason (Optional)</Label>
-                  <Input
-                    id="resendReason"
-                    value={resendReason}
-                    onChange={(e) => setResendReason(e.target.value)}
-                    placeholder="e.g., Recipient didn't receive original email"
-                  />
-                </div>
-              )}
-
-              <div className="flex gap-2 pt-4">
-                <Button
-                  onClick={handleSend}
-                  disabled={loading || !recipientEmail || !recipientName}
-                  className="flex-1"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      {isResend ? 'Resending...' : 'Sending...'}
-                    </>
-                  ) : (
-                    <>
-                      {isResend ? <RotateCcw className="h-4 w-4 mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-                      {isResend ? 'Resend' : 'Send'} Contract
-                    </>
-                  )}
-                </Button>
-                <Button variant="outline" onClick={onClose}>
-                  Cancel
-                </Button>
-              </div>
-
-              {isResend && (
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setIsResend(false);
-                    setRecipientEmail("");
-                    setRecipientName("");
-                    setCustomMessage("");
-                    setResendReason("");
-                  }}
-                  className="w-full"
-                >
-                  Switch to New Send
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Send History */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <History className="h-4 w-4" />
-                Send History
-              </CardTitle>
-              <CardDescription>
-                Previous sends of this contract
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loadingHistory ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                  <span className="ml-2">Loading history...</span>
-                </div>
-              ) : sendHistory.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <History className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                  <p>No previous sends</p>
-                  <p className="text-sm">This contract hasn't been sent yet</p>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {sendHistory.map((recipient) => (
-                    <div key={recipient.id} className="p-3 border rounded-lg">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <p className="font-medium">{recipient.recipient_name}</p>
-                          <p className="text-sm text-gray-600">{recipient.recipient_email}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {recipient.is_resend && (
-                            <Badge variant="secondary" className="text-xs">
-                              Resend
-                            </Badge>
-                          )}
-                          <Badge className={getStatusBadgeColor(recipient.email_status)}>
-                            {recipient.email_status}
-                          </Badge>
-                        </div>
-                      </div>
-                      
-                      <p className="text-xs text-gray-500 mb-2">
-                        Sent: {new Date(recipient.sent_at).toLocaleString()}
-                      </p>
-                      
-                      {recipient.custom_message && (
-                        <p className="text-sm text-gray-700 mb-2 italic">
-                          "{recipient.custom_message}"
-                        </p>
-                      )}
-                      
-                      {recipient.resend_reason && (
-                        <p className="text-xs text-orange-600 mb-2">
-                          Resend reason: {recipient.resend_reason}
-                        </p>
-                      )}
-                      
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleResendToRecipient(recipient)}
-                        className="w-full"
-                      >
-                        <RotateCcw className="h-3 w-3 mr-1" />
-                        Resend to this recipient
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </DialogContent>
-    </Dialog>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={onClose} disabled={sending}>
+                Cancel
+              </Button>
+              <Button onClick={handleSend} disabled={sending || !recipientEmail}>
+                {sending ? "Sending..." : "Send Contract"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
