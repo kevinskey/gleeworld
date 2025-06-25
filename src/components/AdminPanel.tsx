@@ -1,68 +1,70 @@
 
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Activity } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useUsers } from "@/hooks/useUsers";
-import { AdminSummaryStats } from "@/components/admin/AdminSummaryStats";
-import { UserManagement } from "@/components/admin/UserManagement";
-import { ActivityLogs } from "@/components/admin/ActivityLogs";
-import { SystemSettings } from "@/components/admin/SystemSettings";
-import { UserImport } from "@/components/admin/UserImport";
+import { UserManagement } from "./admin/UserManagement";
+import { SystemSettings } from "./admin/SystemSettings";
+import { AdminSummaryStats } from "./admin/AdminSummaryStats";
+import { ContractSignatureFixer } from "./admin/ContractSignatureFixer";
+import { Shield, Users, Settings, FileText } from "lucide-react";
 
 export const AdminPanel = () => {
-  const { users, loading, error, refetch } = useUsers();
-  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState("overview");
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-gray-600">Please sign in to access the admin panel.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full max-w-none space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Admin Panel</h2>
-          <p className="text-gray-600">Monitor system activity and manage users</p>
-        </div>
-        <Button
-          onClick={() => navigate('/activity-logs')}
-          className="flex items-center space-x-2"
-        >
-          <Activity className="h-4 w-4" />
-          <span>View All Activity</span>
-        </Button>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+          <Shield className="h-8 w-8" />
+          Admin Panel
+        </h1>
+        <p className="text-gray-600 mt-2">Manage users, contracts, and system settings</p>
       </div>
 
-      <AdminSummaryStats users={users} loading={loading} activityLogs={[]} />
-
-      <Tabs defaultValue="users" className="w-full space-y-4">
-        <TabsList>
-          <TabsTrigger value="users">User Management</TabsTrigger>
-          <TabsTrigger value="import">Import Users</TabsTrigger>
-          <TabsTrigger value="activity">Activity Logs</TabsTrigger>
-          <TabsTrigger value="settings">System Settings</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="users" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Users
+          </TabsTrigger>
+          <TabsTrigger value="contracts" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Contract Tools
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Settings
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="users" className="w-full">
-          <div className="max-w-none">
-            <UserManagement users={users} loading={loading} error={error} onRefetch={refetch} />
-          </div>
+        <TabsContent value="overview" className="space-y-6">
+          <AdminSummaryStats />
         </TabsContent>
 
-        <TabsContent value="import" className="w-full">
-          <div className="max-w-none">
-            <UserImport />
-          </div>
+        <TabsContent value="users" className="space-y-6">
+          <UserManagement />
         </TabsContent>
 
-        <TabsContent value="activity" className="w-full">
-          <div className="max-w-none">
-            <ActivityLogs />
-          </div>
+        <TabsContent value="contracts" className="space-y-6">
+          <ContractSignatureFixer />
         </TabsContent>
 
-        <TabsContent value="settings" className="w-full">
-          <div className="max-w-none">
-            <SystemSettings />
-          </div>
+        <TabsContent value="settings" className="space-y-6">
+          <SystemSettings />
         </TabsContent>
       </Tabs>
     </div>
