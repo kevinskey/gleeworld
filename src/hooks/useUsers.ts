@@ -5,8 +5,8 @@ import { useToast } from "@/hooks/use-toast";
 
 export interface User {
   id: string;
-  email: string;
-  full_name?: string;
+  email: string | null;
+  full_name: string | null;
   role: string;
   created_at: string;
 }
@@ -32,7 +32,16 @@ export const useUsers = () => {
         throw error;
       }
 
-      setUsers(data || []);
+      // Transform data to ensure proper typing
+      const transformedUsers: User[] = (data || []).map(user => ({
+        id: user.id,
+        email: user.email || null,
+        full_name: user.full_name || null,
+        role: user.role || 'user',
+        created_at: user.created_at
+      }));
+
+      setUsers(transformedUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
       setError('Failed to load users');

@@ -6,10 +6,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserManagement } from "./admin/UserManagement";
 import { SystemSettings } from "./admin/SystemSettings";
 import { AdminSummaryStats } from "./admin/AdminSummaryStats";
+import { ActivityLogs } from "./admin/ActivityLogs";
 import { ContractSignatureFixer } from "./admin/ContractSignatureFixer";
 import { useUsers } from "@/hooks/useUsers";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
-import { Shield, Users, Settings, FileText } from "lucide-react";
+import { Shield, Users, Settings, FileText, Activity } from "lucide-react";
 
 export const AdminPanel = () => {
   const { user } = useAuth();
@@ -38,7 +39,7 @@ export const AdminPanel = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Overview
@@ -46,6 +47,10 @@ export const AdminPanel = () => {
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Users
+          </TabsTrigger>
+          <TabsTrigger value="activity" className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Activity
           </TabsTrigger>
           <TabsTrigger value="contracts" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -72,6 +77,10 @@ export const AdminPanel = () => {
             error={usersError}
             onRefetch={refetchUsers}
           />
+        </TabsContent>
+
+        <TabsContent value="activity" className="space-y-6">
+          <ActivityLogs activityLogs={activityLogs} />
         </TabsContent>
 
         <TabsContent value="contracts" className="space-y-6">

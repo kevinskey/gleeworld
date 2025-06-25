@@ -105,7 +105,7 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
                     {getRoleIcon(user.role)}
                     <div>
                       <p className="font-medium">{user.full_name || 'No name provided'}</p>
-                      <p className="text-sm text-gray-600">{user.email}</p>
+                      <p className="text-sm text-gray-600">{user.email || 'No email'}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

@@ -1,25 +1,9 @@
 
-import { useActivityLogs } from "@/hooks/useActivityLogs";
+import { useActivityLogs, ActivityLog } from "@/hooks/useActivityLogs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Activity, User, FileText, Settings, Eye, Edit, Trash2, Send, PenTool } from "lucide-react";
-
-interface ActivityLog {
-  id: string;
-  user_id: string | null;
-  action_type: string;
-  resource_type: string;
-  resource_id: string | null;
-  details: any;
-  ip_address: string | null;
-  user_agent: string | null;
-  created_at: string;
-  user_profile?: {
-    full_name?: string;
-    email?: string;
-  };
-}
+import { Activity, User, FileText, Settings, PenTool } from "lucide-react";
 
 interface ActivityLogsProps {
   activityLogs?: ActivityLog[];
@@ -134,6 +118,17 @@ export const ActivityLogs = ({ activityLogs: propActivityLogs }: ActivityLogsPro
                         {new Date(log.created_at).toLocaleString()}
                       </span>
                     </div>
+                    <p className="text-sm text-gray-700 mb-1">
+                      {log.user_profile?.full_name && (
+                        <span className="font-medium">{log.user_profile.full_name}</span>
+                      )}
+                      {log.user_profile?.email && !log.user_profile?.full_name && (
+                        <span className="font-medium">{log.user_profile.email}</span>
+                      )}
+                      {!log.user_profile && (
+                        <span className="text-gray-500">System</span>
+                      )}
+                    </p>
                     <p className="text-sm text-gray-700 mb-1">
                       Resource: <span className="font-medium">{log.resource_type}</span>
                       {log.resource_id && (

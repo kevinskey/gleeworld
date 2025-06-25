@@ -5,18 +5,18 @@ import { useToast } from "@/hooks/use-toast";
 
 export interface ActivityLog {
   id: string;
-  user_id: string;
+  user_id: string | null;
   action_type: string;
   resource_type: string;
-  resource_id?: string;
+  resource_id: string | null;
   details: any;
-  ip_address?: string;
-  user_agent?: string;
+  ip_address: string | null;
+  user_agent: string | null;
   created_at: string;
   user_profile?: {
     full_name?: string;
     email?: string;
-  };
+  } | null;
 }
 
 export const useActivityLogs = () => {
@@ -34,7 +34,7 @@ export const useActivityLogs = () => {
         .from('activity_logs')
         .select(`
           *,
-          user_profile:profiles(full_name, email)
+          user_profile:profiles!user_id(full_name, email)
         `)
         .order('created_at', { ascending: false })
         .limit(100); // Limit to recent 100 logs for performance
@@ -45,12 +45,19 @@ export const useActivityLogs = () => {
       }
 
       // Transform the data to match our interface
-      const transformedLogs = (data || []).map(log => ({
-        ...log,
-        ip_address: log.ip_address ? String(log.ip_address) : undefined,
-        user_agent: log.user_agent || undefined,
-        resource_id: log.resource_id || undefined,
-        user_profile: Array.isArray(log.user_profile) ? log.user_profile[0] : log.user_profile
+      const transformedLogs: ActivityLog[] = (data || []).map(log => ({
+        id: log.id,
+        user_id: log.user_id,
+        action_type: log.action_type,
+        resource_type: log.resource_type,
+        resource_id: log.resource_id,
+        details: log.details || {},
+        ip_address: log.ip_address ? String(log.ip_address) : null,
+        user_agent: log.user_agent || null,
+        created_at: log.created_at,
+        user_profile: Array.isArray(log.user_profile) && log.user_profile.length > 0 
+          ? log.user_profile[0] 
+          : log.user_profile || null
       }));
 
       setLogs(transformedLogs);
