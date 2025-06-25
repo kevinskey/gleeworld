@@ -38,20 +38,44 @@ const ContractSigning = () => {
     signatureFields: signatureFields?.length 
   });
 
+  // Add detailed error logging
+  if (error) {
+    console.error('ContractSigning: Detailed error:', {
+      error,
+      contractId,
+      timestamp: new Date().toISOString()
+    });
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
           <p className="text-gray-600">Loading contract...</p>
+          <p className="text-sm text-gray-400 mt-2">Contract ID: {contractId}</p>
         </div>
       </div>
     );
   }
 
   if (error) {
-    console.error('ContractSigning: Error loading contract:', error);
-    return <ContractNotFound />;
+    console.error('ContractSigning: Rendering error state:', error);
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <h2 className="text-xl font-semibold text-red-600 mb-2">Connection Error</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <p className="text-sm text-gray-400">Contract ID: {contractId}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (!contract) {

@@ -22,8 +22,11 @@ export const useContractFetcher = (contractId: string | undefined) => {
     setError(null);
 
     try {
-      // Query the contracts table with only existing columns
-      const { data: contractData, error: contractError } = await supabase
+      // Try contracts table first
+      let contractData = null;
+      let contractError = null;
+
+      const { data: contractsData, error: contractsError } = await supabase
         .from('contracts')
         .select(`
           id,
@@ -37,7 +40,29 @@ export const useContractFetcher = (contractId: string | undefined) => {
         .eq('id', contractId)
         .maybeSingle();
 
-      console.log('useContractFetcher: Contracts query result:', { contractData, contractError });
+      if (contractsData) {
+        contractData = contractsData;
+      } else {
+        // If not found in contracts, try contracts_v2
+        const { data: contractsV2Data, error: contractsV2Error } = await supabase
+          .from('contracts_v2')
+          .select(`
+            id,
+            title,
+            content,
+            status,
+            created_at,
+            updated_at,
+            created_by
+          `)
+          .eq('id', contractId)
+          .maybeSingle();
+
+        contractData = contractsV2Data;
+        contractError = contractsV2Error;
+      }
+
+      console.log('useContractFetcher: Contract query result:', { contractData, contractError });
 
       if (contractError) {
         console.error('useContractFetcher: Contract fetch error:', contractError);
