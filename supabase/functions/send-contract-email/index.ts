@@ -21,11 +21,20 @@ interface SendContractRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log("=== SEND CONTRACT EMAIL FUNCTION STARTED ===");
+  console.log("Request method:", req.method);
+  console.log("Request headers:", Object.fromEntries(req.headers.entries()));
+
   if (req.method === "OPTIONS") {
+    console.log("Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log("Parsing request body...");
+    const requestBody = await req.json();
+    console.log("Request body received:", JSON.stringify(requestBody, null, 2));
+
     const { 
       contractId, 
       recipientEmail, 
@@ -34,16 +43,19 @@ const handler = async (req: Request): Promise<Response> => {
       customMessage,
       signatureFields,
       isResend = false
-    }: SendContractRequest = await req.json();
+    }: SendContractRequest = requestBody;
 
-    console.log("Sending contract email for:", contractId);
-    console.log("Recipient email (from request):", recipientEmail);
-    console.log("Recipient name (from request):", recipientName);
-    console.log("Is resend:", isResend);
+    console.log("=== REQUEST VALIDATION ===");
+    console.log("Contract ID:", contractId);
+    console.log("Recipient Email:", recipientEmail);
+    console.log("Recipient Name:", recipientName);
+    console.log("Contract Title:", contractTitle);
+    console.log("Is Resend:", isResend);
+    console.log("Custom Message:", customMessage || "None");
 
     // Validate that we have the required recipient information
     if (!recipientEmail || recipientEmail.trim() === "") {
-      console.error("No recipient email provided");
+      console.error("❌ VALIDATION ERROR: No recipient email provided");
       throw new Error("Recipient email is required");
     }
 
@@ -52,30 +64,40 @@ const handler = async (req: Request): Promise<Response> => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     
     if (!emailRegex.test(cleanRecipientEmail)) {
-      console.error("Invalid email format:", cleanRecipientEmail);
+      console.error("❌ VALIDATION ERROR: Invalid email format:", cleanRecipientEmail);
       throw new Error("Invalid email format");
     }
 
-    console.log("Using cleaned recipient email:", cleanRecipientEmail);
+    console.log("✅ Email validation passed. Using cleaned email:", cleanRecipientEmail);
 
     // Initialize Supabase client
+    console.log("=== INITIALIZING SUPABASE CLIENT ===");
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
+    console.log("✅ Supabase client initialized");
 
     // Check if user exists by email
-    const { data: existingUser } = await supabase
+    console.log("=== CHECKING IF USER EXISTS ===");
+    const { data: existingUser, error: userCheckError } = await supabase
       .from('profiles')
       .select('id, email, full_name')
       .eq('email', cleanRecipientEmail)
       .maybeSingle();
 
+    if (userCheckError) {
+      console.error("❌ Error checking for existing user:", userCheckError);
+    } else {
+      console.log("User check result:", existingUser ? "User exists" : "User not found");
+    }
+
     let autoEnrollMessage = "";
     
     // If user doesn't exist, auto-enroll them
     if (!existingUser) {
-      console.log("User not found, auto-enrolling:", cleanRecipientEmail);
+      console.log("=== AUTO-ENROLLING NEW USER ===");
+      console.log("Calling auto-enroll function for:", cleanRecipientEmail);
       
       const { data: enrollData, error: enrollError } = await supabase.functions.invoke('auto-enroll-user', {
         body: {
@@ -86,12 +108,14 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
       if (enrollError) {
-        console.error("Auto-enrollment failed:", enrollError);
+        console.error("❌ Auto-enrollment failed:", enrollError);
         // Continue anyway - we can still send the contract
       } else {
-        console.log("User auto-enrolled successfully:", enrollData);
+        console.log("✅ User auto-enrolled successfully:", enrollData);
         autoEnrollMessage = `\n\nNote: An account has been created for you with email ${cleanRecipientEmail}. Your temporary password is: ${enrollData.tempPassword}\nPlease log in and change your password after signing the contract.`;
       }
+    } else {
+      console.log("✅ User already exists, skipping auto-enrollment");
     }
 
     // Use default signature fields if none provided
@@ -126,9 +150,10 @@ const handler = async (req: Request): Promise<Response> => {
       ? signatureFields 
       : defaultSignatureFields;
 
-    console.log("Using signature fields:", effectiveSignatureFields);
+    console.log("Using signature fields count:", effectiveSignatureFields.length);
 
-    // Store contract recipient record with the correct recipient email and resend flag
+    // Store contract recipient record
+    console.log("=== STORING RECIPIENT RECORD ===");
     const { error: recipientError } = await supabase
       .from('contract_recipients_v2')
       .insert({
@@ -143,7 +168,9 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
     if (recipientError) {
-      console.error("Error storing recipient record:", recipientError);
+      console.error("❌ Error storing recipient record:", recipientError);
+    } else {
+      console.log("✅ Recipient record stored successfully");
     }
 
     // Get the contract signing URL
@@ -152,6 +179,7 @@ const handler = async (req: Request): Promise<Response> => {
                    'https://your-app.lovable.app';
     
     const contractUrl = `${baseUrl}/contract-signing/${contractId}`;
+    console.log("Contract signing URL:", contractUrl);
 
     // Determine if there are signature fields
     const hasSignatureFields = effectiveSignatureFields.length > 0;
@@ -176,9 +204,20 @@ const handler = async (req: Request): Promise<Response> => {
          </div>`
       : '';
 
-    console.log("Sending email to:", cleanRecipientEmail);
+    console.log("=== PREPARING EMAIL ===");
+    console.log("Email subject:", emailSubject);
+    console.log("Sending to:", cleanRecipientEmail);
+
+    // Check if RESEND_API_KEY is available
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      console.error("❌ RESEND_API_KEY not found in environment variables");
+      throw new Error("Email service not configured - missing API key");
+    }
+    console.log("✅ Resend API key found");
 
     // Send email using Resend to the correct recipient
+    console.log("=== SENDING EMAIL VIA RESEND ===");
     const emailResponse = await resend.emails.send({
       from: "ContractFlow <onboarding@resend.dev>",
       to: [cleanRecipientEmail],
@@ -257,10 +296,17 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("Email sent successfully to:", cleanRecipientEmail);
-    console.log("Email response:", emailResponse);
+    console.log("=== EMAIL SEND RESULT ===");
+    if (emailResponse.error) {
+      console.error("❌ Resend API error:", emailResponse.error);
+      throw new Error(`Email service error: ${emailResponse.error.message}`);
+    }
 
-    return new Response(JSON.stringify({ 
+    console.log("✅ Email sent successfully!");
+    console.log("Email ID:", emailResponse.data?.id);
+    console.log("Recipient:", cleanRecipientEmail);
+
+    const responseData = { 
       success: true, 
       emailId: emailResponse.data?.id,
       hasSignatureFields: hasSignatureFields,
@@ -268,7 +314,12 @@ const handler = async (req: Request): Promise<Response> => {
       autoEnrolled: !existingUser,
       recipientEmail: cleanRecipientEmail,
       isResend: isResend
-    }), {
+    };
+
+    console.log("=== FUNCTION COMPLETED SUCCESSFULLY ===");
+    console.log("Response data:", JSON.stringify(responseData, null, 2));
+
+    return new Response(JSON.stringify(responseData), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
@@ -277,9 +328,18 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
   } catch (error: any) {
-    console.error("Error in send-contract-email:", error);
+    console.error("=== FUNCTION ERROR ===");
+    console.error("Error type:", typeof error);
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    console.error("Full error object:", error);
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack,
+        timestamp: new Date().toISOString()
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
