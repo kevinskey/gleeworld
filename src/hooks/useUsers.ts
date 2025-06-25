@@ -1,11 +1,12 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export interface User {
   id: string;
   email: string;
-  full_name: string | null;
+  full_name?: string;
   role: string;
   created_at: string;
 }
@@ -14,44 +15,32 @@ export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // First check if user is authenticated
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      console.log('Current user:', currentUser);
-      
-      if (!currentUser) {
-        setError('User not authenticated');
-        console.log('No authenticated user found');
-        return;
-      }
-      
-      // Check current user's profile and role
-      const { data: currentProfile, error: profileError } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('id', currentUser.id)
-        .single();
-      
-      console.log('Current user profile:', currentProfile);
-      console.log('Profile error:', profileError);
-      
-      // Use the get_all_user_profiles function which handles RLS properly
-      const { data, error } = await supabase.rpc('get_all_user_profiles');
+        .select('id, email, full_name, role, created_at')
+        .order('created_at', { ascending: false });
 
-      console.log('RPC response data:', data);
-      console.log('RPC response error:', error);
-
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+      }
 
       setUsers(data || []);
-    } catch (err) {
-      console.error('Error fetching users:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch users');
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      setError('Failed to load users');
+      toast({
+        title: "Error",
+        description: "Failed to load users",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -61,10 +50,14 @@ export const useUsers = () => {
     fetchUsers();
   }, []);
 
+  const refetch = () => {
+    fetchUsers();
+  };
+
   return {
     users,
     loading,
     error,
-    refetch: fetchUsers
+    refetch,
   };
 };
