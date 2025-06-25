@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,8 +50,43 @@ export const SendContractDialog = ({ contract, isOpen, onClose, onSent }: SendCo
   useEffect(() => {
     if (isOpen && contract) {
       loadSendHistory();
+      extractRecipientFromContract();
     }
   }, [isOpen, contract]);
+
+  const extractRecipientFromContract = () => {
+    // Try to extract recipient info from contract content
+    const content = contract.content || '';
+    
+    // Look for email patterns in the contract content
+    const emailMatch = content.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+    
+    // Look for recipient name patterns (this is a simple approach, could be enhanced)
+    const namePatterns = [
+      /Recipient[:\s]+([A-Za-z\s]+)/i,
+      /Artist[:\s]+([A-Za-z\s]+)/i,
+      /Client[:\s]+([A-Za-z\s]+)/i,
+      /To[:\s]+([A-Za-z\s]+)/i
+    ];
+    
+    let extractedName = '';
+    for (const pattern of namePatterns) {
+      const nameMatch = content.match(pattern);
+      if (nameMatch && nameMatch[1]) {
+        extractedName = nameMatch[1].trim();
+        break;
+      }
+    }
+    
+    // Set the extracted values
+    if (emailMatch && emailMatch[1]) {
+      setRecipientEmail(emailMatch[1]);
+    }
+    
+    if (extractedName) {
+      setRecipientName(extractedName);
+    }
+  };
 
   const loadSendHistory = async () => {
     setLoadingHistory(true);
