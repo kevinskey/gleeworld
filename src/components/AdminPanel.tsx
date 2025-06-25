@@ -16,8 +16,10 @@ export const AdminPanel = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
   
-  // Fetch users and activity logs data
+  // Fetch users data
   const { users, loading: usersLoading, error: usersError, refetch: refetchUsers } = useUsers();
+  
+  // Only fetch activity logs when the activity tab is active
   const { logs: activityLogs, loading: logsLoading } = useActivityLogs();
 
   if (!user) {
@@ -65,8 +67,8 @@ export const AdminPanel = () => {
         <TabsContent value="overview" className="space-y-6">
           <AdminSummaryStats 
             users={users}
-            loading={usersLoading || logsLoading}
-            activityLogs={activityLogs}
+            loading={usersLoading}
+            activityLogs={activeTab === "overview" ? activityLogs : []}
           />
         </TabsContent>
 
@@ -80,7 +82,7 @@ export const AdminPanel = () => {
         </TabsContent>
 
         <TabsContent value="activity" className="space-y-6">
-          <ActivityLogs activityLogs={activityLogs} />
+          {activeTab === "activity" && <ActivityLogs />}
         </TabsContent>
 
         <TabsContent value="contracts" className="space-y-6">

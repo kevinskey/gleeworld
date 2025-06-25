@@ -19,13 +19,15 @@ export interface ActivityLog {
   } | null;
 }
 
-export const useActivityLogs = () => {
+export const useActivityLogs = (enabled: boolean = true) => {
   const [logs, setLogs] = useState<ActivityLog[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchActivityLogs = async () => {
+    if (!enabled) return;
+    
     try {
       setLoading(true);
       setError(null);
@@ -75,8 +77,10 @@ export const useActivityLogs = () => {
   };
 
   useEffect(() => {
-    fetchActivityLogs();
-  }, []);
+    if (enabled) {
+      fetchActivityLogs();
+    }
+  }, [enabled]);
 
   return {
     logs,

@@ -5,15 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Activity, User, FileText, Settings, PenTool } from "lucide-react";
 
-interface ActivityLogsProps {
-  activityLogs?: ActivityLog[];
-}
-
-export const ActivityLogs = ({ activityLogs: propActivityLogs }: ActivityLogsProps) => {
-  const { logs: fetchedActivityLogs, loading, error } = useActivityLogs();
-  
-  // Use prop logs if provided, otherwise use fetched logs
-  const logs = propActivityLogs || fetchedActivityLogs;
+export const ActivityLogs = () => {
+  const { logs, loading, error } = useActivityLogs(true);
 
   const getActionIcon = (actionType: string) => {
     switch (actionType) {
