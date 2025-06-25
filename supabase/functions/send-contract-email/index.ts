@@ -17,6 +17,7 @@ interface SendContractRequest {
   contractTitle: string;
   customMessage?: string;
   signatureFields?: any[];
+  isResend?: boolean;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -31,12 +32,14 @@ const handler = async (req: Request): Promise<Response> => {
       recipientName, 
       contractTitle, 
       customMessage,
-      signatureFields 
+      signatureFields,
+      isResend = false
     }: SendContractRequest = await req.json();
 
     console.log("Sending contract email for:", contractId);
     console.log("Recipient email (from request):", recipientEmail);
     console.log("Recipient name (from request):", recipientName);
+    console.log("Is resend:", isResend);
 
     // Validate that we have the required recipient information
     if (!recipientEmail || recipientEmail.trim() === "") {
@@ -125,16 +128,18 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Using signature fields:", effectiveSignatureFields);
 
-    // Store contract recipient record with the correct recipient email
+    // Store contract recipient record with the correct recipient email and resend flag
     const { error: recipientError } = await supabase
       .from('contract_recipients_v2')
       .insert({
         contract_id: contractId,
         recipient_name: recipientName || cleanRecipientEmail.split('@')[0],
-        recipient_email: cleanRecipientEmail, // Use the cleaned recipient email
+        recipient_email: cleanRecipientEmail,
         custom_message: customMessage || null,
         email_status: 'sent',
-        delivery_status: 'delivered'
+        delivery_status: 'delivered',
+        is_resend: isResend,
+        resend_reason: isResend ? 'User requested resend' : null
       });
 
     if (recipientError) {
@@ -158,13 +163,26 @@ const handler = async (req: Request): Promise<Response> => {
     const signatureFieldsBgColor = hasSignatureFields ? "#e3f2fd" : "#fff3e0";
     const signatureFieldsTextColor = hasSignatureFields ? "#1976d2" : "#f57c00";
 
+    // Update email subject and content for resends
+    const emailSubject = isResend 
+      ? `Contract Signature Required (Resent): ${contractTitle}`
+      : `Contract Signature Required: ${contractTitle}`;
+
+    const resendNotice = isResend 
+      ? `<div style="border: 1px solid #ff9800; border-radius: 8px; padding: 15px; margin: 20px 0; background-color: #fff3e0;">
+           <p style="margin: 0; color: #f57c00; font-size: 14px; display: flex; align-items: center;">
+             📧 This is a resend of the contract signing request.
+           </p>
+         </div>`
+      : '';
+
     console.log("Sending email to:", cleanRecipientEmail);
 
     // Send email using Resend to the correct recipient
     const emailResponse = await resend.emails.send({
       from: "ContractFlow <onboarding@resend.dev>",
-      to: [cleanRecipientEmail], // Use the cleaned recipient email
-      subject: `Contract Signature Required: ${contractTitle}`,
+      to: [cleanRecipientEmail],
+      subject: emailSubject,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
           <!-- Header -->
@@ -179,6 +197,8 @@ const handler = async (req: Request): Promise<Response> => {
             <p style="font-size: 16px; color: #666; line-height: 1.6; margin-bottom: 25px;">
               You have been requested to review and sign the following contract:
             </p>
+
+            ${resendNotice}
             
             <!-- Contract Info Card -->
             <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin: 25px 0; background-color: #fafafa;">
@@ -246,7 +266,8 @@ const handler = async (req: Request): Promise<Response> => {
       hasSignatureFields: hasSignatureFields,
       signatureFieldsCount: effectiveSignatureFields.length,
       autoEnrolled: !existingUser,
-      recipientEmail: cleanRecipientEmail // Return the actual recipient for confirmation
+      recipientEmail: cleanRecipientEmail,
+      isResend: isResend
     }), {
       status: 200,
       headers: {

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,15 +22,36 @@ interface SendContractDialogProps {
   onClose: () => void;
   contract: Contract | null;
   onSent?: () => void;
+  initialRecipientEmail?: string;
+  initialRecipientName?: string;
+  isResend?: boolean;
 }
 
-export const SendContractDialog = ({ isOpen, onClose, contract, onSent }: SendContractDialogProps) => {
+export const SendContractDialog = ({ 
+  isOpen, 
+  onClose, 
+  contract, 
+  onSent,
+  initialRecipientEmail = "",
+  initialRecipientName = "",
+  isResend = false
+}: SendContractDialogProps) => {
   const [recipientEmail, setRecipientEmail] = useState("");
   const [recipientName, setRecipientName] = useState("");
   const [customMessage, setCustomMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [autoEnrolled, setAutoEnrolled] = useState(false);
   const { toast } = useToast();
+
+  // Auto-populate fields when dialog opens with initial values
+  useEffect(() => {
+    if (isOpen) {
+      setRecipientEmail(initialRecipientEmail);
+      setRecipientName(initialRecipientName);
+      setCustomMessage("");
+      setAutoEnrolled(false);
+    }
+  }, [isOpen, initialRecipientEmail, initialRecipientName]);
 
   const handleSend = async () => {
     if (!contract || !recipientEmail) {
@@ -58,14 +79,16 @@ export const SendContractDialog = ({ isOpen, onClose, contract, onSent }: SendCo
       console.log('Sending contract via edge function...');
       console.log('Recipient email:', recipientEmail);
       console.log('Recipient name:', recipientName);
+      console.log('Is resend:', isResend);
       
       const { data, error } = await supabase.functions.invoke('send-contract-email', {
         body: {
           contractId: contract.id,
           contractTitle: contract.title,
-          recipientEmail: recipientEmail, // Explicitly use the form input value
+          recipientEmail: recipientEmail,
           recipientName: recipientName || recipientEmail.split('@')[0],
-          customMessage: customMessage || undefined
+          customMessage: customMessage || undefined,
+          isResend: isResend
         }
       });
 
@@ -77,8 +100,8 @@ export const SendContractDialog = ({ isOpen, onClose, contract, onSent }: SendCo
       console.log('Contract sent successfully:', data);
 
       toast({
-        title: "Contract Sent!",
-        description: `Contract has been sent to ${recipientEmail}${data?.autoEnrolled ? ' (user was automatically enrolled)' : ''}`,
+        title: isResend ? "Contract Resent!" : "Contract Sent!",
+        description: `Contract has been ${isResend ? 'resent' : 'sent'} to ${recipientEmail}${data?.autoEnrolled ? ' (user was automatically enrolled)' : ''}`,
       });
 
       // Reset form
@@ -117,6 +140,8 @@ export const SendContractDialog = ({ isOpen, onClose, contract, onSent }: SendCo
     onClose();
   };
 
+  const dialogTitle = isResend ? "Resend Contract for Signing" : "Send Contract for Signing";
+
   return (
     <>
       {recipientEmail && (
@@ -131,7 +156,7 @@ export const SendContractDialog = ({ isOpen, onClose, contract, onSent }: SendCo
       <Dialog open={isOpen} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Send Contract for Signing</DialogTitle>
+            <DialogTitle>{dialogTitle}</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
@@ -191,7 +216,7 @@ export const SendContractDialog = ({ isOpen, onClose, contract, onSent }: SendCo
                 Cancel
               </Button>
               <Button onClick={handleSend} disabled={sending || !recipientEmail}>
-                {sending ? "Sending..." : "Send Contract"}
+                {sending ? (isResend ? "Resending..." : "Sending...") : (isResend ? "Resend Contract" : "Send Contract")}
               </Button>
             </div>
           </div>

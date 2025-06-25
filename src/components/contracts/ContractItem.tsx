@@ -15,6 +15,7 @@ interface ContractItemProps {
   onDelete: (contractId: string) => void;
   onAdminSign: (contract: Contract) => void;
   onSend: (contract: Contract) => void;
+  onResend?: (contract: Contract) => void;
 }
 
 export const ContractItem = ({
@@ -25,9 +26,18 @@ export const ContractItem = ({
   onView,
   onDelete,
   onAdminSign,
-  onSend
+  onSend,
+  onResend
 }: ContractItemProps) => {
   const hasBeenSent = sendCount > 0;
+
+  const handleSendClick = () => {
+    if (hasBeenSent && onResend) {
+      onResend(contract);
+    } else {
+      onSend(contract);
+    }
+  };
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors gap-4">
@@ -82,7 +92,7 @@ export const ContractItem = ({
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => onSend(contract)}
+            onClick={handleSendClick}
             title={hasBeenSent ? "Resend Contract" : "Send Contract"}
             className={hasBeenSent ? "bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200" : ""}
           >

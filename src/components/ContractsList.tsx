@@ -9,6 +9,7 @@ import { AdminSignatureModal } from "@/components/contracts/AdminSignatureModal"
 import { EmptyState } from "@/components/contracts/EmptyState";
 import { useContractSendHistory } from "@/hooks/useContractSendHistory";
 import { useAdminSigning } from "@/hooks/useAdminSigning";
+import { useLastRecipient } from "@/hooks/useLastRecipient";
 import type { Contract } from "@/hooks/useContracts";
 
 interface ContractsListProps {
@@ -33,8 +34,10 @@ export const ContractsList = ({
   const { toast } = useToast();
   const [selectedContracts, setSelectedContracts] = useState<Set<string>>(new Set());
   const [sendDialogContract, setSendDialogContract] = useState<Contract | null>(null);
+  const [isResendMode, setIsResendMode] = useState(false);
   
   const { contractSendHistory, reloadSendHistory } = useContractSendHistory(contracts);
+  const { lastRecipient } = useLastRecipient(sendDialogContract?.id || null);
   const {
     signingContract,
     adminSignature,
@@ -92,12 +95,14 @@ export const ContractsList = ({
     });
   };
 
-  const handleOpenSendDialog = (contract: Contract) => {
+  const handleOpenSendDialog = (contract: Contract, isResend: boolean = false) => {
     setSendDialogContract(contract);
+    setIsResendMode(isResend);
   };
 
   const handleSendDialogClose = () => {
     setSendDialogContract(null);
+    setIsResendMode(false);
   };
 
   const handleContractSent = () => {
@@ -145,7 +150,8 @@ export const ContractsList = ({
                     onView={onViewContract}
                     onDelete={handleDeleteContract}
                     onAdminSign={handleAdminSign}
-                    onSend={handleOpenSendDialog}
+                    onSend={(contract) => handleOpenSendDialog(contract, false)}
+                    onResend={(contract) => handleOpenSendDialog(contract, true)}
                   />
                 );
               })}
@@ -161,6 +167,9 @@ export const ContractsList = ({
           isOpen={!!sendDialogContract}
           onClose={handleSendDialogClose}
           onSent={handleContractSent}
+          initialRecipientEmail={isResendMode ? lastRecipient?.recipientEmail || "" : ""}
+          initialRecipientName={isResendMode ? lastRecipient?.recipientName || "" : ""}
+          isResend={isResendMode}
         />
       )}
 
