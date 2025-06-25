@@ -236,7 +236,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send email using Resend to the correct recipient
     console.log("=== SENDING EMAIL VIA RESEND ===");
     const emailResponse = await resend.emails.send({
-      from: "ContractFlow <onboarding@resend.dev>",
+      from: "GleeWorld Contracts <contracts@gleeworld.org>",
       to: [cleanRecipientEmail],
       subject: emailSubject,
       html: `
@@ -244,6 +244,7 @@ const handler = async (req: Request): Promise<Response> => {
           <!-- Header -->
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center;">
             <h1 style="margin: 0; font-size: 28px; font-weight: bold;">Contract Signature Required</h1>
+            <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">GleeWorld Contract Management</p>
           </div>
           
           <!-- Main Content -->
@@ -299,15 +300,15 @@ const handler = async (req: Request): Promise<Response> => {
             ` : ''}
             
             <p style="color: #999; font-size: 14px; line-height: 1.6; margin-top: 30px;">
-              If you have any questions about this contract, please contact the sender directly.
+              If you have any questions about this contract, please contact us at contracts@gleeworld.org.
               This link will remain active until the contract is signed.
             </p>
           </div>
           
           <!-- Footer -->
           <div style="background-color: #f5f5f5; padding: 20px; text-align: center; color: #999; font-size: 12px;">
-            <p style="margin: 0;">This email was sent by ContractFlow</p>
-            <p style="margin: 5px 0 0 0;">Secure digital contract management platform</p>
+            <p style="margin: 0;">This email was sent by GleeWorld Contract Management</p>
+            <p style="margin: 5px 0 0 0;">Secure digital contract platform | gleeworld.org</p>
           </div>
         </div>
       `,
