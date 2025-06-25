@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { Contract } from "@/hooks/useContracts";
+import type { Contract } from "@/types/contractSigning";
 
-export const useContractFetcher = (contractId: string) => {
+export const useContractFetcher = (contractId: string | undefined) => {
   const [contract, setContract] = useState<Contract | null>(null);
   const [signatureRecord, setSignatureRecord] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -22,7 +22,7 @@ export const useContractFetcher = (contractId: string) => {
     setError(null);
 
     try {
-      // First try the contracts table (which has the correct structure)
+      // Query the contracts table with only existing columns
       const { data: contractData, error: contractError } = await supabase
         .from('contracts')
         .select(`
@@ -31,7 +31,8 @@ export const useContractFetcher = (contractId: string) => {
           content,
           status,
           created_at,
-          updated_at
+          updated_at,
+          created_by
         `)
         .eq('id', contractId)
         .maybeSingle();
