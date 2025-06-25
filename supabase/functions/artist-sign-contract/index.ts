@@ -62,6 +62,26 @@ const handler = async (req: Request): Promise<Response> => {
     const signedDate = dateSigned || new Date().toLocaleDateString();
     const signedDateTime = new Date().toISOString();
 
+    // Create artist signature in embedded format
+    const artistSignature = {
+      fieldId: 1,
+      signatureData: signatureData,
+      dateSigned: signedDate,
+      timestamp: signedDateTime,
+      ipAddress: clientIP || 'unknown',
+      signerType: 'artist',
+      signerName: 'Artist'
+    };
+
+    // Update contract content with embedded artist signature
+    let updatedContent = contract.content;
+    // Remove any existing embedded signatures section
+    updatedContent = updatedContent.replace(/\[EMBEDDED_SIGNATURES\].*?\[\/EMBEDDED_SIGNATURES\]/s, '');
+    
+    // Add the artist signature as embedded signature
+    const signaturesSection = `\n\n[EMBEDDED_SIGNATURES]${JSON.stringify([artistSignature])}[/EMBEDDED_SIGNATURES]`;
+    updatedContent += signaturesSection;
+
     // Generate interim PDF with artist signature
     const pdfBytes = await generateInterimPDF(contract, signatureData, signedDate);
     
@@ -98,7 +118,8 @@ const handler = async (req: Request): Promise<Response> => {
           date_signed: signedDate,
           signer_ip: clientIP,
           pdf_storage_path: pdfFileName,
-          status: 'pending_admin_signature'
+          status: 'pending_admin_signature',
+          embedded_signatures: JSON.stringify([artistSignature])
         })
         .eq('id', existingSignature.id)
         .select()
@@ -120,7 +141,8 @@ const handler = async (req: Request): Promise<Response> => {
           date_signed: signedDate,
           signer_ip: clientIP,
           pdf_storage_path: pdfFileName,
-          status: 'pending_admin_signature'
+          status: 'pending_admin_signature',
+          embedded_signatures: JSON.stringify([artistSignature])
         })
         .select()
         .single();
@@ -132,16 +154,19 @@ const handler = async (req: Request): Promise<Response> => {
       signatureRecord = newRecord;
     }
 
-    // Update contract status
+    console.log("Signature record handled successfully:", signatureRecord.id);
+
+    // Update contract status and content with embedded signature
     await supabase
       .from('contracts_v2')
       .update({ 
+        content: updatedContent,
         status: 'pending_admin_signature',
         updated_at: signedDateTime
       })
       .eq('id', contractId);
 
-    console.log("Artist signature processed successfully:", signatureRecord.id);
+    console.log("Artist signature processed successfully with embedded format:", signatureRecord.id);
 
     return new Response(JSON.stringify({ 
       success: true, 

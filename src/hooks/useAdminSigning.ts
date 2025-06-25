@@ -30,7 +30,7 @@ export const useAdminSigning = () => {
     try {
       console.log('Admin signing contract:', contractToSign.id);
       
-      // Get the current contract content to extract existing embedded signatures
+      // Get the current contract content and signature record
       const { data: contractData, error: contractError } = await supabase
         .from('contracts_v2')
         .select('content')
@@ -42,7 +42,19 @@ export const useAdminSigning = () => {
         throw contractError;
       }
 
-      // Parse existing embedded signatures
+      // Get existing signature record to preserve artist signature data
+      const { data: signatureRecord, error: signatureError } = await supabase
+        .from('contract_signatures_v2')
+        .select('*')
+        .eq('contract_id', contractToSign.id)
+        .single();
+
+      if (signatureError) {
+        console.error('Error fetching signature record:', signatureError);
+        throw signatureError;
+      }
+
+      // Parse existing embedded signatures from contract content
       let existingSignatures: any[] = [];
       const signatureMatch = contractData.content.match(/\[EMBEDDED_SIGNATURES\](.*?)\[\/EMBEDDED_SIGNATURES\]/s);
       if (signatureMatch) {
@@ -54,26 +66,45 @@ export const useAdminSigning = () => {
         }
       }
 
-      // Create new admin signature with proper signer identification
+      // Create artist signature object from signature record if not already in embedded signatures
+      let artistSignature = existingSignatures.find(sig => sig.signerType === 'artist');
+      if (!artistSignature && signatureRecord.artist_signature_data) {
+        artistSignature = {
+          fieldId: 1,
+          signatureData: signatureRecord.artist_signature_data,
+          dateSigned: signatureRecord.date_signed || new Date().toLocaleDateString(),
+          timestamp: signatureRecord.artist_signed_at || new Date().toISOString(),
+          ipAddress: signatureRecord.signer_ip || 'unknown',
+          signerType: 'artist',
+          signerName: 'Artist' // You might want to get actual artist name from contract content
+        };
+      }
+
+      // Create new admin signature
       const newAdminSignature = {
-        fieldId: 999, // Unique ID for admin signature
+        fieldId: 999,
         signatureData: adminSignature,
         dateSigned: new Date().toLocaleDateString(),
         timestamp: new Date().toISOString(),
         ipAddress: 'admin-portal',
         signerType: 'admin',
-        signerName: 'Dr. Kevin P. Johnson' // Admin name for display
+        signerName: 'Dr. Kevin P. Johnson'
       };
 
-      // Remove any existing admin signatures and add the new one
-      const updatedSignatures = [
-        ...existingSignatures.filter((sig: any) => sig.signerType !== 'admin'),
-        newAdminSignature
-      ];
+      // Build complete signatures array with both artist and admin
+      const updatedSignatures = [];
+      
+      // Add artist signature if it exists
+      if (artistSignature) {
+        updatedSignatures.push(artistSignature);
+      }
+      
+      // Add admin signature
+      updatedSignatures.push(newAdminSignature);
 
-      console.log('Updated signatures with admin:', updatedSignatures);
+      console.log('Complete signatures array with both artist and admin:', updatedSignatures);
 
-      // Update contract content with embedded signatures
+      // Update contract content with both embedded signatures
       let updatedContent = contractData.content;
       updatedContent = updatedContent.replace(/\[EMBEDDED_SIGNATURES\].*?\[\/EMBEDDED_SIGNATURES\]/s, '');
       const signaturesSection = `\n\n[EMBEDDED_SIGNATURES]${JSON.stringify(updatedSignatures)}[/EMBEDDED_SIGNATURES]`;
@@ -81,47 +112,23 @@ export const useAdminSigning = () => {
 
       const adminSignedAt = new Date().toISOString();
 
-      // Check if there's an existing signature record, if not create one
-      const { data: existingSignatureRecord } = await supabase
+      // Update signature record with admin signature
+      const { error: updateError } = await supabase
         .from('contract_signatures_v2')
-        .select('*')
-        .eq('contract_id', contractToSign.id)
-        .maybeSingle();
+        .update({
+          admin_signature_data: adminSignature,
+          admin_signed_at: adminSignedAt,
+          status: 'completed',
+          embedded_signatures: JSON.stringify(updatedSignatures)
+        })
+        .eq('id', signatureRecord.id);
 
-      if (existingSignatureRecord) {
-        // Update existing signature record
-        const { error: updateError } = await supabase
-          .from('contract_signatures_v2')
-          .update({
-            admin_signature_data: adminSignature,
-            admin_signed_at: adminSignedAt,
-            status: 'completed'
-          })
-          .eq('id', existingSignatureRecord.id);
-
-        if (updateError) {
-          console.error('Error updating signature record:', updateError);
-          throw updateError;
-        }
-      } else {
-        // Create new signature record
-        const { error: createError } = await supabase
-          .from('contract_signatures_v2')
-          .insert({
-            contract_id: contractToSign.id,
-            admin_signature_data: adminSignature,
-            admin_signed_at: adminSignedAt,
-            status: 'completed',
-            date_signed: new Date().toLocaleDateString()
-          });
-
-        if (createError) {
-          console.error('Error creating signature record:', createError);
-          throw createError;
-        }
+      if (updateError) {
+        console.error('Error updating signature record:', updateError);
+        throw updateError;
       }
 
-      console.log('Signature record handled successfully');
+      console.log('Signature record updated with both signatures');
 
       // Update contract status and content
       const { error: contractUpdateError } = await supabase
@@ -138,7 +145,7 @@ export const useAdminSigning = () => {
         throw contractUpdateError;
       }
 
-      console.log('Contract updated successfully with embedded admin signature');
+      console.log('Contract updated successfully with both artist and admin embedded signatures');
 
       toast({
         title: "Contract Completed!",
