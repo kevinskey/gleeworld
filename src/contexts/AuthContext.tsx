@@ -29,32 +29,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     let mounted = true;
 
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id || 'no user');
-        
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-          setLoading(false);
-        }
-      }
-    );
-
-    // THEN initialize auth state
+    // Initialize auth state check
     const initializeAuth = async () => {
       try {
+        console.log('Initializing auth state...');
+        
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error getting session:', error);
-          // Clean up potentially corrupted auth state
-          cleanupAuthState();
+          console.error('Error getting initial session:', error);
+          if (mounted) {
+            setSession(null);
+            setUser(null);
+            setLoading(false);
+          }
+          return;
         }
         
         if (mounted) {
-          console.log('Initial session check:', session?.user?.id || 'no user');
+          console.log('Initial session found:', session?.user?.id || 'no user');
           setSession(session);
           setUser(session?.user ?? null);
           setLoading(false);
@@ -62,14 +55,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (error) {
         console.error('Failed to initialize auth:', error);
         if (mounted) {
-          // Clean up on error and reset state
-          cleanupAuthState();
           setSession(null);
           setUser(null);
           setLoading(false);
         }
       }
     };
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id || 'no user');
+        
+        if (!mounted) return;
+        
+        // Handle different auth events
+        if (event === 'SIGNED_OUT') {
+          console.log('User signed out');
+          setSession(null);
+          setUser(null);
+        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          console.log('User signed in or token refreshed');
+          setSession(session);
+          setUser(session?.user ?? null);
+        } else if (event === 'INITIAL_SESSION') {
+          console.log('Initial session event');
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+        
+        setLoading(false);
+      }
+    );
 
     // Initialize on mount
     initializeAuth();
@@ -84,31 +101,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       console.log('Starting sign out process...');
       
-      // Clean up auth state first
-      cleanupAuthState();
+      // Set loading state
+      setLoading(true);
       
-      // Clear local state immediately
-      setUser(null);
-      setSession(null);
-      
-      // Sign out from Supabase with global scope
+      // Sign out from Supabase
       const { error } = await supabase.auth.signOut({ scope: 'global' });
       
       if (error) {
         console.error('Error signing out:', error);
-        throw error;
       }
       
-      console.log('Sign out successful');
+      // Clean up auth state
+      cleanupAuthState();
       
-      // Force page reload for clean state
+      // Clear local state
+      setUser(null);
+      setSession(null);
+      setLoading(false);
+      
+      console.log('Sign out completed');
+      
+      // Redirect to auth page
       window.location.href = '/auth';
     } catch (error) {
       console.error('Sign out failed:', error);
-      // Even if there's an error, clear local state and redirect
+      // Force cleanup and redirect even on error
       cleanupAuthState();
       setUser(null);
       setSession(null);
+      setLoading(false);
       window.location.href = '/auth';
     }
   };

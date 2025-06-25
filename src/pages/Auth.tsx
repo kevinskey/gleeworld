@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Loader2, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { cleanupAuthState } from "@/utils/authCleanup";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -24,9 +24,14 @@ const Auth = () => {
   useEffect(() => {
     // Check if user is already authenticated
     const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        navigate("/");
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          console.log('User already authenticated, redirecting...');
+          navigate("/");
+        }
+      } catch (error) {
+        console.error('Error checking auth status:', error);
       }
     };
     checkUser();
@@ -38,17 +43,35 @@ const Auth = () => {
     setError(null);
 
     try {
+      console.log('Attempting sign in...');
+      
+      // Clean up any existing auth state first
+      cleanupAuthState();
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Sign in error:', error);
+        throw error;
+      }
 
       if (data.user) {
-        navigate("/");
+        console.log('Sign in successful:', data.user.id);
+        toast({
+          title: "Welcome back!",
+          description: "You have been signed in successfully.",
+        });
+        
+        // Small delay to ensure auth state is properly set
+        setTimeout(() => {
+          navigate("/");
+        }, 100);
       }
     } catch (error) {
+      console.error('Sign in failed:', error);
       setError(error instanceof Error ? error.message : "Failed to sign in");
     } finally {
       setLoading(false);
@@ -61,6 +84,11 @@ const Auth = () => {
     setError(null);
 
     try {
+      console.log('Attempting sign up...');
+      
+      // Clean up any existing auth state first
+      cleanupAuthState();
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -69,12 +97,27 @@ const Auth = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Sign up error:', error);
+        throw error;
+      }
 
       if (data.user) {
-        setError("Check your email for the confirmation link!");
+        console.log('Sign up successful:', data.user.id);
+        if (data.session) {
+          // User is automatically signed in
+          toast({
+            title: "Account created!",
+            description: "Welcome to ContractFlow!",
+          });
+          navigate("/");
+        } else {
+          // Email confirmation required
+          setError("Check your email for the confirmation link!");
+        }
       }
     } catch (error) {
+      console.error('Sign up failed:', error);
       setError(error instanceof Error ? error.message : "Failed to sign up");
     } finally {
       setLoading(false);
