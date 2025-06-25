@@ -42,16 +42,30 @@ export const SendContractDialog = ({ isOpen, onClose, contract, onSent }: SendCo
       return;
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(recipientEmail)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSending(true);
     try {
       console.log('Sending contract via edge function...');
+      console.log('Recipient email:', recipientEmail);
+      console.log('Recipient name:', recipientName);
       
       const { data, error } = await supabase.functions.invoke('send-contract-email', {
         body: {
           contractId: contract.id,
-          recipientEmail,
+          contractTitle: contract.title,
+          recipientEmail: recipientEmail, // Explicitly use the form input value
           recipientName: recipientName || recipientEmail.split('@')[0],
-          customMessage
+          customMessage: customMessage || undefined
         }
       });
 
@@ -64,7 +78,7 @@ export const SendContractDialog = ({ isOpen, onClose, contract, onSent }: SendCo
 
       toast({
         title: "Contract Sent!",
-        description: `Contract has been sent to ${recipientEmail}${data.autoEnrolled ? ' (user was automatically enrolled)' : ''}`,
+        description: `Contract has been sent to ${recipientEmail}${data?.autoEnrolled ? ' (user was automatically enrolled)' : ''}`,
       });
 
       // Reset form
@@ -94,6 +108,15 @@ export const SendContractDialog = ({ isOpen, onClose, contract, onSent }: SendCo
     }
   };
 
+  // Reset form when dialog closes
+  const handleClose = () => {
+    setRecipientEmail("");
+    setRecipientName("");
+    setCustomMessage("");
+    setAutoEnrolled(false);
+    onClose();
+  };
+
   return (
     <>
       {recipientEmail && (
@@ -105,7 +128,7 @@ export const SendContractDialog = ({ isOpen, onClose, contract, onSent }: SendCo
         />
       )}
       
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Send Contract for Signing</DialogTitle>
@@ -125,9 +148,10 @@ export const SendContractDialog = ({ isOpen, onClose, contract, onSent }: SendCo
                 id="recipient-email"
                 type="email"
                 value={recipientEmail}
-                onChange={(e) => setRecipientEmail(e.target.value)}
+                onChange={(e) => setRecipientEmail(e.target.value.trim())}
                 placeholder="Enter recipient's email address"
                 required
+                autoComplete="off"
               />
             </div>
 
@@ -139,6 +163,7 @@ export const SendContractDialog = ({ isOpen, onClose, contract, onSent }: SendCo
                 value={recipientName}
                 onChange={(e) => setRecipientName(e.target.value)}
                 placeholder="Enter recipient's full name (optional)"
+                autoComplete="off"
               />
             </div>
 
@@ -162,7 +187,7 @@ export const SendContractDialog = ({ isOpen, onClose, contract, onSent }: SendCo
             )}
 
             <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={onClose} disabled={sending}>
+              <Button variant="outline" onClick={handleClose} disabled={sending}>
                 Cancel
               </Button>
               <Button onClick={handleSend} disabled={sending || !recipientEmail}>

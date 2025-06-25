@@ -35,8 +35,25 @@ const handler = async (req: Request): Promise<Response> => {
     }: SendContractRequest = await req.json();
 
     console.log("Sending contract email for:", contractId);
-    console.log("Recipient:", recipientEmail, recipientName);
-    console.log("Signature fields provided:", signatureFields);
+    console.log("Recipient email (from request):", recipientEmail);
+    console.log("Recipient name (from request):", recipientName);
+
+    // Validate that we have the required recipient information
+    if (!recipientEmail || recipientEmail.trim() === "") {
+      console.error("No recipient email provided");
+      throw new Error("Recipient email is required");
+    }
+
+    // Clean and validate the recipient email
+    const cleanRecipientEmail = recipientEmail.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!emailRegex.test(cleanRecipientEmail)) {
+      console.error("Invalid email format:", cleanRecipientEmail);
+      throw new Error("Invalid email format");
+    }
+
+    console.log("Using cleaned recipient email:", cleanRecipientEmail);
 
     // Initialize Supabase client
     const supabase = createClient(
@@ -48,18 +65,18 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: existingUser } = await supabase
       .from('profiles')
       .select('id, email, full_name')
-      .eq('email', recipientEmail)
+      .eq('email', cleanRecipientEmail)
       .maybeSingle();
 
     let autoEnrollMessage = "";
     
     // If user doesn't exist, auto-enroll them
     if (!existingUser) {
-      console.log("User not found, auto-enrolling:", recipientEmail);
+      console.log("User not found, auto-enrolling:", cleanRecipientEmail);
       
       const { data: enrollData, error: enrollError } = await supabase.functions.invoke('auto-enroll-user', {
         body: {
-          email: recipientEmail,
+          email: cleanRecipientEmail,
           fullName: recipientName,
           role: 'user'
         }
@@ -70,7 +87,7 @@ const handler = async (req: Request): Promise<Response> => {
         // Continue anyway - we can still send the contract
       } else {
         console.log("User auto-enrolled successfully:", enrollData);
-        autoEnrollMessage = `\n\nNote: An account has been created for you with email ${recipientEmail}. Your temporary password is: ${enrollData.tempPassword}\nPlease log in and change your password after signing the contract.`;
+        autoEnrollMessage = `\n\nNote: An account has been created for you with email ${cleanRecipientEmail}. Your temporary password is: ${enrollData.tempPassword}\nPlease log in and change your password after signing the contract.`;
       }
     }
 
@@ -108,13 +125,13 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Using signature fields:", effectiveSignatureFields);
 
-    // Store contract recipient record
+    // Store contract recipient record with the correct recipient email
     const { error: recipientError } = await supabase
       .from('contract_recipients_v2')
       .insert({
         contract_id: contractId,
-        recipient_name: recipientName,
-        recipient_email: recipientEmail,
+        recipient_name: recipientName || cleanRecipientEmail.split('@')[0],
+        recipient_email: cleanRecipientEmail, // Use the cleaned recipient email
         custom_message: customMessage || null,
         email_status: 'sent',
         delivery_status: 'delivered'
@@ -141,10 +158,12 @@ const handler = async (req: Request): Promise<Response> => {
     const signatureFieldsBgColor = hasSignatureFields ? "#e3f2fd" : "#fff3e0";
     const signatureFieldsTextColor = hasSignatureFields ? "#1976d2" : "#f57c00";
 
-    // Send email using Resend
+    console.log("Sending email to:", cleanRecipientEmail);
+
+    // Send email using Resend to the correct recipient
     const emailResponse = await resend.emails.send({
       from: "ContractFlow <onboarding@resend.dev>",
-      to: [recipientEmail],
+      to: [cleanRecipientEmail], // Use the cleaned recipient email
       subject: `Contract Signature Required: ${contractTitle}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
@@ -155,7 +174,7 @@ const handler = async (req: Request): Promise<Response> => {
           
           <!-- Main Content -->
           <div style="padding: 30px; background-color: white;">
-            <p style="font-size: 18px; color: #333; margin-bottom: 20px;">Hello ${recipientName},</p>
+            <p style="font-size: 18px; color: #333; margin-bottom: 20px;">Hello ${recipientName || cleanRecipientEmail.split('@')[0]},</p>
             
             <p style="font-size: 16px; color: #666; line-height: 1.6; margin-bottom: 25px;">
               You have been requested to review and sign the following contract:
@@ -218,14 +237,16 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    console.log("Email sent successfully to:", cleanRecipientEmail);
+    console.log("Email response:", emailResponse);
 
     return new Response(JSON.stringify({ 
       success: true, 
       emailId: emailResponse.data?.id,
       hasSignatureFields: hasSignatureFields,
       signatureFieldsCount: effectiveSignatureFields.length,
-      autoEnrolled: !existingUser
+      autoEnrolled: !existingUser,
+      recipientEmail: cleanRecipientEmail // Return the actual recipient for confirmation
     }), {
       status: 200,
       headers: {
