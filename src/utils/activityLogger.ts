@@ -15,9 +15,15 @@ export const logActivity = async ({
   details = {}
 }: LogActivityParams) => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    // Check if we have a session first
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
-    if (!user) {
+    if (sessionError) {
+      console.warn('Session error when trying to log activity:', sessionError);
+      return;
+    }
+    
+    if (!session?.user) {
       console.warn('No authenticated user found for activity logging');
       return;
     }
@@ -25,8 +31,8 @@ export const logActivity = async ({
     // Get client IP and user agent (simplified for demo)
     const userAgent = navigator.userAgent;
     
-    await supabase.rpc('log_activity', {
-      p_user_id: user.id,
+    const { error } = await supabase.rpc('log_activity', {
+      p_user_id: session.user.id,
       p_action_type: actionType,
       p_resource_type: resourceType,
       p_resource_id: resourceId || null,
@@ -34,8 +40,12 @@ export const logActivity = async ({
       p_ip_address: null, // Would need server-side implementation for real IP
       p_user_agent: userAgent
     });
+
+    if (error) {
+      console.warn('Failed to log activity:', error);
+    }
   } catch (error) {
-    console.error('Failed to log activity:', error);
+    console.warn('Failed to log activity:', error);
     // Don't throw error to avoid breaking main functionality
   }
 };
