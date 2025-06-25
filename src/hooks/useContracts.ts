@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +20,7 @@ export const useContracts = () => {
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const channelRef = useRef<any>(null);
+  const mountedRef = useRef(true);
 
   const fetchContracts = async () => {
     try {
@@ -50,17 +50,23 @@ export const useContracts = () => {
       }
       
       console.log('Contracts fetched successfully:', data?.length || 0);
-      setContracts(data || []);
+      if (mountedRef.current) {
+        setContracts(data || []);
+      }
     } catch (error) {
       console.error('Error fetching contracts:', error);
-      setError('Failed to load contracts');
-      toast({
-        title: "Error",
-        description: "Failed to load contracts",
-        variant: "destructive",
-      });
+      if (mountedRef.current) {
+        setError('Failed to load contracts');
+        toast({
+          title: "Error",
+          description: "Failed to load contracts",
+          variant: "destructive",
+        });
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
@@ -195,6 +201,8 @@ export const useContracts = () => {
   };
 
   useEffect(() => {
+    mountedRef.current = true;
+    
     console.log('useContracts effect triggered');
     console.log('Auth loading:', authLoading);
     console.log('User:', user?.id);
@@ -207,16 +215,18 @@ export const useContracts = () => {
 
     if (!user) {
       console.log('No authenticated user, clearing contracts');
-      setContracts([]);
-      setLoading(false);
-      setError(null);
+      if (mountedRef.current) {
+        setContracts([]);
+        setLoading(false);
+        setError(null);
+      }
       return;
     }
 
     console.log('User authenticated, fetching contracts for:', user.id);
     fetchContracts();
 
-    // Clean up any existing channel
+    // Clean up any existing channel before creating a new one
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
@@ -224,7 +234,7 @@ export const useContracts = () => {
 
     // Set up real-time subscription with improved handling
     const channel = supabase
-      .channel('contracts-changes')
+      .channel(`contracts-changes-${user.id}`) // Unique channel per user
       .on(
         'postgres_changes',
         {
@@ -234,6 +244,8 @@ export const useContracts = () => {
         },
         (payload) => {
           console.log('Real-time contract update:', payload);
+          
+          if (!mountedRef.current) return;
           
           if (payload.eventType === 'INSERT') {
             const newContract = payload.new as Contract;
@@ -267,6 +279,7 @@ export const useContracts = () => {
 
     // Cleanup function
     return () => {
+      mountedRef.current = false;
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;

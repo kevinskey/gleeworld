@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { cleanupAuthState } from "@/utils/authCleanup";
@@ -25,9 +25,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const subscriptionRef = useRef<any>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    let mounted = true;
+    mountedRef.current = true;
 
     // Initialize auth state check
     const initializeAuth = async () => {
@@ -38,7 +40,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (error) {
           console.error('Error getting initial session:', error);
-          if (mounted) {
+          if (mountedRef.current) {
             setSession(null);
             setUser(null);
             setLoading(false);
@@ -46,7 +48,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return;
         }
         
-        if (mounted) {
+        if (mountedRef.current) {
           console.log('Initial session found:', session?.user?.id || 'no user');
           setSession(session);
           setUser(session?.user ?? null);
@@ -54,7 +56,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       } catch (error) {
         console.error('Failed to initialize auth:', error);
-        if (mounted) {
+        if (mountedRef.current) {
           setSession(null);
           setUser(null);
           setLoading(false);
@@ -62,12 +64,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    // Set up auth state listener
+    // Clean up any existing subscription
+    if (subscriptionRef.current) {
+      subscriptionRef.current.unsubscribe();
+      subscriptionRef.current = null;
+    }
+
+    // Set up auth state listener - only once
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id || 'no user');
         
-        if (!mounted) return;
+        if (!mountedRef.current) return;
         
         // Handle different auth events
         if (event === 'SIGNED_OUT') {
@@ -88,14 +96,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
+    subscriptionRef.current = subscription;
+
     // Initialize on mount
     initializeAuth();
 
     return () => {
-      mounted = false;
-      subscription.unsubscribe();
+      mountedRef.current = false;
+      if (subscriptionRef.current) {
+        subscriptionRef.current.unsubscribe();
+        subscriptionRef.current = null;
+      }
     };
-  }, []);
+  }, []); // Empty dependency array to run only once
 
   const signOut = async () => {
     try {
