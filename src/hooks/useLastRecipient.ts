@@ -20,6 +20,8 @@ export const useLastRecipient = (contractId: string | null) => {
     const fetchLastRecipient = async () => {
       setLoading(true);
       try {
+        console.log('Fetching last recipient for contract:', contractId);
+        
         const { data, error } = await supabase
           .from('contract_recipients_v2')
           .select('recipient_email, recipient_name')
@@ -34,12 +36,15 @@ export const useLastRecipient = (contractId: string | null) => {
           return;
         }
 
+        console.log('Last recipient data:', data);
+
         if (data) {
           setLastRecipient({
-            recipientEmail: data.recipient_email,
-            recipientName: data.recipient_name
+            recipientEmail: data.recipient_email || '',
+            recipientName: data.recipient_name || ''
           });
         } else {
+          console.log('No previous recipient found for contract:', contractId);
           setLastRecipient(null);
         }
       } catch (error) {

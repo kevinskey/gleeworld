@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -45,13 +44,20 @@ export const SendContractDialog = ({
 
   // Auto-populate fields when dialog opens with initial values
   useEffect(() => {
+    console.log('SendContractDialog useEffect triggered:', {
+      isOpen,
+      initialRecipientEmail,
+      initialRecipientName,
+      isResend
+    });
+    
     if (isOpen) {
-      setRecipientEmail(initialRecipientEmail);
-      setRecipientName(initialRecipientName);
+      setRecipientEmail(initialRecipientEmail || "");
+      setRecipientName(initialRecipientName || "");
       setCustomMessage("");
       setAutoEnrolled(false);
     }
-  }, [isOpen, initialRecipientEmail, initialRecipientName]);
+  }, [isOpen, initialRecipientEmail, initialRecipientName, isResend]);
 
   const handleSend = async () => {
     if (!contract || !recipientEmail) {
@@ -164,6 +170,14 @@ export const SendContractDialog = ({
               <div className="p-3 bg-gray-50 rounded-lg">
                 <p className="font-medium">{contract.title}</p>
                 <p className="text-sm text-gray-600">Created: {new Date(contract.created_at).toLocaleDateString()}</p>
+              </div>
+            )}
+
+            {isResend && (
+              <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <p className="text-sm text-orange-800">
+                  📧 Resending contract - fields auto-populated from last recipient
+                </p>
               </div>
             )}
 

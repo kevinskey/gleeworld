@@ -37,7 +37,9 @@ export const ContractsList = ({
   const [isResendMode, setIsResendMode] = useState(false);
   
   const { contractSendHistory, reloadSendHistory } = useContractSendHistory(contracts);
-  const { lastRecipient } = useLastRecipient(sendDialogContract?.id || null);
+  const { lastRecipient, loading: lastRecipientLoading } = useLastRecipient(
+    sendDialogContract?.id || null
+  );
   const {
     signingContract,
     adminSignature,
@@ -96,6 +98,7 @@ export const ContractsList = ({
   };
 
   const handleOpenSendDialog = (contract: Contract, isResend: boolean = false) => {
+    console.log('Opening send dialog for contract:', contract.id, 'isResend:', isResend);
     setSendDialogContract(contract);
     setIsResendMode(isResend);
   };
@@ -167,8 +170,8 @@ export const ContractsList = ({
           isOpen={!!sendDialogContract}
           onClose={handleSendDialogClose}
           onSent={handleContractSent}
-          initialRecipientEmail={isResendMode ? lastRecipient?.recipientEmail || "" : ""}
-          initialRecipientName={isResendMode ? lastRecipient?.recipientName || "" : ""}
+          initialRecipientEmail={isResendMode && lastRecipient ? lastRecipient.recipientEmail : ""}
+          initialRecipientName={isResendMode && lastRecipient ? lastRecipient.recipientName : ""}
           isResend={isResendMode}
         />
       )}
