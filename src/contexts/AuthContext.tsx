@@ -54,7 +54,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.log('Initial session retrieved:', session?.user?.id || 'no user');
           setSession(session);
           setUser(session?.user ?? null);
-          // Only set loading to false after we've checked for an existing session
           setLoading(false);
         }
       } catch (error) {
@@ -80,31 +79,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (!mountedRef.current) return;
         
-        // Handle different auth events
+        // Handle different auth events with more stability
         if (event === 'SIGNED_OUT') {
           console.log('User signed out');
           setSession(null);
           setUser(null);
+          setLoading(false);
         } else if (event === 'SIGNED_IN') {
           console.log('User signed in');
           setSession(session);
           setUser(session?.user ?? null);
+          setLoading(false);
         } else if (event === 'TOKEN_REFRESHED') {
-          console.log('Token refreshed');
+          console.log('Token refreshed - maintaining session');
+          // Don't change loading state on token refresh to prevent UI flicker
           setSession(session);
           setUser(session?.user ?? null);
         } else if (event === 'INITIAL_SESSION') {
-          // Don't override session state on INITIAL_SESSION if we already have one
-          console.log('Initial session event - checking if we need to update');
+          console.log('Initial session event');
+          // Only update if we don't already have a session
           if (!user && session) {
-            console.log('Setting session from initial session event');
             setSession(session);
             setUser(session?.user ?? null);
           }
-        }
-        
-        // Only set loading to false after we've processed the initial session
-        if (event !== 'INITIAL_SESSION' || !loading) {
           setLoading(false);
         }
       }

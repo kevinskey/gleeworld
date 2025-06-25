@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -97,8 +98,10 @@ export const useContracts = () => {
       console.log('Contract created successfully:', data);
       console.log('Contract created_by field:', data.created_by);
       
-      // Update local state
-      setContracts(prev => [data, ...prev]);
+      // Update local state immediately to prevent UI flicker
+      if (mountedRef.current) {
+        setContracts(prev => [data, ...prev]);
+      }
       
       toast({
         title: "Success",
@@ -232,7 +235,7 @@ export const useContracts = () => {
       channelRef.current = null;
     }
 
-    // Set up real-time subscription with improved handling
+    // Set up real-time subscription with improved stability
     const channel = supabase
       .channel(`contracts-changes-${user.id}`) // Unique channel per user
       .on(
@@ -247,28 +250,33 @@ export const useContracts = () => {
           
           if (!mountedRef.current) return;
           
-          if (payload.eventType === 'INSERT') {
-            const newContract = payload.new as Contract;
-            setContracts(prev => {
-              // Check if contract already exists to prevent duplicates
-              const exists = prev.some(contract => contract.id === newContract.id);
-              if (exists) return prev;
-              return [newContract, ...prev];
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            const updatedContract = payload.new as Contract;
-            console.log('Contract updated via real-time:', updatedContract.id, 'Status:', updatedContract.status);
-            setContracts(prev => 
-              prev.map(contract => 
-                contract.id === updatedContract.id ? updatedContract : contract
-              )
-            );
-          } else if (payload.eventType === 'DELETE') {
-            const deletedId = payload.old.id;
-            setContracts(prev => 
-              prev.filter(contract => contract.id !== deletedId)
-            );
-          }
+          // Use setTimeout to defer state updates and prevent auth conflicts
+          setTimeout(() => {
+            if (!mountedRef.current) return;
+            
+            if (payload.eventType === 'INSERT') {
+              const newContract = payload.new as Contract;
+              setContracts(prev => {
+                // Check if contract already exists to prevent duplicates
+                const exists = prev.some(contract => contract.id === newContract.id);
+                if (exists) return prev;
+                return [newContract, ...prev];
+              });
+            } else if (payload.eventType === 'UPDATE') {
+              const updatedContract = payload.new as Contract;
+              console.log('Contract updated via real-time:', updatedContract.id, 'Status:', updatedContract.status);
+              setContracts(prev => 
+                prev.map(contract => 
+                  contract.id === updatedContract.id ? updatedContract : contract
+                )
+              );
+            } else if (payload.eventType === 'DELETE') {
+              const deletedId = payload.old.id;
+              setContracts(prev => 
+                prev.filter(contract => contract.id !== deletedId)
+              );
+            }
+          }, 0);
         }
       )
       .subscribe((status) => {
