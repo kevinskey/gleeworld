@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,8 @@ import { useUsers } from "@/hooks/useUsers";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
-import { SignatureFieldEditor, SignatureField } from "./SignatureFieldEditor";
+import { SignatureFieldEditor } from "./SignatureFieldEditor";
+import type { SignatureField } from "@/types/signatureField";
 import { UserSelectionSection } from "./upload/UserSelectionSection";
 import { StipendAmountField } from "./upload/StipendAmountField";
 import { ContractContentSection } from "./upload/ContractContentSection";
@@ -94,6 +94,9 @@ export const DocumentUpload = ({
           page: 1,
           x: 100,
           y: 400,
+          width: 200,
+          height: 50,
+          font_size: 12,
           required: true
         },
         {
@@ -103,6 +106,9 @@ export const DocumentUpload = ({
           page: 1,
           x: 400,
           y: 400,
+          width: 200,
+          height: 50,
+          font_size: 12,
           required: true
         }
       ];
@@ -164,6 +170,9 @@ export const DocumentUpload = ({
           page: 1,
           x: 100,
           y: 400,
+          width: 200,
+          height: 50,
+          font_size: 12,
           required: true
         },
         {
@@ -173,6 +182,9 @@ export const DocumentUpload = ({
           page: 1,
           x: 400,
           y: 400,
+          width: 200,
+          height: 50,
+          font_size: 12,
           required: true
         }
       ];
