@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,12 +62,17 @@ export const SendContractDialog = ({ contract, isOpen, onClose, onSent }: SendCo
     // Look for email patterns in the contract content
     const emailMatch = content.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
     
-    // Look for recipient name patterns (this is a simple approach, could be enhanced)
+    // Enhanced name patterns to better capture artist data
     const namePatterns = [
-      /Recipient[:\s]+([A-Za-z\s]+)/i,
-      /Artist[:\s]+([A-Za-z\s]+)/i,
-      /Client[:\s]+([A-Za-z\s]+)/i,
-      /To[:\s]+([A-Za-z\s]+)/i
+      /Artist[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,)/i,
+      /Artist Name[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,)/i,
+      /Performer[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,)/i,
+      /Singer[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,)/i,
+      /Musician[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,)/i,
+      /Contractor[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,)/i,
+      /Name[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,)/i,
+      /Recipient[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,)/i,
+      /To[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,)/i
     ];
     
     let extractedName = '';
@@ -74,7 +80,12 @@ export const SendContractDialog = ({ contract, isOpen, onClose, onSent }: SendCo
       const nameMatch = content.match(pattern);
       if (nameMatch && nameMatch[1]) {
         extractedName = nameMatch[1].trim();
-        break;
+        // Clean up common suffixes/prefixes that might be captured
+        extractedName = extractedName.replace(/^(Mr|Ms|Mrs|Dr)\.?\s*/i, '');
+        extractedName = extractedName.replace(/\s+(will|shall|hereby|agrees?).*$/i, '');
+        if (extractedName.length > 2) { // Only use if it's a reasonable name length
+          break;
+        }
       }
     }
     
