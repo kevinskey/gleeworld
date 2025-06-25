@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,29 +61,53 @@ export const SendContractDialog = ({ contract, isOpen, onClose, onSent }: SendCo
     // Look for email patterns in the contract content
     const emailMatch = content.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
     
-    // Enhanced name patterns to better capture artist data
+    // Focus on first paragraph and prioritize "Artist:" pattern
+    const firstParagraph = content.split('\n\n')[0] || content.split('\n').slice(0, 5).join('\n');
+    
+    // Enhanced name patterns specifically targeting first paragraph artist listing
     const namePatterns = [
-      /Artist[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,)/i,
-      /Artist Name[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,)/i,
-      /Performer[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,)/i,
-      /Singer[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,)/i,
-      /Musician[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,)/i,
-      /Contractor[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,)/i,
-      /Name[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,)/i,
-      /Recipient[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,)/i,
-      /To[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,)/i
+      // Prioritize "Artist:" pattern in first paragraph
+      /Artist[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,|\.)/i,
+      // Then try other variations
+      /Artist Name[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,|\.)/i,
+      /Performer[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,|\.)/i,
+      /Singer[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,|\.)/i,
+      /Musician[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,|\.)/i,
+      /Contractor[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,|\.)/i,
+      /Name[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,|\.)/i,
+      /Recipient[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,|\.)/i,
+      /To[:\s]*([A-Za-z\s]+?)(?:\s|$|\n|,|\.)/i
     ];
     
     let extractedName = '';
+    
+    // First try to find artist name in the first paragraph
     for (const pattern of namePatterns) {
-      const nameMatch = content.match(pattern);
+      const nameMatch = firstParagraph.match(pattern);
       if (nameMatch && nameMatch[1]) {
         extractedName = nameMatch[1].trim();
         // Clean up common suffixes/prefixes that might be captured
         extractedName = extractedName.replace(/^(Mr|Ms|Mrs|Dr)\.?\s*/i, '');
-        extractedName = extractedName.replace(/\s+(will|shall|hereby|agrees?).*$/i, '');
-        if (extractedName.length > 2) { // Only use if it's a reasonable name length
+        extractedName = extractedName.replace(/\s+(will|shall|hereby|agrees?|is|was|and).*$/i, '');
+        extractedName = extractedName.replace(/\s*,.*$/, ''); // Remove everything after comma
+        if (extractedName.length > 2 && extractedName.length < 50) { // Reasonable name length
           break;
+        }
+      }
+    }
+    
+    // If no name found in first paragraph, try the entire content
+    if (!extractedName) {
+      for (const pattern of namePatterns) {
+        const nameMatch = content.match(pattern);
+        if (nameMatch && nameMatch[1]) {
+          extractedName = nameMatch[1].trim();
+          extractedName = extractedName.replace(/^(Mr|Ms|Mrs|Dr)\.?\s*/i, '');
+          extractedName = extractedName.replace(/\s+(will|shall|hereby|agrees?|is|was|and).*$/i, '');
+          extractedName = extractedName.replace(/\s*,.*$/, '');
+          if (extractedName.length > 2 && extractedName.length < 50) {
+            break;
+          }
         }
       }
     }
