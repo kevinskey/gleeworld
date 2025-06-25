@@ -28,6 +28,7 @@ interface ContractEmailRequest {
   senderName?: string;
   customMessage?: string;
   signatureFields?: SignatureField[];
+  isResend?: boolean;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -43,10 +44,12 @@ const handler = async (req: Request): Promise<Response> => {
       contractId,
       senderName = "ContractFlow",
       customMessage = "",
-      signatureFields = []
+      signatureFields = [],
+      isResend = false
     }: ContractEmailRequest = await req.json();
 
     console.log("Sending contract email to:", recipientEmail);
+    console.log("Is resend:", isResend);
     console.log("Signature fields received:", signatureFields);
     console.log("Number of signature fields:", signatureFields?.length || 0);
 
@@ -56,7 +59,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Generated signature URL:", signatureUrl);
 
-    // Generate signature fields summary for email - Fixed the logic
+    // Generate signature fields summary for email
     const signatureFieldsSummary = signatureFields && signatureFields.length > 0 ? `
       <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0;">
         <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 16px; font-weight: 600;">📝 Signature Fields Required:</h3>
@@ -116,24 +119,36 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    // Debug: Log the generated summary
+    // Create resend-specific messaging
+    const resendBanner = isResend ? `
+      <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+        <p style="margin: 0; color: #92400e; font-size: 14px; font-weight: 600;">
+          🔄 <strong>Contract Resent</strong> - This is a follow-up email for the contract below.
+        </p>
+      </div>
+    ` : '';
+
     console.log("Generated signature fields summary length:", signatureFieldsSummary.length);
 
     const emailResponse = await resend.emails.send({
       from: "ContractFlow <noreply@contract.gleeworld.org>",
       to: [recipientEmail],
-      subject: `Contract for Signature: ${contractTitle}`,
+      subject: `${isResend ? '[RESEND] ' : ''}Contract for Signature: ${contractTitle}`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px 20px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 600;">Contract Signature Required</h1>
+            <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 600;">
+              ${isResend ? 'Contract Resent' : 'Contract Signature Required'}
+            </h1>
           </div>
           
           <div style="padding: 30px 20px;">
+            ${resendBanner}
+            
             <p style="font-size: 16px; color: #374151; margin-bottom: 20px;">Hello ${recipientName},</p>
             
             <p style="font-size: 16px; color: #374151; line-height: 1.6;">
-              You have been requested to review and sign the following contract:
+              ${isResend ? 'This is a follow-up email. ' : ''}You have been requested to review and sign the following contract:
             </p>
             
             <div style="background-color: #f9fafb; padding: 25px; border-radius: 8px; margin: 25px 0; border: 1px solid #e5e7eb;">
@@ -156,13 +171,21 @@ const handler = async (req: Request): Promise<Response> => {
                         color: white; padding: 15px 30px; text-decoration: none; 
                         border-radius: 8px; display: inline-block; font-weight: 600;
                         font-size: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                📄 Review and Sign Contract
+                📄 ${isResend ? 'Review and Sign Contract (Resent)' : 'Review and Sign Contract'}
               </a>
             </div>
             
             <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
               If you have any questions about this contract, please contact <strong>${senderName}</strong>.
             </p>
+            
+            ${isResend ? `
+            <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0; color: #6b7280; font-size: 13px; font-style: italic;">
+                This contract was previously sent but is being resent as requested. If you have already signed this contract, please disregard this email.
+              </p>
+            </div>
+            ` : ''}
           </div>
           
           <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">

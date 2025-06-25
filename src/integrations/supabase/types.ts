@@ -209,6 +209,72 @@ export type Database = {
           },
         ]
       }
+      contract_recipients_v2: {
+        Row: {
+          clicked_at: string | null
+          contract_id: string
+          created_at: string
+          custom_message: string | null
+          delivery_status: string | null
+          email_status: string
+          id: string
+          is_resend: boolean
+          opened_at: string | null
+          recipient_email: string
+          recipient_name: string
+          resend_reason: string | null
+          sent_at: string
+          sent_by: string | null
+        }
+        Insert: {
+          clicked_at?: string | null
+          contract_id: string
+          created_at?: string
+          custom_message?: string | null
+          delivery_status?: string | null
+          email_status?: string
+          id?: string
+          is_resend?: boolean
+          opened_at?: string | null
+          recipient_email: string
+          recipient_name: string
+          resend_reason?: string | null
+          sent_at?: string
+          sent_by?: string | null
+        }
+        Update: {
+          clicked_at?: string | null
+          contract_id?: string
+          created_at?: string
+          custom_message?: string | null
+          delivery_status?: string | null
+          email_status?: string
+          id?: string
+          is_resend?: boolean
+          opened_at?: string | null
+          recipient_email?: string
+          recipient_name?: string
+          resend_reason?: string | null
+          sent_at?: string
+          sent_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_recipients_v2_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_recipients_v2_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_signatures: {
         Row: {
           admin_id: string

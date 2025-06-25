@@ -1,15 +1,15 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Upload, FileText, Eye, Send, Inbox, Loader2, Trash2, AlertCircle, PenTool } from "lucide-react";
+import { Upload, FileText, Eye, Send, Inbox, Loader2, Trash2, AlertCircle, PenTool, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
+import { SendContractDialog } from "@/components/SendContractDialog";
 import type { Contract } from "@/hooks/useContracts";
 
 interface ContractsListProps {
@@ -57,12 +57,41 @@ export const ContractsList = ({
   const { user } = useAuth();
   const { displayName } = useUserProfile(user);
   const [selectedContracts, setSelectedContracts] = useState<Set<string>>(new Set());
-  const [sendingContract, setSendingContract] = useState<string | null>(null);
   const [signingContract, setSigningContract] = useState<string | null>(null);
   const [adminSignature, setAdminSignature] = useState<string>("");
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [contractToSign, setContractToSign] = useState<Contract | null>(null);
+  const [sendDialogContract, setSendDialogContract] = useState<Contract | null>(null);
+  const [contractSendHistory, setContractSendHistory] = useState<Record<string, number>>({});
   const selectAllCheckboxRef = useRef<HTMLButtonElement>(null);
+
+  // Load send history for contracts to show appropriate send/resend buttons
+  useEffect(() => {
+    loadContractSendHistory();
+  }, [contracts]);
+
+  const loadContractSendHistory = async () => {
+    if (contracts.length === 0) return;
+    
+    try {
+      const contractIds = contracts.map(c => c.id);
+      const { data, error } = await supabase
+        .from('contract_recipients_v2')
+        .select('contract_id')
+        .in('contract_id', contractIds);
+
+      if (error) throw error;
+
+      const sendCounts = data.reduce((acc, record) => {
+        acc[record.contract_id] = (acc[record.contract_id] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      setContractSendHistory(sendCounts);
+    } catch (error) {
+      console.error('Error loading send history:', error);
+    }
+  };
 
   const handleDeleteContract = async (contractId: string) => {
     if (confirm("Are you sure you want to delete this contract?")) {
@@ -110,65 +139,18 @@ export const ContractsList = ({
     });
   };
 
-  const handleSendContract = async (contract: Contract) => {
-    setSendingContract(contract.id);
-    
-    try {
-      // For now, we'll just show a placeholder dialog
-      // In a real implementation, you'd open a send dialog with recipient details
-      const recipientEmail = prompt("Enter recipient email:");
-      const recipientName = prompt("Enter recipient name:");
-      
-      if (!recipientEmail || !recipientName) {
-        toast({
-          title: "Send Cancelled",
-          description: "Contract sending was cancelled",
-        });
-        return;
-      }
+  const handleOpenSendDialog = (contract: Contract) => {
+    setSendDialogContract(contract);
+  };
 
-      // Call the send-contract-email edge function
-      const { data, error } = await supabase.functions.invoke('send-contract-email', {
-        body: {
-          recipientEmail,
-          recipientName,
-          contractTitle: contract.title,
-          contractId: contract.id,
-          senderName: displayName || "ContractFlow Team",
-          customMessage: "",
-          signatureFields: []
-        }
-      });
+  const handleSendDialogClose = () => {
+    setSendDialogContract(null);
+  };
 
-      if (error) {
-        throw error;
-      }
-
-      toast({
-        title: "Contract Sent",
-        description: `"${contract.title}" has been sent to ${recipientEmail}`,
-      });
-
-      // Update contract status to pending_recipient (this would typically be done on the server)
-      const { error: updateError } = await supabase
-        .from('contracts_v2')
-        .update({ status: 'pending_recipient' })
-        .eq('id', contract.id);
-
-      if (updateError) {
-        console.error('Error updating contract status:', updateError);
-      }
-
-    } catch (error) {
-      console.error('Error sending contract:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send contract. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setSendingContract(null);
-    }
+  const handleContractSent = () => {
+    // Reload send history after a contract is sent
+    loadContractSendHistory();
+    // You might also want to trigger a refresh of the contracts list here
   };
 
   const handleAdminSign = async (contract: Contract) => {
@@ -401,88 +383,105 @@ export const ContractsList = ({
               </div>
 
               {/* Contracts List */}
-              {contracts.map((contract) => (
-                <div 
-                  key={contract.id} 
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors gap-4"
-                >
-                  <div className="flex items-start sm:items-center space-x-4 min-w-0 flex-1">
-                    <Checkbox 
-                      checked={selectedContracts.has(contract.id)}
-                      onCheckedChange={(checked) => handleSelectContract(contract.id, checked as boolean)}
-                    />
-                    <FileText className="h-8 w-8 text-gray-400 flex-shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-medium text-gray-900 truncate">{contract.title}</h3>
-                      <p className="text-sm text-gray-500">Status: {getStatusText(contract.status)}</p>
-                      <p className="text-xs text-gray-400">
-                        Created: {new Date(contract.created_at).toLocaleDateString()}
-                        {contract.updated_at !== contract.created_at && (
-                          <span className="ml-2">
-                            • Updated: {new Date(contract.updated_at).toLocaleDateString()}
-                          </span>
-                        )}
-                      </p>
+              {contracts.map((contract) => {
+                const sendCount = contractSendHistory[contract.id] || 0;
+                const hasBeenSent = sendCount > 0;
+                
+                return (
+                  <div 
+                    key={contract.id} 
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors gap-4"
+                  >
+                    <div className="flex items-start sm:items-center space-x-4 min-w-0 flex-1">
+                      <Checkbox 
+                        checked={selectedContracts.has(contract.id)}
+                        onCheckedChange={(checked) => handleSelectContract(contract.id, checked as boolean)}
+                      />
+                      <FileText className="h-8 w-8 text-gray-400 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-medium text-gray-900 truncate">{contract.title}</h3>
+                        <p className="text-sm text-gray-500">Status: {getStatusText(contract.status)}</p>
+                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                          <span>Created: {new Date(contract.created_at).toLocaleDateString()}</span>
+                          {contract.updated_at !== contract.created_at && (
+                            <span>• Updated: {new Date(contract.updated_at).toLocaleDateString()}</span>
+                          )}
+                          {hasBeenSent && (
+                            <span>• Sent {sendCount} time{sendCount > 1 ? 's' : ''}</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-shrink-0">
-                    <Badge className={getStatusColor(contract.status)}>
-                      {getStatusText(contract.status)}
-                    </Badge>
                     
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => onViewContract(contract)}
-                        title="View Contract"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-shrink-0">
+                      <Badge className={getStatusColor(contract.status)}>
+                        {getStatusText(contract.status)}
+                      </Badge>
                       
-                      {contract.status === 'pending_admin_signature' && (
+                      <div className="flex space-x-2">
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => handleAdminSign(contract)}
-                          title="Admin Sign Contract"
-                          className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                          onClick={() => onViewContract(contract)}
+                          title="View Contract"
                         >
-                          <PenTool className="h-4 w-4" />
+                          <Eye className="h-4 w-4" />
                         </Button>
-                      )}
-                      
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleSendContract(contract)}
-                        title="Send for Signature"
-                        disabled={sendingContract === contract.id}
-                      >
-                        {sendingContract === contract.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Send className="h-4 w-4" />
+                        
+                        {contract.status === 'pending_admin_signature' && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleAdminSign(contract)}
+                            title="Admin Sign Contract"
+                            className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                          >
+                            <PenTool className="h-4 w-4" />
+                          </Button>
                         )}
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDeleteContract(contract.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        title="Delete Contract"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                        
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleOpenSendDialog(contract)}
+                          title={hasBeenSent ? "Resend Contract" : "Send Contract"}
+                          className={hasBeenSent ? "bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200" : ""}
+                        >
+                          {hasBeenSent ? (
+                            <RotateCcw className="h-4 w-4" />
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
+                        </Button>
+                        
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleDeleteContract(contract.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          title="Delete Contract"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Send Contract Dialog */}
+      {sendDialogContract && (
+        <SendContractDialog
+          contract={sendDialogContract}
+          isOpen={!!sendDialogContract}
+          onClose={handleSendDialogClose}
+          onSent={handleContractSent}
+        />
+      )}
 
       {/* Admin Signature Modal */}
       {showSignatureModal && contractToSign && (
