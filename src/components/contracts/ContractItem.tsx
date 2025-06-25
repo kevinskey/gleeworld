@@ -87,9 +87,15 @@ export const ContractItem = ({
             className={hasBeenSent ? "bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200" : ""}
           >
             {hasBeenSent ? (
-              <RotateCcw className="h-4 w-4" />
+              <>
+                <RotateCcw className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Resend</span>
+              </>
             ) : (
-              <Send className="h-4 w-4" />
+              <>
+                <Send className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Send</span>
+              </>
             )}
           </Button>
           
