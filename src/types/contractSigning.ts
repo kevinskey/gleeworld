@@ -21,6 +21,8 @@ export interface Contract {
   content: string;
   status: string;
   created_at: string;
+  updated_at?: string;
+  created_by?: string;
   header_image_url?: string;
   email_message?: string;
   recipient_email?: string;

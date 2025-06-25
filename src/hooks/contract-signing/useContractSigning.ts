@@ -15,6 +15,7 @@ export const useContractSigning = (contractId: string | undefined) => {
     contract,
     signatureRecord,
     loading,
+    error,
     fetchContract
   } = useContractFetcher(contractId);
 
@@ -35,6 +36,37 @@ export const useContractSigning = (contractId: string | undefined) => {
 
   const isContractSigned = () => {
     return signatureRecord?.status === 'completed' && signatureRecord?.embedded_signatures;
+  };
+
+  const handleSignContract = async (signatureData: string) => {
+    if (!contractId || !user?.id) {
+      console.error('useContractSigning - Contract ID or User ID is missing');
+      return;
+    }
+
+    setSigning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('artist-sign-contract', {
+        body: {
+          contractId: contractId,
+          signatureData: signatureData,
+          dateSigned: new Date().toLocaleDateString()
+        }
+      });
+
+      if (error) {
+        console.error('useContractSigning - Error signing contract:', error);
+        throw error;
+      }
+
+      console.log('useContractSigning - Contract signed successfully:', data);
+      await fetchContract(); // Refresh contract data
+    } catch (error) {
+      console.error('useContractSigning - Failed to sign contract:', error);
+      throw error;
+    } finally {
+      setSigning(false);
+    }
   };
 
   const generateCombinedPDF = async () => {
@@ -74,11 +106,6 @@ export const useContractSigning = (contractId: string | undefined) => {
   }, [contract, user, checkW9Status]);
 
   useEffect(() => {
-    console.log('useContractSigning - Auth state changed, fetching contract and signature record.');
-    fetchContract();
-  }, [fetchContract]);
-
-  useEffect(() => {
     if (contract) {
       initializeMockSignatureFields();
     }
@@ -91,8 +118,10 @@ export const useContractSigning = (contractId: string | undefined) => {
     completedFields,
     loading,
     signing,
+    error,
     embeddedSignatures,
     handleFieldComplete,
+    handleSignContract,
     isAdminOrAgentField,
     isArtistDateField,
     isContractSigned,
