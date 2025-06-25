@@ -14,8 +14,8 @@ export interface ActivityLog {
   user_agent: string | null;
   created_at: string;
   user_profile?: {
-    full_name?: string;
-    email?: string;
+    full_name?: string | null;
+    email?: string | null;
   } | null;
 }
 
@@ -37,7 +37,7 @@ export const useActivityLogs = () => {
           user_profile:profiles!user_id(full_name, email)
         `)
         .order('created_at', { ascending: false })
-        .limit(100); // Limit to recent 100 logs for performance
+        .limit(100);
 
       if (error) {
         console.error('Error fetching activity logs:', error);
