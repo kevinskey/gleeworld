@@ -7,11 +7,17 @@ import { UserManagement } from "./admin/UserManagement";
 import { SystemSettings } from "./admin/SystemSettings";
 import { AdminSummaryStats } from "./admin/AdminSummaryStats";
 import { ContractSignatureFixer } from "./admin/ContractSignatureFixer";
+import { useUsers } from "@/hooks/useUsers";
+import { useActivityLogs } from "@/hooks/useActivityLogs";
 import { Shield, Users, Settings, FileText } from "lucide-react";
 
 export const AdminPanel = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
+  
+  // Fetch users and activity logs data
+  const { users, loading: usersLoading, error: usersError, refetch: refetchUsers } = useUsers();
+  const { logs: activityLogs, loading: logsLoading } = useActivityLogs();
 
   if (!user) {
     return (
@@ -52,11 +58,20 @@ export const AdminPanel = () => {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <AdminSummaryStats />
+          <AdminSummaryStats 
+            users={users}
+            loading={usersLoading || logsLoading}
+            activityLogs={activityLogs}
+          />
         </TabsContent>
 
         <TabsContent value="users" className="space-y-6">
-          <UserManagement />
+          <UserManagement 
+            users={users}
+            loading={usersLoading}
+            error={usersError}
+            onRefetch={refetchUsers}
+          />
         </TabsContent>
 
         <TabsContent value="contracts" className="space-y-6">

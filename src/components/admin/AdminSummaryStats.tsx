@@ -1,17 +1,8 @@
 
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Settings, Activity, FileText, Loader2 } from "lucide-react";
+import { Users, Settings, Activity, FileText } from "lucide-react";
 import { User } from "@/hooks/useUsers";
-
-interface ActivityLog {
-  id: number;
-  timestamp: string;
-  user: string;
-  action: string;
-  document: string;
-  ip: string;
-  status: "success" | "error" | "warning";
-}
+import { ActivityLog } from "@/hooks/useActivityLogs";
 
 interface AdminSummaryStatsProps {
   users: User[];
@@ -21,6 +12,11 @@ interface AdminSummaryStatsProps {
 
 export const AdminSummaryStats = ({ users, loading, activityLogs }: AdminSummaryStatsProps) => {
   const adminUsersCount = users.filter(u => u.role === "admin" || u.role === "super-admin").length;
+  const todaysLogs = activityLogs.filter(log => {
+    const logDate = new Date(log.created_at).toDateString();
+    const today = new Date().toDateString();
+    return logDate === today;
+  });
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -53,7 +49,7 @@ export const AdminSummaryStats = ({ users, loading, activityLogs }: AdminSummary
             Today's Activity
           </CardTitle>
           <div className="text-2xl font-bold text-green-600">
-            {activityLogs.filter(log => log.timestamp.includes(new Date().toISOString().split('T')[0])).length}
+            {todaysLogs.length}
           </div>
         </CardHeader>
       </Card>
