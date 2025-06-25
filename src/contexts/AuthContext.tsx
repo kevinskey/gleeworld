@@ -27,31 +27,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const subscriptionRef = useRef<any>(null);
   const mountedRef = useRef(true);
+  const initializedRef = useRef(false);
 
   useEffect(() => {
     mountedRef.current = true;
+
+    // Prevent multiple initializations
+    if (initializedRef.current) {
+      return;
+    }
+    initializedRef.current = true;
 
     // Initialize auth state check
     const initializeAuth = async () => {
       try {
         console.log('Initializing auth state...');
         
+        // Get the current session without triggering auth state changes
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Error getting initial session:', error);
-          if (mountedRef.current) {
-            setSession(null);
-            setUser(null);
-            setLoading(false);
-          }
-          return;
         }
         
         if (mountedRef.current) {
-          console.log('Initial session found:', session?.user?.id || 'no user');
+          console.log('Initial session retrieved:', session?.user?.id || 'no user');
           setSession(session);
           setUser(session?.user ?? null);
+          // Only set loading to false after we've checked for an existing session
           setLoading(false);
         }
       } catch (error) {
@@ -82,23 +85,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.log('User signed out');
           setSession(null);
           setUser(null);
-        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          console.log('User signed in or token refreshed');
+        } else if (event === 'SIGNED_IN') {
+          console.log('User signed in');
+          setSession(session);
+          setUser(session?.user ?? null);
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log('Token refreshed');
           setSession(session);
           setUser(session?.user ?? null);
         } else if (event === 'INITIAL_SESSION') {
-          console.log('Initial session event');
-          setSession(session);
-          setUser(session?.user ?? null);
+          // Don't override session state on INITIAL_SESSION if we already have one
+          console.log('Initial session event - checking if we need to update');
+          if (!user && session) {
+            console.log('Setting session from initial session event');
+            setSession(session);
+            setUser(session?.user ?? null);
+          }
         }
         
-        setLoading(false);
+        // Only set loading to false after we've processed the initial session
+        if (event !== 'INITIAL_SESSION' || !loading) {
+          setLoading(false);
+        }
       }
     );
 
     subscriptionRef.current = subscription;
 
-    // Initialize on mount
+    // Initialize auth state after setting up the listener
     initializeAuth();
 
     return () => {
