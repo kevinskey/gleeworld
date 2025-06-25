@@ -1,5 +1,8 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
+import { ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { SendContractDialog } from "@/components/SendContractDialog";
@@ -35,6 +38,7 @@ export const ContractsList = ({
   const [selectedContracts, setSelectedContracts] = useState<Set<string>>(new Set());
   const [sendDialogContract, setSendDialogContract] = useState<Contract | null>(null);
   const [isResendMode, setIsResendMode] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   
   const { contractSendHistory, reloadSendHistory } = useContractSendHistory(contracts);
   const { lastRecipient, loading: lastRecipientLoading } = useLastRecipient(
@@ -121,52 +125,66 @@ export const ContractsList = ({
   return (
     <>
       <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Recent Contracts</CardTitle>
-          <CardDescription>Manage your contract signing workflow</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {error && !loading ? (
-            <EmptyState 
-              type="error" 
-              error={error} 
-              onUploadContract={onUploadContract}
-              onRetry={onRetry}
-            />
-          ) : loading ? (
-            <EmptyState type="loading" onUploadContract={onUploadContract} />
-          ) : contracts.length === 0 ? (
-            <EmptyState type="empty" onUploadContract={onUploadContract} />
-          ) : (
-            <div className="space-y-4">
-              <BulkActions
-                contracts={contracts}
-                selectedContracts={selectedContracts}
-                onSelectAll={handleSelectAll}
-                onDeleteSelected={handleDeleteSelected}
-              />
-
-              {contracts.map((contract) => {
-                const sendCount = contractSendHistory[contract.id] || 0;
-                
-                return (
-                  <ContractItem
-                    key={contract.id}
-                    contract={contract}
-                    isSelected={selectedContracts.has(contract.id)}
-                    sendCount={sendCount}
-                    onSelect={handleSelectContract}
-                    onView={onViewContract}
-                    onDelete={handleDeleteContract}
-                    onAdminSign={handleAdminSign}
-                    onSend={(contract) => handleOpenSendDialog(contract, false)}
-                    onResend={(contract) => handleOpenSendDialog(contract, true)}
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <CardHeader>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full justify-between p-0 h-auto hover:bg-transparent">
+                <div className="text-left">
+                  <CardTitle className="flex items-center gap-2">
+                    Recent Contracts
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                  </CardTitle>
+                  <CardDescription>Manage your contract signing workflow</CardDescription>
+                </div>
+              </Button>
+            </CollapsibleTrigger>
+          </CardHeader>
+          
+          <CollapsibleContent>
+            <CardContent>
+              {error && !loading ? (
+                <EmptyState 
+                  type="error" 
+                  error={error} 
+                  onUploadContract={onUploadContract}
+                  onRetry={onRetry}
+                />
+              ) : loading ? (
+                <EmptyState type="loading" onUploadContract={onUploadContract} />
+              ) : contracts.length === 0 ? (
+                <EmptyState type="empty" onUploadContract={onUploadContract} />
+              ) : (
+                <div className="space-y-4">
+                  <BulkActions
+                    contracts={contracts}
+                    selectedContracts={selectedContracts}
+                    onSelectAll={handleSelectAll}
+                    onDeleteSelected={handleDeleteSelected}
                   />
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
+
+                  {contracts.map((contract) => {
+                    const sendCount = contractSendHistory[contract.id] || 0;
+                    
+                    return (
+                      <ContractItem
+                        key={contract.id}
+                        contract={contract}
+                        isSelected={selectedContracts.has(contract.id)}
+                        sendCount={sendCount}
+                        onSelect={handleSelectContract}
+                        onView={onViewContract}
+                        onDelete={handleDeleteContract}
+                        onAdminSign={handleAdminSign}
+                        onSend={(contract) => handleOpenSendDialog(contract, false)}
+                        onResend={(contract) => handleOpenSendDialog(contract, true)}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Collapsible>
       </Card>
 
       {/* Send Contract Dialog */}
