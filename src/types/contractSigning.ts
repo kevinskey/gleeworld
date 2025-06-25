@@ -49,3 +49,13 @@ export interface W9Form {
   created_at: string;
   updated_at: string;
 }
+
+export interface EmbeddedSignature {
+  fieldId: number;
+  signatureData: string;
+  dateSigned: string;
+  ipAddress?: string;
+  timestamp: string;
+  signerType?: 'artist' | 'admin';
+  signerName?: string;
+}

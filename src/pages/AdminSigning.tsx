@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
+import { EmbeddedSignature } from "@/types/contractSigning";
 
 interface ContractSignature {
   id: string;
@@ -21,15 +22,6 @@ interface ContractSignature {
     content: string;
     created_at: string;
   };
-}
-
-interface EmbeddedSignature {
-  fieldId: number;
-  signatureData: string;
-  dateSigned: string;
-  ipAddress?: string;
-  timestamp: string;
-  signerType?: 'artist' | 'admin';
 }
 
 const AdminSigning = () => {
@@ -140,8 +132,8 @@ const AdminSigning = () => {
         }
       }
 
-      // Also check embedded_signatures field in signature record
-      if (!existingSignatures.length && fullSignatureRecord.embedded_signatures) {
+      // Also check embedded_signatures field in signature record if it exists and is a string
+      if (!existingSignatures.length && fullSignatureRecord.embedded_signatures && typeof fullSignatureRecord.embedded_signatures === 'string') {
         try {
           const recordSignatures = JSON.parse(fullSignatureRecord.embedded_signatures);
           if (Array.isArray(recordSignatures)) {
@@ -163,7 +155,7 @@ const AdminSigning = () => {
           signatureData: fullSignatureRecord.artist_signature_data,
           dateSigned: fullSignatureRecord.date_signed || new Date(fullSignatureRecord.artist_signed_at).toLocaleDateString(),
           timestamp: fullSignatureRecord.artist_signed_at || new Date().toISOString(),
-          ipAddress: fullSignatureRecord.signer_ip || 'unknown',
+          ipAddress: fullSignatureRecord.signer_ip ? String(fullSignatureRecord.signer_ip) : 'unknown',
           signerType: 'artist',
           signerName: 'Artist'
         };

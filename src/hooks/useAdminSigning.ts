@@ -66,8 +66,8 @@ export const useAdminSigning = () => {
         }
       }
 
-      // Also check embedded_signatures field in signature record
-      if (!existingSignatures.length && signatureRecord.embedded_signatures) {
+      // Also check embedded_signatures field in signature record if it exists and is a string
+      if (!existingSignatures.length && signatureRecord.embedded_signatures && typeof signatureRecord.embedded_signatures === 'string') {
         try {
           const recordSignatures = JSON.parse(signatureRecord.embedded_signatures);
           if (Array.isArray(recordSignatures)) {
@@ -89,7 +89,7 @@ export const useAdminSigning = () => {
           signatureData: signatureRecord.artist_signature_data,
           dateSigned: signatureRecord.date_signed || new Date(signatureRecord.artist_signed_at).toLocaleDateString(),
           timestamp: signatureRecord.artist_signed_at || new Date().toISOString(),
-          ipAddress: signatureRecord.signer_ip || 'unknown',
+          ipAddress: signatureRecord.signer_ip ? String(signatureRecord.signer_ip) : 'unknown',
           signerType: 'artist',
           signerName: 'Artist'
         };
