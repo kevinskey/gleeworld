@@ -63,6 +63,197 @@ export const DocumentUpload = ({
   const { user } = useAuth();
   const { displayName } = useUserProfile(user);
 
+  const saveAsDraft = async () => {
+    if (!contractTitle.trim() || (!contractContent.trim() && !uploadedFile)) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide contract title and content.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to save contracts.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      let finalContent = contractContent || `Contract document: ${uploadedFile?.name}\n\nSignature Fields: ${JSON.stringify(signatureFields)}`;
+      finalContent = finalContent.replace(/Date Executed:/g, `Date Executed: ${new Date().toLocaleDateString()}`);
+      
+      const contractData = await createContract({
+        title: contractTitle,
+        content: finalContent,
+      });
+
+      if (!contractData) {
+        throw new Error("Failed to create contract");
+      }
+
+      await logActivity({
+        actionType: ACTIVITY_TYPES.CONTRACT_CREATED,
+        resourceType: RESOURCE_TYPES.CONTRACT,
+        resourceId: contractData.id,
+        details: {
+          contractTitle,
+          status: 'draft',
+          signatureFieldsCount: signatureFields.length,
+          contractType,
+          creationMode
+        }
+      });
+
+      toast({
+        title: "Draft saved successfully",
+        description: `Contract "${contractTitle}" has been saved as a draft.`,
+      });
+
+      // Reset form
+      resetForm();
+
+      if (onContractCreated) {
+        onContractCreated();
+      }
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save draft. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendContract = async () => {
+    if (!contractTitle.trim() || !recipientEmail.trim() || (!contractContent.trim() && !uploadedFile)) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to send contracts.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      let finalContent = contractContent || `Contract document: ${uploadedFile?.name}\n\nSignature Fields: ${JSON.stringify(signatureFields)}`;
+      finalContent = finalContent.replace(/Date Executed:/g, `Date Executed: ${new Date().toLocaleDateString()}`);
+      
+      const contractData = await createContract({
+        title: contractTitle,
+        content: finalContent,
+      });
+
+      if (!contractData) {
+        throw new Error("Failed to create contract");
+      }
+
+      await logActivity({
+        actionType: ACTIVITY_TYPES.CONTRACT_SENT,
+        resourceType: RESOURCE_TYPES.CONTRACT,
+        resourceId: contractData.id,
+        details: {
+          contractTitle,
+          recipientEmail,
+          recipientName,
+          signatureFieldsCount: signatureFields.length,
+          hasCustomMessage: !!emailMessage,
+          contractType,
+          creationMode
+        }
+      });
+
+      try {
+        const { data: emailData, error: emailError } = await supabase.functions.invoke('send-contract-email', {
+          body: {
+            recipientEmail,
+            recipientName,
+            contractTitle,
+            contractId: contractData.id,
+            senderName: displayName || "ContractFlow Team",
+            customMessage: emailMessage,
+            signatureFields: signatureFields || []
+          }
+        });
+
+        if (emailError) {
+          console.error("Email error:", emailError);
+          toast({
+            title: "Contract created successfully",
+            description: `Contract was created but email sending failed. You may need to send the signing link manually to ${recipientEmail}.`,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Contract sent successfully",
+            description: `Contract with ${signatureFields.length} signature fields has been sent to ${recipientEmail}.`,
+          });
+        }
+      } catch (emailErr) {
+        console.error("Email sending error:", emailErr);
+        toast({
+          title: "Contract created successfully",
+          description: `Contract was created but email sending failed. Please check your email configuration.`,
+          variant: "destructive",
+        });
+      }
+
+      // Reset form
+      resetForm();
+
+      if (onContractCreated) {
+        onContractCreated();
+      }
+    } catch (error) {
+      console.error("Error sending contract:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create and send contract. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setUploadedFile(null);
+    setRecipientEmail("");
+    setRecipientName("");
+    setEmailMessage("");
+    setContractType("");
+    setContractTitle("");
+    setContractContent("");
+    setOriginalTemplateContent(""); 
+    setSignatureFields([]);
+    setSelectedUserId("");
+    setStipendAmount("");
+    setHeaderImageUrl("");
+    setHasStipendField(false);
+    setCreationMode('create');
+    setShowPreview(false);
+    setTemplateApplied(false);
+  };
+
   // Apply template content when provided - only run once
   useEffect(() => {
     if (templateContent && templateName && !templateApplied) {
@@ -275,190 +466,6 @@ export const DocumentUpload = ({
     }
 
     setShowPreview(true);
-  };
-
-  const saveAsDraft = async () => {
-    if (!contractTitle.trim() || (!contractContent.trim() && !uploadedFile)) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide contract title and content.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      let finalContent = contractContent || `Contract document: ${uploadedFile?.name}\n\nSignature Fields: ${JSON.stringify(signatureFields)}`;
-      finalContent = finalContent.replace(/Date Executed:/g, `Date Executed: ${new Date().toLocaleDateString()}`);
-      
-      const contractData = await createContract({
-        title: contractTitle,
-        content: finalContent,
-      });
-
-      if (!contractData) {
-        throw new Error("Failed to create contract");
-      }
-
-      await logActivity({
-        actionType: ACTIVITY_TYPES.CONTRACT_CREATED,
-        resourceType: RESOURCE_TYPES.CONTRACT,
-        resourceId: contractData.id,
-        details: {
-          contractTitle,
-          status: 'draft',
-          signatureFieldsCount: signatureFields.length,
-          contractType,
-          creationMode
-        }
-      });
-
-      toast({
-        title: "Draft saved successfully",
-        description: `Contract "${contractTitle}" has been saved as a draft.`,
-      });
-
-      // Reset form
-      setUploadedFile(null);
-      setRecipientEmail("");
-      setRecipientName("");
-      setEmailMessage("");
-      setContractType("");
-      setContractTitle("");
-      setContractContent("");
-      setOriginalTemplateContent(""); 
-      setSignatureFields([]);
-      setSelectedUserId("");
-      setStipendAmount("");
-      setHeaderImageUrl("");
-      setHasStipendField(false);
-      setCreationMode('create');
-      setShowPreview(false);
-      setTemplateApplied(false);
-
-      if (onContractCreated) {
-        onContractCreated();
-      }
-    } catch (error) {
-      console.error("Error saving draft:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save draft. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const sendContract = async () => {
-    if (!contractTitle.trim() || !recipientEmail.trim() || (!contractContent.trim() && !uploadedFile)) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide all required fields.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      let finalContent = contractContent || `Contract document: ${uploadedFile?.name}\n\nSignature Fields: ${JSON.stringify(signatureFields)}`;
-      finalContent = finalContent.replace(/Date Executed:/g, `Date Executed: ${new Date().toLocaleDateString()}`);
-      
-      const contractData = await createContract({
-        title: contractTitle,
-        content: finalContent,
-      });
-
-      if (!contractData) {
-        throw new Error("Failed to create contract");
-      }
-
-      await logActivity({
-        actionType: ACTIVITY_TYPES.CONTRACT_SENT,
-        resourceType: RESOURCE_TYPES.CONTRACT,
-        resourceId: contractData.id,
-        details: {
-          contractTitle,
-          recipientEmail,
-          recipientName,
-          signatureFieldsCount: signatureFields.length,
-          hasCustomMessage: !!emailMessage,
-          contractType,
-          creationMode
-        }
-      });
-
-      try {
-        const { data: emailData, error: emailError } = await supabase.functions.invoke('send-contract-email', {
-          body: {
-            recipientEmail,
-            recipientName,
-            contractTitle,
-            contractId: contractData.id,
-            senderName: displayName || "ContractFlow Team",
-            customMessage: emailMessage,
-            signatureFields: signatureFields || []
-          }
-        });
-
-        if (emailError) {
-          console.error("Email error:", emailError);
-          toast({
-            title: "Contract created successfully",
-            description: `Contract was created but email sending failed. You may need to send the signing link manually to ${recipientEmail}.`,
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Contract sent successfully",
-            description: `Contract with ${signatureFields.length} signature fields has been sent to ${recipientEmail}.`,
-          });
-        }
-      } catch (emailErr) {
-        console.error("Email sending error:", emailErr);
-        toast({
-          title: "Contract created successfully",
-          description: `Contract was created but email sending failed. Please check your email configuration.`,
-          variant: "destructive",
-        });
-      }
-
-      // Reset form
-      setUploadedFile(null);
-      setRecipientEmail("");
-      setRecipientName("");
-      setEmailMessage("");
-      setContractType("");
-      setContractTitle("");
-      setContractContent("");
-      setOriginalTemplateContent(""); 
-      setSignatureFields([]);
-      setSelectedUserId("");
-      setStipendAmount("");
-      setHeaderImageUrl("");
-      setHasStipendField(false);
-      setCreationMode('create');
-      setShowPreview(false);
-      setTemplateApplied(false);
-
-      if (onContractCreated) {
-        onContractCreated();
-      }
-    } catch (error) {
-      console.error("Error sending contract:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create and send contract. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const showUserSelection = creationMode === 'template' && !!contractContent;

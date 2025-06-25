@@ -32,26 +32,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     mountedRef.current = true;
 
-    // Prevent multiple initializations
-    if (initializedRef.current) {
-      return;
-    }
+    if (initializedRef.current) return;
     initializedRef.current = true;
 
-    // Initialize auth state check
     const initializeAuth = async () => {
       try {
         console.log('Initializing auth state...');
         
-        // Get the current session without triggering auth state changes
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error getting initial session:', error);
+          console.error('Error getting session:', error);
         }
         
         if (mountedRef.current) {
-          console.log('Initial session retrieved:', session?.user?.id || 'no user');
+          console.log('Session retrieved:', session?.user?.id || 'no user');
           setSession(session);
           setUser(session?.user ?? null);
           setLoading(false);
@@ -66,50 +61,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    // Clean up any existing subscription
+    // Clean up existing subscription
     if (subscriptionRef.current) {
       subscriptionRef.current.unsubscribe();
       subscriptionRef.current = null;
     }
 
-    // Set up auth state listener - only once
+    // Set up auth listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id || 'no user');
         
         if (!mountedRef.current) return;
         
-        // Handle different auth events with more stability
         if (event === 'SIGNED_OUT') {
-          console.log('User signed out');
           setSession(null);
           setUser(null);
           setLoading(false);
         } else if (event === 'SIGNED_IN') {
-          console.log('User signed in');
           setSession(session);
           setUser(session?.user ?? null);
           setLoading(false);
         } else if (event === 'TOKEN_REFRESHED') {
-          console.log('Token refreshed - maintaining session');
-          // Don't change loading state on token refresh to prevent UI flicker
+          // Handle token refresh without changing loading state
           setSession(session);
           setUser(session?.user ?? null);
-        } else if (event === 'INITIAL_SESSION') {
-          console.log('Initial session event');
-          // Only update if we don't already have a session
-          if (!user && session) {
-            setSession(session);
-            setUser(session?.user ?? null);
-          }
-          setLoading(false);
         }
       }
     );
 
     subscriptionRef.current = subscription;
-
-    // Initialize auth state after setting up the listener
     initializeAuth();
 
     return () => {
@@ -119,37 +100,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         subscriptionRef.current = null;
       }
     };
-  }, []); // Empty dependency array to run only once
+  }, []);
 
   const signOut = async () => {
     try {
-      console.log('Starting sign out process...');
-      
-      // Set loading state
+      console.log('Starting sign out...');
       setLoading(true);
       
-      // Sign out from Supabase
       const { error } = await supabase.auth.signOut({ scope: 'global' });
       
       if (error) {
         console.error('Error signing out:', error);
       }
       
-      // Clean up auth state
       cleanupAuthState();
-      
-      // Clear local state
       setUser(null);
       setSession(null);
       setLoading(false);
       
-      console.log('Sign out completed');
-      
-      // Redirect to auth page
       window.location.href = '/auth';
     } catch (error) {
       console.error('Sign out failed:', error);
-      // Force cleanup and redirect even on error
       cleanupAuthState();
       setUser(null);
       setSession(null);

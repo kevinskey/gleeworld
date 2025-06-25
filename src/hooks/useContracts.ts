@@ -22,14 +22,16 @@ export const useContracts = () => {
   const { user, loading: authLoading } = useAuth();
   const channelRef = useRef<any>(null);
   const mountedRef = useRef(true);
+  const fetchingRef = useRef(false);
 
   const fetchContracts = async () => {
+    if (fetchingRef.current || !user) return;
+    
     try {
+      fetchingRef.current = true;
       setLoading(true);
       setError(null);
-      console.log('Fetching contracts...');
-      console.log('Current user:', user?.id);
-      console.log('Auth loading:', authLoading);
+      console.log('Fetching contracts for user:', user.id);
       
       const { data, error } = await supabase
         .from('contracts_v2')
@@ -37,20 +39,12 @@ export const useContracts = () => {
         .order('created_at', { ascending: false });
 
       console.log('Contracts query result:', { data, error });
-      console.log('Contracts count:', data?.length || 0);
 
       if (error) {
         console.error('Error fetching contracts:', error);
-        console.error('Error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
         throw error;
       }
       
-      console.log('Contracts fetched successfully:', data?.length || 0);
       if (mountedRef.current) {
         setContracts(data || []);
       }
@@ -68,6 +62,7 @@ export const useContracts = () => {
       if (mountedRef.current) {
         setLoading(false);
       }
+      fetchingRef.current = false;
     }
   };
 
@@ -96,9 +91,8 @@ export const useContracts = () => {
       }
 
       console.log('Contract created successfully:', data);
-      console.log('Contract created_by field:', data.created_by);
       
-      // Update local state immediately to prevent UI flicker
+      // Update local state immediately
       if (mountedRef.current) {
         setContracts(prev => [data, ...prev]);
       }
@@ -123,7 +117,6 @@ export const useContracts = () => {
   const deleteContract = async (contractId: string) => {
     try {
       console.log('Attempting to delete contract:', contractId);
-      console.log('Current user:', user?.id);
 
       // Check if user is super admin
       const { data: profile } = await supabase
@@ -133,41 +126,22 @@ export const useContracts = () => {
         .single();
 
       const isSuperAdmin = profile?.role === 'super-admin';
-      console.log('User is super admin:', isSuperAdmin);
 
-      // Delete related records in the correct order for super admins
+      // Delete related records for super admins
       if (isSuperAdmin) {
-        // First, delete admin contract notifications
-        const { error: notificationsError } = await supabase
+        await supabase
           .from('admin_contract_notifications')
           .delete()
           .eq('contract_id', contractId);
-
-        if (notificationsError) {
-          console.error('Error deleting admin notifications:', notificationsError);
-          // Continue anyway for super admins
-        } else {
-          console.log('Admin notifications deleted successfully');
-        }
       }
 
       // Delete contract signatures
-      const { error: signaturesError } = await supabase
+      await supabase
         .from('contract_signatures_v2')
         .delete()
         .eq('contract_id', contractId);
 
-      if (signaturesError) {
-        console.error('Error deleting contract signatures:', signaturesError);
-        if (!isSuperAdmin) {
-          throw new Error(`Failed to delete contract signatures: ${signaturesError.message}`);
-        }
-        console.log('Continuing with contract deletion despite signature deletion error (super admin)');
-      } else {
-        console.log('Contract signatures deleted successfully');
-      }
-
-      // Finally delete the contract
+      // Delete the contract
       const { error } = await supabase
         .from('contracts_v2')
         .delete()
@@ -175,18 +149,10 @@ export const useContracts = () => {
 
       if (error) {
         console.error('Error deleting contract:', error);
-        console.error('Error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
-        throw new Error(`Failed to delete contract: ${error.message}`);
+        throw error;
       }
 
-      console.log('Contract deleted successfully from database');
-
-      // Update local state immediately
+      // Update local state
       setContracts(prev => prev.filter(contract => contract.id !== contractId));
       
       toast({
@@ -197,7 +163,7 @@ export const useContracts = () => {
       console.error('Error deleting contract:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete contract",
+        description: "Failed to delete contract",
         variant: "destructive",
       });
     }
@@ -206,38 +172,30 @@ export const useContracts = () => {
   useEffect(() => {
     mountedRef.current = true;
     
-    console.log('useContracts effect triggered');
-    console.log('Auth loading:', authLoading);
-    console.log('User:', user?.id);
-    
-    // Wait for auth to complete loading before making decisions
+    // Wait for auth to complete
     if (authLoading) {
-      console.log('Auth still loading, waiting...');
       return;
     }
 
     if (!user) {
-      console.log('No authenticated user, clearing contracts');
-      if (mountedRef.current) {
-        setContracts([]);
-        setLoading(false);
-        setError(null);
-      }
+      setContracts([]);
+      setLoading(false);
+      setError(null);
       return;
     }
 
-    console.log('User authenticated, fetching contracts for:', user.id);
+    // Fetch contracts
     fetchContracts();
 
-    // Clean up any existing channel before creating a new one
+    // Clean up existing channel
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
     }
 
-    // Set up real-time subscription with improved stability
+    // Set up real-time subscription
     const channel = supabase
-      .channel(`contracts-changes-${user.id}`) // Unique channel per user
+      .channel(`contracts-${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -246,46 +204,36 @@ export const useContracts = () => {
           table: 'contracts_v2'
         },
         (payload) => {
-          console.log('Real-time contract update:', payload);
+          console.log('Real-time update:', payload);
           
           if (!mountedRef.current) return;
           
-          // Use setTimeout to defer state updates and prevent auth conflicts
+          // Defer updates to prevent auth conflicts
           setTimeout(() => {
             if (!mountedRef.current) return;
             
             if (payload.eventType === 'INSERT') {
               const newContract = payload.new as Contract;
               setContracts(prev => {
-                // Check if contract already exists to prevent duplicates
-                const exists = prev.some(contract => contract.id === newContract.id);
-                if (exists) return prev;
+                if (prev.some(c => c.id === newContract.id)) return prev;
                 return [newContract, ...prev];
               });
             } else if (payload.eventType === 'UPDATE') {
               const updatedContract = payload.new as Contract;
-              console.log('Contract updated via real-time:', updatedContract.id, 'Status:', updatedContract.status);
               setContracts(prev => 
-                prev.map(contract => 
-                  contract.id === updatedContract.id ? updatedContract : contract
-                )
+                prev.map(c => c.id === updatedContract.id ? updatedContract : c)
               );
             } else if (payload.eventType === 'DELETE') {
               const deletedId = payload.old.id;
-              setContracts(prev => 
-                prev.filter(contract => contract.id !== deletedId)
-              );
+              setContracts(prev => prev.filter(c => c.id !== deletedId));
             }
-          }, 0);
+          }, 100);
         }
       )
-      .subscribe((status) => {
-        console.log('Real-time subscription status:', status);
-      });
+      .subscribe();
 
     channelRef.current = channel;
 
-    // Cleanup function
     return () => {
       mountedRef.current = false;
       if (channelRef.current) {
@@ -295,12 +243,6 @@ export const useContracts = () => {
     };
   }, [user, authLoading]);
 
-  // Add a method to force refresh contracts
-  const forceRefresh = async () => {
-    console.log('Force refreshing contracts...');
-    await fetchContracts();
-  };
-
   return {
     contracts,
     loading: authLoading || loading,
@@ -308,6 +250,6 @@ export const useContracts = () => {
     createContract,
     deleteContract,
     refetch: fetchContracts,
-    forceRefresh,
+    forceRefresh: fetchContracts,
   };
 };
