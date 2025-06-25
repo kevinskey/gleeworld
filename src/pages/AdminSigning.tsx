@@ -104,7 +104,7 @@ const AdminSigning = () => {
       console.log('Admin signing contract with signature ID:', signatureRecord.id);
       console.log('Contract ID:', signatureRecord.contract_id);
       
-      // Get the current contract content to extract existing embedded signatures
+      // Get the current contract content and signature record
       const { data: contractData, error: contractError } = await supabase
         .from('contracts_v2')
         .select('content')
@@ -116,33 +116,86 @@ const AdminSigning = () => {
         throw contractError;
       }
 
-      // Parse existing embedded signatures
+      // Get complete signature record
+      const { data: fullSignatureRecord, error: sigRecordError } = await supabase
+        .from('contract_signatures_v2')
+        .select('*')
+        .eq('id', signatureRecord.id)
+        .single();
+
+      if (sigRecordError) {
+        console.error('Error fetching full signature record:', sigRecordError);
+        throw sigRecordError;
+      }
+
+      // Parse existing embedded signatures from contract content
       let existingSignatures: EmbeddedSignature[] = [];
       const signatureMatch = contractData.content.match(/\[EMBEDDED_SIGNATURES\](.*?)\[\/EMBEDDED_SIGNATURES\]/s);
       if (signatureMatch) {
         try {
           existingSignatures = JSON.parse(signatureMatch[1]);
+          console.log('Existing signatures found in contract:', existingSignatures);
         } catch (e) {
           console.error('Error parsing existing signatures:', e);
         }
       }
 
+      // Also check embedded_signatures field in signature record
+      if (!existingSignatures.length && fullSignatureRecord.embedded_signatures) {
+        try {
+          const recordSignatures = JSON.parse(fullSignatureRecord.embedded_signatures);
+          if (Array.isArray(recordSignatures)) {
+            existingSignatures = recordSignatures;
+            console.log('Existing signatures found in signature record:', existingSignatures);
+          }
+        } catch (e) {
+          console.error('Error parsing embedded signatures from record:', e);
+        }
+      }
+
+      // Find existing artist signature
+      let artistSignature = existingSignatures.find(sig => sig.signerType === 'artist');
+      
+      // If no artist signature in embedded format, create one from signature record data
+      if (!artistSignature && fullSignatureRecord.artist_signature_data) {
+        artistSignature = {
+          fieldId: 1,
+          signatureData: fullSignatureRecord.artist_signature_data,
+          dateSigned: fullSignatureRecord.date_signed || new Date(fullSignatureRecord.artist_signed_at).toLocaleDateString(),
+          timestamp: fullSignatureRecord.artist_signed_at || new Date().toISOString(),
+          ipAddress: fullSignatureRecord.signer_ip || 'unknown',
+          signerType: 'artist',
+          signerName: 'Artist'
+        };
+        console.log('Created artist signature from record data:', artistSignature);
+      }
+
       // Create new admin signature
       const newAdminSignature: EmbeddedSignature = {
-        fieldId: 3, // Different field ID for admin signature
+        fieldId: 999,
         signatureData: adminSignature,
         dateSigned: new Date().toLocaleDateString(),
         timestamp: new Date().toISOString(),
-        ipAddress: 'unknown',
-        signerType: 'admin'
+        ipAddress: 'admin-portal',
+        signerType: 'admin',
+        signerName: 'Dr. Kevin P. Johnson'
       };
 
-      // Combine existing signatures with new admin signature
-      // Keep all existing signatures and add the new admin signature
-      const updatedSignatures = [
-        ...existingSignatures.filter(sig => sig.signerType !== 'admin'), // Remove any existing admin signatures
-        newAdminSignature // Add the new admin signature
-      ];
+      // Build complete signatures array
+      const updatedSignatures: EmbeddedSignature[] = [];
+      
+      // Add artist signature if it exists
+      if (artistSignature) {
+        updatedSignatures.push(artistSignature);
+        console.log('Preserved artist signature in final array');
+      } else {
+        console.warn('No artist signature found to preserve');
+      }
+      
+      // Add admin signature
+      updatedSignatures.push(newAdminSignature);
+
+      console.log('Final signatures array for admin signing:', updatedSignatures);
 
       // Update contract content with embedded signatures
       let updatedContent = contractData.content;
@@ -156,13 +209,14 @@ const AdminSigning = () => {
 
       const adminSignedAt = new Date().toISOString();
 
-      // Update the signature record with admin signature
+      // Update the signature record with admin signature and complete embedded signatures
       const { error: updateError } = await supabase
         .from('contract_signatures_v2')
         .update({
           admin_signature_data: adminSignature,
           admin_signed_at: adminSignedAt,
-          status: 'completed'
+          status: 'completed',
+          embedded_signatures: JSON.stringify(updatedSignatures)
         })
         .eq('id', signatureRecord.id);
 
@@ -171,7 +225,7 @@ const AdminSigning = () => {
         throw updateError;
       }
 
-      console.log('Signature record updated successfully');
+      console.log('Signature record updated successfully with both signatures');
 
       // Update contract status and content in contracts_v2 table
       const { error: contractUpdateError } = await supabase
