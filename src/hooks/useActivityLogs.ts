@@ -13,6 +13,10 @@ export interface ActivityLog {
   ip_address?: string;
   user_agent?: string;
   created_at: string;
+  user_profile?: {
+    full_name?: string;
+    email?: string;
+  };
 }
 
 export const useActivityLogs = () => {
@@ -28,7 +32,10 @@ export const useActivityLogs = () => {
       
       const { data, error } = await supabase
         .from('activity_logs')
-        .select('*')
+        .select(`
+          *,
+          user_profile:profiles(full_name, email)
+        `)
         .order('created_at', { ascending: false })
         .limit(100); // Limit to recent 100 logs for performance
 
@@ -37,7 +44,16 @@ export const useActivityLogs = () => {
         throw error;
       }
 
-      setLogs(data || []);
+      // Transform the data to match our interface
+      const transformedLogs = (data || []).map(log => ({
+        ...log,
+        ip_address: log.ip_address ? String(log.ip_address) : undefined,
+        user_agent: log.user_agent || undefined,
+        resource_id: log.resource_id || undefined,
+        user_profile: Array.isArray(log.user_profile) ? log.user_profile[0] : log.user_profile
+      }));
+
+      setLogs(transformedLogs);
     } catch (error) {
       console.error('Error fetching activity logs:', error);
       setError('Failed to load activity logs');

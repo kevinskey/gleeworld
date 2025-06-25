@@ -1,3 +1,4 @@
+
 import { useActivityLogs } from "@/hooks/useActivityLogs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,10 @@ interface ActivityLog {
   ip_address: string | null;
   user_agent: string | null;
   created_at: string;
+  user_profile?: {
+    full_name?: string;
+    email?: string;
+  };
 }
 
 interface ActivityLogsProps {
