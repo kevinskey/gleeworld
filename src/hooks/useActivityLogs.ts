@@ -31,37 +31,62 @@ export const useActivityLogs = (enabled: boolean = true) => {
     try {
       setLoading(true);
       setError(null);
+      console.log('Fetching activity logs...');
       
-      const { data, error } = await supabase
+      // First fetch activity logs
+      const { data: logsData, error: logsError } = await supabase
         .from('activity_logs')
-        .select(`
-          *,
-          user_profile:profiles!user_id(full_name, email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(100);
 
-      if (error) {
-        console.error('Error fetching activity logs:', error);
-        throw error;
+      if (logsError) {
+        console.error('Error fetching activity logs:', logsError);
+        throw logsError;
       }
 
-      // Transform the data to match our interface
-      const transformedLogs: ActivityLog[] = (data || []).map(log => ({
-        id: log.id,
-        user_id: log.user_id,
-        action_type: log.action_type,
-        resource_type: log.resource_type,
-        resource_id: log.resource_id,
-        details: log.details || {},
-        ip_address: log.ip_address ? String(log.ip_address) : null,
-        user_agent: log.user_agent || null,
-        created_at: log.created_at,
-        user_profile: Array.isArray(log.user_profile) && log.user_profile.length > 0 
-          ? log.user_profile[0] 
-          : log.user_profile || null
-      }));
+      console.log('Activity logs fetched:', logsData?.length);
 
+      // Get unique user IDs from logs
+      const userIds = [...new Set(logsData?.map(log => log.user_id).filter(Boolean) || [])];
+      
+      let profiles: any[] = [];
+      if (userIds.length > 0) {
+        // Fetch profiles for these users
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name, email')
+          .in('id', userIds);
+
+        if (profilesError) {
+          console.warn('Error fetching profiles:', profilesError);
+          // Don't throw error for profiles, just continue without them
+        } else {
+          profiles = profilesData || [];
+        }
+      }
+
+      // Combine logs with profile data
+      const transformedLogs: ActivityLog[] = (logsData || []).map(log => {
+        const profile = profiles.find(p => p.id === log.user_id);
+        return {
+          id: log.id,
+          user_id: log.user_id,
+          action_type: log.action_type,
+          resource_type: log.resource_type,
+          resource_id: log.resource_id,
+          details: log.details || {},
+          ip_address: log.ip_address ? String(log.ip_address) : null,
+          user_agent: log.user_agent || null,
+          created_at: log.created_at,
+          user_profile: profile ? {
+            full_name: profile.full_name,
+            email: profile.email
+          } : null
+        };
+      });
+
+      console.log('Transformed logs:', transformedLogs.length);
       setLogs(transformedLogs);
     } catch (error) {
       console.error('Error fetching activity logs:', error);
