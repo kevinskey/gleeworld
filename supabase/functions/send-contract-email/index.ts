@@ -173,7 +173,7 @@ const handler = async (req: Request): Promise<Response> => {
       console.log("✅ Recipient record stored successfully");
     }
 
-    // Get the contract signing URL - Always use GleeWorld domain
+    // Get the contract signing URL - Always use contract.gleeworld.org domain
     const contractUrl = `https://contract.gleeworld.org/contract-signing/${contractId}`;
     console.log("Contract signing URL:", contractUrl);
 
@@ -212,10 +212,10 @@ const handler = async (req: Request): Promise<Response> => {
     }
     console.log("✅ Resend API key found");
 
-    // Send email using Resend to the correct recipient
+    // Send email using Resend with the correct domain
     console.log("=== SENDING EMAIL VIA RESEND ===");
     const emailResponse = await resend.emails.send({
-      from: "GleeWorld Contracts <contracts@gleeworld.org>",
+      from: "GleeWorld Contracts <contracts@contract.gleeworld.org>",
       to: [cleanRecipientEmail],
       subject: emailSubject,
       html: `
@@ -279,7 +279,7 @@ const handler = async (req: Request): Promise<Response> => {
             ` : ''}
             
             <p style="color: #999; font-size: 14px; line-height: 1.6; margin-top: 30px;">
-              If you have any questions about this contract, please contact us at contracts@gleeworld.org.
+              If you have any questions about this contract, please contact us at contracts@contract.gleeworld.org.
               This link will remain active until the contract is signed.
             </p>
           </div>
@@ -287,7 +287,7 @@ const handler = async (req: Request): Promise<Response> => {
           <!-- Footer -->
           <div style="background-color: #f5f5f5; padding: 20px; text-align: center; color: #999; font-size: 12px;">
             <p style="margin: 0;">This email was sent by GleeWorld Contract Management</p>
-            <p style="margin: 5px 0 0 0;">Secure digital contract platform | gleeworld.org</p>
+            <p style="margin: 5px 0 0 0;">Secure digital contract platform | contract.gleeworld.org</p>
           </div>
         </div>
       `,
