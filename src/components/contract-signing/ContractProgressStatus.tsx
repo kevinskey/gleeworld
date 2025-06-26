@@ -27,21 +27,24 @@ interface ContractProgressStatusProps {
 
 export const ContractProgressStatus = ({ 
   signatureRecord, 
-  signatureFields, 
+  signatureFields = [], 
   embeddedSignatures = [], 
   getCompletionProgress 
 }: ContractProgressStatusProps) => {
-  // Ensure embeddedSignatures is always an array
+  // Ensure all props are properly defined with fallbacks
+  const safeSignatureFields = Array.isArray(signatureFields) ? signatureFields : [];
   const safeEmbeddedSignatures = Array.isArray(embeddedSignatures) ? embeddedSignatures : [];
   
-  if (signatureRecord && signatureFields.length > 0 && safeEmbeddedSignatures.length === 0) {
+  // Only show progress if we have signature record and fields but no embedded signatures
+  if (signatureRecord && safeSignatureFields.length > 0 && safeEmbeddedSignatures.length === 0) {
     return (
       <div className="text-center text-sm text-gray-600 bg-gray-50 p-3 rounded">
-        Progress: {getCompletionProgress()}
+        Progress: {getCompletionProgress ? getCompletionProgress() : '0/0'}
       </div>
     );
   }
 
+  // Show completion status if we have embedded signatures
   if (safeEmbeddedSignatures.length > 0) {
     const artistSignature = safeEmbeddedSignatures.find(sig => sig.signerType === 'artist');
     const adminSignature = safeEmbeddedSignatures.find(sig => sig.signerType === 'admin');

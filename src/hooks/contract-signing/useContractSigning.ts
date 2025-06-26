@@ -96,19 +96,32 @@ export const useContractSigning = (contractId: string | undefined) => {
     }
   };
 
-  // Extract embedded signatures from signature record
+  // Extract embedded signatures from signature record with proper null safety
   useEffect(() => {
+    console.log('useContractSigning - Processing signature record:', signatureRecord);
+    
     if (signatureRecord?.embedded_signatures) {
       console.log('useContractSigning - Processing embedded signatures:', signatureRecord.embedded_signatures);
       
       if (Array.isArray(signatureRecord.embedded_signatures)) {
         setEmbeddedSignatures(signatureRecord.embedded_signatures);
       } else {
-        // If it's not an array, initialize as empty array
-        console.warn('useContractSigning - embedded_signatures is not an array:', signatureRecord.embedded_signatures);
-        setEmbeddedSignatures([]);
+        // If it's not an array, try to parse it if it's a string
+        try {
+          if (typeof signatureRecord.embedded_signatures === 'string') {
+            const parsed = JSON.parse(signatureRecord.embedded_signatures);
+            setEmbeddedSignatures(Array.isArray(parsed) ? parsed : []);
+          } else {
+            console.warn('useContractSigning - embedded_signatures is not an array or string:', signatureRecord.embedded_signatures);
+            setEmbeddedSignatures([]);
+          }
+        } catch (error) {
+          console.error('useContractSigning - Failed to parse embedded signatures:', error);
+          setEmbeddedSignatures([]);
+        }
       }
     } else {
+      console.log('useContractSigning - No embedded signatures found, setting empty array');
       setEmbeddedSignatures([]);
     }
   }, [signatureRecord]);
@@ -128,15 +141,18 @@ export const useContractSigning = (contractId: string | undefined) => {
     }
   }, [contract, initializeMockSignatureFields]);
 
+  // Always return a safe array for embeddedSignatures
+  const safeEmbeddedSignatures = Array.isArray(embeddedSignatures) ? embeddedSignatures : [];
+
   return {
     contract,
-    signatureFields,
+    signatureFields: signatureFields || [],
     signatureRecord,
-    completedFields,
+    completedFields: completedFields || {},
     loading,
     signing,
     error,
-    embeddedSignatures,
+    embeddedSignatures: safeEmbeddedSignatures,
     handleFieldComplete,
     handleSignContract,
     isAdminOrAgentField,
