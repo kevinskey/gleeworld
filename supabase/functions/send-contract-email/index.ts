@@ -80,16 +80,26 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Check if user exists by email
     console.log("=== CHECKING IF USER EXISTS ===");
-    const { data: existingUser, error: userCheckError } = await supabase
-      .from('profiles')
-      .select('id, email, full_name')
-      .eq('email', cleanRecipientEmail)
-      .maybeSingle();
+    let existingUser;
+    try {
+      const { data: userData, error: userCheckError } = await supabase
+        .from('profiles')
+        .select('id, email, full_name')
+        .eq('email', cleanRecipientEmail)
+        .maybeSingle();
 
-    if (userCheckError) {
-      console.error("❌ Error checking for existing user:", userCheckError);
-    } else {
-      console.log("User check result:", existingUser ? "User exists" : "User not found");
+      if (userCheckError) {
+        console.error("❌ Error checking for existing user:", userCheckError);
+        console.log("Continuing with user check result as null...");
+        existingUser = null;
+      } else {
+        existingUser = userData;
+        console.log("User check result:", existingUser ? "User exists" : "User not found");
+        console.log("User data:", existingUser);
+      }
+    } catch (userError) {
+      console.error("❌ Exception during user check:", userError);
+      existingUser = null;
     }
 
     let autoEnrollMessage = "";
@@ -99,20 +109,25 @@ const handler = async (req: Request): Promise<Response> => {
       console.log("=== AUTO-ENROLLING NEW USER ===");
       console.log("Calling auto-enroll function for:", cleanRecipientEmail);
       
-      const { data: enrollData, error: enrollError } = await supabase.functions.invoke('auto-enroll-user', {
-        body: {
-          email: cleanRecipientEmail,
-          fullName: recipientName,
-          role: 'user'
-        }
-      });
+      try {
+        const { data: enrollData, error: enrollError } = await supabase.functions.invoke('auto-enroll-user', {
+          body: {
+            email: cleanRecipientEmail,
+            fullName: recipientName,
+            role: 'user'
+          }
+        });
 
-      if (enrollError) {
-        console.error("❌ Auto-enrollment failed:", enrollError);
-        // Continue anyway - we can still send the contract
-      } else {
-        console.log("✅ User auto-enrolled successfully:", enrollData);
-        autoEnrollMessage = `\n\nNote: An account has been created for you with email ${cleanRecipientEmail}. Your temporary password is: ${enrollData.tempPassword}\nPlease log in and change your password after signing the contract.`;
+        if (enrollError) {
+          console.error("❌ Auto-enrollment failed:", enrollError);
+          console.log("Continuing without auto-enrollment...");
+        } else {
+          console.log("✅ User auto-enrolled successfully:", enrollData);
+          autoEnrollMessage = `\n\nNote: An account has been created for you with email ${cleanRecipientEmail}. Your temporary password is: ${enrollData.tempPassword}\nPlease log in and change your password after signing the contract.`;
+        }
+      } catch (enrollException) {
+        console.error("❌ Exception during auto-enrollment:", enrollException);
+        console.log("Continuing without auto-enrollment...");
       }
     } else {
       console.log("✅ User already exists, skipping auto-enrollment");
@@ -154,23 +169,29 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Store contract recipient record
     console.log("=== STORING RECIPIENT RECORD ===");
-    const { error: recipientError } = await supabase
-      .from('contract_recipients_v2')
-      .insert({
-        contract_id: contractId,
-        recipient_name: recipientName || cleanRecipientEmail.split('@')[0],
-        recipient_email: cleanRecipientEmail,
-        custom_message: customMessage || null,
-        email_status: 'sent',
-        delivery_status: 'delivered',
-        is_resend: isResend,
-        resend_reason: isResend ? 'User requested resend' : null
-      });
+    try {
+      const { error: recipientError } = await supabase
+        .from('contract_recipients_v2')
+        .insert({
+          contract_id: contractId,
+          recipient_name: recipientName || cleanRecipientEmail.split('@')[0],
+          recipient_email: cleanRecipientEmail,
+          custom_message: customMessage || null,
+          email_status: 'sent',
+          delivery_status: 'delivered',
+          is_resend: isResend,
+          resend_reason: isResend ? 'User requested resend' : null
+        });
 
-    if (recipientError) {
-      console.error("❌ Error storing recipient record:", recipientError);
-    } else {
-      console.log("✅ Recipient record stored successfully");
+      if (recipientError) {
+        console.error("❌ Error storing recipient record:", recipientError);
+        console.log("Continuing despite recipient record error...");
+      } else {
+        console.log("✅ Recipient record stored successfully");
+      }
+    } catch (recipientException) {
+      console.error("❌ Exception storing recipient record:", recipientException);
+      console.log("Continuing despite recipient record exception...");
     }
 
     // Get the contract signing URL - Always use contract.gleeworld.org domain
@@ -214,94 +235,104 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email using Resend with the correct domain
     console.log("=== SENDING EMAIL VIA RESEND ===");
-    const emailResponse = await resend.emails.send({
-      from: "GleeWorld Contracts <contracts@contract.gleeworld.org>",
-      to: [cleanRecipientEmail],
-      subject: emailSubject,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
-          <!-- Header -->
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center;">
-            <h1 style="margin: 0; font-size: 28px; font-weight: bold;">Contract Signature Required</h1>
-            <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">GleeWorld Contract Management</p>
-          </div>
-          
-          <!-- Main Content -->
-          <div style="padding: 30px; background-color: white;">
-            <p style="font-size: 18px; color: #333; margin-bottom: 20px;">Hello ${recipientName || cleanRecipientEmail.split('@')[0]},</p>
-            
-            <p style="font-size: 16px; color: #666; line-height: 1.6; margin-bottom: 25px;">
-              You have been requested to review and sign the following contract:
-            </p>
-
-            ${resendNotice}
-            
-            <!-- Contract Info Card -->
-            <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin: 25px 0; background-color: #fafafa;">
-              <h2 style="margin: 0 0 10px 0; color: #333; font-size: 20px;">${contractTitle}</h2>
-              <p style="margin: 0; color: #666; font-size: 14px;">Contract ID: ${contractId.substring(0, 8)}...</p>
+    let emailResponse;
+    try {
+      emailResponse = await resend.emails.send({
+        from: "GleeWorld Contracts <contracts@contract.gleeworld.org>",
+        to: [cleanRecipientEmail],
+        subject: emailSubject,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center;">
+              <h1 style="margin: 0; font-size: 28px; font-weight: bold;">Contract Signature Required</h1>
+              <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">GleeWorld Contract Management</p>
             </div>
+            
+            <!-- Main Content -->
+            <div style="padding: 30px; background-color: white;">
+              <p style="font-size: 18px; color: #333; margin-bottom: 20px;">Hello ${recipientName || cleanRecipientEmail.split('@')[0]},</p>
+              
+              <p style="font-size: 16px; color: #666; line-height: 1.6; margin-bottom: 25px;">
+                You have been requested to review and sign the following contract:
+              </p>
 
-            <!-- Signature Fields Status -->
-            <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin: 20px 0; background-color: ${signatureFieldsBgColor};">
-              <p style="margin: 0; color: ${signatureFieldsTextColor}; font-size: 14px; display: flex; align-items: center;">
-                ${hasSignatureFields ? '✓' : '⚠️'} ${signatureFieldsMessage}
+              ${resendNotice}
+              
+              <!-- Contract Info Card -->
+              <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin: 25px 0; background-color: #fafafa;">
+                <h2 style="margin: 0 0 10px 0; color: #333; font-size: 20px;">${contractTitle}</h2>
+                <p style="margin: 0; color: #666; font-size: 14px;">Contract ID: ${contractId.substring(0, 8)}...</p>
+              </div>
+
+              <!-- Signature Fields Status -->
+              <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin: 20px 0; background-color: ${signatureFieldsBgColor};">
+                <p style="margin: 0; color: ${signatureFieldsTextColor}; font-size: 14px; display: flex; align-items: center;">
+                  ${hasSignatureFields ? '✓' : '⚠️'} ${signatureFieldsMessage}
+                </p>
+              </div>
+              
+              ${customMessage ? `
+              <div style="border-left: 4px solid #2196f3; padding: 15px; margin: 25px 0; background-color: #f3f8ff;">
+                <h3 style="margin: 0 0 10px 0; color: #333; font-size: 16px;">Custom Message:</h3>
+                <p style="margin: 0; color: #666; font-style: italic; white-space: pre-wrap;">${customMessage}</p>
+              </div>
+              ` : ''}
+              
+              <!-- CTA Button -->
+              <div style="text-align: center; margin: 35px 0;">
+                <a href="${contractUrl}" 
+                   style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                          color: white; 
+                          padding: 15px 30px; 
+                          text-decoration: none; 
+                          border-radius: 8px; 
+                          display: inline-block; 
+                          font-size: 16px; 
+                          font-weight: bold;">
+                  📄 Review and Sign Contract
+                </a>
+              </div>
+
+              ${autoEnrollMessage ? `
+              <div style="border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin: 20px 0; background-color: #f1f8e9;">
+                <h3 style="margin: 0 0 10px 0; color: #2e7d32; font-size: 16px;">Account Created</h3>
+                <p style="margin: 0; color: #2e7d32; font-size: 14px; white-space: pre-wrap;">${autoEnrollMessage}</p>
+              </div>
+              ` : ''}
+              
+              <p style="color: #999; font-size: 14px; line-height: 1.6; margin-top: 30px;">
+                If you have any questions about this contract, please contact us at contracts@contract.gleeworld.org.
+                This link will remain active until the contract is signed.
               </p>
             </div>
             
-            ${customMessage ? `
-            <div style="border-left: 4px solid #2196f3; padding: 15px; margin: 25px 0; background-color: #f3f8ff;">
-              <h3 style="margin: 0 0 10px 0; color: #333; font-size: 16px;">Custom Message:</h3>
-              <p style="margin: 0; color: #666; font-style: italic; white-space: pre-wrap;">${customMessage}</p>
+            <!-- Footer -->
+            <div style="background-color: #f5f5f5; padding: 20px; text-align: center; color: #999; font-size: 12px;">
+              <p style="margin: 0;">This email was sent by GleeWorld Contract Management</p>
+              <p style="margin: 5px 0 0 0;">Secure digital contract platform | contract.gleeworld.org</p>
             </div>
-            ` : ''}
-            
-            <!-- CTA Button -->
-            <div style="text-align: center; margin: 35px 0;">
-              <a href="${contractUrl}" 
-                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                        color: white; 
-                        padding: 15px 30px; 
-                        text-decoration: none; 
-                        border-radius: 8px; 
-                        display: inline-block; 
-                        font-size: 16px; 
-                        font-weight: bold;">
-                📄 Review and Sign Contract
-              </a>
-            </div>
-
-            ${autoEnrollMessage ? `
-            <div style="border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin: 20px 0; background-color: #f1f8e9;">
-              <h3 style="margin: 0 0 10px 0; color: #2e7d32; font-size: 16px;">Account Created</h3>
-              <p style="margin: 0; color: #2e7d32; font-size: 14px; white-space: pre-wrap;">${autoEnrollMessage}</p>
-            </div>
-            ` : ''}
-            
-            <p style="color: #999; font-size: 14px; line-height: 1.6; margin-top: 30px;">
-              If you have any questions about this contract, please contact us at contracts@contract.gleeworld.org.
-              This link will remain active until the contract is signed.
-            </p>
           </div>
-          
-          <!-- Footer -->
-          <div style="background-color: #f5f5f5; padding: 20px; text-align: center; color: #999; font-size: 12px;">
-            <p style="margin: 0;">This email was sent by GleeWorld Contract Management</p>
-            <p style="margin: 5px 0 0 0;">Secure digital contract platform | contract.gleeworld.org</p>
-          </div>
-        </div>
-      `,
-    });
+        `,
+      });
+      console.log("✅ Resend API call completed");
+    } catch (emailError) {
+      console.error("❌ Error during Resend API call:", emailError);
+      console.error("Email error details:", JSON.stringify(emailError, null, 2));
+      throw new Error(`Email service error: ${emailError.message || 'Unknown email error'}`);
+    }
 
     console.log("=== EMAIL SEND RESULT ===");
     if (emailResponse.error) {
       console.error("❌ Resend API error:", emailResponse.error);
-      throw new Error(`Email service error: ${emailResponse.error.message}`);
+      console.error("Resend error details:", JSON.stringify(emailResponse.error, null, 2));
+      throw new Error(`Email service error: ${emailResponse.error.message || 'Unknown Resend error'}`);
     }
 
     console.log("✅ Email sent successfully!");
     console.log("Email ID:", emailResponse.data?.id);
     console.log("Recipient:", cleanRecipientEmail);
+    console.log("Email response data:", JSON.stringify(emailResponse.data, null, 2));
 
     const responseData = { 
       success: true, 
@@ -329,13 +360,14 @@ const handler = async (req: Request): Promise<Response> => {
     console.error("Error type:", typeof error);
     console.error("Error message:", error.message);
     console.error("Error stack:", error.stack);
-    console.error("Full error object:", error);
+    console.error("Full error object:", JSON.stringify(error, null, 2));
     
     return new Response(
       JSON.stringify({ 
         error: error.message,
         details: error.stack,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        errorType: typeof error
       }),
       {
         status: 500,
