@@ -2,7 +2,6 @@
 import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { cleanupAuthState, resetAuthState } from "@/utils/authCleanup";
 
 interface AuthContextType {
   user: User | null;
@@ -38,25 +37,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const initializeAuth = async () => {
       try {
-        console.log('Initializing auth state...');
+        console.log('AuthContext: Initializing auth state...');
         
+        // Set up auth state listener FIRST
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            console.log('AuthContext: Auth state changed:', event, session?.user?.id || 'no user');
+            
+            if (!mountedRef.current) return;
+            
+            if (event === 'SIGNED_OUT') {
+              setSession(null);
+              setUser(null);
+              setLoading(false);
+            } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+              setSession(session);
+              setUser(session?.user ?? null);
+              setLoading(false);
+            } else if (event === 'INITIAL_SESSION') {
+              setSession(session);
+              setUser(session?.user ?? null);
+              setLoading(false);
+            }
+          }
+        );
+
+        subscriptionRef.current = subscription;
+
+        // THEN check for existing session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error getting session:', error);
-          // Clear corrupted state and redirect to auth
-          await resetAuthState();
+          console.error('AuthContext: Error getting session:', error);
+          if (mountedRef.current) {
+            setSession(null);
+            setUser(null);
+            setLoading(false);
+          }
           return;
         }
         
         if (mountedRef.current) {
-          console.log('Session retrieved:', session?.user?.id || 'no user');
+          console.log('AuthContext: Initial session retrieved:', session?.user?.id || 'no user');
           setSession(session);
           setUser(session?.user ?? null);
           setLoading(false);
         }
       } catch (error) {
-        console.error('Failed to initialize auth:', error);
+        console.error('AuthContext: Failed to initialize auth:', error);
         if (mountedRef.current) {
           setSession(null);
           setUser(null);
@@ -65,36 +93,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    // Clean up existing subscription
-    if (subscriptionRef.current) {
-      subscriptionRef.current.unsubscribe();
-      subscriptionRef.current = null;
-    }
-
-    // Set up auth listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id || 'no user');
-        
-        if (!mountedRef.current) return;
-        
-        if (event === 'SIGNED_OUT') {
-          setSession(null);
-          setUser(null);
-          setLoading(false);
-        } else if (event === 'SIGNED_IN') {
-          setSession(session);
-          setUser(session?.user ?? null);
-          setLoading(false);
-        } else if (event === 'TOKEN_REFRESHED') {
-          // Handle token refresh without changing loading state
-          setSession(session);
-          setUser(session?.user ?? null);
-        }
-      }
-    );
-
-    subscriptionRef.current = subscription;
     initializeAuth();
 
     return () => {
@@ -108,24 +106,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
-      console.log('Starting sign out...');
+      console.log('AuthContext: Starting sign out...');
       setLoading(true);
       
       const { error } = await supabase.auth.signOut({ scope: 'global' });
       
       if (error) {
-        console.error('Error signing out:', error);
+        console.error('AuthContext: Error signing out:', error);
       }
       
-      cleanupAuthState();
       setUser(null);
       setSession(null);
       setLoading(false);
       
       window.location.href = '/auth';
     } catch (error) {
-      console.error('Sign out failed:', error);
-      cleanupAuthState();
+      console.error('AuthContext: Sign out failed:', error);
       setUser(null);
       setSession(null);
       setLoading(false);
@@ -134,11 +130,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const resetAuth = async () => {
-    console.log('Resetting auth from context...');
+    console.log('AuthContext: Resetting auth...');
     setLoading(true);
     setUser(null);
     setSession(null);
-    await resetAuthState();
+    
+    try {
+      await supabase.auth.signOut({ scope: 'global' });
+    } catch (error) {
+      console.warn('AuthContext: Reset auth signout failed:', error);
+    }
+    
+    setLoading(false);
   };
 
   const value = {

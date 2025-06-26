@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Loader2, Mail, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { cleanupAuthState, resetAuthState } from "@/utils/authCleanup";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -32,8 +31,6 @@ const Auth = () => {
         
         if (error) {
           console.error('Auth: Error checking session:', error);
-          // Clean up corrupted state
-          await resetAuthState();
           setCheckingAuth(false);
           return;
         }
@@ -67,9 +64,6 @@ const Auth = () => {
         throw new Error("Please enter both email and password");
       }
 
-      console.log('Auth: Cleaning up existing state...');
-      cleanupAuthState();
-      
       console.log('Auth: Attempting sign in with email:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
@@ -138,9 +132,6 @@ const Auth = () => {
         throw new Error("Password must be at least 6 characters long");
       }
 
-      console.log('Auth: Cleaning up existing state...');
-      cleanupAuthState();
-      
       console.log('Auth: Attempting sign up with email:', email);
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
@@ -235,24 +226,6 @@ const Auth = () => {
       });
     } finally {
       setResetLoading(false);
-    }
-  };
-
-  const handleResetAuth = async () => {
-    console.log('Auth: Manual auth reset triggered');
-    try {
-      await resetAuthState();
-      toast({
-        title: "Authentication Reset",
-        description: "Auth state has been cleared. Please try signing in again.",
-      });
-    } catch (error) {
-      console.error('Auth: Reset failed:', error);
-      toast({
-        title: "Reset Failed",
-        description: "Failed to reset authentication state",
-        variant: "destructive",
-      });
     }
   };
 
@@ -436,19 +409,6 @@ const Auth = () => {
               )}
             </TabsContent>
           </Tabs>
-          
-          {/* Debug/Reset Option */}
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleResetAuth}
-              className="w-full text-xs text-gray-600 hover:text-gray-800"
-            >
-              <AlertTriangle className="h-3 w-3 mr-1" />
-              Reset Authentication State
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </div>
