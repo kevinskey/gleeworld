@@ -17,7 +17,7 @@ import { useContracts } from "@/hooks/useContracts";
 import type { Contract } from "@/hooks/useContracts";
 
 const Index = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, resetAuth } = useAuth();
   const { userProfile } = useUserProfile(user);
   const { contracts, loading, error, forceRefresh, deleteContract } = useContracts();
   const [showUpload, setShowUpload] = useState(false);
@@ -31,6 +31,7 @@ const Index = () => {
   } | null>(null);
 
   const handleContractCreated = useCallback(() => {
+    console.log('Contract created, refreshing and closing upload modal');
     forceRefresh();
     setShowUpload(false);
     setTemplateData(null);
@@ -84,6 +85,16 @@ const Index = () => {
               >
                 New Contract
               </Button>
+              
+              {isAdmin && (
+                <Button 
+                  onClick={resetAuth}
+                  variant="outline"
+                  className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+                >
+                  Reset Auth
+                </Button>
+              )}
               
               <Button 
                 onClick={signOut} 
@@ -141,7 +152,10 @@ const Index = () => {
                 {/* Contract Templates - Left Side */}
                 <div className="bg-white rounded-lg border shadow-sm">
                   <div className="p-6">
-                    <ContractTemplates onUseTemplate={handleUseTemplate} />
+                    <ContractTemplates 
+                      onUseTemplate={handleUseTemplate}
+                      onContractCreated={handleContractCreated}
+                    />
                   </div>
                 </div>
                 

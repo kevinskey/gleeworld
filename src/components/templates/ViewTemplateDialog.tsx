@@ -2,6 +2,7 @@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 import type { ContractTemplate } from "@/hooks/useContractTemplates";
 
 interface ViewTemplateDialogProps {
@@ -9,9 +10,16 @@ interface ViewTemplateDialogProps {
   onOpenChange: (open: boolean) => void;
   template: ContractTemplate | null;
   onUseTemplate: (template: ContractTemplate) => void;
+  isCreating?: boolean;
 }
 
-export const ViewTemplateDialog = ({ isOpen, onOpenChange, template, onUseTemplate }: ViewTemplateDialogProps) => {
+export const ViewTemplateDialog = ({ 
+  isOpen, 
+  onOpenChange, 
+  template, 
+  onUseTemplate,
+  isCreating = false 
+}: ViewTemplateDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
@@ -19,6 +27,7 @@ export const ViewTemplateDialog = ({ isOpen, onOpenChange, template, onUseTempla
           <DialogTitle>{template?.name}</DialogTitle>
           <DialogDescription>
             Created: {template && new Date(template.created_at).toLocaleDateString()}
+            {template?.contract_type && ` • Type: ${template.contract_type}`}
           </DialogDescription>
         </DialogHeader>
         {template && (
@@ -40,17 +49,33 @@ export const ViewTemplateDialog = ({ isOpen, onOpenChange, template, onUseTempla
             
             <div>
               <Label className="font-medium">Template Content:</Label>
-              <div className="mt-2 p-4 bg-gray-50 rounded-lg text-sm whitespace-pre-wrap">
+              <div className="mt-2 p-4 bg-gray-50 rounded-lg text-sm whitespace-pre-wrap max-h-60 overflow-y-auto">
                 {template.template_content}
               </div>
             </div>
           </div>
         )}
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            disabled={isCreating}
+          >
             Close
           </Button>
-          <Button onClick={() => template && onUseTemplate(template)}>Use Template</Button>
+          <Button 
+            onClick={() => template && onUseTemplate(template)}
+            disabled={isCreating || !template}
+          >
+            {isCreating ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Creating Contract...
+              </>
+            ) : (
+              'Use Template'
+            )}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

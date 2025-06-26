@@ -4,6 +4,7 @@ import { EditTemplateDialog } from "./EditTemplateDialog";
 import { ViewTemplateDialog } from "./ViewTemplateDialog";
 import type { ContractTemplate } from "@/hooks/useContractTemplates";
 import { useToast } from "@/hooks/use-toast";
+import { useContractFromTemplate } from "@/hooks/useContractFromTemplate";
 
 interface TemplateDialogsManagerProps {
   selectedTemplate: ContractTemplate | null;
@@ -35,11 +36,29 @@ export const TemplateDialogsManager = ({
   onUseTemplate
 }: TemplateDialogsManagerProps) => {
   const { toast } = useToast();
+  const { createContractFromTemplate, isCreating } = useContractFromTemplate(() => {
+    onViewOpenChange(false);
+  });
 
   const handleUseTemplate = async (template: ContractTemplate) => {
-    console.log('Using template:', template);
+    console.log('Using template via direct contract creation:', template);
+    
+    try {
+      // Try to create contract directly from template
+      const result = await createContractFromTemplate(template);
+      
+      if (result) {
+        // Success - contract was created directly
+        console.log('Contract created directly from template');
+        return;
+      }
+    } catch (error) {
+      console.error('Direct contract creation failed, falling back to form:', error);
+    }
+
+    // Fallback to the form-based approach
     if (onUseTemplate) {
-      // Don't pass template.id as template_id since we're not creating from template, just using content
+      console.log('Falling back to form-based template usage');
       onUseTemplate(template.template_content, template.name, template.header_image_url, template.contract_type);
       onViewOpenChange(false);
       toast({
@@ -71,6 +90,7 @@ export const TemplateDialogsManager = ({
         onOpenChange={onViewOpenChange}
         template={selectedTemplate}
         onUseTemplate={handleUseTemplate}
+        isCreating={isCreating}
       />
     </>
   );

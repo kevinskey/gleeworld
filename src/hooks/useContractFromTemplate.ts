@@ -15,23 +15,55 @@ export const useContractFromTemplate = (onContractCreated?: () => void) => {
   const { displayName } = useUserProfile(user);
 
   const createContractFromTemplate = async (template: ContractTemplate, selectedUser?: { full_name?: string; email: string }) => {
+    if (!user) {
+      console.error('User not authenticated');
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to create contracts",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    if (!template.template_content) {
+      console.error('Template content is missing');
+      toast({
+        title: "Template Error",
+        description: "Template content is missing",
+        variant: "destructive",
+      });
+      return null;
+    }
+
     setIsCreating(true);
     try {
+      console.log('Creating contract from template:', {
+        templateId: template.id,
+        templateName: template.name,
+        selectedUser: selectedUser?.email,
+        userId: user.id
+      });
+
       // Use selected user name if provided, otherwise fall back to current user
       const recipientName = selectedUser?.full_name || selectedUser?.email || displayName || user?.email || 'User';
       
       // Generate contract title with recipient's name + template name
       const contractTitle = `${recipientName} - ${template.name}`;
       
-      // Don't pass template_id - we're using template content, not linking to template
+      // Create contract with template content
       const contractData = await createContract({
         title: contractTitle,
         content: template.template_content,
-        // Explicitly don't pass template_id to avoid foreign key constraint issues
       });
 
-      if (contractData) {
-        // Log template usage activity
+      if (!contractData) {
+        throw new Error('Failed to create contract - no data returned');
+      }
+
+      console.log('Contract created successfully:', contractData);
+
+      // Log template usage activity
+      try {
         await logActivity({
           actionType: ACTIVITY_TYPES.TEMPLATE_USED,
           resourceType: RESOURCE_TYPES.TEMPLATE,
@@ -44,27 +76,36 @@ export const useContractFromTemplate = (onContractCreated?: () => void) => {
             recipientEmail: selectedUser?.email
           }
         });
-
-        // Refresh the contracts list to show the new contract
-        await refetch();
-        
-        // Call the callback to update UI (switch to dashboard, etc.)
-        if (onContractCreated) {
-          onContractCreated();
-        }
-        
-        toast({
-          title: "Success",
-          description: `Contract "${contractTitle}" created from template`,
-        });
-        return contractData;
+      } catch (logError) {
+        console.warn('Failed to log activity:', logError);
+        // Don't fail the contract creation if logging fails
       }
-      return null;
+
+      // Refresh the contracts list to show the new contract
+      await refetch();
+      
+      toast({
+        title: "Success",
+        description: `Contract "${contractTitle}" created from template`,
+      });
+
+      // Call the callback to update UI (switch to dashboard, etc.)
+      if (onContractCreated) {
+        onContractCreated();
+      }
+      
+      return contractData;
     } catch (error) {
       console.error('Error creating contract from template:', error);
+      
+      let errorMessage = "Failed to create contract from template";
+      if (error instanceof Error) {
+        errorMessage = `Failed to create contract: ${error.message}`;
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to create contract from template",
+        description: errorMessage,
         variant: "destructive",
       });
       return null;
