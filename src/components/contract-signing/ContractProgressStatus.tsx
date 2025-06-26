@@ -28,10 +28,13 @@ interface ContractProgressStatusProps {
 export const ContractProgressStatus = ({ 
   signatureRecord, 
   signatureFields, 
-  embeddedSignatures, 
+  embeddedSignatures = [], 
   getCompletionProgress 
 }: ContractProgressStatusProps) => {
-  if (signatureRecord && signatureFields.length > 0 && embeddedSignatures.length === 0) {
+  // Ensure embeddedSignatures is always an array
+  const safeEmbeddedSignatures = Array.isArray(embeddedSignatures) ? embeddedSignatures : [];
+  
+  if (signatureRecord && signatureFields.length > 0 && safeEmbeddedSignatures.length === 0) {
     return (
       <div className="text-center text-sm text-gray-600 bg-gray-50 p-3 rounded">
         Progress: {getCompletionProgress()}
@@ -39,9 +42,9 @@ export const ContractProgressStatus = ({
     );
   }
 
-  if (embeddedSignatures.length > 0) {
-    const artistSignature = embeddedSignatures.find(sig => sig.signerType === 'artist');
-    const adminSignature = embeddedSignatures.find(sig => sig.signerType === 'admin');
+  if (safeEmbeddedSignatures.length > 0) {
+    const artistSignature = safeEmbeddedSignatures.find(sig => sig.signerType === 'artist');
+    const adminSignature = safeEmbeddedSignatures.find(sig => sig.signerType === 'admin');
     
     return (
       <div className="text-center text-sm text-green-600 bg-green-50 p-3 rounded">

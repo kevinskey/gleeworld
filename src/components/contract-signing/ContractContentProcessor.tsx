@@ -50,9 +50,12 @@ export const ContractContentProcessor = ({
   isAdminOrAgentField,
   isArtistDateField,
   onFieldComplete,
-  embeddedSignatures
+  embeddedSignatures = []
 }: ContractContentProcessorProps) => {
   const isMobile = useIsMobile();
+
+  // Ensure embeddedSignatures is always an array
+  const safeEmbeddedSignatures = Array.isArray(embeddedSignatures) ? embeddedSignatures : [];
 
   const renderEmbeddedSignatureField = (field: SignatureField) => {
     return (
@@ -79,13 +82,13 @@ export const ContractContentProcessor = ({
     const processedLines: (string | JSX.Element)[] = [];
     
     // Get signatures by type
-    const artistSignature = embeddedSignatures.find(sig => sig.signerType === 'artist');
-    const adminSignature = embeddedSignatures.find(sig => sig.signerType === 'admin');
+    const artistSignature = safeEmbeddedSignatures.find(sig => sig.signerType === 'artist');
+    const adminSignature = safeEmbeddedSignatures.find(sig => sig.signerType === 'admin');
     
     console.log('Processing contract content with signatures:', {
       artistSignature: !!artistSignature,
       adminSignature: !!adminSignature,
-      totalEmbedded: embeddedSignatures.length
+      totalEmbedded: safeEmbeddedSignatures.length
     });
     
     lines.forEach((line, index) => {
@@ -160,7 +163,7 @@ export const ContractContentProcessor = ({
           signatureFields.some(f => isArtistDateField(f))) {
         
         // Check if we have an embedded date signature
-        const embeddedDateSignature = embeddedSignatures.find(sig => sig.fieldId === 2);
+        const embeddedDateSignature = safeEmbeddedSignatures.find(sig => sig.fieldId === 2);
         
         if (embeddedDateSignature) {
           processedLines.push(
@@ -170,7 +173,7 @@ export const ContractContentProcessor = ({
           );
         } else {
           const dateField = signatureFields.find(f => isArtistDateField(f));
-          if (dateField && !embeddedSignatures.some(sig => sig.fieldId === 1)) {
+          if (dateField && !safeEmbeddedSignatures.some(sig => sig.fieldId === 1)) {
             processedLines.push(
               <div key={`date-${dateField.id}`}>
                 {renderEmbeddedSignatureField(dateField)}

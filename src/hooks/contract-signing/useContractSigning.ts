@@ -8,7 +8,7 @@ import { useSignatureFields } from "./useSignatureFields";
 
 export const useContractSigning = (contractId: string | undefined) => {
   const [signing, setSigning] = useState(false);
-  const [embeddedSignatures, setEmbeddedSignatures] = useState<any>(null);
+  const [embeddedSignatures, setEmbeddedSignatures] = useState<any[]>([]);
   const { user } = useAuth();
 
   const {
@@ -95,6 +95,23 @@ export const useContractSigning = (contractId: string | undefined) => {
       throw error;
     }
   };
+
+  // Extract embedded signatures from signature record
+  useEffect(() => {
+    if (signatureRecord?.embedded_signatures) {
+      console.log('useContractSigning - Processing embedded signatures:', signatureRecord.embedded_signatures);
+      
+      if (Array.isArray(signatureRecord.embedded_signatures)) {
+        setEmbeddedSignatures(signatureRecord.embedded_signatures);
+      } else {
+        // If it's not an array, initialize as empty array
+        console.warn('useContractSigning - embedded_signatures is not an array:', signatureRecord.embedded_signatures);
+        setEmbeddedSignatures([]);
+      }
+    } else {
+      setEmbeddedSignatures([]);
+    }
+  }, [signatureRecord]);
 
   useEffect(() => {
     if (contract && user) {
