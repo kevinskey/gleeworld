@@ -18,16 +18,17 @@ export const useContractFetcher = (contractId: string | undefined) => {
     }
 
     console.log('useContractFetcher: Starting fetch for contractId:', contractId);
+    console.log('useContractFetcher: Contract ID type:', typeof contractId);
+    console.log('useContractFetcher: Contract ID length:', contractId.length);
+    
     setLoading(true);
     setError(null);
 
     try {
-      // Try contracts table first
-      let contractData = null;
-      let contractError = null;
-
-      const { data: contractsData, error: contractsError } = await supabase
-        .from('contracts')
+      // Try contracts_v2 table first (primary table)
+      console.log('useContractFetcher: Querying contracts_v2 table...');
+      const { data: contractsV2Data, error: contractsV2Error } = await supabase
+        .from('contracts_v2')
         .select(`
           id,
           title,
@@ -40,12 +41,19 @@ export const useContractFetcher = (contractId: string | undefined) => {
         .eq('id', contractId)
         .maybeSingle();
 
-      if (contractsData) {
-        contractData = contractsData;
-      } else {
-        // If not found in contracts, try contracts_v2
-        const { data: contractsV2Data, error: contractsV2Error } = await supabase
-          .from('contracts_v2')
+      console.log('useContractFetcher: contracts_v2 query result:', { 
+        data: contractsV2Data, 
+        error: contractsV2Error 
+      });
+
+      let contractData = contractsV2Data;
+      let contractError = contractsV2Error;
+
+      // If not found in contracts_v2, try contracts table as fallback
+      if (!contractData && !contractError) {
+        console.log('useContractFetcher: Not found in contracts_v2, trying contracts table...');
+        const { data: contractsData, error: contractsError } = await supabase
+          .from('contracts')
           .select(`
             id,
             title,
@@ -58,43 +66,66 @@ export const useContractFetcher = (contractId: string | undefined) => {
           .eq('id', contractId)
           .maybeSingle();
 
-        contractData = contractsV2Data;
-        contractError = contractsV2Error;
-      }
+        console.log('useContractFetcher: contracts query result:', { 
+          data: contractsData, 
+          error: contractsError 
+        });
 
-      console.log('useContractFetcher: Contract query result:', { contractData, contractError });
+        contractData = contractsData;
+        contractError = contractsError;
+      }
 
       if (contractError) {
         console.error('useContractFetcher: Contract fetch error:', contractError);
-        setError(contractError.message);
+        setError(`Database error: ${contractError.message}`);
         return;
       }
 
       if (!contractData) {
         console.warn('useContractFetcher: No contract found for ID:', contractId);
+        console.log('useContractFetcher: This could mean:');
+        console.log('1. Contract ID is invalid');
+        console.log('2. Contract was deleted');
+        console.log('3. Contract exists in a different table');
         setError('Contract not found');
         return;
       }
 
       // Fetch signature record
+      console.log('useContractFetcher: Fetching signature record...');
       const { data: signatureData, error: signatureError } = await supabase
         .from('contract_signatures_v2')
         .select('*')
         .eq('contract_id', contractId)
         .maybeSingle();
 
-      console.log('useContractFetcher: Signature query result:', { signatureData, signatureError });
+      console.log('useContractFetcher: Signature query result:', { 
+        data: signatureData, 
+        error: signatureError 
+      });
 
       if (signatureError && signatureError.code !== 'PGRST116') {
         console.error('useContractFetcher: Signature fetch error:', signatureError);
       }
 
-      console.log('useContractFetcher: Contract found:', contractData);
+      console.log('useContractFetcher: Successfully found contract:', {
+        id: contractData.id,
+        title: contractData.title,
+        status: contractData.status,
+        hasSignatureRecord: !!signatureData
+      });
+      
       setContract(contractData as Contract);
       setSignatureRecord(signatureData);
     } catch (err) {
       console.error('useContractFetcher: Catch block error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch contract');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch contract';
+      console.error('useContractFetcher: Error details:', {
+        message: errorMessage,
+        contractId,
+        timestamp: new Date().toISOString()
+      });
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

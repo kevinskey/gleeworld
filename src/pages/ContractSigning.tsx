@@ -8,10 +8,19 @@ import { Loader2 } from "lucide-react";
 const ContractSigning = () => {
   const { contractId } = useParams<{ contractId: string }>();
   
-  console.log('ContractSigning: Component mounted with contractId:', contractId);
+  console.log('ContractSigning: Component mounted');
+  console.log('ContractSigning: URL params:', { contractId });
+  console.log('ContractSigning: Window location:', window.location.href);
   
   if (!contractId) {
-    console.error('ContractSigning: No contractId provided');
+    console.error('ContractSigning: No contractId in URL params');
+    return <ContractNotFound />;
+  }
+
+  // Validate contract ID format (should be UUID)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(contractId)) {
+    console.error('ContractSigning: Invalid contract ID format:', contractId);
     return <ContractNotFound />;
   }
 
@@ -31,29 +40,33 @@ const ContractSigning = () => {
   } = useContractSigning(contractId);
 
   console.log('ContractSigning: Hook state:', { 
-    contract, 
+    hasContract: !!contract, 
     loading, 
     error, 
-    signatureRecord,
-    signatureFields: signatureFields?.length 
+    hasSignatureRecord: !!signatureRecord,
+    signatureFieldsCount: signatureFields?.length || 0
   });
 
   // Add detailed error logging
   if (error) {
-    console.error('ContractSigning: Detailed error:', {
+    console.error('ContractSigning: Detailed error state:', {
       error,
       contractId,
-      timestamp: new Date().toISOString()
+      url: window.location.href,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent
     });
   }
 
   if (loading) {
+    console.log('ContractSigning: Showing loading state');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
           <p className="text-gray-600">Loading contract...</p>
           <p className="text-sm text-gray-400 mt-2">Contract ID: {contractId}</p>
+          <p className="text-xs text-gray-300 mt-1">Please wait while we fetch your contract...</p>
         </div>
       </div>
     );
@@ -63,15 +76,24 @@ const ContractSigning = () => {
     console.error('ContractSigning: Rendering error state:', error);
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center max-w-md">
-          <h2 className="text-xl font-semibold text-red-600 mb-2">Connection Error</h2>
+        <div className="text-center max-w-md mx-auto p-6">
+          <h2 className="text-xl font-semibold text-red-600 mb-2">Unable to Load Contract</h2>
           <p className="text-gray-600 mb-4">{error}</p>
-          <p className="text-sm text-gray-400">Contract ID: {contractId}</p>
+          <div className="bg-gray-100 p-3 rounded text-xs text-gray-500 mb-4">
+            <p><strong>Contract ID:</strong> {contractId}</p>
+            <p><strong>URL:</strong> {window.location.href}</p>
+          </div>
           <button 
             onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mr-2"
           >
-            Retry Connection
+            Retry Loading
+          </button>
+          <button 
+            onClick={() => window.location.href = '/'} 
+            className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+          >
+            Go to Homepage
           </button>
         </div>
       </div>
@@ -79,9 +101,11 @@ const ContractSigning = () => {
   }
 
   if (!contract) {
-    console.error('ContractSigning: Contract not found');
+    console.error('ContractSigning: No contract data available');
     return <ContractNotFound />;
   }
+
+  console.log('ContractSigning: Rendering contract successfully:', contract.title);
 
   const getCompletionProgress = () => {
     const totalFields = signatureFields.filter(field => !isAdminOrAgentField(field)).length;
