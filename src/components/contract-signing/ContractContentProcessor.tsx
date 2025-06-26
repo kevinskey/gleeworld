@@ -44,22 +44,66 @@ interface ContractContentProcessorProps {
 
 export const ContractContentProcessor = ({
   contract,
-  signatureFields = [],
-  completedFields = {},
+  signatureFields,
+  completedFields,
   signatureRecord,
   isAdminOrAgentField,
   isArtistDateField,
   onFieldComplete,
-  embeddedSignatures = []
+  embeddedSignatures
 }: ContractContentProcessorProps) => {
   const isMobile = useIsMobile();
 
-  // Ensure all arrays are properly initialized with fallbacks
-  const safeSignatureFields = Array.isArray(signatureFields) ? signatureFields : [];
-  const safeEmbeddedSignatures = Array.isArray(embeddedSignatures) ? embeddedSignatures : [];
-  const safeCompletedFields = completedFields || {};
+  // Enhanced null safety with detailed logging
+  console.log('ContractContentProcessor: Raw props received:', {
+    hasContract: !!contract,
+    signatureFields,
+    signatureFieldsType: typeof signatureFields,
+    signatureFieldsIsArray: Array.isArray(signatureFields),
+    embeddedSignatures,
+    embeddedSignaturesType: typeof embeddedSignatures,
+    embeddedSignaturesIsArray: Array.isArray(embeddedSignatures),
+    completedFields,
+    completedFieldsType: typeof completedFields
+  });
+
+  // Ensure all arrays are properly initialized with comprehensive fallbacks
+  const safeSignatureFields = (() => {
+    if (Array.isArray(signatureFields)) {
+      return signatureFields;
+    }
+    console.warn('ContractContentProcessor: signatureFields is not an array, using empty array');
+    return [];
+  })();
+
+  const safeEmbeddedSignatures = (() => {
+    if (Array.isArray(embeddedSignatures)) {
+      return embeddedSignatures;
+    }
+    console.warn('ContractContentProcessor: embeddedSignatures is not an array, using empty array');
+    return [];
+  })();
+
+  const safeCompletedFields = (() => {
+    if (completedFields && typeof completedFields === 'object') {
+      return completedFields;
+    }
+    console.warn('ContractContentProcessor: completedFields is not an object, using empty object');
+    return {};
+  })();
+
+  console.log('ContractContentProcessor: Safe props after processing:', {
+    safeSignatureFieldsLength: safeSignatureFields.length,
+    safeEmbeddedSignaturesLength: safeEmbeddedSignatures.length,
+    safeCompletedFieldsKeys: Object.keys(safeCompletedFields).length
+  });
 
   const renderEmbeddedSignatureField = (field: SignatureField) => {
+    if (!field) {
+      console.warn('ContractContentProcessor: renderEmbeddedSignatureField called with null/undefined field');
+      return null;
+    }
+
     return (
       <SignatureFieldRenderer
         field={field}
@@ -83,15 +127,20 @@ export const ContractContentProcessor = ({
     const lines = cleanContent.split('\n');
     const processedLines: (string | JSX.Element)[] = [];
     
-    // Get signatures by type with proper null safety
-    const artistSignature = safeEmbeddedSignatures.find(sig => sig.signerType === 'artist');
-    const adminSignature = safeEmbeddedSignatures.find(sig => sig.signerType === 'admin');
+    // Get signatures by type with enhanced null safety
+    const artistSignature = safeEmbeddedSignatures.length > 0 
+      ? safeEmbeddedSignatures.find(sig => sig && sig.signerType === 'artist') 
+      : null;
+    const adminSignature = safeEmbeddedSignatures.length > 0 
+      ? safeEmbeddedSignatures.find(sig => sig && sig.signerType === 'admin') 
+      : null;
     
-    console.log('Processing contract content with signatures:', {
+    console.log('ContractContentProcessor: Processing contract content with signatures:', {
       artistSignature: !!artistSignature,
       adminSignature: !!adminSignature,
       totalEmbedded: safeEmbeddedSignatures.length,
-      signatureFieldsCount: safeSignatureFields.length
+      signatureFieldsCount: safeSignatureFields.length,
+      contentLength: content.length
     });
     
     lines.forEach((line, index) => {
@@ -99,7 +148,7 @@ export const ContractContentProcessor = ({
       if (line.includes('Printed Name:') && line.includes('Dr. Kevin P. Johnson')) {
         // Add admin signature BEFORE this line
         if (adminSignature) {
-          console.log('Adding admin signature before printed name line');
+          console.log('ContractContentProcessor: Adding admin signature before printed name line');
           processedLines.push(
             <div key={`embedded-admin-signature-${adminSignature.fieldId}`} className="mb-4">
               <EmbeddedSignatureDisplay signature={adminSignature} />
@@ -138,21 +187,25 @@ export const ContractContentProcessor = ({
       // Add artist signature after signature-related lines
       if (line.toLowerCase().includes('artist:') || line.toLowerCase().includes('signature')) {
         if (artistSignature) {
-          console.log('Adding artist signature after artist line');
+          console.log('ContractContentProcessor: Adding artist signature after artist line');
           processedLines.push(
             <div key={`embedded-artist-signature-${artistSignature.fieldId}`}>
               <EmbeddedSignatureDisplay signature={artistSignature} />
             </div>
           );
         } else {
-          // Show signature field for signing with proper null safety
-          const artistSignatureField = safeSignatureFields.find(f => 
-            f.type === 'signature' && 
-            (f.label.toLowerCase().includes('artist') || f.id === 1) &&
-            !isAdminOrAgentField(f)
-          );
+          // Show signature field for signing with enhanced null safety
+          const artistSignatureField = safeSignatureFields.length > 0 
+            ? safeSignatureFields.find(f => 
+                f && 
+                f.type === 'signature' && 
+                (f.label.toLowerCase().includes('artist') || f.id === 1) &&
+                !isAdminOrAgentField(f)
+              )
+            : null;
           
           if (artistSignatureField) {
+            console.log('ContractContentProcessor: Adding artist signature field');
             processedLines.push(
               <div key={`signature-${artistSignatureField.id}`}>
                 {renderEmbeddedSignatureField(artistSignatureField)}
@@ -163,20 +216,26 @@ export const ContractContentProcessor = ({
       }
       
       if ((index === lines.length - 1 || line.toLowerCase().includes('date executed')) && 
-          safeSignatureFields.some(f => isArtistDateField(f))) {
+          safeSignatureFields.length > 0 && safeSignatureFields.some(f => f && isArtistDateField(f))) {
         
         // Check if we have an embedded date signature
-        const embeddedDateSignature = safeEmbeddedSignatures.find(sig => sig.fieldId === 2);
+        const embeddedDateSignature = safeEmbeddedSignatures.length > 0 
+          ? safeEmbeddedSignatures.find(sig => sig && sig.fieldId === 2) 
+          : null;
         
         if (embeddedDateSignature) {
+          console.log('ContractContentProcessor: Adding embedded date signature');
           processedLines.push(
             <div key={`embedded-date-${embeddedDateSignature.fieldId}`} className="my-2 p-2 bg-blue-50 rounded">
               <span className="text-sm font-medium text-blue-700">Date Signed: {embeddedDateSignature.dateSigned}</span>
             </div>
           );
         } else {
-          const dateField = safeSignatureFields.find(f => isArtistDateField(f));
-          if (dateField && !safeEmbeddedSignatures.some(sig => sig.fieldId === 1)) {
+          const dateField = safeSignatureFields.length > 0 
+            ? safeSignatureFields.find(f => f && isArtistDateField(f)) 
+            : null;
+          if (dateField && !safeEmbeddedSignatures.some(sig => sig && sig.fieldId === 1)) {
+            console.log('ContractContentProcessor: Adding date field');
             processedLines.push(
               <div key={`date-${dateField.id}`}>
                 {renderEmbeddedSignatureField(dateField)}
@@ -189,9 +248,9 @@ export const ContractContentProcessor = ({
     
     // If admin signature exists but wasn't placed above, add it at the end
     if (adminSignature && !processedLines.some(line => 
-      typeof line === 'object' && line.key && line.key.includes('admin-signature')
+      typeof line === 'object' && line && line.key && line.key.includes('admin-signature')
     )) {
-      console.log('Adding admin signature at the end');
+      console.log('ContractContentProcessor: Adding admin signature at the end');
       processedLines.push(
         <div key={`embedded-admin-signature-fallback-${adminSignature.fieldId}`} className="mt-6">
           <EmbeddedSignatureDisplay signature={adminSignature} />
@@ -199,8 +258,19 @@ export const ContractContentProcessor = ({
       );
     }
     
+    console.log('ContractContentProcessor: Processed lines count:', processedLines.length);
     return processedLines;
   };
+
+  // Early return if no contract
+  if (!contract) {
+    console.warn('ContractContentProcessor: No contract provided');
+    return (
+      <div className="p-4 text-center text-gray-500">
+        No contract data available
+      </div>
+    );
+  }
 
   return (
     <div 
