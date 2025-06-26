@@ -52,6 +52,9 @@ export const ContractContentRenderer = ({
   getCompletionProgress,
   embeddedSignatures = []
 }: ContractContentRendererProps) => {
+  // Ensure embeddedSignatures is always an array - double safety check
+  const safeEmbeddedSignatures = Array.isArray(embeddedSignatures) ? embeddedSignatures : [];
+  
   return (
     <div className="space-y-2">
       <ContractContentProcessor
@@ -62,13 +65,13 @@ export const ContractContentRenderer = ({
         isAdminOrAgentField={isAdminOrAgentField}
         isArtistDateField={isArtistDateField}
         onFieldComplete={onFieldComplete}
-        embeddedSignatures={embeddedSignatures}
+        embeddedSignatures={safeEmbeddedSignatures}
       />
       
       <ContractProgressStatus
         signatureRecord={signatureRecord}
         signatureFields={signatureFields}
-        embeddedSignatures={embeddedSignatures}
+        embeddedSignatures={safeEmbeddedSignatures}
         getCompletionProgress={getCompletionProgress}
       />
     </div>

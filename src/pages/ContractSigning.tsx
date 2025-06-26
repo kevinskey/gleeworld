@@ -44,7 +44,9 @@ const ContractSigning = () => {
     loading, 
     error, 
     hasSignatureRecord: !!signatureRecord,
-    signatureFieldsCount: signatureFields?.length || 0
+    signatureFieldsCount: signatureFields?.length || 0,
+    embeddedSignaturesCount: Array.isArray(embeddedSignatures) ? embeddedSignatures.length : 0,
+    embeddedSignaturesType: typeof embeddedSignatures
   });
 
   // Add detailed error logging
@@ -113,6 +115,9 @@ const ContractSigning = () => {
     return `${completedCount}/${totalFields}`;
   };
 
+  // Ensure embeddedSignatures is always an array before passing to components
+  const safeEmbeddedSignatures = Array.isArray(embeddedSignatures) ? embeddedSignatures : [];
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
@@ -128,7 +133,7 @@ const ContractSigning = () => {
             isArtistDateField={isArtistDateField}
             onFieldComplete={handleFieldComplete}
             getCompletionProgress={getCompletionProgress}
-            embeddedSignatures={embeddedSignatures}
+            embeddedSignatures={safeEmbeddedSignatures}
           />
         </div>
       </div>
