@@ -43,8 +43,8 @@ interface ContractContentRendererProps {
 
 export const ContractContentRenderer = ({ 
   contract, 
-  signatureFields, 
-  completedFields, 
+  signatureFields = [], 
+  completedFields = {}, 
   signatureRecord, 
   isAdminOrAgentField, 
   isArtistDateField, 
@@ -52,15 +52,24 @@ export const ContractContentRenderer = ({
   getCompletionProgress,
   embeddedSignatures = []
 }: ContractContentRendererProps) => {
-  // Ensure embeddedSignatures is always an array - double safety check
+  // Ensure all props have safe defaults
+  const safeSignatureFields = Array.isArray(signatureFields) ? signatureFields : [];
+  const safeCompletedFields = completedFields || {};
   const safeEmbeddedSignatures = Array.isArray(embeddedSignatures) ? embeddedSignatures : [];
+  
+  console.log('ContractContentRenderer: Rendering with safe props:', {
+    hasContract: !!contract,
+    signatureFieldsCount: safeSignatureFields.length,
+    completedFieldsCount: Object.keys(safeCompletedFields).length,
+    embeddedSignaturesCount: safeEmbeddedSignatures.length
+  });
   
   return (
     <div className="space-y-2">
       <ContractContentProcessor
         contract={contract}
-        signatureFields={signatureFields}
-        completedFields={completedFields}
+        signatureFields={safeSignatureFields}
+        completedFields={safeCompletedFields}
         signatureRecord={signatureRecord}
         isAdminOrAgentField={isAdminOrAgentField}
         isArtistDateField={isArtistDateField}
@@ -70,7 +79,7 @@ export const ContractContentRenderer = ({
       
       <ContractProgressStatus
         signatureRecord={signatureRecord}
-        signatureFields={signatureFields}
+        signatureFields={safeSignatureFields}
         embeddedSignatures={safeEmbeddedSignatures}
         getCompletionProgress={getCompletionProgress}
       />

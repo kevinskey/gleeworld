@@ -44,8 +44,8 @@ interface ContractContentProcessorProps {
 
 export const ContractContentProcessor = ({
   contract,
-  signatureFields,
-  completedFields,
+  signatureFields = [],
+  completedFields = {},
   signatureRecord,
   isAdminOrAgentField,
   isArtistDateField,
@@ -54,14 +54,16 @@ export const ContractContentProcessor = ({
 }: ContractContentProcessorProps) => {
   const isMobile = useIsMobile();
 
-  // Ensure embeddedSignatures is always an array
+  // Ensure all arrays are properly initialized with fallbacks
+  const safeSignatureFields = Array.isArray(signatureFields) ? signatureFields : [];
   const safeEmbeddedSignatures = Array.isArray(embeddedSignatures) ? embeddedSignatures : [];
+  const safeCompletedFields = completedFields || {};
 
   const renderEmbeddedSignatureField = (field: SignatureField) => {
     return (
       <SignatureFieldRenderer
         field={field}
-        completedFields={completedFields}
+        completedFields={safeCompletedFields}
         signatureRecord={signatureRecord}
         isAdminOrAgentField={isAdminOrAgentField}
         onFieldComplete={onFieldComplete}
@@ -81,14 +83,15 @@ export const ContractContentProcessor = ({
     const lines = cleanContent.split('\n');
     const processedLines: (string | JSX.Element)[] = [];
     
-    // Get signatures by type
+    // Get signatures by type with proper null safety
     const artistSignature = safeEmbeddedSignatures.find(sig => sig.signerType === 'artist');
     const adminSignature = safeEmbeddedSignatures.find(sig => sig.signerType === 'admin');
     
     console.log('Processing contract content with signatures:', {
       artistSignature: !!artistSignature,
       adminSignature: !!adminSignature,
-      totalEmbedded: safeEmbeddedSignatures.length
+      totalEmbedded: safeEmbeddedSignatures.length,
+      signatureFieldsCount: safeSignatureFields.length
     });
     
     lines.forEach((line, index) => {
@@ -142,8 +145,8 @@ export const ContractContentProcessor = ({
             </div>
           );
         } else {
-          // Show signature field for signing
-          const artistSignatureField = signatureFields.find(f => 
+          // Show signature field for signing with proper null safety
+          const artistSignatureField = safeSignatureFields.find(f => 
             f.type === 'signature' && 
             (f.label.toLowerCase().includes('artist') || f.id === 1) &&
             !isAdminOrAgentField(f)
@@ -160,7 +163,7 @@ export const ContractContentProcessor = ({
       }
       
       if ((index === lines.length - 1 || line.toLowerCase().includes('date executed')) && 
-          signatureFields.some(f => isArtistDateField(f))) {
+          safeSignatureFields.some(f => isArtistDateField(f))) {
         
         // Check if we have an embedded date signature
         const embeddedDateSignature = safeEmbeddedSignatures.find(sig => sig.fieldId === 2);
@@ -172,7 +175,7 @@ export const ContractContentProcessor = ({
             </div>
           );
         } else {
-          const dateField = signatureFields.find(f => isArtistDateField(f));
+          const dateField = safeSignatureFields.find(f => isArtistDateField(f));
           if (dateField && !safeEmbeddedSignatures.some(sig => sig.fieldId === 1)) {
             processedLines.push(
               <div key={`date-${dateField.id}`}>
