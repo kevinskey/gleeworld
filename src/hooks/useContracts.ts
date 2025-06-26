@@ -23,6 +23,7 @@ export const useContracts = () => {
   const channelRef = useRef<any>(null);
   const mountedRef = useRef(true);
   const fetchingRef = useRef(false);
+  const subscribedRef = useRef(false);
 
   const fetchContracts = async () => {
     if (fetchingRef.current || !user) return;
@@ -181,64 +182,73 @@ export const useContracts = () => {
       setContracts([]);
       setLoading(false);
       setError(null);
+      subscribedRef.current = false;
       return;
     }
 
     // Fetch contracts
     fetchContracts();
 
-    // Clean up existing channel
-    if (channelRef.current) {
-      supabase.removeChannel(channelRef.current);
-      channelRef.current = null;
-    }
-
-    // Set up real-time subscription
-    const channel = supabase
-      .channel(`contracts-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'contracts_v2'
-        },
-        (payload) => {
-          console.log('Real-time update:', payload);
-          
-          if (!mountedRef.current) return;
-          
-          // Defer updates to prevent auth conflicts
-          setTimeout(() => {
+    // Only set up subscription if not already subscribed
+    if (!subscribedRef.current) {
+      console.log('Setting up real-time subscription for contracts');
+      
+      // Create unique channel name
+      const channelName = `contracts-${user.id}-${Date.now()}`;
+      
+      const channel = supabase
+        .channel(channelName)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'contracts_v2'
+          },
+          (payload) => {
+            console.log('Real-time update:', payload);
+            
             if (!mountedRef.current) return;
             
-            if (payload.eventType === 'INSERT') {
-              const newContract = payload.new as Contract;
-              setContracts(prev => {
-                if (prev.some(c => c.id === newContract.id)) return prev;
-                return [newContract, ...prev];
-              });
-            } else if (payload.eventType === 'UPDATE') {
-              const updatedContract = payload.new as Contract;
-              setContracts(prev => 
-                prev.map(c => c.id === updatedContract.id ? updatedContract : c)
-              );
-            } else if (payload.eventType === 'DELETE') {
-              const deletedId = payload.old.id;
-              setContracts(prev => prev.filter(c => c.id !== deletedId));
-            }
-          }, 100);
-        }
-      )
-      .subscribe();
+            // Defer updates to prevent auth conflicts
+            setTimeout(() => {
+              if (!mountedRef.current) return;
+              
+              if (payload.eventType === 'INSERT') {
+                const newContract = payload.new as Contract;
+                setContracts(prev => {
+                  if (prev.some(c => c.id === newContract.id)) return prev;
+                  return [newContract, ...prev];
+                });
+              } else if (payload.eventType === 'UPDATE') {
+                const updatedContract = payload.new as Contract;
+                setContracts(prev => 
+                  prev.map(c => c.id === updatedContract.id ? updatedContract : c)
+                );
+              } else if (payload.eventType === 'DELETE') {
+                const deletedId = payload.old.id;
+                setContracts(prev => prev.filter(c => c.id !== deletedId));
+              }
+            }, 100);
+          }
+        )
+        .subscribe((status) => {
+          console.log('Subscription status:', status);
+          if (status === 'SUBSCRIBED') {
+            subscribedRef.current = true;
+          }
+        });
 
-    channelRef.current = channel;
+      channelRef.current = channel;
+    }
 
     return () => {
       mountedRef.current = false;
-      if (channelRef.current) {
+      if (channelRef.current && subscribedRef.current) {
+        console.log('Cleaning up subscription');
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
+        subscribedRef.current = false;
       }
     };
   }, [user, authLoading]);
