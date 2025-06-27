@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -313,12 +312,16 @@ export const useFinanceRecords = () => {
         });
         console.log(`- All available fields:`, Array.from(allFields));
         
-        // Analyze stipend-related fields
-        const stipendFields = Array.from(allFields).filter(field => 
-          field.toLowerCase().includes('stipend') || 
-          field.toLowerCase().includes('amount') || 
-          field.toLowerCase().includes('payment')
-        );
+        // Analyze stipend-related fields with proper type checking
+        const stipendFields = Array.from(allFields).filter(field => {
+          if (typeof field === 'string') {
+            const fieldLower = field.toLowerCase();
+            return fieldLower.includes('stipend') || 
+                   fieldLower.includes('amount') || 
+                   fieldLower.includes('payment');
+          }
+          return false;
+        });
         console.log(`- Stipend-related fields:`, stipendFields);
         
         // Check each contract for stipend data
