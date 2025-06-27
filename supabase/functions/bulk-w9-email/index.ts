@@ -106,18 +106,18 @@ const handler = async (req: Request): Promise<Response> => {
     for (const targetUser of targetUsers) {
       try {
         const emailSubject = reminderType === 'reminder' 
-          ? "Reminder: Complete Your W9 Tax Form" 
-          : "Action Required: Complete Your W9 Tax Form";
+          ? "Reminder: Complete Your W9 Tax Form - Syracuse International Jazz Festival" 
+          : "Action Required: Complete Your W9 Tax Form - Syracuse International Jazz Festival";
 
         const emailContent = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #1e40af;">W9 Tax Form Required</h2>
+            <h2 style="color: #1e40af;">W9 Tax Form Required - Syracuse International Jazz Festival</h2>
             
             <p>Hello ${targetUser.full_name || targetUser.email},</p>
             
             ${reminderType === 'reminder' 
-              ? '<p><strong>This is a reminder</strong> that you need to complete your W9 tax form.</p>'
-              : '<p>You are required to complete your W9 tax form for our records.</p>'
+              ? '<p><strong>This is a reminder</strong> that you need to complete your W9 tax form for the Syracuse International Jazz Festival.</p>'
+              : '<p>You are required to complete your W9 tax form for the Syracuse International Jazz Festival.</p>'
             }
             
             ${customMessage ? `<div style="background: #f8fafc; padding: 15px; border-left: 4px solid #1e40af; margin: 20px 0;"><p>${customMessage}</p></div>` : ''}
@@ -133,7 +133,7 @@ const handler = async (req: Request): Promise<Response> => {
             Form W-9 is used to request the taxpayer identification number (TIN) of a U.S. person and to request certain certifications and claims for exemption.</p>
             
             <p><strong>Why do I need to complete this?</strong><br>
-            We are required by law to collect this information for tax reporting purposes if you receive payments from us.</p>
+            We are required by law to collect this information for tax reporting purposes if you receive payments from us for the Syracuse International Jazz Festival.</p>
             
             <p>If you have any questions, please contact our support team.</p>
             
@@ -147,7 +147,7 @@ const handler = async (req: Request): Promise<Response> => {
         console.log(`Attempting to send email to ${targetUser.email}`);
 
         const emailResponse = await resend.emails.send({
-          from: "Admin <onboarding@resend.dev>",
+          from: "Syracuse International Jazz Festival <onboarding@resend.dev>",
           to: [targetUser.email],
           subject: emailSubject,
           html: emailContent,
