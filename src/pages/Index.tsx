@@ -13,10 +13,19 @@ import { useContracts } from "@/hooks/useContracts";
 import type { Contract } from "@/hooks/useContracts";
 
 const Index = () => {
+  console.log('Index: Component is rendering');
+  
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [contractViewerOpen, setContractViewerOpen] = useState(false);
   const { contracts, loading, error, deleteContract, refetch } = useContracts();
+
+  console.log('Index: State initialized', { 
+    activeTab, 
+    contractsCount: contracts.length, 
+    loading, 
+    error 
+  });
 
   // Calculate stats for StatsCards
   const totalContracts = contracts.length;
@@ -52,13 +61,18 @@ const Index = () => {
   };
 
   const renderContent = () => {
+    console.log('Index: Rendering content for tab:', activeTab);
+    
     switch (activeTab) {
       case "library":
+        console.log('Index: Rendering Library component');
         return <Library />;
       case "finance":
+        console.log('Index: Rendering FinanceManagement component');
         return <FinanceManagement />;
       case "dashboard":
       default:
+        console.log('Index: Rendering Dashboard content');
         return (
           <div className="space-y-6">
             <StatsCards 
@@ -85,6 +99,8 @@ const Index = () => {
         );
     }
   };
+
+  console.log('Index: About to render main component');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900">
