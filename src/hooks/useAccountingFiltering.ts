@@ -143,13 +143,44 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
           return false;
         });
       } else {
-        // Handle real template filtering
+        // Handle real template filtering - match by both template ID and template name
+        const selectedTemplate = templates.find(t => t.id === filterByTemplate);
+        
         filtered = filtered.filter(entry => {
-          const matches = entry.templateId === filterByTemplate;
-          if (matches) {
-            console.log('Contract matches template filter:', entry.contractTitle, 'templateId:', entry.templateId);
+          // Match by template ID
+          if (entry.templateId === filterByTemplate) {
+            console.log('Contract matches template filter by ID:', entry.contractTitle, 'templateId:', entry.templateId);
+            return true;
           }
-          return matches;
+          
+          // Match by template name if available
+          if (selectedTemplate && entry.templateName) {
+            const nameMatches = entry.templateName.toLowerCase().includes(selectedTemplate.name.toLowerCase()) ||
+                               selectedTemplate.name.toLowerCase().includes(entry.templateName.toLowerCase());
+            if (nameMatches) {
+              console.log('Contract matches template filter by name:', entry.contractTitle, 'templateName:', entry.templateName);
+              return true;
+            }
+          }
+          
+          // Also check if contract title contains template name patterns
+          if (selectedTemplate) {
+            const titleLower = entry.contractTitle.toLowerCase();
+            const templateNameLower = selectedTemplate.name.toLowerCase();
+            
+            // Check for partial matches in contract title
+            const titleContainsTemplate = titleLower.includes(templateNameLower) ||
+                                        templateNameLower.split(' ').some(word => 
+                                          word.length > 3 && titleLower.includes(word)
+                                        );
+            
+            if (titleContainsTemplate) {
+              console.log('Contract matches template filter by title pattern:', entry.contractTitle, 'template:', selectedTemplate.name);
+              return true;
+            }
+          }
+          
+          return false;
         });
       }
       console.log('After template filter:', filtered.length);
@@ -218,7 +249,7 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
     });
 
     return filtered;
-  }, [data, sortBy, sortOrder, filterByStatus, filterByDateRange, filterByTemplate, searchTerm]);
+  }, [data, sortBy, sortOrder, filterByStatus, filterByDateRange, filterByTemplate, searchTerm, templates]);
 
   const handleSortChange = (newSortBy: string, newSortOrder: 'asc' | 'desc') => {
     setSortBy(newSortBy);
