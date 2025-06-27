@@ -1,6 +1,9 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useW9Forms } from "@/hooks/useW9Forms";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
+import { FileText, CheckCircle, Clock, ChevronDown } from "lucide-react";
+import { useState } from "react";
 
 interface StatsCardsProps {
   totalContracts: number;
@@ -9,34 +12,55 @@ interface StatsCardsProps {
 }
 
 export const StatsCards = ({ totalContracts, completedCount, pendingCount }: StatsCardsProps) => {
-  const { w9Forms } = useW9Forms();
+  const [isOpen, setIsOpen] = useState(true);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-2xl font-bold">{totalContracts}</CardTitle>
-          <CardDescription className="text-blue-100">Total Contracts</CardDescription>
+    <Card className="w-full">
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CardHeader>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="w-full justify-between p-0 h-auto hover:bg-transparent">
+              <div className="text-left">
+                <CardTitle className="flex items-center gap-2">
+                  Contract Statistics
+                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                </CardTitle>
+                <CardDescription>Overview of your contract status</CardDescription>
+              </div>
+            </Button>
+          </CollapsibleTrigger>
         </CardHeader>
-      </Card>
-      <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-2xl font-bold">{completedCount}</CardTitle>
-          <CardDescription className="text-green-100">Completed</CardDescription>
-        </CardHeader>
-      </Card>
-      <Card className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-2xl font-bold">{pendingCount}</CardTitle>
-          <CardDescription className="text-yellow-100">Pending</CardDescription>
-        </CardHeader>
-      </Card>
-      <Card className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-2xl font-bold">{w9Forms.length}</CardTitle>
-          <CardDescription className="text-yellow-100">W9 Forms</CardDescription>
-        </CardHeader>
-      </Card>
-    </div>
+        
+        <CollapsibleContent>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-center p-4 bg-blue-50 rounded-lg">
+                <FileText className="h-8 w-8 text-blue-600 mr-3" />
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Contracts</p>
+                  <p className="text-2xl font-bold text-gray-900">{totalContracts}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center p-4 bg-green-50 rounded-lg">
+                <CheckCircle className="h-8 w-8 text-green-600 mr-3" />
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Completed</p>
+                  <p className="text-2xl font-bold text-gray-900">{completedCount}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center p-4 bg-yellow-50 rounded-lg">
+                <Clock className="h-8 w-8 text-yellow-600 mr-3" />
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Pending</p>
+                  <p className="text-2xl font-bold text-gray-900">{pendingCount}</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
   );
 };

@@ -1,19 +1,17 @@
 
 import { useState, useCallback } from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calculator, DollarSign } from "lucide-react";
 import { DocumentUpload } from "@/components/DocumentUpload";
 import { ContractsList } from "@/components/ContractsList";
 import { ContractViewer } from "@/components/ContractViewer";
-import { AdminPanel } from "@/components/AdminPanel";
 import { StatsCards } from "@/components/StatsCards";
-import { ContractTemplates } from "@/components/ContractTemplates";
-import { W9FormsList } from "@/components/W9FormsList";
+import { ContractTemplatesCollapsible } from "@/components/ContractTemplatesCollapsible";
+import { W9FormsListCollapsible } from "@/components/W9FormsListCollapsible";
+import { AdminPanelCollapsible } from "@/components/AdminPanelCollapsible";
+import { AccountingCardCollapsible } from "@/components/AccountingCardCollapsible";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useContracts } from "@/hooks/useContracts";
+import { Button } from "@/components/ui/button";
 import type { Contract } from "@/hooks/useContracts";
 
 const Index = () => {
@@ -120,29 +118,25 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Stats Overview */}
-        <div className="mb-8">
+        {/* Main Content Grid */}
+        <div className="space-y-8">
+          {/* Stats Overview */}
           <StatsCards 
             totalContracts={contracts.length}
             completedCount={completedContracts.length}
             pendingCount={pendingContracts.length}
           />
-        </div>
 
-        {/* Main Content Grid */}
-        <div className="space-y-8">
           {/* Contracts Section */}
-          <div>
-            <ContractsList 
-              contracts={contracts}
-              loading={loading}
-              error={error}
-              onViewContract={handleViewContract}
-              onDeleteContract={handleDeleteContract}
-              onUploadContract={handleUploadContract}
-              onRetry={forceRefresh}
-            />
-          </div>
+          <ContractsList 
+            contracts={contracts}
+            loading={loading}
+            error={error}
+            onViewContract={handleViewContract}
+            onDeleteContract={handleDeleteContract}
+            onUploadContract={handleUploadContract}
+            onRetry={forceRefresh}
+          />
 
           {/* Admin Only Sections */}
           {isAdmin && (
@@ -150,63 +144,26 @@ const Index = () => {
               {/* Templates and W9 Forms - 50/50 Split */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Contract Templates - Left Side */}
-                <div className="bg-white rounded-lg border shadow-sm">
-                  <div className="p-6">
-                    <ContractTemplates 
-                      onUseTemplate={handleUseTemplate}
-                      onContractCreated={handleContractCreated}
-                    />
-                  </div>
-                </div>
+                <ContractTemplatesCollapsible 
+                  onUseTemplate={handleUseTemplate}
+                  onContractCreated={handleContractCreated}
+                />
                 
                 {/* W9 Forms - Right Side */}
-                <div className="bg-white rounded-lg border shadow-sm">
-                  <div className="p-6">
-                    <W9FormsList />
-                  </div>
-                </div>
+                <W9FormsListCollapsible />
               </div>
               
               {/* Admin Panel - Full Width */}
-              <div className="w-full">
-                <AdminPanel />
-              </div>
+              <AdminPanelCollapsible />
               
               {/* Accounting Card - Separate */}
-              <div className="max-w-md">
-                <Card className="h-fit">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Calculator className="h-5 w-5 text-blue-600" />
-                      Accounting
-                    </CardTitle>
-                    <CardDescription>
-                      Track stipends and contract payments
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-600 mb-4">
-                      View detailed accounting information for all signed contracts with stipend amounts.
-                    </p>
-                    <Button asChild className="w-full">
-                      <Link to="/accounting">
-                        <DollarSign className="h-4 w-4 mr-2" />
-                        View Accounting
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
+              <AccountingCardCollapsible />
             </>
           )}
 
           {/* Non-Admin Users - Show W9 Forms Only */}
           {!isAdmin && (
-            <div className="bg-white rounded-lg border shadow-sm">
-              <div className="p-6">
-                <W9FormsList />
-              </div>
-            </div>
+            <W9FormsListCollapsible />
           )}
         </div>
 
