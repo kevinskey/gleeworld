@@ -27,7 +27,6 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
     requestersAddress: '',
     tin: '',
     certification: false,
-    backupWithholdingExempt: true,
     email: '' // Add email field for non-authenticated users
   });
   const [loading, setLoading] = useState(false);
@@ -82,13 +81,12 @@ Requester's Name: ${formData.requestersName}
 Requester's Address: ${formData.requestersAddress}
 TIN: ${formData.tin}
 Email: ${user?.email || formData.email}
-Backup Withholding Exempt: ${formData.backupWithholdingExempt ? 'Yes' : 'No'}
 Certified: ${formData.certification ? 'Yes' : 'No'}
       `;
 
-      // Generate unique file path
-      const sanitizedName = formData.name.replace(/[^a-zA-Z0-9]/g, '_') || 'anonymous';
-      const fileName = `w9-${user?.id || 'guest'}-${Date.now()}-${sanitizedName}.txt`;
+      // Generate unique file path with username in title
+      const userName = formData.name.replace(/[^a-zA-Z0-9]/g, '_') || 'anonymous';
+      const fileName = `w9-${userName}-${user?.id || 'guest'}-${Date.now()}.txt`;
       
       // Upload to storage
       const { error: uploadError } = await supabase.storage
@@ -244,25 +242,6 @@ Certified: ${formData.certification ? 'Yes' : 'No'}
             </div>
 
             <div className="space-y-4">
-              {/* Backup Withholding Section */}
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <h3 className="font-semibold text-gray-900 mb-3">Backup Withholding Status</h3>
-                <div className="flex items-start space-x-3">
-                  <Checkbox
-                    id="backupWithholdingExempt"
-                    checked={formData.backupWithholdingExempt}
-                    onCheckedChange={(checked) => handleInputChange('backupWithholdingExempt', checked as boolean)}
-                    className="mt-1 border-gray-400 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                  />
-                  <Label htmlFor="backupWithholdingExempt" className="text-sm text-gray-900 cursor-pointer">
-                    I am not subject to backup withholding because: (a) I am exempt from backup withholding, or (b) I have not been notified by the Internal Revenue Service (IRS) that I am subject to backup withholding as a result of a failure to report all interest or dividends, or (c) the IRS has notified me that I am no longer subject to backup withholding.
-                  </Label>
-                </div>
-                <p className="text-xs text-gray-600 mt-2">
-                  <strong>Note:</strong> If you have been notified by the IRS that you are currently subject to backup withholding, please uncheck this box.
-                </p>
-              </div>
-
               {/* Main Certification */}
               <div className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <Checkbox
@@ -275,9 +254,12 @@ Certified: ${formData.certification ? 'Yes' : 'No'}
                   <strong className="block mb-2">Under penalties of perjury, I certify that:</strong>
                   <div className="space-y-1 text-gray-800">
                     <div>1. The number shown on this form is my correct taxpayer identification number, and</div>
-                    <div>2. I am not subject to backup withholding (as indicated above), and</div>
+                    <div>2. I am not subject to backup withholding because: (a) I am exempt from backup withholding, or (b) I have not been notified by the Internal Revenue Service (IRS) that I am subject to backup withholding as a result of a failure to report all interest or dividends, or (c) the IRS has notified me that I am no longer subject to backup withholding, and</div>
                     <div>3. I am a U.S. citizen or other U.S. person, and</div>
                     <div>4. The FATCA code(s) entered on this form (if any) indicating that I am exempt from FATCA reporting is correct.</div>
+                  </div>
+                  <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-gray-800">
+                    <strong>Certification instructions:</strong> You must cross out item 2 above if you have been notified by the IRS that you are currently subject to backup withholding.
                   </div>
                 </Label>
               </div>
