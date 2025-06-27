@@ -234,17 +234,17 @@ ${contractUrl}
 
 ${autoEnrollMessage ? `\nAccount Created:\n${autoEnrollMessage}\n` : ''}
 
-Questions? Contact us at contracts@contract.gleeworld.org
+Questions? Contact us at help@contract.gleeworld.org
 
 ---
 GleeWorld Contract Management
 contract.gleeworld.org
     `.trim();
 
-    // Send email with both HTML and plain text versions
+    // Send email with both HTML and plain text versions using Resend's verified domain
     console.log("=== SENDING EMAIL VIA RESEND ===");
     const emailResponse = await resend.emails.send({
-      from: "GleeWorld Contracts <contracts@contract.gleeworld.org>",
+      from: "GleeWorld Contracts <onboarding@resend.dev>",
       to: [cleanRecipientEmail],
       subject: emailSubject,
       text: plainTextContent,
@@ -309,7 +309,7 @@ contract.gleeworld.org
             ` : ''}
             
             <p style="color: #999; font-size: 14px; line-height: 1.6; margin-top: 30px;">
-              Questions? Contact us at contracts@contract.gleeworld.org
+              Questions? Contact us at help@contract.gleeworld.org
             </p>
           </div>
           
