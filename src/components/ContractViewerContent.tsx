@@ -27,7 +27,22 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
   const processContractContent = () => {
     const content = contract?.content || '';
     
-    // Extract embedded signatures from contract content
+    console.log('ContractViewerContent processing contract:', {
+      title: contract?.title,
+      status: contract?.status,
+      contentLength: content.length,
+      hasContent: !!content
+    });
+
+    // For draft contracts, display content as-is without signature processing
+    if (contract?.status === 'draft') {
+      console.log('Processing draft contract, displaying content as-is');
+      return content.split('\n').map((line, index) => (
+        <div key={index} dangerouslySetInnerHTML={{ __html: line.replace(/\n/g, '<br>') }} />
+      ));
+    }
+    
+    // Extract embedded signatures from contract content for completed contracts
     let embeddedSignatures: EmbeddedSignature[] = [];
     const signatureMatch = content.match(/\[EMBEDDED_SIGNATURES\](.*?)\[\/EMBEDDED_SIGNATURES\]/s);
     if (signatureMatch) {
@@ -36,12 +51,6 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
       } catch (e) {
         console.error('Error parsing embedded signatures in viewer:', e);
       }
-    }
-    
-    // If no embedded signatures in content, check if we need to fetch from signature record
-    if (embeddedSignatures.length === 0 && contract.status === 'completed') {
-      // This will be handled by fetching signature record data in the parent component
-      console.log('No embedded signatures found in content for completed contract');
     }
     
     // Remove embedded signatures section from display and clean up signature fields text
@@ -140,6 +149,17 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
     
     return processedLines;
   };
+
+  // Ensure we have a contract before processing
+  if (!contract) {
+    console.log('ContractViewerContent: No contract provided');
+    return <div className="p-4 text-gray-500">No contract content available</div>;
+  }
+
+  if (!contract.content) {
+    console.log('ContractViewerContent: Contract has no content');
+    return <div className="p-4 text-gray-500">Contract content is empty</div>;
+  }
 
   return (
     <div className="whitespace-pre-wrap border rounded-lg p-4 md:p-8 bg-white min-h-[400px]">

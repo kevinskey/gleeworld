@@ -52,6 +52,13 @@ export const ContractViewer = ({ contract, open, onOpenChange }: ContractViewerP
         return;
       }
 
+      // For draft contracts, just use the contract as-is without trying to fetch signature data
+      if (contract.status === 'draft') {
+        console.log('Contract is draft, displaying as-is:', contract.title);
+        setEnhancedContract(contract);
+        return;
+      }
+
       // If contract is completed, try to fetch embedded signatures from signature record
       if (contract.status === 'completed') {
         try {
@@ -90,6 +97,12 @@ export const ContractViewer = ({ contract, open, onOpenChange }: ContractViewerP
   }, [contract, open]);
 
   if (!enhancedContract) return null;
+
+  console.log('ContractViewer rendering contract:', {
+    title: enhancedContract.title,
+    status: enhancedContract.status,
+    contentLength: enhancedContract.content?.length || 0
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
