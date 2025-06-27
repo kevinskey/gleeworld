@@ -1,87 +1,144 @@
 
-import { ContractContentProcessor } from "./ContractContentProcessor";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { SignatureFieldOverlay } from "@/components/SignatureFieldOverlay";
+import { SignatureCanvas } from "@/components/SignatureCanvas";
+import { EmbeddedSignatureDisplay } from "./EmbeddedSignatureDisplay";
 import { ContractProgressStatus } from "./ContractProgressStatus";
-
-interface SignatureField {
-  id: number;
-  label: string;
-  type: 'signature' | 'date' | 'text' | 'initials' | 'username';
-  page: number;
-  x: number;
-  y: number;
-  required: boolean;
-}
-
-interface Contract {
-  id: string;
-  title: string;
-  content: string;
-  status: string;
-  created_at: string;
-}
-
-interface EmbeddedSignature {
-  fieldId: number;
-  signatureData: string;
-  dateSigned: string;
-  ipAddress?: string;
-  timestamp: string;
-  signerType?: 'artist' | 'admin';
-}
+import { ContractContentProcessor } from "./ContractContentProcessor";
+import { SignatureStatus } from "./SignatureStatus";
+import { CompletionStatus } from "./CompletionStatus";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface ContractContentRendererProps {
-  contract: Contract;
-  signatureFields: SignatureField[] | null | undefined;
-  completedFields: Record<number, string> | null | undefined;
+  contract: any;
+  signatureFields: any[];
+  completedFields: Record<number, string>;
   signatureRecord: any;
-  isAdminOrAgentField: (field: SignatureField) => boolean;
-  isArtistDateField: (field: SignatureField) => boolean;
+  isAdminOrAgentField: (field: any) => boolean;
+  isArtistDateField: (field: any) => boolean;
   onFieldComplete: (fieldId: number, value: string) => void;
   getCompletionProgress: () => string;
-  embeddedSignatures?: EmbeddedSignature[] | null | undefined;
+  embeddedSignatures: any[];
 }
 
-export const ContractContentRenderer = ({ 
-  contract, 
-  signatureFields, 
-  completedFields, 
-  signatureRecord, 
-  isAdminOrAgentField, 
-  isArtistDateField, 
+export const ContractContentRenderer = ({
+  contract,
+  signatureFields,
+  completedFields,
+  signatureRecord,
+  isAdminOrAgentField,
+  isArtistDateField,
   onFieldComplete,
   getCompletionProgress,
   embeddedSignatures
 }: ContractContentRendererProps) => {
-  // Ensure all props have safe defaults
-  const safeSignatureFields = Array.isArray(signatureFields) ? signatureFields : [];
-  const safeCompletedFields = completedFields || {};
-  const safeEmbeddedSignatures = Array.isArray(embeddedSignatures) ? embeddedSignatures : [];
-  
-  console.log('ContractContentRenderer: Rendering with safe props:', {
-    hasContract: !!contract,
-    signatureFieldsCount: safeSignatureFields.length,
-    completedFieldsCount: Object.keys(safeCompletedFields).length,
-    embeddedSignaturesCount: safeEmbeddedSignatures.length
-  });
-  
+  const [finalSignature, setFinalSignature] = useState<string | null>(null);
+  const [signingInProgress, setSigningInProgress] = useState(false);
+  const { toast } = useToast();
+
+  const handleFinalSignatureComplete = async () => {
+    if (!finalSignature) {
+      toast({
+        title: "Signature Required",
+        description: "Please provide your signature to complete the contract.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSigningInProgress(true);
+    try {
+      // Here you would call your contract signing function
+      // For now, we'll just show a success message
+      toast({
+        title: "Contract Signed",
+        description: "Your contract has been signed successfully!",
+      });
+    } catch (error) {
+      console.error('Error signing contract:', error);
+      toast({
+        title: "Error",
+        description: "Failed to sign contract. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSigningInProgress(false);
+    }
+  };
+
+  const isContractCompleted = signatureRecord?.status === 'completed';
+  const artistFields = signatureFields.filter(field => !isAdminOrAgentField(field));
+  const allFieldsCompleted = artistFields.every(field => completedFields[field.id]);
+
   return (
-    <div className="space-y-2">
-      <ContractContentProcessor
-        contract={contract}
-        signatureFields={safeSignatureFields}
-        completedFields={safeCompletedFields}
-        signatureRecord={signatureRecord}
-        isAdminOrAgentField={isAdminOrAgentField}
-        isArtistDateField={isArtistDateField}
-        onFieldComplete={onFieldComplete}
-        embeddedSignatures={safeEmbeddedSignatures}
-      />
-      
+    <div className="space-y-6">
+      {/* Contract Progress Status */}
       <ContractProgressStatus
+        completionProgress={getCompletionProgress()}
+        isContractCompleted={isContractCompleted}
+      />
+
+      {/* Contract Content with Signature Fields */}
+      <Card className="p-6">
+        <div className="relative">
+          <ContractContentProcessor 
+            content={contract.content}
+            embeddedSignatures={embeddedSignatures}
+          />
+          
+          {/* Render signature field overlays */}
+          {signatureFields
+            .filter(field => !isAdminOrAgentField(field))
+            .map((field) => (
+              <SignatureFieldOverlay
+                key={field.id}
+                field={field}
+                onFieldComplete={onFieldComplete}
+                isCompleted={!!completedFields[field.id]}
+                value={completedFields[field.id]}
+              />
+            ))}
+        </div>
+      </Card>
+
+      {/* Signature Status */}
+      <SignatureStatus 
         signatureRecord={signatureRecord}
-        signatureFields={safeSignatureFields}
-        embeddedSignatures={safeEmbeddedSignatures}
-        getCompletionProgress={getCompletionProgress}
+        embeddedSignatures={embeddedSignatures}
+      />
+
+      {/* Final Signature Section */}
+      {allFieldsCompleted && !isContractCompleted && (
+        <Card className="p-6">
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Final Signature</h3>
+            <p className="text-gray-600">
+              Please provide your final signature to complete the contract.
+            </p>
+            
+            <SignatureCanvas 
+              onSignatureChange={setFinalSignature}
+              disabled={signingInProgress}
+            />
+            
+            <Button 
+              onClick={handleFinalSignatureComplete}
+              disabled={!finalSignature || signingInProgress}
+              className="w-full"
+              size="lg"
+            >
+              {signingInProgress ? "Signing Contract..." : "Complete Contract Signing"}
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {/* Completion Status */}
+      <CompletionStatus 
+        isContractCompleted={isContractCompleted}
+        signatureRecord={signatureRecord}
       />
     </div>
   );

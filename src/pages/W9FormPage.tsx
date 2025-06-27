@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
-import { useEffect } from "react";
 
 const W9FormPage = () => {
   const navigate = useNavigate();
@@ -30,26 +29,15 @@ const W9FormPage = () => {
   }
 
   const handleSuccess = () => {
-    console.log('W9 form completed successfully, handling navigation...');
+    console.log('W9 form completed successfully');
     
     toast({
       title: "W9 Form Submitted",
-      description: "Your W9 form has been submitted successfully. You can now proceed with contract signing.",
+      description: "Your W9 form has been submitted successfully.",
     });
     
-    // Get the return contract ID from URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const contractId = urlParams.get('return');
-    
-    console.log('Contract ID from URL params:', contractId);
-    
-    if (contractId) {
-      console.log('Navigating back to contract:', contractId);
-      navigate(`/contract-signing/${contractId}`);
-    } else {
-      console.log('No contract ID found, navigating to home');
-      navigate('/');
-    }
+    // Navigate back to home
+    navigate('/');
   };
 
   return (
