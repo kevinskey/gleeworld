@@ -9,7 +9,9 @@ import { Loader2, Mail, AlertCircle } from "lucide-react";
 const ContractSigning = () => {
   const { contractId } = useParams<{ contractId: string }>();
   
-  console.log('ContractSigning: Component mounted with contractId:', contractId);
+  console.log('ContractSigning: Component mounted with URL:', window.location.href);
+  console.log('ContractSigning: contractId from useParams:', contractId);
+  console.log('ContractSigning: All URL params:', useParams());
   
   // Show immediate feedback if no contractId
   if (!contractId) {
@@ -188,6 +190,8 @@ const ContractSigning = () => {
     allArraysValid: Array.isArray(safeEmbeddedSignatures) && Array.isArray(safeSignatureFields)
   });
 
+  console.log('ContractSigning: About to render main content');
+
   return (
     <ContractErrorBoundary>
       <div className="min-h-screen bg-gray-50 p-4">
@@ -197,6 +201,9 @@ const ContractSigning = () => {
               <h1 className="text-2xl font-bold text-gray-900 mb-2">{contract.title}</h1>
               <div className="text-sm text-gray-500">
                 Contract ID: {contractId}
+              </div>
+              <div className="text-xs text-blue-600 mt-2">
+                DEBUG: Rendering main contract content successfully
               </div>
             </div>
             

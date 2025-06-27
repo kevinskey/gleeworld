@@ -69,6 +69,8 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 
 const App = () => {
   console.log('App: Component mounted');
+  console.log('App: Current URL:', window.location.href);
+  console.log('App: Current pathname:', window.location.pathname);
   
   return (
     <QueryClientProvider client={queryClient}>
@@ -88,7 +90,12 @@ const App = () => {
               />
               <Route 
                 path="/contract-signing/:contractId" 
-                element={<ContractSigning />} 
+                element={
+                  <>
+                    {console.log('App: Contract signing route matched')}
+                    <ContractSigning />
+                  </>
+                } 
               />
               <Route 
                 path="/admin-signing" 
