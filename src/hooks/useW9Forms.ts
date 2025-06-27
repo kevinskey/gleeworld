@@ -97,22 +97,32 @@ export const useW9Forms = () => {
         }
       }
 
-      // Delete from database
-      const { error } = await supabase
+      // Delete from database with explicit user check
+      const { error: deleteError, count } = await supabase
         .from('w9_forms')
-        .delete()
+        .delete({ count: 'exact' })
         .eq('id', formId)
-        .eq('user_id', user.id); // Ensure user can only delete their own forms
+        .eq('user_id', user.id);
 
-      if (error) {
-        console.error('Error deleting W9 form from database:', error);
-        throw new Error(`Failed to delete W9 form: ${error.message}`);
+      if (deleteError) {
+        console.error('Error deleting W9 form from database:', deleteError);
+        throw new Error(`Failed to delete W9 form: ${deleteError.message}`);
+      }
+
+      console.log('Delete operation completed. Rows affected:', count);
+
+      if (count === 0) {
+        throw new Error('No rows were deleted. Form may not exist or belong to another user.');
       }
 
       console.log('W9 form deleted successfully from database');
       
       // Update local state immediately
-      setW9Forms(prev => prev.filter(form => form.id !== formId));
+      setW9Forms(prev => {
+        const updated = prev.filter(form => form.id !== formId);
+        console.log('Updated local state. Forms remaining:', updated.length);
+        return updated;
+      });
       
       toast({
         title: "Success",
@@ -125,6 +135,9 @@ export const useW9Forms = () => {
         description: error instanceof Error ? error.message : "Failed to delete W9 form",
         variant: "destructive",
       });
+      
+      // Refetch to ensure UI is in sync with database
+      await fetchW9Forms();
     }
   };
 
@@ -198,6 +211,30 @@ export const useW9Forms = () => {
 
     console.log('User authenticated, fetching W9 forms for:', user.id);
     fetchW9Forms();
+
+    // Set up real-time subscription for this user's W9 forms only
+    const channel = supabase
+      .channel('w9-forms-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'w9_forms',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('Real-time W9 forms change:', payload);
+          // Refetch data to ensure consistency
+          fetchW9Forms();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('Cleaning up W9 forms subscription');
+      supabase.removeChannel(channel);
+    };
   }, [user, authLoading]);
 
   return {
