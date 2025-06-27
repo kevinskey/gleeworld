@@ -49,7 +49,7 @@ export const ContractFilters = ({
       template: filterByTemplate,
       type: filterByType,
       date: filterByDate,
-      [key]: value
+      [key]: value === 'all' ? '' : value
     };
     onFilterChange(newFilters);
   };
@@ -101,12 +101,12 @@ export const ContractFilters = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="template-filter">Filter by Template</Label>
-              <Select value={filterByTemplate} onValueChange={(value) => handleFilterChange('template', value)}>
+              <Select value={filterByTemplate || 'all'} onValueChange={(value) => handleFilterChange('template', value)}>
                 <SelectTrigger id="template-filter">
                   <SelectValue placeholder="All templates" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All templates</SelectItem>
+                  <SelectItem value="all">All templates</SelectItem>
                   {availableTemplates.map((template) => (
                     <SelectItem key={template} value={template}>
                       {template}
@@ -118,12 +118,12 @@ export const ContractFilters = ({
 
             <div className="space-y-2">
               <Label htmlFor="type-filter">Filter by Type</Label>
-              <Select value={filterByType} onValueChange={(value) => handleFilterChange('type', value)}>
+              <Select value={filterByType || 'all'} onValueChange={(value) => handleFilterChange('type', value)}>
                 <SelectTrigger id="type-filter">
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All types</SelectItem>
+                  <SelectItem value="all">All types</SelectItem>
                   {availableTypes.map((type) => (
                     <SelectItem key={type} value={type}>
                       {type}
