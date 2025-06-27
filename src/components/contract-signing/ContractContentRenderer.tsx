@@ -31,26 +31,26 @@ interface EmbeddedSignature {
 
 interface ContractContentRendererProps {
   contract: Contract;
-  signatureFields: SignatureField[];
-  completedFields: Record<number, string>;
+  signatureFields: SignatureField[] | null | undefined;
+  completedFields: Record<number, string> | null | undefined;
   signatureRecord: any;
   isAdminOrAgentField: (field: SignatureField) => boolean;
   isArtistDateField: (field: SignatureField) => boolean;
   onFieldComplete: (fieldId: number, value: string) => void;
   getCompletionProgress: () => string;
-  embeddedSignatures?: EmbeddedSignature[];
+  embeddedSignatures?: EmbeddedSignature[] | null | undefined;
 }
 
 export const ContractContentRenderer = ({ 
   contract, 
-  signatureFields = [], 
-  completedFields = {}, 
+  signatureFields, 
+  completedFields, 
   signatureRecord, 
   isAdminOrAgentField, 
   isArtistDateField, 
   onFieldComplete,
   getCompletionProgress,
-  embeddedSignatures = []
+  embeddedSignatures
 }: ContractContentRendererProps) => {
   // Ensure all props have safe defaults
   const safeSignatureFields = Array.isArray(signatureFields) ? signatureFields : [];

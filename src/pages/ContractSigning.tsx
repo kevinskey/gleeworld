@@ -3,15 +3,13 @@ import { useParams } from "react-router-dom";
 import { useContractSigning } from "@/hooks/contract-signing/useContractSigning";
 import { ContractNotFound } from "@/components/contract-signing/ContractNotFound";
 import { ContractContentRenderer } from "@/components/contract-signing/ContractContentRenderer";
+import { ContractErrorBoundary } from "@/components/contract-signing/ContractErrorBoundary";
 import { Loader2, Mail, AlertCircle } from "lucide-react";
 
 const ContractSigning = () => {
   const { contractId } = useParams<{ contractId: string }>();
   
-  console.log('ContractSigning: Component mounted');
-  console.log('ContractSigning: URL params:', { contractId });
-  console.log('ContractSigning: Window location:', window.location.href);
-  console.log('ContractSigning: Full URL path:', window.location.pathname);
+  console.log('ContractSigning: Component mounted with contractId:', contractId);
   
   // Show immediate feedback if no contractId
   if (!contractId) {
@@ -75,17 +73,6 @@ const ContractSigning = () => {
     embeddedSignaturesType: typeof embeddedSignatures
   });
 
-  // Add detailed error logging
-  if (error) {
-    console.error('ContractSigning: Detailed error state:', {
-      error,
-      contractId,
-      url: window.location.href,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent
-    });
-  }
-
   // Enhanced loading state with more feedback
   if (loading) {
     console.log('ContractSigning: Showing loading state');
@@ -98,9 +85,6 @@ const ContractSigning = () => {
           <div className="bg-gray-100 p-3 rounded text-sm text-gray-500">
             <p><strong>Contract ID:</strong> {contractId}</p>
             <p className="text-xs mt-1">This may take a few moments...</p>
-          </div>
-          <div className="mt-4 text-xs text-gray-400">
-            If this takes longer than expected, please refresh the page or contact support.
           </div>
         </div>
       </div>
@@ -205,46 +189,48 @@ const ContractSigning = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">{contract.title}</h1>
-            <div className="text-sm text-gray-500">
-              Contract ID: {contractId}
+    <ContractErrorBoundary>
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">{contract.title}</h1>
+              <div className="text-sm text-gray-500">
+                Contract ID: {contractId}
+              </div>
             </div>
-          </div>
-          
-          <ContractContentRenderer
-            contract={contract}
-            signatureFields={safeSignatureFields}
-            completedFields={safeCompletedFields}
-            signatureRecord={signatureRecord}
-            isAdminOrAgentField={isAdminOrAgentField}
-            isArtistDateField={isArtistDateField}
-            onFieldComplete={handleFieldComplete}
-            getCompletionProgress={getCompletionProgress}
-            embeddedSignatures={safeEmbeddedSignatures}
-          />
-          
-          {/* Contact Information */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <div className="text-center">
-              <p className="text-sm text-gray-600 mb-2">
-                Questions about this contract?
-              </p>
-              <a 
-                href="mailto:contracts@contract.gleeworld.org" 
-                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
-              >
-                <Mail className="h-4 w-4" />
-                contracts@contract.gleeworld.org
-              </a>
+            
+            <ContractContentRenderer
+              contract={contract}
+              signatureFields={safeSignatureFields}
+              completedFields={safeCompletedFields}
+              signatureRecord={signatureRecord}
+              isAdminOrAgentField={isAdminOrAgentField}
+              isArtistDateField={isArtistDateField}
+              onFieldComplete={handleFieldComplete}
+              getCompletionProgress={getCompletionProgress}
+              embeddedSignatures={safeEmbeddedSignatures}
+            />
+            
+            {/* Contact Information */}
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <div className="text-center">
+                <p className="text-sm text-gray-600 mb-2">
+                  Questions about this contract?
+                </p>
+                <a 
+                  href="mailto:contracts@contract.gleeworld.org" 
+                  className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+                >
+                  <Mail className="h-4 w-4" />
+                  contracts@contract.gleeworld.org
+                </a>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </ContractErrorBoundary>
   );
 };
 

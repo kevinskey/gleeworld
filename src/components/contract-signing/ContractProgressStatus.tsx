@@ -20,15 +20,15 @@ interface SignatureField {
 
 interface ContractProgressStatusProps {
   signatureRecord: any;
-  signatureFields: SignatureField[];
-  embeddedSignatures: EmbeddedSignature[];
+  signatureFields: SignatureField[] | null | undefined;
+  embeddedSignatures: EmbeddedSignature[] | null | undefined;
   getCompletionProgress: () => string;
 }
 
 export const ContractProgressStatus = ({ 
   signatureRecord, 
-  signatureFields = [], 
-  embeddedSignatures = [], 
+  signatureFields, 
+  embeddedSignatures, 
   getCompletionProgress 
 }: ContractProgressStatusProps) => {
   // Ensure all props are properly defined with fallbacks
@@ -46,8 +46,8 @@ export const ContractProgressStatus = ({
 
   // Show completion status if we have embedded signatures
   if (safeEmbeddedSignatures.length > 0) {
-    const artistSignature = safeEmbeddedSignatures.find(sig => sig.signerType === 'artist');
-    const adminSignature = safeEmbeddedSignatures.find(sig => sig.signerType === 'admin');
+    const artistSignature = safeEmbeddedSignatures.find(sig => sig && sig.signerType === 'artist');
+    const adminSignature = safeEmbeddedSignatures.find(sig => sig && sig.signerType === 'admin');
     
     return (
       <div className="text-center text-sm text-green-600 bg-green-50 p-3 rounded">
