@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import type { FinanceRecord } from "@/components/finance/FinanceTable";
 
 export const useFinanceRecords = () => {
@@ -9,8 +9,16 @@ export const useFinanceRecords = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const fetchRecords = async () => {
+    if (!user) {
+      setRecords([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -56,12 +64,16 @@ export const useFinanceRecords = () => {
   };
 
   const createRecord = async (recordData: Omit<FinanceRecord, 'id' | 'created_at' | 'updated_at' | 'balance'>): Promise<FinanceRecord | null> => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to create finance records",
+        variant: "destructive",
+      });
+      return null;
+    }
 
+    try {
       const newBalance = calculateBalance(records, recordData.amount, recordData.type);
 
       const { data, error } = await supabase
@@ -105,6 +117,15 @@ export const useFinanceRecords = () => {
   };
 
   const updateRecord = async (id: string, updates: Partial<FinanceRecord>): Promise<boolean> => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to update finance records",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     try {
       const { error } = await supabase
         .from('finance_records')
@@ -140,6 +161,15 @@ export const useFinanceRecords = () => {
   };
 
   const deleteRecord = async (id: string): Promise<boolean> => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to delete finance records",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     try {
       const { error } = await supabase
         .from('finance_records')
@@ -170,6 +200,8 @@ export const useFinanceRecords = () => {
   };
 
   const recalculateBalances = async () => {
+    if (!user) return;
+
     try {
       // Fetch all records ordered by date (oldest first)
       const { data: allRecords, error } = await supabase
@@ -212,13 +244,17 @@ export const useFinanceRecords = () => {
   };
 
   const importStipendRecords = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to import stipend records",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
 
       // Fetch signed contracts with stipend amounts
       const { data: contractSignatures, error: contractError } = await supabase
@@ -402,7 +438,7 @@ export const useFinanceRecords = () => {
 
   useEffect(() => {
     fetchRecords();
-  }, []);
+  }, [user]);
 
   return {
     records,

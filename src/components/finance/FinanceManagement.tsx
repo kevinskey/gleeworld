@@ -6,9 +6,11 @@ import { FinanceTable } from "./FinanceTable";
 import { FinanceSummary } from "./FinanceSummary";
 import { AddFinanceRecordDialog } from "./AddFinanceRecordDialog";
 import { useFinanceRecords } from "@/hooks/useFinanceRecords";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const FinanceManagement = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const { user } = useAuth();
   const { 
     records, 
     loading, 
@@ -37,6 +39,32 @@ export const FinanceManagement = () => {
   const handleImportStipends = () => {
     importStipendRecords();
   };
+
+  // Show authentication required message if user is not logged in
+  if (!user) {
+    return (
+      <div className="space-y-6 p-6">
+        <div className="glass-card p-6">
+          <h2 className="text-3xl font-bold text-gradient mb-2">Finance Management</h2>
+          <p className="text-lg text-white/70">Manage stipends, receipts, payments, debits, credits, and balances.</p>
+        </div>
+        
+        <div className="glass-card p-6">
+          <div className="flex items-center space-x-2 mb-4">
+            <Calculator className="h-6 w-6 text-spelman-400" />
+            <h3 className="text-2xl font-semibold text-white">Authentication Required</h3>
+          </div>
+          <p className="text-white/70 mb-4">Please sign in to access your financial records and manage your finances.</p>
+          <Button 
+            onClick={() => window.location.href = '/auth'}
+            className="glass-button text-white font-medium"
+          >
+            Sign In
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
