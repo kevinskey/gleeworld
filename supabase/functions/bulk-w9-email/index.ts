@@ -17,6 +17,9 @@ interface BulkW9EmailRequest {
   reminderType?: 'initial' | 'reminder';
 }
 
+// Rate limiting helper - wait 600ms between sends (allowing ~1.5 emails per second to be safe)
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -98,13 +101,20 @@ const handler = async (req: Request): Promise<Response> => {
       targetUsers = targetUsers.filter(user => !completedUserIds.has(user.id));
     }
 
-    console.log(`Sending W9 emails to ${targetUsers.length} users`);
+    console.log(`Sending W9 emails to ${targetUsers.length} users with rate limiting`);
 
     const emailResults = [];
     const appUrl = 'https://contract.gleeworld.org';
+    let emailCount = 0;
 
     for (const targetUser of targetUsers) {
       try {
+        // Add rate limiting delay after every email (except the first one)
+        if (emailCount > 0) {
+          console.log(`Rate limiting: waiting 600ms before sending email ${emailCount + 1}`);
+          await delay(600);
+        }
+
         const emailSubject = reminderType === 'reminder' 
           ? "Reminder: Complete Your W9 Tax Form - Syracuse International Jazz Festival" 
           : "Action Required: Complete Your W9 Tax Form - Syracuse International Jazz Festival";
@@ -144,7 +154,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
         `;
 
-        console.log(`Attempting to send email to ${targetUser.email}`);
+        console.log(`Attempting to send email ${emailCount + 1} to ${targetUser.email}`);
 
         const emailResponse = await resend.emails.send({
           from: "Syracuse International Jazz Festival <onboarding@resend.dev>",
@@ -161,7 +171,9 @@ const handler = async (req: Request): Promise<Response> => {
             userId: targetUser.id,
             email: targetUser.email,
             success: false,
-            error: emailResponse.error.message || 'Unknown Resend API error',
+            error: emailResponse.error.name === 'rate_limit_exceeded' 
+              ? 'Rate limit exceeded - please try again later'
+              : emailResponse.error.message || 'Unknown Resend API error',
           });
         } else {
           emailResults.push({
@@ -173,6 +185,8 @@ const handler = async (req: Request): Promise<Response> => {
           console.log(`Email successfully sent to ${targetUser.email}, ID: ${emailResponse.data?.id}`);
         }
 
+        emailCount++;
+
       } catch (emailError) {
         console.error(`Failed to send email to ${targetUser.email}:`, emailError);
         emailResults.push({
@@ -181,6 +195,7 @@ const handler = async (req: Request): Promise<Response> => {
           success: false,
           error: emailError.message,
         });
+        emailCount++;
       }
     }
 
@@ -209,7 +224,8 @@ const handler = async (req: Request): Promise<Response> => {
       totalUsers: targetUsers.length,
       successCount,
       failureCount,
-      results: emailResults
+      results: emailResults,
+      rateLimited: emailResults.some(r => r.error?.includes('Rate limit'))
     }), {
       status: 200,
       headers: {
