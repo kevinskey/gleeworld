@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +14,6 @@ export const useFinanceRecords = () => {
 
   const fetchRecords = async () => {
     if (!user) {
-      console.log('No user found, clearing records');
       setRecords([]);
       setLoading(false);
       setError(null);
@@ -24,8 +24,6 @@ export const useFinanceRecords = () => {
       setLoading(true);
       setError(null);
       
-      console.log('Fetching finance records for user:', user.id);
-      
       const { data, error: fetchError } = await supabase
         .from('finance_records')
         .select('*')
@@ -34,21 +32,16 @@ export const useFinanceRecords = () => {
         .order('created_at', { ascending: false });
       
       if (fetchError) {
-        console.error('Database error fetching records:', fetchError);
         throw fetchError;
       }
-      
-      console.log('Raw data from database:', data);
       
       const typedRecords = (data || []).map(record => ({
         ...record,
         type: record.type as FinanceRecord['type']
       }));
       
-      console.log('Processed finance records:', typedRecords);
       setRecords(typedRecords);
     } catch (err) {
-      console.error('Error fetching finance records:', err);
       setError('Failed to fetch finance records');
     } finally {
       setLoading(false);
@@ -120,7 +113,6 @@ export const useFinanceRecords = () => {
 
       return typedRecord;
     } catch (err) {
-      console.error('Error creating finance record:', err);
       toast({
         title: "Error",
         description: "Failed to create finance record",
@@ -164,7 +156,6 @@ export const useFinanceRecords = () => {
 
       return true;
     } catch (err) {
-      console.error('Error updating finance record:', err);
       toast({
         title: "Error",
         description: "Failed to update finance record",
@@ -204,7 +195,6 @@ export const useFinanceRecords = () => {
 
       return true;
     } catch (err) {
-      console.error('Error deleting finance record:', err);
       toast({
         title: "Error",
         description: "Failed to delete finance record",
@@ -218,8 +208,6 @@ export const useFinanceRecords = () => {
     if (!user) return;
 
     try {
-      console.log('Starting balance recalculation for user:', user.id);
-      
       const { data: allRecords, error } = await supabase
         .from('finance_records')
         .select('*')
@@ -229,15 +217,10 @@ export const useFinanceRecords = () => {
 
       if (error) throw error;
 
-      console.log('Records to recalculate:', allRecords?.length || 0);
-
       let runningBalance = 0;
-      const updatedRecords = allRecords?.map((record, index) => {
+      const updatedRecords = allRecords?.map((record) => {
         const newBalance = calculateNewBalance(runningBalance, Number(record.amount), record.type);
         runningBalance = newBalance;
-        
-        console.log(`Record ${index + 1}: ${record.type} $${record.amount} -> Balance: $${newBalance}`);
-        
         return { ...record, balance: newBalance };
       }) || [];
 
@@ -247,8 +230,6 @@ export const useFinanceRecords = () => {
           .update({ balance: record.balance })
           .eq('id', record.id);
       }
-
-      console.log('Balance recalculation completed');
       
       await fetchRecords();
     } catch (err) {
@@ -267,8 +248,6 @@ export const useFinanceRecords = () => {
     }
 
     try {
-      console.log('Clearing all finance records for user:', user.id);
-      
       const { error } = await supabase
         .from('finance_records')
         .delete()
@@ -278,7 +257,6 @@ export const useFinanceRecords = () => {
         throw error;
       }
 
-      console.log('All finance records cleared');
       await fetchRecords();
       
       toast({
@@ -286,7 +264,6 @@ export const useFinanceRecords = () => {
         description: "All finance records cleared successfully",
       });
     } catch (err) {
-      console.error('Error clearing finance records:', err);
       toast({
         title: "Error",
         description: "Failed to clear finance records",
@@ -307,7 +284,6 @@ export const useFinanceRecords = () => {
 
     try {
       setLoading(true);
-      console.log('Starting comprehensive stipend import for user:', user.id);
 
       // Step 1: Clear ALL existing finance records
       await clearAllRecords();
@@ -315,7 +291,6 @@ export const useFinanceRecords = () => {
       let importedCount = 0;
 
       // Step 2: Import from contracts_v2 with structured stipend_amount
-      console.log('Importing from contracts_v2...');
       const { data: contractsV2, error: contractsV2Error } = await supabase
         .from('contracts_v2')
         .select('*')
@@ -323,16 +298,11 @@ export const useFinanceRecords = () => {
         .gt('stipend_amount', 0);
 
       if (contractsV2Error) {
-        console.error('Error fetching contracts_v2:', contractsV2Error);
         throw contractsV2Error;
       }
 
-      console.log(`Found ${contractsV2?.length || 0} contracts_v2 with stipend amounts`);
-
       for (const contract of contractsV2 || []) {
         if (contract.stipend_amount && contract.stipend_amount > 0) {
-          console.log(`Importing contracts_v2 stipend: $${contract.stipend_amount} for ${contract.title}`);
-          
           const recordDate = new Date(contract.created_at).toISOString().split('T')[0];
 
           const { error: insertError } = await supabase
@@ -349,16 +319,13 @@ export const useFinanceRecords = () => {
               notes: 'Imported from contract system'
             });
           
-          if (insertError) {
-            console.error('Error inserting contracts_v2 record:', insertError);
-          } else {
+          if (!insertError) {
             importedCount++;
           }
         }
       }
 
       // Step 3: Import from generated_contracts with structured stipend data
-      console.log('Importing from generated_contracts...');
       const { data: generatedContracts, error: generatedError } = await supabase
         .from('generated_contracts')
         .select('*')
@@ -366,16 +333,11 @@ export const useFinanceRecords = () => {
         .gt('stipend', 0);
 
       if (generatedError) {
-        console.error('Error fetching generated contracts:', generatedError);
         throw generatedError;
       }
 
-      console.log(`Found ${generatedContracts?.length || 0} generated contracts with stipends`);
-
       for (const contract of generatedContracts || []) {
         if (contract.stipend && contract.stipend > 0) {
-          console.log(`Importing generated contract stipend: $${contract.stipend} for ${contract.event_name}`);
-          
           const { error: insertError } = await supabase
             .from('finance_records')
             .insert({
@@ -390,15 +352,11 @@ export const useFinanceRecords = () => {
               notes: 'Imported from contract system'
             });
           
-          if (insertError) {
-            console.error('Error inserting generated contract record:', insertError);
-          } else {
+          if (!insertError) {
             importedCount++;
           }
         }
       }
-
-      console.log(`Import completed. Total imported: ${importedCount}`);
 
       // Step 4: Recalculate all balances after importing
       if (importedCount > 0) {
@@ -416,7 +374,6 @@ export const useFinanceRecords = () => {
       }
       
     } catch (err) {
-      console.error('Error importing stipend records:', err);
       toast({
         title: "Import Failed",
         description: "Failed to import stipend records from contracts",
