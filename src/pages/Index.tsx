@@ -5,6 +5,7 @@ import { ContractsList } from "@/components/ContractsList";
 import { ContractViewer } from "@/components/ContractViewer";
 import { StatsCards } from "@/components/StatsCards";
 import { ContractTemplatesCollapsible } from "@/components/ContractTemplatesCollapsible";
+import { ContractTemplates } from "@/components/ContractTemplates";
 import { W9FormsListCollapsible } from "@/components/W9FormsListCollapsible";
 import { AccountingCardCollapsible } from "@/components/AccountingCardCollapsible";
 import { AdminPanel } from "@/components/AdminPanel";
@@ -182,8 +183,13 @@ const Index = () => {
             </TabsContent>
 
             <TabsContent value="templates" className="space-y-8">
-              <div className="grid grid-cols-1 gap-8">
-                <ContractTemplatesCollapsible 
+              <div className="mb-8 glass-card p-6">
+                <h2 className="text-3xl font-bold text-gradient mb-2">Contract Templates</h2>
+                <p className="text-lg text-white/70">Create and manage contract templates with custom headers.</p>
+              </div>
+              
+              <div className="glass-card p-6">
+                <ContractTemplates 
                   onUseTemplate={handleUseTemplate}
                   onContractCreated={handleContractCreated}
                 />
