@@ -1,3 +1,4 @@
+
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -370,6 +371,7 @@ export const Library = () => {
             </Table>
           </div>
         )}
+      </div>
 
       <W9PreviewDialog
         open={showPreview}
