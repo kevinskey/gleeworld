@@ -77,17 +77,21 @@ export const useContractFetcher = (contractId: string | undefined) => {
 
       if (contractError) {
         console.error('useContractFetcher: Contract fetch error:', contractError);
-        setError(`Database error: ${contractError.message}`);
+        
+        // Provide more specific error messages
+        if (contractError.code === 'PGRST116') {
+          setError('Contract not found. Please check the contract ID and try again.');
+        } else if (contractError.message?.includes('JWT')) {
+          setError('Authentication error. The contract link may have expired.');
+        } else {
+          setError(`Unable to load contract: ${contractError.message}`);
+        }
         return;
       }
 
       if (!contractData) {
         console.warn('useContractFetcher: No contract found for ID:', contractId);
-        console.log('useContractFetcher: This could mean:');
-        console.log('1. Contract ID is invalid');
-        console.log('2. Contract was deleted');
-        console.log('3. Contract exists in a different table');
-        setError('Contract not found');
+        setError('Contract not found. The contract may have been deleted or the link is incorrect.');
         return;
       }
 
@@ -106,6 +110,7 @@ export const useContractFetcher = (contractId: string | undefined) => {
 
       if (signatureError && signatureError.code !== 'PGRST116') {
         console.error('useContractFetcher: Signature fetch error:', signatureError);
+        // Don't fail the whole request for signature errors, just log it
       }
 
       console.log('useContractFetcher: Successfully found contract:', {
@@ -125,7 +130,15 @@ export const useContractFetcher = (contractId: string | undefined) => {
         contractId,
         timestamp: new Date().toISOString()
       });
-      setError(errorMessage);
+      
+      // Provide user-friendly error messages
+      if (errorMessage.includes('Failed to fetch')) {
+        setError('Network error. Please check your internet connection and try again.');
+      } else if (errorMessage.includes('timeout')) {
+        setError('Request timed out. Please try again.');
+      } else {
+        setError('Unable to load contract. Please try again or contact support.');
+      }
     } finally {
       setLoading(false);
     }

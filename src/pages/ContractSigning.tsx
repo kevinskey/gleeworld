@@ -64,11 +64,14 @@ const ContractSigning = () => {
     console.log('ContractSigning: Showing loading state');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Loading contract...</p>
-          <p className="text-sm text-gray-400 mt-2">Contract ID: {contractId}</p>
-          <p className="text-xs text-gray-300 mt-1">Please wait while we fetch your contract...</p>
+        <div className="text-center max-w-md mx-auto p-6">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-blue-600" />
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Loading Contract</h2>
+          <p className="text-gray-600 mb-4">Please wait while we fetch your contract...</p>
+          <div className="bg-gray-100 p-3 rounded text-sm text-gray-500">
+            <p><strong>Contract ID:</strong> {contractId}</p>
+            <p className="text-xs mt-1">This may take a few moments...</p>
+          </div>
         </div>
       </div>
     );
@@ -79,24 +82,40 @@ const ContractSigning = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
-          <h2 className="text-xl font-semibold text-red-600 mb-2">Unable to Load Contract</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <div className="bg-gray-100 p-3 rounded text-xs text-gray-500 mb-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+            <h2 className="text-xl font-semibold text-red-700 mb-2">Unable to Load Contract</h2>
+            <p className="text-red-600 mb-4">{error}</p>
+          </div>
+          
+          <div className="bg-gray-100 p-4 rounded text-sm text-gray-600 mb-6">
+            <p className="font-medium mb-2">Troubleshooting Information:</p>
             <p><strong>Contract ID:</strong> {contractId}</p>
             <p><strong>URL:</strong> {window.location.href}</p>
+            <p className="text-xs mt-2">If this link was sent to you via email, please ensure you're using the correct link.</p>
           </div>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mr-2"
-          >
-            Retry Loading
-          </button>
-          <button 
-            onClick={() => window.location.href = '/'} 
-            className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-          >
-            Go to Homepage
-          </button>
+          
+          <div className="space-y-3">
+            <button 
+              onClick={() => window.location.reload()} 
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              Retry Loading
+            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => window.history.back()} 
+                className="flex-1 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+              >
+                Go Back
+              </button>
+              <a 
+                href="mailto:contracts@contract.gleeworld.org" 
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-center"
+              >
+                Get Help
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -104,7 +123,29 @@ const ContractSigning = () => {
 
   if (!contract) {
     console.error('ContractSigning: No contract data available');
-    return <ContractNotFound />;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+            <h2 className="text-xl font-semibold text-yellow-700 mb-2">Contract Not Found</h2>
+            <p className="text-yellow-600 mb-4">The contract you're looking for could not be found or may have been removed.</p>
+          </div>
+          
+          <div className="bg-gray-100 p-4 rounded text-sm text-gray-600 mb-6">
+            <p><strong>Contract ID:</strong> {contractId}</p>
+            <p className="text-xs mt-2">Please verify the contract ID is correct or contact support for assistance.</p>
+          </div>
+          
+          <a 
+            href="mailto:contracts@contract.gleeworld.org" 
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            <Mail className="h-4 w-4" />
+            Contact Support
+          </a>
+        </div>
+      </div>
+    );
   }
 
   console.log('ContractSigning: Rendering contract successfully:', contract.title);
@@ -117,7 +158,7 @@ const ContractSigning = () => {
     return `${completedCount}/${totalFields}`;
   };
 
-  // Ensure all arrays are safe before passing to components - quadruple safety check
+  // Ensure all arrays are safe before passing to components
   const safeEmbeddedSignatures = Array.isArray(embeddedSignatures) ? embeddedSignatures : [];
   const safeSignatureFields = Array.isArray(signatureFields) ? signatureFields : [];
   const safeCompletedFields = completedFields || {};
@@ -133,7 +174,12 @@ const ContractSigning = () => {
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <h1 className="text-2xl font-bold mb-4">{contract.title}</h1>
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">{contract.title}</h1>
+            <div className="text-sm text-gray-500">
+              Contract ID: {contractId}
+            </div>
+          </div>
           
           <ContractContentRenderer
             contract={contract}
@@ -155,7 +201,7 @@ const ContractSigning = () => {
               </p>
               <a 
                 href="mailto:contracts@contract.gleeworld.org" 
-                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
               >
                 <Mail className="h-4 w-4" />
                 contracts@contract.gleeworld.org
