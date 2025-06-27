@@ -14,21 +14,21 @@ export const ContractCreationCollapsible = ({ onContractCreated }: ContractCreat
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <Card className="glass-card border-spelman-400/30">
+    <Card className="border-brand-300/40 shadow-lg">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-white/5 transition-colors">
+          <CardHeader className="cursor-pointer hover:bg-brand-50/80 transition-colors rounded-t-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <Plus className="h-6 w-6 text-spelman-400" />
+                <Plus className="h-6 w-6 text-brand-500" />
                 <div>
-                  <CardTitle className="text-xl text-white">Create Contract from Blank</CardTitle>
-                  <CardDescription className="text-white/70">
+                  <CardTitle className="text-xl text-brand-800">Create Contract from Blank</CardTitle>
+                  <CardDescription className="text-brand-600">
                     Upload documents or create contracts from scratch
                   </CardDescription>
                 </div>
               </div>
-              <Button variant="ghost" size="sm" className="text-spelman-400 hover:text-white">
+              <Button variant="ghost" size="sm" className="text-brand-500 hover:text-brand-700 hover:bg-brand-100">
                 {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
             </div>

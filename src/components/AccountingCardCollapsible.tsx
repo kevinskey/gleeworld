@@ -10,18 +10,18 @@ export const AccountingCardCollapsible = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md border-brand-300/40 shadow-lg">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CardHeader>
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full justify-between p-0 h-auto hover:bg-transparent">
+            <Button variant="ghost" className="w-full justify-between p-0 h-auto hover:bg-brand-50/80 rounded-xl">
               <div className="text-left">
-                <CardTitle className="flex items-center gap-2">
-                  <Calculator className="h-5 w-5 text-blue-600" />
+                <CardTitle className="flex items-center gap-2 text-brand-800">
+                  <Calculator className="h-5 w-5 text-brand-500" />
                   Accounting
-                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''} text-brand-500`} />
                 </CardTitle>
-                <CardDescription>Track stipends and contract payments</CardDescription>
+                <CardDescription className="text-brand-600">Track stipends and contract payments</CardDescription>
               </div>
             </Button>
           </CollapsibleTrigger>
@@ -29,10 +29,10 @@ export const AccountingCardCollapsible = () => {
         
         <CollapsibleContent>
           <CardContent>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-brand-600 mb-4">
               View detailed accounting information for all signed contracts with stipend amounts.
             </p>
-            <Button asChild className="w-full">
+            <Button asChild className="w-full bg-brand-500 hover:bg-brand-600 text-white">
               <Link to="/accounting">
                 <DollarSign className="h-4 w-4 mr-2" />
                 View Accounting
