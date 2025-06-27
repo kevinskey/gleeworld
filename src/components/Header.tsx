@@ -12,7 +12,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { 
   Home, 
   Library, 
@@ -25,7 +25,8 @@ import {
   Users,
   FileText,
   Menu,
-  X
+  X,
+  UserCog
 } from "lucide-react";
 
 interface HeaderProps {
@@ -37,6 +38,7 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
   const { user } = useAuth();
   const { userProfile, displayName } = useUserProfile(user);
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -58,6 +60,8 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
   };
 
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
+  const isOnUserDashboard = location.pathname === '/dashboard';
+  const isOnAdminPage = ['/system', '/activity-logs', '/accounting', '/admin-signing'].includes(location.pathname);
 
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
@@ -70,10 +74,6 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
     { id: 'activity', label: 'Activity', icon: Activity, route: '/activity-logs' },
     { id: 'accounting', label: 'Accounting', icon: FileText, route: '/accounting' },
     { id: 'admin-signing', label: 'Admin Signing', icon: Shield, route: '/admin-signing' },
-  ];
-
-  const userItems = [
-    { id: 'user-dashboard', label: 'My Dashboard', icon: User, route: '/dashboard' },
   ];
 
   return (
@@ -101,26 +101,43 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
               </Button>
             ))}
 
-            {/* User Dashboard Link */}
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/dashboard')}
-              className="text-white hover:bg-white/20"
-            >
-              <User className="h-4 w-4 mr-2" />
-              My Dashboard
-            </Button>
-
-            {/* Admin Items */}
+            {/* Dashboard Toggle for Admins */}
             {isAdmin && (
               <>
                 <div className="h-6 w-px bg-white/20 mx-2" />
+                {isOnUserDashboard ? (
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate('/system')}
+                    className="text-white hover:bg-white/20 bg-blue-500/30"
+                  >
+                    <UserCog className="h-4 w-4 mr-2" />
+                    Admin Panel
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate('/dashboard')}
+                    className="text-white hover:bg-white/20 bg-green-500/30"
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    My Dashboard
+                  </Button>
+                )}
+              </>
+            )}
+
+            {/* Admin Items - only show if not on user dashboard */}
+            {isAdmin && !isOnUserDashboard && (
+              <>
                 {adminItems.map((item) => (
                   <Button
                     key={item.id}
                     variant="ghost"
                     onClick={() => navigate(item.route)}
-                    className="text-white hover:bg-white/20"
+                    className={`text-white hover:bg-white/20 ${
+                      location.pathname === item.route ? 'bg-white/20' : ''
+                    }`}
                   >
                     <item.icon className="h-4 w-4 mr-2" />
                     {item.label}
@@ -164,11 +181,25 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>My Dashboard</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
+                
+                {/* Dashboard Toggle in Dropdown */}
+                {isAdmin && (
+                  <>
+                    {isOnUserDashboard ? (
+                      <DropdownMenuItem onClick={() => navigate('/system')}>
+                        <UserCog className="mr-2 h-4 w-4" />
+                        <span>Admin Panel</span>
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                        <User className="mr-2 h-4 w-4" />
+                        <span>My Dashboard</span>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+                
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Sign out</span>
@@ -199,22 +230,37 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
                 </Button>
               ))}
 
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  navigate('/dashboard');
-                  setMobileMenuOpen(false);
-                }}
-                className="justify-start text-white hover:bg-white/20"
-              >
-                <User className="h-4 w-4 mr-2" />
-                My Dashboard
-              </Button>
-
+              {/* Mobile Dashboard Toggle */}
               {isAdmin && (
                 <>
                   <div className="h-px bg-white/20 my-2" />
-                  {adminItems.map((item) => (
+                  {isOnUserDashboard ? (
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        navigate('/system');
+                        setMobileMenuOpen(false);
+                      }}
+                      className="justify-start text-white hover:bg-white/20 bg-blue-500/30"
+                    >
+                      <UserCog className="h-4 w-4 mr-2" />
+                      Admin Panel
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        navigate('/dashboard');
+                        setMobileMenuOpen(false);
+                      }}
+                      className="justify-start text-white hover:bg-white/20 bg-green-500/30"
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      My Dashboard
+                    </Button>
+                  )}
+
+                  {!isOnUserDashboard && adminItems.map((item) => (
                     <Button
                       key={item.id}
                       variant="ghost"
@@ -222,7 +268,9 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
                         navigate(item.route);
                         setMobileMenuOpen(false);
                       }}
-                      className="justify-start text-white hover:bg-white/20"
+                      className={`justify-start text-white hover:bg-white/20 ${
+                        location.pathname === item.route ? 'bg-white/20' : ''
+                      }`}
                     >
                       <item.icon className="h-4 w-4 mr-2" />
                       {item.label}
