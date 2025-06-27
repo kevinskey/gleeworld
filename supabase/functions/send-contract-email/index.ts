@@ -201,7 +201,11 @@ const handler = async (req: Request): Promise<Response> => {
       : `Contract Signature Required: ${contractTitle}`;
 
     const resendNotice = isResend 
-      ? `📧 This is a resend of the contract signing request.\n\n`
+      ? `<div style="border: 1px solid #ff9800; border-radius: 8px; padding: 15px; margin: 20px 0; background-color: #fff3e0;">
+           <p style="margin: 0; color: #f57c00; font-size: 14px;">
+             📧 This is a resend of the contract signing request.
+           </p>
+         </div>`
       : '';
 
     console.log("=== PREPARING EMAIL ===");
@@ -216,45 +220,21 @@ const handler = async (req: Request): Promise<Response> => {
     }
     console.log("✅ Resend API key found");
 
-    // Prepare plain text version
-    const plainTextContent = `
-Contract Signature Required
-
-Hello ${recipientName || cleanRecipientEmail.split('@')[0]},
-
-${resendNotice}You have been requested to review and sign the following contract:
-
-Contract: ${contractTitle}
-Contract ID: ${contractId.substring(0, 8)}...
-
-${customMessage ? `\nMessage:\n${customMessage}\n` : ''}
-
-To review and sign the contract, please visit:
-${contractUrl}
-
-${autoEnrollMessage ? `\nAccount Created:\n${autoEnrollMessage}\n` : ''}
-
-Questions? Contact us at help@contract.gleeworld.org
-
----
-GleeWorld Contract Management
-contract.gleeworld.org
-    `.trim();
-
-    // Send email with both HTML and plain text versions using Resend's verified domain
+    // Send email - simplified template
     console.log("=== SENDING EMAIL VIA RESEND ===");
     const emailResponse = await resend.emails.send({
-      from: "GleeWorld Contracts <onboarding@resend.dev>",
+      from: "GleeWorld Contracts <contracts@contract.gleeworld.org>",
       to: [cleanRecipientEmail],
       subject: emailSubject,
-      text: plainTextContent,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
+          <!-- Header -->
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center;">
             <h1 style="margin: 0; font-size: 28px; font-weight: bold;">Contract Signature Required</h1>
             <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">GleeWorld Contract Management</p>
           </div>
           
+          <!-- Main Content -->
           <div style="padding: 30px; background-color: white;">
             <p style="font-size: 18px; color: #333; margin-bottom: 20px;">Hello ${recipientName || cleanRecipientEmail.split('@')[0]},</p>
             
@@ -262,14 +242,9 @@ contract.gleeworld.org
               You have been requested to review and sign the following contract:
             </p>
 
-            ${isResend ? `
-            <div style="border: 1px solid #ff9800; border-radius: 8px; padding: 15px; margin: 20px 0; background-color: #fff3e0;">
-              <p style="margin: 0; color: #f57c00; font-size: 14px;">
-                📧 This is a resend of the contract signing request.
-              </p>
-            </div>
-            ` : ''}
+            ${resendNotice}
             
+            <!-- Contract Info -->
             <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin: 25px 0; background-color: #fafafa;">
               <h2 style="margin: 0 0 10px 0; color: #333; font-size: 20px;">${contractTitle}</h2>
               <p style="margin: 0; color: #666; font-size: 14px;">Contract ID: ${contractId.substring(0, 8)}...</p>
@@ -282,6 +257,7 @@ contract.gleeworld.org
             </div>
             ` : ''}
             
+            <!-- CTA Button -->
             <div style="text-align: center; margin: 35px 0;">
               <a href="${contractUrl}" 
                  style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
@@ -296,6 +272,7 @@ contract.gleeworld.org
               </a>
             </div>
 
+            <!-- Direct Link -->
             <div style="text-align: center; margin: 20px 0; padding: 15px; background-color: #f0f0f0; border-radius: 5px;">
               <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">If the button doesn't work, copy this link:</p>
               <p style="margin: 0; word-break: break-all; font-family: monospace; font-size: 12px; color: #333;">${contractUrl}</p>
@@ -309,10 +286,11 @@ contract.gleeworld.org
             ` : ''}
             
             <p style="color: #999; font-size: 14px; line-height: 1.6; margin-top: 30px;">
-              Questions? Contact us at help@contract.gleeworld.org
+              Questions? Contact us at contracts@contract.gleeworld.org
             </p>
           </div>
           
+          <!-- Footer -->
           <div style="background-color: #f5f5f5; padding: 20px; text-align: center; color: #999; font-size: 12px;">
             <p style="margin: 0;">GleeWorld Contract Management</p>
             <p style="margin: 5px 0 0 0;">contract.gleeworld.org</p>
