@@ -321,28 +321,54 @@ export const useFinanceRecords = () => {
         // Enhanced stipend extraction from contract content
         const content = contract.content || '';
         console.log('Processing contract content for stipend extraction:', contract.title);
+        console.log('Contract content preview:', content.substring(0, 500));
         
-        // Try multiple patterns to extract stipend amounts
+        // More specific patterns that look for actual stipend/payment amounts
         const stipendPatterns = [
-          /stipend[:\s]*\$?([\d,]+(?:\.\d{2})?)/i,
-          /payment[:\s]*\$?([\d,]+(?:\.\d{2})?)/i,
-          /compensation[:\s]*\$?([\d,]+(?:\.\d{2})?)/i,
-          /amount[:\s]*\$?([\d,]+(?:\.\d{2})?)/i,
-          /\$\s*([\d,]+(?:\.\d{2})?)/g
+          // Look for "stipend of $XXX" or "stipend: $XXX"
+          /stipend\s+(?:of|:)\s*\$\s*([\d,]+(?:\.\d{2})?)/i,
+          // Look for "payment of $XXX" or "payment: $XXX"  
+          /payment\s+(?:of|:)\s*\$\s*([\d,]+(?:\.\d{2})?)/i,
+          // Look for "compensation of $XXX"
+          /compensation\s+(?:of|:)\s*\$\s*([\d,]+(?:\.\d{2})?)/i,
+          // Look for "amount of $XXX"
+          /amount\s+(?:of|:)\s*\$\s*([\d,]+(?:\.\d{2})?)/i,
+          // Look for standalone dollar amounts that are likely stipends (between $50-$2000)
+          /\$\s*((?:[1-9]\d{2}|[1-2]\d{3})(?:\.\d{2})?)\b/g
         ];
         
         let stipendAmount = 0;
+        const foundAmounts = [];
         
         for (const pattern of stipendPatterns) {
           const matches = content.match(pattern);
           if (matches) {
-            const extractedAmount = parseFloat(matches[1].replace(/,/g, ''));
-            if (extractedAmount > 0 && extractedAmount <= 10000) { // Reasonable stipend range
-              stipendAmount = extractedAmount;
-              console.log(`Found stipend amount $${stipendAmount} using pattern: ${pattern}`);
-              break;
+            if (pattern.global) {
+              // For global patterns, find all matches
+              let match;
+              const globalPattern = new RegExp(pattern.source, pattern.flags);
+              while ((match = globalPattern.exec(content)) !== null) {
+                const amount = parseFloat(match[1].replace(/,/g, ''));
+                if (amount >= 50 && amount <= 2000) { // Reasonable stipend range
+                  foundAmounts.push(amount);
+                }
+              }
+            } else {
+              const extractedAmount = parseFloat(matches[1].replace(/,/g, ''));
+              if (extractedAmount >= 50 && extractedAmount <= 2000) { // Reasonable stipend range
+                foundAmounts.push(extractedAmount);
+                stipendAmount = extractedAmount;
+                console.log(`Found stipend amount $${stipendAmount} using pattern: ${pattern}`);
+                break;
+              }
             }
           }
+        }
+        
+        // If we found multiple amounts from global pattern, pick the largest reasonable one
+        if (foundAmounts.length > 0 && stipendAmount === 0) {
+          stipendAmount = Math.max(...foundAmounts);
+          console.log(`Selected stipend amount $${stipendAmount} from found amounts:`, foundAmounts);
         }
         
         if (stipendAmount > 0) {
@@ -384,6 +410,7 @@ export const useFinanceRecords = () => {
           }
         } else {
           console.log(`No valid stipend amount found in contract: ${contract.title}`);
+          console.log('Found amounts that were filtered out:', foundAmounts);
         }
       }
 
