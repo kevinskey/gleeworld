@@ -16,6 +16,7 @@ import type { Contract } from "@/hooks/useContracts";
 const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [contractViewerOpen, setContractViewerOpen] = useState(false);
   const { contracts, loading, error, deleteContract, refetch } = useContracts();
 
   // Calculate stats for StatsCards
@@ -25,6 +26,7 @@ const Index = () => {
 
   const handleViewContract = (contract: Contract) => {
     setSelectedContract(contract);
+    setContractViewerOpen(true);
   };
 
   const handleDeleteContract = async (contractId: string) => {
@@ -91,12 +93,11 @@ const Index = () => {
       </div>
       
       {/* Contract Viewer Modal */}
-      {selectedContract && (
-        <ContractViewer 
-          contract={selectedContract}
-          onClose={() => setSelectedContract(null)}
-        />
-      )}
+      <ContractViewer 
+        contract={selectedContract}
+        open={contractViewerOpen}
+        onOpenChange={setContractViewerOpen}
+      />
     </div>
   );
 };
