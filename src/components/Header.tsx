@@ -2,17 +2,18 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FileText, LogOut, Settings, Calculator, Library, Monitor } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface HeaderProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
 export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -47,19 +48,27 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
   };
 
   const tabs = [
-    { id: "dashboard", label: "Dashboard", icon: Settings },
-    { id: "library", label: "Library", icon: Library },
-    { id: "finance", label: "Finance", icon: Calculator },
-    { id: "system", label: "System", icon: Monitor },
+    { id: "dashboard", label: "Dashboard", icon: Settings, route: "/" },
+    { id: "library", label: "Library", icon: Library, route: "/" },
+    { id: "finance", label: "Finance", icon: Calculator, route: "/" },
+    { id: "system", label: "System", icon: Monitor, route: "/system" },
   ];
 
-  const handleTabClick = (tabId: string) => {
-    if (tabId === "system") {
-      navigate("/system");
+  const handleTabClick = (tab: typeof tabs[0]) => {
+    if (tab.route === "/") {
+      // For main dashboard tabs, use onTabChange if available
+      if (onTabChange) {
+        onTabChange(tab.id);
+      }
+      navigate("/");
     } else {
-      onTabChange(tabId);
+      // For other routes, navigate directly
+      navigate(tab.route);
     }
   };
+
+  // Determine active tab based on current route and activeTab prop
+  const currentActiveTab = location.pathname === "/system" ? "system" : activeTab || "dashboard";
 
   return (
     <header className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
@@ -74,11 +83,11 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
               {tabs.map((tab) => (
                 <Button
                   key={tab.id}
-                  variant={activeTab === tab.id ? "default" : "ghost"}
-                  onClick={() => handleTabClick(tab.id)}
+                  variant={currentActiveTab === tab.id ? "default" : "ghost"}
+                  onClick={() => handleTabClick(tab)}
                   className={`
                     flex items-center space-x-2 px-4 py-2 rounded-lg transition-all
-                    ${activeTab === tab.id 
+                    ${currentActiveTab === tab.id 
                       ? "bg-brand-400 text-white shadow-lg" 
                       : "text-white/80 hover:text-white hover:bg-white/10"
                     }
@@ -110,12 +119,12 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
           {tabs.map((tab) => (
             <Button
               key={tab.id}
-              variant={activeTab === tab.id ? "default" : "ghost"}
-              onClick={() => handleTabClick(tab.id)}
+              variant={currentActiveTab === tab.id ? "default" : "ghost"}
+              onClick={() => handleTabClick(tab)}
               size="sm"
               className={`
                 flex items-center space-x-2 px-3 py-2 rounded-lg transition-all whitespace-nowrap
-                ${activeTab === tab.id 
+                ${currentActiveTab === tab.id 
                   ? "bg-brand-400 text-white shadow-lg" 
                   : "text-white/80 hover:text-white hover:bg-white/10"
                 }
