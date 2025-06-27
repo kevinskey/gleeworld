@@ -97,6 +97,8 @@ export const useAccountingData = () => {
         ?.map(contract => contract.template_id)
         .filter(Boolean) || [])];
 
+      console.log('Template IDs found in contracts:', templateIds);
+
       // Fetch template names if we have template IDs
       let templatesMap: Record<string, string> = {};
       if (templateIds.length > 0) {
@@ -110,6 +112,7 @@ export const useAccountingData = () => {
             acc[template.id] = template.name;
             return acc;
           }, {} as Record<string, string>);
+          console.log('Templates map:', templatesMap);
         }
       }
 
@@ -117,7 +120,7 @@ export const useAccountingData = () => {
       let total = 0;
 
       contracts?.forEach(contract => {
-        console.log('Processing contract:', contract.title, 'Status:', contract.status);
+        console.log('Processing contract:', contract.title, 'Status:', contract.status, 'Template ID:', contract.template_id);
         
         // Extract stipend from contract content
         const stipendAmount = extractStipendFromContent(contract.content);
@@ -155,12 +158,12 @@ export const useAccountingData = () => {
               dateSigned,
               stipend: stipendAmount,
               status: contract.status,
-              templateId: contract.template_id,
+              templateId: contract.template_id, // This is the key fix - using template_id from the contract
               templateName: contract.template_id ? templatesMap[contract.template_id] : undefined
             });
             
             total += stipendAmount;
-            console.log('Added contract to accounting:', contract.title, 'Stipend:', stipendAmount);
+            console.log('Added contract to accounting:', contract.title, 'Stipend:', stipendAmount, 'Template ID:', contract.template_id);
           }
         } else {
           console.log('No stipend found in contract:', contract.title);
