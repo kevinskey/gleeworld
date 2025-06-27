@@ -125,21 +125,21 @@ export const FinanceManagement = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent 
                 align="end" 
-                className="w-56 bg-white/95 backdrop-blur-sm border-gray-200 shadow-lg"
+                className="w-56 bg-white border-gray-200 shadow-lg text-gray-900"
               >
-                <DropdownMenuItem onClick={handleImportStipends} disabled={loading}>
+                <DropdownMenuItem onClick={handleImportStipends} disabled={loading} className="text-gray-900 hover:bg-gray-100">
                   <DollarSign className="h-4 w-4 mr-2" />
                   Import Stipends
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => document.getElementById('import-file')?.click()}>
+                <DropdownMenuItem onClick={() => document.getElementById('import-file')?.click()} className="text-gray-900 hover:bg-gray-100">
                   <Upload className="h-4 w-4 mr-2" />
                   Import Excel
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExport}>
+                <DropdownMenuItem onClick={handleExport} className="text-gray-900 hover:bg-gray-100">
                   <Download className="h-4 w-4 mr-2" />
                   Export Excel
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setBulkW9EmailOpen(true)}>
+                <DropdownMenuItem onClick={() => setBulkW9EmailOpen(true)} className="text-gray-900 hover:bg-gray-100">
                   <Mail className="h-4 w-4 mr-2" />
                   Send W9 Forms
                 </DropdownMenuItem>
