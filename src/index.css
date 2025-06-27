@@ -124,6 +124,42 @@
   .float-animation {
     @apply animate-float;
   }
+
+  /* W9 Form specific styles to override dark theme */
+  .w9-form-container {
+    /* Force light theme for W9 form */
+    color-scheme: light;
+  }
+  
+  .w9-form-container * {
+    /* Ensure all text is dark and readable */
+    color: #1f2937 !important;
+  }
+  
+  .w9-form-container input,
+  .w9-form-container textarea,
+  .w9-form-container select {
+    background-color: #ffffff !important;
+    border-color: #d1d5db !important;
+    color: #1f2937 !important;
+  }
+  
+  .w9-form-container input:focus,
+  .w9-form-container textarea:focus,
+  .w9-form-container select:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  }
+  
+  .w9-form-container label {
+    color: #1f2937 !important;
+    font-weight: 500 !important;
+  }
+  
+  .w9-form-container .card {
+    background-color: #ffffff !important;
+    border-color: #d1d5db !important;
+  }
 }
 
 @layer utilities {
