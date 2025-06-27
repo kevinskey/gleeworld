@@ -35,7 +35,7 @@ export const UserDashboard = () => {
           <CardContent className="pt-6">
             <div className="text-center">
               <User className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Authentication Required</h3>
+              <h3 className="text-lg font-semibold mb-2 text-gray-900">Authentication Required</h3>
               <p className="text-gray-600 mb-4">Please sign in to access your dashboard.</p>
               <Button onClick={() => window.location.href = '/auth'}>
                 Sign In
@@ -83,10 +83,10 @@ export const UserDashboard = () => {
         <div className="glass-card p-6 mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 Welcome back, {dashboardData?.full_name || user.email}
               </h1>
-              <div className="flex items-center gap-4 text-white/70">
+              <div className="flex items-center gap-4 text-gray-700">
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4" />
                   <span>{dashboardData?.email}</span>
@@ -112,12 +112,12 @@ export const UserDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <Card className="glass-card border-spelman-400/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-white">Total Contracts</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-900">Total Contracts</CardTitle>
               <FileText className="h-4 w-4 text-spelman-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">{dashboardData?.total_contracts || 0}</div>
-              <p className="text-xs text-white/70">
+              <div className="text-2xl font-bold text-gray-900">{dashboardData?.total_contracts || 0}</div>
+              <p className="text-xs text-gray-600">
                 {dashboardData?.signed_contracts || 0} completed
               </p>
             </CardContent>
@@ -125,23 +125,23 @@ export const UserDashboard = () => {
 
           <Card className="glass-card border-spelman-400/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-white">W9 Forms</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-900">W9 Forms</CardTitle>
               <CheckCircle className="h-4 w-4 text-spelman-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">{dashboardData?.w9_forms_count || 0}</div>
-              <p className="text-xs text-white/70">Submitted</p>
+              <div className="text-2xl font-bold text-gray-900">{dashboardData?.w9_forms_count || 0}</div>
+              <p className="text-xs text-gray-600">Submitted</p>
             </CardContent>
           </Card>
 
           <Card className="glass-card border-spelman-400/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-white">Payments</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-900">Payments</CardTitle>
               <DollarSign className="h-4 w-4 text-spelman-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">{dashboardData?.payments_received || 0}</div>
-              <p className="text-xs text-white/70">
+              <div className="text-2xl font-bold text-gray-900">{dashboardData?.payments_received || 0}</div>
+              <p className="text-xs text-gray-600">
                 ${dashboardData?.total_amount_received || 0} total
               </p>
             </CardContent>
@@ -149,12 +149,12 @@ export const UserDashboard = () => {
 
           <Card className="glass-card border-spelman-400/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-white">Notifications</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-900">Notifications</CardTitle>
               <Bell className="h-4 w-4 text-spelman-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">{dashboardData?.unread_notifications || 0}</div>
-              <p className="text-xs text-white/70">Unread</p>
+              <div className="text-2xl font-bold text-gray-900">{dashboardData?.unread_notifications || 0}</div>
+              <p className="text-xs text-gray-600">Unread</p>
             </CardContent>
           </Card>
         </div>
@@ -162,16 +162,16 @@ export const UserDashboard = () => {
         {/* Main Content Tabs */}
         <Tabs defaultValue="contracts" className="space-y-6">
           <TabsList className="glass border-spelman-400/30">
-            <TabsTrigger value="contracts" className="text-white data-[state=active]:bg-spelman-500/30">
+            <TabsTrigger value="contracts" className="text-gray-900 data-[state=active]:bg-spelman-500/30">
               Contracts ({contracts.length})
             </TabsTrigger>
-            <TabsTrigger value="w9forms" className="text-white data-[state=active]:bg-spelman-500/30">
+            <TabsTrigger value="w9forms" className="text-gray-900 data-[state=active]:bg-spelman-500/30">
               W9 Forms ({w9Forms?.length || 0})
             </TabsTrigger>
-            <TabsTrigger value="payments" className="text-white data-[state=active]:bg-spelman-500/30">
+            <TabsTrigger value="payments" className="text-gray-900 data-[state=active]:bg-spelman-500/30">
               Payments ({dashboardData?.payments_received || 0})
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="text-white data-[state=active]:bg-spelman-500/30">
+            <TabsTrigger value="notifications" className="text-gray-900 data-[state=active]:bg-spelman-500/30">
               Notifications ({dashboardData?.unread_notifications || 0})
             </TabsTrigger>
           </TabsList>

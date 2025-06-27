@@ -22,6 +22,7 @@ export const UserContractsList = () => {
   };
 
   const handleViewContract = (contract: any) => {
+    console.log('UserContractsList: Viewing contract:', contract);
     setSelectedContract(contract);
     setContractViewerOpen(true);
   };
@@ -32,7 +33,7 @@ export const UserContractsList = () => {
         <CardContent className="pt-6">
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-spelman-400"></div>
-            <span className="ml-2 text-white">Loading contracts...</span>
+            <span className="ml-2 text-gray-900">Loading contracts...</span>
           </div>
         </CardContent>
       </Card>
@@ -44,7 +45,7 @@ export const UserContractsList = () => {
       <Card className="glass-card border-spelman-400/20">
         <CardContent className="pt-6">
           <div className="text-center py-8">
-            <p className="text-red-300 mb-4">{error}</p>
+            <p className="text-red-600 mb-4">{error}</p>
           </div>
         </CardContent>
       </Card>
@@ -57,8 +58,8 @@ export const UserContractsList = () => {
         <CardContent className="pt-6">
           <div className="text-center py-8">
             <FileText className="h-12 w-12 mx-auto text-spelman-400/50 mb-4" />
-            <h3 className="text-lg font-semibold text-white mb-2">No Contracts Yet</h3>
-            <p className="text-white/70">You don't have any contracts assigned to you yet.</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Contracts Yet</h3>
+            <p className="text-gray-600">You don't have any contracts assigned to you yet.</p>
           </div>
         </CardContent>
       </Card>
@@ -73,11 +74,11 @@ export const UserContractsList = () => {
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="text-white flex items-center gap-2">
+                  <CardTitle className="text-gray-900 flex items-center gap-2">
                     <FileText className="h-5 w-5" />
                     {contract.title}
                   </CardTitle>
-                  <CardDescription className="text-white/70">
+                  <CardDescription className="text-gray-600">
                     Created on {new Date(contract.created_at).toLocaleDateString()}
                   </CardDescription>
                 </div>
@@ -88,7 +89,7 @@ export const UserContractsList = () => {
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-sm text-white/70 space-y-1">
+                <div className="text-sm text-gray-600 space-y-1">
                   {contract.artist_signed_at && (
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
@@ -107,7 +108,7 @@ export const UserContractsList = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => handleViewContract(contract)}
-                    className="glass border-spelman-400/30 text-spelman-300 hover:bg-spelman-500/20"
+                    className="glass border-spelman-400/30 text-spelman-600 hover:bg-spelman-500/20"
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     View
@@ -116,7 +117,7 @@ export const UserContractsList = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="glass border-spelman-400/30 text-spelman-300 hover:bg-spelman-500/20"
+                      className="glass border-spelman-400/30 text-spelman-600 hover:bg-spelman-500/20"
                     >
                       <Download className="h-4 w-4 mr-2" />
                       Download

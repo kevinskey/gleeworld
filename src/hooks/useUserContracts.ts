@@ -28,41 +28,63 @@ export const useUserContracts = () => {
     try {
       setLoading(true);
       setError(null);
+      console.log('useUserContracts: Fetching contracts for user:', user.id);
 
-      // Fetch contracts where user is involved (either as creator or signee)
-      const { data, error } = await supabase
+      // First, try to get contracts from contracts_v2 where user is the creator or involved in signatures
+      const { data: contractsData, error: contractsError } = await supabase
         .from('contracts_v2')
         .select(`
           id,
           title,
           content,
           status,
-          created_at,
-          contract_signatures_v2!inner (
-            status,
-            artist_signed_at,
-            admin_signed_at
-          )
+          created_at
         `)
-        .or(`created_by.eq.${user.id},contract_signatures_v2.artist_signature_data.not.is.null`)
+        .or(`created_by.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (contractsError) {
+        console.error('useUserContracts: Error fetching contracts:', contractsError);
+        throw contractsError;
+      }
 
-      const transformedContracts = (data || []).map(contract => ({
-        id: contract.id,
-        title: contract.title,
-        content: contract.content,
-        status: contract.status,
-        created_at: contract.created_at,
-        signature_status: contract.contract_signatures_v2?.[0]?.status || 'pending',
-        artist_signed_at: contract.contract_signatures_v2?.[0]?.artist_signed_at || null,
-        admin_signed_at: contract.contract_signatures_v2?.[0]?.admin_signed_at || null,
-      }));
+      console.log('useUserContracts: Found contracts:', contractsData?.length || 0);
 
-      setContracts(transformedContracts);
+      // For each contract, get signature status
+      const enrichedContracts = await Promise.all(
+        (contractsData || []).map(async (contract) => {
+          console.log('useUserContracts: Processing contract:', contract.id);
+          
+          // Get signature record for this contract
+          const { data: signatureData, error: signatureError } = await supabase
+            .from('contract_signatures_v2')
+            .select('status, artist_signed_at, admin_signed_at')
+            .eq('contract_id', contract.id)
+            .maybeSingle();
+
+          if (signatureError && signatureError.code !== 'PGRST116') {
+            console.error('useUserContracts: Error fetching signature for contract:', contract.id, signatureError);
+          }
+
+          console.log('useUserContracts: Signature data for contract', contract.id, ':', signatureData);
+
+          return {
+            id: contract.id,
+            title: contract.title,
+            content: contract.content,
+            status: contract.status,
+            created_at: contract.created_at,
+            signature_status: signatureData?.status || 'pending',
+            artist_signed_at: signatureData?.artist_signed_at || null,
+            admin_signed_at: signatureData?.admin_signed_at || null,
+          };
+        })
+      );
+
+      console.log('useUserContracts: Final enriched contracts:', enrichedContracts);
+      setContracts(enrichedContracts);
     } catch (error) {
-      console.error('Error fetching user contracts:', error);
+      console.error('useUserContracts: Error in fetchUserContracts:', error);
       setError('Failed to load contracts');
       toast({
         title: "Error",
