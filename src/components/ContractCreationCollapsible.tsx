@@ -22,7 +22,7 @@ export const ContractCreationCollapsible = ({ onContractCreated }: ContractCreat
               <div className="flex items-center space-x-3">
                 <Plus className="h-6 w-6 text-spelman-400" />
                 <div>
-                  <CardTitle className="text-xl text-white">Create New Contract</CardTitle>
+                  <CardTitle className="text-xl text-white">Create Contract from Blank</CardTitle>
                   <CardDescription className="text-white/70">
                     Upload documents or create contracts from scratch
                   </CardDescription>
