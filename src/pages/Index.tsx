@@ -196,7 +196,7 @@ const Index = () => {
             </TabsContent>
 
             <TabsContent value="accounting" className="space-y-6">
-              <AccountingCardCollapsible />
+              <AdminPanel activeTab="accounting" />
             </TabsContent>
 
             <TabsContent value="settings" className="space-y-6">
