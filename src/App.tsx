@@ -28,7 +28,14 @@ const queryClient = new QueryClient({
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
+  console.log('ProtectedRoute: Checking auth state', { 
+    user: user?.id || 'no user', 
+    loading, 
+    pathname: window.location.pathname 
+  });
+  
   if (loading) {
+    console.log('ProtectedRoute: Still loading auth state');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -40,9 +47,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!user) {
+    console.log('ProtectedRoute: No user found, redirecting to auth');
     return <Navigate to="/auth" replace />;
   }
   
+  console.log('ProtectedRoute: User authenticated, rendering protected content');
   return <>{children}</>;
 };
 
