@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -230,6 +229,14 @@ export const useReceipts = () => {
     }
   };
 
+  const getReceiptsByTemplate = (templateId: string) => {
+    return receipts.filter(receipt => receipt.template_id === templateId);
+  };
+
+  const getTemplateReceiptTotal = (templateId: string) => {
+    return getReceiptsByTemplate(templateId).reduce((sum, receipt) => sum + receipt.amount, 0);
+  };
+
   useEffect(() => {
     fetchReceipts();
   }, []);
@@ -242,6 +249,8 @@ export const useReceipts = () => {
     updateReceipt,
     deleteReceipt,
     uploadReceiptImage,
+    getReceiptsByTemplate,
+    getTemplateReceiptTotal,
     refetch: fetchReceipts
   };
 };
