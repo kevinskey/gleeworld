@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 interface W9FormProps {
   onSuccess?: () => void;
@@ -50,6 +50,165 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
     }));
   };
 
+  const generateW9PDF = async () => {
+    // Create a new PDF document
+    const pdfDoc = await PDFDocument.create();
+    const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+    const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+    
+    // Add a page
+    const page = pdfDoc.addPage([612, 792]); // 8.5" x 11" in points
+    const { width, height } = page.getSize();
+    
+    // Title
+    page.drawText('Form W-9', {
+      x: 50,
+      y: height - 50,
+      size: 18,
+      font: timesRomanBoldFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    page.drawText('Request for Taxpayer Identification Number and Certification', {
+      x: 50,
+      y: height - 75,
+      size: 12,
+      font: timesRomanFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Form fields
+    let yPosition = height - 120;
+    const lineHeight = 25;
+    
+    const fields = [
+      { label: 'Name:', value: formData.name },
+      { label: 'Business Name:', value: formData.businessName || 'N/A' },
+      { label: 'Address:', value: formData.address },
+      { label: 'City:', value: formData.city },
+      { label: 'State:', value: formData.state },
+      { label: 'ZIP Code:', value: formData.zipCode },
+      { label: 'Taxpayer ID Number:', value: formData.tin },
+      { label: 'Email:', value: user?.email || formData.email },
+    ];
+    
+    fields.forEach(field => {
+      page.drawText(field.label, {
+        x: 50,
+        y: yPosition,
+        size: 10,
+        font: timesRomanBoldFont,
+        color: rgb(0, 0, 0),
+      });
+      
+      page.drawText(field.value, {
+        x: 150,
+        y: yPosition,
+        size: 10,
+        font: timesRomanFont,
+        color: rgb(0, 0, 0),
+      });
+      
+      yPosition -= lineHeight;
+    });
+    
+    // Certification section
+    yPosition -= 20;
+    page.drawText('Certification:', {
+      x: 50,
+      y: yPosition,
+      size: 12,
+      font: timesRomanBoldFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    yPosition -= 20;
+    const certificationText = `Under penalties of perjury, I certify that:
+1. The number shown on this form is my correct taxpayer identification number, and
+2. I am not subject to backup withholding, and
+3. I am a U.S. citizen or other U.S. person, and
+4. The FATCA code(s) entered on this form (if any) is correct.`;
+    
+    const certificationLines = certificationText.split('\n');
+    certificationLines.forEach(line => {
+      page.drawText(line, {
+        x: 50,
+        y: yPosition,
+        size: 9,
+        font: timesRomanFont,
+        color: rgb(0, 0, 0),
+      });
+      yPosition -= 15;
+    });
+    
+    // Signature section
+    yPosition -= 30;
+    page.drawText('Signature:', {
+      x: 50,
+      y: yPosition,
+      size: 10,
+      font: timesRomanBoldFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Embed signature if available
+    if (formData.signature) {
+      try {
+        // Convert base64 signature to image
+        const signatureImage = await pdfDoc.embedPng(formData.signature);
+        const signatureDims = signatureImage.scale(0.3);
+        
+        page.drawImage(signatureImage, {
+          x: 150,
+          y: yPosition - 50,
+          width: signatureDims.width,
+          height: signatureDims.height,
+        });
+      } catch (error) {
+        console.error('Error embedding signature:', error);
+        // Fallback to text signature
+        page.drawText('[Digital Signature]', {
+          x: 150,
+          y: yPosition - 20,
+          size: 10,
+          font: timesRomanFont,
+          color: rgb(0, 0, 0),
+        });
+      }
+    }
+    
+    // Date
+    page.drawText(`Date: ${formData.signatureDate}`, {
+      x: 400,
+      y: yPosition - 20,
+      size: 10,
+      font: timesRomanFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Certification status
+    yPosition -= 80;
+    page.drawText(`Certified: ${formData.certification ? 'Yes' : 'No'}`, {
+      x: 50,
+      y: yPosition,
+      size: 10,
+      font: timesRomanBoldFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Generation timestamp
+    yPosition -= 40;
+    page.drawText(`Generated on: ${new Date().toLocaleString()}`, {
+      x: 50,
+      y: yPosition,
+      size: 8,
+      font: timesRomanFont,
+      color: rgb(0.5, 0.5, 0.5),
+    });
+    
+    return await pdfDoc.save();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -84,37 +243,20 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
     try {
       setLoading(true);
 
-      // Create form data as text content
-      const formContent = `
-W9 Form Submission
-Date: ${new Date().toISOString()}
-Name: ${formData.name}
-Business Name: ${formData.businessName}
-Tax Classification: ${formData.taxClassification}
-Address: ${formData.address}
-City: ${formData.city}
-State: ${formData.state}
-ZIP Code: ${formData.zipCode}
-Account Numbers: ${formData.accountNumbers}
-Requester's Name: ${formData.requestersName}
-Requester's Address: ${formData.requestersAddress}
-TIN: ${formData.tin}
-Email: ${user?.email || formData.email}
-Signature Date: ${formData.signatureDate}
-Certified: ${formData.certification ? 'Yes' : 'No'}
-      `;
-
-      // Generate unique file path with username in title and proper folder structure for RLS
+      // Generate PDF with embedded signature
+      const pdfBytes = await generateW9PDF();
+      
+      // Generate unique file path with proper folder structure for RLS
       const userName = formData.name.replace(/[^a-zA-Z0-9]/g, '_') || 'anonymous';
       const userId = user?.id || 'guest';
       const timestamp = Date.now();
-      const fileName = `${userId}/w9-${userName}-${userId}-${timestamp}.txt`;
+      const fileName = `${userId}/w9-${userName}-${userId}-${timestamp}.pdf`;
       
-      // Upload to storage
+      // Upload PDF to storage
       const { error: uploadError } = await supabase.storage
         .from('w9-forms')
-        .upload(fileName, formContent, {
-          contentType: 'text/plain'
+        .upload(fileName, pdfBytes, {
+          contentType: 'application/pdf'
         });
 
       if (uploadError) {
@@ -142,7 +284,7 @@ Certified: ${formData.certification ? 'Yes' : 'No'}
 
       toast({
         title: "W9 Form Submitted",
-        description: "Your W9 form has been submitted successfully.",
+        description: "Your W9 form has been submitted successfully as a PDF.",
       });
 
       if (onSuccess) {
@@ -337,7 +479,7 @@ Certified: ${formData.certification ? 'Yes' : 'No'}
                 disabled={loading || !formData.certification || !formData.signature}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 font-medium"
               >
-                {loading ? "Submitting..." : "Submit W9 Form"}
+                {loading ? "Generating PDF..." : "Submit W9 Form"}
               </Button>
             </div>
           </form>
