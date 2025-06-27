@@ -5,6 +5,7 @@ import { StatsCards } from "@/components/StatsCards";
 import { ContractsList } from "@/components/ContractsList";
 import { ContractCreationCollapsible } from "@/components/ContractCreationCollapsible";
 import { ContractTemplatesCollapsible } from "@/components/ContractTemplatesCollapsible";
+import { RecentContractsTemplatesCollapsible } from "@/components/RecentContractsTemplatesCollapsible";
 import { W9FormsListCollapsible } from "@/components/W9FormsListCollapsible";
 import { AdminPanelCollapsible } from "@/components/AdminPanelCollapsible";
 import { AccountingCardCollapsible } from "@/components/AccountingCardCollapsible";
@@ -30,6 +31,13 @@ const Index = () => {
     setContractViewerOpen(true);
   };
 
+  const handleViewContractById = (contractId: string) => {
+    const contract = contracts.find(c => c.id === contractId);
+    if (contract) {
+      handleViewContract(contract);
+    }
+  };
+
   const handleDeleteContract = async (contractId: string) => {
     await deleteContract(contractId);
   };
@@ -43,6 +51,16 @@ const Index = () => {
     console.log('Template selected for use:', templateName);
     // This would typically populate a contract creation form or navigate to a contract creation page
     // For now, we'll just log it
+  };
+
+  const handleNewContract = () => {
+    console.log('New contract clicked');
+    // This would typically navigate to contract creation or open a creation dialog
+  };
+
+  const handleNewTemplate = () => {
+    console.log('New template clicked');
+    setActiveTab("templates");
   };
 
   const renderContent = () => {
@@ -74,6 +92,11 @@ const Index = () => {
                 <ContractTemplatesCollapsible 
                   onUseTemplate={handleUseTemplate}
                   onContractCreated={refetch}
+                />
+                <RecentContractsTemplatesCollapsible
+                  onNewContract={handleNewContract}
+                  onNewTemplate={handleNewTemplate}
+                  onViewContract={handleViewContractById}
                 />
                 <W9FormsListCollapsible />
               </div>
