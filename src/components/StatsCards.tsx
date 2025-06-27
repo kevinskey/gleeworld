@@ -13,11 +13,11 @@ export const StatsCards = ({ totalContracts, completedCount, pendingCount }: Sta
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card className="w-full">
         <CardContent className="p-3">
-          <div className="flex items-center bg-blue-50 rounded-lg p-2">
-            <FileText className="h-6 w-6 text-blue-600 mr-2" />
+          <div className="flex items-center bg-brand-400/20 rounded-lg p-2">
+            <FileText className="h-6 w-6 text-brand-400 mr-2" />
             <div>
-              <p className="text-xs font-medium text-gray-600">Total Contracts</p>
-              <p className="text-lg font-bold text-gray-900">{totalContracts}</p>
+              <p className="text-xs font-medium text-white/80">Total Contracts</p>
+              <p className="text-lg font-bold text-white">{totalContracts}</p>
             </div>
           </div>
         </CardContent>
@@ -25,11 +25,11 @@ export const StatsCards = ({ totalContracts, completedCount, pendingCount }: Sta
       
       <Card className="w-full">
         <CardContent className="p-3">
-          <div className="flex items-center bg-green-50 rounded-lg p-2">
-            <CheckCircle className="h-6 w-6 text-green-600 mr-2" />
+          <div className="flex items-center bg-green-400/20 rounded-lg p-2">
+            <CheckCircle className="h-6 w-6 text-green-400 mr-2" />
             <div>
-              <p className="text-xs font-medium text-gray-600">Completed</p>
-              <p className="text-lg font-bold text-gray-900">{completedCount}</p>
+              <p className="text-xs font-medium text-white/80">Completed</p>
+              <p className="text-lg font-bold text-white">{completedCount}</p>
             </div>
           </div>
         </CardContent>
@@ -37,11 +37,11 @@ export const StatsCards = ({ totalContracts, completedCount, pendingCount }: Sta
       
       <Card className="w-full">
         <CardContent className="p-3">
-          <div className="flex items-center bg-yellow-50 rounded-lg p-2">
-            <Clock className="h-6 w-6 text-yellow-600 mr-2" />
+          <div className="flex items-center bg-yellow-400/20 rounded-lg p-2">
+            <Clock className="h-6 w-6 text-yellow-400 mr-2" />
             <div>
-              <p className="text-xs font-medium text-gray-600">Pending</p>
-              <p className="text-lg font-bold text-gray-900">{pendingCount}</p>
+              <p className="text-xs font-medium text-white/80">Pending</p>
+              <p className="text-lg font-bold text-white">{pendingCount}</p>
             </div>
           </div>
         </CardContent>

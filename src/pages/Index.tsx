@@ -95,7 +95,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-spelman-900 via-spelman-800 to-spelman-700">
+    <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900">
       <Header activeTab={activeTab} onTabChange={setActiveTab} />
       <div className="container mx-auto px-4 py-6">
         {renderContent()}

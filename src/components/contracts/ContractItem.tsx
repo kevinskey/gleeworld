@@ -45,9 +45,9 @@ export const ContractItem = ({
         <Checkbox 
           checked={isSelected}
           onCheckedChange={(checked) => onSelect(contract.id, checked as boolean)}
-          className="border-white/40 data-[state=checked]:bg-spelman-500 data-[state=checked]:border-spelman-400"
+          className="border-white/40 data-[state=checked]:bg-brand-400 data-[state=checked]:border-brand-400"
         />
-        <FileText className="h-8 w-8 text-spelman-300 flex-shrink-0" />
+        <FileText className="h-8 w-8 text-brand-400 flex-shrink-0" />
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold text-white truncate text-lg drop-shadow-sm">{contract.title}</h3>
           <p className="text-sm text-white/80 font-medium">Status: {getStatusText(contract.status)}</p>
@@ -96,7 +96,7 @@ export const ContractItem = ({
             size="sm"
             onClick={handleSendClick}
             title={hasBeenSent ? "Resend Contract" : "Send Contract"}
-            className={hasBeenSent ? "glass border-orange-400/40 text-orange-200 hover:bg-orange-500/30 font-medium" : "glass border-blue-400/40 text-blue-200 hover:bg-blue-500/30 font-medium"}
+            className={hasBeenSent ? "glass border-orange-400/40 text-orange-200 hover:bg-orange-500/30 font-medium" : "glass border-brand-400/40 text-brand-200 hover:bg-brand-500/30 font-medium"}
           >
             {hasBeenSent ? (
               <>

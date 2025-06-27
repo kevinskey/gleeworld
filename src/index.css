@@ -3,11 +3,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system with Spelman Blue and Liquid Glass theme */
+/* Definition of the design system with custom brand colors */
 
 @layer base {
   :root {
-    --background: 222 84% 4%; /* Dark background for glass effect */
+    --background: 222 84% 4%; /* Dark background */
     --foreground: 210 40% 98%;
 
     --card: 222 84% 4%;
@@ -16,7 +16,7 @@
     --popover: 222 84% 4%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 73% 45%; /* Spelman Blue */
+    --primary: 203 85% 63%; /* #55bbee converted to HSL */
     --primary-foreground: 210 40% 98%;
 
     --secondary: 217 32% 17%;
@@ -25,7 +25,7 @@
     --muted: 217 32% 17%;
     --muted-foreground: 215 20% 65%;
 
-    --accent: 210 73% 45%; /* Spelman Blue accent */
+    --accent: 203 85% 63%; /* #55bbee accent */
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 84% 60%;
@@ -33,57 +33,57 @@
 
     --border: 217 32% 17%;
     --input: 217 32% 17%;
-    --ring: 210 73% 45%; /* Spelman Blue ring */
+    --ring: 203 85% 63%; /* #55bbee ring */
 
     --radius: 0.75rem;
 
     --sidebar-background: 222 84% 4%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 210 73% 45%;
+    --sidebar-primary: 203 85% 63%;
     --sidebar-primary-foreground: 210 40% 98%;
     --sidebar-accent: 217 32% 17%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217 32% 17%;
-    --sidebar-ring: 210 73% 45%;
+    --sidebar-ring: 203 85% 63%;
   }
 
   .light {
     --background: 0 0% 100%;
-    --foreground: 210 73% 16%; /* Spelman Blue text */
+    --foreground: 220 78% 31%; /* #11448e converted to HSL for text */
 
     --card: 0 0% 100%;
-    --card-foreground: 210 73% 16%;
+    --card-foreground: 220 78% 31%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 73% 16%;
+    --popover-foreground: 220 78% 31%;
 
-    --primary: 210 73% 45%; /* Spelman Blue */
+    --primary: 203 85% 63%; /* #55bbee */
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96%;
-    --secondary-foreground: 210 73% 16%;
+    --secondary-foreground: 220 78% 31%;
 
     --muted: 210 40% 96%;
-    --muted-foreground: 210 73% 16%;
+    --muted-foreground: 220 78% 31%;
 
     --accent: 210 40% 96%;
-    --accent-foreground: 210 73% 16%;
+    --accent-foreground: 220 78% 31%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214 31% 91%;
     --input: 214 31% 91%;
-    --ring: 210 73% 45%;
+    --ring: 203 85% 63%;
 
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 210 73% 16%;
-    --sidebar-primary: 210 73% 45%;
+    --sidebar-foreground: 220 78% 31%;
+    --sidebar-primary: 203 85% 63%;
     --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 210 73% 16%;
+    --sidebar-accent-foreground: 220 78% 31%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 210 73% 45%;
+    --sidebar-ring: 203 85% 63%;
   }
 }
 
@@ -93,13 +93,13 @@
   }
 
   body {
-    @apply bg-gradient-to-br from-spelman-900 via-spelman-800 to-slate-900 text-foreground min-h-screen;
+    @apply bg-gradient-to-br from-brand-700 via-brand-800 to-slate-900 text-foreground min-h-screen;
     background-attachment: fixed;
   }
 }
 
 @layer components {
-  /* Glass morphism effects */
+  /* Glass morphism effects with brand colors */
   .glass {
     @apply bg-white/10 backdrop-blur-md border border-white/20 shadow-glass;
   }
@@ -113,11 +113,11 @@
   }
   
   .glass-button {
-    @apply bg-spelman-700/80 hover:bg-spelman-600/80 backdrop-blur-sm border border-spelman-500/30 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105;
+    @apply bg-brand-700/80 hover:bg-brand-400/80 backdrop-blur-sm border border-brand-400/30 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105;
   }
   
   .glass-input {
-    @apply bg-white/5 backdrop-blur-sm border border-white/20 focus:border-spelman-400/50 focus:ring-2 focus:ring-spelman-400/20;
+    @apply bg-white/5 backdrop-blur-sm border border-white/20 focus:border-brand-400/50 focus:ring-2 focus:ring-brand-400/20;
   }
 
   /* Floating animation for glass elements */
@@ -128,12 +128,12 @@
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-spelman-400 to-spelman-200 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-brand-400 to-brand-200 bg-clip-text text-transparent;
   }
   
   .border-gradient {
-    background: linear-gradient(90deg, rgba(79, 172, 254, 0.2) 0%, rgba(30, 58, 138, 0.2) 100%);
+    background: linear-gradient(90deg, rgba(85, 187, 238, 0.2) 0%, rgba(17, 68, 142, 0.2) 100%);
     border: 1px solid;
-    border-image: linear-gradient(90deg, rgba(79, 172, 254, 0.3) 0%, rgba(30, 58, 138, 0.3) 100%) 1;
+    border-image: linear-gradient(90deg, rgba(85, 187, 238, 0.3) 0%, rgba(17, 68, 142, 0.3) 100%) 1;
   }
 }
