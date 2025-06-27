@@ -1,8 +1,7 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserManagement } from "./admin/UserManagement";
 import { SystemSettings } from "./admin/SystemSettings";
 import { AdminSummaryStats } from "./admin/AdminSummaryStats";
@@ -13,9 +12,12 @@ import { useUsers } from "@/hooks/useUsers";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
 import { Shield, Users, Settings, FileText, Activity, Receipt } from "lucide-react";
 
-export const AdminPanel = () => {
+interface AdminPanelProps {
+  activeTab?: string;
+}
+
+export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("overview");
   
   // Fetch users data
   const { users, loading: usersLoading, error: usersError, refetch: refetchUsers } = useUsers();
@@ -25,83 +27,61 @@ export const AdminPanel = () => {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[400px]">
         <p className="text-gray-600">Please sign in to access the admin panel.</p>
       </div>
     );
   }
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-          <Shield className="h-8 w-8" />
-          Admin Panel
-        </h1>
-        <p className="text-gray-600 mt-2">Manage users, contracts, and system settings</p>
-      </div>
+  // Render content based on active tab from URL or parent
+  const currentPath = window.location.pathname;
+  const currentTab = activeTab || 
+    (currentPath.includes('users') ? 'users' : 
+     currentPath.includes('activity') ? 'activity' : 
+     currentPath.includes('receipts') ? 'receipts' : 
+     currentPath.includes('settings') ? 'settings' : 'overview');
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="users" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Users
-          </TabsTrigger>
-          <TabsTrigger value="activity" className="flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            Activity
-          </TabsTrigger>
-          <TabsTrigger value="contracts" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Contract Tools
-          </TabsTrigger>
-          <TabsTrigger value="receipts" className="flex items-center gap-2">
-            <Receipt className="h-4 w-4" />
-            Receipts
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Settings
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
+  const renderContent = () => {
+    switch (currentTab) {
+      case 'overview':
+        return (
           <AdminSummaryStats 
             users={users}
             loading={usersLoading}
-            activityLogs={activeTab === "overview" ? activityLogs : []}
+            activityLogs={activityLogs}
           />
-        </TabsContent>
-
-        <TabsContent value="users" className="space-y-6">
+        );
+      case 'users':
+        return (
           <UserManagement 
             users={users}
             loading={usersLoading}
             error={usersError}
             onRefetch={refetchUsers}
           />
-        </TabsContent>
+        );
+      case 'activity':
+        return <ActivityLogs />;
+      case 'contracts':
+        return <ContractSignatureFixer />;
+      case 'receipts':
+        return <ReceiptsManagement />;
+      case 'settings':
+        return <SystemSettings />;
+      default:
+        return (
+          <AdminSummaryStats 
+            users={users}
+            loading={usersLoading}
+            activityLogs={activityLogs}
+          />
+        );
+    }
+  };
 
-        <TabsContent value="activity" className="space-y-6">
-          {activeTab === "activity" && <ActivityLogs />}
-        </TabsContent>
-
-        <TabsContent value="contracts" className="space-y-6">
-          <ContractSignatureFixer />
-        </TabsContent>
-
-        <TabsContent value="receipts" className="space-y-6">
-          <ReceiptsManagement />
-        </TabsContent>
-
-        <TabsContent value="settings" className="space-y-6">
-          <SystemSettings />
-        </TabsContent>
-      </Tabs>
+  return (
+    <div className="space-y-6">
+      {renderContent()}
     </div>
   );
 };
