@@ -8,7 +8,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface W9FormProps {
   onSuccess?: () => void;
@@ -27,12 +26,12 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
     requestersName: '',
     requestersAddress: '',
     tin: '',
-    certification: false
+    certification: false,
+    email: '' // Add email field for non-authenticated users
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
-  const { displayName } = useUserProfile(user);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
@@ -44,19 +43,20 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user) {
+    if (!formData.certification) {
       toast({
-        title: "Error",
-        description: "You must be logged in to submit a W9 form.",
+        title: "Certification Required",
+        description: "You must certify the accuracy of the information under penalties of perjury.",
         variant: "destructive",
       });
       return;
     }
 
-    if (!formData.certification) {
+    // If no authenticated user, require email
+    if (!user && !formData.email) {
       toast({
-        title: "Certification Required",
-        description: "You must certify the accuracy of the information under penalties of perjury.",
+        title: "Email Required",
+        description: "Please provide your email address.",
         variant: "destructive",
       });
       return;
@@ -80,12 +80,13 @@ Account Numbers: ${formData.accountNumbers}
 Requester's Name: ${formData.requestersName}
 Requester's Address: ${formData.requestersAddress}
 TIN: ${formData.tin}
+Email: ${user?.email || formData.email}
 Certified: ${formData.certification ? 'Yes' : 'No'}
       `;
 
-      // Generate unique file path with username
-      const sanitizedDisplayName = displayName.replace(/[^a-zA-Z0-9]/g, '_');
-      const fileName = `w9-${user.id}-${Date.now()}-${sanitizedDisplayName}.txt`;
+      // Generate unique file path
+      const sanitizedName = formData.name.replace(/[^a-zA-Z0-9]/g, '_') || 'anonymous';
+      const fileName = `w9-${user?.id || 'guest'}-${Date.now()}-${sanitizedName}.txt`;
       
       // Upload to storage
       const { error: uploadError } = await supabase.storage
@@ -102,9 +103,12 @@ Certified: ${formData.certification ? 'Yes' : 'No'}
       const { error: dbError } = await supabase
         .from('w9_forms')
         .insert({
-          user_id: user.id,
+          user_id: user?.id || null,
           storage_path: fileName,
-          form_data: formData,
+          form_data: {
+            ...formData,
+            email: user?.email || formData.email
+          },
           status: 'submitted'
         });
 
@@ -155,6 +159,21 @@ Certified: ${formData.certification ? 'Yes' : 'No'}
                   className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
+
+              {/* Show email field only if user is not authenticated */}
+              {!user && (
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-gray-900 font-medium">Email Address *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    required
+                    className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="businessName" className="text-gray-900 font-medium">Business Name (if different from above)</Label>

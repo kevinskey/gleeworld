@@ -107,6 +107,11 @@ const App = () => {
                 path="/contract-signing/:contractId" 
                 element={<ContractSigning />} 
               />
+              {/* W9 form should be accessible without authentication */}
+              <Route 
+                path="/w9-form" 
+                element={<W9FormPage />} 
+              />
               <Route 
                 path="/system" 
                 element={
@@ -128,14 +133,6 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <ActivityLogs />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/w9-form" 
-                element={
-                  <ProtectedRoute>
-                    <W9FormPage />
                   </ProtectedRoute>
                 } 
               />
