@@ -43,7 +43,7 @@ interface ContractContentProcessorProps {
 }
 
 // Helper function to safely find in array
-const safeFindInArray = <T>(array: T[] | null | undefined, predicate: (item: T) => boolean): T | null => {
+function safeFindInArray<T>(array: T[] | null | undefined, predicate: (item: T) => boolean): T | null {
   if (!array || !Array.isArray(array) || array.length === 0) {
     return null;
   }
@@ -53,15 +53,15 @@ const safeFindInArray = <T>(array: T[] | null | undefined, predicate: (item: T) 
     console.error('Error in safeFindInArray:', error);
     return null;
   }
-};
+}
 
 // Helper function to safely check array properties
-const safeArrayCheck = <T>(array: T[] | null | undefined): T[] => {
+function safeArrayCheck<T>(array: T[] | null | undefined): T[] {
   if (!array || !Array.isArray(array)) {
     return [];
   }
   return array;
-};
+}
 
 export const ContractContentProcessor = ({
   contract,
