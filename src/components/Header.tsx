@@ -58,7 +58,7 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-8">
             <h1 className="text-2xl font-bold text-white">
-              Spelman <span className="text-spelman-400">Contracts</span>
+              GleeWorld <span className="text-spelman-400">Contracts</span>
             </h1>
             
             <nav className="hidden md:flex items-center space-x-1">
