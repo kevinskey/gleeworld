@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +23,13 @@ export const useFinanceRecords = () => {
         throw fetchError;
       }
       
-      setRecords(data || []);
+      // Cast the data to FinanceRecord type since we know the database constraints ensure valid types
+      const typedRecords = (data || []).map(record => ({
+        ...record,
+        type: record.type as FinanceRecord['type']
+      }));
+      
+      setRecords(typedRecords);
     } catch (err) {
       console.error('Error fetching finance records:', err);
       setError('Failed to fetch finance records');
@@ -72,6 +77,12 @@ export const useFinanceRecords = () => {
         throw error;
       }
 
+      // Cast the returned data to FinanceRecord type
+      const typedRecord = {
+        ...data,
+        type: data.type as FinanceRecord['type']
+      };
+
       // Recalculate all balances for records after this one
       await recalculateBalances();
       
@@ -80,7 +91,7 @@ export const useFinanceRecords = () => {
         description: "Finance record created successfully",
       });
 
-      return data;
+      return typedRecord;
     } catch (err) {
       console.error('Error creating finance record:', err);
       toast({
