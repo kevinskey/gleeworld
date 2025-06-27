@@ -11,7 +11,7 @@ import type { FinanceRecord } from "./FinanceTable";
 interface AddFinanceRecordDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (record: Omit<FinanceRecord, 'id' | 'created_at' | 'updated_at' | 'balance'>) => Promise<FinanceRecord | null>;
+  onSubmit: (record: Omit<FinanceRecord, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'balance'>) => Promise<FinanceRecord | null>;
 }
 
 export const AddFinanceRecordDialog = ({ open, onOpenChange, onSubmit }: AddFinanceRecordDialogProps) => {

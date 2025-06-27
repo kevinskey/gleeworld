@@ -11,6 +11,7 @@ import { format } from "date-fns";
 
 export interface FinanceRecord {
   id: string;
+  user_id: string;
   date: string;
   type: 'stipend' | 'receipt' | 'payment' | 'debit' | 'credit';
   category: string;

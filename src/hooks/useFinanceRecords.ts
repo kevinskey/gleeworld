@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import type { FinanceRecord } from "@/components/finance/FinanceTable";
 
 export const useFinanceRecords = () => {
@@ -9,57 +10,21 @@ export const useFinanceRecords = () => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Mock data for demonstration - in a real app, this would connect to Supabase
-  const mockRecords: FinanceRecord[] = [
-    {
-      id: '1',
-      date: '2024-01-15',
-      type: 'stipend',
-      category: 'Performance',
-      description: 'January concert stipend',
-      amount: 500.00,
-      balance: 500.00,
-      reference: 'STI-001',
-      notes: 'Monthly performance stipend',
-      created_at: '2024-01-15T10:00:00Z',
-      updated_at: '2024-01-15T10:00:00Z'
-    },
-    {
-      id: '2',
-      date: '2024-01-20',
-      type: 'receipt',
-      category: 'Travel',
-      description: 'Gas receipt for venue travel',
-      amount: 45.50,
-      balance: 454.50,
-      reference: 'REC-001',
-      notes: 'Travel to downtown venue',
-      created_at: '2024-01-20T14:30:00Z',
-      updated_at: '2024-01-20T14:30:00Z'
-    },
-    {
-      id: '3',
-      date: '2024-01-25',
-      type: 'payment',
-      category: 'Equipment',
-      description: 'Microphone rental payment',
-      amount: 75.00,
-      balance: 379.50,
-      reference: 'PAY-001',
-      notes: 'Wireless mic rental for weekend',
-      created_at: '2024-01-25T09:15:00Z',
-      updated_at: '2024-01-25T09:15:00Z'
-    }
-  ];
-
   const fetchRecords = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setRecords(mockRecords);
+      const { data, error: fetchError } = await supabase
+        .from('finance_records')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      if (fetchError) {
+        throw fetchError;
+      }
+      
+      setRecords(data || []);
     } catch (err) {
       console.error('Error fetching finance records:', err);
       setError('Failed to fetch finance records');
@@ -68,41 +33,54 @@ export const useFinanceRecords = () => {
     }
   };
 
+  const calculateBalance = (existingRecords: FinanceRecord[], newAmount: number, type: string) => {
+    const currentBalance = existingRecords.length > 0 ? existingRecords[0].balance : 0; // Most recent record first
+    
+    switch (type) {
+      case 'stipend':
+      case 'credit':
+        return currentBalance + newAmount;
+      case 'receipt':
+      case 'payment':
+      case 'debit':
+        return currentBalance - newAmount;
+      default:
+        return currentBalance;
+    }
+  };
+
   const createRecord = async (recordData: Omit<FinanceRecord, 'id' | 'created_at' | 'updated_at' | 'balance'>): Promise<FinanceRecord | null> => {
     try {
-      const newId = Date.now().toString();
-      const currentBalance = records.length > 0 ? records[records.length - 1].balance : 0;
-      
-      // Calculate new balance based on transaction type
-      let newBalance = currentBalance;
-      switch (recordData.type) {
-        case 'stipend':
-        case 'credit':
-          newBalance += recordData.amount;
-          break;
-        case 'receipt':
-        case 'payment':
-        case 'debit':
-          newBalance -= recordData.amount;
-          break;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
       }
 
-      const newRecord: FinanceRecord = {
-        ...recordData,
-        id: newId,
-        balance: newBalance,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
+      const newBalance = calculateBalance(records, recordData.amount, recordData.type);
 
-      setRecords(prev => [...prev, newRecord]);
+      const { data, error } = await supabase
+        .from('finance_records')
+        .insert({
+          ...recordData,
+          user_id: user.id,
+          balance: newBalance
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      // Recalculate all balances for records after this one
+      await recalculateBalances();
       
       toast({
         title: "Success",
         description: "Finance record created successfully",
       });
 
-      return newRecord;
+      return data;
     } catch (err) {
       console.error('Error creating finance record:', err);
       toast({
@@ -116,11 +94,21 @@ export const useFinanceRecords = () => {
 
   const updateRecord = async (id: string, updates: Partial<FinanceRecord>): Promise<boolean> => {
     try {
-      setRecords(prev => prev.map(record => 
-        record.id === id 
-          ? { ...record, ...updates, updated_at: new Date().toISOString() }
-          : record
-      ));
+      const { error } = await supabase
+        .from('finance_records')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) {
+        throw error;
+      }
+
+      // Recalculate balances if amount or type changed
+      if (updates.amount !== undefined || updates.type !== undefined) {
+        await recalculateBalances();
+      } else {
+        await fetchRecords();
+      }
 
       toast({
         title: "Success",
@@ -141,7 +129,16 @@ export const useFinanceRecords = () => {
 
   const deleteRecord = async (id: string): Promise<boolean> => {
     try {
-      setRecords(prev => prev.filter(record => record.id !== id));
+      const { error } = await supabase
+        .from('finance_records')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        throw error;
+      }
+
+      await recalculateBalances();
 
       toast({
         title: "Success",
@@ -160,8 +157,49 @@ export const useFinanceRecords = () => {
     }
   };
 
+  const recalculateBalances = async () => {
+    try {
+      // Fetch all records ordered by date (oldest first)
+      const { data: allRecords, error } = await supabase
+        .from('finance_records')
+        .select('*')
+        .order('date', { ascending: true })
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      let runningBalance = 0;
+      const updatedRecords = allRecords?.map(record => {
+        switch (record.type) {
+          case 'stipend':
+          case 'credit':
+            runningBalance += Number(record.amount);
+            break;
+          case 'receipt':
+          case 'payment':
+          case 'debit':
+            runningBalance -= Number(record.amount);
+            break;
+        }
+        return { ...record, balance: runningBalance };
+      }) || [];
+
+      // Update all records with new balances
+      for (const record of updatedRecords) {
+        await supabase
+          .from('finance_records')
+          .update({ balance: record.balance })
+          .eq('id', record.id);
+      }
+
+      // Refresh the display
+      await fetchRecords();
+    } catch (err) {
+      console.error('Error recalculating balances:', err);
+    }
+  };
+
   const exportToExcel = () => {
-    // Simple CSV export for demonstration
     const headers = ['Date', 'Type', 'Category', 'Description', 'Amount', 'Balance', 'Reference', 'Notes'];
     const csvContent = [
       headers.join(','),
