@@ -26,30 +26,29 @@ export const useW9Forms = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('Fetching W9 forms...');
-      console.log('Current user:', user?.id);
-      console.log('Auth loading:', authLoading);
+      console.log('Fetching W9 forms for user:', user?.id);
+
+      if (!user) {
+        console.log('No authenticated user, skipping fetch');
+        setW9Forms([]);
+        return;
+      }
 
       const { data, error } = await supabase
         .from('w9_forms')
         .select('*')
+        .eq('user_id', user.id) // Filter by current user only
         .order('created_at', { ascending: false });
 
-      console.log('W9 forms query result:', { data, error });
-      console.log('W9 forms count:', data?.length || 0);
+      console.log('W9 forms query result:', { data, error, userId: user.id });
+      console.log('W9 forms count for current user:', data?.length || 0);
 
       if (error) {
         console.error('Error fetching W9 forms:', error);
-        console.error('Error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
         throw error;
       }
       
-      console.log('W9 forms fetched successfully:', data?.length || 0);
+      console.log('W9 forms fetched successfully for user:', data?.length || 0);
       setW9Forms(data || []);
     } catch (error) {
       console.error('Error fetching W9 forms:', error);
@@ -69,25 +68,50 @@ export const useW9Forms = () => {
       console.log('Attempting to delete W9 form:', formId);
       console.log('Current user:', user?.id);
 
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // First, get the form to check ownership and get storage path
+      const formToDelete = w9Forms.find(form => form.id === formId);
+      if (!formToDelete) {
+        throw new Error('Form not found in current user\'s forms');
+      }
+
+      if (formToDelete.user_id !== user.id) {
+        throw new Error('Permission denied: Cannot delete another user\'s form');
+      }
+
+      // Delete from storage first if storage path exists
+      if (formToDelete.storage_path) {
+        console.log('Deleting file from storage:', formToDelete.storage_path);
+        const { error: storageError } = await supabase.storage
+          .from('w9-forms')
+          .remove([formToDelete.storage_path]);
+
+        if (storageError) {
+          console.error('Error deleting file from storage:', storageError);
+          // Continue with database deletion even if storage deletion fails
+        } else {
+          console.log('File deleted from storage successfully');
+        }
+      }
+
+      // Delete from database
       const { error } = await supabase
         .from('w9_forms')
         .delete()
-        .eq('id', formId);
+        .eq('id', formId)
+        .eq('user_id', user.id); // Ensure user can only delete their own forms
 
       if (error) {
-        console.error('Error deleting W9 form:', error);
-        console.error('Error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
+        console.error('Error deleting W9 form from database:', error);
         throw new Error(`Failed to delete W9 form: ${error.message}`);
       }
 
       console.log('W9 form deleted successfully from database');
       
-      // Update local state
+      // Update local state immediately
       setW9Forms(prev => prev.filter(form => form.id !== formId));
       
       toast({
@@ -131,7 +155,7 @@ export const useW9Forms = () => {
       const url = URL.createObjectURL(data);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `w9-form-${form.created_at.split('T')[0]}.pdf`;
+      a.download = `w9-form-${form.created_at.split('T')[0]}.txt`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
