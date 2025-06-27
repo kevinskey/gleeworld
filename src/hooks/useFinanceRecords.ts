@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -257,7 +256,6 @@ export const useFinanceRecords = () => {
     }
   };
 
-  // Clear all finance records for the current user
   const clearAllRecords = async () => {
     if (!user) {
       toast({
@@ -309,7 +307,7 @@ export const useFinanceRecords = () => {
 
     try {
       setLoading(true);
-      console.log('Starting fresh stipend import for user:', user.id);
+      console.log('Starting comprehensive stipend import for user:', user.id);
 
       // Step 1: Clear ALL existing finance records
       await clearAllRecords();
@@ -317,33 +315,25 @@ export const useFinanceRecords = () => {
       let importedCount = 0;
 
       // Step 2: Import from contracts_v2 with structured stipend_amount
-      console.log('Importing from contracts_v2 with structured stipend amounts...');
+      console.log('Importing from contracts_v2...');
       const { data: contractsV2, error: contractsV2Error } = await supabase
         .from('contracts_v2')
-        .select(`
-          *,
-          contract_signatures_v2!inner(
-            status,
-            artist_signed_at
-          )
-        `)
+        .select('*')
         .not('stipend_amount', 'is', null)
-        .gt('stipend_amount', 0)
-        .eq('contract_signatures_v2.status', 'completed');
+        .gt('stipend_amount', 0);
 
       if (contractsV2Error) {
         console.error('Error fetching contracts_v2:', contractsV2Error);
         throw contractsV2Error;
       }
 
+      console.log(`Found ${contractsV2?.length || 0} contracts_v2 with stipend amounts`);
+
       for (const contract of contractsV2 || []) {
         if (contract.stipend_amount && contract.stipend_amount > 0) {
           console.log(`Importing contracts_v2 stipend: $${contract.stipend_amount} for ${contract.title}`);
           
-          const signatureData = contract.contract_signatures_v2[0];
-          const recordDate = signatureData?.artist_signed_at 
-            ? new Date(signatureData.artist_signed_at).toISOString().split('T')[0]
-            : new Date(contract.created_at).toISOString().split('T')[0];
+          const recordDate = new Date(contract.created_at).toISOString().split('T')[0];
 
           const { error: insertError } = await supabase
             .from('finance_records')
@@ -379,6 +369,8 @@ export const useFinanceRecords = () => {
         console.error('Error fetching generated contracts:', generatedError);
         throw generatedError;
       }
+
+      console.log(`Found ${generatedContracts?.length || 0} generated contracts with stipends`);
 
       for (const contract of generatedContracts || []) {
         if (contract.stipend && contract.stipend > 0) {
@@ -419,7 +411,7 @@ export const useFinanceRecords = () => {
       } else {
         toast({
           title: "No Records Found",
-          description: "No structured stipend data found in contracts",
+          description: "No stipend data found in contracts",
         });
       }
       
