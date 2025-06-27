@@ -127,6 +127,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "admin_notifications_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "admin_notifications_contract_signature_id_fkey"
             columns: ["contract_signature_id"]
             isOneToOne: false
@@ -273,6 +280,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contract_recipients_v2_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       contract_signatures: {
@@ -327,6 +341,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "contract_signatures_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "contract_signatures_contract_id_fkey"
             columns: ["contract_id"]
             isOneToOne: false
@@ -339,6 +360,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_signatures_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -510,6 +538,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -931,6 +966,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "receipts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "receipts_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
@@ -992,6 +1034,104 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "singer_contract_assignments_singer_id_fkey"
+            columns: ["singer_id"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      user_notifications: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_read: boolean
+          message: string
+          related_contract_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_read?: boolean
+          message: string
+          related_contract_id?: string | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_read?: boolean
+          message?: string
+          related_contract_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_notifications_related_contract_id_fkey"
+            columns: ["related_contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_payments: {
+        Row: {
+          amount: number | null
+          contract_id: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          paid_by: string | null
+          payment_date: string | null
+          payment_method: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          contract_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          paid_by?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          contract_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          paid_by?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_payments_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts_v2"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_roles: {
@@ -1050,7 +1190,42 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_dashboard_data: {
+        Row: {
+          email: string | null
+          full_name: string | null
+          payments_received: number | null
+          signed_contracts: number | null
+          total_amount_received: number | null
+          total_contracts: number | null
+          unread_notifications: number | null
+          user_id: string | null
+          w9_forms_count: number | null
+        }
+        Insert: {
+          email?: string | null
+          full_name?: string | null
+          payments_received?: never
+          signed_contracts?: never
+          total_amount_received?: never
+          total_contracts?: never
+          unread_notifications?: never
+          user_id?: string | null
+          w9_forms_count?: never
+        }
+        Update: {
+          email?: string | null
+          full_name?: string | null
+          payments_received?: never
+          signed_contracts?: never
+          total_amount_received?: never
+          total_contracts?: never
+          unread_notifications?: never
+          user_id?: string | null
+          w9_forms_count?: never
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_create_user: {

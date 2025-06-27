@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +13,7 @@ import ActivityLogs from "./pages/ActivityLogs";
 import W9FormPage from "./pages/W9FormPage";
 import NotFound from "./pages/NotFound";
 import Accounting from "./pages/Accounting";
+import UserDashboard from "./pages/UserDashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,7 +71,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
   
   return <>{children}</>;
@@ -141,6 +141,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <Accounting />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <UserDashboard />
                   </ProtectedRoute>
                 } 
               />
