@@ -87,7 +87,8 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-1">
-            {navigationItems.map((item) => (
+            {/* Only show regular navigation items when on user dashboard */}
+            {isOnUserDashboard && navigationItems.map((item) => (
               <Button
                 key={item.id}
                 variant="ghost"
@@ -104,7 +105,7 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
             {/* Dashboard Toggle for Admins */}
             {isAdmin && (
               <>
-                <div className="h-6 w-px bg-white/20 mx-2" />
+                {!isOnUserDashboard && <div className="h-6 w-px bg-white/20 mx-2" />}
                 {isOnUserDashboard ? (
                   <Button
                     variant="ghost"
@@ -127,7 +128,7 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
               </>
             )}
 
-            {/* Admin Items - only show if not on user dashboard */}
+            {/* Admin Items - only show if admin and not on user dashboard */}
             {isAdmin && !isOnUserDashboard && (
               <>
                 {adminItems.map((item) => (
@@ -213,7 +214,8 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-white/20">
             <nav className="flex flex-col space-y-2">
-              {navigationItems.map((item) => (
+              {/* Only show regular navigation items when on user dashboard */}
+              {isOnUserDashboard && navigationItems.map((item) => (
                 <Button
                   key={item.id}
                   variant="ghost"
