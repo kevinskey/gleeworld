@@ -50,21 +50,21 @@ export const RecentContractsTemplatesCollapsible = ({
   };
 
   return (
-    <Card className="glass-card border-spelman-400/30">
+    <Card className="border-brand-300/40 shadow-lg">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-white/5 transition-colors">
+          <CardHeader className="cursor-pointer hover:bg-brand-50/80 transition-colors rounded-t-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <FileText className="h-6 w-6 text-spelman-400" />
+                <FileText className="h-6 w-6 text-brand-500" />
                 <div>
-                  <CardTitle className="text-xl text-white">Recent Contracts & Templates</CardTitle>
-                  <CardDescription className="text-white/70">
+                  <CardTitle className="text-xl text-brand-800">Recent Contracts & Templates</CardTitle>
+                  <CardDescription className="text-brand-600">
                     View recent activity and create new items
                   </CardDescription>
                 </div>
               </div>
-              <Button variant="ghost" size="sm" className="text-spelman-400 hover:text-white">
+              <Button variant="ghost" size="sm" className="text-brand-500 hover:text-brand-700 hover:bg-brand-100">
                 <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
               </Button>
             </div>
@@ -78,7 +78,7 @@ export const RecentContractsTemplatesCollapsible = ({
               <div className="flex gap-2">
                 <Button 
                   onClick={onNewContract}
-                  className="flex-1 bg-spelman-600 hover:bg-spelman-700 text-white"
+                  className="flex-1 bg-brand-500 hover:bg-brand-600 text-white"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   New Contract
@@ -86,7 +86,7 @@ export const RecentContractsTemplatesCollapsible = ({
                 <Button 
                   onClick={onNewTemplate}
                   variant="outline"
-                  className="flex-1 border-spelman-400 text-spelman-400 hover:bg-spelman-400 hover:text-white"
+                  className="flex-1 border-brand-400 text-brand-600 hover:bg-brand-500 hover:text-white"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   New Template
@@ -95,15 +95,15 @@ export const RecentContractsTemplatesCollapsible = ({
 
               {/* Recent Items List */}
               <div className="space-y-2">
-                <h4 className="text-sm font-medium text-white/80 mb-3">Recent Activity</h4>
+                <h4 className="text-sm font-medium text-brand-700 mb-3">Recent Activity</h4>
                 
                 {contractsLoading || templatesLoading ? (
                   <div className="text-center py-4">
-                    <p className="text-white/60">Loading...</p>
+                    <p className="text-brand-600">Loading...</p>
                   </div>
                 ) : recentItems.length === 0 ? (
                   <div className="text-center py-4">
-                    <p className="text-white/60">No recent items</p>
+                    <p className="text-brand-600">No recent items</p>
                   </div>
                 ) : (
                   <div className="space-y-1 max-h-64 overflow-y-auto">
@@ -111,21 +111,21 @@ export const RecentContractsTemplatesCollapsible = ({
                       <div
                         key={`${item.type}-${item.id}`}
                         onClick={() => handleItemClick(item)}
-                        className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer transition-colors group"
+                        className="flex items-center justify-between p-3 rounded-lg bg-brand-50/50 hover:bg-brand-100/70 cursor-pointer transition-colors group border border-brand-200/30"
                       >
                         <div className="flex items-center space-x-3 flex-1 min-w-0">
                           <div className={`p-1.5 rounded ${
                             item.type === 'contract' 
-                              ? 'bg-blue-500/20 text-blue-400' 
-                              : 'bg-green-500/20 text-green-400'
+                              ? 'bg-blue-100 text-blue-600' 
+                              : 'bg-green-100 text-green-600'
                           }`}>
                             <FileText className="h-3 w-3" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-white truncate group-hover:text-spelman-300">
+                            <p className="text-sm font-medium text-brand-800 truncate group-hover:text-brand-900">
                               {item.title}
                             </p>
-                            <div className="flex items-center space-x-2 text-xs text-white/60">
+                            <div className="flex items-center space-x-2 text-xs text-brand-600">
                               <span className="capitalize">{item.type}</span>
                               {item.type === 'contract' && 'status' in item && (
                                 <>
@@ -143,7 +143,7 @@ export const RecentContractsTemplatesCollapsible = ({
                           </div>
                         </div>
                         
-                        <div className="flex items-center space-x-2 text-xs text-white/50">
+                        <div className="flex items-center space-x-2 text-xs text-brand-500">
                           <Calendar className="h-3 w-3" />
                           <span>{formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}</span>
                         </div>
