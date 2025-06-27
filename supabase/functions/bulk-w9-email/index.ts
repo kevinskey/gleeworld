@@ -101,7 +101,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Sending W9 emails to ${targetUsers.length} users`);
 
     const emailResults = [];
-    const appUrl = Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '.lovable.app') || 'https://your-app.lovable.app';
+    const appUrl = 'https://oopmlreysjzuxzylyheb.lovable.app';
 
     for (const targetUser of targetUsers) {
       try {
