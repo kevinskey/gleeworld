@@ -12,6 +12,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { W9PreviewDialog } from "./W9PreviewDialog";
 import { ContractViewer } from "./ContractViewer";
+import { ViewTemplateDialog } from "./templates/ViewTemplateDialog";
 
 interface LibraryItem {
   id: string;
@@ -34,6 +35,8 @@ export const Library = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [selectedContract, setSelectedContract] = useState<any>(null);
   const [contractViewerOpen, setContractViewerOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [templateViewerOpen, setTemplateViewerOpen] = useState(false);
   const navigate = useNavigate();
   
   const { contracts, loading: contractsLoading } = useContracts();
@@ -157,6 +160,15 @@ export const Library = () => {
     }
   };
 
+  const handlePreviewTemplate = (item: LibraryItem) => {
+    const template = templates.find(t => t.id === item.id);
+    if (template) {
+      console.log('Previewing template:', template.name);
+      setSelectedTemplate(template);
+      setTemplateViewerOpen(true);
+    }
+  };
+
   const handleDownloadW9 = async (item: LibraryItem) => {
     const w9Form = w9Forms.find(form => form.id === item.id);
     if (w9Form) {
@@ -176,6 +188,8 @@ export const Library = () => {
       handlePreviewW9(item);
     } else if (item.type === 'contract') {
       handlePreviewContract(item);
+    } else if (item.type === 'template') {
+      handlePreviewTemplate(item);
     } else {
       console.log('View action for', item.type, 'not implemented yet');
     }
@@ -412,6 +426,18 @@ export const Library = () => {
         contract={selectedContract}
         open={contractViewerOpen}
         onOpenChange={setContractViewerOpen}
+      />
+
+      <ViewTemplateDialog
+        isOpen={templateViewerOpen}
+        onOpenChange={setTemplateViewerOpen}
+        template={selectedTemplate}
+        onUseTemplate={(template) => {
+          console.log('Using template from library:', template.name);
+          setTemplateViewerOpen(false);
+          // Navigate to main page or show success message
+          navigate('/');
+        }}
       />
     </div>
   );
