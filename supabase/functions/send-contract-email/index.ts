@@ -223,7 +223,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send email - simplified template
     console.log("=== SENDING EMAIL VIA RESEND ===");
     const emailResponse = await resend.emails.send({
-      from: "GleeWorld Contracts <contracts@contract.gleeworld.org>",
+      from: "GleeWorld Contracts <admin@contract.gleeworld.org>",
       to: [cleanRecipientEmail],
       subject: emailSubject,
       html: `
@@ -286,7 +286,7 @@ const handler = async (req: Request): Promise<Response> => {
             ` : ''}
             
             <p style="color: #999; font-size: 14px; line-height: 1.6; margin-top: 30px;">
-              Questions? Contact us at contracts@contract.gleeworld.org
+              Questions? Contact us at admin@contract.gleeworld.org
             </p>
           </div>
           
