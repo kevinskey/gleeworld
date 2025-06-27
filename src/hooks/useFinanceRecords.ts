@@ -314,59 +314,80 @@ export const useFinanceRecords = () => {
 
       let importedCount = 0;
       
-      // Process contract signatures
+      // Process contract signatures - improved stipend extraction
       for (const signature of contractSignatures || []) {
         const contract = signature.contracts_v2;
         
-        // Extract stipend amount from contract content
+        // Enhanced stipend extraction from contract content
         const content = contract.content || '';
-        const stipendMatch = content.match(/\$?([\d,]+(?:\.\d{2})?)/);
+        console.log('Processing contract content for stipend extraction:', contract.title);
         
-        if (stipendMatch) {
-          const stipendAmount = parseFloat(stipendMatch[1].replace(/,/g, ''));
-          
-          if (stipendAmount > 0) {
-            console.log(`Processing contract ${contract.id} with stipend $${stipendAmount}`);
-            
-            // Check if record already exists
-            const { data: existingRecord } = await supabase
-              .from('finance_records')
-              .select('id')
-              .eq('user_id', user.id)
-              .eq('type', 'stipend')
-              .eq('amount', stipendAmount)
-              .eq('description', `Stipend from ${contract.title}`)
-              .maybeSingle();
-
-            if (!existingRecord) {
-              const { error: insertError } = await supabase
-                .from('finance_records')
-                .insert({
-                  user_id: user.id,
-                  date: signature.artist_signed_at ? new Date(signature.artist_signed_at).toISOString().split('T')[0] : new Date(contract.created_at).toISOString().split('T')[0],
-                  type: 'stipend',
-                  category: 'Performance',
-                  description: `Stipend from ${contract.title}`,
-                  amount: stipendAmount,
-                  balance: 0, // Will be recalculated
-                  reference: `Contract ID: ${contract.id}`,
-                  notes: 'Imported from contract system'
-                });
-              
-              if (insertError) {
-                console.error('Error inserting stipend record:', insertError);
-              } else {
-                importedCount++;
-                console.log(`Imported stipend record: $${stipendAmount} from ${contract.title}`);
-              }
-            } else {
-              console.log(`Stipend record already exists for ${contract.title}`);
+        // Try multiple patterns to extract stipend amounts
+        const stipendPatterns = [
+          /stipend[:\s]*\$?([\d,]+(?:\.\d{2})?)/i,
+          /payment[:\s]*\$?([\d,]+(?:\.\d{2})?)/i,
+          /compensation[:\s]*\$?([\d,]+(?:\.\d{2})?)/i,
+          /amount[:\s]*\$?([\d,]+(?:\.\d{2})?)/i,
+          /\$\s*([\d,]+(?:\.\d{2})?)/g
+        ];
+        
+        let stipendAmount = 0;
+        
+        for (const pattern of stipendPatterns) {
+          const matches = content.match(pattern);
+          if (matches) {
+            const extractedAmount = parseFloat(matches[1].replace(/,/g, ''));
+            if (extractedAmount > 0 && extractedAmount <= 10000) { // Reasonable stipend range
+              stipendAmount = extractedAmount;
+              console.log(`Found stipend amount $${stipendAmount} using pattern: ${pattern}`);
+              break;
             }
           }
         }
+        
+        if (stipendAmount > 0) {
+          console.log(`Processing contract ${contract.id} with stipend $${stipendAmount}`);
+          
+          // Check if record already exists
+          const { data: existingRecord } = await supabase
+            .from('finance_records')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('type', 'stipend')
+            .eq('amount', stipendAmount)
+            .eq('description', `Stipend from ${contract.title}`)
+            .maybeSingle();
+
+          if (!existingRecord) {
+            const { error: insertError } = await supabase
+              .from('finance_records')
+              .insert({
+                user_id: user.id,
+                date: signature.artist_signed_at ? new Date(signature.artist_signed_at).toISOString().split('T')[0] : new Date(contract.created_at).toISOString().split('T')[0],
+                type: 'stipend',
+                category: 'Performance',
+                description: `Stipend from ${contract.title}`,
+                amount: stipendAmount,
+                balance: 0, // Will be recalculated
+                reference: `Contract ID: ${contract.id}`,
+                notes: 'Imported from contract system'
+              });
+            
+            if (insertError) {
+              console.error('Error inserting stipend record:', insertError);
+            } else {
+              importedCount++;
+              console.log(`Imported stipend record: $${stipendAmount} from ${contract.title}`);
+            }
+          } else {
+            console.log(`Stipend record already exists for ${contract.title}`);
+          }
+        } else {
+          console.log(`No valid stipend amount found in contract: ${contract.title}`);
+        }
       }
 
-      // Process generated contracts
+      // Process generated contracts (these have explicit stipend amounts)
       for (const contract of generatedContracts || []) {
         if (contract.stipend && contract.stipend > 0) {
           console.log(`Processing generated contract ${contract.id} with stipend $${contract.stipend}`);
