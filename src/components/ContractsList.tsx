@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
@@ -10,9 +9,11 @@ import { BulkActions } from "@/components/contracts/BulkActions";
 import { ContractItem } from "@/components/contracts/ContractItem";
 import { AdminSignatureModal } from "@/components/contracts/AdminSignatureModal";
 import { EmptyState } from "@/components/contracts/EmptyState";
+import { ContractFilters } from "@/components/contracts/ContractFilters";
 import { useContractSendHistory } from "@/hooks/useContractSendHistory";
 import { useAdminSigning } from "@/hooks/useAdminSigning";
 import { useLastRecipient } from "@/hooks/useLastRecipient";
+import { useContractFiltering } from "@/hooks/useContractFiltering";
 import type { Contract } from "@/hooks/useContracts";
 
 interface ContractsListProps {
@@ -55,6 +56,19 @@ export const ContractsList = ({
     setAdminSignature
   } = useAdminSigning();
 
+  const {
+    filteredAndSortedContracts,
+    sortBy,
+    sortOrder,
+    filterByTemplate,
+    filterByType,
+    filterByDate,
+    availableTemplates,
+    availableTypes,
+    handleSortChange,
+    handleFilterChange
+  } = useContractFiltering(contracts);
+
   const handleDeleteContract = async (contractId: string) => {
     if (confirm("Are you sure you want to delete this contract?")) {
       await onDeleteContract(contractId);
@@ -83,7 +97,7 @@ export const ContractsList = ({
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedContracts(new Set(contracts.map(contract => contract.id)));
+      setSelectedContracts(new Set(filteredAndSortedContracts.map(contract => contract.id)));
     } else {
       setSelectedContracts(new Set());
     }
@@ -119,7 +133,6 @@ export const ContractsList = ({
     reloadSendHistory();
   };
 
-  // Debug the lastRecipient data when it changes
   console.log('ContractsList render - lastRecipient:', lastRecipient, 'loading:', lastRecipientLoading);
 
   return (
@@ -134,7 +147,7 @@ export const ContractsList = ({
                     Recent Contracts
                     <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
                   </CardTitle>
-                  <CardDescription>Manage your contract signing workflow</CardDescription>
+                  <CardDescription>Manage your contract signing workflow ({filteredAndSortedContracts.length} of {contracts.length} contracts)</CardDescription>
                 </div>
               </Button>
             </CollapsibleTrigger>
@@ -155,14 +168,26 @@ export const ContractsList = ({
                 <EmptyState type="empty" onUploadContract={onUploadContract} />
               ) : (
                 <div className="space-y-4">
+                  <ContractFilters
+                    sortBy={sortBy}
+                    sortOrder={sortOrder}
+                    filterByTemplate={filterByTemplate}
+                    filterByType={filterByType}
+                    filterByDate={filterByDate}
+                    onSortChange={handleSortChange}
+                    onFilterChange={handleFilterChange}
+                    availableTemplates={availableTemplates}
+                    availableTypes={availableTypes}
+                  />
+
                   <BulkActions
-                    contracts={contracts}
+                    contracts={filteredAndSortedContracts}
                     selectedContracts={selectedContracts}
                     onSelectAll={handleSelectAll}
                     onDeleteSelected={handleDeleteSelected}
                   />
 
-                  {contracts.map((contract) => {
+                  {filteredAndSortedContracts.map((contract) => {
                     const sendCount = contractSendHistory[contract.id] || 0;
                     
                     return (
@@ -180,6 +205,15 @@ export const ContractsList = ({
                       />
                     );
                   })}
+
+                  {filteredAndSortedContracts.length === 0 && contracts.length > 0 && (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500 mb-4">No contracts match your current filters</p>
+                      <Button variant="outline" onClick={() => handleFilterChange({ template: '', type: '', date: '' })}>
+                        Clear Filters
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
