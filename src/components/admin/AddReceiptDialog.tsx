@@ -125,7 +125,9 @@ export const AddReceiptDialog = ({ open, onOpenChange, onSubmit, onUploadImage }
                 placeholder="e.g., Office Depot, Amazon"
               />
               {errors.vendor_name && (
-                <p className="text-sm text-red-600 mt-1">{errors.vendor_name.message}</p>
+                <p className="text-sm text-red-600 mt-1">
+                  {typeof errors.vendor_name.message === 'string' ? errors.vendor_name.message : 'Vendor name is required'}
+                </p>
               )}
             </div>
           </div>
@@ -138,7 +140,9 @@ export const AddReceiptDialog = ({ open, onOpenChange, onSubmit, onUploadImage }
               placeholder="Brief description of the purchase"
             />
             {errors.description && (
-              <p className="text-sm text-red-600 mt-1">{errors.description.message}</p>
+              <p className="text-sm text-red-600 mt-1">
+                {typeof errors.description.message === 'string' ? errors.description.message : 'Description is required'}
+              </p>
             )}
           </div>
 
@@ -156,7 +160,9 @@ export const AddReceiptDialog = ({ open, onOpenChange, onSubmit, onUploadImage }
                 placeholder="0.00"
               />
               {errors.amount && (
-                <p className="text-sm text-red-600 mt-1">{errors.amount.message}</p>
+                <p className="text-sm text-red-600 mt-1">
+                  {typeof errors.amount.message === 'string' ? errors.amount.message : 'Amount is required'}
+                </p>
               )}
             </div>
 
@@ -168,7 +174,9 @@ export const AddReceiptDialog = ({ open, onOpenChange, onSubmit, onUploadImage }
                 {...register('purchase_date', { required: 'Purchase date is required' })}
               />
               {errors.purchase_date && (
-                <p className="text-sm text-red-600 mt-1">{errors.purchase_date.message}</p>
+                <p className="text-sm text-red-600 mt-1">
+                  {typeof errors.purchase_date.message === 'string' ? errors.purchase_date.message : 'Purchase date is required'}
+                </p>
               )}
             </div>
 
