@@ -76,15 +76,23 @@ export const ContractContentRenderer = ({
     <div className="space-y-6">
       {/* Contract Progress Status */}
       <ContractProgressStatus
-        completionProgress={getCompletionProgress()}
-        isContractCompleted={isContractCompleted}
+        signatureRecord={signatureRecord}
+        signatureFields={signatureFields}
+        embeddedSignatures={embeddedSignatures}
+        getCompletionProgress={getCompletionProgress}
       />
 
       {/* Contract Content with Signature Fields */}
       <Card className="p-6">
         <div className="relative">
           <ContractContentProcessor 
-            content={contract.content}
+            contract={contract}
+            signatureFields={signatureFields}
+            completedFields={completedFields}
+            signatureRecord={signatureRecord}
+            isAdminOrAgentField={isAdminOrAgentField}
+            isArtistDateField={isArtistDateField}
+            onFieldComplete={onFieldComplete}
             embeddedSignatures={embeddedSignatures}
           />
           
@@ -106,7 +114,6 @@ export const ContractContentRenderer = ({
       {/* Signature Status */}
       <SignatureStatus 
         signatureRecord={signatureRecord}
-        embeddedSignatures={embeddedSignatures}
       />
 
       {/* Final Signature Section */}
@@ -137,8 +144,7 @@ export const ContractContentRenderer = ({
 
       {/* Completion Status */}
       <CompletionStatus 
-        isContractCompleted={isContractCompleted}
-        signatureRecord={signatureRecord}
+        contract={contract}
       />
     </div>
   );
