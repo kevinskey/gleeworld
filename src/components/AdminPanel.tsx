@@ -51,7 +51,9 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-gray-600">Please sign in to access the admin panel.</p>
+        <div className="glass-card p-8">
+          <p className="text-white/70">Please sign in to access the admin panel.</p>
+        </div>
       </div>
     );
   }
@@ -101,19 +103,19 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
       case 'accounting':
         return (
           <div className="space-y-6">
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Accounting</h2>
-              <p className="text-lg text-gray-600">Contract financial overview and stipend tracking.</p>
+            <div className="mb-8 glass-card p-6">
+              <h2 className="text-3xl font-bold text-gradient mb-2">Accounting</h2>
+              <p className="text-lg text-white/70">Contract financial overview and stipend tracking.</p>
             </div>
             
-            <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center space-x-2">
-                  <Calculator className="h-6 w-6" />
-                  <span>Contract Accounting</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+            <div className="glass-card">
+              <div className="p-6 border-b border-white/10">
+                <div className="flex items-center space-x-2">
+                  <Calculator className="h-6 w-6 text-spelman-400" />
+                  <h3 className="text-2xl font-semibold text-white">Contract Accounting</h3>
+                </div>
+              </div>
+              <div className="p-6">
                 <AccountingSummary 
                   totalStipends={totalStipends}
                   contractCount={contractCount}
@@ -141,8 +143,8 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
                     onSort={handleSort}
                   />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         );
       case 'settings':

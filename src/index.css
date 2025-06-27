@@ -3,93 +3,87 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
+/* Definition of the design system with Spelman Blue and Liquid Glass theme */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 210 73% 16%; /* #114488 converted to HSL */
-
-    --card: 0 0% 100%;
-    --card-foreground: 210 73% 16%; /* #114488 */
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 210 73% 16%; /* #114488 */
-
-    --primary: 210 73% 16%; /* #114488 */
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 200 78% 63%; /* #55bbee converted to HSL */
-    --secondary-foreground: 210 73% 16%; /* #114488 */
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 210 73% 16%; /* #114488 */
-
-    --accent: 200 78% 63%; /* #55bbee */
-    --accent-foreground: 210 73% 16%; /* #114488 */
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 210 73% 16%; /* #114488 */
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 210 73% 16%; /* #114488 */
-
-    --sidebar-primary: 210 73% 16%; /* #114488 */
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 200 78% 63%; /* #55bbee */
-
-    --sidebar-accent-foreground: 210 73% 16%; /* #114488 */
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 210 73% 16%; /* #114488 */
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 222 84% 4%; /* Dark background for glass effect */
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 222 84% 4%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 222 84% 4%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 200 78% 63%; /* #55bbee for dark mode */
-    --primary-foreground: 210 73% 16%; /* #114488 */
+    --primary: 210 73% 45%; /* Spelman Blue */
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 217 32% 17%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 217 32% 17%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 210 73% 45%; /* Spelman Blue accent */
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 200 78% 63%; /* #55bbee for dark mode */
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 200 78% 63%; /* #55bbee */
-    --sidebar-primary-foreground: 210 73% 16%; /* #114488 */
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 200 78% 63%; /* #55bbee */
+    --border: 217 32% 17%;
+    --input: 217 32% 17%;
+    --ring: 210 73% 45%; /* Spelman Blue ring */
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 222 84% 4%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 73% 45%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 217 32% 17%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 32% 17%;
+    --sidebar-ring: 210 73% 45%;
+  }
+
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 210 73% 16%; /* Spelman Blue text */
+
+    --card: 0 0% 100%;
+    --card-foreground: 210 73% 16%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 73% 16%;
+
+    --primary: 210 73% 45%; /* Spelman Blue */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 210 73% 16%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 210 73% 16%;
+
+    --accent: 210 40% 96%;
+    --accent-foreground: 210 73% 16%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214 31% 91%;
+    --input: 214 31% 91%;
+    --ring: 210 73% 45%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 210 73% 16%;
+    --sidebar-primary: 210 73% 45%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 210 73% 16%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 210 73% 45%;
   }
 }
 
@@ -99,6 +93,47 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-gradient-to-br from-spelman-900 via-spelman-800 to-slate-900 text-foreground min-h-screen;
+    background-attachment: fixed;
+  }
+}
+
+@layer components {
+  /* Glass morphism effects */
+  .glass {
+    @apply bg-white/10 backdrop-blur-md border border-white/20 shadow-glass;
+  }
+  
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-lg border border-white/10 shadow-glass-lg rounded-xl;
+  }
+  
+  .glass-header {
+    @apply bg-white/10 backdrop-blur-xl border-b border-white/20;
+  }
+  
+  .glass-button {
+    @apply bg-spelman-700/80 hover:bg-spelman-600/80 backdrop-blur-sm border border-spelman-500/30 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105;
+  }
+  
+  .glass-input {
+    @apply bg-white/5 backdrop-blur-sm border border-white/20 focus:border-spelman-400/50 focus:ring-2 focus:ring-spelman-400/20;
+  }
+
+  /* Floating animation for glass elements */
+  .float-animation {
+    @apply animate-float;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-spelman-400 to-spelman-200 bg-clip-text text-transparent;
+  }
+  
+  .border-gradient {
+    background: linear-gradient(90deg, rgba(79, 172, 254, 0.2) 0%, rgba(30, 58, 138, 0.2) 100%);
+    border: 1px solid;
+    border-image: linear-gradient(90deg, rgba(79, 172, 254, 0.3) 0%, rgba(30, 58, 138, 0.3) 100%) 1;
   }
 }

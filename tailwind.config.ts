@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,20 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Spelman Blue color palette
+				spelman: {
+					50: '#f0f4ff',
+					100: '#e0e9ff',
+					200: '#c7d8ff',
+					300: '#a5c0ff',
+					400: '#829dff',
+					500: '#5f7aff',
+					600: '#4a5bdb',
+					700: '#1e3a8a', // Main Spelman Blue
+					800: '#1e3a7a',
+					900: '#1a2e6b',
+					950: '#141f52'
 				}
 			},
 			borderRadius: {
@@ -84,11 +99,27 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'float': {
+					'0%, 100%': {
+						transform: 'translateY(0px)'
+					},
+					'50%': {
+						transform: 'translateY(-10px)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'float': 'float 6s ease-in-out infinite'
+			},
+			backdropBlur: {
+				xs: '2px',
+			},
+			boxShadow: {
+				'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+				'glass-lg': '0 25px 50px -12px rgba(31, 38, 135, 0.25)',
 			}
 		}
 	},
