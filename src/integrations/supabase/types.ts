@@ -825,6 +825,79 @@ export type Database = {
         }
         Relationships: []
       }
+      receipts: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          created_by: string
+          description: string
+          event_id: string | null
+          id: string
+          notes: string | null
+          purchase_date: string
+          receipt_image_url: string | null
+          receipt_number: string | null
+          template_id: string | null
+          updated_at: string
+          vendor_name: string
+        }
+        Insert: {
+          amount: number
+          category?: string
+          created_at?: string
+          created_by: string
+          description: string
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          purchase_date: string
+          receipt_image_url?: string | null
+          receipt_number?: string | null
+          template_id?: string | null
+          updated_at?: string
+          vendor_name: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          purchase_date?: string
+          receipt_image_url?: string | null
+          receipt_number?: string | null
+          template_id?: string | null
+          updated_at?: string
+          vendor_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "contract_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       singer_contract_assignments: {
         Row: {
           assigned_at: string

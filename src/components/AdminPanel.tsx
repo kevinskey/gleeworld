@@ -8,9 +8,10 @@ import { SystemSettings } from "./admin/SystemSettings";
 import { AdminSummaryStats } from "./admin/AdminSummaryStats";
 import { ActivityLogs } from "./admin/ActivityLogs";
 import { ContractSignatureFixer } from "./admin/ContractSignatureFixer";
+import { ReceiptsManagement } from "./admin/ReceiptsManagement";
 import { useUsers } from "@/hooks/useUsers";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
-import { Shield, Users, Settings, FileText, Activity } from "lucide-react";
+import { Shield, Users, Settings, FileText, Activity, Receipt } from "lucide-react";
 
 export const AdminPanel = () => {
   const { user } = useAuth();
@@ -41,7 +42,7 @@ export const AdminPanel = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Overview
@@ -57,6 +58,10 @@ export const AdminPanel = () => {
           <TabsTrigger value="contracts" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Contract Tools
+          </TabsTrigger>
+          <TabsTrigger value="receipts" className="flex items-center gap-2">
+            <Receipt className="h-4 w-4" />
+            Receipts
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
@@ -87,6 +92,10 @@ export const AdminPanel = () => {
 
         <TabsContent value="contracts" className="space-y-6">
           <ContractSignatureFixer />
+        </TabsContent>
+
+        <TabsContent value="receipts" className="space-y-6">
+          <ReceiptsManagement />
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-6">
