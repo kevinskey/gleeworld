@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, FileText, Calendar, User, Eye, Download, Trash2 } from "lucide-react";
+import { Search, FileText, Calendar, User, Eye, Download, Trash2, Edit } from "lucide-react";
 import { useContracts } from "@/hooks/useContracts";
 import { useContractTemplates } from "@/hooks/useContractTemplates";
 import { useW9Forms } from "@/hooks/useW9Forms";
 import { formatDistanceToNow } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 interface LibraryItem {
   id: string;
@@ -20,15 +21,23 @@ interface LibraryItem {
   created_at: string;
   created_by?: string;
   user_id?: string;
+  storage_path?: string;
 }
 
 export const Library = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
+  const navigate = useNavigate();
   
   const { contracts, loading: contractsLoading } = useContracts();
   const { templates, loading: templatesLoading } = useContractTemplates();
   const { w9Forms, loading: w9Loading, downloadW9Form, deleteW9Form } = useW9Forms();
+
+  console.log('Library component - W9 forms data:', {
+    w9Forms,
+    count: w9Forms?.length || 0,
+    loading: w9Loading
+  });
 
   // Combine all documents into a single array
   const allItems: LibraryItem[] = useMemo(() => {
@@ -52,12 +61,20 @@ export const Library = () => {
 
     const w9Items = w9Forms.map(form => ({
       id: form.id,
-      title: `W9 Form - ${form.created_at.split('T')[0]}`,
+      title: `W9 Form - ${new Date(form.created_at).toLocaleDateString()}`,
       type: 'w9' as const,
       status: form.status,
       created_at: form.created_at,
       user_id: form.user_id,
+      storage_path: form.storage_path,
     }));
+
+    console.log('Library - All items before sorting:', {
+      contracts: contractItems.length,
+      templates: templateItems.length,
+      w9Forms: w9Items.length,
+      total: [...contractItems, ...templateItems, ...w9Items].length
+    });
 
     return [...contractItems, ...templateItems, ...w9Items].sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -66,7 +83,7 @@ export const Library = () => {
 
   // Filter items based on search term and type
   const filteredItems = useMemo(() => {
-    return allItems.filter(item => {
+    const filtered = allItems.filter(item => {
       const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            item.status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            item.contract_type?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -75,6 +92,16 @@ export const Library = () => {
       
       return matchesSearch && matchesType;
     });
+
+    console.log('Library - Filtered items:', {
+      searchTerm,
+      selectedType,
+      filteredCount: filtered.length,
+      totalCount: allItems.length,
+      w9Count: filtered.filter(item => item.type === 'w9').length
+    });
+
+    return filtered;
   }, [allItems, searchTerm, selectedType]);
 
   const getTypeColor = (type: string) => {
@@ -98,20 +125,44 @@ export const Library = () => {
         return 'bg-yellow-500/20 text-yellow-400';
       case 'draft':
         return 'bg-gray-500/20 text-gray-400';
+      case 'submitted':
+        return 'bg-green-500/20 text-green-400';
       default:
         return 'bg-blue-500/20 text-blue-400';
     }
   };
 
-  const handleDownloadW9 = (item: LibraryItem) => {
+  const handleDownloadW9 = async (item: LibraryItem) => {
     const w9Form = w9Forms.find(form => form.id === item.id);
     if (w9Form) {
-      downloadW9Form(w9Form);
+      console.log('Downloading W9 form:', w9Form.id);
+      await downloadW9Form(w9Form);
     }
   };
 
-  const handleDeleteW9 = (item: LibraryItem) => {
-    deleteW9Form(item.id);
+  const handleDeleteW9 = async (item: LibraryItem) => {
+    console.log('Deleting W9 form:', item.id);
+    await deleteW9Form(item.id);
+  };
+
+  const handleViewItem = (item: LibraryItem) => {
+    console.log('Viewing item:', item.type, item.id);
+    // Navigate to appropriate view based on item type
+    if (item.type === 'w9') {
+      // Could navigate to a W9 view page or download directly
+      handleDownloadW9(item);
+    } else {
+      // Handle contract/template viewing
+      console.log('View action for', item.type, 'not implemented yet');
+    }
+  };
+
+  const handleEditItem = (item: LibraryItem) => {
+    console.log('Editing item:', item.type, item.id);
+    if (item.type === 'w9') {
+      // Navigate to W9 form page for editing
+      navigate('/w9-form');
+    }
   };
 
   const loading = contractsLoading || templatesLoading || w9Loading;
@@ -147,31 +198,40 @@ export const Library = () => {
               onClick={() => setSelectedType("all")}
               className={selectedType === "all" ? "bg-spelman-500" : "border-white/20 text-white/70 hover:bg-white/10"}
             >
-              All
+              All ({allItems.length})
             </Button>
             <Button
               variant={selectedType === "contract" ? "default" : "outline"}
               onClick={() => setSelectedType("contract")}
               className={selectedType === "contract" ? "bg-spelman-500" : "border-white/20 text-white/70 hover:bg-white/10"}
             >
-              Contracts
+              Contracts ({allItems.filter(item => item.type === 'contract').length})
             </Button>
             <Button
               variant={selectedType === "template" ? "default" : "outline"}
               onClick={() => setSelectedType("template")}
               className={selectedType === "template" ? "bg-spelman-500" : "border-white/20 text-white/70 hover:bg-white/10"}
             >
-              Templates
+              Templates ({allItems.filter(item => item.type === 'template').length})
             </Button>
             <Button
               variant={selectedType === "w9" ? "default" : "outline"}
               onClick={() => setSelectedType("w9")}
               className={selectedType === "w9" ? "bg-spelman-500" : "border-white/20 text-white/70 hover:bg-white/10"}
             >
-              W9 Forms
+              W9 Forms ({allItems.filter(item => item.type === 'w9').length})
             </Button>
           </div>
         </div>
+
+        {/* Debug Information */}
+        {selectedType === "w9" && (
+          <div className="mb-4 p-3 bg-white/5 rounded-lg border border-white/10">
+            <p className="text-sm text-white/70">
+              Debug: W9 Forms loaded: {w9Forms.length}, Loading: {w9Loading ? 'Yes' : 'No'}
+            </p>
+          </div>
+        )}
 
         {/* Documents Table */}
         {loading ? (
@@ -183,7 +243,19 @@ export const Library = () => {
           <div className="text-center py-8">
             <FileText className="h-12 w-12 text-white/30 mx-auto mb-4" />
             <p className="text-white/70 mb-2">No documents found</p>
-            <p className="text-white/50 text-sm">Try adjusting your search terms or filters</p>
+            <p className="text-white/50 text-sm">
+              {selectedType === "all" 
+                ? "Try adjusting your search terms or filters" 
+                : `No ${selectedType} documents match your search`}
+            </p>
+            {selectedType === "w9" && (
+              <Button 
+                onClick={() => navigate('/w9-form')} 
+                className="mt-4 bg-spelman-500 hover:bg-spelman-600"
+              >
+                Create New W9 Form
+              </Button>
+            )}
           </div>
         ) : (
           <div className="rounded-lg border border-white/20 overflow-hidden">
@@ -218,7 +290,7 @@ export const Library = () => {
                         </Badge>
                       )}
                       {item.contract_type && (
-                        <Badge className="bg-purple-500/20 text-purple-400 border-0">
+                        <Badge className="bg-purple-500/20 text-purple-400 border-0 ml-2">
                           {item.contract_type}
                         </Badge>
                       )}
@@ -234,10 +306,13 @@ export const Library = () => {
                         <Button
                           variant="ghost"
                           size="sm"
+                          onClick={() => handleViewItem(item)}
                           className="text-white/70 hover:text-white hover:bg-white/10"
+                          title="View/Download"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
+                        
                         {item.type === 'w9' && (
                           <>
                             <Button
@@ -245,18 +320,41 @@ export const Library = () => {
                               size="sm"
                               onClick={() => handleDownloadW9(item)}
                               className="text-white/70 hover:text-white hover:bg-white/10"
+                              title="Download W9"
                             >
                               <Download className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
+                              onClick={() => handleEditItem(item)}
+                              className="text-white/70 hover:text-white hover:bg-white/10"
+                              title="Create New W9"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => handleDeleteW9(item)}
                               className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                              title="Delete W9"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </>
+                        )}
+                        
+                        {item.type !== 'w9' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDownloadW9(item)}
+                            className="text-white/70 hover:text-white hover:bg-white/10"
+                            title="Download"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
                         )}
                       </div>
                     </TableCell>
