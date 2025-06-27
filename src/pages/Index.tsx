@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { StatsCards } from "@/components/StatsCards";
 import { ContractsList } from "@/components/ContractsList";
 import { ContractCreationCollapsible } from "@/components/ContractCreationCollapsible";
+import { ContractTemplatesCollapsible } from "@/components/ContractTemplatesCollapsible";
 import { W9FormsListCollapsible } from "@/components/W9FormsListCollapsible";
 import { AdminPanelCollapsible } from "@/components/AdminPanelCollapsible";
 import { AccountingCardCollapsible } from "@/components/AccountingCardCollapsible";
@@ -38,6 +39,12 @@ const Index = () => {
     console.log('Upload contract clicked');
   };
 
+  const handleUseTemplate = (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => {
+    console.log('Template selected for use:', templateName);
+    // This would typically populate a contract creation form or navigate to a contract creation page
+    // For now, we'll just log it
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case "templates":
@@ -64,6 +71,10 @@ const Index = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-6">
                 <ContractCreationCollapsible onContractCreated={refetch} />
+                <ContractTemplatesCollapsible 
+                  onUseTemplate={handleUseTemplate}
+                  onContractCreated={refetch}
+                />
                 <W9FormsListCollapsible />
               </div>
               <div className="space-y-6">
