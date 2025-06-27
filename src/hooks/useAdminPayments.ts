@@ -32,32 +32,52 @@ export const useAdminPayments = () => {
       setLoading(true);
       setError(null);
 
-      const { data, error } = await supabase
+      // First get payments
+      const { data: paymentsData, error: paymentsError } = await supabase
         .from('user_payments')
-        .select(`
-          *,
-          profiles!user_id (email, full_name),
-          contracts_v2 (title)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (paymentsError) throw paymentsError;
 
-      const transformedPayments = (data || []).map(payment => ({
-        id: payment.id,
-        user_id: payment.user_id,
-        contract_id: payment.contract_id,
-        amount: payment.amount,
-        payment_date: payment.payment_date,
-        payment_method: payment.payment_method,
-        notes: payment.notes,
-        user_email: payment.profiles?.email || '',
-        user_full_name: payment.profiles?.full_name || null,
-        contract_title: payment.contracts_v2?.title || null,
-        created_at: payment.created_at,
-      }));
+      // Then enrich with user and contract data
+      const enrichedPayments = await Promise.all(
+        (paymentsData || []).map(async (payment) => {
+          // Get user profile
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('email, full_name')
+            .eq('id', payment.user_id)
+            .single();
 
-      setPayments(transformedPayments);
+          // Get contract if exists
+          let contractTitle = null;
+          if (payment.contract_id) {
+            const { data: contract } = await supabase
+              .from('contracts_v2')
+              .select('title')
+              .eq('id', payment.contract_id)
+              .single();
+            contractTitle = contract?.title || null;
+          }
+
+          return {
+            id: payment.id,
+            user_id: payment.user_id,
+            contract_id: payment.contract_id,
+            amount: payment.amount,
+            payment_date: payment.payment_date,
+            payment_method: payment.payment_method,
+            notes: payment.notes,
+            user_email: profile?.email || '',
+            user_full_name: profile?.full_name || null,
+            contract_title: contractTitle,
+            created_at: payment.created_at,
+          };
+        })
+      );
+
+      setPayments(enrichedPayments);
     } catch (error) {
       console.error('Error fetching payments:', error);
       setError('Failed to load payments');
@@ -97,14 +117,29 @@ export const useAdminPayments = () => {
         .insert([{
           user_id: paymentData.user_id,
           title: 'Payment Received',
-          message: `You have received a payment of $${paymentData.amount} via ${paymentData.payment_method}.`,
+          message: `Thank you for your service! Your payment of $${paymentData.amount} has been issued via ${paymentData.payment_method}.`,
           type: 'success',
           created_by: user?.id,
         }]);
 
+      // Send email notification
+      try {
+        await supabase.functions.invoke('send-payment-notification', {
+          body: {
+            userId: paymentData.user_id,
+            amount: paymentData.amount,
+            paymentMethod: paymentData.payment_method,
+            contractId: paymentData.contract_id,
+          }
+        });
+      } catch (emailError) {
+        console.error('Email notification failed:', emailError);
+        // Don't fail the payment creation if email fails
+      }
+
       toast({
         title: "Success",
-        description: "Payment recorded successfully",
+        description: "Payment recorded and notification sent",
       });
 
       fetchPayments();
