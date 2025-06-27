@@ -1,54 +1,131 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { LogOut, Plus, RotateCcw } from "lucide-react";
+import { FileText, LogOut, Settings, User, Receipt } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface HeaderProps {
-  displayName: string;
-  onSignOut: () => void;
-  onNewContract: () => void;
-  onResetAuth?: () => void;
+  activeTab: string;
+  onTabChange: (tab: string) => void;
 }
 
-export const Header = ({ displayName, onSignOut, onNewContract, onResetAuth }: HeaderProps) => {
+export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Logout error:", error);
+        toast({
+          title: "Error",
+          description: "Failed to log out. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Logged out successfully",
+        });
+        navigate("/auth");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  const tabs = [
+    { id: "dashboard", label: "Dashboard", icon: Settings },
+    { id: "templates", label: "Templates", icon: FileText },
+    { id: "receipts", label: "Receipts", icon: Receipt },
+  ];
+
   return (
-    <header className="bg-white shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Contract Manager</h1>
-            <p className="text-sm text-gray-500">Welcome back, {displayName}</p>
+    <header className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-8">
+            <h1 className="text-2xl font-bold text-white">
+              Spelman <span className="text-spelman-400">Contracts</span>
+            </h1>
+            
+            <nav className="hidden md:flex items-center space-x-1">
+              {tabs.map((tab) => (
+                <Button
+                  key={tab.id}
+                  variant={activeTab === tab.id ? "default" : "ghost"}
+                  onClick={() => onTabChange(tab.id)}
+                  className={`
+                    flex items-center space-x-2 px-4 py-2 rounded-lg transition-all
+                    ${activeTab === tab.id 
+                      ? "bg-spelman-500 text-white shadow-lg" 
+                      : "text-white/80 hover:text-white hover:bg-white/10"
+                    }
+                  `}
+                >
+                  <tab.icon className="h-4 w-4" />
+                  <span>{tab.label}</span>
+                </Button>
+              ))}
+            </nav>
           </div>
-          
+
           <div className="flex items-center space-x-4">
-            <Button 
-              onClick={onNewContract}
-              className="bg-blue-600 hover:bg-blue-700"
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white/80 hover:text-white hover:bg-white/10"
             >
-              <Plus className="h-4 w-4 mr-2" />
-              New Contract
+              <User className="h-4 w-4 mr-2" />
+              Profile
             </Button>
             
-            {onResetAuth && (
-              <Button 
-                onClick={onResetAuth}
-                variant="outline"
-                className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
-              >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Reset Auth
-              </Button>
-            )}
-            
-            <Button 
-              onClick={onSignOut} 
-              variant="outline"
-              className="border-red-300 text-red-700 hover:bg-red-50"
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="text-white/80 hover:text-white hover:bg-white/10"
             >
               <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
+              {isLoggingOut ? "Logging out..." : "Logout"}
             </Button>
           </div>
         </div>
+
+        {/* Mobile Navigation */}
+        <nav className="md:hidden mt-4 flex items-center space-x-1 overflow-x-auto">
+          {tabs.map((tab) => (
+            <Button
+              key={tab.id}
+              variant={activeTab === tab.id ? "default" : "ghost"}
+              onClick={() => onTabChange(tab.id)}
+              size="sm"
+              className={`
+                flex items-center space-x-2 px-3 py-2 rounded-lg transition-all whitespace-nowrap
+                ${activeTab === tab.id 
+                  ? "bg-spelman-500 text-white shadow-lg" 
+                  : "text-white/80 hover:text-white hover:bg-white/10"
+                }
+              `}
+            >
+              <tab.icon className="h-4 w-4" />
+              <span>{tab.label}</span>
+            </Button>
+          ))}
+        </nav>
       </div>
     </header>
   );
