@@ -13,7 +13,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useContracts } from "@/hooks/useContracts";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Users, Settings, FileText, Activity, Receipt, Home, Template, Calculator } from "lucide-react";
+import { Shield, Users, Settings, FileText, Activity, Receipt, Home, FileTemplate, Calculator } from "lucide-react";
 import type { Contract } from "@/hooks/useContracts";
 
 const Index = () => {
