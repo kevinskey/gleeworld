@@ -1,7 +1,8 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Calculator, FileSpreadsheet, Download, Upload, DollarSign, Mail } from "lucide-react";
+import { Plus, Calculator, FileSpreadsheet, Download, Upload, DollarSign, Mail, MoreVertical } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { FinanceTable } from "./FinanceTable";
 import { FinanceSummary } from "./FinanceSummary";
 import { AddFinanceRecordDialog } from "./AddFinanceRecordDialog";
@@ -104,48 +105,55 @@ export const FinanceManagement = () => {
             <h2 className="text-3xl font-bold text-gradient mb-2">Finance Management</h2>
             <p className="text-lg text-white/70">Manage stipends, receipts, payments, debits, credits, and balances with Excel-like functionality.</p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <Button 
-              onClick={handleImportStipends}
-              variant="outline"
-              className="glass border-green-400/30 text-green-300 hover:bg-green-500/20 w-full sm:w-auto"
-              disabled={loading}
-            >
-              <DollarSign className="h-4 w-4 mr-2" />
-              Import Stipends
-            </Button>
-            <div className="relative">
-              <input
-                type="file"
-                accept=".xlsx,.xls,.csv"
-                onChange={handleImport}
-                className="hidden"
-                id="import-file"
-              />
-              <Button
-                variant="outline"
-                className="glass border-spelman-400/30 text-spelman-300 hover:bg-spelman-500/20 w-full sm:w-auto"
-                onClick={() => document.getElementById('import-file')?.click()}
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Import Excel
-              </Button>
-            </div>
-            <Button 
-              onClick={handleExport}
-              variant="outline"
-              className="glass border-spelman-400/30 text-spelman-300 hover:bg-spelman-500/20 w-full sm:w-auto"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export Excel
-            </Button>
+          <div className="flex gap-3 w-full sm:w-auto">
             <Button 
               onClick={() => setShowAddDialog(true)}
-              className="glass-button text-white font-medium w-full sm:w-auto"
+              className="glass-button text-white font-medium flex-1 sm:flex-none"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Record
             </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="glass border-spelman-400/30 text-spelman-300 hover:bg-spelman-500/20"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align="end" 
+                className="w-56 bg-white/95 backdrop-blur-sm border-gray-200 shadow-lg"
+              >
+                <DropdownMenuItem onClick={handleImportStipends} disabled={loading}>
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  Import Stipends
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => document.getElementById('import-file')?.click()}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExport}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setBulkW9EmailOpen(true)}>
+                  <Mail className="h-4 w-4 mr-2" />
+                  Send W9 Forms
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
+            {/* Hidden file input for Excel import */}
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              onChange={handleImport}
+              className="hidden"
+              id="import-file"
+            />
           </div>
         </div>
       </div>
@@ -157,13 +165,6 @@ export const FinanceManagement = () => {
             <h3 className="text-xl font-semibold text-white mb-2">W9 Forms Management</h3>
             <p className="text-white/70">Send W9 tax forms to users and track completion for financial reporting</p>
           </div>
-          <Button
-            onClick={() => setBulkW9EmailOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Mail className="h-4 w-4 mr-2" />
-            Send W9 Forms
-          </Button>
         </div>
       </div>
 
