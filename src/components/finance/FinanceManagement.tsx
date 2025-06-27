@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Calculator, FileSpreadsheet, Download, Upload } from "lucide-react";
+import { Plus, Calculator, FileSpreadsheet, Download, Upload, DollarSign } from "lucide-react";
 import { FinanceTable } from "./FinanceTable";
 import { FinanceSummary } from "./FinanceSummary";
 import { AddFinanceRecordDialog } from "./AddFinanceRecordDialog";
@@ -16,6 +16,7 @@ export const FinanceManagement = () => {
     createRecord, 
     updateRecord, 
     deleteRecord,
+    importStipendRecords,
     exportToExcel,
     importFromExcel 
   } = useFinanceRecords();
@@ -31,6 +32,10 @@ export const FinanceManagement = () => {
     if (file) {
       importFromExcel(file);
     }
+  };
+
+  const handleImportStipends = () => {
+    importStipendRecords();
   };
 
   if (error) {
@@ -68,6 +73,15 @@ export const FinanceManagement = () => {
             <p className="text-lg text-white/70">Manage stipends, receipts, payments, debits, credits, and balances with Excel-like functionality.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <Button 
+              onClick={handleImportStipends}
+              variant="outline"
+              className="glass border-green-400/30 text-green-300 hover:bg-green-500/20 w-full sm:w-auto"
+              disabled={loading}
+            >
+              <DollarSign className="h-4 w-4 mr-2" />
+              Import Stipends
+            </Button>
             <div className="relative">
               <input
                 type="file"

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -210,6 +211,150 @@ export const useFinanceRecords = () => {
     }
   };
 
+  const importStipendRecords = async () => {
+    try {
+      setLoading(true);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Fetch signed contracts with stipend amounts
+      const { data: contractSignatures, error: contractError } = await supabase
+        .from('contract_signatures_v2')
+        .select(`
+          *,
+          contracts_v2!inner(
+            id,
+            title,
+            content,
+            created_at
+          )
+        `)
+        .eq('status', 'completed')
+        .not('contracts_v2.content', 'is', null);
+
+      if (contractError) {
+        throw contractError;
+      }
+
+      // Also fetch from generated_contracts table
+      const { data: generatedContracts, error: generatedError } = await supabase
+        .from('generated_contracts')
+        .select('*')
+        .not('stipend', 'is', null)
+        .gt('stipend', 0);
+
+      if (generatedError) {
+        throw generatedError;
+      }
+
+      let importedCount = 0;
+      
+      // Process contract signatures
+      for (const signature of contractSignatures || []) {
+        const contract = signature.contracts_v2;
+        
+        // Extract stipend amount from contract content
+        const content = contract.content;
+        const stipendMatch = content.match(/\$?([\d,]+(?:\.\d{2})?)/);
+        
+        if (stipendMatch) {
+          const stipendAmount = parseFloat(stipendMatch[1].replace(/,/g, ''));
+          
+          if (stipendAmount > 0) {
+            // Check if record already exists
+            const { data: existingRecord } = await supabase
+              .from('finance_records')
+              .select('id')
+              .eq('user_id', user.id)
+              .eq('type', 'stipend')
+              .eq('amount', stipendAmount)
+              .eq('description', `Stipend from ${contract.title}`)
+              .single();
+
+            if (!existingRecord) {
+              await supabase
+                .from('finance_records')
+                .insert({
+                  user_id: user.id,
+                  date: signature.artist_signed_at ? new Date(signature.artist_signed_at).toISOString().split('T')[0] : new Date(contract.created_at).toISOString().split('T')[0],
+                  type: 'stipend',
+                  category: 'Performance',
+                  description: `Stipend from ${contract.title}`,
+                  amount: stipendAmount,
+                  balance: 0, // Will be recalculated
+                  reference: `Contract ID: ${contract.id}`,
+                  notes: 'Imported from contract system'
+                });
+              
+              importedCount++;
+            }
+          }
+        }
+      }
+
+      // Process generated contracts
+      for (const contract of generatedContracts || []) {
+        if (contract.stipend && contract.stipend > 0) {
+          // Check if record already exists
+          const { data: existingRecord } = await supabase
+            .from('finance_records')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('type', 'stipend')
+            .eq('amount', contract.stipend)
+            .eq('description', `Stipend for ${contract.event_name}`)
+            .single();
+
+          if (!existingRecord) {
+            await supabase
+              .from('finance_records')
+              .insert({
+                user_id: user.id,
+                date: new Date(contract.created_at).toISOString().split('T')[0],
+                type: 'stipend',
+                category: 'Performance',
+                description: `Stipend for ${contract.event_name}`,
+                amount: Number(contract.stipend),
+                balance: 0, // Will be recalculated
+                reference: `Event Contract ID: ${contract.id}`,
+                notes: 'Imported from contract system'
+              });
+            
+            importedCount++;
+          }
+        }
+      }
+
+      if (importedCount > 0) {
+        // Recalculate all balances after importing
+        await recalculateBalances();
+        
+        toast({
+          title: "Import Successful",
+          description: `Imported ${importedCount} stipend records from contracts`,
+        });
+      } else {
+        toast({
+          title: "No New Records",
+          description: "No new stipend records found to import",
+        });
+      }
+      
+    } catch (err) {
+      console.error('Error importing stipend records:', err);
+      toast({
+        title: "Import Failed",
+        description: "Failed to import stipend records from contracts",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const exportToExcel = () => {
     const headers = ['Date', 'Type', 'Category', 'Description', 'Amount', 'Balance', 'Reference', 'Notes'];
     const csvContent = [
@@ -266,6 +411,7 @@ export const useFinanceRecords = () => {
     createRecord,
     updateRecord,
     deleteRecord,
+    importStipendRecords,
     exportToExcel,
     importFromExcel,
     refetch: fetchRecords
