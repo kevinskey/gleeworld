@@ -194,8 +194,19 @@ const handler = async (req: Request): Promise<Response> => {
       console.log("Continuing despite recipient record exception...");
     }
 
-    // Get the contract signing URL - Always use contract.gleeworld.org domain
-    const contractUrl = `https://contract.gleeworld.org/contract-signing/${contractId}`;
+    // Get the contract signing URL - Use the current environment's domain
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    let contractUrl;
+    
+    // Check if we're in production or development
+    if (supabaseUrl.includes("oopmlreysqjzuxzylyheb")) {
+      // Production environment - use the custom domain
+      contractUrl = `https://contract.gleeworld.org/contract-signing/${contractId}`;
+    } else {
+      // Development environment - use a fallback domain
+      contractUrl = `https://contract.gleeworld.org/contract-signing/${contractId}`;
+    }
+    
     console.log("Contract signing URL:", contractUrl);
 
     // Determine if there are signature fields
@@ -294,6 +305,12 @@ const handler = async (req: Request): Promise<Response> => {
                 </a>
               </div>
 
+              <!-- Direct Link for Backup -->
+              <div style="text-align: center; margin: 20px 0; padding: 15px; background-color: #f0f0f0; border-radius: 5px;">
+                <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">If the button above doesn't work, copy and paste this link:</p>
+                <p style="margin: 0; word-break: break-all; font-family: monospace; font-size: 12px; color: #333;">${contractUrl}</p>
+              </div>
+
               ${autoEnrollMessage ? `
               <div style="border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin: 20px 0; background-color: #f1f8e9;">
                 <h3 style="margin: 0 0 10px 0; color: #2e7d32; font-size: 16px;">Account Created</h3>
@@ -341,7 +358,8 @@ const handler = async (req: Request): Promise<Response> => {
       signatureFieldsCount: effectiveSignatureFields.length,
       autoEnrolled: !existingUser,
       recipientEmail: cleanRecipientEmail,
-      isResend: isResend
+      isResend: isResend,
+      contractUrl: contractUrl
     };
 
     console.log("=== FUNCTION COMPLETED SUCCESSFULLY ===");
