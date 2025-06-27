@@ -29,10 +29,10 @@ export const UserContractsList = () => {
 
   if (loading) {
     return (
-      <Card className="glass-card border-spelman-400/20">
+      <Card>
         <CardContent className="pt-6">
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-spelman-400"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
             <span className="ml-2 text-gray-900">Loading contracts...</span>
           </div>
         </CardContent>
@@ -42,7 +42,7 @@ export const UserContractsList = () => {
 
   if (error) {
     return (
-      <Card className="glass-card border-spelman-400/20">
+      <Card>
         <CardContent className="pt-6">
           <div className="text-center py-8">
             <p className="text-red-600 mb-4">{error}</p>
@@ -54,10 +54,10 @@ export const UserContractsList = () => {
 
   if (contracts.length === 0) {
     return (
-      <Card className="glass-card border-spelman-400/20">
+      <Card>
         <CardContent className="pt-6">
           <div className="text-center py-8">
-            <FileText className="h-12 w-12 mx-auto text-spelman-400/50 mb-4" />
+            <FileText className="h-12 w-12 mx-auto text-brand-400 mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No Contracts Yet</h3>
             <p className="text-gray-600">You don't have any contracts assigned to you yet.</p>
           </div>
@@ -70,7 +70,7 @@ export const UserContractsList = () => {
     <>
       <div className="space-y-4">
         {contracts.map((contract) => (
-          <Card key={contract.id} className="glass-card border-spelman-400/20">
+          <Card key={contract.id}>
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
@@ -108,7 +108,7 @@ export const UserContractsList = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => handleViewContract(contract)}
-                    className="glass border-spelman-400/30 text-spelman-600 hover:bg-spelman-500/20"
+                    className="border-brand-300 text-brand-700 hover:bg-brand-50"
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     View
@@ -117,7 +117,7 @@ export const UserContractsList = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="glass border-spelman-400/30 text-spelman-600 hover:bg-spelman-500/20"
+                      className="border-brand-300 text-brand-700 hover:bg-brand-50"
                     >
                       <Download className="h-4 w-4 mr-2" />
                       Download

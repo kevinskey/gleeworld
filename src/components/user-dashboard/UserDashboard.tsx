@@ -80,13 +80,13 @@ export const UserDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900">
       <div className="container mx-auto px-4 py-6">
         {/* Header */}
-        <div className="glass-card p-6 mb-6">
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl p-6 mb-6 shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 Welcome back, {dashboardData?.full_name || user.email}
               </h1>
-              <div className="flex items-center gap-4 text-gray-700">
+              <div className="flex items-center gap-4 text-gray-600">
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4" />
                   <span>{dashboardData?.email}</span>
@@ -100,7 +100,7 @@ export const UserDashboard = () => {
             <Button 
               onClick={refetch} 
               variant="outline" 
-              className="glass border-spelman-400/30 text-spelman-300 hover:bg-spelman-500/20"
+              className="border-brand-400/50 text-brand-700 hover:bg-brand-50"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
@@ -110,10 +110,10 @@ export const UserDashboard = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <Card className="glass-card border-spelman-400/20">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-900">Total Contracts</CardTitle>
-              <FileText className="h-4 w-4 text-spelman-400" />
+              <FileText className="h-4 w-4 text-brand-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gray-900">{dashboardData?.total_contracts || 0}</div>
@@ -123,10 +123,10 @@ export const UserDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="glass-card border-spelman-400/20">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-900">W9 Forms</CardTitle>
-              <CheckCircle className="h-4 w-4 text-spelman-400" />
+              <CheckCircle className="h-4 w-4 text-brand-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gray-900">{dashboardData?.w9_forms_count || 0}</div>
@@ -134,10 +134,10 @@ export const UserDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="glass-card border-spelman-400/20">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-900">Payments</CardTitle>
-              <DollarSign className="h-4 w-4 text-spelman-400" />
+              <DollarSign className="h-4 w-4 text-brand-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gray-900">{dashboardData?.payments_received || 0}</div>
@@ -147,10 +147,10 @@ export const UserDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="glass-card border-spelman-400/20">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-900">Notifications</CardTitle>
-              <Bell className="h-4 w-4 text-spelman-400" />
+              <Bell className="h-4 w-4 text-brand-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gray-900">{dashboardData?.unread_notifications || 0}</div>
@@ -161,17 +161,17 @@ export const UserDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="contracts" className="space-y-6">
-          <TabsList className="glass border-spelman-400/30">
-            <TabsTrigger value="contracts" className="text-gray-900 data-[state=active]:bg-spelman-500/30">
+          <TabsList className="bg-white/95 backdrop-blur-sm border border-brand-200/30">
+            <TabsTrigger value="contracts" className="text-gray-700 data-[state=active]:bg-brand-100 data-[state=active]:text-brand-800">
               Contracts ({contracts.length})
             </TabsTrigger>
-            <TabsTrigger value="w9forms" className="text-gray-900 data-[state=active]:bg-spelman-500/30">
+            <TabsTrigger value="w9forms" className="text-gray-700 data-[state=active]:bg-brand-100 data-[state=active]:text-brand-800">
               W9 Forms ({w9Forms?.length || 0})
             </TabsTrigger>
-            <TabsTrigger value="payments" className="text-gray-900 data-[state=active]:bg-spelman-500/30">
+            <TabsTrigger value="payments" className="text-gray-700 data-[state=active]:bg-brand-100 data-[state=active]:text-brand-800">
               Payments ({dashboardData?.payments_received || 0})
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="text-gray-900 data-[state=active]:bg-spelman-500/30">
+            <TabsTrigger value="notifications" className="text-gray-700 data-[state=active]:bg-brand-100 data-[state=active]:text-brand-800">
               Notifications ({dashboardData?.unread_notifications || 0})
             </TabsTrigger>
           </TabsList>

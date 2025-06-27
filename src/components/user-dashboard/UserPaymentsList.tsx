@@ -9,11 +9,11 @@ export const UserPaymentsList = () => {
 
   if (loading) {
     return (
-      <Card className="glass-card border-spelman-400/20">
+      <Card>
         <CardContent className="pt-6">
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-spelman-400"></div>
-            <span className="ml-2 text-white">Loading payments...</span>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
+            <span className="ml-2 text-gray-900">Loading payments...</span>
           </div>
         </CardContent>
       </Card>
@@ -22,10 +22,10 @@ export const UserPaymentsList = () => {
 
   if (error) {
     return (
-      <Card className="glass-card border-spelman-400/20">
+      <Card>
         <CardContent className="pt-6">
           <div className="text-center py-8">
-            <p className="text-red-300 mb-4">{error}</p>
+            <p className="text-red-600 mb-4">{error}</p>
           </div>
         </CardContent>
       </Card>
@@ -34,12 +34,12 @@ export const UserPaymentsList = () => {
 
   if (payments.length === 0) {
     return (
-      <Card className="glass-card border-spelman-400/20">
+      <Card>
         <CardContent className="pt-6">
           <div className="text-center py-8">
-            <DollarSign className="h-12 w-12 mx-auto text-spelman-400/50 mb-4" />
-            <h3 className="text-lg font-semibold text-white mb-2">No Payments Yet</h3>
-            <p className="text-white/70">You haven't received any payments yet.</p>
+            <DollarSign className="h-12 w-12 mx-auto text-brand-400 mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Payments Yet</h3>
+            <p className="text-gray-600">You haven't received any payments yet.</p>
           </div>
         </CardContent>
       </Card>
@@ -49,15 +49,15 @@ export const UserPaymentsList = () => {
   return (
     <div className="space-y-4">
       {payments.map((payment) => (
-        <Card key={payment.id} className="glass-card border-spelman-400/20">
+        <Card key={payment.id}>
           <CardHeader>
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-gray-900 flex items-center gap-2">
                   <DollarSign className="h-5 w-5" />
                   ${payment.amount || 0}
                 </CardTitle>
-                <CardDescription className="text-white/70">
+                <CardDescription className="text-gray-600">
                   {payment.payment_date 
                     ? `Paid on ${new Date(payment.payment_date).toLocaleDateString()}`
                     : `Recorded on ${new Date(payment.created_at).toLocaleDateString()}`
@@ -73,9 +73,9 @@ export const UserPaymentsList = () => {
           <CardContent>
             <div className="space-y-2">
               {payment.notes && (
-                <p className="text-sm text-white/70">{payment.notes}</p>
+                <p className="text-sm text-gray-600">{payment.notes}</p>
               )}
-              <div className="flex items-center gap-2 text-xs text-white/50">
+              <div className="flex items-center gap-2 text-xs text-gray-500">
                 <Calendar className="h-3 w-3" />
                 <span>Recorded: {new Date(payment.created_at).toLocaleDateString()}</span>
               </div>

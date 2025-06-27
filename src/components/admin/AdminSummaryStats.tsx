@@ -22,7 +22,7 @@ export const AdminSummaryStats = ({ users, loading, activityLogs }: AdminSummary
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center">
+          <CardTitle className="text-lg flex items-center text-gray-900">
             <Users className="h-5 w-5 mr-2 text-blue-600" />
             Registered Users
           </CardTitle>
@@ -33,7 +33,7 @@ export const AdminSummaryStats = ({ users, loading, activityLogs }: AdminSummary
       </Card>
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center">
+          <CardTitle className="text-lg flex items-center text-gray-900">
             <Settings className="h-5 w-5 mr-2 text-purple-600" />
             Admin Users
           </CardTitle>
@@ -44,7 +44,7 @@ export const AdminSummaryStats = ({ users, loading, activityLogs }: AdminSummary
       </Card>
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center">
+          <CardTitle className="text-lg flex items-center text-gray-900">
             <Activity className="h-5 w-5 mr-2 text-green-600" />
             Today's Activity
           </CardTitle>
@@ -55,7 +55,7 @@ export const AdminSummaryStats = ({ users, loading, activityLogs }: AdminSummary
       </Card>
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center">
+          <CardTitle className="text-lg flex items-center text-gray-900">
             <FileText className="h-5 w-5 mr-2 text-orange-600" />
             System Health
           </CardTitle>

@@ -17,7 +17,7 @@ export const PaymentManagement = () => {
         <CardContent className="pt-6">
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-2">Loading payments...</span>
+            <span className="ml-2 text-gray-900">Loading payments...</span>
           </div>
         </CardContent>
       </Card>
@@ -45,7 +45,7 @@ export const PaymentManagement = () => {
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-gray-900">
                 <DollarSign className="h-5 w-5" />
                 Payment Management
               </CardTitle>
@@ -63,7 +63,7 @@ export const PaymentManagement = () => {
           {payments.length === 0 ? (
             <div className="text-center py-8">
               <DollarSign className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Payments Recorded</h3>
+              <h3 className="text-lg font-semibold mb-2 text-gray-900">No Payments Recorded</h3>
               <p className="text-gray-600 mb-4">Start by recording your first payment.</p>
               <Button onClick={() => setShowAddDialog(true)}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -79,7 +79,7 @@ export const PaymentManagement = () => {
                       <DollarSign className="h-5 w-5 text-green-600" />
                     </div>
                     <div>
-                      <p className="font-medium">
+                      <p className="font-medium text-gray-900">
                         ${payment.amount || 0} to {payment.user_full_name || payment.user_email}
                       </p>
                       <div className="flex items-center gap-4 text-sm text-gray-600">
