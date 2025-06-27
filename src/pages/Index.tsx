@@ -8,7 +8,7 @@ import { RecentContractsTemplatesCollapsible } from "@/components/RecentContract
 import { W9FormsListCollapsible } from "@/components/W9FormsListCollapsible";
 import { AccountingCardCollapsible } from "@/components/AccountingCardCollapsible";
 import { Library } from "@/components/Library";
-import { ReceiptsManagement } from "@/components/admin/ReceiptsManagement";
+import { FinanceManagement } from "@/components/finance/FinanceManagement";
 import { ContractViewer } from "@/components/ContractViewer";
 import { useContracts } from "@/hooks/useContracts";
 import type { Contract } from "@/hooks/useContracts";
@@ -56,8 +56,8 @@ const Index = () => {
     switch (activeTab) {
       case "library":
         return <Library />;
-      case "receipts":
-        return <ReceiptsManagement />;
+      case "finance":
+        return <FinanceManagement />;
       case "dashboard":
       default:
         return (

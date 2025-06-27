@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FileText, LogOut, Settings, Receipt, Library, Monitor } from "lucide-react";
+import { FileText, LogOut, Settings, Calculator, Library, Monitor } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -49,7 +49,7 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
   const tabs = [
     { id: "dashboard", label: "Dashboard", icon: Settings },
     { id: "library", label: "Library", icon: Library },
-    { id: "receipts", label: "Receipts", icon: Receipt },
+    { id: "finance", label: "Finance", icon: Calculator },
     { id: "system", label: "System", icon: Monitor },
   ];
 
