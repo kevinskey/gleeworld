@@ -104,9 +104,11 @@ Signature Date: ${formData.signatureDate}
 Certified: ${formData.certification ? 'Yes' : 'No'}
       `;
 
-      // Generate unique file path with username in title
+      // Generate unique file path with username in title and proper folder structure for RLS
       const userName = formData.name.replace(/[^a-zA-Z0-9]/g, '_') || 'anonymous';
-      const fileName = `w9-${userName}-${user?.id || 'guest'}-${Date.now()}.txt`;
+      const userId = user?.id || 'guest';
+      const timestamp = Date.now();
+      const fileName = `${userId}/w9-${userName}-${userId}-${timestamp}.txt`;
       
       // Upload to storage
       const { error: uploadError } = await supabase.storage
@@ -116,6 +118,7 @@ Certified: ${formData.certification ? 'Yes' : 'No'}
         });
 
       if (uploadError) {
+        console.error('Upload error:', uploadError);
         throw uploadError;
       }
 
@@ -133,6 +136,7 @@ Certified: ${formData.certification ? 'Yes' : 'No'}
         });
 
       if (dbError) {
+        console.error('Database error:', dbError);
         throw dbError;
       }
 
