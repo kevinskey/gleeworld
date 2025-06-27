@@ -78,22 +78,40 @@ export const useAccountingData = () => {
       setLoading(true);
       console.log('Fetching contracts for accounting...');
       
-      // Query all contracts that are completed or have signatures, including template info
-      const { data: contracts, error } = await supabase
+      // Query contracts first
+      const { data: contracts, error: contractsError } = await supabase
         .from('contracts_v2')
-        .select(`
-          *,
-          contract_templates(name)
-        `)
+        .select('*')
         .or('status.eq.completed,status.eq.pending_admin_signature')
         .order('updated_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching contracts:', error);
-        throw error;
+      if (contractsError) {
+        console.error('Error fetching contracts:', contractsError);
+        throw contractsError;
       }
 
       console.log('Found contracts:', contracts?.length || 0);
+
+      // Get unique template IDs from contracts
+      const templateIds = [...new Set(contracts
+        ?.map(contract => contract.template_id)
+        .filter(Boolean) || [])];
+
+      // Fetch template names if we have template IDs
+      let templatesMap: Record<string, string> = {};
+      if (templateIds.length > 0) {
+        const { data: templates, error: templatesError } = await supabase
+          .from('contract_templates')
+          .select('id, name')
+          .in('id', templateIds);
+
+        if (!templatesError && templates) {
+          templatesMap = templates.reduce((acc, template) => {
+            acc[template.id] = template.name;
+            return acc;
+          }, {} as Record<string, string>);
+        }
+      }
 
       const entries: AccountingEntry[] = [];
       let total = 0;
@@ -138,7 +156,7 @@ export const useAccountingData = () => {
               stipend: stipendAmount,
               status: contract.status,
               templateId: contract.template_id,
-              templateName: contract.contract_templates?.name
+              templateName: contract.template_id ? templatesMap[contract.template_id] : undefined
             });
             
             total += stipendAmount;
