@@ -208,6 +208,10 @@ const handler = async (req: Request): Promise<Response> => {
          </div>`
       : '';
 
+    const resendNoticeText = isResend 
+      ? `📧 This is a resend of the contract signing request.\n\n`
+      : '';
+
     console.log("=== PREPARING EMAIL ===");
     console.log("Email subject:", emailSubject);
     console.log("Sending to:", cleanRecipientEmail);
@@ -220,7 +224,33 @@ const handler = async (req: Request): Promise<Response> => {
     }
     console.log("✅ Resend API key found");
 
-    // Send email - simplified template
+    // Create plain text version
+    const plainTextContent = `
+Contract Signature Required
+
+Hello ${recipientName || cleanRecipientEmail.split('@')[0]},
+
+${resendNoticeText}You have been requested to review and sign the following contract:
+
+Contract: ${contractTitle}
+Contract ID: ${contractId.substring(0, 8)}...
+
+${customMessage ? `Message:\n${customMessage}\n\n` : ''}Review and Sign Contract:
+${contractUrl}
+
+If the link doesn't work, copy and paste this URL into your browser:
+${contractUrl}
+
+${autoEnrollMessage || ''}
+
+Questions? Contact us at admin@contract.gleeworld.org
+
+---
+GleeWorld Contract Management
+contract.gleeworld.org
+    `.trim();
+
+    // Send email - with both HTML and plain text versions
     console.log("=== SENDING EMAIL VIA RESEND ===");
     const emailResponse = await resend.emails.send({
       from: "GleeWorld Contracts <admin@contract.gleeworld.org>",
@@ -297,6 +327,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
         </div>
       `,
+      text: plainTextContent,
     });
 
     console.log("=== EMAIL SEND RESULT ===");
