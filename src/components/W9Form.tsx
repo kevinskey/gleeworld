@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface W9FormProps {
   onSuccess?: () => void;
@@ -31,6 +32,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { displayName } = useUserProfile(user);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
@@ -81,8 +83,9 @@ TIN: ${formData.tin}
 Certified: ${formData.certification ? 'Yes' : 'No'}
       `;
 
-      // Generate unique file path
-      const fileName = `w9-${user.id}-${Date.now()}.txt`;
+      // Generate unique file path with username
+      const sanitizedDisplayName = displayName.replace(/[^a-zA-Z0-9]/g, '_');
+      const fileName = `w9-${user.id}-${Date.now()}-${sanitizedDisplayName}.txt`;
       
       // Upload to storage
       const { error: uploadError } = await supabase.storage
