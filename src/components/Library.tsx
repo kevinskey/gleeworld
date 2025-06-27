@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +11,7 @@ import { useW9Forms } from "@/hooks/useW9Forms";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { W9PreviewDialog } from "./W9PreviewDialog";
+import { ContractViewer } from "./ContractViewer";
 
 interface LibraryItem {
   id: string;
@@ -23,6 +23,8 @@ interface LibraryItem {
   created_by?: string;
   user_id?: string;
   storage_path?: string;
+  content?: string;
+  updated_at?: string;
 }
 
 export const Library = () => {
@@ -30,6 +32,8 @@ export const Library = () => {
   const [selectedType, setSelectedType] = useState<string>("all");
   const [previewForm, setPreviewForm] = useState<any>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedContract, setSelectedContract] = useState<any>(null);
+  const [contractViewerOpen, setContractViewerOpen] = useState(false);
   const navigate = useNavigate();
   
   const { contracts, loading: contractsLoading } = useContracts();
@@ -51,6 +55,8 @@ export const Library = () => {
       status: contract.status,
       created_at: contract.created_at,
       created_by: contract.created_by,
+      content: contract.content,
+      updated_at: contract.updated_at,
     }));
 
     const templateItems = templates.map(template => ({
@@ -143,6 +149,14 @@ export const Library = () => {
     }
   };
 
+  const handlePreviewContract = (item: LibraryItem) => {
+    const contract = contracts.find(c => c.id === item.id);
+    if (contract) {
+      setSelectedContract(contract);
+      setContractViewerOpen(true);
+    }
+  };
+
   const handleDownloadW9 = async (item: LibraryItem) => {
     const w9Form = w9Forms.find(form => form.id === item.id);
     if (w9Form) {
@@ -160,6 +174,8 @@ export const Library = () => {
     console.log('Viewing item:', item.type, item.id);
     if (item.type === 'w9') {
       handlePreviewW9(item);
+    } else if (item.type === 'contract') {
+      handlePreviewContract(item);
     } else {
       console.log('View action for', item.type, 'not implemented yet');
     }
@@ -315,7 +331,7 @@ export const Library = () => {
                           size="sm"
                           onClick={() => handleViewItem(item)}
                           className="text-white/70 hover:text-white hover:bg-white/10"
-                          title={item.type === 'w9' ? "Preview W9" : "View/Download"}
+                          title={item.type === 'w9' ? "Preview W9" : item.type === 'contract' ? "Preview Contract" : "View/Download"}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -382,6 +398,12 @@ export const Library = () => {
             handleDownloadW9({ id: previewForm.id, type: 'w9' } as LibraryItem);
           }
         }}
+      />
+
+      <ContractViewer 
+        contract={selectedContract}
+        open={contractViewerOpen}
+        onOpenChange={setContractViewerOpen}
       />
     </div>
   );
