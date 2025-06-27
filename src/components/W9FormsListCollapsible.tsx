@@ -1,14 +1,14 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download, Plus, Trash2, ChevronDown } from "lucide-react";
+import { FileText, Download, Plus, Trash2, ChevronDown, Eye } from "lucide-react";
 import { useW9Forms } from "@/hooks/useW9Forms";
 import { useNavigate } from "react-router-dom";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { W9PreviewDialog } from "./W9PreviewDialog";
 
 export const W9FormsListCollapsible = () => {
   const { w9Forms, loading, error, downloadW9Form, deleteW9Form } = useW9Forms();
@@ -16,6 +16,8 @@ export const W9FormsListCollapsible = () => {
   const { toast } = useToast();
   const [deletingFormId, setDeletingFormId] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [previewForm, setPreviewForm] = useState<any>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   // Debug logging to see what forms we have
   useEffect(() => {
@@ -26,6 +28,11 @@ export const W9FormsListCollapsible = () => {
       error
     });
   }, [w9Forms, loading, error]);
+
+  const handlePreview = (form: any) => {
+    setPreviewForm(form);
+    setShowPreview(true);
+  };
 
   const handleDownload = async (form: any) => {
     try {
@@ -171,7 +178,18 @@ export const W9FormsListCollapsible = () => {
                           <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => handlePreview(form)}
+                            title="Preview Form"
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            Preview
+                          </Button>
+                          
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => handleDownload(form)}
+                            title="Download PDF"
                           >
                             <Download className="h-4 w-4 mr-2" />
                             Download
@@ -218,6 +236,17 @@ export const W9FormsListCollapsible = () => {
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
+
+      <W9PreviewDialog
+        open={showPreview}
+        onOpenChange={setShowPreview}
+        form={previewForm}
+        onDownload={() => {
+          if (previewForm) {
+            handleDownload(previewForm);
+          }
+        }}
+      />
     </Card>
   );
 };

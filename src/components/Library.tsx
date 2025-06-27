@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,6 +10,7 @@ import { useContractTemplates } from "@/hooks/useContractTemplates";
 import { useW9Forms } from "@/hooks/useW9Forms";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { W9PreviewDialog } from "./W9PreviewDialog";
 
 interface LibraryItem {
   id: string;
@@ -27,6 +27,8 @@ interface LibraryItem {
 export const Library = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
+  const [previewForm, setPreviewForm] = useState<any>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const navigate = useNavigate();
   
   const { contracts, loading: contractsLoading } = useContracts();
@@ -132,6 +134,14 @@ export const Library = () => {
     }
   };
 
+  const handlePreviewW9 = (item: LibraryItem) => {
+    const w9Form = w9Forms.find(form => form.id === item.id);
+    if (w9Form) {
+      setPreviewForm(w9Form);
+      setShowPreview(true);
+    }
+  };
+
   const handleDownloadW9 = async (item: LibraryItem) => {
     const w9Form = w9Forms.find(form => form.id === item.id);
     if (w9Form) {
@@ -147,12 +157,9 @@ export const Library = () => {
 
   const handleViewItem = (item: LibraryItem) => {
     console.log('Viewing item:', item.type, item.id);
-    // Navigate to appropriate view based on item type
     if (item.type === 'w9') {
-      // Could navigate to a W9 view page or download directly
-      handleDownloadW9(item);
+      handlePreviewW9(item);
     } else {
-      // Handle contract/template viewing
       console.log('View action for', item.type, 'not implemented yet');
     }
   };
@@ -160,7 +167,6 @@ export const Library = () => {
   const handleEditItem = (item: LibraryItem) => {
     console.log('Editing item:', item.type, item.id);
     if (item.type === 'w9') {
-      // Navigate to W9 form page for editing
       navigate('/w9-form');
     }
   };
@@ -308,7 +314,7 @@ export const Library = () => {
                           size="sm"
                           onClick={() => handleViewItem(item)}
                           className="text-white/70 hover:text-white hover:bg-white/10"
-                          title="View/Download"
+                          title={item.type === 'w9' ? "Preview W9" : "View/Download"}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -364,7 +370,17 @@ export const Library = () => {
             </Table>
           </div>
         )}
-      </div>
+
+      <W9PreviewDialog
+        open={showPreview}
+        onOpenChange={setShowPreview}
+        form={previewForm}
+        onDownload={() => {
+          if (previewForm) {
+            handleDownloadW9({ id: previewForm.id, type: 'w9' } as LibraryItem);
+          }
+        }}
+      />
     </div>
   );
 };
