@@ -54,7 +54,7 @@ export const ViewTemplateDialog = ({
                 <Label className="font-medium mb-2 block">Template Content:</Label>
                 <div className="border rounded-lg p-6 bg-white min-h-[300px] text-sm leading-relaxed">
                   {template.template_content ? (
-                    <div className="whitespace-pre-wrap break-words">
+                    <div className="whitespace-pre-wrap break-words text-black">
                       {template.template_content}
                     </div>
                   ) : (
