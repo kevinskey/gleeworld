@@ -23,6 +23,14 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Check if Resend API key is available
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      console.error("RESEND_API_KEY environment variable is not set");
+      throw new Error("Email service not configured");
+    }
+    console.log("Resend API key is available:", !!resendApiKey);
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -136,6 +144,8 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
         `;
 
+        console.log(`Attempting to send email to ${targetUser.email}`);
+
         const emailResponse = await resend.emails.send({
           from: "Admin <onboarding@resend.dev>",
           to: [targetUser.email],
@@ -143,14 +153,25 @@ const handler = async (req: Request): Promise<Response> => {
           html: emailContent,
         });
 
-        emailResults.push({
-          userId: targetUser.id,
-          email: targetUser.email,
-          success: true,
-          messageId: emailResponse.data?.id,
-        });
+        console.log(`Resend API response for ${targetUser.email}:`, JSON.stringify(emailResponse));
 
-        console.log(`Email sent to ${targetUser.email}:`, emailResponse.data?.id);
+        if (emailResponse.error) {
+          console.error(`Resend API error for ${targetUser.email}:`, emailResponse.error);
+          emailResults.push({
+            userId: targetUser.id,
+            email: targetUser.email,
+            success: false,
+            error: emailResponse.error.message || 'Unknown Resend API error',
+          });
+        } else {
+          emailResults.push({
+            userId: targetUser.id,
+            email: targetUser.email,
+            success: true,
+            messageId: emailResponse.data?.id,
+          });
+          console.log(`Email successfully sent to ${targetUser.email}, ID: ${emailResponse.data?.id}`);
+        }
 
       } catch (emailError) {
         console.error(`Failed to send email to ${targetUser.email}:`, emailError);
@@ -165,6 +186,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     const successCount = emailResults.filter(r => r.success).length;
     const failureCount = emailResults.filter(r => !r.success).length;
+
+    console.log(`Email sending completed: ${successCount} successful, ${failureCount} failed`);
 
     // Log the bulk email activity
     await supabaseClient.rpc('log_activity', {
