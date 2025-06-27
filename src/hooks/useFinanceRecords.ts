@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +14,7 @@ export const useFinanceRecords = () => {
 
   const fetchRecords = async () => {
     if (!user) {
+      console.log('No user found, clearing records');
       setRecords([]);
       setLoading(false);
       setError(null);
@@ -23,14 +25,20 @@ export const useFinanceRecords = () => {
       setLoading(true);
       setError(null);
       
+      console.log('Fetching finance records for user:', user.id);
+      
       const { data, error: fetchError } = await supabase
         .from('finance_records')
         .select('*')
+        .eq('user_id', user.id)
         .order('date', { ascending: false });
       
       if (fetchError) {
+        console.error('Database error fetching records:', fetchError);
         throw fetchError;
       }
+      
+      console.log('Raw data from database:', data);
       
       // Cast the data to FinanceRecord type since we know the database constraints ensure valid types
       const typedRecords = (data || []).map(record => ({
@@ -38,6 +46,7 @@ export const useFinanceRecords = () => {
         type: record.type as FinanceRecord['type']
       }));
       
+      console.log('Processed finance records:', typedRecords);
       setRecords(typedRecords);
     } catch (err) {
       console.error('Error fetching finance records:', err);
@@ -255,6 +264,7 @@ export const useFinanceRecords = () => {
 
     try {
       setLoading(true);
+      console.log('Starting stipend import for user:', user.id);
 
       // Fetch signed contracts with stipend amounts
       const { data: contractSignatures, error: contractError } = await supabase
@@ -268,12 +278,14 @@ export const useFinanceRecords = () => {
             created_at
           )
         `)
-        .eq('status', 'completed')
-        .not('contracts_v2.content', 'is', null);
+        .eq('status', 'completed');
 
       if (contractError) {
+        console.error('Error fetching contract signatures:', contractError);
         throw contractError;
       }
+
+      console.log('Found contract signatures:', contractSignatures?.length || 0);
 
       // Also fetch from generated_contracts table
       const { data: generatedContracts, error: generatedError } = await supabase
@@ -283,8 +295,11 @@ export const useFinanceRecords = () => {
         .gt('stipend', 0);
 
       if (generatedError) {
+        console.error('Error fetching generated contracts:', generatedError);
         throw generatedError;
       }
+
+      console.log('Found generated contracts with stipends:', generatedContracts?.length || 0);
 
       let importedCount = 0;
       
@@ -293,13 +308,15 @@ export const useFinanceRecords = () => {
         const contract = signature.contracts_v2;
         
         // Extract stipend amount from contract content
-        const content = contract.content;
+        const content = contract.content || '';
         const stipendMatch = content.match(/\$?([\d,]+(?:\.\d{2})?)/);
         
         if (stipendMatch) {
           const stipendAmount = parseFloat(stipendMatch[1].replace(/,/g, ''));
           
           if (stipendAmount > 0) {
+            console.log(`Processing contract ${contract.id} with stipend $${stipendAmount}`);
+            
             // Check if record already exists
             const { data: existingRecord } = await supabase
               .from('finance_records')
@@ -308,10 +325,10 @@ export const useFinanceRecords = () => {
               .eq('type', 'stipend')
               .eq('amount', stipendAmount)
               .eq('description', `Stipend from ${contract.title}`)
-              .single();
+              .maybeSingle();
 
             if (!existingRecord) {
-              await supabase
+              const { error: insertError } = await supabase
                 .from('finance_records')
                 .insert({
                   user_id: user.id,
@@ -325,7 +342,14 @@ export const useFinanceRecords = () => {
                   notes: 'Imported from contract system'
                 });
               
-              importedCount++;
+              if (insertError) {
+                console.error('Error inserting stipend record:', insertError);
+              } else {
+                importedCount++;
+                console.log(`Imported stipend record: $${stipendAmount} from ${contract.title}`);
+              }
+            } else {
+              console.log(`Stipend record already exists for ${contract.title}`);
             }
           }
         }
@@ -334,6 +358,8 @@ export const useFinanceRecords = () => {
       // Process generated contracts
       for (const contract of generatedContracts || []) {
         if (contract.stipend && contract.stipend > 0) {
+          console.log(`Processing generated contract ${contract.id} with stipend $${contract.stipend}`);
+          
           // Check if record already exists
           const { data: existingRecord } = await supabase
             .from('finance_records')
@@ -342,10 +368,10 @@ export const useFinanceRecords = () => {
             .eq('type', 'stipend')
             .eq('amount', contract.stipend)
             .eq('description', `Stipend for ${contract.event_name}`)
-            .single();
+            .maybeSingle();
 
           if (!existingRecord) {
-            await supabase
+            const { error: insertError } = await supabase
               .from('finance_records')
               .insert({
                 user_id: user.id,
@@ -359,10 +385,19 @@ export const useFinanceRecords = () => {
                 notes: 'Imported from contract system'
               });
             
-            importedCount++;
+            if (insertError) {
+              console.error('Error inserting generated contract stipend record:', insertError);
+            } else {
+              importedCount++;
+              console.log(`Imported stipend record: $${contract.stipend} for ${contract.event_name}`);
+            }
+          } else {
+            console.log(`Stipend record already exists for ${contract.event_name}`);
           }
         }
       }
+
+      console.log(`Import completed. Total imported: ${importedCount}`);
 
       if (importedCount > 0) {
         // Recalculate all balances after importing
@@ -453,3 +488,4 @@ export const useFinanceRecords = () => {
     refetch: fetchRecords
   };
 };
+```
