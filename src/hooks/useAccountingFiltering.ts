@@ -61,13 +61,43 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
     return statuses;
   }, [data]);
 
-  // Available templates are all active templates from database
+  // Available templates includes both database templates and contract-derived templates
   const availableTemplates = useMemo(() => {
-    return templates.map(template => ({
+    // Start with templates from database
+    const dbTemplates = templates.map(template => ({
       id: template.id,
       name: template.name
     }));
-  }, [templates]);
+
+    // Add a special option for contracts without templates (null template_id)
+    const contractsWithoutTemplates = data.filter(entry => !entry.templateId);
+    if (contractsWithoutTemplates.length > 0) {
+      // Group by common patterns in contract titles to create virtual template categories
+      const titlePatterns = new Map<string, number>();
+      
+      contractsWithoutTemplates.forEach(entry => {
+        // Extract potential template name from contract title
+        const title = entry.contractTitle.toLowerCase();
+        if (title.includes('syracuse') && title.includes('jazz')) {
+          titlePatterns.set('Syracuse International Jazz Festival', (titlePatterns.get('Syracuse International Jazz Festival') || 0) + 1);
+        } else if (title.includes('festival')) {
+          titlePatterns.set('Festival Contracts', (titlePatterns.get('Festival Contracts') || 0) + 1);
+        } else {
+          titlePatterns.set('Unassigned Contracts', (titlePatterns.get('Unassigned Contracts') || 0) + 1);
+        }
+      });
+
+      // Add virtual templates for contracts without template associations
+      titlePatterns.forEach((count, pattern) => {
+        dbTemplates.push({
+          id: `virtual_${pattern.toLowerCase().replace(/\s+/g, '_')}`,
+          name: `${pattern} (${count} contracts)`
+        });
+      });
+    }
+
+    return dbTemplates;
+  }, [templates, data]);
 
   // Apply filters and sorting
   const filteredAndSortedData = useMemo(() => {
@@ -91,18 +121,37 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
       console.log('After status filter:', filtered.length);
     }
 
-    // Apply template filter - filter by template ID
+    // Apply template filter - handle both real templates and virtual templates
     if (filterByTemplate) {
       console.log('Filtering by template ID:', filterByTemplate);
-      console.log('Sample contract template IDs:', filtered.slice(0, 3).map(c => ({ id: c.id, templateId: c.templateId })));
       
-      filtered = filtered.filter(entry => {
-        const matches = entry.templateId === filterByTemplate;
-        if (matches) {
-          console.log('Contract matches template filter:', entry.contractTitle, 'templateId:', entry.templateId);
-        }
-        return matches;
-      });
+      if (filterByTemplate.startsWith('virtual_')) {
+        // Handle virtual template filtering
+        const templateType = filterByTemplate.replace('virtual_', '').replace(/_/g, ' ');
+        
+        filtered = filtered.filter(entry => {
+          if (entry.templateId) return false; // Skip contracts that have real templates
+          
+          const title = entry.contractTitle.toLowerCase();
+          if (templateType === 'syracuse international jazz festival') {
+            return title.includes('syracuse') && title.includes('jazz');
+          } else if (templateType === 'festival contracts') {
+            return title.includes('festival') && !(title.includes('syracuse') && title.includes('jazz'));
+          } else if (templateType === 'unassigned contracts') {
+            return !title.includes('festival');
+          }
+          return false;
+        });
+      } else {
+        // Handle real template filtering
+        filtered = filtered.filter(entry => {
+          const matches = entry.templateId === filterByTemplate;
+          if (matches) {
+            console.log('Contract matches template filter:', entry.contractTitle, 'templateId:', entry.templateId);
+          }
+          return matches;
+        });
+      }
       console.log('After template filter:', filtered.length);
     }
 
