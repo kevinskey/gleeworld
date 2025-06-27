@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import type { Contract } from "@/hooks/useContracts";
 
 const Index = () => {
-  const { user, signOut, resetAuth } = useAuth();
+  const { user, signOut } = useAuth();
   const { userProfile } = useUserProfile(user);
   const { contracts, loading, error, forceRefresh, deleteContract } = useContracts();
   const [showUpload, setShowUpload] = useState(false);
@@ -83,16 +83,6 @@ const Index = () => {
               >
                 New Contract
               </Button>
-              
-              {isAdmin && (
-                <Button 
-                  onClick={resetAuth}
-                  variant="outline"
-                  className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
-                >
-                  Reset Auth
-                </Button>
-              )}
               
               <Button 
                 onClick={signOut} 
