@@ -6,7 +6,9 @@ import { Calculator, DollarSign, FileText, ArrowLeft, Home, Users, Settings } fr
 import { Link, useNavigate } from "react-router-dom";
 import { AccountingTable } from "@/components/accounting/AccountingTable";
 import { AccountingSummary } from "@/components/accounting/AccountingSummary";
+import { AccountingFilters } from "@/components/accounting/AccountingFilters";
 import { useAccountingData } from "@/hooks/useAccountingData";
+import { useAccountingFiltering } from "@/hooks/useAccountingFiltering";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 
@@ -15,6 +17,26 @@ const Accounting = () => {
   const { user, signOut } = useAuth();
   const { userProfile } = useUserProfile(user);
   const navigate = useNavigate();
+
+  const {
+    filteredAndSortedData,
+    sortBy,
+    sortOrder,
+    filterByStatus,
+    filterByDateRange,
+    searchTerm,
+    availableStatuses,
+    handleSortChange,
+    handleFilterChange
+  } = useAccountingFiltering(accountingData);
+
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      handleSortChange(column, sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      handleSortChange(column, 'desc');
+    }
+  };
 
   if (loading) {
     return (
@@ -105,8 +127,25 @@ const Accounting = () => {
                 contractCount={contractCount}
               />
               
-              <div className="mt-6">
-                <AccountingTable data={accountingData} />
+              <div className="mt-6 space-y-4">
+                <AccountingFilters
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                  filterByStatus={filterByStatus}
+                  filterByDateRange={filterByDateRange}
+                  searchTerm={searchTerm}
+                  onSortChange={handleSortChange}
+                  onFilterChange={handleFilterChange}
+                  availableStatuses={availableStatuses}
+                />
+                
+                <AccountingTable 
+                  data={filteredAndSortedData}
+                  totalCount={accountingData.length}
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
               </div>
             </CardContent>
           </Card>
