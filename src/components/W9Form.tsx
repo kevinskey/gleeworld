@@ -37,6 +37,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
   const { user } = useAuth();
 
   const handleInputChange = (field: string, value: string | boolean) => {
+    console.log('Form field changed:', field, value);
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -44,6 +45,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
   };
 
   const handleSignatureChange = (signature: string | null) => {
+    console.log('Signature changed:', signature ? 'signature provided' : 'signature cleared');
     setFormData(prev => ({
       ...prev,
       signature
@@ -51,6 +53,8 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
   };
 
   const generateW9PDF = async () => {
+    console.log('Starting PDF generation...');
+    
     // Create a new PDF document
     const pdfDoc = await PDFDocument.create();
     const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
@@ -206,13 +210,21 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
       color: rgb(0.5, 0.5, 0.5),
     });
     
+    console.log('PDF generation completed');
     return await pdfDoc.save();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('W9 form submission started');
+    console.log('Form data:', {
+      ...formData,
+      signature: formData.signature ? 'signature provided' : 'no signature'
+    });
     
+    // Validation checks with detailed logging
     if (!formData.certification) {
+      console.log('Validation failed: certification not checked');
       toast({
         title: "Certification Required",
         description: "You must certify the accuracy of the information under penalties of perjury.",
@@ -222,6 +234,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
     }
 
     if (!formData.signature) {
+      console.log('Validation failed: no signature provided');
       toast({
         title: "Signature Required",
         description: "Please provide your signature.",
@@ -232,6 +245,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
 
     // If no authenticated user, require email
     if (!user && !formData.email) {
+      console.log('Validation failed: no email provided for guest user');
       toast({
         title: "Email Required",
         description: "Please provide your email address.",
@@ -240,17 +254,24 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
       return;
     }
 
+    console.log('All validations passed, proceeding with submission');
+
     try {
       setLoading(true);
+      console.log('Loading state set to true');
 
       // Generate PDF with embedded signature
+      console.log('Generating PDF...');
       const pdfBytes = await generateW9PDF();
+      console.log('PDF generated successfully, size:', pdfBytes.length, 'bytes');
       
       // Generate unique file path with proper folder structure for RLS
       const userName = formData.name.replace(/[^a-zA-Z0-9]/g, '_') || 'anonymous';
       const userId = user?.id || 'guest';
       const timestamp = Date.now();
       const fileName = `${userId}/w9-${userName}-${userId}-${timestamp}.pdf`;
+      
+      console.log('Uploading PDF to storage with path:', fileName);
       
       // Upload PDF to storage
       const { error: uploadError } = await supabase.storage
@@ -263,6 +284,8 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
         console.error('Upload error:', uploadError);
         throw uploadError;
       }
+
+      console.log('PDF uploaded successfully, saving to database...');
 
       // Save form record to database
       const { error: dbError } = await supabase
@@ -282,12 +305,15 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
         throw dbError;
       }
 
+      console.log('W9 form saved to database successfully');
+
       toast({
         title: "W9 Form Submitted",
         description: "Your W9 form has been submitted successfully as a PDF.",
       });
 
       if (onSuccess) {
+        console.log('Calling onSuccess callback');
         onSuccess();
       }
 
@@ -299,6 +325,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
         variant: "destructive",
       });
     } finally {
+      console.log('Setting loading state to false');
       setLoading(false);
     }
   };
@@ -478,6 +505,11 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
                 type="submit"
                 disabled={loading || !formData.certification || !formData.signature}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 font-medium"
+                onClick={() => console.log('Submit button clicked - form state:', {
+                  certification: formData.certification,
+                  signature: formData.signature ? 'provided' : 'missing',
+                  loading
+                })}
               >
                 {loading ? "Generating PDF..." : "Submit W9 Form"}
               </Button>
