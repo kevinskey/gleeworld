@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -148,7 +147,7 @@ export const BulkW9EmailDialog = ({ open, onOpenChange, totalUsers }: BulkW9Emai
                   <Checkbox
                     id="exclude-completed"
                     checked={excludeCompleted}
-                    onCheckedChange={setExcludeCompleted}
+                    onCheckedChange={(checked) => setExcludeCompleted(checked === true)}
                   />
                   <Label htmlFor="exclude-completed" className="text-sm">
                     Exclude users who already completed W9 forms
