@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
@@ -157,7 +156,7 @@ const handler = async (req: Request): Promise<Response> => {
         console.log(`Attempting to send email ${emailCount + 1} to ${targetUser.email}`);
 
         const emailResponse = await resend.emails.send({
-          from: "Syracuse International Jazz Festival <onboarding@resend.dev>",
+          from: "Syracuse International Jazz Festival <noreply@contract.gleeworld.org>",
           to: [targetUser.email],
           subject: emailSubject,
           html: emailContent,
