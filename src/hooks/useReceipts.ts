@@ -67,11 +67,21 @@ export const useReceipts = () => {
 
   const createReceipt = async (receiptData: Omit<Receipt, 'id' | 'created_at' | 'updated_at' | 'created_by'>) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to create receipts",
+          variant: "destructive",
+        });
+        return null;
+      }
+
       const { data, error } = await supabase
         .from('receipts')
         .insert([{
           ...receiptData,
-          created_by: (await supabase.auth.getUser()).data.user?.id
+          created_by: user.id
         }])
         .select()
         .single();
@@ -180,17 +190,27 @@ export const useReceipts = () => {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `receipts/${fileName}`;
 
+      // Check if the receipts bucket exists, if not we'll get an error
       const { error: uploadError } = await supabase.storage
         .from('receipts')
         .upload(filePath, file);
 
       if (uploadError) {
         console.error('Error uploading image:', uploadError);
-        toast({
-          title: "Error",
-          description: "Failed to upload receipt image",
-          variant: "destructive",
-        });
+        // If bucket doesn't exist, show a helpful error message
+        if (uploadError.message.includes('bucket')) {
+          toast({
+            title: "Error",
+            description: "Storage bucket not configured. Please contact admin.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to upload receipt image",
+            variant: "destructive",
+          });
+        }
         return null;
       }
 

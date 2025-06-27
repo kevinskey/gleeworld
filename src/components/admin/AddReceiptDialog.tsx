@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useContractTemplates } from "@/hooks/useContractTemplates";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
-import { Upload, X } from "lucide-react";
+import { X } from "lucide-react";
 
 interface AddReceiptDialogProps {
   open: boolean;
@@ -25,7 +24,7 @@ interface Event {
 }
 
 export const AddReceiptDialog = ({ open, onOpenChange, onSubmit, onUploadImage }: AddReceiptDialogProps) => {
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
   const { templates } = useContractTemplates();
   const [events, setEvents] = useState<Event[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -101,31 +100,33 @@ export const AddReceiptDialog = ({ open, onOpenChange, onSubmit, onUploadImage }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="glass-card border-white/20 max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Receipt</DialogTitle>
+          <DialogTitle className="text-white">Add New Receipt</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="receipt_number">Receipt Number</Label>
+              <Label htmlFor="receipt_number" className="text-white/80">Receipt Number</Label>
               <Input
                 id="receipt_number"
                 {...register('receipt_number')}
                 placeholder="Optional receipt number"
+                className="glass-input text-white"
               />
             </div>
 
             <div>
-              <Label htmlFor="vendor_name">Vendor Name *</Label>
+              <Label htmlFor="vendor_name" className="text-white/80">Vendor Name *</Label>
               <Input
                 id="vendor_name"
                 {...register('vendor_name', { required: 'Vendor name is required' })}
                 placeholder="e.g., Office Depot, Amazon"
+                className="glass-input text-white"
               />
               {errors.vendor_name && (
-                <p className="text-sm text-red-600 mt-1">
+                <p className="text-sm text-red-400 mt-1">
                   {typeof errors.vendor_name.message === 'string' ? errors.vendor_name.message : 'Vendor name is required'}
                 </p>
               )}
@@ -133,14 +134,15 @@ export const AddReceiptDialog = ({ open, onOpenChange, onSubmit, onUploadImage }
           </div>
 
           <div>
-            <Label htmlFor="description">Description *</Label>
+            <Label htmlFor="description" className="text-white/80">Description *</Label>
             <Input
               id="description"
               {...register('description', { required: 'Description is required' })}
               placeholder="Brief description of the purchase"
+              className="glass-input text-white"
             />
             {errors.description && (
-              <p className="text-sm text-red-600 mt-1">
+              <p className="text-sm text-red-400 mt-1">
                 {typeof errors.description.message === 'string' ? errors.description.message : 'Description is required'}
               </p>
             )}
@@ -148,7 +150,7 @@ export const AddReceiptDialog = ({ open, onOpenChange, onSubmit, onUploadImage }
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="amount">Amount *</Label>
+              <Label htmlFor="amount" className="text-white/80">Amount *</Label>
               <Input
                 id="amount"
                 type="number"
@@ -158,37 +160,39 @@ export const AddReceiptDialog = ({ open, onOpenChange, onSubmit, onUploadImage }
                   min: { value: 0.01, message: 'Amount must be greater than 0' }
                 })}
                 placeholder="0.00"
+                className="glass-input text-white"
               />
               {errors.amount && (
-                <p className="text-sm text-red-600 mt-1">
+                <p className="text-sm text-red-400 mt-1">
                   {typeof errors.amount.message === 'string' ? errors.amount.message : 'Amount is required'}
                 </p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="purchase_date">Purchase Date *</Label>
+              <Label htmlFor="purchase_date" className="text-white/80">Purchase Date *</Label>
               <Input
                 id="purchase_date"
                 type="date"
                 {...register('purchase_date', { required: 'Purchase date is required' })}
+                className="glass-input text-white"
               />
               {errors.purchase_date && (
-                <p className="text-sm text-red-600 mt-1">
+                <p className="text-sm text-red-400 mt-1">
                   {typeof errors.purchase_date.message === 'string' ? errors.purchase_date.message : 'Purchase date is required'}
                 </p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="category">Category *</Label>
+              <Label htmlFor="category" className="text-white/80">Category *</Label>
               <Select onValueChange={(value) => setValue('category', value)}>
-                <SelectTrigger>
+                <SelectTrigger className="glass-input text-white">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="glass-card border-white/20">
                   {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
+                    <SelectItem key={category} value={category} className="text-white hover:bg-white/10">
                       {category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                     </SelectItem>
                   ))}
@@ -285,10 +289,15 @@ export const AddReceiptDialog = ({ open, onOpenChange, onSubmit, onUploadImage }
                 onOpenChange(false);
               }}
               disabled={submitting}
+              className="glass border-white/20 text-white/80 hover:bg-white/10"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
+            <Button 
+              type="submit" 
+              disabled={submitting}
+              className="glass-button text-white font-medium"
+            >
               {submitting ? 'Adding...' : 'Add Receipt'}
             </Button>
           </div>

@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Receipt } from "lucide-react";
 import { useReceipts } from "@/hooks/useReceipts";
@@ -14,42 +13,40 @@ export const ReceiptsManagement = () => {
 
   if (error) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Receipt className="h-5 w-5" />
-            Receipts Management
-          </CardTitle>
-          <CardDescription>Error loading receipts</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-red-600">{error}</p>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <div className="mb-8 glass-card p-6">
+          <h2 className="text-3xl font-bold text-gradient mb-2">Receipts Management</h2>
+          <p className="text-lg text-white/70">Track and manage purchase receipts for templates and events.</p>
+        </div>
+        
+        <div className="glass-card p-6">
+          <div className="flex items-center space-x-2 mb-4">
+            <Receipt className="h-6 w-6 text-spelman-400" />
+            <h3 className="text-2xl font-semibold text-white">Error Loading Receipts</h3>
+          </div>
+          <p className="text-red-300">{error}</p>
+        </div>
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Receipt className="h-5 w-5" />
-                Receipts Management
-              </CardTitle>
-              <CardDescription>
-                Track and manage purchase receipts for templates and events
-              </CardDescription>
-            </div>
-            <Button onClick={() => setShowAddDialog(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Receipt
-            </Button>
+      <div className="mb-8 glass-card p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold text-gradient mb-2">Receipts Management</h2>
+            <p className="text-lg text-white/70">Track and manage purchase receipts for templates and events.</p>
           </div>
-        </CardHeader>
-      </Card>
+          <Button 
+            onClick={() => setShowAddDialog(true)}
+            className="glass-button text-white font-medium"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Receipt
+          </Button>
+        </div>
+      </div>
 
       <ReceiptsSummary receipts={receipts} loading={loading} />
 

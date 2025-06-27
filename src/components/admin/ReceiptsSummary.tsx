@@ -1,5 +1,4 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, FileText, Calendar, TrendingUp } from "lucide-react";
 
 interface Receipt {
@@ -21,14 +20,12 @@ export const ReceiptsSummary = ({ receipts, loading }: ReceiptsSummaryProps) => 
     return (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <Card key={i}>
-            <CardContent className="p-6">
-              <div className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            </CardContent>
-          </Card>
+          <div key={i} className="glass-card p-6">
+            <div className="animate-pulse">
+              <div className="h-4 bg-white/20 rounded w-3/4 mb-2"></div>
+              <div className="h-8 bg-white/20 rounded w-1/2"></div>
+            </div>
+          </div>
         ))}
       </div>
     );
@@ -56,59 +53,51 @@ export const ReceiptsSummary = ({ receipts, loading }: ReceiptsSummaryProps) => 
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(totalAmount)}</div>
-          <p className="text-xs text-muted-foreground">
-            Across all receipts
-          </p>
-        </CardContent>
-      </Card>
+      <div className="glass-card p-6">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-medium text-white/80">Total Amount</h3>
+          <DollarSign className="h-4 w-4 text-spelman-400" />
+        </div>
+        <div className="text-2xl font-bold text-white">{formatCurrency(totalAmount)}</div>
+        <p className="text-xs text-white/60">
+          Across all receipts
+        </p>
+      </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Receipts</CardTitle>
-          <FileText className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{totalCount}</div>
-          <p className="text-xs text-muted-foreground">
-            {associatedCount} associated with templates/events
-          </p>
-        </CardContent>
-      </Card>
+      <div className="glass-card p-6">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-medium text-white/80">Total Receipts</h3>
+          <FileText className="h-4 w-4 text-spelman-400" />
+        </div>
+        <div className="text-2xl font-bold text-white">{totalCount}</div>
+        <p className="text-xs text-white/60">
+          {associatedCount} associated with templates/events
+        </p>
+      </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">This Month</CardTitle>
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(thisMonthAmount)}</div>
-          <p className="text-xs text-muted-foreground">
-            {thisMonthReceipts.length} receipts
-          </p>
-        </CardContent>
-      </Card>
+      <div className="glass-card p-6">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-medium text-white/80">This Month</h3>
+          <Calendar className="h-4 w-4 text-spelman-400" />
+        </div>
+        <div className="text-2xl font-bold text-white">{formatCurrency(thisMonthAmount)}</div>
+        <p className="text-xs text-white/60">
+          {thisMonthReceipts.length} receipts
+        </p>
+      </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Average Amount</CardTitle>
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {totalCount > 0 ? formatCurrency(totalAmount / totalCount) : '$0.00'}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Per receipt
-          </p>
-        </CardContent>
-      </Card>
+      <div className="glass-card p-6">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-medium text-white/80">Average Amount</h3>
+          <TrendingUp className="h-4 w-4 text-spelman-400" />
+        </div>
+        <div className="text-2xl font-bold text-white">
+          {totalCount > 0 ? formatCurrency(totalAmount / totalCount) : '$0.00'}
+        </div>
+        <p className="text-xs text-white/60">
+          Per receipt
+        </p>
+      </div>
     </div>
   );
 };
