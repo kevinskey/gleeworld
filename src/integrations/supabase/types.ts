@@ -522,6 +522,7 @@ export type Database = {
           id: string
           is_template: boolean
           status: string
+          stipend_amount: number | null
           template_id: string | null
           title: string
           updated_at: string
@@ -534,6 +535,7 @@ export type Database = {
           id?: string
           is_template?: boolean
           status?: string
+          stipend_amount?: number | null
           template_id?: string | null
           title: string
           updated_at?: string
@@ -546,6 +548,7 @@ export type Database = {
           id?: string
           is_template?: boolean
           status?: string
+          stipend_amount?: number | null
           template_id?: string | null
           title?: string
           updated_at?: string

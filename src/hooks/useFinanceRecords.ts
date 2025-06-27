@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -263,6 +264,45 @@ export const useFinanceRecords = () => {
     }
   };
 
+  // Enhanced function to extract stipend from structured data with fallback to text parsing
+  const extractStipendFromContract = (contract: any): number => {
+    // Priority 1: Check for structured stipend_amount in contracts_v2
+    if (contract.stipend_amount && contract.stipend_amount > 0) {
+      console.log(`Found structured stipend amount: $${contract.stipend_amount}`);
+      return Number(contract.stipend_amount);
+    }
+
+    // Priority 2: Fall back to text parsing for legacy contracts
+    const content = contract.content || '';
+    console.log('Falling back to text parsing for contract:', contract.title);
+    
+    // More targeted patterns for stipend extraction
+    const stipendPatterns = [
+      // Look for "stipend of $XXX" or "stipend: $XXX"
+      /stipend\s+(?:of|:)\s*\$\s*([\d,]+(?:\.\d{2})?)/i,
+      // Look for "payment of $XXX" or "payment: $XXX"  
+      /payment\s+(?:of|:)\s*\$\s*([\d,]+(?:\.\d{2})?)/i,
+      // Look for "compensation of $XXX"
+      /compensation\s+(?:of|:)\s*\$\s*([\d,]+(?:\.\d{2})?)/i,
+      // Look for "amount of $XXX"
+      /amount\s+(?:of|:)\s*\$\s*([\d,]+(?:\.\d{2})?)/i
+    ];
+    
+    for (const pattern of stipendPatterns) {
+      const match = content.match(pattern);
+      if (match) {
+        const amount = parseFloat(match[1].replace(/,/g, ''));
+        if (amount >= 50 && amount <= 5000) { // Reasonable stipend range
+          console.log(`Found stipend amount $${amount} using text parsing`);
+          return amount;
+        }
+      }
+    }
+    
+    console.log('No valid stipend amount found');
+    return 0;
+  };
+
   const importStipendRecords = async () => {
     if (!user) {
       toast({
@@ -277,28 +317,7 @@ export const useFinanceRecords = () => {
       setLoading(true);
       console.log('Starting stipend import for user:', user.id);
 
-      // Fetch signed contracts with stipend amounts
-      const { data: contractSignatures, error: contractError } = await supabase
-        .from('contract_signatures_v2')
-        .select(`
-          *,
-          contracts_v2!inner(
-            id,
-            title,
-            content,
-            created_at
-          )
-        `)
-        .eq('status', 'completed');
-
-      if (contractError) {
-        console.error('Error fetching contract signatures:', contractError);
-        throw contractError;
-      }
-
-      console.log('Found contract signatures:', contractSignatures?.length || 0);
-
-      // Also fetch from generated_contracts table
+      // Priority 1: Import from generated_contracts table (has structured stipend field)
       const { data: generatedContracts, error: generatedError } = await supabase
         .from('generated_contracts')
         .select('*')
@@ -313,63 +332,78 @@ export const useFinanceRecords = () => {
       console.log('Found generated contracts with stipends:', generatedContracts?.length || 0);
 
       let importedCount = 0;
-      
-      // Process contract signatures - improved stipend extraction
+
+      // Process generated contracts (structured data - highest priority)
+      for (const contract of generatedContracts || []) {
+        if (contract.stipend && contract.stipend > 0) {
+          console.log(`Processing generated contract ${contract.id} with stipend $${contract.stipend}`);
+          
+          // Check if record already exists
+          const { data: existingRecord } = await supabase
+            .from('finance_records')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('type', 'stipend')
+            .eq('amount', contract.stipend)
+            .eq('description', `Stipend for ${contract.event_name}`)
+            .maybeSingle();
+
+          if (!existingRecord) {
+            const { error: insertError } = await supabase
+              .from('finance_records')
+              .insert({
+                user_id: user.id,
+                date: new Date(contract.created_at).toISOString().split('T')[0],
+                type: 'stipend',
+                category: 'Performance',
+                description: `Stipend for ${contract.event_name}`,
+                amount: Number(contract.stipend),
+                balance: 0, // Will be recalculated
+                reference: `Event Contract ID: ${contract.id}`,
+                notes: 'Imported from contract system'
+              });
+            
+            if (insertError) {
+              console.error('Error inserting generated contract stipend record:', insertError);
+            } else {
+              importedCount++;
+              console.log(`Imported stipend record: $${contract.stipend} for ${contract.event_name}`);
+            }
+          } else {
+            console.log(`Stipend record already exists for ${contract.event_name}`);
+          }
+        }
+      }
+
+      // Priority 2: Import from contracts_v2 with signed contracts (structured and text parsing)
+      const { data: contractSignatures, error: contractError } = await supabase
+        .from('contract_signatures_v2')
+        .select(`
+          *,
+          contracts_v2!inner(
+            id,
+            title,
+            content,
+            stipend_amount,
+            created_at
+          )
+        `)
+        .eq('status', 'completed');
+
+      if (contractError) {
+        console.error('Error fetching contract signatures:', contractError);
+        throw contractError;
+      }
+
+      console.log('Found contract signatures:', contractSignatures?.length || 0);
+
+      // Process contract signatures
       for (const signature of contractSignatures || []) {
         const contract = signature.contracts_v2;
         
-        // Enhanced stipend extraction from contract content
-        const content = contract.content || '';
-        console.log('Processing contract content for stipend extraction:', contract.title);
-        console.log('Contract content preview:', content.substring(0, 500));
+        console.log('Processing contract for stipend extraction:', contract.title);
         
-        // More specific patterns that look for actual stipend/payment amounts
-        const stipendPatterns = [
-          // Look for "stipend of $XXX" or "stipend: $XXX"
-          /stipend\s+(?:of|:)\s*\$\s*([\d,]+(?:\.\d{2})?)/i,
-          // Look for "payment of $XXX" or "payment: $XXX"  
-          /payment\s+(?:of|:)\s*\$\s*([\d,]+(?:\.\d{2})?)/i,
-          // Look for "compensation of $XXX"
-          /compensation\s+(?:of|:)\s*\$\s*([\d,]+(?:\.\d{2})?)/i,
-          // Look for "amount of $XXX"
-          /amount\s+(?:of|:)\s*\$\s*([\d,]+(?:\.\d{2})?)/i,
-          // Look for standalone dollar amounts that are likely stipends (between $50-$2000)
-          /\$\s*((?:[1-9]\d{2}|[1-2]\d{3})(?:\.\d{2})?)\b/g
-        ];
-        
-        let stipendAmount = 0;
-        const foundAmounts = [];
-        
-        for (const pattern of stipendPatterns) {
-          const matches = content.match(pattern);
-          if (matches) {
-            if (pattern.global) {
-              // For global patterns, find all matches
-              let match;
-              const globalPattern = new RegExp(pattern.source, pattern.flags);
-              while ((match = globalPattern.exec(content)) !== null) {
-                const amount = parseFloat(match[1].replace(/,/g, ''));
-                if (amount >= 50 && amount <= 2000) { // Reasonable stipend range
-                  foundAmounts.push(amount);
-                }
-              }
-            } else {
-              const extractedAmount = parseFloat(matches[1].replace(/,/g, ''));
-              if (extractedAmount >= 50 && extractedAmount <= 2000) { // Reasonable stipend range
-                foundAmounts.push(extractedAmount);
-                stipendAmount = extractedAmount;
-                console.log(`Found stipend amount $${stipendAmount} using pattern: ${pattern}`);
-                break;
-              }
-            }
-          }
-        }
-        
-        // If we found multiple amounts from global pattern, pick the largest reasonable one
-        if (foundAmounts.length > 0 && stipendAmount === 0) {
-          stipendAmount = Math.max(...foundAmounts);
-          console.log(`Selected stipend amount $${stipendAmount} from found amounts:`, foundAmounts);
-        }
+        const stipendAmount = extractStipendFromContract(contract);
         
         if (stipendAmount > 0) {
           console.log(`Processing contract ${contract.id} with stipend $${stipendAmount}`);
@@ -410,49 +444,6 @@ export const useFinanceRecords = () => {
           }
         } else {
           console.log(`No valid stipend amount found in contract: ${contract.title}`);
-          console.log('Found amounts that were filtered out:', foundAmounts);
-        }
-      }
-
-      // Process generated contracts (these have explicit stipend amounts)
-      for (const contract of generatedContracts || []) {
-        if (contract.stipend && contract.stipend > 0) {
-          console.log(`Processing generated contract ${contract.id} with stipend $${contract.stipend}`);
-          
-          // Check if record already exists
-          const { data: existingRecord } = await supabase
-            .from('finance_records')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('type', 'stipend')
-            .eq('amount', contract.stipend)
-            .eq('description', `Stipend for ${contract.event_name}`)
-            .maybeSingle();
-
-          if (!existingRecord) {
-            const { error: insertError } = await supabase
-              .from('finance_records')
-              .insert({
-                user_id: user.id,
-                date: new Date(contract.created_at).toISOString().split('T')[0],
-                type: 'stipend',
-                category: 'Performance',
-                description: `Stipend for ${contract.event_name}`,
-                amount: Number(contract.stipend),
-                balance: 0, // Will be recalculated
-                reference: `Event Contract ID: ${contract.id}`,
-                notes: 'Imported from contract system'
-              });
-            
-            if (insertError) {
-              console.error('Error inserting generated contract stipend record:', insertError);
-            } else {
-              importedCount++;
-              console.log(`Imported stipend record: $${contract.stipend} for ${contract.event_name}`);
-            }
-          } else {
-            console.log(`Stipend record already exists for ${contract.event_name}`);
-          }
         }
       }
 

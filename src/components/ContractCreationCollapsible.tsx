@@ -13,6 +13,12 @@ interface ContractCreationCollapsibleProps {
 export const ContractCreationCollapsible = ({ onContractCreated }: ContractCreationCollapsibleProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
+  const handleContractCreated = () => {
+    if (onContractCreated) {
+      onContractCreated();
+    }
+  };
+
   return (
     <Card className="border-brand-300/40 shadow-lg">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -37,7 +43,7 @@ export const ContractCreationCollapsible = ({ onContractCreated }: ContractCreat
         
         <CollapsibleContent>
           <CardContent className="pt-0">
-            <DocumentUpload onContractCreated={onContractCreated} />
+            <DocumentUpload onContractCreated={handleContractCreated} />
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
