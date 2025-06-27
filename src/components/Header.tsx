@@ -82,7 +82,9 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-white">Contract Manager</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-white truncate">
+              Contract Manager
+            </h1>
           </div>
 
           {/* Desktop Navigation */}
@@ -149,13 +151,13 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
           </nav>
 
           {/* User Menu */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 md:space-x-4">
             {/* Mobile Menu Button */}
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden text-white hover:bg-white/20"
+              className="md:hidden text-white hover:bg-white/20 h-10 w-10"
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
@@ -212,8 +214,8 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-white/20">
-            <nav className="flex flex-col space-y-2">
+          <div className="md:hidden border-t border-white/20">
+            <div className="px-2 py-4 space-y-2 max-h-[calc(100vh-4rem)] overflow-y-auto">
               {/* Only show regular navigation items when on user dashboard */}
               {isOnUserDashboard && navigationItems.map((item) => (
                 <Button
@@ -223,19 +225,21 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
                     onTabChange(item.id);
                     setMobileMenuOpen(false);
                   }}
-                  className={`justify-start text-white hover:bg-white/20 ${
+                  className={`w-full justify-start text-white hover:bg-white/20 h-12 ${
                     activeTab === item.id ? 'bg-white/20' : ''
                   }`}
                 >
-                  <item.icon className="h-4 w-4 mr-2" />
-                  {item.label}
+                  <item.icon className="h-5 w-5 mr-3" />
+                  <span className="text-base">{item.label}</span>
                 </Button>
               ))}
 
               {/* Mobile Dashboard Toggle */}
               {isAdmin && (
                 <>
-                  <div className="h-px bg-white/20 my-2" />
+                  {(isOnUserDashboard || !isOnUserDashboard) && (
+                    <div className="h-px bg-white/20 my-3" />
+                  )}
                   {isOnUserDashboard ? (
                     <Button
                       variant="ghost"
@@ -243,10 +247,10 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
                         navigate('/system');
                         setMobileMenuOpen(false);
                       }}
-                      className="justify-start text-white hover:bg-white/20 bg-blue-500/30"
+                      className="w-full justify-start text-white hover:bg-white/20 bg-blue-500/30 h-12"
                     >
-                      <UserCog className="h-4 w-4 mr-2" />
-                      Admin Panel
+                      <UserCog className="h-5 w-5 mr-3" />
+                      <span className="text-base">Admin Panel</span>
                     </Button>
                   ) : (
                     <Button
@@ -255,13 +259,14 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
                         navigate('/dashboard');
                         setMobileMenuOpen(false);
                       }}
-                      className="justify-start text-white hover:bg-white/20 bg-green-500/30"
+                      className="w-full justify-start text-white hover:bg-white/20 bg-green-500/30 h-12"
                     >
-                      <User className="h-4 w-4 mr-2" />
-                      My Dashboard
+                      <User className="h-5 w-5 mr-3" />
+                      <span className="text-base">My Dashboard</span>
                     </Button>
                   )}
 
+                  {/* Mobile Admin Items */}
                   {!isOnUserDashboard && adminItems.map((item) => (
                     <Button
                       key={item.id}
@@ -270,17 +275,17 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
                         navigate(item.route);
                         setMobileMenuOpen(false);
                       }}
-                      className={`justify-start text-white hover:bg-white/20 ${
+                      className={`w-full justify-start text-white hover:bg-white/20 h-12 ${
                         location.pathname === item.route ? 'bg-white/20' : ''
                       }`}
                     >
-                      <item.icon className="h-4 w-4 mr-2" />
-                      {item.label}
+                      <item.icon className="h-5 w-5 mr-3" />
+                      <span className="text-base">{item.label}</span>
                     </Button>
                   ))}
                 </>
               )}
-            </nav>
+            </div>
           </div>
         )}
       </div>
