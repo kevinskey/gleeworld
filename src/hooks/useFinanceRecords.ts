@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,7 +30,8 @@ export const useFinanceRecords = () => {
         .from('finance_records')
         .select('*')
         .eq('user_id', user.id)
-        .order('date', { ascending: false });
+        .order('date', { ascending: false })
+        .order('created_at', { ascending: false });
       
       if (fetchError) {
         console.error('Database error fetching records:', fetchError);
@@ -56,17 +56,15 @@ export const useFinanceRecords = () => {
     }
   };
 
-  const calculateBalance = (existingRecords: FinanceRecord[], newAmount: number, type: string) => {
-    const currentBalance = existingRecords.length > 0 ? existingRecords[0].balance : 0; // Most recent record first
-    
+  const calculateNewBalance = (currentBalance: number, amount: number, type: string): number => {
     switch (type) {
       case 'stipend':
       case 'credit':
-        return currentBalance + newAmount;
+        return currentBalance + amount;
       case 'receipt':
-      case 'payment':
+      case 'payment':  
       case 'debit':
-        return currentBalance - newAmount;
+        return currentBalance - amount;
       default:
         return currentBalance;
     }
@@ -83,7 +81,18 @@ export const useFinanceRecords = () => {
     }
 
     try {
-      const newBalance = calculateBalance(records, recordData.amount, recordData.type);
+      // Get the current balance (most recent record)
+      const { data: latestRecord } = await supabase
+        .from('finance_records')
+        .select('balance')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const currentBalance = latestRecord?.balance || 0;
+      const newBalance = calculateNewBalance(currentBalance, recordData.amount, recordData.type);
 
       const { data, error } = await supabase
         .from('finance_records')
@@ -105,8 +114,7 @@ export const useFinanceRecords = () => {
         type: data.type as FinanceRecord['type']
       };
 
-      // Recalculate all balances for records after this one
-      await recalculateBalances();
+      await fetchRecords();
       
       toast({
         title: "Success",
@@ -139,7 +147,8 @@ export const useFinanceRecords = () => {
       const { error } = await supabase
         .from('finance_records')
         .update(updates)
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id);
 
       if (error) {
         throw error;
@@ -183,7 +192,8 @@ export const useFinanceRecords = () => {
       const { error } = await supabase
         .from('finance_records')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id);
 
       if (error) {
         throw error;
@@ -212,7 +222,9 @@ export const useFinanceRecords = () => {
     if (!user) return;
 
     try {
-      // Fetch all records ordered by date (oldest first)
+      console.log('Starting balance recalculation for user:', user.id);
+      
+      // Fetch all records ordered by date (oldest first), then by creation time for same dates
       const { data: allRecords, error } = await supabase
         .from('finance_records')
         .select('*')
@@ -222,20 +234,16 @@ export const useFinanceRecords = () => {
 
       if (error) throw error;
 
+      console.log('Records to recalculate:', allRecords?.length || 0);
+
       let runningBalance = 0;
-      const updatedRecords = allRecords?.map(record => {
-        switch (record.type) {
-          case 'stipend':
-          case 'credit':
-            runningBalance += Number(record.amount);
-            break;
-          case 'receipt':
-          case 'payment':
-          case 'debit':
-            runningBalance -= Number(record.amount);
-            break;
-        }
-        return { ...record, balance: runningBalance };
+      const updatedRecords = allRecords?.map((record, index) => {
+        const newBalance = calculateNewBalance(runningBalance, Number(record.amount), record.type);
+        runningBalance = newBalance;
+        
+        console.log(`Record ${index + 1}: ${record.type} $${record.amount} -> Balance: $${newBalance}`);
+        
+        return { ...record, balance: newBalance };
       }) || [];
 
       // Update all records with new balances
@@ -246,6 +254,8 @@ export const useFinanceRecords = () => {
           .eq('id', record.id);
       }
 
+      console.log('Balance recalculation completed');
+      
       // Refresh the display
       await fetchRecords();
     } catch (err) {
