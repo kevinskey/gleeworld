@@ -253,8 +253,9 @@ contract.gleeworld.org
     // Send email - with both HTML and plain text versions
     console.log("=== SENDING EMAIL VIA RESEND ===");
     const emailResponse = await resend.emails.send({
-      from: "GleeWorld Contracts <admin@contract.gleeworld.org>",
+      from: "GleeWorld Contract System <noreply@contract.gleeworld.org>",
       to: [cleanRecipientEmail],
+      reply_to: "admin@contract.gleeworld.org",
       subject: emailSubject,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
