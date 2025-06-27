@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -285,80 +284,104 @@ export const useFinanceRecords = () => {
     try {
       setLoading(true);
 
-      // Step 1: Clear ALL existing finance records
+      // Clear existing records first
       await clearAllRecords();
 
       let importedCount = 0;
 
-      // Step 2: Import from contracts_v2 with structured stipend_amount
-      const { data: contractsV2, error: contractsV2Error } = await supabase
+      // Query ALL contracts_v2 to see what's available
+      console.log('Querying contracts_v2 table...');
+      const { data: allContractsV2, error: allContractsV2Error } = await supabase
         .from('contracts_v2')
-        .select('*')
-        .not('stipend_amount', 'is', null)
-        .gt('stipend_amount', 0);
+        .select('*');
 
-      if (contractsV2Error) {
-        throw contractsV2Error;
+      if (allContractsV2Error) {
+        console.error('Error querying contracts_v2:', allContractsV2Error);
+        throw allContractsV2Error;
       }
 
-      for (const contract of contractsV2 || []) {
-        if (contract.stipend_amount && contract.stipend_amount > 0) {
-          const recordDate = new Date(contract.created_at).toISOString().split('T')[0];
+      console.log(`Found ${allContractsV2?.length || 0} total contracts in contracts_v2:`, allContractsV2);
 
-          const { error: insertError } = await supabase
-            .from('finance_records')
-            .insert({
-              user_id: user.id,
-              date: recordDate,
-              type: 'stipend',
-              category: 'Performance',
-              description: `Stipend from ${contract.title}`,
-              amount: Number(contract.stipend_amount),
-              balance: 0, // Will be recalculated
-              reference: `Contract ID: ${contract.id}`,
-              notes: 'Imported from contract system'
-            });
-          
-          if (!insertError) {
-            importedCount++;
-          }
+      // Filter for contracts with stipend amounts
+      const contractsWithStipends = allContractsV2?.filter(contract => 
+        contract.stipend_amount && contract.stipend_amount > 0
+      ) || [];
+
+      console.log(`Found ${contractsWithStipends.length} contracts with stipend amounts:`, contractsWithStipends);
+
+      // Import from contracts_v2
+      for (const contract of contractsWithStipends) {
+        console.log('Processing contract:', contract);
+        const recordDate = new Date(contract.created_at).toISOString().split('T')[0];
+
+        const { error: insertError } = await supabase
+          .from('finance_records')
+          .insert({
+            user_id: user.id,
+            date: recordDate,
+            type: 'stipend',
+            category: 'Performance',
+            description: `Stipend from ${contract.title}`,
+            amount: Number(contract.stipend_amount),
+            balance: 0,
+            reference: `Contract ID: ${contract.id}`,
+            notes: 'Imported from contract system'
+          });
+        
+        if (!insertError) {
+          importedCount++;
+          console.log('Successfully imported contract stipend:', contract.id);
+        } else {
+          console.error('Error inserting contract stipend:', insertError);
         }
       }
 
-      // Step 3: Import from generated_contracts with structured stipend data
-      const { data: generatedContracts, error: generatedError } = await supabase
+      // Query ALL generated_contracts to see what's available
+      console.log('Querying generated_contracts table...');
+      const { data: allGeneratedContracts, error: allGeneratedError } = await supabase
         .from('generated_contracts')
-        .select('*')
-        .not('stipend', 'is', null)
-        .gt('stipend', 0);
+        .select('*');
 
-      if (generatedError) {
-        throw generatedError;
+      if (allGeneratedError) {
+        console.error('Error querying generated_contracts:', allGeneratedError);
+        throw allGeneratedError;
       }
 
-      for (const contract of generatedContracts || []) {
-        if (contract.stipend && contract.stipend > 0) {
-          const { error: insertError } = await supabase
-            .from('finance_records')
-            .insert({
-              user_id: user.id,
-              date: new Date(contract.created_at).toISOString().split('T')[0],
-              type: 'stipend',
-              category: 'Performance',
-              description: `Stipend for ${contract.event_name}`,
-              amount: Number(contract.stipend),
-              balance: 0, // Will be recalculated
-              reference: `Generated Contract ID: ${contract.id}`,
-              notes: 'Imported from contract system'
-            });
-          
-          if (!insertError) {
-            importedCount++;
-          }
+      console.log(`Found ${allGeneratedContracts?.length || 0} total generated contracts:`, allGeneratedContracts);
+
+      // Filter for generated contracts with stipends
+      const generatedWithStipends = allGeneratedContracts?.filter(contract => 
+        contract.stipend && contract.stipend > 0
+      ) || [];
+
+      console.log(`Found ${generatedWithStipends.length} generated contracts with stipends:`, generatedWithStipends);
+
+      // Import from generated_contracts
+      for (const contract of generatedWithStipends) {
+        console.log('Processing generated contract:', contract);
+        const { error: insertError } = await supabase
+          .from('finance_records')
+          .insert({
+            user_id: user.id,
+            date: new Date(contract.created_at).toISOString().split('T')[0],
+            type: 'stipend',
+            category: 'Performance',
+            description: `Stipend for ${contract.event_name}`,
+            amount: Number(contract.stipend),
+            balance: 0,
+            reference: `Generated Contract ID: ${contract.id}`,
+            notes: 'Imported from contract system'
+          });
+        
+        if (!insertError) {
+          importedCount++;
+          console.log('Successfully imported generated contract stipend:', contract.id);
+        } else {
+          console.error('Error inserting generated contract stipend:', insertError);
         }
       }
 
-      // Step 4: Recalculate all balances after importing
+      // Recalculate balances
       if (importedCount > 0) {
         await recalculateBalances();
         
@@ -369,11 +392,12 @@ export const useFinanceRecords = () => {
       } else {
         toast({
           title: "No Records Found",
-          description: "No stipend data found in contracts",
+          description: "No stipend data found in contracts. Check console for details.",
         });
       }
       
     } catch (err) {
+      console.error('Import failed:', err);
       toast({
         title: "Import Failed",
         description: "Failed to import stipend records from contracts",
