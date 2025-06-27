@@ -39,59 +39,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         console.log('AuthContext: Initializing auth state...');
         
-        // Set up auth state listener FIRST
+        // Get existing session FIRST
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('AuthContext: Error getting session:', error);
+        } else {
+          console.log('AuthContext: Initial session retrieved:', session?.user?.id || 'no user');
+          if (mountedRef.current) {
+            setSession(session);
+            setUser(session?.user ?? null);
+          }
+        }
+
+        // Set up auth state listener AFTER initial session check
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             console.log('AuthContext: Auth state changed:', event, session?.user?.id || 'no user');
-            console.log('AuthContext: Current pathname:', window.location.pathname);
             
             if (!mountedRef.current) return;
             
+            // Update state immediately for all events
+            setSession(session);
+            setUser(session?.user ?? null);
+            
             if (event === 'SIGNED_OUT') {
               console.log('AuthContext: User signed out, clearing state');
-              setSession(null);
-              setUser(null);
-              setLoading(false);
             } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
               console.log('AuthContext: User signed in/token refreshed');
-              setSession(session);
-              setUser(session?.user ?? null);
-              setLoading(false);
-            } else if (event === 'INITIAL_SESSION') {
-              console.log('AuthContext: Initial session loaded');
-              setSession(session);
-              setUser(session?.user ?? null);
-              setLoading(false);
             }
           }
         );
 
         subscriptionRef.current = subscription;
-
-        // THEN check for existing session
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('AuthContext: Error getting session:', error);
-          if (mountedRef.current) {
-            setSession(null);
-            setUser(null);
-            setLoading(false);
-          }
-          return;
-        }
-        
-        if (mountedRef.current) {
-          console.log('AuthContext: Initial session retrieved:', session?.user?.id || 'no user');
-          setSession(session);
-          setUser(session?.user ?? null);
-          setLoading(false);
-        }
       } catch (error) {
         console.error('AuthContext: Failed to initialize auth:', error);
+      } finally {
         if (mountedRef.current) {
-          setSession(null);
-          setUser(null);
           setLoading(false);
         }
       }
