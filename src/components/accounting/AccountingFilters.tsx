@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -22,7 +21,7 @@ interface AccountingFiltersProps {
     search: string;
   }) => void;
   availableStatuses: string[];
-  availableTemplates: string[];
+  availableTemplates: Array<{ id: string; name: string; }>;
 }
 
 export const AccountingFilters = ({
@@ -140,8 +139,8 @@ export const AccountingFilters = ({
                 <SelectContent>
                   <SelectItem value="all">All templates</SelectItem>
                   {availableTemplates.map((template) => (
-                    <SelectItem key={template} value={template}>
-                      {template}
+                    <SelectItem key={template.id} value={template.id}>
+                      {template.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

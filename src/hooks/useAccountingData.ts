@@ -10,6 +10,8 @@ interface AccountingEntry {
   dateSigned: string;
   stipend: number;
   status: string;
+  templateId?: string;
+  templateName?: string;
 }
 
 export const useAccountingData = () => {
@@ -76,10 +78,13 @@ export const useAccountingData = () => {
       setLoading(true);
       console.log('Fetching contracts for accounting...');
       
-      // Query all contracts that are completed or have signatures
+      // Query all contracts that are completed or have signatures, including template info
       const { data: contracts, error } = await supabase
         .from('contracts_v2')
-        .select('*')
+        .select(`
+          *,
+          contract_templates(name)
+        `)
         .or('status.eq.completed,status.eq.pending_admin_signature')
         .order('updated_at', { ascending: false });
 
@@ -131,7 +136,9 @@ export const useAccountingData = () => {
               contractTitle: contract.title,
               dateSigned,
               stipend: stipendAmount,
-              status: contract.status
+              status: contract.status,
+              templateId: contract.template_id,
+              templateName: contract.contract_templates?.name
             });
             
             total += stipendAmount;

@@ -1,5 +1,6 @@
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AccountingEntry {
   id: string;
@@ -8,6 +9,13 @@ interface AccountingEntry {
   dateSigned: string;
   stipend: number;
   status: string;
+  templateId?: string;
+  templateName?: string;
+}
+
+interface Template {
+  id: string;
+  name: string;
 }
 
 export const useAccountingFiltering = (data: AccountingEntry[]) => {
@@ -17,6 +25,41 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
   const [filterByDateRange, setFilterByDateRange] = useState<string>('');
   const [filterByTemplate, setFilterByTemplate] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [templates, setTemplates] = useState<Template[]>([]);
+
+  // Fetch templates used in contracts
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        // Get unique template IDs from contracts that have stipends
+        const templateIds = [...new Set(data
+          .map(entry => entry.templateId)
+          .filter(Boolean)
+        )];
+
+        if (templateIds.length === 0) {
+          setTemplates([]);
+          return;
+        }
+
+        const { data: templatesData, error } = await supabase
+          .from('contract_templates')
+          .select('id, name')
+          .in('id', templateIds);
+
+        if (error) {
+          console.error('Error fetching templates:', error);
+          return;
+        }
+
+        setTemplates(templatesData || []);
+      } catch (error) {
+        console.error('Error fetching templates:', error);
+      }
+    };
+
+    fetchTemplates();
+  }, [data]);
 
   // Extract unique statuses
   const availableStatuses = useMemo(() => {
@@ -27,39 +70,13 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
     return statuses;
   }, [data]);
 
-  // Extract unique templates from contract titles
+  // Available templates are the ones fetched from database
   const availableTemplates = useMemo(() => {
-    const templates = data
-      .map(entry => {
-        // Extract template name from contract title patterns
-        const title = entry.contractTitle;
-        // Common patterns: "Template Name - Artist", "Artist - Template Name", "Template Name Contract"
-        let templateName = title;
-        
-        if (title.includes(' - ')) {
-          const parts = title.split(' - ');
-          // If first part looks like a template (contains "Contract", "Agreement", etc.)
-          if (parts[0].toLowerCase().includes('contract') || 
-              parts[0].toLowerCase().includes('agreement') ||
-              parts[0].toLowerCase().includes('performance')) {
-            templateName = parts[0];
-          } else if (parts[1] && (parts[1].toLowerCase().includes('contract') || 
-                     parts[1].toLowerCase().includes('agreement') ||
-                     parts[1].toLowerCase().includes('performance'))) {
-            templateName = parts[1];
-          }
-        } else if (title.toLowerCase().includes('contract')) {
-          // Extract everything before artist name if possible
-          const contractIndex = title.toLowerCase().indexOf('contract');
-          templateName = title.substring(0, contractIndex + 8).trim();
-        }
-        
-        return templateName;
-      })
-      .filter((template, index, arr) => arr.indexOf(template) === index)
-      .sort();
-    return templates;
-  }, [data]);
+    return templates.map(template => ({
+      id: template.id,
+      name: template.name
+    }));
+  }, [templates]);
 
   // Apply filters and sorting
   const filteredAndSortedData = useMemo(() => {
@@ -78,30 +95,9 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
       filtered = filtered.filter(entry => entry.status === filterByStatus);
     }
 
-    // Apply template filter
+    // Apply template filter - filter by template ID
     if (filterByTemplate) {
-      filtered = filtered.filter(entry => {
-        const title = entry.contractTitle;
-        let templateName = title;
-        
-        if (title.includes(' - ')) {
-          const parts = title.split(' - ');
-          if (parts[0].toLowerCase().includes('contract') || 
-              parts[0].toLowerCase().includes('agreement') ||
-              parts[0].toLowerCase().includes('performance')) {
-            templateName = parts[0];
-          } else if (parts[1] && (parts[1].toLowerCase().includes('contract') || 
-                     parts[1].toLowerCase().includes('agreement') ||
-                     parts[1].toLowerCase().includes('performance'))) {
-            templateName = parts[1];
-          }
-        } else if (title.toLowerCase().includes('contract')) {
-          const contractIndex = title.toLowerCase().indexOf('contract');
-          templateName = title.substring(0, contractIndex + 8).trim();
-        }
-        
-        return templateName === filterByTemplate;
-      });
+      filtered = filtered.filter(entry => entry.templateId === filterByTemplate);
     }
 
     // Apply date range filter
