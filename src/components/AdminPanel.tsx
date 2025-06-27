@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,8 @@ import { ActivityLogs } from "./admin/ActivityLogs";
 import { ContractSignatureFixer } from "./admin/ContractSignatureFixer";
 import { ReceiptsManagement } from "./admin/ReceiptsManagement";
 import { AccountingCardCollapsible } from "./AccountingCardCollapsible";
+import { BulkW9EmailDialog } from "./admin/BulkW9EmailDialog";
+import { Button } from "@/components/ui/button";
 import { useUsers } from "@/hooks/useUsers";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
 import { useAccountingData } from "@/hooks/useAccountingData";
@@ -16,7 +17,7 @@ import { AccountingSummary } from "./accounting/AccountingSummary";
 import { AccountingTable } from "./accounting/AccountingTable";
 import { AccountingFilters } from "./accounting/AccountingFilters";
 import { useAccountingFiltering } from "@/hooks/useAccountingFiltering";
-import { Shield, Users, Settings, FileText, Activity, Receipt, Calculator } from "lucide-react";
+import { Shield, Users, Settings, FileText, Activity, Receipt, Calculator, Mail } from "lucide-react";
 
 interface AdminPanelProps {
   activeTab?: string;
@@ -47,6 +48,8 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
     handleSortChange,
     handleFilterChange
   } = useAccountingFiltering(accountingData);
+
+  const [bulkW9EmailOpen, setBulkW9EmailOpen] = useState(false);
 
   if (!user) {
     return (
@@ -79,11 +82,30 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
     switch (currentTab) {
       case 'overview':
         return (
-          <AdminSummaryStats 
-            users={users}
-            loading={usersLoading}
-            activityLogs={activityLogs}
-          />
+          <>
+            <AdminSummaryStats 
+              users={users}
+              loading={usersLoading}
+              activityLogs={activityLogs}
+            />
+            <div className="mt-6">
+              <div className="glass-card p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-xl font-semibold text-white mb-2">W9 Forms Management</h3>
+                    <p className="text-white/70">Send W9 tax forms to users and track completion</p>
+                  </div>
+                  <Button
+                    onClick={() => setBulkW9EmailOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    Send W9 Forms
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </>
         );
       case 'users':
         return (
@@ -151,11 +173,30 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
         return <SystemSettings />;
       default:
         return (
-          <AdminSummaryStats 
-            users={users}
-            loading={usersLoading}
-            activityLogs={activityLogs}
-          />
+          <>
+            <AdminSummaryStats 
+              users={users}
+              loading={usersLoading}
+              activityLogs={activityLogs}
+            />
+            <div className="mt-6">
+              <div className="glass-card p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-xl font-semibold text-white mb-2">W9 Forms Management</h3>
+                    <p className="text-white/70">Send W9 tax forms to users and track completion</p>
+                  </div>
+                  <Button
+                    onClick={() => setBulkW9EmailOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    Send W9 Forms
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </>
         );
     }
   };
@@ -163,6 +204,12 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
   return (
     <div className="space-y-6">
       {renderContent()}
+      
+      <BulkW9EmailDialog
+        open={bulkW9EmailOpen}
+        onOpenChange={setBulkW9EmailOpen}
+        totalUsers={users.length}
+      />
     </div>
   );
 };
