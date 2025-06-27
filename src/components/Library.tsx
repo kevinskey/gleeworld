@@ -183,7 +183,14 @@ export const Library = () => {
 
   const handleEditItem = (item: LibraryItem) => {
     console.log('Editing item:', item.type, item.id);
-    if (item.type === 'w9') {
+    if (item.type === 'contract') {
+      // Navigate to contract creation page with edit mode
+      navigate(`/?edit-contract=${item.id}`);
+    } else if (item.type === 'template') {
+      // Navigate to templates page with edit mode
+      navigate(`/?edit-template=${item.id}`);
+    } else if (item.type === 'w9') {
+      // Navigate to W9 form page to create a new one (W9s can't be edited once submitted)
       navigate('/w9-form');
     }
   };
@@ -336,6 +343,16 @@ export const Library = () => {
                           <Eye className="h-4 w-4" />
                         </Button>
                         
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditItem(item)}
+                          className="text-white/70 hover:text-white hover:bg-white/10"
+                          title={item.type === 'w9' ? "Create New W9" : `Edit ${item.type}`}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        
                         {item.type === 'w9' && (
                           <>
                             <Button
@@ -346,15 +363,6 @@ export const Library = () => {
                               title="Download W9"
                             >
                               <Download className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditItem(item)}
-                              className="text-white/70 hover:text-white hover:bg-white/10"
-                              title="Create New W9"
-                            >
-                              <Edit className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
