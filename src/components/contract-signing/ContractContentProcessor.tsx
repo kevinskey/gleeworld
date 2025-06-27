@@ -33,34 +33,39 @@ interface EmbeddedSignature {
 
 interface ContractContentProcessorProps {
   contract: Contract;
-  signatureFields: SignatureField[];
-  completedFields: Record<number, string>;
+  signatureFields: SignatureField[] | null | undefined;
+  completedFields: Record<number, string> | null | undefined;
   signatureRecord: any;
   isAdminOrAgentField: (field: SignatureField) => boolean;
   isArtistDateField: (field: SignatureField) => boolean;
   onFieldComplete: (fieldId: number, value: string) => void;
-  embeddedSignatures: EmbeddedSignature[];
+  embeddedSignatures: EmbeddedSignature[] | null | undefined;
+}
+
+// Helper function to safely ensure we always have an array
+function ensureArray<T>(value: T[] | null | undefined): T[] {
+  if (value === null || value === undefined) {
+    return [];
+  }
+  if (!Array.isArray(value)) {
+    console.warn('Expected array but got:', typeof value, value);
+    return [];
+  }
+  return value;
 }
 
 // Helper function to safely find in array
 function safeFindInArray<T>(array: T[] | null | undefined, predicate: (item: T) => boolean): T | null {
-  if (!array || !Array.isArray(array) || array.length === 0) {
+  const safeArray = ensureArray(array);
+  if (safeArray.length === 0) {
     return null;
   }
   try {
-    return array.find(predicate) || null;
+    return safeArray.find(predicate) || null;
   } catch (error) {
     console.error('Error in safeFindInArray:', error);
     return null;
   }
-}
-
-// Helper function to safely check array properties
-function safeArrayCheck<T>(array: T[] | null | undefined): T[] {
-  if (!array || !Array.isArray(array)) {
-    return [];
-  }
-  return array;
 }
 
 export const ContractContentProcessor = ({
@@ -85,22 +90,9 @@ export const ContractContentProcessor = ({
     );
   }
 
-  // Comprehensive null safety with early returns and logging
-  console.log('ContractContentProcessor: Raw props received:', {
-    hasContract: !!contract,
-    signatureFields,
-    signatureFieldsType: typeof signatureFields,
-    signatureFieldsIsArray: Array.isArray(signatureFields),
-    embeddedSignatures,
-    embeddedSignaturesType: typeof embeddedSignatures,
-    embeddedSignaturesIsArray: Array.isArray(embeddedSignatures),
-    completedFields,
-    completedFieldsType: typeof completedFields
-  });
-
   // Ensure all arrays are properly initialized with comprehensive fallbacks
-  const safeSignatureFields = safeArrayCheck(signatureFields);
-  const safeEmbeddedSignatures = safeArrayCheck(embeddedSignatures);
+  const safeSignatureFields = ensureArray(signatureFields);
+  const safeEmbeddedSignatures = ensureArray(embeddedSignatures);
   const safeCompletedFields = (completedFields && typeof completedFields === 'object') ? completedFields : {};
 
   console.log('ContractContentProcessor: Safe props after processing:', {
@@ -138,7 +130,7 @@ export const ContractContentProcessor = ({
     const lines = cleanContent.split('\n');
     const processedLines: (string | JSX.Element)[] = [];
     
-    // Get signatures by type with enhanced null safety and additional validation
+    // Get signatures by type with enhanced null safety
     let artistSignature = null;
     let adminSignature = null;
     
