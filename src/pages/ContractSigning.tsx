@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useContractSigning } from "@/hooks/contract-signing/useContractSigning";
 import { ContractNotFound } from "@/components/contract-signing/ContractNotFound";
 import { ContractContentRenderer } from "@/components/contract-signing/ContractContentRenderer";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail } from "lucide-react";
 
 const ContractSigning = () => {
   const { contractId } = useParams<{ contractId: string }>();
@@ -146,6 +146,22 @@ const ContractSigning = () => {
             getCompletionProgress={getCompletionProgress}
             embeddedSignatures={safeEmbeddedSignatures}
           />
+          
+          {/* Contact Information */}
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <div className="text-center">
+              <p className="text-sm text-gray-600 mb-2">
+                Questions about this contract?
+              </p>
+              <a 
+                href="mailto:contracts@contract.gleeworld.org" 
+                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
+              >
+                <Mail className="h-4 w-4" />
+                contracts@contract.gleeworld.org
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
