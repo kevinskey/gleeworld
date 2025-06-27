@@ -1,6 +1,7 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FileText, LogOut, Settings, User, Receipt, Library } from "lucide-react";
+import { FileText, LogOut, Settings, Receipt, Library, Monitor } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -49,7 +50,16 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
     { id: "dashboard", label: "Dashboard", icon: Settings },
     { id: "library", label: "Library", icon: Library },
     { id: "receipts", label: "Receipts", icon: Receipt },
+    { id: "system", label: "System", icon: Monitor },
   ];
+
+  const handleTabClick = (tabId: string) => {
+    if (tabId === "system") {
+      navigate("/system");
+    } else {
+      onTabChange(tabId);
+    }
+  };
 
   return (
     <header className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
@@ -57,7 +67,7 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-8">
             <h1 className="text-2xl font-bold text-white">
-              GleeWorld <span className="text-spelman-400">Contracts</span>
+              GleeWorld <span className="text-brand-200">Contracts</span>
             </h1>
             
             <nav className="hidden md:flex items-center space-x-1">
@@ -65,11 +75,11 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
                 <Button
                   key={tab.id}
                   variant={activeTab === tab.id ? "default" : "ghost"}
-                  onClick={() => onTabChange(tab.id)}
+                  onClick={() => handleTabClick(tab.id)}
                   className={`
                     flex items-center space-x-2 px-4 py-2 rounded-lg transition-all
                     ${activeTab === tab.id 
-                      ? "bg-spelman-500 text-white shadow-lg" 
+                      ? "bg-brand-400 text-white shadow-lg" 
                       : "text-white/80 hover:text-white hover:bg-white/10"
                     }
                   `}
@@ -82,15 +92,6 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
           </div>
 
           <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white/80 hover:text-white hover:bg-white/10"
-            >
-              <User className="h-4 w-4 mr-2" />
-              Profile
-            </Button>
-            
             <Button
               variant="ghost"
               size="sm"
@@ -110,12 +111,12 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
             <Button
               key={tab.id}
               variant={activeTab === tab.id ? "default" : "ghost"}
-              onClick={() => onTabChange(tab.id)}
+              onClick={() => handleTabClick(tab.id)}
               size="sm"
               className={`
                 flex items-center space-x-2 px-3 py-2 rounded-lg transition-all whitespace-nowrap
                 ${activeTab === tab.id 
-                  ? "bg-spelman-500 text-white shadow-lg" 
+                  ? "bg-brand-400 text-white shadow-lg" 
                   : "text-white/80 hover:text-white hover:bg-white/10"
                 }
               `}

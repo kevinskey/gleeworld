@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import System from "./pages/System";
 import ContractSigning from "./pages/ContractSigning";
 import AdminSigning from "./pages/AdminSigning";
 import ActivityLogs from "./pages/ActivityLogs";
@@ -96,6 +97,14 @@ const App = () => {
               <Route 
                 path="/contract-signing/:contractId" 
                 element={<ContractSigning />} 
+              />
+              <Route 
+                path="/system" 
+                element={
+                  <ProtectedRoute>
+                    <System />
+                  </ProtectedRoute>
+                } 
               />
               <Route 
                 path="/admin-signing" 
