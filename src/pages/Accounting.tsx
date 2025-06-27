@@ -24,8 +24,10 @@ const Accounting = () => {
     sortOrder,
     filterByStatus,
     filterByDateRange,
+    filterByTemplate,
     searchTerm,
     availableStatuses,
+    availableTemplates,
     handleSortChange,
     handleFilterChange
   } = useAccountingFiltering(accountingData);
@@ -133,10 +135,12 @@ const Accounting = () => {
                   sortOrder={sortOrder}
                   filterByStatus={filterByStatus}
                   filterByDateRange={filterByDateRange}
+                  filterByTemplate={filterByTemplate}
                   searchTerm={searchTerm}
                   onSortChange={handleSortChange}
                   onFilterChange={handleFilterChange}
                   availableStatuses={availableStatuses}
+                  availableTemplates={availableTemplates}
                 />
                 
                 <AccountingTable 

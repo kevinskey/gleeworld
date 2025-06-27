@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar, SortAsc, SortDesc, Filter, Search, DollarSign } from "lucide-react";
+import { Calendar, SortAsc, SortDesc, Filter, Search, DollarSign, FileText } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 
@@ -12,14 +12,17 @@ interface AccountingFiltersProps {
   sortOrder: 'asc' | 'desc';
   filterByStatus: string;
   filterByDateRange: string;
+  filterByTemplate: string;
   searchTerm: string;
   onSortChange: (sortBy: string, order: 'asc' | 'desc') => void;
   onFilterChange: (filters: {
     status: string;
     dateRange: string;
+    template: string;
     search: string;
   }) => void;
   availableStatuses: string[];
+  availableTemplates: string[];
 }
 
 export const AccountingFilters = ({
@@ -27,10 +30,12 @@ export const AccountingFilters = ({
   sortOrder,
   filterByStatus,
   filterByDateRange,
+  filterByTemplate,
   searchTerm,
   onSortChange,
   onFilterChange,
-  availableStatuses
+  availableStatuses,
+  availableTemplates
 }: AccountingFiltersProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -46,6 +51,7 @@ export const AccountingFilters = ({
     const newFilters = {
       status: filterByStatus,
       dateRange: filterByDateRange,
+      template: filterByTemplate,
       search: searchTerm,
       [key]: value === 'all' ? '' : value
     };
@@ -53,7 +59,7 @@ export const AccountingFilters = ({
   };
 
   const clearFilters = () => {
-    onFilterChange({ status: '', dateRange: '', search: '' });
+    onFilterChange({ status: '', dateRange: '', template: '', search: '' });
   };
 
   return (
@@ -109,7 +115,7 @@ export const AccountingFilters = ({
 
       <CollapsibleContent>
         <div className="bg-gray-50 p-4 rounded-lg space-y-4 mb-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="search-filter">Search</Label>
               <div className="relative">
@@ -123,6 +129,23 @@ export const AccountingFilters = ({
                   className="pl-10"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="template-filter">Filter by Template</Label>
+              <Select value={filterByTemplate || 'all'} onValueChange={(value) => handleFilterChange('template', value)}>
+                <SelectTrigger id="template-filter">
+                  <SelectValue placeholder="All templates" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All templates</SelectItem>
+                  {availableTemplates.map((template) => (
+                    <SelectItem key={template} value={template}>
+                      {template}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

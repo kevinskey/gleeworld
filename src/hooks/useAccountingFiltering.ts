@@ -15,6 +15,7 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filterByStatus, setFilterByStatus] = useState<string>('');
   const [filterByDateRange, setFilterByDateRange] = useState<string>('');
+  const [filterByTemplate, setFilterByTemplate] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   // Extract unique statuses
@@ -24,6 +25,40 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
       .filter((status, index, arr) => arr.indexOf(status) === index)
       .sort();
     return statuses;
+  }, [data]);
+
+  // Extract unique templates from contract titles
+  const availableTemplates = useMemo(() => {
+    const templates = data
+      .map(entry => {
+        // Extract template name from contract title patterns
+        const title = entry.contractTitle;
+        // Common patterns: "Template Name - Artist", "Artist - Template Name", "Template Name Contract"
+        let templateName = title;
+        
+        if (title.includes(' - ')) {
+          const parts = title.split(' - ');
+          // If first part looks like a template (contains "Contract", "Agreement", etc.)
+          if (parts[0].toLowerCase().includes('contract') || 
+              parts[0].toLowerCase().includes('agreement') ||
+              parts[0].toLowerCase().includes('performance')) {
+            templateName = parts[0];
+          } else if (parts[1] && (parts[1].toLowerCase().includes('contract') || 
+                     parts[1].toLowerCase().includes('agreement') ||
+                     parts[1].toLowerCase().includes('performance'))) {
+            templateName = parts[1];
+          }
+        } else if (title.toLowerCase().includes('contract')) {
+          // Extract everything before artist name if possible
+          const contractIndex = title.toLowerCase().indexOf('contract');
+          templateName = title.substring(0, contractIndex + 8).trim();
+        }
+        
+        return templateName;
+      })
+      .filter((template, index, arr) => arr.indexOf(template) === index)
+      .sort();
+    return templates;
   }, [data]);
 
   // Apply filters and sorting
@@ -41,6 +76,32 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
     // Apply status filter
     if (filterByStatus) {
       filtered = filtered.filter(entry => entry.status === filterByStatus);
+    }
+
+    // Apply template filter
+    if (filterByTemplate) {
+      filtered = filtered.filter(entry => {
+        const title = entry.contractTitle;
+        let templateName = title;
+        
+        if (title.includes(' - ')) {
+          const parts = title.split(' - ');
+          if (parts[0].toLowerCase().includes('contract') || 
+              parts[0].toLowerCase().includes('agreement') ||
+              parts[0].toLowerCase().includes('performance')) {
+            templateName = parts[0];
+          } else if (parts[1] && (parts[1].toLowerCase().includes('contract') || 
+                     parts[1].toLowerCase().includes('agreement') ||
+                     parts[1].toLowerCase().includes('performance'))) {
+            templateName = parts[1];
+          }
+        } else if (title.toLowerCase().includes('contract')) {
+          const contractIndex = title.toLowerCase().indexOf('contract');
+          templateName = title.substring(0, contractIndex + 8).trim();
+        }
+        
+        return templateName === filterByTemplate;
+      });
     }
 
     // Apply date range filter
@@ -105,7 +166,7 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
     });
 
     return filtered;
-  }, [data, sortBy, sortOrder, filterByStatus, filterByDateRange, searchTerm]);
+  }, [data, sortBy, sortOrder, filterByStatus, filterByDateRange, filterByTemplate, searchTerm]);
 
   const handleSortChange = (newSortBy: string, newSortOrder: 'asc' | 'desc') => {
     setSortBy(newSortBy);
@@ -115,10 +176,12 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
   const handleFilterChange = (filters: {
     status: string;
     dateRange: string;
+    template: string;
     search: string;
   }) => {
     setFilterByStatus(filters.status);
     setFilterByDateRange(filters.dateRange);
+    setFilterByTemplate(filters.template);
     setSearchTerm(filters.search);
   };
 
@@ -128,8 +191,10 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
     sortOrder,
     filterByStatus,
     filterByDateRange,
+    filterByTemplate,
     searchTerm,
     availableStatuses,
+    availableTemplates,
     handleSortChange,
     handleFilterChange
   };
