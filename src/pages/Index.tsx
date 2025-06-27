@@ -6,7 +6,6 @@ import { ContractCreationCollapsible } from "@/components/ContractCreationCollap
 import { ContractTemplatesCollapsible } from "@/components/ContractTemplatesCollapsible";
 import { RecentContractsTemplatesCollapsible } from "@/components/RecentContractsTemplatesCollapsible";
 import { W9FormsListCollapsible } from "@/components/W9FormsListCollapsible";
-import { AdminPanelCollapsible } from "@/components/AdminPanelCollapsible";
 import { AccountingCardCollapsible } from "@/components/AccountingCardCollapsible";
 import { Library } from "@/components/Library";
 import { ReceiptsManagement } from "@/components/admin/ReceiptsManagement";
@@ -83,9 +82,6 @@ const Index = () => {
                 <W9FormsListCollapsible />
               </div>
               <div className="space-y-6">
-                <div className="h-1/2">
-                  <AdminPanelCollapsible />
-                </div>
                 <AccountingCardCollapsible />
               </div>
             </div>
