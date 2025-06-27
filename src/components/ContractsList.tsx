@@ -39,7 +39,7 @@ export const ContractsList = ({
   const [selectedContracts, setSelectedContracts] = useState<Set<string>>(new Set());
   const [sendDialogContract, setSendDialogContract] = useState<Contract | null>(null);
   const [isResendMode, setIsResendMode] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true); // Changed from false to true to open by default
   
   const { contractSendHistory, reloadSendHistory } = useContractSendHistory(contracts);
   const { lastRecipient, loading: lastRecipientLoading } = useLastRecipient(
