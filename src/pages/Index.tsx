@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { Header } from "@/components/Header";
 import { StatsCards } from "@/components/StatsCards";
-import { ContractsList } from "@/components/ContractsList";
 import { ContractCreationCollapsible } from "@/components/ContractCreationCollapsible";
 import { ContractTemplatesCollapsible } from "@/components/ContractTemplatesCollapsible";
 import { RecentContractsTemplatesCollapsible } from "@/components/RecentContractsTemplatesCollapsible";
@@ -36,15 +35,6 @@ const Index = () => {
     if (contract) {
       handleViewContract(contract);
     }
-  };
-
-  const handleDeleteContract = async (contractId: string) => {
-    await deleteContract(contractId);
-  };
-
-  const handleUploadContract = () => {
-    // This would typically open a file upload dialog or navigate to upload page
-    console.log('Upload contract clicked');
   };
 
   const handleUseTemplate = (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => {
@@ -93,15 +83,6 @@ const Index = () => {
                 <W9FormsListCollapsible />
               </div>
               <div className="space-y-6">
-                <ContractsList 
-                  contracts={contracts}
-                  loading={loading}
-                  error={error}
-                  onViewContract={handleViewContract}
-                  onDeleteContract={handleDeleteContract}
-                  onUploadContract={handleUploadContract}
-                  onRetry={refetch}
-                />
                 <AdminPanelCollapsible />
                 <AccountingCardCollapsible />
               </div>
