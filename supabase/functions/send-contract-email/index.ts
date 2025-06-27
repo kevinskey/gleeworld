@@ -23,7 +23,6 @@ interface SendContractRequest {
 const handler = async (req: Request): Promise<Response> => {
   console.log("=== SEND CONTRACT EMAIL FUNCTION STARTED ===");
   console.log("Request method:", req.method);
-  console.log("Request headers:", Object.fromEntries(req.headers.entries()));
 
   if (req.method === "OPTIONS") {
     console.log("Handling CORS preflight request");
@@ -31,7 +30,6 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    console.log("Parsing request body...");
     const requestBody = await req.json();
     console.log("Request body received:", JSON.stringify(requestBody, null, 2));
 
@@ -49,17 +47,25 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Contract ID:", contractId);
     console.log("Recipient Email:", recipientEmail);
     console.log("Recipient Name:", recipientName);
-    console.log("Contract Title:", contractTitle);
     console.log("Is Resend:", isResend);
-    console.log("Custom Message:", customMessage || "None");
 
-    // Validate that we have the required recipient information
+    // Validate required fields
     if (!recipientEmail || recipientEmail.trim() === "") {
       console.error("❌ VALIDATION ERROR: No recipient email provided");
       throw new Error("Recipient email is required");
     }
 
-    // Clean and validate the recipient email
+    if (!contractId || contractId.trim() === "") {
+      console.error("❌ VALIDATION ERROR: No contract ID provided");
+      throw new Error("Contract ID is required");
+    }
+
+    if (!contractTitle || contractTitle.trim() === "") {
+      console.error("❌ VALIDATION ERROR: No contract title provided");
+      throw new Error("Contract title is required");
+    }
+
+    // Clean and validate email
     const cleanRecipientEmail = recipientEmail.trim().toLowerCase();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     
@@ -68,7 +74,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Invalid email format");
     }
 
-    console.log("✅ Email validation passed. Using cleaned email:", cleanRecipientEmail);
+    console.log("✅ Validation passed. Using cleaned email:", cleanRecipientEmail);
 
     // Initialize Supabase client
     console.log("=== INITIALIZING SUPABASE CLIENT ===");
@@ -78,9 +84,11 @@ const handler = async (req: Request): Promise<Response> => {
     );
     console.log("✅ Supabase client initialized");
 
-    // Check if user exists by email
+    // Check if user exists - simplified approach
     console.log("=== CHECKING IF USER EXISTS ===");
-    let existingUser;
+    let existingUser = null;
+    let autoEnrollMessage = "";
+    
     try {
       const { data: userData, error: userCheckError } = await supabase
         .from('profiles')
@@ -88,26 +96,19 @@ const handler = async (req: Request): Promise<Response> => {
         .eq('email', cleanRecipientEmail)
         .maybeSingle();
 
-      if (userCheckError) {
-        console.error("❌ Error checking for existing user:", userCheckError);
-        console.log("Continuing with user check result as null...");
-        existingUser = null;
-      } else {
+      if (!userCheckError && userData) {
         existingUser = userData;
-        console.log("User check result:", existingUser ? "User exists" : "User not found");
-        console.log("User data:", existingUser);
+        console.log("✅ User exists:", userData.id);
+      } else {
+        console.log("User not found, will attempt auto-enrollment");
       }
     } catch (userError) {
-      console.error("❌ Exception during user check:", userError);
-      existingUser = null;
+      console.log("User check failed, continuing without auto-enrollment:", userError);
     }
 
-    let autoEnrollMessage = "";
-    
-    // If user doesn't exist, auto-enroll them
+    // Attempt auto-enrollment if user doesn't exist - but don't fail if it doesn't work
     if (!existingUser) {
-      console.log("=== AUTO-ENROLLING NEW USER ===");
-      console.log("Calling auto-enroll function for:", cleanRecipientEmail);
+      console.log("=== ATTEMPTING AUTO-ENROLLMENT ===");
       
       try {
         const { data: enrollData, error: enrollError } = await supabase.functions.invoke('auto-enroll-user', {
@@ -118,20 +119,47 @@ const handler = async (req: Request): Promise<Response> => {
           }
         });
 
-        if (enrollError) {
-          console.error("❌ Auto-enrollment failed:", enrollError);
-          console.log("Continuing without auto-enrollment...");
+        if (!enrollError && enrollData) {
+          console.log("✅ User auto-enrolled successfully");
+          if (enrollData.tempPassword) {
+            autoEnrollMessage = `\n\nNote: An account has been created for you with email ${cleanRecipientEmail}. Your temporary password is: ${enrollData.tempPassword}\nPlease log in and change your password after signing the contract.`;
+          }
         } else {
-          console.log("✅ User auto-enrolled successfully:", enrollData);
-          autoEnrollMessage = `\n\nNote: An account has been created for you with email ${cleanRecipientEmail}. Your temporary password is: ${enrollData.tempPassword}\nPlease log in and change your password after signing the contract.`;
+          console.log("Auto-enrollment failed, but continuing with email send:", enrollError);
         }
       } catch (enrollException) {
-        console.error("❌ Exception during auto-enrollment:", enrollException);
-        console.log("Continuing without auto-enrollment...");
+        console.log("Auto-enrollment exception, but continuing with email send:", enrollException);
       }
-    } else {
-      console.log("✅ User already exists, skipping auto-enrollment");
     }
+
+    // Store contract recipient record - don't fail if this doesn't work
+    console.log("=== STORING RECIPIENT RECORD ===");
+    try {
+      const { error: recipientError } = await supabase
+        .from('contract_recipients_v2')
+        .insert({
+          contract_id: contractId,
+          recipient_name: recipientName || cleanRecipientEmail.split('@')[0],
+          recipient_email: cleanRecipientEmail,
+          custom_message: customMessage || null,
+          email_status: 'sent',
+          delivery_status: 'delivered',
+          is_resend: isResend,
+          resend_reason: isResend ? 'User requested resend' : null
+        });
+
+      if (recipientError) {
+        console.log("Recipient record storage failed, but continuing:", recipientError);
+      } else {
+        console.log("✅ Recipient record stored successfully");
+      }
+    } catch (recipientException) {
+      console.log("Recipient record exception, but continuing:", recipientException);
+    }
+
+    // Prepare email content
+    const contractUrl = `https://contract.gleeworld.org/contract-signing/${contractId}`;
+    console.log("Contract signing URL:", contractUrl);
 
     // Use default signature fields if none provided
     const defaultSignatureFields = [
@@ -165,68 +193,16 @@ const handler = async (req: Request): Promise<Response> => {
       ? signatureFields 
       : defaultSignatureFields;
 
-    console.log("Using signature fields count:", effectiveSignatureFields.length);
-
-    // Store contract recipient record
-    console.log("=== STORING RECIPIENT RECORD ===");
-    try {
-      const { error: recipientError } = await supabase
-        .from('contract_recipients_v2')
-        .insert({
-          contract_id: contractId,
-          recipient_name: recipientName || cleanRecipientEmail.split('@')[0],
-          recipient_email: cleanRecipientEmail,
-          custom_message: customMessage || null,
-          email_status: 'sent',
-          delivery_status: 'delivered',
-          is_resend: isResend,
-          resend_reason: isResend ? 'User requested resend' : null
-        });
-
-      if (recipientError) {
-        console.error("❌ Error storing recipient record:", recipientError);
-        console.log("Continuing despite recipient record error...");
-      } else {
-        console.log("✅ Recipient record stored successfully");
-      }
-    } catch (recipientException) {
-      console.error("❌ Exception storing recipient record:", recipientException);
-      console.log("Continuing despite recipient record exception...");
-    }
-
-    // Get the contract signing URL - Use the current environment's domain
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-    let contractUrl;
-    
-    // Check if we're in production or development
-    if (supabaseUrl.includes("oopmlreysqjzuxzylyheb")) {
-      // Production environment - use the custom domain
-      contractUrl = `https://contract.gleeworld.org/contract-signing/${contractId}`;
-    } else {
-      // Development environment - use a fallback domain
-      contractUrl = `https://contract.gleeworld.org/contract-signing/${contractId}`;
-    }
-    
-    console.log("Contract signing URL:", contractUrl);
-
-    // Determine if there are signature fields
     const hasSignatureFields = effectiveSignatureFields.length > 0;
-    const signatureFieldsMessage = hasSignatureFields 
-      ? "The contract includes digital signature fields for easy online signing." 
-      : "⚠️ No signature fields found: This contract may require manual review for signing requirements.";
 
-    const signatureFieldsClass = hasSignatureFields ? "info" : "warning";
-    const signatureFieldsBgColor = hasSignatureFields ? "#e3f2fd" : "#fff3e0";
-    const signatureFieldsTextColor = hasSignatureFields ? "#1976d2" : "#f57c00";
-
-    // Update email subject and content for resends
+    // Email subject and content
     const emailSubject = isResend 
       ? `Contract Signature Required (Resent): ${contractTitle}`
       : `Contract Signature Required: ${contractTitle}`;
 
     const resendNotice = isResend 
       ? `<div style="border: 1px solid #ff9800; border-radius: 8px; padding: 15px; margin: 20px 0; background-color: #fff3e0;">
-           <p style="margin: 0; color: #f57c00; font-size: 14px; display: flex; align-items: center;">
+           <p style="margin: 0; color: #f57c00; font-size: 14px;">
              📧 This is a resend of the contract signing request.
            </p>
          </div>`
@@ -236,7 +212,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Email subject:", emailSubject);
     console.log("Sending to:", cleanRecipientEmail);
 
-    // Check if RESEND_API_KEY is available
+    // Check Resend API key
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
       console.error("❌ RESEND_API_KEY not found in environment variables");
@@ -244,112 +220,94 @@ const handler = async (req: Request): Promise<Response> => {
     }
     console.log("✅ Resend API key found");
 
-    // Send email using Resend with the correct domain
+    // Send email - simplified template
     console.log("=== SENDING EMAIL VIA RESEND ===");
-    let emailResponse;
-    try {
-      emailResponse = await resend.emails.send({
-        from: "GleeWorld Contracts <contracts@contract.gleeworld.org>",
-        to: [cleanRecipientEmail],
-        subject: emailSubject,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
-            <!-- Header -->
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center;">
-              <h1 style="margin: 0; font-size: 28px; font-weight: bold;">Contract Signature Required</h1>
-              <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">GleeWorld Contract Management</p>
-            </div>
-            
-            <!-- Main Content -->
-            <div style="padding: 30px; background-color: white;">
-              <p style="font-size: 18px; color: #333; margin-bottom: 20px;">Hello ${recipientName || cleanRecipientEmail.split('@')[0]},</p>
-              
-              <p style="font-size: 16px; color: #666; line-height: 1.6; margin-bottom: 25px;">
-                You have been requested to review and sign the following contract:
-              </p>
-
-              ${resendNotice}
-              
-              <!-- Contract Info Card -->
-              <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin: 25px 0; background-color: #fafafa;">
-                <h2 style="margin: 0 0 10px 0; color: #333; font-size: 20px;">${contractTitle}</h2>
-                <p style="margin: 0; color: #666; font-size: 14px;">Contract ID: ${contractId.substring(0, 8)}...</p>
-              </div>
-
-              <!-- Signature Fields Status -->
-              <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin: 20px 0; background-color: ${signatureFieldsBgColor};">
-                <p style="margin: 0; color: ${signatureFieldsTextColor}; font-size: 14px; display: flex; align-items: center;">
-                  ${hasSignatureFields ? '✓' : '⚠️'} ${signatureFieldsMessage}
-                </p>
-              </div>
-              
-              ${customMessage ? `
-              <div style="border-left: 4px solid #2196f3; padding: 15px; margin: 25px 0; background-color: #f3f8ff;">
-                <h3 style="margin: 0 0 10px 0; color: #333; font-size: 16px;">Custom Message:</h3>
-                <p style="margin: 0; color: #666; font-style: italic; white-space: pre-wrap;">${customMessage}</p>
-              </div>
-              ` : ''}
-              
-              <!-- CTA Button -->
-              <div style="text-align: center; margin: 35px 0;">
-                <a href="${contractUrl}" 
-                   style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                          color: white; 
-                          padding: 15px 30px; 
-                          text-decoration: none; 
-                          border-radius: 8px; 
-                          display: inline-block; 
-                          font-size: 16px; 
-                          font-weight: bold;">
-                  📄 Review and Sign Contract
-                </a>
-              </div>
-
-              <!-- Direct Link for Backup -->
-              <div style="text-align: center; margin: 20px 0; padding: 15px; background-color: #f0f0f0; border-radius: 5px;">
-                <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">If the button above doesn't work, copy and paste this link:</p>
-                <p style="margin: 0; word-break: break-all; font-family: monospace; font-size: 12px; color: #333;">${contractUrl}</p>
-              </div>
-
-              ${autoEnrollMessage ? `
-              <div style="border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin: 20px 0; background-color: #f1f8e9;">
-                <h3 style="margin: 0 0 10px 0; color: #2e7d32; font-size: 16px;">Account Created</h3>
-                <p style="margin: 0; color: #2e7d32; font-size: 14px; white-space: pre-wrap;">${autoEnrollMessage}</p>
-              </div>
-              ` : ''}
-              
-              <p style="color: #999; font-size: 14px; line-height: 1.6; margin-top: 30px;">
-                If you have any questions about this contract, please contact us at contracts@contract.gleeworld.org.
-                This link will remain active until the contract is signed.
-              </p>
-            </div>
-            
-            <!-- Footer -->
-            <div style="background-color: #f5f5f5; padding: 20px; text-align: center; color: #999; font-size: 12px;">
-              <p style="margin: 0;">This email was sent by GleeWorld Contract Management</p>
-              <p style="margin: 5px 0 0 0;">Secure digital contract platform | contract.gleeworld.org</p>
-            </div>
+    const emailResponse = await resend.emails.send({
+      from: "GleeWorld Contracts <contracts@contract.gleeworld.org>",
+      to: [cleanRecipientEmail],
+      subject: emailSubject,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center;">
+            <h1 style="margin: 0; font-size: 28px; font-weight: bold;">Contract Signature Required</h1>
+            <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">GleeWorld Contract Management</p>
           </div>
-        `,
-      });
-      console.log("✅ Resend API call completed");
-    } catch (emailError) {
-      console.error("❌ Error during Resend API call:", emailError);
-      console.error("Email error details:", JSON.stringify(emailError, null, 2));
-      throw new Error(`Email service error: ${emailError.message || 'Unknown email error'}`);
-    }
+          
+          <!-- Main Content -->
+          <div style="padding: 30px; background-color: white;">
+            <p style="font-size: 18px; color: #333; margin-bottom: 20px;">Hello ${recipientName || cleanRecipientEmail.split('@')[0]},</p>
+            
+            <p style="font-size: 16px; color: #666; line-height: 1.6; margin-bottom: 25px;">
+              You have been requested to review and sign the following contract:
+            </p>
+
+            ${resendNotice}
+            
+            <!-- Contract Info -->
+            <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin: 25px 0; background-color: #fafafa;">
+              <h2 style="margin: 0 0 10px 0; color: #333; font-size: 20px;">${contractTitle}</h2>
+              <p style="margin: 0; color: #666; font-size: 14px;">Contract ID: ${contractId.substring(0, 8)}...</p>
+            </div>
+            
+            ${customMessage ? `
+            <div style="border-left: 4px solid #2196f3; padding: 15px; margin: 25px 0; background-color: #f3f8ff;">
+              <h3 style="margin: 0 0 10px 0; color: #333; font-size: 16px;">Message:</h3>
+              <p style="margin: 0; color: #666; white-space: pre-wrap;">${customMessage}</p>
+            </div>
+            ` : ''}
+            
+            <!-- CTA Button -->
+            <div style="text-align: center; margin: 35px 0;">
+              <a href="${contractUrl}" 
+                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                        color: white; 
+                        padding: 15px 30px; 
+                        text-decoration: none; 
+                        border-radius: 8px; 
+                        display: inline-block; 
+                        font-size: 16px; 
+                        font-weight: bold;">
+                📄 Review and Sign Contract
+              </a>
+            </div>
+
+            <!-- Direct Link -->
+            <div style="text-align: center; margin: 20px 0; padding: 15px; background-color: #f0f0f0; border-radius: 5px;">
+              <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">If the button doesn't work, copy this link:</p>
+              <p style="margin: 0; word-break: break-all; font-family: monospace; font-size: 12px; color: #333;">${contractUrl}</p>
+            </div>
+
+            ${autoEnrollMessage ? `
+            <div style="border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin: 20px 0; background-color: #f1f8e9;">
+              <h3 style="margin: 0 0 10px 0; color: #2e7d32; font-size: 16px;">Account Created</h3>
+              <p style="margin: 0; color: #2e7d32; font-size: 14px; white-space: pre-wrap;">${autoEnrollMessage}</p>
+            </div>
+            ` : ''}
+            
+            <p style="color: #999; font-size: 14px; line-height: 1.6; margin-top: 30px;">
+              Questions? Contact us at contracts@contract.gleeworld.org
+            </p>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background-color: #f5f5f5; padding: 20px; text-align: center; color: #999; font-size: 12px;">
+            <p style="margin: 0;">GleeWorld Contract Management</p>
+            <p style="margin: 5px 0 0 0;">contract.gleeworld.org</p>
+          </div>
+        </div>
+      `,
+    });
 
     console.log("=== EMAIL SEND RESULT ===");
     if (emailResponse.error) {
       console.error("❌ Resend API error:", emailResponse.error);
-      console.error("Resend error details:", JSON.stringify(emailResponse.error, null, 2));
       throw new Error(`Email service error: ${emailResponse.error.message || 'Unknown Resend error'}`);
     }
 
     console.log("✅ Email sent successfully!");
     console.log("Email ID:", emailResponse.data?.id);
     console.log("Recipient:", cleanRecipientEmail);
-    console.log("Email response data:", JSON.stringify(emailResponse.data, null, 2));
 
     const responseData = { 
       success: true, 
@@ -375,17 +333,14 @@ const handler = async (req: Request): Promise<Response> => {
 
   } catch (error: any) {
     console.error("=== FUNCTION ERROR ===");
-    console.error("Error type:", typeof error);
     console.error("Error message:", error.message);
     console.error("Error stack:", error.stack);
-    console.error("Full error object:", JSON.stringify(error, null, 2));
     
     return new Response(
       JSON.stringify({ 
         error: error.message,
         details: error.stack,
-        timestamp: new Date().toISOString(),
-        errorType: typeof error
+        timestamp: new Date().toISOString()
       }),
       {
         status: 500,
