@@ -1,15 +1,17 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, CheckCircle, Clock, User, Mail, Shield, Star } from "lucide-react";
 import { useContracts } from "@/hooks/useContracts";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuth } from "@/contexts/AuthContext";
+import { Header } from "@/components/Header";
+import { useState } from "react";
 
 export const System = () => {
   const { contracts, loading } = useContracts();
   const { user } = useAuth();
   const { userProfile, displayName } = useUserProfile(user);
+  const [activeTab, setActiveTab] = useState("system");
 
   // Calculate stats
   const totalContracts = contracts.length;
@@ -18,6 +20,7 @@ export const System = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700">
+      <Header activeTab={activeTab} onTabChange={setActiveTab} />
       <div className="container mx-auto px-4 py-8">
         <div className="space-y-8">
           {/* Header */}
