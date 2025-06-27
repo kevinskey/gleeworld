@@ -42,6 +42,7 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
           return;
         }
 
+        console.log('Fetched templates for filter:', templatesData?.length || 0);
         setTemplates(templatesData || []);
       } catch (error) {
         console.error('Error fetching templates:', error);
@@ -72,22 +73,37 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
   const filteredAndSortedData = useMemo(() => {
     let filtered = [...data];
 
+    console.log('Starting with contracts:', filtered.length);
+    console.log('Template filter value:', filterByTemplate);
+
     // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(entry => 
         entry.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         entry.contractTitle.toLowerCase().includes(searchTerm.toLowerCase())
       );
+      console.log('After search filter:', filtered.length);
     }
 
     // Apply status filter
     if (filterByStatus) {
       filtered = filtered.filter(entry => entry.status === filterByStatus);
+      console.log('After status filter:', filtered.length);
     }
 
     // Apply template filter - filter by template ID
     if (filterByTemplate) {
-      filtered = filtered.filter(entry => entry.templateId === filterByTemplate);
+      console.log('Filtering by template ID:', filterByTemplate);
+      console.log('Sample contract template IDs:', filtered.slice(0, 3).map(c => ({ id: c.id, templateId: c.templateId })));
+      
+      filtered = filtered.filter(entry => {
+        const matches = entry.templateId === filterByTemplate;
+        if (matches) {
+          console.log('Contract matches template filter:', entry.contractTitle, 'templateId:', entry.templateId);
+        }
+        return matches;
+      });
+      console.log('After template filter:', filtered.length);
     }
 
     // Apply date range filter
@@ -113,6 +129,7 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
         const entryDate = new Date(entry.dateSigned);
         return entryDate >= filterDate;
       });
+      console.log('After date filter:', filtered.length);
     }
 
     // Apply sorting
@@ -165,6 +182,7 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
     template: string;
     search: string;
   }) => {
+    console.log('Filter change - template:', filters.template);
     setFilterByStatus(filters.status);
     setFilterByDateRange(filters.dateRange);
     setFilterByTemplate(filters.template);
