@@ -24,7 +24,7 @@ export const ViewTemplateDialog = ({
 }: ViewTemplateDialogProps) => {
   const [currentTemplate, setCurrentTemplate] = useState<ContractTemplate | null>(null);
 
-  // Update the current template whenever the template prop changes
+  // Update the current template whenever the template prop changes or when important fields change
   useEffect(() => {
     if (template) {
       console.log('ViewTemplateDialog: Template updated', {
@@ -33,9 +33,10 @@ export const ViewTemplateDialog = ({
         contentLength: template.template_content?.length || 0,
         updated_at: template.updated_at
       });
-      setCurrentTemplate(template);
+      // Force a fresh copy of the template to ensure updates are reflected
+      setCurrentTemplate({ ...template });
     }
-  }, [template]);
+  }, [template, template?.updated_at, template?.template_content]);
 
   // Reset when dialog closes
   useEffect(() => {
@@ -43,6 +44,14 @@ export const ViewTemplateDialog = ({
       setCurrentTemplate(null);
     }
   }, [isOpen]);
+
+  // Force refresh when dialog opens
+  useEffect(() => {
+    if (isOpen && template) {
+      console.log('ViewTemplateDialog: Dialog opened, refreshing template data');
+      setCurrentTemplate({ ...template });
+    }
+  }, [isOpen, template]);
 
   const displayTemplate = currentTemplate || template;
 
