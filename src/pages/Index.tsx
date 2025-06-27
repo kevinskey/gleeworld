@@ -83,7 +83,9 @@ const Index = () => {
                 <W9FormsListCollapsible />
               </div>
               <div className="space-y-6">
-                <AdminPanelCollapsible />
+                <div className="h-1/2">
+                  <AdminPanelCollapsible />
+                </div>
                 <AccountingCardCollapsible />
               </div>
             </div>
