@@ -54,7 +54,17 @@ export const ContractContentProcessor = ({
 }: ContractContentProcessorProps) => {
   const isMobile = useIsMobile();
 
-  // Enhanced null safety with detailed logging
+  // Early return if contract is not available
+  if (!contract) {
+    console.warn('ContractContentProcessor: No contract provided');
+    return (
+      <div className="p-4 text-center text-gray-500">
+        No contract data available
+      </div>
+    );
+  }
+
+  // Comprehensive null safety with early returns
   console.log('ContractContentProcessor: Raw props received:', {
     hasContract: !!contract,
     signatureFields,
@@ -68,29 +78,17 @@ export const ContractContentProcessor = ({
   });
 
   // Ensure all arrays are properly initialized with comprehensive fallbacks
-  const safeSignatureFields = (() => {
-    if (Array.isArray(signatureFields)) {
-      return signatureFields;
-    }
-    console.warn('ContractContentProcessor: signatureFields is not an array, using empty array');
-    return [];
-  })();
+  const safeSignatureFields = Array.isArray(signatureFields) ? signatureFields : [];
+  const safeEmbeddedSignatures = Array.isArray(embeddedSignatures) ? embeddedSignatures : [];
+  const safeCompletedFields = (completedFields && typeof completedFields === 'object') ? completedFields : {};
 
-  const safeEmbeddedSignatures = (() => {
-    if (Array.isArray(embeddedSignatures)) {
-      return embeddedSignatures;
-    }
-    console.warn('ContractContentProcessor: embeddedSignatures is not an array, using empty array');
-    return [];
-  })();
-
-  const safeCompletedFields = (() => {
-    if (completedFields && typeof completedFields === 'object') {
-      return completedFields;
-    }
-    console.warn('ContractContentProcessor: completedFields is not an object, using empty object');
-    return {};
-  })();
+  // Additional validation to prevent null/undefined access
+  if (signatureFields === null || signatureFields === undefined) {
+    console.warn('ContractContentProcessor: signatureFields is null/undefined, using empty array');
+  }
+  if (embeddedSignatures === null || embeddedSignatures === undefined) {
+    console.warn('ContractContentProcessor: embeddedSignatures is null/undefined, using empty array');
+  }
 
   console.log('ContractContentProcessor: Safe props after processing:', {
     safeSignatureFieldsLength: safeSignatureFields.length,
@@ -127,13 +125,20 @@ export const ContractContentProcessor = ({
     const lines = cleanContent.split('\n');
     const processedLines: (string | JSX.Element)[] = [];
     
-    // Get signatures by type with enhanced null safety
-    const artistSignature = safeEmbeddedSignatures.length > 0 
-      ? safeEmbeddedSignatures.find(sig => sig && sig.signerType === 'artist') 
-      : null;
-    const adminSignature = safeEmbeddedSignatures.length > 0 
-      ? safeEmbeddedSignatures.find(sig => sig && sig.signerType === 'admin') 
-      : null;
+    // Get signatures by type with enhanced null safety and additional validation
+    let artistSignature = null;
+    let adminSignature = null;
+    
+    try {
+      if (safeEmbeddedSignatures && safeEmbeddedSignatures.length > 0) {
+        artistSignature = safeEmbeddedSignatures.find(sig => sig && sig.signerType === 'artist') || null;
+        adminSignature = safeEmbeddedSignatures.find(sig => sig && sig.signerType === 'admin') || null;
+      }
+    } catch (error) {
+      console.error('ContractContentProcessor: Error finding signatures:', error);
+      artistSignature = null;
+      adminSignature = null;
+    }
     
     console.log('ContractContentProcessor: Processing contract content with signatures:', {
       artistSignature: !!artistSignature,
@@ -195,14 +200,20 @@ export const ContractContentProcessor = ({
           );
         } else {
           // Show signature field for signing with enhanced null safety
-          const artistSignatureField = safeSignatureFields.length > 0 
-            ? safeSignatureFields.find(f => 
+          let artistSignatureField = null;
+          try {
+            if (safeSignatureFields && safeSignatureFields.length > 0) {
+              artistSignatureField = safeSignatureFields.find(f => 
                 f && 
                 f.type === 'signature' && 
                 (f.label.toLowerCase().includes('artist') || f.id === 1) &&
                 !isAdminOrAgentField(f)
-              )
-            : null;
+              ) || null;
+            }
+          } catch (error) {
+            console.error('ContractContentProcessor: Error finding artist signature field:', error);
+            artistSignatureField = null;
+          }
           
           if (artistSignatureField) {
             console.log('ContractContentProcessor: Adding artist signature field');
@@ -216,12 +227,18 @@ export const ContractContentProcessor = ({
       }
       
       if ((index === lines.length - 1 || line.toLowerCase().includes('date executed')) && 
-          safeSignatureFields.length > 0 && safeSignatureFields.some(f => f && isArtistDateField(f))) {
+          safeSignatureFields.length > 0) {
         
         // Check if we have an embedded date signature
-        const embeddedDateSignature = safeEmbeddedSignatures.length > 0 
-          ? safeEmbeddedSignatures.find(sig => sig && sig.fieldId === 2) 
-          : null;
+        let embeddedDateSignature = null;
+        try {
+          if (safeEmbeddedSignatures && safeEmbeddedSignatures.length > 0) {
+            embeddedDateSignature = safeEmbeddedSignatures.find(sig => sig && sig.fieldId === 2) || null;
+          }
+        } catch (error) {
+          console.error('ContractContentProcessor: Error finding embedded date signature:', error);
+          embeddedDateSignature = null;
+        }
         
         if (embeddedDateSignature) {
           console.log('ContractContentProcessor: Adding embedded date signature');
@@ -231,9 +248,16 @@ export const ContractContentProcessor = ({
             </div>
           );
         } else {
-          const dateField = safeSignatureFields.length > 0 
-            ? safeSignatureFields.find(f => f && isArtistDateField(f)) 
-            : null;
+          let dateField = null;
+          try {
+            if (safeSignatureFields && safeSignatureFields.length > 0) {
+              dateField = safeSignatureFields.find(f => f && isArtistDateField(f)) || null;
+            }
+          } catch (error) {
+            console.error('ContractContentProcessor: Error finding date field:', error);
+            dateField = null;
+          }
+          
           if (dateField && !safeEmbeddedSignatures.some(sig => sig && sig.fieldId === 1)) {
             console.log('ContractContentProcessor: Adding date field');
             processedLines.push(
@@ -261,16 +285,6 @@ export const ContractContentProcessor = ({
     console.log('ContractContentProcessor: Processed lines count:', processedLines.length);
     return processedLines;
   };
-
-  // Early return if no contract
-  if (!contract) {
-    console.warn('ContractContentProcessor: No contract provided');
-    return (
-      <div className="p-4 text-center text-gray-500">
-        No contract data available
-      </div>
-    );
-  }
 
   return (
     <div 
