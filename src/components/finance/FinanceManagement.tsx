@@ -1,16 +1,20 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Calculator, FileSpreadsheet, Download, Upload, DollarSign } from "lucide-react";
+import { Plus, Calculator, FileSpreadsheet, Download, Upload, DollarSign, Mail } from "lucide-react";
 import { FinanceTable } from "./FinanceTable";
 import { FinanceSummary } from "./FinanceSummary";
 import { AddFinanceRecordDialog } from "./AddFinanceRecordDialog";
+import { BulkW9EmailDialog } from "@/components/admin/BulkW9EmailDialog";
 import { useFinanceRecords } from "@/hooks/useFinanceRecords";
+import { useUsers } from "@/hooks/useUsers";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const FinanceManagement = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [bulkW9EmailOpen, setBulkW9EmailOpen] = useState(false);
   const { user } = useAuth();
+  const { users } = useUsers();
   const { 
     records, 
     loading, 
@@ -146,6 +150,23 @@ export const FinanceManagement = () => {
         </div>
       </div>
 
+      {/* W9 Forms Management Section */}
+      <div className="glass-card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-xl font-semibold text-white mb-2">W9 Forms Management</h3>
+            <p className="text-white/70">Send W9 tax forms to users and track completion for financial reporting</p>
+          </div>
+          <Button
+            onClick={() => setBulkW9EmailOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Mail className="h-4 w-4 mr-2" />
+            Send W9 Forms
+          </Button>
+        </div>
+      </div>
+
       {/* Summary Section */}
       <FinanceSummary records={records} loading={loading} />
 
@@ -162,6 +183,13 @@ export const FinanceManagement = () => {
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
         onSubmit={createRecord}
+      />
+
+      {/* Bulk W9 Email Dialog */}
+      <BulkW9EmailDialog
+        open={bulkW9EmailOpen}
+        onOpenChange={setBulkW9EmailOpen}
+        totalUsers={users.length}
       />
     </div>
   );
