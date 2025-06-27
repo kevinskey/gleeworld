@@ -13,7 +13,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useContracts } from "@/hooks/useContracts";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Users, Settings, FileText, Activity, Receipt, Home, FileTemplate, Calculator } from "lucide-react";
+import { Shield, Users, Settings, FileText, Activity, Receipt, Home, Calculator } from "lucide-react";
 import type { Contract } from "@/hooks/useContracts";
 
 const Index = () => {
@@ -114,7 +114,7 @@ const Index = () => {
                     Users
                   </TabsTrigger>
                   <TabsTrigger value="templates" className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-                    <Template className="h-4 w-4" />
+                    <FileText className="h-4 w-4" />
                     Templates
                   </TabsTrigger>
                   <TabsTrigger value="activity" className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
@@ -184,15 +184,15 @@ const Index = () => {
 
             {/* Admin Panel Integration */}
             <TabsContent value="users" className="space-y-6">
-              <AdminPanel />
+              <AdminPanel activeTab="users" />
             </TabsContent>
 
             <TabsContent value="activity" className="space-y-6">
-              <AdminPanel />
+              <AdminPanel activeTab="activity" />
             </TabsContent>
 
             <TabsContent value="receipts" className="space-y-6">
-              <AdminPanel />
+              <AdminPanel activeTab="receipts" />
             </TabsContent>
 
             <TabsContent value="accounting" className="space-y-6">
@@ -200,7 +200,7 @@ const Index = () => {
             </TabsContent>
 
             <TabsContent value="settings" className="space-y-6">
-              <AdminPanel />
+              <AdminPanel activeTab="settings" />
             </TabsContent>
           </Tabs>
         ) : (
