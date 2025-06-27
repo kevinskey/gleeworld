@@ -37,7 +37,7 @@ export const useW9Forms = () => {
       const { data, error } = await supabase
         .from('w9_forms')
         .select('*')
-        .eq('user_id', user.id) // Filter by current user only
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       console.log('W9 forms query result:', { data, error, userId: user.id });
