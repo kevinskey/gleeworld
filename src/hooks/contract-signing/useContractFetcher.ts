@@ -20,11 +20,15 @@ export const useContractFetcher = (contractId: string | undefined) => {
     console.log('useContractFetcher: Starting fetch for contractId:', contractId);
     console.log('useContractFetcher: Contract ID type:', typeof contractId);
     console.log('useContractFetcher: Contract ID length:', contractId.length);
+    console.log('useContractFetcher: Supabase client initialized:', !!supabase);
     
     setLoading(true);
     setError(null);
 
     try {
+      // Add a small delay to show loading state
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // Try contracts_v2 table first (primary table)
       console.log('useContractFetcher: Querying contracts_v2 table...');
       const { data: contractsV2Data, error: contractsV2Error } = await supabase
@@ -43,7 +47,8 @@ export const useContractFetcher = (contractId: string | undefined) => {
 
       console.log('useContractFetcher: contracts_v2 query result:', { 
         data: contractsV2Data, 
-        error: contractsV2Error 
+        error: contractsV2Error,
+        hasData: !!contractsV2Data
       });
 
       let contractData = contractsV2Data;
@@ -68,7 +73,8 @@ export const useContractFetcher = (contractId: string | undefined) => {
 
         console.log('useContractFetcher: contracts query result:', { 
           data: contractsData, 
-          error: contractsError 
+          error: contractsError,
+          hasData: !!contractsData
         });
 
         contractData = contractsData;
@@ -83,6 +89,8 @@ export const useContractFetcher = (contractId: string | undefined) => {
           setError('Contract not found. Please check the contract ID and try again.');
         } else if (contractError.message?.includes('JWT')) {
           setError('Authentication error. The contract link may have expired.');
+        } else if (contractError.message?.includes('network')) {
+          setError('Network error. Please check your internet connection and try again.');
         } else {
           setError(`Unable to load contract: ${contractError.message}`);
         }
@@ -105,7 +113,8 @@ export const useContractFetcher = (contractId: string | undefined) => {
 
       console.log('useContractFetcher: Signature query result:', { 
         data: signatureData, 
-        error: signatureError 
+        error: signatureError,
+        hasSignatureData: !!signatureData
       });
 
       if (signatureError && signatureError.code !== 'PGRST116') {
@@ -117,7 +126,8 @@ export const useContractFetcher = (contractId: string | undefined) => {
         id: contractData.id,
         title: contractData.title,
         status: contractData.status,
-        hasSignatureRecord: !!signatureData
+        hasSignatureRecord: !!signatureData,
+        contentLength: contractData.content?.length || 0
       });
       
       setContract(contractData as Contract);
@@ -128,7 +138,8 @@ export const useContractFetcher = (contractId: string | undefined) => {
       console.error('useContractFetcher: Error details:', {
         message: errorMessage,
         contractId,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        stack: err instanceof Error ? err.stack : undefined
       });
       
       // Provide user-friendly error messages
@@ -136,6 +147,8 @@ export const useContractFetcher = (contractId: string | undefined) => {
         setError('Network error. Please check your internet connection and try again.');
       } else if (errorMessage.includes('timeout')) {
         setError('Request timed out. Please try again.');
+      } else if (errorMessage.includes('cors')) {
+        setError('Access error. Please try refreshing the page.');
       } else {
         setError('Unable to load contract. Please try again or contact support.');
       }
@@ -145,6 +158,7 @@ export const useContractFetcher = (contractId: string | undefined) => {
   };
 
   useEffect(() => {
+    console.log('useContractFetcher: useEffect triggered with contractId:', contractId);
     fetchContract();
   }, [contractId]);
 

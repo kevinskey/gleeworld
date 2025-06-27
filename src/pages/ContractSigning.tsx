@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useContractSigning } from "@/hooks/contract-signing/useContractSigning";
 import { ContractNotFound } from "@/components/contract-signing/ContractNotFound";
 import { ContractContentRenderer } from "@/components/contract-signing/ContractContentRenderer";
-import { Loader2, Mail } from "lucide-react";
+import { Loader2, Mail, AlertCircle } from "lucide-react";
 
 const ContractSigning = () => {
   const { contractId } = useParams<{ contractId: string }>();
@@ -11,17 +11,43 @@ const ContractSigning = () => {
   console.log('ContractSigning: Component mounted');
   console.log('ContractSigning: URL params:', { contractId });
   console.log('ContractSigning: Window location:', window.location.href);
+  console.log('ContractSigning: Full URL path:', window.location.pathname);
   
+  // Show immediate feedback if no contractId
   if (!contractId) {
     console.error('ContractSigning: No contractId in URL params');
-    return <ContractNotFound />;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-red-700 mb-2">Invalid Contract Link</h2>
+          <p className="text-red-600 mb-4">No contract ID found in the URL. Please use the complete link from your email.</p>
+          <div className="bg-gray-100 p-3 rounded text-sm text-gray-500">
+            <p><strong>Current URL:</strong> {window.location.href}</p>
+            <p className="text-xs mt-1">Expected format: /contract-signing/[contract-id]</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Validate contract ID format (should be UUID)
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(contractId)) {
     console.error('ContractSigning: Invalid contract ID format:', contractId);
-    return <ContractNotFound />;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-amber-700 mb-2">Invalid Contract ID Format</h2>
+          <p className="text-amber-600 mb-4">The contract ID in the URL is not in the correct format.</p>
+          <div className="bg-gray-100 p-3 rounded text-sm text-gray-500">
+            <p><strong>Contract ID:</strong> {contractId}</p>
+            <p className="text-xs mt-1">Please use the complete link from your email.</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const { 
@@ -60,6 +86,7 @@ const ContractSigning = () => {
     });
   }
 
+  // Enhanced loading state with more feedback
   if (loading) {
     console.log('ContractSigning: Showing loading state');
     return (
@@ -72,17 +99,22 @@ const ContractSigning = () => {
             <p><strong>Contract ID:</strong> {contractId}</p>
             <p className="text-xs mt-1">This may take a few moments...</p>
           </div>
+          <div className="mt-4 text-xs text-gray-400">
+            If this takes longer than expected, please refresh the page or contact support.
+          </div>
         </div>
       </div>
     );
   }
 
+  // Enhanced error state with more troubleshooting info
   if (error) {
     console.error('ContractSigning: Rendering error state:', error);
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+            <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-3" />
             <h2 className="text-xl font-semibold text-red-700 mb-2">Unable to Load Contract</h2>
             <p className="text-red-600 mb-4">{error}</p>
           </div>
@@ -121,12 +153,14 @@ const ContractSigning = () => {
     );
   }
 
+  // Enhanced no contract state
   if (!contract) {
     console.error('ContractSigning: No contract data available');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+            <AlertCircle className="h-8 w-8 text-yellow-500 mx-auto mb-3" />
             <h2 className="text-xl font-semibold text-yellow-700 mb-2">Contract Not Found</h2>
             <p className="text-yellow-600 mb-4">The contract you're looking for could not be found or may have been removed.</p>
           </div>
