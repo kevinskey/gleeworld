@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { SignatureCanvas } from "@/components/SignatureCanvas";
 
 interface W9FormProps {
   onSuccess?: () => void;
@@ -27,6 +28,8 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
     requestersAddress: '',
     tin: '',
     certification: false,
+    signature: null as string | null,
+    signatureDate: new Date().toISOString().split('T')[0], // Default to today's date
     email: '' // Add email field for non-authenticated users
   });
   const [loading, setLoading] = useState(false);
@@ -40,6 +43,13 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
     }));
   };
 
+  const handleSignatureChange = (signature: string | null) => {
+    setFormData(prev => ({
+      ...prev,
+      signature
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -47,6 +57,15 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
       toast({
         title: "Certification Required",
         description: "You must certify the accuracy of the information under penalties of perjury.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.signature) {
+      toast({
+        title: "Signature Required",
+        description: "Please provide your signature.",
         variant: "destructive",
       });
       return;
@@ -81,6 +100,7 @@ Requester's Name: ${formData.requestersName}
 Requester's Address: ${formData.requestersAddress}
 TIN: ${formData.tin}
 Email: ${user?.email || formData.email}
+Signature Date: ${formData.signatureDate}
 Certified: ${formData.certification ? 'Yes' : 'No'}
       `;
 
@@ -229,6 +249,13 @@ Certified: ${formData.certification ? 'Yes' : 'No'}
                 />
               </div>
 
+              {/* Part 1 Header */}
+              <div className="md:col-span-2 mt-8 mb-4">
+                <h3 className="text-xl font-bold text-gray-900 border-b-2 border-gray-300 pb-2">
+                  Part I - Taxpayer Identification Number (TIN)
+                </h3>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="tin" className="text-gray-900 font-medium">Taxpayer Identification Number (SSN or EIN) *</Label>
                 <Input
@@ -239,6 +266,13 @@ Certified: ${formData.certification ? 'Yes' : 'No'}
                   className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
+            </div>
+
+            {/* Part 2 Header */}
+            <div className="mt-8 mb-6">
+              <h3 className="text-xl font-bold text-gray-900 border-b-2 border-gray-300 pb-2">
+                Part II - Certification
+              </h3>
             </div>
 
             <div className="space-y-4">
@@ -265,10 +299,38 @@ Certified: ${formData.certification ? 'Yes' : 'No'}
               </div>
             </div>
 
+            {/* Signature Section */}
+            <div className="mt-8 space-y-6">
+              <h4 className="text-lg font-semibold text-gray-900">Signature</h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-2">
+                  <Label className="text-gray-900 font-medium">Sign here</Label>
+                  <p className="text-xs text-gray-600 mb-2">signature of U.S. person</p>
+                  <SignatureCanvas 
+                    onSignatureChange={handleSignatureChange}
+                    disabled={loading}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="signatureDate" className="text-gray-900 font-medium">Date *</Label>
+                  <Input
+                    id="signatureDate"
+                    type="date"
+                    value={formData.signatureDate}
+                    onChange={(e) => handleInputChange('signatureDate', e.target.value)}
+                    required
+                    className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
             <div className="flex justify-end space-x-2 pt-4 border-t border-gray-200">
               <Button
                 type="submit"
-                disabled={loading || !formData.certification}
+                disabled={loading || !formData.certification || !formData.signature}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 font-medium"
               >
                 {loading ? "Submitting..." : "Submit W9 Form"}
