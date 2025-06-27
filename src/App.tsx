@@ -88,14 +88,10 @@ const App = () => {
                   </PublicRoute>
                 } 
               />
+              {/* Contract signing should be accessible without authentication */}
               <Route 
                 path="/contract-signing/:contractId" 
-                element={
-                  <>
-                    {console.log('App: Contract signing route matched')}
-                    <ContractSigning />
-                  </>
-                } 
+                element={<ContractSigning />} 
               />
               <Route 
                 path="/admin-signing" 
