@@ -8,6 +8,7 @@ import { useSignatureFields } from "./useSignatureFields";
 
 export const useContractSigning = (contractId: string | undefined) => {
   const [signing, setSigning] = useState(false);
+  // Initialize as empty array and ensure it never becomes null
   const [embeddedSignatures, setEmbeddedSignatures] = useState<any[]>([]);
   const { user } = useAuth();
 
@@ -96,33 +97,41 @@ export const useContractSigning = (contractId: string | undefined) => {
     }
   };
 
-  // Extract embedded signatures from signature record with proper null safety
+  // Extract embedded signatures from signature record with enhanced null safety
   useEffect(() => {
     console.log('useContractSigning - Processing signature record:', signatureRecord);
     
+    // Always ensure we have a valid array, never null
     if (signatureRecord?.embedded_signatures) {
       console.log('useContractSigning - Processing embedded signatures:', signatureRecord.embedded_signatures);
       
       if (Array.isArray(signatureRecord.embedded_signatures)) {
-        setEmbeddedSignatures(signatureRecord.embedded_signatures);
+        console.log('useContractSigning - Setting embedded signatures array:', signatureRecord.embedded_signatures.length, 'items');
+        setEmbeddedSignatures([...signatureRecord.embedded_signatures]); // Create new array to prevent mutations
       } else {
         // If it's not an array, try to parse it if it's a string
         try {
           if (typeof signatureRecord.embedded_signatures === 'string') {
             const parsed = JSON.parse(signatureRecord.embedded_signatures);
-            setEmbeddedSignatures(Array.isArray(parsed) ? parsed : []);
+            if (Array.isArray(parsed)) {
+              console.log('useContractSigning - Setting parsed embedded signatures array:', parsed.length, 'items');
+              setEmbeddedSignatures([...parsed]); // Create new array
+            } else {
+              console.warn('useContractSigning - Parsed embedded_signatures is not an array:', parsed);
+              setEmbeddedSignatures([]); // Ensure it's an empty array, not null
+            }
           } else {
             console.warn('useContractSigning - embedded_signatures is not an array or string:', signatureRecord.embedded_signatures);
-            setEmbeddedSignatures([]);
+            setEmbeddedSignatures([]); // Ensure it's an empty array, not null
           }
         } catch (error) {
           console.error('useContractSigning - Failed to parse embedded signatures:', error);
-          setEmbeddedSignatures([]);
+          setEmbeddedSignatures([]); // Ensure it's an empty array, not null
         }
       }
     } else {
-      console.log('useContractSigning - No embedded signatures found, setting empty array');
-      setEmbeddedSignatures([]);
+      console.log('useContractSigning - No embedded signatures found, ensuring empty array');
+      setEmbeddedSignatures([]); // Ensure it's an empty array, not null
     }
   }, [signatureRecord]);
 
@@ -141,12 +150,21 @@ export const useContractSigning = (contractId: string | undefined) => {
     }
   }, [contract, initializeMockSignatureFields]);
 
-  // Always return a safe array for embeddedSignatures
+  // Triple safety check: ensure we always return a valid array, never null or undefined
   const safeEmbeddedSignatures = Array.isArray(embeddedSignatures) ? embeddedSignatures : [];
+  
+  console.log('useContractSigning - Final return values:', {
+    hasContract: !!contract,
+    signatureFieldsLength: signatureFields?.length || 0,
+    completedFieldsCount: Object.keys(completedFields || {}).length,
+    embeddedSignaturesLength: safeEmbeddedSignatures.length,
+    embeddedSignaturesType: typeof safeEmbeddedSignatures,
+    embeddedSignaturesIsArray: Array.isArray(safeEmbeddedSignatures)
+  });
 
   return {
     contract,
-    signatureFields: signatureFields || [],
+    signatureFields: Array.isArray(signatureFields) ? signatureFields : [],
     signatureRecord,
     completedFields: completedFields || {},
     loading,

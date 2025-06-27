@@ -110,13 +110,24 @@ const ContractSigning = () => {
   console.log('ContractSigning: Rendering contract successfully:', contract.title);
 
   const getCompletionProgress = () => {
-    const totalFields = signatureFields.filter(field => !isAdminOrAgentField(field)).length;
-    const completedCount = Object.keys(completedFields).length;
+    const safeSignatureFields = Array.isArray(signatureFields) ? signatureFields : [];
+    const safeCompletedFields = completedFields || {};
+    const totalFields = safeSignatureFields.filter(field => !isAdminOrAgentField(field)).length;
+    const completedCount = Object.keys(safeCompletedFields).length;
     return `${completedCount}/${totalFields}`;
   };
 
-  // Ensure embeddedSignatures is always an array before passing to components
+  // Ensure all arrays are safe before passing to components - quadruple safety check
   const safeEmbeddedSignatures = Array.isArray(embeddedSignatures) ? embeddedSignatures : [];
+  const safeSignatureFields = Array.isArray(signatureFields) ? signatureFields : [];
+  const safeCompletedFields = completedFields || {};
+
+  console.log('ContractSigning: Final safety check before render:', {
+    safeEmbeddedSignaturesLength: safeEmbeddedSignatures.length,
+    safeSignatureFieldsLength: safeSignatureFields.length,
+    safeCompletedFieldsKeys: Object.keys(safeCompletedFields).length,
+    allArraysValid: Array.isArray(safeEmbeddedSignatures) && Array.isArray(safeSignatureFields)
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -126,8 +137,8 @@ const ContractSigning = () => {
           
           <ContractContentRenderer
             contract={contract}
-            signatureFields={signatureFields}
-            completedFields={completedFields}
+            signatureFields={safeSignatureFields}
+            completedFields={safeCompletedFields}
             signatureRecord={signatureRecord}
             isAdminOrAgentField={isAdminOrAgentField}
             isArtistDateField={isArtistDateField}
