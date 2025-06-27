@@ -5,6 +5,7 @@ import { StatsCards } from "@/components/StatsCards";
 import { ContractsList } from "@/components/ContractsList";
 import { ContractCreationCollapsible } from "@/components/ContractCreationCollapsible";
 import { ContractTemplatesCollapsible } from "@/components/ContractTemplatesCollapsible";
+import { RecentContractsTemplatesCollapsible } from "@/components/RecentContractsTemplatesCollapsible";
 import { W9FormsListCollapsible } from "@/components/W9FormsListCollapsible";
 import { AdminPanelCollapsible } from "@/components/AdminPanelCollapsible";
 import { AccountingCardCollapsible } from "@/components/AccountingCardCollapsible";
@@ -83,6 +84,11 @@ const Index = () => {
                 <ContractTemplatesCollapsible 
                   onUseTemplate={handleUseTemplate}
                   onContractCreated={refetch}
+                />
+                <RecentContractsTemplatesCollapsible
+                  onNewContract={handleNewContract}
+                  onNewTemplate={handleNewTemplate}
+                  onViewContract={handleViewContractById}
                 />
                 <W9FormsListCollapsible />
               </div>
