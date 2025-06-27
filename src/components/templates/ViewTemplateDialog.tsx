@@ -2,6 +2,7 @@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 import type { ContractTemplate } from "@/hooks/useContractTemplates";
 
@@ -22,7 +23,7 @@ export const ViewTemplateDialog = ({
 }: ViewTemplateDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>{template?.name}</DialogTitle>
           <DialogDescription>
@@ -30,32 +31,36 @@ export const ViewTemplateDialog = ({
             {template?.contract_type && ` • Type: ${template.contract_type}`}
           </DialogDescription>
         </DialogHeader>
-        {template && (
-          <div className="space-y-4">
-            {template.header_image_url && (
-              <div className="border rounded-lg p-4 bg-gray-50">
-                <Label className="font-medium">Header Image:</Label>
-                <img 
-                  src={template.header_image_url} 
-                  alt="Template header" 
-                  className="mt-2 max-h-40 mx-auto rounded border"
-                  onError={(e) => {
-                    console.log('Header image failed to load in view dialog:', template.header_image_url);
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-              </div>
-            )}
-            
-            <div>
-              <Label className="font-medium">Template Content:</Label>
-              <div className="mt-2 p-4 bg-gray-50 rounded-lg text-sm whitespace-pre-wrap max-h-60 overflow-y-auto">
-                {template.template_content}
+        
+        <ScrollArea className="h-[70vh] pr-4">
+          {template && (
+            <div className="space-y-4">
+              {template.header_image_url && (
+                <div className="border rounded-lg p-4 bg-gray-50">
+                  <Label className="font-medium">Header Image:</Label>
+                  <img 
+                    src={template.header_image_url} 
+                    alt="Template header" 
+                    className="mt-2 max-h-40 mx-auto rounded border"
+                    onError={(e) => {
+                      console.log('Header image failed to load in view dialog:', template.header_image_url);
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+              
+              <div>
+                <Label className="font-medium">Template Content:</Label>
+                <div className="mt-2 p-4 bg-gray-50 rounded-lg text-sm whitespace-pre-wrap">
+                  {template.template_content}
+                </div>
               </div>
             </div>
-          </div>
-        )}
-        <DialogFooter>
+          )}
+        </ScrollArea>
+        
+        <DialogFooter className="mt-4">
           <Button 
             variant="outline" 
             onClick={() => onOpenChange(false)}
