@@ -51,11 +51,25 @@ export const ViewTemplateDialog = ({
               )}
               
               <div>
-                <Label className="font-medium">Template Content:</Label>
-                <div className="mt-2 p-4 bg-gray-50 rounded-lg text-sm whitespace-pre-wrap">
-                  {template.template_content}
+                <Label className="font-medium mb-2 block">Template Content:</Label>
+                <div className="border rounded-lg p-6 bg-white min-h-[300px] text-sm leading-relaxed">
+                  {template.template_content ? (
+                    <div className="whitespace-pre-wrap break-words">
+                      {template.template_content}
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 italic">
+                      No content available for this template
+                    </div>
+                  )}
                 </div>
               </div>
+            </div>
+          )}
+          
+          {!template && (
+            <div className="flex items-center justify-center h-40 text-gray-500">
+              No template selected
             </div>
           )}
         </ScrollArea>
