@@ -9,7 +9,7 @@ import { RecentContractsTemplatesCollapsible } from "@/components/RecentContract
 import { W9FormsListCollapsible } from "@/components/W9FormsListCollapsible";
 import { AdminPanelCollapsible } from "@/components/AdminPanelCollapsible";
 import { AccountingCardCollapsible } from "@/components/AccountingCardCollapsible";
-import { ContractTemplates } from "@/components/ContractTemplates";
+import { Library } from "@/components/Library";
 import { ReceiptsManagement } from "@/components/admin/ReceiptsManagement";
 import { ContractViewer } from "@/components/ContractViewer";
 import { useContracts } from "@/hooks/useContracts";
@@ -60,21 +60,13 @@ const Index = () => {
 
   const handleNewTemplate = () => {
     console.log('New template clicked');
-    setActiveTab("templates");
+    setActiveTab("library");
   };
 
   const renderContent = () => {
     switch (activeTab) {
-      case "templates":
-        return (
-          <div className="space-y-6">
-            <div className="glass-card p-6">
-              <h2 className="text-3xl font-bold text-gradient mb-2">Contract Templates</h2>
-              <p className="text-lg text-white/70">Create and manage reusable contract templates.</p>
-            </div>
-            <ContractTemplates />
-          </div>
-        );
+      case "library":
+        return <Library />;
       case "receipts":
         return <ReceiptsManagement />;
       case "dashboard":
