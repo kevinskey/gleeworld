@@ -216,6 +216,7 @@ export const useFinanceRecords = () => {
       const { data: allRecords, error } = await supabase
         .from('finance_records')
         .select('*')
+        .eq('user_id', user.id)
         .order('date', { ascending: true })
         .order('created_at', { ascending: true });
 
@@ -488,4 +489,3 @@ export const useFinanceRecords = () => {
     refetch: fetchRecords
   };
 };
-```
