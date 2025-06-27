@@ -27,25 +27,15 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [templates, setTemplates] = useState<Template[]>([]);
 
-  // Fetch templates used in contracts
+  // Fetch all active templates for the dropdown
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        // Get unique template IDs from contracts that have stipends
-        const templateIds = [...new Set(data
-          .map(entry => entry.templateId)
-          .filter(Boolean)
-        )];
-
-        if (templateIds.length === 0) {
-          setTemplates([]);
-          return;
-        }
-
         const { data: templatesData, error } = await supabase
           .from('contract_templates')
           .select('id, name')
-          .in('id', templateIds);
+          .eq('is_active', true)
+          .order('name');
 
         if (error) {
           console.error('Error fetching templates:', error);
@@ -59,7 +49,7 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
     };
 
     fetchTemplates();
-  }, [data]);
+  }, []);
 
   // Extract unique statuses
   const availableStatuses = useMemo(() => {
@@ -70,7 +60,7 @@ export const useAccountingFiltering = (data: AccountingEntry[]) => {
     return statuses;
   }, [data]);
 
-  // Available templates are the ones fetched from database
+  // Available templates are all active templates from database
   const availableTemplates = useMemo(() => {
     return templates.map(template => ({
       id: template.id,
