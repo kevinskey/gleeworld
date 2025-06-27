@@ -6,7 +6,6 @@ import { ContractCreationCollapsible } from "@/components/ContractCreationCollap
 import { ContractTemplatesCollapsible } from "@/components/ContractTemplatesCollapsible";
 import { RecentContractsTemplatesCollapsible } from "@/components/RecentContractsTemplatesCollapsible";
 import { W9FormsListCollapsible } from "@/components/W9FormsListCollapsible";
-import { AccountingCardCollapsible } from "@/components/AccountingCardCollapsible";
 import { Library } from "@/components/Library";
 import { FinanceManagement } from "@/components/finance/FinanceManagement";
 import { ContractViewer } from "@/components/ContractViewer";
@@ -80,9 +79,6 @@ const Index = () => {
                   onViewContract={handleViewContractById}
                 />
                 <W9FormsListCollapsible />
-              </div>
-              <div className="space-y-6">
-                <AccountingCardCollapsible />
               </div>
             </div>
           </div>
