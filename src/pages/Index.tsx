@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Header } from "@/components/Header";
 import { StatsCards } from "@/components/StatsCards";
 import { ContractsList } from "@/components/ContractsList";
-import { DocumentUpload } from "@/components/DocumentUpload";
+import { ContractCreationCollapsible } from "@/components/ContractCreationCollapsible";
 import { W9FormsListCollapsible } from "@/components/W9FormsListCollapsible";
 import { AdminPanelCollapsible } from "@/components/AdminPanelCollapsible";
 import { AccountingCardCollapsible } from "@/components/AccountingCardCollapsible";
@@ -63,7 +63,7 @@ const Index = () => {
             />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-6">
-                <DocumentUpload />
+                <ContractCreationCollapsible onContractCreated={refetch} />
                 <W9FormsListCollapsible />
               </div>
               <div className="space-y-6">
