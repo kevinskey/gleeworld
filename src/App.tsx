@@ -68,9 +68,13 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => {
+  console.log('=== App Debug Info ===');
   console.log('App: Component mounted');
   console.log('App: Current URL:', window.location.href);
   console.log('App: Current pathname:', window.location.pathname);
+  console.log('App: Current search:', window.location.search);
+  console.log('App: Current hash:', window.location.hash);
+  console.log('=== End App Debug Info ===');
   
   return (
     <QueryClientProvider client={queryClient}>
