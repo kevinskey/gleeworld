@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { StatsCards } from "@/components/StatsCards";
 import { ContractCreationCollapsible } from "@/components/ContractCreationCollapsible";
@@ -9,7 +9,11 @@ import { W9FormsListCollapsible } from "@/components/W9FormsListCollapsible";
 import { Library } from "@/components/Library";
 import { FinanceManagement } from "@/components/finance/FinanceManagement";
 import { ContractViewer } from "@/components/ContractViewer";
+import { EditTemplateDialog } from "@/components/templates/EditTemplateDialog";
 import { useContracts } from "@/hooks/useContracts";
+import { useContractTemplates } from "@/hooks/useContractTemplates";
+import { useTemplateOperations } from "@/hooks/useTemplateOperations";
+import { useSearchParams } from "react-router-dom";
 import type { Contract } from "@/hooks/useContracts";
 
 const Index = () => {
@@ -18,7 +22,38 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [contractViewerOpen, setContractViewerOpen] = useState(false);
+  const [editTemplateOpen, setEditTemplateOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const { contracts, loading, error, deleteContract, refetch } = useContracts();
+  const { templates } = useContractTemplates();
+  const { handleUpdateTemplate, isUpdating } = useTemplateOperations();
+
+  // Handle edit template URL parameter
+  useEffect(() => {
+    const editTemplateId = searchParams.get('edit-template');
+    if (editTemplateId && templates.length > 0) {
+      const template = templates.find(t => t.id === editTemplateId);
+      if (template) {
+        console.log('Opening edit dialog for template:', template.name);
+        setSelectedTemplate(template);
+        setEditTemplateOpen(true);
+      }
+    }
+  }, [searchParams, templates]);
+
+  // Clear URL parameters when closing edit dialog
+  const handleEditTemplateClose = (open: boolean) => {
+    setEditTemplateOpen(open);
+    if (!open) {
+      setSelectedTemplate(null);
+      // Remove the edit-template parameter from URL
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('edit-template');
+      setSearchParams(newSearchParams);
+    }
+  };
 
   console.log('Index: State initialized', { 
     activeTab, 
@@ -114,6 +149,15 @@ const Index = () => {
         contract={selectedContract}
         open={contractViewerOpen}
         onOpenChange={setContractViewerOpen}
+      />
+
+      {/* Edit Template Modal */}
+      <EditTemplateDialog
+        isOpen={editTemplateOpen}
+        onOpenChange={handleEditTemplateClose}
+        template={selectedTemplate}
+        onUpdate={handleUpdateTemplate}
+        isUpdating={isUpdating}
       />
     </div>
   );
