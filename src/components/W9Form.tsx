@@ -349,7 +349,6 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
         console.error('=== STORAGE UPLOAD ERROR ===');
         console.error('Upload error details:', {
           message: uploadError.message,
-          statusCode: uploadError.statusCode,
           error: uploadError
         });
         throw new Error('Failed to upload PDF: ' + uploadError.message);
