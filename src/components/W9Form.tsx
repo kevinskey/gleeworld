@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -347,27 +346,45 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
 
       console.log('PDF uploaded successfully, saving to database...');
 
-      // Save form record to database
-      const { error: dbError } = await supabase
+      // Save form record to database - handle both authenticated and guest users
+      const dbPayload = {
+        user_id: user?.id || null,
+        storage_path: fileName,
+        form_data: {
+          ...formData,
+          email: emailToUse,
+          signatureValid: isSignatureValid(formData.signature),
+          submissionType: user ? 'authenticated' : 'guest'
+        },
+        status: 'submitted'
+      };
+
+      console.log('Database payload:', {
+        ...dbPayload,
+        form_data: {
+          ...dbPayload.form_data,
+          signature: dbPayload.form_data.signature ? 'signature provided' : 'no signature'
+        }
+      });
+
+      const { error: dbError, data: insertedData } = await supabase
         .from('w9_forms')
-        .insert({
-          user_id: user?.id || null,
-          storage_path: fileName,
-          form_data: {
-            ...formData,
-            email: emailToUse,
-            signatureValid: isSignatureValid(formData.signature),
-            submissionType: user ? 'authenticated' : 'guest'
-          },
-          status: 'submitted'
-        });
+        .insert(dbPayload)
+        .select();
 
       if (dbError) {
         console.error('Database error:', dbError);
-        throw new Error('Failed to save form data: ' + dbError.message);
+        // Try to provide more specific error information
+        if (dbError.code === '42501') {
+          throw new Error('Permission denied. Please ensure you have the necessary permissions to submit W9 forms.');
+        } else if (dbError.code === '23505') {
+          throw new Error('A W9 form with similar details already exists.');
+        } else {
+          throw new Error(`Failed to save form data: ${dbError.message}`);
+        }
       }
 
-      console.log('W9 form saved to database successfully');
+      console.log('W9 form saved to database successfully:', insertedData);
 
       toast({
         title: "W9 Form Submitted Successfully",
