@@ -61,8 +61,8 @@ const Accounting = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/')}
-                className="flex items-center space-x-2"
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100"
               >
                 <ArrowLeft className="h-4 w-4" />
                 <span>Back to Dashboard</span>
@@ -76,19 +76,19 @@ const Accounting = () => {
             
             <div className="flex items-center space-x-3">
               <nav className="hidden md:flex items-center space-x-1">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/" className="flex items-center space-x-2">
+                <Button variant="ghost" size="sm" asChild className="text-gray-700 hover:text-gray-900 hover:bg-gray-100">
+                  <Link to="/dashboard" className="flex items-center space-x-2">
                     <Home className="h-4 w-4" />
                     <span>Dashboard</span>
                   </Link>
                 </Button>
-                <Button variant="ghost" size="sm" asChild>
+                <Button variant="ghost" size="sm" asChild className="text-gray-700 hover:text-gray-900 hover:bg-gray-100">
                   <Link to="/activity-logs" className="flex items-center space-x-2">
                     <FileText className="h-4 w-4" />
                     <span>Activity Logs</span>
                   </Link>
                 </Button>
-                <Button variant="ghost" size="sm" asChild>
+                <Button variant="ghost" size="sm" asChild className="text-gray-700 hover:text-gray-900 hover:bg-gray-100">
                   <Link to="/admin-signing" className="flex items-center space-x-2">
                     <Users className="h-4 w-4" />
                     <span>Admin Signing</span>
@@ -104,7 +104,7 @@ const Accounting = () => {
                 onClick={signOut} 
                 variant="outline"
                 size="sm"
-                className="border-red-300 text-red-700 hover:bg-red-50"
+                className="border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800"
               >
                 Sign Out
               </Button>
