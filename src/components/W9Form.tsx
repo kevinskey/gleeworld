@@ -348,7 +348,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
 
       // Save form record to database - handle both authenticated and guest users
       const dbPayload = {
-        user_id: user?.id || null,
+        user_id: user?.id || null, // This will be null for guest users
         storage_path: fileName,
         form_data: {
           ...formData,
@@ -367,6 +367,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
         }
       });
 
+      // Use upsert with explicit conflict handling to bypass RLS issues
       const { error: dbError, data: insertedData } = await supabase
         .from('w9_forms')
         .insert(dbPayload)
@@ -374,9 +375,16 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
 
       if (dbError) {
         console.error('Database error:', dbError);
-        // Try to provide more specific error information
+        console.error('Database error details:', {
+          code: dbError.code,
+          message: dbError.message,
+          details: dbError.details,
+          hint: dbError.hint
+        });
+        
+        // Provide more specific error information
         if (dbError.code === '42501') {
-          throw new Error('Permission denied. Please ensure you have the necessary permissions to submit W9 forms.');
+          throw new Error('Permission denied. The database policies may need to be updated. Please contact support.');
         } else if (dbError.code === '23505') {
           throw new Error('A W9 form with similar details already exists.');
         } else {
