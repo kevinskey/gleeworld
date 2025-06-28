@@ -1,15 +1,16 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useContractFetcher } from "./useContractFetcher";
 import { useSignatureFields } from "./useSignatureFields";
+import { useToast } from "@/hooks/use-toast";
 
 export const useContractSigning = (contractId: string | undefined) => {
   const [signing, setSigning] = useState(false);
   // Initialize as empty array and ensure it never becomes null
   const [embeddedSignatures, setEmbeddedSignatures] = useState<any[]>([]);
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const {
     contract,
@@ -30,6 +31,49 @@ export const useContractSigning = (contractId: string | undefined) => {
 
   const isContractSigned = () => {
     return signatureRecord?.status === 'completed' && signatureRecord?.embedded_signatures;
+  };
+
+  const sendW9RequestEmail = async () => {
+    if (!contract || !user) {
+      console.log('Missing contract or user data for W9 email');
+      return;
+    }
+
+    try {
+      console.log('Sending W9 request email for contract:', contract.id);
+      
+      const { error } = await supabase.functions.invoke('send-w9-request', {
+        body: {
+          userId: user.id,
+          contractId: contract.id,
+          contractTitle: contract.title,
+          recipientEmail: user.email,
+          recipientName: user.email.split('@')[0] || 'Artist'
+        }
+      });
+
+      if (error) {
+        console.error('Error sending W9 request email:', error);
+        toast({
+          title: "W9 Email Warning",
+          description: "Contract signed successfully, but W9 request email failed to send. Please contact support.",
+          variant: "destructive",
+        });
+      } else {
+        console.log('W9 request email sent successfully');
+        toast({
+          title: "Contract Completed!",
+          description: "Your contract has been signed and a W9 form request has been sent to your email.",
+        });
+      }
+    } catch (error) {
+      console.error('Error in W9 email sending:', error);
+      toast({
+        title: "W9 Email Warning", 
+        description: "Contract signed successfully, but W9 request email failed to send. Please contact support.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSignContract = async (signatureData: string) => {
@@ -55,6 +99,10 @@ export const useContractSigning = (contractId: string | undefined) => {
 
       console.log('useContractSigning - Contract signed successfully:', data);
       await fetchContract(); // Refresh contract data
+      
+      // Send W9 request email after successful signing
+      await sendW9RequestEmail();
+
     } catch (error) {
       console.error('useContractSigning - Failed to sign contract:', error);
       throw error;

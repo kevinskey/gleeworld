@@ -27,12 +27,31 @@ const handler = async (req: Request): Promise<Response> => {
     const { userId, contractId, contractTitle, recipientEmail, recipientName }: W9RequestData = await req.json();
 
     console.log("Sending W9 request for user:", userId);
+    console.log("Contract:", contractTitle);
+    console.log("Recipient email:", recipientEmail);
 
     // Initialize Supabase client
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
+
+    // Get user profile for better name formatting
+    let displayName = recipientName;
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', userId)
+        .single();
+      
+      if (profile?.full_name) {
+        displayName = profile.full_name;
+        console.log("Found user profile name:", displayName);
+      }
+    } catch (error) {
+      console.log("Could not fetch user profile, using provided name:", displayName);
+    }
 
     const w9FormUrl = `https://contract.gleeworld.org/w9-form`;
     const dashboardUrl = `https://contract.gleeworld.org/dashboard`;
@@ -53,7 +72,7 @@ const handler = async (req: Request): Promise<Response> => {
           
           <!-- Main Content -->
           <div style="padding: 30px; background-color: white;">
-            <p style="font-size: 18px; color: #333; margin-bottom: 20px;">Dear ${recipientName},</p>
+            <p style="font-size: 18px; color: #333; margin-bottom: 20px;">Dear ${displayName},</p>
             
             <p style="font-size: 16px; color: #666; line-height: 1.6; margin-bottom: 25px;">
               Congratulations! Your contract "<strong>${contractTitle}</strong>" has been fully signed and completed by all parties.
@@ -117,7 +136,7 @@ const handler = async (req: Request): Promise<Response> => {
       text: `
 W9 Form Required - Contract Completed
 
-Dear ${recipientName},
+Dear ${displayName},
 
 Congratulations! Your contract "${contractTitle}" has been fully signed and completed by all parties.
 
@@ -152,7 +171,8 @@ contract.gleeworld.org
     return new Response(JSON.stringify({ 
       success: true, 
       emailId: emailResponse.data?.id,
-      recipient: recipientEmail
+      recipient: recipientEmail,
+      contractTitle: contractTitle
     }), {
       status: 200,
       headers: {
