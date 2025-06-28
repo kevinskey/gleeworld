@@ -194,11 +194,12 @@ export const useContracts = () => {
       channelRef.current = null;
     }
 
-    // Set up new subscription
+    // Set up new subscription with unique channel name
     console.log('Setting up real-time subscription for contracts');
     
+    const uniqueChannelName = `contracts-realtime-${user.id}-${Date.now()}-${Math.random()}`;
     const channel = supabase
-      .channel(`contracts-${user.id}-${Date.now()}`)
+      .channel(uniqueChannelName)
       .on(
         'postgres_changes',
         {
