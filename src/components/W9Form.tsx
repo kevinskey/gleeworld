@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -247,12 +248,15 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('W9 form submission started');
+    console.log('=== W9 FORM SUBMISSION STARTED ===');
     console.log('User authenticated:', !!user);
-    console.log('Form data:', {
-      ...formData,
-      signature: formData.signature ? 'signature provided' : 'no signature',
-      email: formData.email || (user?.email ? 'from auth' : 'not provided')
+    console.log('User ID:', user?.id || 'NO USER ID (GUEST)');
+    console.log('Form data summary:', {
+      name: formData.name,
+      email: formData.email || user?.email || 'NO EMAIL',
+      hasSignature: !!formData.signature,
+      signatureValid: isSignatureValid(formData.signature),
+      certified: formData.certification
     });
     
     // Enhanced validation checks
@@ -260,7 +264,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
     const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
     
     if (missingFields.length > 0) {
-      console.log('Validation failed: missing required fields:', missingFields);
+      console.log('VALIDATION FAILED: missing required fields:', missingFields);
       toast({
         title: "Required Fields Missing",
         description: `Please fill in the following fields: ${missingFields.join(', ')}`,
@@ -270,7 +274,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
     }
 
     if (!formData.certification) {
-      console.log('Validation failed: certification not checked');
+      console.log('VALIDATION FAILED: certification not checked');
       toast({
         title: "Certification Required",
         description: "You must certify the accuracy of the information under penalties of perjury.",
@@ -280,7 +284,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
     }
 
     if (!isSignatureValid(formData.signature)) {
-      console.log('Validation failed: invalid or missing signature');
+      console.log('VALIDATION FAILED: invalid or missing signature');
       toast({
         title: "Valid Signature Required",
         description: "Please provide a valid signature using the signature canvas.",
@@ -292,7 +296,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
     // For guest users, email is required
     const emailToUse = user?.email || formData.email;
     if (!emailToUse) {
-      console.log('Validation failed: no email provided');
+      console.log('VALIDATION FAILED: no email provided');
       toast({
         title: "Email Required",
         description: "Please provide your email address.",
@@ -304,7 +308,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(emailToUse)) {
-      console.log('Validation failed: invalid email format');
+      console.log('VALIDATION FAILED: invalid email format');
       toast({
         title: "Invalid Email",
         description: "Please enter a valid email address.",
@@ -313,14 +317,14 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
       return;
     }
 
-    console.log('All validations passed, proceeding with submission');
+    console.log('=== ALL VALIDATIONS PASSED ===');
 
     try {
       setLoading(true);
       console.log('Loading state set to true');
 
       // Generate PDF with embedded signature
-      console.log('Generating PDF...');
+      console.log('=== STEP 1: GENERATING PDF ===');
       const pdfBytes = await generateW9PDF();
       console.log('PDF generated successfully, size:', pdfBytes.length, 'bytes');
       
@@ -330,69 +334,89 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
       const timestamp = Date.now();
       const fileName = `${userId}/w9-${userName}-${userId}-${timestamp}.pdf`;
       
-      console.log('Uploading PDF to storage with path:', fileName);
+      console.log('=== STEP 2: UPLOADING TO STORAGE ===');
+      console.log('Upload path:', fileName);
+      console.log('User ID for path:', userId);
       
       // Upload PDF to storage
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError, data: uploadData } = await supabase.storage
         .from('w9-forms')
         .upload(fileName, pdfBytes, {
           contentType: 'application/pdf'
         });
 
       if (uploadError) {
-        console.error('Upload error:', uploadError);
+        console.error('=== STORAGE UPLOAD ERROR ===');
+        console.error('Upload error details:', {
+          message: uploadError.message,
+          statusCode: uploadError.statusCode,
+          error: uploadError
+        });
         throw new Error('Failed to upload PDF: ' + uploadError.message);
       }
 
-      console.log('PDF uploaded successfully, saving to database...');
+      console.log('=== PDF UPLOADED SUCCESSFULLY ===');
+      console.log('Upload result:', uploadData);
 
-      // Save form record to database - handle both authenticated and guest users
+      // Save form record to database
+      console.log('=== STEP 3: SAVING TO DATABASE ===');
       const dbPayload = {
-        user_id: user?.id || null, // This will be null for guest users
+        user_id: user?.id || null,
         storage_path: fileName,
         form_data: {
           ...formData,
           email: emailToUse,
           signatureValid: isSignatureValid(formData.signature),
-          submissionType: user ? 'authenticated' : 'guest'
+          submissionType: user ? 'authenticated' : 'guest',
+          submissionTimestamp: new Date().toISOString()
         },
         status: 'submitted'
       };
 
-      console.log('Database payload:', {
-        ...dbPayload,
-        form_data: {
-          ...dbPayload.form_data,
-          signature: dbPayload.form_data.signature ? 'signature provided' : 'no signature'
-        }
+      console.log('=== DATABASE PAYLOAD ===');
+      console.log('Payload details:', {
+        user_id: dbPayload.user_id || 'NULL (GUEST USER)',
+        storage_path: dbPayload.storage_path,
+        status: dbPayload.status,
+        form_data_keys: Object.keys(dbPayload.form_data),
+        submission_type: dbPayload.form_data.submissionType
       });
 
-      // Use upsert with explicit conflict handling to bypass RLS issues
+      // Insert to database with detailed error handling
+      console.log('=== ATTEMPTING DATABASE INSERT ===');
       const { error: dbError, data: insertedData } = await supabase
         .from('w9_forms')
         .insert(dbPayload)
         .select();
 
       if (dbError) {
-        console.error('Database error:', dbError);
-        console.error('Database error details:', {
-          code: dbError.code,
-          message: dbError.message,
-          details: dbError.details,
-          hint: dbError.hint
+        console.error('=== DATABASE ERROR DETAILS ===');
+        console.error('Error code:', dbError.code);
+        console.error('Error message:', dbError.message);
+        console.error('Error details:', dbError.details);
+        console.error('Error hint:', dbError.hint);
+        console.error('Full error object:', dbError);
+        
+        // Show specific error to user
+        toast({
+          title: "Database Error",
+          description: `Error ${dbError.code}: ${dbError.message}`,
+          variant: "destructive",
         });
         
         // Provide more specific error information
         if (dbError.code === '42501') {
+          console.error('RLS POLICY VIOLATION - Permission denied');
           throw new Error('Permission denied. The database policies may need to be updated. Please contact support.');
         } else if (dbError.code === '23505') {
           throw new Error('A W9 form with similar details already exists.');
         } else {
-          throw new Error(`Failed to save form data: ${dbError.message}`);
+          throw new Error(`Failed to save form data: ${dbError.message} (Code: ${dbError.code})`);
         }
       }
 
-      console.log('W9 form saved to database successfully:', insertedData);
+      console.log('=== SUCCESS: FORM SAVED TO DATABASE ===');
+      console.log('Inserted data:', insertedData);
 
       toast({
         title: "W9 Form Submitted Successfully",
@@ -405,14 +429,18 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
       }
 
     } catch (error) {
-      console.error('Error submitting W9 form:', error);
+      console.error('=== SUBMISSION ERROR ===');
+      console.error('Error type:', typeof error);
+      console.error('Error message:', error.message);
+      console.error('Full error:', error);
+      
       toast({
         title: "Submission Failed",
         description: error instanceof Error ? error.message : "Failed to submit W9 form. Please try again.",
         variant: "destructive",
       });
     } finally {
-      console.log('Setting loading state to false');
+      console.log('=== SUBMISSION COMPLETE - CLEANING UP ===');
       setLoading(false);
     }
   };
