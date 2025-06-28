@@ -249,9 +249,11 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('W9 form submission started');
+    console.log('User authenticated:', !!user);
     console.log('Form data:', {
       ...formData,
-      signature: formData.signature ? 'signature provided' : 'no signature'
+      signature: formData.signature ? 'signature provided' : 'no signature',
+      email: formData.email || (user?.email ? 'from auth' : 'not provided')
     });
     
     // Enhanced validation checks
@@ -288,12 +290,25 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
       return;
     }
 
-    // If no authenticated user, require email
-    if (!user && !formData.email) {
-      console.log('Validation failed: no email provided for guest user');
+    // For guest users, email is required
+    const emailToUse = user?.email || formData.email;
+    if (!emailToUse) {
+      console.log('Validation failed: no email provided');
       toast({
         title: "Email Required",
         description: "Please provide your email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailToUse)) {
+      console.log('Validation failed: invalid email format');
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
         variant: "destructive",
       });
       return;
@@ -310,7 +325,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
       const pdfBytes = await generateW9PDF();
       console.log('PDF generated successfully, size:', pdfBytes.length, 'bytes');
       
-      // Generate unique file path with proper folder structure for RLS
+      // Generate unique file path - handle both authenticated and guest users
       const userName = formData.name.replace(/[^a-zA-Z0-9]/g, '_') || 'anonymous';
       const userId = user?.id || 'guest';
       const timestamp = Date.now();
@@ -340,8 +355,9 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
           storage_path: fileName,
           form_data: {
             ...formData,
-            email: user?.email || formData.email,
-            signatureValid: isSignatureValid(formData.signature)
+            email: emailToUse,
+            signatureValid: isSignatureValid(formData.signature),
+            submissionType: user ? 'authenticated' : 'guest'
           },
           status: 'submitted'
         });
@@ -411,6 +427,17 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
                     required
                     className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                     placeholder="your.email@example.com"
+                  />
+                </div>
+              )}
+
+              {user && (
+                <div className="space-y-2">
+                  <Label className="text-gray-900 font-medium">Email Address</Label>
+                  <Input
+                    value={user.email || ''}
+                    disabled
+                    className="bg-gray-100 border-gray-300 text-gray-700"
                   />
                 </div>
               )}
