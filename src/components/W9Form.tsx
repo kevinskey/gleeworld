@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -250,14 +249,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
     e.preventDefault();
     console.log('=== W9 FORM SUBMISSION STARTED ===');
     console.log('User authenticated:', !!user);
-    console.log('User ID:', user?.id || 'NO USER ID (GUEST)');
-    console.log('Form data summary:', {
-      name: formData.name,
-      email: formData.email || user?.email || 'NO EMAIL',
-      hasSignature: !!formData.signature,
-      signatureValid: isSignatureValid(formData.signature),
-      certified: formData.certification
-    });
+    console.log('User ID:', user?.id || 'GUEST USER');
     
     // Enhanced validation checks
     const requiredFields = ['name', 'address', 'city', 'state', 'zipCode', 'tin'];
@@ -336,7 +328,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
       
       console.log('=== STEP 2: UPLOADING TO STORAGE ===');
       console.log('Upload path:', fileName);
-      console.log('User ID for path:', userId);
+      console.log('User type:', user ? 'authenticated' : 'guest');
       
       // Upload PDF to storage
       const { error: uploadError, data: uploadData } = await supabase.storage
@@ -360,7 +352,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
       // Save form record to database
       console.log('=== STEP 3: SAVING TO DATABASE ===');
       const dbPayload = {
-        user_id: user?.id || null,
+        user_id: user?.id || null, // This is now nullable and should work with our new RLS policy
         storage_path: fileName,
         form_data: {
           ...formData,
@@ -377,11 +369,10 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
         user_id: dbPayload.user_id || 'NULL (GUEST USER)',
         storage_path: dbPayload.storage_path,
         status: dbPayload.status,
-        form_data_keys: Object.keys(dbPayload.form_data),
         submission_type: dbPayload.form_data.submissionType
       });
 
-      // Insert to database with detailed error handling
+      // Insert to database with the new universal policy
       console.log('=== ATTEMPTING DATABASE INSERT ===');
       const { error: dbError, data: insertedData } = await supabase
         .from('w9_forms')
@@ -403,15 +394,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
           variant: "destructive",
         });
         
-        // Provide more specific error information
-        if (dbError.code === '42501') {
-          console.error('RLS POLICY VIOLATION - Permission denied');
-          throw new Error('Permission denied. The database policies may need to be updated. Please contact support.');
-        } else if (dbError.code === '23505') {
-          throw new Error('A W9 form with similar details already exists.');
-        } else {
-          throw new Error(`Failed to save form data: ${dbError.message} (Code: ${dbError.code})`);
-        }
+        throw new Error(`Failed to save form data: ${dbError.message} (Code: ${dbError.code})`);
       }
 
       console.log('=== SUCCESS: FORM SAVED TO DATABASE ===');
