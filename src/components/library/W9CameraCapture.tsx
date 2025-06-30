@@ -41,43 +41,29 @@ export const W9CameraCapture = () => {
       setStream(mediaStream);
       
       if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        console.log('Video element srcObject set');
-        
-        // Wait for the video to be ready
         const video = videoRef.current;
+        video.srcObject = mediaStream;
         
+        // Set up event handlers before playing
         const handleLoadedMetadata = () => {
           console.log('Video metadata loaded, dimensions:', video.videoWidth, 'x', video.videoHeight);
           setVideoReady(true);
-          
-          video.play().then(() => {
-            console.log('Video playing successfully');
-            setIsCapturing(true);
-          }).catch((playError) => {
+        };
+
+        const handleCanPlay = () => {
+          console.log('Video can start playing');
+          video.play().catch((playError) => {
             console.error('Error playing video:', playError);
             setCameraError('Failed to start video playback');
           });
         };
 
-        const handleLoadedData = () => {
-          console.log('Video data loaded');
-        };
-
-        const handleCanPlay = () => {
-          console.log('Video can start playing');
-        };
-
         video.addEventListener('loadedmetadata', handleLoadedMetadata);
-        video.addEventListener('loadeddata', handleLoadedData);
         video.addEventListener('canplay', handleCanPlay);
         
-        // Cleanup function to remove event listeners
-        return () => {
-          video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-          video.removeEventListener('loadeddata', handleLoadedData);
-          video.removeEventListener('canplay', handleCanPlay);
-        };
+        // Start loading the video
+        video.load();
+        setIsCapturing(true);
       }
     } catch (error) {
       console.error('Error accessing camera:', error);
@@ -304,8 +290,7 @@ export const W9CameraCapture = () => {
                   muted
                   className="w-full h-full object-cover"
                   style={{ 
-                    backgroundColor: 'black',
-                    transform: 'scaleX(-1)' // Mirror the video for better UX
+                    backgroundColor: 'black'
                   }}
                 />
                 <canvas ref={canvasRef} className="hidden" />
