@@ -113,7 +113,7 @@
   }
   
   .glass-button {
-    @apply bg-brand-700/80 hover:bg-brand-400/80 backdrop-blur-sm border border-brand-400/30 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105;
+    @apply bg-brand-600/80 hover:bg-brand-500/90 backdrop-blur-sm border border-brand-400/30 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 text-white font-medium;
   }
   
   .glass-input {
