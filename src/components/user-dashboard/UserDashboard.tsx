@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Header } from "@/components/Header";
+import { Library } from "@/components/Library";
 import { 
   FileText, 
   CheckCircle, 
@@ -88,8 +89,7 @@ export const UserDashboard = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "library":
-        // TODO: Add Library component when needed
-        return <div>Library content coming soon...</div>;
+        return <Library />;
       case "finance":
         // TODO: Add Finance component when needed  
         return <div>Finance content coming soon...</div>;
