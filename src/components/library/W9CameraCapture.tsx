@@ -1,5 +1,4 @@
-
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -15,6 +14,7 @@ export const W9CameraCapture = () => {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -23,6 +23,9 @@ export const W9CameraCapture = () => {
 
   const startCamera = useCallback(async () => {
     try {
+      setCameraError(null);
+      console.log('Starting camera...');
+      
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { 
           facingMode: 'environment',
@@ -30,13 +33,31 @@ export const W9CameraCapture = () => {
           height: { ideal: 1080 }
         }
       });
+      
+      console.log('Camera stream obtained:', mediaStream);
       setStream(mediaStream);
+      
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        console.log('Video element srcObject set');
+        
+        // Wait for video to load and play
+        videoRef.current.onloadedmetadata = () => {
+          console.log('Video metadata loaded');
+          if (videoRef.current) {
+            videoRef.current.play().then(() => {
+              console.log('Video playing');
+              setIsCapturing(true);
+            }).catch((playError) => {
+              console.error('Error playing video:', playError);
+              setCameraError('Failed to start video playback');
+            });
+          }
+        };
       }
-      setIsCapturing(true);
     } catch (error) {
       console.error('Error accessing camera:', error);
+      setCameraError('Unable to access camera. Please check permissions.');
       toast({
         title: "Camera Error",
         description: "Unable to access camera. Please check permissions.",
@@ -46,27 +67,56 @@ export const W9CameraCapture = () => {
   }, [toast]);
 
   const stopCamera = useCallback(() => {
+    console.log('Stopping camera...');
     if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach(track => {
+        track.stop();
+        console.log('Camera track stopped');
+      });
       setStream(null);
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
     setIsCapturing(false);
+    setCameraError(null);
   }, [stream]);
 
-  const capturePhoto = async () => {
-    if (!videoRef.current || !canvasRef.current) return;
+  // Clean up camera when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      stopCamera();
+      setCapturedImage(null);
+    }
+  }, [isOpen, stopCamera]);
 
+  const capturePhoto = async () => {
+    if (!videoRef.current || !canvasRef.current) {
+      console.error('Video or canvas ref not available');
+      return;
+    }
+
+    console.log('Capturing photo...');
     const canvas = canvasRef.current;
     const video = videoRef.current;
     const context = canvas.getContext('2d');
 
-    if (!context) return;
+    if (!context) {
+      console.error('Canvas context not available');
+      return;
+    }
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0);
+    // Set canvas dimensions to match video
+    canvas.width = video.videoWidth || video.clientWidth;
+    canvas.height = video.videoHeight || video.clientHeight;
+    
+    console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
+    
+    // Draw the video frame to canvas
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    console.log('Image captured, data URL length:', imageDataUrl.length);
     setCapturedImage(imageDataUrl);
     stopCamera();
   };
@@ -206,22 +256,34 @@ export const W9CameraCapture = () => {
                 onChange={handleFileUpload}
                 className="hidden"
               />
+              {cameraError && (
+                <div className="text-red-500 text-sm text-center p-2 bg-red-50 rounded">
+                  {cameraError}
+                </div>
+              )}
             </div>
           )}
 
           {isCapturing && (
             <div className="space-y-4">
-              <div className="relative">
+              <div className="relative bg-black rounded-lg overflow-hidden">
                 <video
                   ref={videoRef}
                   autoPlay
                   playsInline
-                  className="w-full rounded-lg"
+                  muted
+                  className="w-full h-auto max-h-96 object-contain"
+                  style={{ backgroundColor: 'black' }}
                 />
                 <canvas ref={canvasRef} className="hidden" />
               </div>
+              {cameraError && (
+                <div className="text-red-500 text-sm text-center p-2 bg-red-50 rounded">
+                  {cameraError}
+                </div>
+              )}
               <div className="flex gap-2">
-                <Button onClick={capturePhoto} className="flex-1">
+                <Button onClick={capturePhoto} className="flex-1" disabled={!!cameraError}>
                   <Camera className="h-4 w-4 mr-2" />
                   Capture
                 </Button>
