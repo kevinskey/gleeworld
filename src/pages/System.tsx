@@ -2,20 +2,48 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { AdminPanel } from "@/components/AdminPanel";
+import { SystemDashboard } from "@/components/admin/SystemDashboard";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { PaymentManagement } from "@/components/admin/PaymentManagement";
 import { useUsers } from "@/hooks/useUsers";
+import { useActivityLogs } from "@/hooks/useActivityLogs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, Users, DollarSign } from "lucide-react";
+import { Shield, Users, DollarSign, BarChart3 } from "lucide-react";
+import { useState } from "react";
+import { BulkW9EmailDialog } from "@/components/admin/BulkW9EmailDialog";
 
 const System = () => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
   const { users, loading, error, refetch } = useUsers();
+  const { logs: activityLogs } = useActivityLogs();
+  const [bulkW9EmailOpen, setBulkW9EmailOpen] = useState(false);
 
   // Check if user is admin or super-admin
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
+
+  const handleQuickAction = (action: string) => {
+    switch (action) {
+      case 'w9-forms':
+        setBulkW9EmailOpen(true);
+        break;
+      case 'users':
+        // Switch to users tab
+        document.querySelector('[data-value="users"]')?.click();
+        break;
+      case 'settings':
+        // Switch to admin tab (which contains settings)
+        document.querySelector('[data-value="admin"]')?.click();
+        break;
+      case 'activity':
+        // Switch to admin tab and show activity
+        document.querySelector('[data-value="admin"]')?.click();
+        break;
+      default:
+        break;
+    }
+  };
 
   if (!isAdmin) {
     return (
@@ -38,11 +66,15 @@ const System = () => {
       <div className="container mx-auto px-4 py-6">
         <div className="glass-card p-6 mb-6">
           <h1 className="text-3xl font-bold text-white mb-2">System Administration</h1>
-          <p className="text-lg text-white/70">Manage users, payments, and system settings</p>
+          <p className="text-lg text-white/70">Comprehensive system management and monitoring</p>
         </div>
 
-        <Tabs defaultValue="admin" className="space-y-6">
+        <Tabs defaultValue="dashboard" className="space-y-6">
           <TabsList className="glass border-spelman-400/30">
+            <TabsTrigger value="dashboard" className="text-white data-[state=active]:bg-spelman-500/30">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Dashboard
+            </TabsTrigger>
             <TabsTrigger value="admin" className="text-white data-[state=active]:bg-spelman-500/30">
               <Shield className="h-4 w-4 mr-2" />
               Admin Panel
@@ -56,6 +88,15 @@ const System = () => {
               Payment Management
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="dashboard">
+            <SystemDashboard
+              users={users}
+              loading={loading}
+              activityLogs={activityLogs}
+              onQuickAction={handleQuickAction}
+            />
+          </TabsContent>
 
           <TabsContent value="admin">
             <AdminPanel />
@@ -74,6 +115,12 @@ const System = () => {
             <PaymentManagement />
           </TabsContent>
         </Tabs>
+
+        <BulkW9EmailDialog
+          open={bulkW9EmailOpen}
+          onOpenChange={setBulkW9EmailOpen}
+          totalUsers={users.length}
+        />
       </div>
     </div>
   );
