@@ -23,14 +23,38 @@ export const useUserContracts = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchUserContracts = async () => {
-    if (!user) return;
+    if (!user) {
+      setContracts([]);
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
       console.log('useUserContracts: Fetching contracts for user:', user.id);
 
-      // First, try to get contracts from contracts_v2 where user is the creator or involved in signatures
+      // Get contracts that have been sent to this user by checking contract_recipients_v2
+      const { data: recipientData, error: recipientError } = await supabase
+        .from('contract_recipients_v2')
+        .select('contract_id')
+        .eq('recipient_email', user.email);
+
+      if (recipientError) {
+        console.error('useUserContracts: Error fetching recipient data:', recipientError);
+        throw recipientError;
+      }
+
+      const contractIds = recipientData?.map(r => r.contract_id) || [];
+      console.log('useUserContracts: Found contract IDs for user:', contractIds);
+
+      if (contractIds.length === 0) {
+        console.log('useUserContracts: No contracts found for user');
+        setContracts([]);
+        return;
+      }
+
+      // Fetch the actual contracts
       const { data: contractsData, error: contractsError } = await supabase
         .from('contracts_v2')
         .select(`
@@ -40,7 +64,7 @@ export const useUserContracts = () => {
           status,
           created_at
         `)
-        .or(`created_by.eq.${user.id}`)
+        .in('id', contractIds)
         .order('created_at', { ascending: false });
 
       if (contractsError) {
