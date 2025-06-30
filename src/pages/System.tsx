@@ -19,6 +19,7 @@ const System = () => {
   const { users, loading, error, refetch } = useUsers();
   const { logs: activityLogs } = useActivityLogs();
   const [bulkW9EmailOpen, setBulkW9EmailOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("dashboard");
 
   // Check if user is admin or super-admin
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
@@ -29,16 +30,13 @@ const System = () => {
         setBulkW9EmailOpen(true);
         break;
       case 'users':
-        // Switch to users tab
-        document.querySelector('[data-value="users"]')?.click();
+        setActiveTab('users');
         break;
       case 'settings':
-        // Switch to admin tab (which contains settings)
-        document.querySelector('[data-value="admin"]')?.click();
+        setActiveTab('admin');
         break;
       case 'activity':
-        // Switch to admin tab and show activity
-        document.querySelector('[data-value="admin"]')?.click();
+        setActiveTab('admin');
         break;
       default:
         break;
@@ -69,7 +67,7 @@ const System = () => {
           <p className="text-lg text-white/70">Comprehensive system management and monitoring</p>
         </div>
 
-        <Tabs defaultValue="dashboard" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="glass border-spelman-400/30">
             <TabsTrigger value="dashboard" className="text-white data-[state=active]:bg-spelman-500/30">
               <BarChart3 className="h-4 w-4 mr-2" />
