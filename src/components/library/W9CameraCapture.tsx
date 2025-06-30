@@ -43,9 +43,9 @@ export const W9CameraCapture = () => {
         const video = videoRef.current;
         video.srcObject = mediaStream;
         
-        // Handle video loading
-        const handleLoadedMetadata = () => {
-          console.log('Video metadata loaded, dimensions:', video.videoWidth, 'x', video.videoHeight);
+        // Set up event listeners
+        const handleCanPlay = () => {
+          console.log('Video can play, starting playback');
           setVideoLoaded(true);
           video.play().catch((error) => {
             console.error('Error playing video:', error);
@@ -53,12 +53,23 @@ export const W9CameraCapture = () => {
           });
         };
 
-        video.addEventListener('loadedmetadata', handleLoadedMetadata);
-        
-        // Clean up previous event listeners
-        return () => {
-          video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        const handleLoadedData = () => {
+          console.log('Video data loaded');
+          setVideoLoaded(true);
         };
+
+        // Use multiple events to ensure we catch when video is ready
+        video.addEventListener('canplay', handleCanPlay);
+        video.addEventListener('loadeddata', handleLoadedData);
+        
+        // Force play attempt after a short delay
+        setTimeout(() => {
+          if (!videoLoaded) {
+            console.log('Forcing video play attempt');
+            setVideoLoaded(true);
+            video.play().catch(console.error);
+          }
+        }, 1000);
       }
       
       setIsCapturing(true);
@@ -71,7 +82,7 @@ export const W9CameraCapture = () => {
         variant: "destructive",
       });
     }
-  }, [toast]);
+  }, [toast, videoLoaded]);
 
   const stopCamera = useCallback(() => {
     console.log('Stopping camera...');
@@ -99,11 +110,11 @@ export const W9CameraCapture = () => {
   }, [isOpen, stopCamera]);
 
   const capturePhoto = async () => {
-    if (!videoRef.current || !canvasRef.current || !videoLoaded) {
-      console.error('Video not ready or canvas ref not available');
+    if (!videoRef.current || !canvasRef.current) {
+      console.error('Video or canvas ref not available');
       toast({
         title: "Error",
-        description: "Camera not ready. Please wait for the video to load.",
+        description: "Camera not ready. Please try again.",
         variant: "destructive",
       });
       return;
@@ -306,10 +317,10 @@ export const W9CameraCapture = () => {
                 <Button 
                   onClick={capturePhoto} 
                   className="flex-1" 
-                  disabled={!!cameraError || !videoLoaded}
+                  disabled={!!cameraError}
                 >
                   <Camera className="h-4 w-4 mr-2" />
-                  {videoLoaded ? 'Capture' : 'Loading...'}
+                  Capture
                 </Button>
                 <Button onClick={stopCamera} variant="outline">
                   Cancel
