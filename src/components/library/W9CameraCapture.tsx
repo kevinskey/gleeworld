@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +15,7 @@ export const W9CameraCapture = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -25,6 +25,7 @@ export const W9CameraCapture = () => {
   const startCamera = useCallback(async () => {
     try {
       setCameraError(null);
+      setVideoLoaded(false);
       console.log('Starting camera...');
       
       const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -42,17 +43,25 @@ export const W9CameraCapture = () => {
         const video = videoRef.current;
         video.srcObject = mediaStream;
         
-        // Simply play the video when it's ready
-        video.onloadedmetadata = () => {
-          console.log('Video metadata loaded, playing video');
+        // Handle video loading
+        const handleLoadedMetadata = () => {
+          console.log('Video metadata loaded, dimensions:', video.videoWidth, 'x', video.videoHeight);
+          setVideoLoaded(true);
           video.play().catch((error) => {
             console.error('Error playing video:', error);
             setCameraError('Failed to start video playback');
           });
         };
+
+        video.addEventListener('loadedmetadata', handleLoadedMetadata);
         
-        setIsCapturing(true);
+        // Clean up previous event listeners
+        return () => {
+          video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        };
       }
+      
+      setIsCapturing(true);
     } catch (error) {
       console.error('Error accessing camera:', error);
       setCameraError('Unable to access camera. Please check permissions and ensure you\'re using HTTPS.');
@@ -77,6 +86,7 @@ export const W9CameraCapture = () => {
       videoRef.current.srcObject = null;
     }
     setIsCapturing(false);
+    setVideoLoaded(false);
     setCameraError(null);
   }, [stream]);
 
@@ -89,11 +99,11 @@ export const W9CameraCapture = () => {
   }, [isOpen, stopCamera]);
 
   const capturePhoto = async () => {
-    if (!videoRef.current || !canvasRef.current) {
-      console.error('Video or canvas ref not available');
+    if (!videoRef.current || !canvasRef.current || !videoLoaded) {
+      console.error('Video not ready or canvas ref not available');
       toast({
         title: "Error",
-        description: "Camera not ready. Please try again.",
+        description: "Camera not ready. Please wait for the video to load.",
         variant: "destructive",
       });
       return;
@@ -278,6 +288,14 @@ export const W9CameraCapture = () => {
                   className="w-full h-full object-cover"
                 />
                 <canvas ref={canvasRef} className="hidden" />
+                {!videoLoaded && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="text-white text-center">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                      <p>Loading camera...</p>
+                    </div>
+                  </div>
+                )}
               </div>
               {cameraError && (
                 <div className="text-red-500 text-sm text-center p-2 bg-red-50 rounded">
@@ -288,10 +306,10 @@ export const W9CameraCapture = () => {
                 <Button 
                   onClick={capturePhoto} 
                   className="flex-1" 
-                  disabled={!!cameraError}
+                  disabled={!!cameraError || !videoLoaded}
                 >
                   <Camera className="h-4 w-4 mr-2" />
-                  Capture
+                  {videoLoaded ? 'Capture' : 'Loading...'}
                 </Button>
                 <Button onClick={stopCamera} variant="outline">
                   Cancel
