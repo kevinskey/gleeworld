@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -355,10 +354,12 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
         console.error('Session error:', sessionError);
       }
 
-      // Save form record to database with detailed logging
+      // Save form record to database with proper structure
       console.log('=== STEP 4: SAVING TO DATABASE ===');
+      
+      // Create a clean payload with explicit null handling
       const dbPayload = {
-        user_id: user?.id || null,
+        user_id: user?.id || null, // Explicitly set to null for guest users
         storage_path: fileName,
         form_data: {
           ...formData,
@@ -367,7 +368,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
           submissionType: user ? 'authenticated' : 'guest',
           submissionTimestamp: new Date().toISOString()
         },
-        status: 'submitted'
+        status: 'submitted' as const
       };
 
       console.log('=== DATABASE PAYLOAD DETAILS ===');
@@ -387,13 +388,14 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
         console.error('Database connection test failed:', testError);
         throw new Error('Database connection failed: ' + testError.message);
       }
-      console.log('Database connection test successful');
+      console.log('Database connection test successful, count:', testData);
 
-      // Insert to database
+      // Attempt simple insert with minimal logging to avoid potential interference
       console.log('=== ATTEMPTING DATABASE INSERT ===');
+      
       const { error: dbError, data: insertedData } = await supabase
         .from('w9_forms')
-        .insert(dbPayload)
+        .insert([dbPayload])
         .select()
         .single();
 
@@ -403,20 +405,24 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
         console.error('Error message:', dbError.message);
         console.error('Error details:', dbError.details);
         console.error('Error hint:', dbError.hint);
-        console.error('Full error object:', dbError);
+        console.error('Full error object:', JSON.stringify(dbError, null, 2));
         
-        // Try a more detailed error analysis
-        if (dbError.message.includes('row-level security')) {
-          console.error('RLS POLICY VIOLATION - Current user:', user?.id || 'anonymous');
-          console.error('Payload user_id:', dbPayload.user_id);
-          console.error('Auth session user:', session?.user?.id || 'no session');
+        // Try a more basic insert without select
+        console.log('=== ATTEMPTING BASIC INSERT WITHOUT SELECT ===');
+        const { error: basicInsertError } = await supabase
+          .from('w9_forms')
+          .insert([dbPayload]);
+          
+        if (basicInsertError) {
+          console.error('Basic insert also failed:', basicInsertError);
+          throw new Error(`Database insertion failed: ${basicInsertError.message} (Code: ${basicInsertError.code})`);
+        } else {
+          console.log('Basic insert succeeded!');
         }
-        
-        throw new Error(`Database insertion failed: ${dbError.message} (Code: ${dbError.code})`);
+      } else {
+        console.log('=== SUCCESS: FORM SAVED TO DATABASE ===');
+        console.log('Inserted data:', insertedData);
       }
-
-      console.log('=== SUCCESS: FORM SAVED TO DATABASE ===');
-      console.log('Inserted data:', insertedData);
 
       toast({
         title: "W9 Form Submitted Successfully",
