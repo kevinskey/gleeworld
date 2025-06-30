@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -339,20 +340,25 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
 
       if (uploadError) {
         console.error('=== STORAGE UPLOAD ERROR ===');
-        console.error('Upload error details:', {
-          message: uploadError.message,
-          error: uploadError
-        });
+        console.error('Upload error details:', uploadError);
         throw new Error('Failed to upload PDF: ' + uploadError.message);
       }
 
       console.log('=== PDF UPLOADED SUCCESSFULLY ===');
       console.log('Upload result:', uploadData);
 
-      // Save form record to database
-      console.log('=== STEP 3: SAVING TO DATABASE ===');
+      // Check current auth state before database insertion
+      console.log('=== STEP 3: CHECKING AUTH STATE ===');
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      console.log('Current session:', session?.user?.id || 'No session');
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+      }
+
+      // Save form record to database with detailed logging
+      console.log('=== STEP 4: SAVING TO DATABASE ===');
       const dbPayload = {
-        user_id: user?.id || null, // This is now nullable and should work with our new RLS policy
+        user_id: user?.id || null,
         storage_path: fileName,
         form_data: {
           ...formData,
@@ -364,20 +370,32 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
         status: 'submitted'
       };
 
-      console.log('=== DATABASE PAYLOAD ===');
-      console.log('Payload details:', {
-        user_id: dbPayload.user_id || 'NULL (GUEST USER)',
-        storage_path: dbPayload.storage_path,
-        status: dbPayload.status,
-        submission_type: dbPayload.form_data.submissionType
-      });
+      console.log('=== DATABASE PAYLOAD DETAILS ===');
+      console.log('user_id:', dbPayload.user_id);
+      console.log('storage_path:', dbPayload.storage_path);
+      console.log('status:', dbPayload.status);
+      console.log('form_data keys:', Object.keys(dbPayload.form_data));
 
-      // Insert to database with the new universal policy
+      // Test database connection first
+      console.log('=== TESTING DATABASE CONNECTION ===');
+      const { data: testData, error: testError } = await supabase
+        .from('w9_forms')
+        .select('count(*)')
+        .single();
+      
+      if (testError) {
+        console.error('Database connection test failed:', testError);
+        throw new Error('Database connection failed: ' + testError.message);
+      }
+      console.log('Database connection test successful');
+
+      // Insert to database
       console.log('=== ATTEMPTING DATABASE INSERT ===');
       const { error: dbError, data: insertedData } = await supabase
         .from('w9_forms')
         .insert(dbPayload)
-        .select();
+        .select()
+        .single();
 
       if (dbError) {
         console.error('=== DATABASE ERROR DETAILS ===');
@@ -387,14 +405,14 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
         console.error('Error hint:', dbError.hint);
         console.error('Full error object:', dbError);
         
-        // Show specific error to user
-        toast({
-          title: "Database Error",
-          description: `Error ${dbError.code}: ${dbError.message}`,
-          variant: "destructive",
-        });
+        // Try a more detailed error analysis
+        if (dbError.message.includes('row-level security')) {
+          console.error('RLS POLICY VIOLATION - Current user:', user?.id || 'anonymous');
+          console.error('Payload user_id:', dbPayload.user_id);
+          console.error('Auth session user:', session?.user?.id || 'no session');
+        }
         
-        throw new Error(`Failed to save form data: ${dbError.message} (Code: ${dbError.code})`);
+        throw new Error(`Database insertion failed: ${dbError.message} (Code: ${dbError.code})`);
       }
 
       console.log('=== SUCCESS: FORM SAVED TO DATABASE ===');
