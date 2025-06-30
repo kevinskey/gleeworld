@@ -16,6 +16,7 @@ export const W9CameraCapture = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [videoReady, setVideoReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -25,6 +26,7 @@ export const W9CameraCapture = () => {
   const startCamera = useCallback(async () => {
     try {
       setCameraError(null);
+      setVideoReady(false);
       console.log('Starting camera...');
       
       const constraints = {
@@ -38,25 +40,38 @@ export const W9CameraCapture = () => {
       
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       console.log('Camera stream obtained:', mediaStream);
-      setStream(mediaStream);
       
       if (videoRef.current) {
         const video = videoRef.current;
-        video.srcObject = mediaStream;
-        video.setAttribute('playsinline', 'true');
-        video.muted = true;
         
-        // Wait for the video to be ready and then play
-        video.onloadedmetadata = async () => {
-          try {
-            await video.play();
+        // Set up event listeners before setting stream
+        video.onloadedmetadata = () => {
+          console.log('Video metadata loaded');
+          setVideoReady(true);
+          video.play().then(() => {
             console.log('Video playing successfully');
             setIsCapturing(true);
-          } catch (playError) {
-            console.error('Error playing video:', playError);
-            setCameraError('Failed to start video playback. Please allow camera access and try again.');
-          }
+          }).catch((error) => {
+            console.error('Error playing video:', error);
+            setCameraError('Failed to start video playback');
+          });
         };
+        
+        video.onerror = (error) => {
+          console.error('Video error:', error);
+          setCameraError('Video error occurred');
+        };
+        
+        // Set video properties
+        video.setAttribute('playsinline', 'true');
+        video.muted = true;
+        video.autoplay = true;
+        
+        // Assign stream
+        video.srcObject = mediaStream;
+        setStream(mediaStream);
+        
+        console.log('Video element setup complete');
       }
       
     } catch (error) {
@@ -95,6 +110,7 @@ export const W9CameraCapture = () => {
       videoRef.current.srcObject = null;
     }
     setIsCapturing(false);
+    setVideoReady(false);
     setCameraError(null);
   }, [stream]);
 
@@ -287,17 +303,18 @@ export const W9CameraCapture = () => {
 
           {isCapturing && (
             <div className="space-y-4">
-              <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
+              <div className="relative bg-black rounded-lg overflow-hidden" style={{ aspectRatio: '16/9', minHeight: '300px' }}>
                 <video
                   ref={videoRef}
                   autoPlay
                   playsInline
                   muted
                   className="w-full h-full object-cover"
+                  style={{ display: 'block' }}
                 />
                 <canvas ref={canvasRef} className="hidden" />
-                {!stream && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black">
+                {!videoReady && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75">
                     <div className="text-white text-center">
                       <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
                       <p>Loading camera...</p>
@@ -315,7 +332,7 @@ export const W9CameraCapture = () => {
                 <Button 
                   onClick={capturePhoto} 
                   className="flex-1" 
-                  disabled={!stream || !!cameraError}
+                  disabled={!videoReady || !!cameraError}
                 >
                   <Camera className="h-4 w-4 mr-2" />
                   Capture
