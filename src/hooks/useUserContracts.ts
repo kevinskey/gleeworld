@@ -32,9 +32,9 @@ export const useUserContracts = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('useUserContracts: Fetching contracts for user:', user.id);
+      console.log('useUserContracts: Fetching contracts for user:', user.id, 'email:', user.email);
 
-      // Get contracts that have been sent to this user by checking contract_recipients_v2
+      // First, check for contracts sent to this user via email
       const { data: recipientData, error: recipientError } = await supabase
         .from('contract_recipients_v2')
         .select('contract_id')
@@ -42,13 +42,29 @@ export const useUserContracts = () => {
 
       if (recipientError) {
         console.error('useUserContracts: Error fetching recipient data:', recipientError);
-        throw recipientError;
       }
 
-      const contractIds = recipientData?.map(r => r.contract_id) || [];
-      console.log('useUserContracts: Found contract IDs for user:', contractIds);
+      const contractIdsFromRecipients = recipientData?.map(r => r.contract_id) || [];
+      console.log('useUserContracts: Contract IDs from recipients:', contractIdsFromRecipients);
 
-      if (contractIds.length === 0) {
+      // Also check for contracts where the user has signatures
+      const { data: signatureData, error: signatureError } = await supabase
+        .from('contract_signatures_v2')
+        .select('contract_id')
+        .not('artist_signed_at', 'is', null);
+
+      if (signatureError) {
+        console.error('useUserContracts: Error fetching signature data:', signatureError);
+      }
+
+      const contractIdsFromSignatures = signatureData?.map(s => s.contract_id) || [];
+      console.log('useUserContracts: Contract IDs from signatures:', contractIdsFromSignatures);
+
+      // Combine all contract IDs and remove duplicates
+      const allContractIds = [...new Set([...contractIdsFromRecipients, ...contractIdsFromSignatures])];
+      console.log('useUserContracts: All contract IDs:', allContractIds);
+
+      if (allContractIds.length === 0) {
         console.log('useUserContracts: No contracts found for user');
         setContracts([]);
         return;
@@ -64,7 +80,7 @@ export const useUserContracts = () => {
           status,
           created_at
         `)
-        .in('id', contractIds)
+        .in('id', allContractIds)
         .order('created_at', { ascending: false });
 
       if (contractsError) {
