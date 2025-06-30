@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +16,7 @@ export const W9CameraCapture = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const [videoLoaded, setVideoLoaded] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -25,7 +26,7 @@ export const W9CameraCapture = () => {
   const startCamera = useCallback(async () => {
     try {
       setCameraError(null);
-      setVideoLoaded(false);
+      setVideoReady(false);
       console.log('Starting camera...');
       
       const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -43,16 +44,23 @@ export const W9CameraCapture = () => {
         const video = videoRef.current;
         video.srcObject = mediaStream;
         
-        // Simple approach - just play the video
-        video.onloadedmetadata = () => {
-          console.log('Video metadata loaded, playing video');
-          video.play().then(() => {
+        // Wait for video to be ready and then play
+        video.onloadedmetadata = async () => {
+          console.log('Video metadata loaded');
+          try {
+            await video.play();
             console.log('Video playing successfully');
-            setVideoLoaded(true);
-          }).catch((error) => {
+            setVideoReady(true);
+          } catch (error) {
             console.error('Error playing video:', error);
             setCameraError('Failed to start video playback');
-          });
+          }
+        };
+
+        // Additional event for when video starts playing
+        video.onplaying = () => {
+          console.log('Video is now playing');
+          setVideoReady(true);
         };
       }
       
@@ -81,7 +89,7 @@ export const W9CameraCapture = () => {
       videoRef.current.srcObject = null;
     }
     setIsCapturing(false);
-    setVideoLoaded(false);
+    setVideoReady(false);
     setCameraError(null);
   }, [stream]);
 
@@ -281,10 +289,11 @@ export const W9CameraCapture = () => {
                   playsInline
                   muted
                   className="w-full h-full object-cover"
+                  style={{ display: videoReady ? 'block' : 'none' }}
                 />
                 <canvas ref={canvasRef} className="hidden" />
-                {!videoLoaded && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                {!videoReady && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black">
                     <div className="text-white text-center">
                       <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
                       <p>Loading camera...</p>
@@ -301,7 +310,7 @@ export const W9CameraCapture = () => {
                 <Button 
                   onClick={capturePhoto} 
                   className="flex-1" 
-                  disabled={!!cameraError || !videoLoaded}
+                  disabled={!videoReady || !!cameraError}
                 >
                   <Camera className="h-4 w-4 mr-2" />
                   Capture
