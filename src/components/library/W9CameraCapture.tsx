@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +15,6 @@ export const W9CameraCapture = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const [videoReady, setVideoReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -26,7 +24,6 @@ export const W9CameraCapture = () => {
   const startCamera = useCallback(async () => {
     try {
       setCameraError(null);
-      setVideoReady(false);
       console.log('Starting camera...');
       
       const constraints = {
@@ -44,32 +41,24 @@ export const W9CameraCapture = () => {
       if (videoRef.current) {
         const video = videoRef.current;
         
-        // Set up event listeners before setting stream
-        video.onloadedmetadata = () => {
-          console.log('Video metadata loaded');
-          setVideoReady(true);
-          video.play().then(() => {
-            console.log('Video playing successfully');
-            setIsCapturing(true);
-          }).catch((error) => {
-            console.error('Error playing video:', error);
-            setCameraError('Failed to start video playback');
-          });
-        };
-        
-        video.onerror = (error) => {
-          console.error('Video error:', error);
-          setCameraError('Video error occurred');
-        };
-        
-        // Set video properties
+        // Set video properties first
         video.setAttribute('playsinline', 'true');
         video.muted = true;
         video.autoplay = true;
         
-        // Assign stream
+        // Assign stream and start capturing immediately
         video.srcObject = mediaStream;
         setStream(mediaStream);
+        setIsCapturing(true);
+        
+        // Play the video
+        try {
+          await video.play();
+          console.log('Video playing successfully');
+        } catch (playError) {
+          console.error('Error playing video:', playError);
+          // Don't throw here, the video might still work
+        }
         
         console.log('Video element setup complete');
       }
@@ -110,7 +99,6 @@ export const W9CameraCapture = () => {
       videoRef.current.srcObject = null;
     }
     setIsCapturing(false);
-    setVideoReady(false);
     setCameraError(null);
   }, [stream]);
 
@@ -310,10 +298,9 @@ export const W9CameraCapture = () => {
                   playsInline
                   muted
                   className="w-full h-full object-cover"
-                  style={{ display: 'block' }}
                 />
                 <canvas ref={canvasRef} className="hidden" />
-                {!videoReady && (
+                {!stream && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75">
                     <div className="text-white text-center">
                       <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
@@ -332,7 +319,7 @@ export const W9CameraCapture = () => {
                 <Button 
                   onClick={capturePhoto} 
                   className="flex-1" 
-                  disabled={!videoReady || !!cameraError}
+                  disabled={!stream || !!cameraError}
                 >
                   <Camera className="h-4 w-4 mr-2" />
                   Capture
