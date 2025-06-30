@@ -43,33 +43,17 @@ export const W9CameraCapture = () => {
         const video = videoRef.current;
         video.srcObject = mediaStream;
         
-        // Set up event listeners
-        const handleCanPlay = () => {
-          console.log('Video can play, starting playback');
-          setVideoLoaded(true);
-          video.play().catch((error) => {
+        // Simple approach - just play the video
+        video.onloadedmetadata = () => {
+          console.log('Video metadata loaded, playing video');
+          video.play().then(() => {
+            console.log('Video playing successfully');
+            setVideoLoaded(true);
+          }).catch((error) => {
             console.error('Error playing video:', error);
             setCameraError('Failed to start video playback');
           });
         };
-
-        const handleLoadedData = () => {
-          console.log('Video data loaded');
-          setVideoLoaded(true);
-        };
-
-        // Use multiple events to ensure we catch when video is ready
-        video.addEventListener('canplay', handleCanPlay);
-        video.addEventListener('loadeddata', handleLoadedData);
-        
-        // Force play attempt after a short delay
-        setTimeout(() => {
-          if (!videoLoaded) {
-            console.log('Forcing video play attempt');
-            setVideoLoaded(true);
-            video.play().catch(console.error);
-          }
-        }, 1000);
       }
       
       setIsCapturing(true);
@@ -82,7 +66,7 @@ export const W9CameraCapture = () => {
         variant: "destructive",
       });
     }
-  }, [toast, videoLoaded]);
+  }, [toast]);
 
   const stopCamera = useCallback(() => {
     console.log('Stopping camera...');
@@ -317,7 +301,7 @@ export const W9CameraCapture = () => {
                 <Button 
                   onClick={capturePhoto} 
                   className="flex-1" 
-                  disabled={!!cameraError}
+                  disabled={!!cameraError || !videoLoaded}
                 >
                   <Camera className="h-4 w-4 mr-2" />
                   Capture
