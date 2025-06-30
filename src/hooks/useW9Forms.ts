@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -229,8 +230,10 @@ export const useW9Forms = () => {
     fetchW9Forms();
 
     // Set up real-time subscription for this user's W9 forms only
+    // Use a unique channel name to prevent conflicts
+    const channelName = `w9-forms-${user.id}-${Date.now()}`;
     const channel = supabase
-      .channel('w9-forms-changes')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -251,7 +254,7 @@ export const useW9Forms = () => {
       console.log('useW9Forms: Cleaning up W9 forms subscription');
       supabase.removeChannel(channel);
     };
-  }, [user, authLoading]);
+  }, [user?.id, authLoading]); // Only depend on user.id and authLoading
 
   return {
     w9Forms,
