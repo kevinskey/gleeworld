@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,61 +26,93 @@ export const W9CameraCapture = () => {
     try {
       setCameraError(null);
       setVideoReady(false);
-      console.log('Starting camera...');
+      console.log('Starting camera on Mac...');
       
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
+      // Mac-friendly camera constraints
+      const constraints = {
         video: { 
           facingMode: 'environment',
-          width: { ideal: 1920, min: 640 },
-          height: { ideal: 1080, min: 480 }
-        }
-      });
+          width: { ideal: 1280, min: 640, max: 1920 },
+          height: { ideal: 720, min: 480, max: 1080 },
+          frameRate: { ideal: 30, max: 30 }
+        },
+        audio: false
+      };
       
-      console.log('Camera stream obtained:', mediaStream);
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('Camera stream obtained for Mac:', mediaStream);
       setStream(mediaStream);
       
       if (videoRef.current) {
         const video = videoRef.current;
         video.srcObject = mediaStream;
         
-        // Wait for video to be ready and then play
-        video.onloadedmetadata = async () => {
-          console.log('Video metadata loaded');
+        // Mac Safari specific handling
+        video.setAttribute('playsinline', 'true');
+        video.setAttribute('webkit-playsinline', 'true');
+        video.muted = true;
+        
+        // Promise-based approach for better Mac compatibility
+        const playVideo = async () => {
           try {
+            console.log('Attempting to play video on Mac...');
             await video.play();
-            console.log('Video playing successfully');
+            console.log('Video playing successfully on Mac');
             setVideoReady(true);
-          } catch (error) {
-            console.error('Error playing video:', error);
-            setCameraError('Failed to start video playback');
+            setIsCapturing(true);
+          } catch (playError) {
+            console.error('Error playing video on Mac:', playError);
+            setCameraError('Failed to start video playback. Please allow camera access and try again.');
           }
         };
 
-        // Additional event for when video starts playing
-        video.onplaying = () => {
-          console.log('Video is now playing');
-          setVideoReady(true);
-        };
+        // Wait for metadata and then play
+        if (video.readyState >= 2) {
+          // Video is already loaded
+          await playVideo();
+        } else {
+          video.addEventListener('loadedmetadata', playVideo, { once: true });
+        }
+        
+        // Fallback timeout for Mac
+        setTimeout(() => {
+          if (!videoReady && mediaStream.active) {
+            console.log('Mac camera timeout - forcing video display');
+            setVideoReady(true);
+            setIsCapturing(true);
+          }
+        }, 3000);
       }
       
-      setIsCapturing(true);
     } catch (error) {
-      console.error('Error accessing camera:', error);
-      setCameraError('Unable to access camera. Please check permissions and ensure you\'re using HTTPS.');
+      console.error('Error accessing camera on Mac:', error);
+      let errorMessage = 'Unable to access camera on Mac. ';
+      
+      if (error instanceof Error) {
+        if (error.name === 'NotAllowedError') {
+          errorMessage += 'Please allow camera access in your browser settings and try again.';
+        } else if (error.name === 'NotFoundError') {
+          errorMessage += 'No camera found. Please connect a camera and try again.';
+        } else {
+          errorMessage += 'Please check camera permissions and ensure you\'re using HTTPS.';
+        }
+      }
+      
+      setCameraError(errorMessage);
       toast({
         title: "Camera Error",
-        description: "Unable to access camera. Please check permissions and ensure you're using HTTPS.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
-  }, [toast]);
+  }, [toast, videoReady]);
 
   const stopCamera = useCallback(() => {
-    console.log('Stopping camera...');
+    console.log('Stopping camera on Mac...');
     if (stream) {
       stream.getTracks().forEach(track => {
         track.stop();
-        console.log('Camera track stopped');
+        console.log('Mac camera track stopped');
       });
       setStream(null);
     }
@@ -103,7 +134,7 @@ export const W9CameraCapture = () => {
 
   const capturePhoto = async () => {
     if (!videoRef.current || !canvasRef.current) {
-      console.error('Video or canvas ref not available');
+      console.error('Video or canvas ref not available on Mac');
       toast({
         title: "Error",
         description: "Camera not ready. Please try again.",
@@ -112,13 +143,13 @@ export const W9CameraCapture = () => {
       return;
     }
 
-    console.log('Capturing photo...');
+    console.log('Capturing photo on Mac...');
     const canvas = canvasRef.current;
     const video = videoRef.current;
     const context = canvas.getContext('2d');
 
     if (!context) {
-      console.error('Canvas context not available');
+      console.error('Canvas context not available on Mac');
       return;
     }
 
@@ -126,13 +157,13 @@ export const W9CameraCapture = () => {
     canvas.width = video.videoWidth || 640;
     canvas.height = video.videoHeight || 480;
     
-    console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
+    console.log('Mac canvas dimensions:', canvas.width, 'x', canvas.height);
     
     // Draw the video frame to canvas
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-    console.log('Image captured, data URL length:', imageDataUrl.length);
+    console.log('Image captured on Mac, data URL length:', imageDataUrl.length);
     setCapturedImage(imageDataUrl);
     stopCamera();
   };
@@ -296,7 +327,8 @@ export const W9CameraCapture = () => {
                   <div className="absolute inset-0 flex items-center justify-center bg-black">
                     <div className="text-white text-center">
                       <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                      <p>Loading camera...</p>
+                      <p>Loading camera on Mac...</p>
+                      <p className="text-sm mt-2">Please allow camera access if prompted</p>
                     </div>
                   </div>
                 )}
