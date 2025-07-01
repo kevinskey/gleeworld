@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -151,7 +150,7 @@ const System = () => {
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="ghost" 
-                  className={`flex items-center gap-1 text-gray-700 hover:text-gray-900 text-xs px-2 py-2 h-auto ${
+                  className={`flex items-center gap-1 bg-brand-500 text-white hover:bg-brand-600 text-xs px-2 py-2 h-auto ${
                     ['financial-overview', 'user-records', 'payment-tracking', 'stipends', 'budget', 'reports'].includes(activeTab) 
                       ? 'bg-blue-600 text-white' 
                       : ''
@@ -162,7 +161,7 @@ const System = () => {
                   <ChevronDown className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg">
                 <DropdownMenuItem onClick={() => setActiveTab('financial-overview')}>
                   <TrendingUp className="h-4 w-4 mr-2" />
                   Overview
@@ -196,14 +195,14 @@ const System = () => {
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="ghost" 
-                  className="flex items-center gap-1 text-gray-700 hover:text-gray-900 text-xs px-2 py-2 h-auto"
+                  className="flex items-center gap-1 bg-brand-500 text-white hover:bg-brand-600 text-xs px-2 py-2 h-auto"
                 >
                   <Settings className="h-3 w-3" />
                   Tools
                   <ChevronDown className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg">
                 <DropdownMenuItem onClick={() => console.log('System settings')}>
                   <Settings className="h-4 w-4 mr-2" />
                   System Settings
