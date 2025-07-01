@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { AdminPanel } from "@/components/AdminPanel";
@@ -15,6 +14,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Shield, Users, DollarSign, BarChart3, FileText } from "lucide-react";
 import { useState } from "react";
 import { BulkW9EmailDialog } from "@/components/admin/BulkW9EmailDialog";
+import { W9Management } from "@/components/admin/W9Management";
+import { W9SummaryStats } from "@/components/admin/W9SummaryStats";
+import { useAdminW9Forms } from "@/hooks/useAdminW9Forms";
 
 const System = () => {
   const { user } = useAuth();
@@ -22,6 +24,7 @@ const System = () => {
   const { users, loading, error, refetch } = useUsers();
   const { logs: activityLogs } = useActivityLogs();
   const { contracts, loading: contractsLoading } = useContracts();
+  const { w9Forms, loading: w9Loading } = useAdminW9Forms();
   const [bulkW9EmailOpen, setBulkW9EmailOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
 
@@ -30,8 +33,11 @@ const System = () => {
 
   const handleQuickAction = (action: string) => {
     switch (action) {
-      case 'w9-forms':
+      case 'bulk-w9':
         setBulkW9EmailOpen(true);
+        break;
+      case 'w9-forms':
+        setActiveTab('w9-forms');
         break;
       case 'users':
         setActiveTab('users');
@@ -84,6 +90,10 @@ const System = () => {
               <FileText className="h-4 w-4 mr-2" />
               Contracts
             </TabsTrigger>
+            <TabsTrigger value="w9-forms" className="text-white data-[state=active]:bg-spelman-500/30">
+              <FileText className="h-4 w-4 mr-2" />
+              W9 Forms
+            </TabsTrigger>
             <TabsTrigger value="admin" className="text-white data-[state=active]:bg-spelman-500/30">
               <Shield className="h-4 w-4 mr-2" />
               Admin Panel
@@ -114,6 +124,16 @@ const System = () => {
                 loading={contractsLoading}
               />
               <ContractManagement />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="w9-forms">
+            <div className="space-y-4">
+              <W9SummaryStats 
+                w9Forms={w9Forms}
+                loading={w9Loading}
+              />
+              <W9Management />
             </div>
           </TabsContent>
 

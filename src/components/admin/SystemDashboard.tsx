@@ -1,8 +1,7 @@
-
 import { AdminSummaryStats } from "./AdminSummaryStats";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, FileText, Settings, Activity, BarChart3 } from "lucide-react";
+import { Users, FileText, Settings, Activity, BarChart3, Mail } from "lucide-react";
 import { User } from "@/hooks/useUsers";
 import { ActivityLog } from "@/hooks/useActivityLogs";
 
@@ -31,10 +30,17 @@ export const SystemDashboard = ({ users, loading, activityLogs, onQuickAction }:
     },
     {
       id: 'w9-forms',
-      label: 'W9 Forms',
-      description: 'Send W9 forms to users',
+      label: 'W9 Management',
+      description: 'Review and approve W9 forms',
       icon: FileText,
       color: 'bg-purple-500 hover:bg-purple-600'
+    },
+    {
+      id: 'bulk-w9',
+      label: 'Send W9 Forms',
+      description: 'Send W9 forms to users',
+      icon: Mail,
+      color: 'bg-indigo-500 hover:bg-indigo-600'
     },
     {
       id: 'settings',
