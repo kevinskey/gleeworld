@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Header } from "@/components/Header";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { StatsCards } from "@/components/StatsCards";
 import { ContractCreationCollapsible } from "@/components/ContractCreationCollapsible";
 import { ContractTemplatesCollapsible } from "@/components/ContractTemplatesCollapsible";
@@ -14,6 +14,8 @@ import { useContracts } from "@/hooks/useContracts";
 import { useContractTemplates } from "@/hooks/useContractTemplates";
 import { useTemplateOperations } from "@/hooks/useTemplateOperations";
 import { useSearchParams } from "react-router-dom";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { ErrorState } from "@/components/shared/ErrorState";
 import type { Contract } from "@/hooks/useContracts";
 
 const Index = () => {
@@ -48,7 +50,6 @@ const Index = () => {
     setEditTemplateOpen(open);
     if (!open) {
       setSelectedTemplate(null);
-      // Remove the edit-template parameter from URL
       const newSearchParams = new URLSearchParams(searchParams);
       newSearchParams.delete('edit-template');
       setSearchParams(newSearchParams);
@@ -81,19 +82,37 @@ const Index = () => {
 
   const handleUseTemplate = (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => {
     console.log('Template selected for use:', templateName);
-    // This would typically populate a contract creation form or navigate to a contract creation page
-    // For now, we'll just log it
   };
 
   const handleNewContract = () => {
     console.log('New contract clicked');
-    // This would typically navigate to contract creation or open a creation dialog
   };
 
   const handleNewTemplate = () => {
     console.log('New template clicked');
     setActiveTab("library");
   };
+
+  if (loading) {
+    return (
+      <UniversalLayout>
+        <LoadingSpinner size="lg" text="Loading contracts..." />
+      </UniversalLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <UniversalLayout>
+        <div className="flex items-center justify-center py-20">
+          <ErrorState 
+            message={error} 
+            onRetry={refetch}
+          />
+        </div>
+      </UniversalLayout>
+    );
+  }
 
   const renderContent = () => {
     console.log('Index: Rendering content for tab:', activeTab);
@@ -138,8 +157,7 @@ const Index = () => {
   console.log('Index: About to render main component');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900">
-      <Header activeTab={activeTab} onTabChange={setActiveTab} />
+    <UniversalLayout>
       <div className="container mx-auto px-4 py-6">
         {renderContent()}
       </div>
@@ -159,7 +177,7 @@ const Index = () => {
         onUpdate={handleUpdateTemplate}
         isUpdating={isUpdating}
       />
-    </div>
+    </UniversalLayout>
   );
 };
 

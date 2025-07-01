@@ -1,10 +1,11 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Header } from "@/components/Header";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { Library } from "@/components/Library";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { ErrorState } from "@/components/shared/ErrorState";
 import { 
   FileText, 
   CheckCircle, 
@@ -34,55 +35,40 @@ export const UserDashboard = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900 flex items-center justify-center">
-        <Card className="w-full max-w-md mx-4">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <User className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold mb-2 text-gray-900">Authentication Required</h3>
-              <p className="text-gray-600 mb-4">Please sign in to access your dashboard.</p>
-              <Button onClick={() => window.location.href = '/auth'}>
-                Sign In
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900">
-        <Header activeTab={activeTab} onTabChange={setActiveTab} />
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <RefreshCw className="h-8 w-8 animate-spin text-white mx-auto mb-4" />
-            <p className="text-white/70">Loading your dashboard...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900">
-        <Header activeTab={activeTab} onTabChange={setActiveTab} />
+      <UniversalLayout>
         <div className="flex items-center justify-center py-20">
           <Card className="w-full max-w-md mx-4">
             <CardContent className="pt-6">
               <div className="text-center">
-                <p className="text-red-600 mb-4">{error}</p>
-                <Button onClick={refetch} variant="outline">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Try Again
+                <User className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-semibold mb-2 text-gray-900">Authentication Required</h3>
+                <p className="text-gray-600 mb-4">Please sign in to access your dashboard.</p>
+                <Button onClick={() => window.location.href = '/auth'}>
+                  Sign In
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
-      </div>
+      </UniversalLayout>
+    );
+  }
+
+  if (loading) {
+    return (
+      <UniversalLayout>
+        <LoadingSpinner size="lg" text="Loading your dashboard..." />
+      </UniversalLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <UniversalLayout>
+        <div className="flex items-center justify-center py-20">
+          <ErrorState message={error} onRetry={refetch} />
+        </div>
+      </UniversalLayout>
     );
   }
 
@@ -91,7 +77,6 @@ export const UserDashboard = () => {
       case "library":
         return <Library />;
       case "finance":
-        // TODO: Add Finance component when needed  
         return <div>Finance content coming soon...</div>;
       case "dashboard":
       default:
@@ -216,11 +201,10 @@ export const UserDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900">
-      <Header activeTab={activeTab} onTabChange={setActiveTab} />
+    <UniversalLayout>
       <div className="container mx-auto px-4 py-6">
         {renderContent()}
       </div>
-    </div>
+    </UniversalLayout>
   );
 };
