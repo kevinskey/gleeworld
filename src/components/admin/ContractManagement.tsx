@@ -327,7 +327,7 @@ export const ContractManagement = () => {
                       size="sm"
                       onClick={() => handleViewContract(contract)}
                       title="View Contract"
-                      className="h-8 w-8 p-0"
+                      className="h-8 w-8 p-0 bg-white border-brand-300 text-brand-700 hover:bg-brand-50 hover:text-brand-800"
                     >
                       <Eye className="h-3 w-3" />
                     </Button>
@@ -336,7 +336,7 @@ export const ContractManagement = () => {
                       size="sm"
                       onClick={() => handleSendContract(contract)}
                       title="Send Contract"
-                      className="h-8 w-8 p-0"
+                      className="h-8 w-8 p-0 bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:text-blue-800"
                     >
                       <Send className="h-3 w-3" />
                     </Button>
@@ -345,7 +345,7 @@ export const ContractManagement = () => {
                       size="sm"
                       onClick={() => handleDownloadContract(contract)}
                       title="Download"
-                      className="h-8 w-8 p-0"
+                      className="h-8 w-8 p-0 bg-white border-green-300 text-green-700 hover:bg-green-50 hover:text-green-800"
                     >
                       <Download className="h-3 w-3" />
                     </Button>
@@ -353,7 +353,7 @@ export const ContractManagement = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => deleteContract(contract.id)}
-                      className="border-red-300 text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+                      className="h-8 w-8 p-0 bg-white border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800"
                       title="Delete Contract"
                     >
                       <Trash2 className="h-3 w-3" />
