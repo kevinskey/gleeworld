@@ -47,11 +47,16 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
     const signatureMatch = content.match(/\[EMBEDDED_SIGNATURES\](.*?)\[\/EMBEDDED_SIGNATURES\]/s);
     if (signatureMatch) {
       try {
-        embeddedSignatures = JSON.parse(signatureMatch[1]);
-        console.log('Found embedded signatures:', embeddedSignatures);
+        const signaturesData = signatureMatch[1];
+        console.log('Raw signature data found:', signaturesData);
+        embeddedSignatures = JSON.parse(signaturesData);
+        console.log('Parsed embedded signatures:', embeddedSignatures);
       } catch (e) {
         console.error('Error parsing embedded signatures in viewer:', e);
+        console.log('Failed to parse signature data:', signatureMatch[1]);
       }
+    } else {
+      console.log('No embedded signatures found in contract content');
     }
     
     // Remove embedded signatures section from display and clean up signature fields text
@@ -74,13 +79,17 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
     });
     
     lines.forEach((line, index) => {
-      // Add artist signature after lines containing "Artist:" or "Signature" (but not admin lines)
+      // Check for artist signature placement first
       if ((line.toLowerCase().includes('artist:') || 
+           line.toLowerCase().includes('agreed and accepted by:') ||
            (line.toLowerCase().includes('signature') && 
             !line.toLowerCase().includes('dr.') && 
             !line.toLowerCase().includes('kevin') && 
             !line.toLowerCase().includes('johnson'))) && 
-          artistSignature) {
+          artistSignature && 
+          !processedLines.some(item => 
+            typeof item === 'object' && item.key && item.key.includes('artist-signature')
+          )) {
         
         processedLines.push(line);
         processedLines.push(
@@ -91,7 +100,7 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
         return;
       }
       
-      // Add admin signature before lines containing "Dr. Kevin P. Johnson"
+      // Check for admin signature placement - before "Printed Name: Dr. Kevin P. Johnson"
       if (line.includes('Printed Name:') && line.includes('Dr. Kevin P. Johnson') && adminSignature) {
         // Add admin signature BEFORE this line
         processedLines.push(
@@ -102,69 +111,44 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
         
         // Add the printed name line
         processedLines.push(line);
-        
-        // Check if the next line contains "Title:" and align date with it
-        if (index + 1 < lines.length && lines[index + 1].includes('Title:')) {
-          const titleLine = lines[index + 1];
-          processedLines.push(titleLine);
-          
-          // Skip the title line in the main loop
-          lines[index + 1] = '';
-          
-          // Add date execution line aligned with title
-          if (index + 2 < lines.length && lines[index + 2].includes('Date Executed:')) {
-            processedLines.push(lines[index + 2]);
-            // Skip this line in the main loop
-            lines[index + 2] = '';
-          }
-        }
         return;
       }
       
-      // Skip empty lines that we've already processed
-      if (line === '') {
-        return;
-      }
-      
+      // Add the line as-is
       processedLines.push(line);
-      
-      // Add date signature if this is the last line or contains "date executed"
-      if ((index === lines.length - 1 || line.toLowerCase().includes('date executed')) && artistSignature) {
-        const embeddedDateSignature = embeddedSignatures.find(sig => sig.fieldId === 2);
-        if (embeddedDateSignature) {
-          processedLines.push(
-            <div key={`embedded-date-${embeddedDateSignature.fieldId}`} className="my-2 p-2 bg-blue-50 rounded">
-              <span className="text-sm font-medium text-blue-700">Date Signed: {embeddedDateSignature.dateSigned}</span>
-            </div>
-          );
-        }
-      }
     });
     
-    // If admin signature exists but wasn't placed above, add it at the end
-    if (adminSignature && !processedLines.some(line => 
-      typeof line === 'object' && line.key && line.key.includes('admin-signature')
-    )) {
-      processedLines.push(
-        <div key={`embedded-admin-signature-fallback-${adminSignature.fieldId}`} className="mt-6">
-          <h4 className="font-semibold mb-2">Administrator Signature:</h4>
-          <EmbeddedSignatureDisplay signature={adminSignature} />
-        </div>
+    // If no signatures were placed inline, add them at the end
+    if (embeddedSignatures.length > 0) {
+      const artistSignaturePlaced = processedLines.some(line => 
+        typeof line === 'object' && line.key && line.key.includes('artist-signature')
       );
+      const adminSignaturePlaced = processedLines.some(line => 
+        typeof line === 'object' && line.key && line.key.includes('admin-signature')
+      );
+      
+      if (!artistSignaturePlaced && artistSignature) {
+        console.log('Adding artist signature at the end');
+        processedLines.push(
+          <div key={`embedded-artist-signature-fallback-${artistSignature.fieldId}`} className="mt-6">
+            <h4 className="font-semibold mb-2">Artist Signature:</h4>
+            <EmbeddedSignatureDisplay signature={artistSignature} />
+          </div>
+        );
+      }
+      
+      if (!adminSignaturePlaced && adminSignature) {
+        console.log('Adding admin signature at the end');
+        processedLines.push(
+          <div key={`embedded-admin-signature-fallback-${adminSignature.fieldId}`} className="mt-6">
+            <h4 className="font-semibold mb-2">Administrator Signature:</h4>
+            <EmbeddedSignatureDisplay signature={adminSignature} />
+          </div>
+        );
+      }
     }
     
-    // If artist signature exists but wasn't placed above, add it at the end
-    if (artistSignature && !processedLines.some(line => 
-      typeof line === 'object' && line.key && line.key.includes('artist-signature')
-    )) {
-      processedLines.push(
-        <div key={`embedded-artist-signature-fallback-${artistSignature.fieldId}`} className="mt-6">
-          <h4 className="font-semibold mb-2">Artist Signature:</h4>
-          <EmbeddedSignatureDisplay signature={artistSignature} />
-        </div>
-      );
-    }
-    
+    console.log('Final processed lines count:', processedLines.length);
     return processedLines;
   };
 
