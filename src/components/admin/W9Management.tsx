@@ -42,32 +42,55 @@ export const W9Management = () => {
       setLoading(true);
       setError(null);
       
-      // Fetch all W9 forms with user information
-      let query = supabase
+      console.log('W9Management: Fetching W9 forms...');
+      
+      // First get all W9 forms
+      const { data: formsData, error: formsError } = await supabase
         .from('w9_forms')
-        .select(`
-          *,
-          profiles!left(email, full_name)
-        `)
+        .select('*')
         .order('submitted_at', { ascending: false });
 
-      const { data, error } = await query;
+      console.log('W9Management: Forms query result:', { data: formsData, error: formsError });
 
-      if (error) {
-        console.error('Error fetching W9 forms:', error);
-        throw error;
+      if (formsError) {
+        console.error('W9Management: Error fetching W9 forms:', formsError);
+        throw formsError;
       }
 
-      // Transform data to include user information
-      const transformedData = (data || []).map((form: any) => ({
-        ...form,
-        user_email: form.profiles?.email || 'Unknown',
-        user_name: form.profiles?.full_name || 'Unknown User'
-      }));
+      // Then get user profiles for forms that have user_id
+      const userIds = formsData?.filter(form => form.user_id).map(form => form.user_id) || [];
+      let profilesData: any[] = [];
+      
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, email, full_name')
+          .in('id', userIds);
 
+        console.log('W9Management: Profiles query result:', { data: profiles, error: profilesError });
+
+        if (profilesError) {
+          console.error('W9Management: Error fetching profiles:', profilesError);
+          // Don't throw here, just log the error and continue without user data
+        } else {
+          profilesData = profiles || [];
+        }
+      }
+
+      // Combine the data
+      const transformedData = (formsData || []).map((form: any) => {
+        const userProfile = profilesData.find(profile => profile.id === form.user_id);
+        return {
+          ...form,
+          user_email: userProfile?.email || 'Unknown',
+          user_name: userProfile?.full_name || 'Unknown User'
+        };
+      });
+
+      console.log('W9Management: Transformed data:', transformedData);
       setW9Forms(transformedData);
     } catch (error) {
-      console.error('Error fetching W9 forms:', error);
+      console.error('W9Management: Error in fetchW9Forms:', error);
       setError('Failed to load W9 forms');
       toast({
         title: "Error",
@@ -173,87 +196,89 @@ export const W9Management = () => {
 
   // Filter and sort forms
   const filteredForms = w9Forms.filter(form => {
-    const matchesSearch = 
-      (form.user_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (form.user_email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      form.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || form.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  }).sort((a, b) => {
-    const aValue = a[sortBy as keyof typeof a];
-    const bValue = b[sortBy as keyof typeof b];
+    const matchesSearch = searchTerm === "" || 
+      form.user_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      form.user_email?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    if (sortOrder === "asc") {
-      return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-    } else {
-      return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
-    }
+    const matchesStatus = statusFilter === "all" || form.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
   });
 
-  const statusOptions = [
-    { value: "all", label: "All Statuses" },
-    { value: "submitted", label: "Submitted" },
-    { value: "under_review", label: "Under Review" },
-    { value: "approved", label: "Approved" },
-    { value: "rejected", label: "Rejected" },
-    { value: "requires_revision", label: "Requires Revision" }
-  ];
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'approved': return <CheckCircle className="h-3 w-3" />;
-      case 'rejected': return <XCircle className="h-3 w-3" />;
-      case 'under_review': return <Clock className="h-3 w-3" />;
-      default: return <FileText className="h-3 w-3" />;
+  const sortedForms = [...filteredForms].sort((a, b) => {
+    let aVal, bVal;
+    
+    switch (sortBy) {
+      case 'user_name':
+        aVal = a.user_name || '';
+        bVal = b.user_name || '';
+        break;
+      case 'user_email':
+        aVal = a.user_email || '';
+        bVal = b.user_email || '';
+        break;
+      case 'status':
+        aVal = a.status;
+        bVal = b.status;
+        break;
+      case 'submitted_at':
+      default:
+        aVal = new Date(a.submitted_at).getTime();
+        bVal = new Date(b.submitted_at).getTime();
+        break;
     }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'under_review': return 'bg-yellow-100 text-yellow-800';
-      case 'requires_revision': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
+    
+    if (sortOrder === 'asc') {
+      return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+    } else {
+      return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
     }
-  };
+  });
 
   useEffect(() => {
     fetchW9Forms();
   }, []);
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'pending':
+        return <Clock className="h-4 w-4 text-yellow-600" />;
+      default:
+        return <XCircle className="h-4 w-4 text-red-600" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-red-100 text-red-800';
+    }
+  };
+
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            W9 Forms Management
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <RefreshCw className="h-6 w-6 animate-spin" />
-            <span className="ml-2">Loading W9 forms...</span>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2">Loading W9 forms...</p>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            W9 Forms Management
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={fetchW9Forms} variant="outline">
+        <CardContent className="pt-6">
+          <div className="text-center text-red-600">
+            <p>Error loading W9 forms: {error}</p>
+            <Button onClick={fetchW9Forms} className="mt-4">
               <RefreshCw className="h-4 w-4 mr-2" />
               Retry
             </Button>
@@ -264,204 +289,181 @@ export const W9Management = () => {
   }
 
   return (
-    <>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold">W9 Forms Management</h2>
+          <p className="text-gray-600">Manage and review W9 tax forms</p>
+        </div>
+        <Button onClick={fetchW9Forms}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
+      </div>
+
+      {/* Filters and Search */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                W9 Forms Management
-              </CardTitle>
-              <CardDescription>
-                Manage all W9 tax forms in the system ({filteredForms.length} of {w9Forms.length} forms)
-              </CardDescription>
-            </div>
-            <Button onClick={fetchW9Forms} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-          </div>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filters
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Filters and Search */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder="Search by name, email, or ID..."
+                placeholder="Search by name or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
+            
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue />
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                {statusOptions.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="submitted">Submitted</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={`${sortBy}-${sortOrder}`} onValueChange={(value) => {
-              const [field, order] = value.split('-');
-              setSortBy(field);
-              setSortOrder(order as "asc" | "desc");
-            }}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue />
+
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="submitted_at-desc">Newest First</SelectItem>
-                <SelectItem value="submitted_at-asc">Oldest First</SelectItem>
-                <SelectItem value="user_name-asc">Name A-Z</SelectItem>
-                <SelectItem value="user_name-desc">Name Z-A</SelectItem>
-                <SelectItem value="status-asc">Status A-Z</SelectItem>
-                <SelectItem value="updated_at-desc">Recently Updated</SelectItem>
+                <SelectItem value="submitted_at">Submission Date</SelectItem>
+                <SelectItem value="user_name">User Name</SelectItem>
+                <SelectItem value="user_email">Email</SelectItem>
+                <SelectItem value="status">Status</SelectItem>
               </SelectContent>
             </Select>
-          </div>
 
-          {/* Bulk Actions */}
-          {selectedForms.size > 0 && (
-            <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <span className="text-sm font-medium text-blue-800">
-                {selectedForms.size} form(s) selected
-              </span>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => setSelectedForms(new Set())}>
-                  Clear Selection
-                </Button>
-                <Button size="sm" onClick={() => {
-                  selectedForms.forEach(id => updateFormStatus(id, 'approved'));
-                  setSelectedForms(new Set());
-                }}>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Approve Selected
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Forms List */}
-          <div className="space-y-2">
-            {/* Select All Header */}
-            <div className="flex items-center gap-3 p-3 border-b">
-              <Checkbox
-                checked={selectedForms.size === filteredForms.length && filteredForms.length > 0}
-                onCheckedChange={handleSelectAll}
-              />
-              <span className="text-sm font-medium">Select All</span>
-            </div>
-
-            {filteredForms.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                {searchTerm || statusFilter !== "all" ? (
-                  <>
-                    <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No W9 forms match your current filters</p>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setSearchTerm("");
-                        setStatusFilter("all");
-                      }}
-                      className="mt-2"
-                    >
-                      Clear Filters
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No W9 forms found</p>
-                  </>
-                )}
-              </div>
-            ) : (
-              filteredForms.map((form) => (
-                <div
-                  key={form.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg hover:shadow-md transition-all duration-200 gap-3 bg-white"
-                >
-                  <div className="flex items-start sm:items-center space-x-3 min-w-0 flex-1">
-                    <Checkbox
-                      checked={selectedForms.has(form.id)}
-                      onCheckedChange={(checked) => handleSelectForm(form.id, checked as boolean)}
-                      className="mt-1 sm:mt-0"
-                    />
-                    <FileText className="h-5 w-5 text-brand-500 flex-shrink-0 mt-1 sm:mt-0" />
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-medium text-gray-900 truncate">
-                        {form.user_name} ({form.user_email})
-                      </h3>
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 mt-1">
-                        <span>Submitted: {new Date(form.submitted_at).toLocaleDateString()}</span>
-                        {form.updated_at !== form.submitted_at && (
-                          <span>• Updated: {new Date(form.updated_at).toLocaleDateString()}</span>
-                        )}
-                        <span>• ID: {form.id.slice(0, 8)}...</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-shrink-0">
-                    <div className="flex items-center gap-2">
-                      <Badge className={`${getStatusColor(form.status)} text-xs flex items-center gap-1`}>
-                        {getStatusIcon(form.status)}
-                        {form.status.replace('_', ' ')}
-                      </Badge>
-                      
-                      <Select
-                        value={form.status}
-                        onValueChange={(newStatus) => updateFormStatus(form.id, newStatus)}
-                      >
-                        <SelectTrigger className="h-8 w-32 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="submitted">Submitted</SelectItem>
-                          <SelectItem value="under_review">Under Review</SelectItem>
-                          <SelectItem value="approved">Approved</SelectItem>
-                          <SelectItem value="rejected">Rejected</SelectItem>
-                          <SelectItem value="requires_revision">Requires Revision</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="flex space-x-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePreview(form)}
-                        className="h-8 w-8 p-0"
-                        title="Preview Form"
-                      >
-                        <Eye className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => downloadW9Form(form)}
-                        className="h-8 w-8 p-0"
-                        title="Download Form"
-                      >
-                        <Download className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
+            <Select value={sortOrder} onValueChange={(value: "asc" | "desc") => setSortOrder(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Order" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="desc">Descending</SelectItem>
+                <SelectItem value="asc">Ascending</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
 
+      {/* Results */}
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle>
+              W9 Forms ({sortedForms.length})
+            </CardTitle>
+            {selectedForms.size > 0 && (
+              <div className="flex gap-2">
+                <Badge variant="outline">
+                  {selectedForms.size} selected
+                </Badge>
+              </div>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {sortedForms.length === 0 ? (
+            <div className="text-center py-8">
+              <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No W9 Forms Found</h3>
+              <p className="text-gray-600">No forms match your current filters.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Select All */}
+              <div className="flex items-center space-x-2 pb-2 border-b">
+                <Checkbox
+                  id="select-all"
+                  checked={selectedForms.size === sortedForms.length && sortedForms.length > 0}
+                  onCheckedChange={(checked) => handleSelectAll(checked === true)}
+                />
+                <label htmlFor="select-all" className="text-sm font-medium">
+                  Select All
+                </label>
+              </div>
+
+              {/* Forms List */}
+              {sortedForms.map((form) => (
+                <div key={form.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <Checkbox
+                        checked={selectedForms.has(form.id)}
+                        onCheckedChange={(checked) => handleSelectForm(form.id, checked === true)}
+                      />
+                      
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="font-semibold">{form.user_name}</h4>
+                          <Badge className={getStatusColor(form.status)}>
+                            {getStatusIcon(form.status)}
+                            <span className="ml-1">{form.status}</span>
+                          </Badge>
+                        </div>
+                        
+                        <div className="text-sm text-gray-600 space-y-1">
+                          <p><strong>Email:</strong> {form.user_email}</p>
+                          <p><strong>Submitted:</strong> {new Date(form.submitted_at).toLocaleDateString()}</p>
+                          <p><strong>Form ID:</strong> {form.id.slice(0, 8)}...</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Select
+                        value={form.status}
+                        onValueChange={(newStatus) => updateFormStatus(form.id, newStatus)}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="submitted">Submitted</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePreview(form)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        Preview
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => downloadW9Form(form)}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Download
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Preview Dialog */}
       <W9PreviewDialog
         open={showPreview}
         onOpenChange={setShowPreview}
@@ -472,6 +474,6 @@ export const W9Management = () => {
           }
         }}
       />
-    </>
+    </div>
   );
 };
