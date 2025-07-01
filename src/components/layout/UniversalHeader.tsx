@@ -7,6 +7,7 @@ import { LogOut, User, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppNavigation } from "@/components/navigation/AppNavigation";
 import { AIAssist } from "@/components/shared/AIAssist";
+import { DashboardSwitcher } from "@/components/navigation/DashboardSwitcher";
 
 export const UniversalHeader = () => {
   const { user, signOut } = useAuth();
@@ -45,6 +46,8 @@ export const UniversalHeader = () => {
           <div className="flex items-center gap-4">
             {user && (
               <>
+                <DashboardSwitcher />
+                
                 <AIAssist 
                   context="contract management" 
                   placeholder="How can I help you today?"

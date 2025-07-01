@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { useRoleBasedRedirect } from "@/hooks/useRoleBasedRedirect";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import System from "./pages/System";
@@ -54,9 +55,10 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Public route wrapper (redirect to dashboard if authenticated)
+// Public route wrapper with role-based redirect
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
+  const { userProfile } = useRoleBasedRedirect();
   
   if (loading) {
     return (
@@ -66,11 +68,33 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
   
-  if (user) {
-    return <Navigate to="/dashboard" replace />;
+  if (user && userProfile) {
+    // Role-based redirect happens in useRoleBasedRedirect hook
+    return null;
   }
   
   return <>{children}</>;
+};
+
+// Root route handler for authenticated users
+const RootRoute = () => {
+  const { user, loading } = useAuth();
+  const { userProfile } = useRoleBasedRedirect();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900 flex items-center justify-center">
+        <LoadingSpinner size="lg" text="Loading..." />
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+  
+  // Let useRoleBasedRedirect handle the redirect
+  return <Index />;
 };
 
 const App = () => {
@@ -152,7 +176,7 @@ const App = () => {
                 path="/" 
                 element={
                   <ProtectedRoute>
-                    <Index />
+                    <RootRoute />
                   </ProtectedRoute>
                 } 
               />

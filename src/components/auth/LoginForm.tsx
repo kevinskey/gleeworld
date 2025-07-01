@@ -30,8 +30,8 @@ export const LoginForm = ({ onSwitchToForgot }: LoginFormProps) => {
 
       if (error) throw error;
       
-      // Redirect will be handled by AuthContext
-      window.location.href = '/dashboard';
+      // Don't force redirect - let the role-based redirect handle it
+      // The AuthContext and useRoleBasedRedirect will handle the appropriate redirect
     } catch (error: any) {
       setError(error.message || "An error occurred during sign in");
     } finally {
