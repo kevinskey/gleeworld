@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { StatsCards } from "@/components/StatsCards";
@@ -6,6 +5,7 @@ import { ContractCreationCollapsible } from "@/components/ContractCreationCollap
 import { ContractTemplatesCollapsible } from "@/components/ContractTemplatesCollapsible";
 import { RecentContractsTemplatesCollapsible } from "@/components/RecentContractsTemplatesCollapsible";
 import { W9FormsListCollapsible } from "@/components/W9FormsListCollapsible";
+import { ContractsSection } from "@/components/dashboard/ContractsSection";
 import { Library } from "@/components/Library";
 import { FinanceManagement } from "@/components/finance/FinanceManagement";
 import { ContractViewer } from "@/components/ContractViewer";
@@ -171,31 +171,25 @@ const Index = () => {
               pendingCount={pendingCount}
             />
             
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="bg-white/95 backdrop-blur-sm">
-                <TabsTrigger value="dashboard">Overview</TabsTrigger>
-                <TabsTrigger value="library">Library</TabsTrigger>
-                <TabsTrigger value="finance">Finance</TabsTrigger>
-              </TabsList>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-6">
+                <ContractCreationCollapsible onContractCreated={refetch} />
+                <ContractTemplatesCollapsible 
+                  onUseTemplate={handleUseTemplate}
+                  onContractCreated={refetch}
+                />
+                <RecentContractsTemplatesCollapsible
+                  onNewContract={handleNewContract}
+                  onNewTemplate={handleNewTemplate}
+                  onViewContract={handleViewContractById}
+                />
+                <W9FormsListCollapsible />
+              </div>
               
-              <TabsContent value="dashboard">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-6">
-                    <ContractCreationCollapsible onContractCreated={refetch} />
-                    <ContractTemplatesCollapsible 
-                      onUseTemplate={handleUseTemplate}
-                      onContractCreated={refetch}
-                    />
-                    <RecentContractsTemplatesCollapsible
-                      onNewContract={handleNewContract}
-                      onNewTemplate={handleNewTemplate}
-                      onViewContract={handleViewContractById}
-                    />
-                    <W9FormsListCollapsible />
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
+              <div className="space-y-6">
+                <ContractsSection onViewContract={handleViewContract} />
+              </div>
+            </div>
           </div>
         );
     }
