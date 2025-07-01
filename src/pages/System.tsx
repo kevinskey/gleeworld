@@ -1,70 +1,30 @@
-import { useAuth } from "@/contexts/AuthContext";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { AdminPanel } from "@/components/AdminPanel";
+
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SystemDashboard } from "@/components/admin/SystemDashboard";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { PaymentManagement } from "@/components/admin/PaymentManagement";
-import { ContractManagement } from "@/components/admin/ContractManagement";
-import { ContractSummaryStats } from "@/components/admin/ContractSummaryStats";
-import { useUsers } from "@/hooks/useUsers";
-import { useActivityLogs } from "@/hooks/useActivityLogs";
-import { useContracts } from "@/hooks/useContracts";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, Users, DollarSign, BarChart3, FileText } from "lucide-react";
-import { useState } from "react";
-import { BulkW9EmailDialog } from "@/components/admin/BulkW9EmailDialog";
 import { W9Management } from "@/components/admin/W9Management";
-import { W9SummaryStats } from "@/components/admin/W9SummaryStats";
-import { useAdminW9Forms } from "@/hooks/useAdminW9Forms";
+import { FinancialSystem } from "@/components/admin/FinancialSystem";
+import { useUsers } from "@/hooks/useUsers";
+import { useAuth } from "@/contexts/AuthContext";
+import { Settings, Users, DollarSign, FileText, Calculator, Shield } from "lucide-react";
 
-const System = () => {
+export const System = () => {
   const { user } = useAuth();
-  const { userProfile } = useUserProfile(user);
   const { users, loading, error, refetch } = useUsers();
-  const { logs: activityLogs } = useActivityLogs();
-  const { contracts, loading: contractsLoading } = useContracts();
-  const { w9Forms, loading: w9Loading } = useAdminW9Forms();
-  const [bulkW9EmailOpen, setBulkW9EmailOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
 
-  // Check if user is admin or super-admin
-  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
-
-  const handleQuickAction = (action: string) => {
-    switch (action) {
-      case 'bulk-w9':
-        setBulkW9EmailOpen(true);
-        break;
-      case 'w9-forms':
-        setActiveTab('w9-forms');
-        break;
-      case 'users':
-        setActiveTab('users');
-        break;
-      case 'contracts':
-        setActiveTab('contracts');
-        break;
-      case 'settings':
-        setActiveTab('admin');
-        break;
-      case 'activity':
-        setActiveTab('admin');
-        break;
-      default:
-        break;
-    }
-  };
-
-  if (!isAdmin) {
+  if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900 flex items-center justify-center">
-        <Card className="w-full max-w-md mx-4">
+      <div className="container mx-auto px-4 py-8">
+        <Card>
           <CardContent className="pt-6">
-            <div className="text-center">
+            <div className="text-center py-8">
               <Shield className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Access Denied</h3>
-              <p className="text-gray-600">You don't have permission to access this page.</p>
+              <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
+              <p className="text-gray-600">Please sign in to access the system administration panel.</p>
             </div>
           </CardContent>
         </Card>
@@ -73,96 +33,61 @@ const System = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900">
-      <div className="container mx-auto px-4 py-4">
-        <div className="glass-card p-4 mb-4">
-          <h1 className="text-2xl font-bold text-white mb-1">System Administration</h1>
-          <p className="text-base text-white/70">Comprehensive system management and monitoring</p>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="glass border-spelman-400/30">
-            <TabsTrigger value="dashboard" className="text-white data-[state=active]:bg-spelman-500/30">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Dashboard
-            </TabsTrigger>
-            <TabsTrigger value="contracts" className="text-white data-[state=active]:bg-spelman-500/30">
-              <FileText className="h-4 w-4 mr-2" />
-              Contracts
-            </TabsTrigger>
-            <TabsTrigger value="w9-forms" className="text-white data-[state=active]:bg-spelman-500/30">
-              <FileText className="h-4 w-4 mr-2" />
-              W9 Forms
-            </TabsTrigger>
-            <TabsTrigger value="admin" className="text-white data-[state=active]:bg-spelman-500/30">
-              <Shield className="h-4 w-4 mr-2" />
-              Admin Panel
-            </TabsTrigger>
-            <TabsTrigger value="users" className="text-white data-[state=active]:bg-spelman-500/30">
-              <Users className="h-4 w-4 mr-2" />
-              User Management
-            </TabsTrigger>
-            <TabsTrigger value="payments" className="text-white data-[state=active]:bg-spelman-500/30">
-              <DollarSign className="h-4 w-4 mr-2" />
-              Payment Management
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="dashboard">
-            <SystemDashboard
-              users={users}
-              loading={loading}
-              activityLogs={activityLogs}
-              onQuickAction={handleQuickAction}
-            />
-          </TabsContent>
-
-          <TabsContent value="contracts">
-            <div className="space-y-4">
-              <ContractSummaryStats 
-                contracts={contracts}
-                loading={contractsLoading}
-              />
-              <ContractManagement />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="w9-forms">
-            <div className="space-y-4">
-              <W9SummaryStats 
-                w9Forms={w9Forms}
-                loading={w9Loading}
-              />
-              <W9Management />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="admin">
-            <AdminPanel />
-          </TabsContent>
-
-          <TabsContent value="users">
-            <UserManagement 
-              users={users}
-              loading={loading}
-              error={error}
-              onRefetch={refetch}
-            />
-          </TabsContent>
-
-          <TabsContent value="payments">
-            <PaymentManagement />
-          </TabsContent>
-        </Tabs>
-
-        <BulkW9EmailDialog
-          open={bulkW9EmailOpen}
-          onOpenChange={setBulkW9EmailOpen}
-          totalUsers={users.length}
-        />
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">System Administration</h1>
+        <p className="text-gray-600">Comprehensive management and oversight tools</p>
       </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="dashboard" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="users" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Users
+          </TabsTrigger>
+          <TabsTrigger value="payments" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Payments
+          </TabsTrigger>
+          <TabsTrigger value="w9" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            W9 Forms
+          </TabsTrigger>
+          <TabsTrigger value="financial" className="flex items-center gap-2">
+            <Calculator className="h-4 w-4" />
+            Financial
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="dashboard" className="space-y-6">
+          <SystemDashboard />
+        </TabsContent>
+
+        <TabsContent value="users" className="space-y-6">
+          <UserManagement 
+            users={users} 
+            loading={loading} 
+            error={error} 
+            onRefetch={refetch}
+          />
+        </TabsContent>
+
+        <TabsContent value="payments" className="space-y-6">
+          <PaymentManagement />
+        </TabsContent>
+
+        <TabsContent value="w9" className="space-y-6">
+          <W9Management />
+        </TabsContent>
+
+        <TabsContent value="financial" className="space-y-6">
+          <FinancialSystem />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
-
-export default System;
