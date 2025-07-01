@@ -60,11 +60,8 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
       console.log('No embedded signatures found in contract content');
     }
     
-    // Remove embedded signatures section from display and clean up signature fields text
-    let cleanContent = content
-      .replace(/\[EMBEDDED_SIGNATURES\].*?\[\/EMBEDDED_SIGNATURES\]/gs, '')
-      .replace(/Signature Fields: \[.*?\]/g, '')
-      .trim();
+    // Remove embedded signatures section from display completely
+    let cleanContent = content.replace(/\[EMBEDDED_SIGNATURES\].*?\[\/EMBEDDED_SIGNATURES\]/gs, '').trim();
     
     const lines = cleanContent.split('\n');
     const processedLines: (string | JSX.Element)[] = [];
