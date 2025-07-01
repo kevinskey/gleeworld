@@ -9,6 +9,13 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { 
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger
+} from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,10 +29,8 @@ import {
   LogOut, 
   Shield,
   Activity,
-  Users,
   FileText,
   Menu,
-  X,
   UserCog
 } from "lucide-react";
 
@@ -61,7 +66,6 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
 
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
   const isOnUserDashboard = location.pathname === '/dashboard';
-  const isOnAdminPage = ['/system', '/activity-logs', '/accounting', '/admin-signing'].includes(location.pathname);
 
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
@@ -76,20 +80,29 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
     { id: 'admin-signing', label: 'Admin Signing', icon: Shield, route: '/admin-signing' },
   ];
 
+  const handleMobileNavClick = (itemId: string, route?: string) => {
+    if (route) {
+      navigate(route);
+    } else {
+      onTabChange(itemId);
+    }
+    setMobileMenuOpen(false);
+  };
+
   return (
     <header className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-4">
-            <h1 className="text-xl md:text-2xl font-bold text-white truncate">
+          <div className="flex items-center space-x-4 min-w-0">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white truncate">
               Contract Manager
             </h1>
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
-            {/* Only show regular navigation items when on user dashboard */}
+          <nav className="hidden lg:flex items-center space-x-1">
+            {/* Regular navigation items when on user dashboard */}
             {isOnUserDashboard && navigationItems.map((item) => (
               <Button
                 key={item.id}
@@ -150,17 +163,86 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
             )}
           </nav>
 
-          {/* User Menu */}
-          <div className="flex items-center space-x-2 md:space-x-4">
+          {/* Right side actions */}
+          <div className="flex items-center space-x-2">
             {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden text-white hover:bg-white/20 h-10 w-10"
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+            <div className="lg:hidden">
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-white/20 h-10 w-10"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-80 bg-gradient-to-br from-brand-700 via-brand-800 to-slate-900 border-l border-white/20">
+                  <SheetHeader>
+                    <SheetTitle className="text-white text-left">Navigation</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6 space-y-2">
+                    {/* Regular navigation items when on user dashboard */}
+                    {isOnUserDashboard && navigationItems.map((item) => (
+                      <Button
+                        key={item.id}
+                        variant="ghost"
+                        onClick={() => handleMobileNavClick(item.id)}
+                        className={`w-full justify-start text-white hover:bg-white/20 h-12 ${
+                          activeTab === item.id ? 'bg-white/20' : ''
+                        }`}
+                      >
+                        <item.icon className="h-5 w-5 mr-3" />
+                        <span className="text-base">{item.label}</span>
+                      </Button>
+                    ))}
+
+                    {/* Mobile Dashboard Toggle */}
+                    {isAdmin && (
+                      <>
+                        {(isOnUserDashboard || !isOnUserDashboard) && (
+                          <div className="h-px bg-white/20 my-3" />
+                        )}
+                        {isOnUserDashboard ? (
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleMobileNavClick('', '/system')}
+                            className="w-full justify-start text-white hover:bg-white/20 bg-blue-500/30 h-12"
+                          >
+                            <UserCog className="h-5 w-5 mr-3" />
+                            <span className="text-base">Admin Panel</span>
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleMobileNavClick('', '/dashboard')}
+                            className="w-full justify-start text-white hover:bg-white/20 bg-green-500/30 h-12"
+                          >
+                            <User className="h-5 w-5 mr-3" />
+                            <span className="text-base">My Dashboard</span>
+                          </Button>
+                        )}
+
+                        {/* Mobile Admin Items */}
+                        {!isOnUserDashboard && adminItems.map((item) => (
+                          <Button
+                            key={item.id}
+                            variant="ghost"
+                            onClick={() => handleMobileNavClick('', item.route)}
+                            className={`w-full justify-start text-white hover:bg-white/20 h-12 ${
+                              location.pathname === item.route ? 'bg-white/20' : ''
+                            }`}
+                          >
+                            <item.icon className="h-5 w-5 mr-3" />
+                            <span className="text-base">{item.label}</span>
+                          </Button>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
 
             {/* User Avatar and Dropdown */}
             <DropdownMenu>
@@ -211,83 +293,6 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
             </DropdownMenu>
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-white/20">
-            <div className="px-2 py-4 space-y-2 max-h-[calc(100vh-4rem)] overflow-y-auto">
-              {/* Only show regular navigation items when on user dashboard */}
-              {isOnUserDashboard && navigationItems.map((item) => (
-                <Button
-                  key={item.id}
-                  variant="ghost"
-                  onClick={() => {
-                    onTabChange(item.id);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`w-full justify-start text-white hover:bg-white/20 h-12 ${
-                    activeTab === item.id ? 'bg-white/20' : ''
-                  }`}
-                >
-                  <item.icon className="h-5 w-5 mr-3" />
-                  <span className="text-base">{item.label}</span>
-                </Button>
-              ))}
-
-              {/* Mobile Dashboard Toggle */}
-              {isAdmin && (
-                <>
-                  {(isOnUserDashboard || !isOnUserDashboard) && (
-                    <div className="h-px bg-white/20 my-3" />
-                  )}
-                  {isOnUserDashboard ? (
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        navigate('/system');
-                        setMobileMenuOpen(false);
-                      }}
-                      className="w-full justify-start text-white hover:bg-white/20 bg-blue-500/30 h-12"
-                    >
-                      <UserCog className="h-5 w-5 mr-3" />
-                      <span className="text-base">Admin Panel</span>
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        navigate('/dashboard');
-                        setMobileMenuOpen(false);
-                      }}
-                      className="w-full justify-start text-white hover:bg-white/20 bg-green-500/30 h-12"
-                    >
-                      <User className="h-5 w-5 mr-3" />
-                      <span className="text-base">My Dashboard</span>
-                    </Button>
-                  )}
-
-                  {/* Mobile Admin Items */}
-                  {!isOnUserDashboard && adminItems.map((item) => (
-                    <Button
-                      key={item.id}
-                      variant="ghost"
-                      onClick={() => {
-                        navigate(item.route);
-                        setMobileMenuOpen(false);
-                      }}
-                      className={`w-full justify-start text-white hover:bg-white/20 h-12 ${
-                        location.pathname === item.route ? 'bg-white/20' : ''
-                      }`}
-                    >
-                      <item.icon className="h-5 w-5 mr-3" />
-                      <span className="text-base">{item.label}</span>
-                    </Button>
-                  ))}
-                </>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </header>
   );
