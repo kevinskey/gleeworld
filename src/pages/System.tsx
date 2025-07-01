@@ -15,6 +15,7 @@ import { PaymentTracking } from "@/components/admin/financial/PaymentTracking";
 import { StipendManagement } from "@/components/admin/financial/StipendManagement";
 import { BudgetTracking } from "@/components/admin/financial/BudgetTracking";
 import { FinancialReports } from "@/components/admin/financial/FinancialReports";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useUsers } from "@/hooks/useUsers";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
 import { useAuth } from "@/contexts/AuthContext";
@@ -79,7 +80,7 @@ const System = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <UniversalLayout>
         <div className="container mx-auto px-4 py-6">
           <Card className="bg-white shadow-sm">
             <CardContent className="pt-6">
@@ -91,135 +92,139 @@ const System = () => {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </UniversalLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <UniversalLayout containerized={false}>
       <div className="container mx-auto px-4 py-3">
         <div className="mb-4">
-          <h1 className="text-xl font-bold text-gray-900 mb-1">System Administration</h1>
-          <p className="text-gray-600 text-sm">Comprehensive management and oversight tools</p>
+          <h1 className="text-xl font-bold text-white mb-1">System Administration</h1>
+          <p className="text-gray-300 text-sm">Comprehensive management and oversight tools</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-7 bg-white border border-gray-200 p-1 h-auto">
-            <TabsTrigger 
-              value="dashboard" 
-              className="flex items-center gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-700 hover:text-gray-900 text-xs px-2 py-2"
-            >
-              <Settings className="h-3 w-3" />
-              Dashboard
-            </TabsTrigger>
-            
-            <TabsTrigger 
-              value="users" 
-              className="flex items-center gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-700 hover:text-gray-900 text-xs px-2 py-2"
-            >
-              <Users className="h-3 w-3" />
-              Users
-            </TabsTrigger>
+          {/* Mobile/Desktop Responsive Tab Layout */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 p-1">
+            <TabsList className="w-full bg-transparent p-0 h-auto flex-wrap gap-1 justify-start lg:grid lg:grid-cols-7">
+              <TabsTrigger 
+                value="dashboard" 
+                className="flex items-center gap-1 data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white text-xs px-2 py-2 rounded"
+              >
+                <Settings className="h-3 w-3" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </TabsTrigger>
+              
+              <TabsTrigger 
+                value="users" 
+                className="flex items-center gap-1 data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white text-xs px-2 py-2 rounded"
+              >
+                <Users className="h-3 w-3" />
+                <span className="hidden sm:inline">Users</span>
+              </TabsTrigger>
 
-            <TabsTrigger 
-              value="contracts" 
-              className="flex items-center gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-700 hover:text-gray-900 text-xs px-2 py-2"
-            >
-              <FileText className="h-3 w-3" />
-              Contracts
-            </TabsTrigger>
-            
-            <TabsTrigger 
-              value="payments" 
-              className="flex items-center gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-700 hover:text-gray-900 text-xs px-2 py-2"
-            >
-              <DollarSign className="h-3 w-3" />
-              Payments
-            </TabsTrigger>
-            
-            <TabsTrigger 
-              value="w9" 
-              className="flex items-center gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-700 hover:text-gray-900 text-xs px-2 py-2"
-            >
-              <FileText className="h-3 w-3" />
-              W9 Forms
-            </TabsTrigger>
+              <TabsTrigger 
+                value="contracts" 
+                className="flex items-center gap-1 data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white text-xs px-2 py-2 rounded"
+              >
+                <FileText className="h-3 w-3" />
+                <span className="hidden sm:inline">Contracts</span>
+              </TabsTrigger>
+              
+              <TabsTrigger 
+                value="payments" 
+                className="flex items-center gap-1 data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white text-xs px-2 py-2 rounded"
+              >
+                <DollarSign className="h-3 w-3" />
+                <span className="hidden sm:inline">Payments</span>
+              </TabsTrigger>
+              
+              <TabsTrigger 
+                value="w9" 
+                className="flex items-center gap-1 data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white text-xs px-2 py-2 rounded"
+              >
+                <FileText className="h-3 w-3" />
+                <span className="hidden sm:inline">W9 Forms</span>
+              </TabsTrigger>
 
-            {/* Financial Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  className={`flex items-center gap-1 bg-brand-500 text-white hover:bg-brand-600 text-xs px-2 py-2 h-auto ${
-                    ['financial-overview', 'user-records', 'payment-tracking', 'stipends', 'budget', 'reports'].includes(activeTab) 
-                      ? 'bg-blue-600 text-white' 
-                      : ''
-                  }`}
-                >
-                  <Calculator className="h-3 w-3" />
-                  Financial
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg">
-                <DropdownMenuItem onClick={() => setActiveTab('financial-overview')}>
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Overview
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setActiveTab('user-records')}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  User Records
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setActiveTab('payment-tracking')}>
-                  <CreditCard className="h-4 w-4 mr-2" />
-                  Payment Tracking
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setActiveTab('stipends')}>
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Stipends
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setActiveTab('budget')}>
-                  <PieChart className="h-4 w-4 mr-2" />
-                  Budget
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setActiveTab('reports')}>
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Reports
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              {/* Financial Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className={`flex items-center gap-1 text-white/70 hover:text-white hover:bg-white/10 text-xs px-2 py-2 h-auto rounded ${
+                      ['financial-overview', 'user-records', 'payment-tracking', 'stipends', 'budget', 'reports'].includes(activeTab) 
+                        ? 'bg-white/20 text-white' 
+                        : ''
+                    }`}
+                  >
+                    <Calculator className="h-3 w-3" />
+                    <span className="hidden sm:inline">Financial</span>
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg">
+                  <DropdownMenuItem onClick={() => setActiveTab('financial-overview')}>
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Overview
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveTab('user-records')}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    User Records
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveTab('payment-tracking')}>
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Payment Tracking
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setActiveTab('stipends')}>
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Stipends
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveTab('budget')}>
+                    <PieChart className="h-4 w-4 mr-2" />
+                    Budget
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveTab('reports')}>
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Reports
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-            {/* System Tools Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  className="flex items-center gap-1 bg-brand-500 text-white hover:bg-brand-600 text-xs px-2 py-2 h-auto"
-                >
-                  <Settings className="h-3 w-3" />
-                  Tools
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg">
-                <DropdownMenuItem onClick={() => console.log('System settings')}>
-                  <Settings className="h-4 w-4 mr-2" />
-                  System Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => console.log('Activity logs')}>
-                  <Shield className="h-4 w-4 mr-2" />
-                  Activity Logs
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => console.log('Bulk actions')}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Bulk Actions
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </TabsList>
+              {/* System Tools Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="flex items-center gap-1 text-white/70 hover:text-white hover:bg-white/10 text-xs px-2 py-2 h-auto rounded"
+                  >
+                    <Settings className="h-3 w-3" />
+                    <span className="hidden sm:inline">Tools</span>
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg">
+                  <DropdownMenuItem onClick={() => console.log('System settings')}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    System Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => console.log('Activity logs')}>
+                    <Shield className="h-4 w-4 mr-2" />
+                    Activity Logs
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => console.log('Bulk actions')}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Bulk Actions
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TabsList>
+          </div>
 
+          {/* Tab Content */}
           <TabsContent value="dashboard" className="space-y-4">
             <SystemDashboard 
               users={users}
@@ -276,7 +281,7 @@ const System = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </UniversalLayout>
   );
 };
 
