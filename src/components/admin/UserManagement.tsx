@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -167,7 +168,7 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
     <>
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
@@ -177,19 +178,19 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
                 Manage user accounts, roles, and permissions ({filteredAndSortedUsers.length} of {users.length} users)
               </CardDescription>
             </div>
-            <div className="flex gap-2">
-              <Button onClick={onRefetch} variant="outline" size="sm">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button onClick={onRefetch} variant="outline" size="sm" className="w-full sm:w-auto">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="w-full sm:w-auto">
                     <MoreHorizontal className="h-4 w-4 mr-2" />
                     Actions
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem onClick={() => setAddUserOpen(true)}>
                     <UserPlus className="h-4 w-4 mr-2" />
                     Add User
@@ -209,22 +210,23 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
           </div>
         </CardHeader>
         <CardContent>
-          {/* Filters and Search */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search by name or email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
+          {/* Mobile-First Filters and Search */}
+          <div className="space-y-4 mb-6">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
             </div>
-            <div className="flex gap-2">
+            
+            {/* Filter Controls */}
+            <div className="flex flex-col sm:flex-row gap-2">
               <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-full sm:w-[140px]">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue />
                 </SelectTrigger>
@@ -235,8 +237,9 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
                   <SelectItem value="super-admin">Super Admins</SelectItem>
                 </SelectContent>
               </Select>
+              
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-full sm:w-[140px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -246,23 +249,25 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
                   <SelectItem value="role">Role</SelectItem>
                 </SelectContent>
               </Select>
+              
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                className="w-full sm:w-auto"
               >
-                {sortOrder === 'asc' ? '↑' : '↓'}
+                Sort {sortOrder === 'asc' ? '↑' : '↓'}
               </Button>
             </div>
           </div>
 
-          {/* Users List */}
-          <div className="space-y-4">
+          {/* Mobile-Optimized Users List */}
+          <div className="space-y-3">
             {filteredAndSortedUsers.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
                 <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                 <h3 className="text-lg font-medium mb-2">No users found</h3>
-                <p className="text-sm">
+                <p className="text-sm mb-4">
                   {searchTerm || roleFilter !== "all" 
                     ? "Try adjusting your search or filters" 
                     : "Get started by adding your first user"
@@ -279,40 +284,52 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
                 )}
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {filteredAndSortedUsers.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        {getRoleIcon(user.role)}
-                        <div>
-                          <p className="font-medium">{user.full_name || 'No name provided'}</p>
-                          <p className="text-sm text-gray-600">{user.email || 'No email'}</p>
+                  <div key={user.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      {/* User Info */}
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                        <div className="flex-shrink-0">
+                          {getRoleIcon(user.role)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-sm sm:text-base truncate">
+                            {user.full_name || 'No name provided'}
+                          </p>
+                          <p className="text-xs sm:text-sm text-gray-600 truncate">
+                            {user.email || 'No email'}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant={getRoleBadgeVariant(user.role)} className="text-xs">
+                              {user.role}
+                            </Badge>
+                            <span className="text-xs text-gray-500">
+                              {new Date(user.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Badge variant={getRoleBadgeVariant(user.role)}>
-                        {user.role}
-                      </Badge>
-                      <span className="text-xs text-gray-500 hidden md:block">
-                        {new Date(user.created_at).toLocaleDateString()}
-                      </span>
-                      <div className="flex gap-1">
+                      
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 flex-shrink-0">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleEditUser(user)}
+                          className="flex-1 sm:flex-none"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-4 w-4 sm:mr-0 mr-2" />
+                          <span className="sm:hidden">Edit</span>
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleDeleteUser(user)}
-                          className="text-red-600 hover:text-red-700"
+                          className="text-red-600 hover:text-red-700 flex-1 sm:flex-none"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4 sm:mr-0 mr-2" />
+                          <span className="sm:hidden">Delete</span>
                         </Button>
                       </div>
                     </div>
