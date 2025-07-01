@@ -92,7 +92,26 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
         processedLines.push(line);
         processedLines.push(
           <div key={`embedded-artist-signature-${artistSignature.fieldId}`} className="my-4">
-            <EmbeddedSignatureDisplay signature={artistSignature} />
+            <div className="border-2 border-green-300 bg-green-50 p-4 rounded-lg">
+              <div className="text-green-700 font-medium mb-2">✓ Artist Signature Applied</div>
+              {artistSignature.signatureData && artistSignature.signatureData.startsWith('data:image') ? (
+                <div className="bg-white p-2 border rounded inline-block">
+                  <img 
+                    src={artistSignature.signatureData} 
+                    alt="Artist Signature" 
+                    className="max-w-[200px] h-[60px] object-contain"
+                    style={{ maxWidth: '200px', height: '60px' }}
+                  />
+                </div>
+              ) : (
+                <div className="font-cursive text-2xl text-gray-800 bg-white p-2 border rounded inline-block">
+                  {artistSignature.signatureData || 'Digital signature applied'}
+                </div>
+              )}
+              <div className="text-xs text-green-600 mt-2">
+                Signed on: {artistSignature.dateSigned}
+              </div>
+            </div>
           </div>
         );
         artistSignaturePlaced = true;
@@ -104,7 +123,28 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
         // Add admin signature BEFORE this line
         processedLines.push(
           <div key={`embedded-admin-signature-${adminSignature.fieldId}`} className="mb-4">
-            <EmbeddedSignatureDisplay signature={adminSignature} />
+            <div className="border-2 border-blue-300 bg-blue-50 p-4 rounded-lg">
+              <div className="text-blue-700 font-medium mb-2">✓ Admin/Agent Signature Applied</div>
+              {adminSignature.signatureData && adminSignature.signatureData.startsWith('data:image') ? (
+                <div className="bg-white p-2 border rounded inline-block">
+                  <img 
+                    src={adminSignature.signatureData} 
+                    alt="Admin Signature" 
+                    className="max-w-[200px] h-[60px] object-contain"
+                    style={{ maxWidth: '200px', height: '60px' }}
+                  />
+                </div>
+              ) : (
+                <div className="font-cursive text-2xl text-gray-800 bg-white p-2 border rounded inline-block">
+                  {adminSignature.signatureData || 'Dr. Kevin P. Johnson'}
+                </div>
+              )}
+              <div className="text-xs text-blue-600 mt-2">
+                Signed on: {adminSignature.dateSigned}
+                <br />
+                Signed by: Dr. Kevin P. Johnson (Admin)
+              </div>
+            </div>
           </div>
         );
         adminSignaturePlaced = true;
@@ -124,7 +164,25 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
       processedLines.push(
         <div key={`embedded-artist-signature-fallback-${artistSignature.fieldId}`} className="mt-6">
           <h4 className="font-semibold mb-2">Artist Signature:</h4>
-          <EmbeddedSignatureDisplay signature={artistSignature} />
+          <div className="border-2 border-green-300 bg-green-50 p-4 rounded-lg">
+            <div className="text-green-700 font-medium mb-2">✓ Artist Signature Applied</div>
+            {artistSignature.signatureData && artistSignature.signatureData.startsWith('data:image') ? (
+              <div className="bg-white p-2 border rounded inline-block">
+                <img 
+                  src={artistSignature.signatureData} 
+                  alt="Artist Signature" 
+                  className="max-w-[200px] h-[60px] object-contain"
+                />
+              </div>
+            ) : (
+              <div className="font-cursive text-2xl text-gray-800 bg-white p-2 border rounded inline-block">
+                {artistSignature.signatureData || 'Digital signature applied'}
+              </div>
+            )}
+            <div className="text-xs text-green-600 mt-2">
+              Signed on: {artistSignature.dateSigned}
+            </div>
+          </div>
         </div>
       );
     }
@@ -134,7 +192,27 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
       processedLines.push(
         <div key={`embedded-admin-signature-fallback-${adminSignature.fieldId}`} className="mt-6">
           <h4 className="font-semibold mb-2">Administrator Signature:</h4>
-          <EmbeddedSignatureDisplay signature={adminSignature} />
+          <div className="border-2 border-blue-300 bg-blue-50 p-4 rounded-lg">
+            <div className="text-blue-700 font-medium mb-2">✓ Admin/Agent Signature Applied</div>
+            {adminSignature.signatureData && adminSignature.signatureData.startsWith('data:image') ? (
+              <div className="bg-white p-2 border rounded inline-block">
+                <img 
+                  src={adminSignature.signatureData} 
+                  alt="Admin Signature" 
+                  className="max-w-[200px] h-[60px] object-contain"
+                />
+              </div>
+            ) : (
+              <div className="font-cursive text-2xl text-gray-800 bg-white p-2 border rounded inline-block">
+                {adminSignature.signatureData || 'Dr. Kevin P. Johnson'}
+              </div>
+            )}
+            <div className="text-xs text-blue-600 mt-2">
+              Signed on: {adminSignature.dateSigned}
+              <br />
+              Signed by: Dr. Kevin P. Johnson (Admin)
+            </div>
+          </div>
         </div>
       );
     }
