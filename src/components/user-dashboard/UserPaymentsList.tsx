@@ -13,7 +13,7 @@ export const UserPaymentsList = () => {
         <CardContent className="pt-6">
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
-            <span className="ml-2 text-gray-900">Loading payments...</span>
+            <span className="ml-2 text-gray-900 text-sm">Loading payments...</span>
           </div>
         </CardContent>
       </Card>
@@ -25,7 +25,7 @@ export const UserPaymentsList = () => {
       <Card>
         <CardContent className="pt-6">
           <div className="text-center py-8">
-            <p className="text-red-600 mb-4">{error}</p>
+            <p className="text-red-600 mb-4 text-sm">{error}</p>
           </div>
         </CardContent>
       </Card>
@@ -39,7 +39,7 @@ export const UserPaymentsList = () => {
           <div className="text-center py-8">
             <DollarSign className="h-12 w-12 mx-auto text-brand-400 mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No Payments Yet</h3>
-            <p className="text-gray-600">You haven't received any payments yet.</p>
+            <p className="text-gray-600 text-sm">You haven't received any payments yet.</p>
           </div>
         </CardContent>
       </Card>
@@ -47,30 +47,30 @@ export const UserPaymentsList = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {payments.map((payment) => (
         <Card key={payment.id}>
-          <CardHeader>
-            <div className="flex justify-between items-start">
+          <CardHeader className="pb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <CardTitle className="text-gray-900 flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
+                <CardTitle className="text-gray-900 flex items-center gap-2 text-lg sm:text-xl">
+                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
                   ${payment.amount || 0}
                 </CardTitle>
-                <CardDescription className="text-gray-600">
+                <CardDescription className="text-gray-600 text-xs sm:text-sm">
                   {payment.payment_date 
                     ? `Paid on ${new Date(payment.payment_date).toLocaleDateString()}`
                     : `Recorded on ${new Date(payment.created_at).toLocaleDateString()}`
                   }
                 </CardDescription>
               </div>
-              <Badge className="bg-green-100 text-green-800">
+              <Badge className="bg-green-100 text-green-800 text-xs self-start sm:self-center">
                 <CreditCard className="h-3 w-3 mr-1" />
                 {payment.payment_method}
               </Badge>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <div className="space-y-2">
               {payment.notes && (
                 <p className="text-sm text-gray-600">{payment.notes}</p>

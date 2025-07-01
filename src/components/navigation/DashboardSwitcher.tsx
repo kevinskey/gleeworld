@@ -8,11 +8,13 @@ import { ChevronDown, Shield, User, BarChart3, Home } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { isAdmin } from "@/constants/permissions";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const DashboardSwitcher = () => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
   const location = useLocation();
+  const isMobile = useIsMobile();
   
   if (!user || !userProfile || !isAdmin(userProfile.role)) {
     return null;
@@ -28,30 +30,30 @@ export const DashboardSwitcher = () => {
   };
 
   const getCurrentIcon = () => {
-    if (isOnAdminDashboard) return <Shield className="h-4 w-4" />;
-    if (isOnUserDashboard) return <User className="h-4 w-4" />;
-    return <Home className="h-4 w-4" />;
+    if (isOnAdminDashboard) return <Shield className="h-3 w-3 sm:h-4 sm:w-4" />;
+    if (isOnUserDashboard) return <User className="h-3 w-3 sm:h-4 sm:w-4" />;
+    return <Home className="h-3 w-3 sm:h-4 sm:w-4" />;
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-white/10">
+        <Button variant="ghost" className="flex items-center gap-1 sm:gap-2 text-white hover:bg-white/10 text-xs sm:text-sm px-2 sm:px-3">
           {getCurrentIcon()}
-          <span className="hidden sm:inline">{getCurrentContext()}</span>
-          <Badge variant="secondary" className="bg-white/20 text-white border-0">
+          {!isMobile && <span className="hidden sm:inline">{getCurrentContext()}</span>}
+          <Badge variant="secondary" className="bg-white/20 text-white border-0 text-xs px-1 sm:px-2">
             {userProfile.role}
           </Badge>
-          <ChevronDown className="h-4 w-4" />
+          <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-56">
+      <DropdownMenuContent align="start" className="w-48 sm:w-56">
         <DropdownMenuItem asChild>
           <Link to="/system" className="flex items-center cursor-pointer">
             <Shield className="mr-2 h-4 w-4" />
             Admin Dashboard
             {isOnAdminDashboard && (
-              <Badge variant="secondary" className="ml-auto">
+              <Badge variant="secondary" className="ml-auto text-xs">
                 Current
               </Badge>
             )}
@@ -62,7 +64,7 @@ export const DashboardSwitcher = () => {
             <User className="mr-2 h-4 w-4" />
             Personal Dashboard
             {isOnUserDashboard && (
-              <Badge variant="secondary" className="ml-auto">
+              <Badge variant="secondary" className="ml-auto text-xs">
                 Current
               </Badge>
             )}

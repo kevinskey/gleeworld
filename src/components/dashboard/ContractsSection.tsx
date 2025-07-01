@@ -90,34 +90,34 @@ export const ContractsSection = ({ onViewContract }: ContractsSectionProps) => {
         <CardDescription>Your latest contract activity</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {recentContracts.map((contract) => (
             <div 
               key={contract.id}
-              className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 transition-colors gap-3"
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <h4 className="font-medium text-gray-900 truncate">{contract.title}</h4>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Calendar className="h-4 w-4" />
+                  <h4 className="font-medium text-gray-900 truncate text-sm sm:text-base">{contract.title}</h4>
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                    <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span>Created {new Date(contract.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
               </div>
               
-              <div className="flex items-center gap-3">
-                <Badge className={getStatusColor(contract.status)}>
+              <div className="flex items-center justify-between sm:justify-end gap-3">
+                <Badge className={`${getStatusColor(contract.status)} text-xs whitespace-nowrap`}>
                   {getStatusText(contract.status)}
                 </Badge>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onViewContract(contract)}
-                  className="flex-shrink-0"
+                  className="flex-shrink-0 text-xs sm:text-sm"
                 >
-                  <Eye className="h-4 w-4 mr-2" />
+                  <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   View
                 </Button>
               </div>
