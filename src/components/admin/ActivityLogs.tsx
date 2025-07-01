@@ -12,23 +12,23 @@ export const ActivityLogs = () => {
     switch (actionType) {
       case 'login':
       case 'logout':
-        return <User className="h-4 w-4" />;
+        return <User className="h-3 w-3" />;
       case 'contract_created':
       case 'contract_updated':
       case 'contract_deleted':
       case 'contract_viewed':
       case 'contract_signed':
       case 'contract_sent':
-        return <FileText className="h-4 w-4" />;
+        return <FileText className="h-3 w-3" />;
       case 'template_created':
       case 'template_updated':
       case 'template_deleted':
       case 'template_used':
-        return <PenTool className="h-4 w-4" />;
+        return <PenTool className="h-3 w-3" />;
       case 'settings_updated':
-        return <Settings className="h-4 w-4" />;
+        return <Settings className="h-3 w-3" />;
       default:
-        return <Activity className="h-4 w-4" />;
+        return <Activity className="h-3 w-3" />;
     }
   };
 
@@ -51,7 +51,7 @@ export const ActivityLogs = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
+            <Activity className="h-4 w-4" />
             Activity Logs
           </CardTitle>
         </CardHeader>
@@ -67,7 +67,7 @@ export const ActivityLogs = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
+            <Activity className="h-4 w-4" />
             Activity Logs
           </CardTitle>
         </CardHeader>
@@ -80,34 +80,34 @@ export const ActivityLogs = () => {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
-          <Activity className="h-5 w-5" />
+          <Activity className="h-4 w-4" />
           Activity Logs
         </CardTitle>
         <p className="text-sm text-gray-600">Recent system activities and user actions</p>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-96">
+        <ScrollArea className="h-80">
           {logs.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <div className="text-center py-6 text-gray-500">
+              <Activity className="h-10 w-10 mx-auto mb-3 opacity-50" />
               <p>No activity logs found</p>
               <p className="text-sm">User actions will appear here once they start using the system</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-2">
               {logs.map((log) => (
-                <div key={log.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50">
+                <div key={log.id} className="flex items-start gap-2 p-2 border rounded-lg hover:bg-gray-50">
                   <div className="flex-shrink-0 mt-1">
                     {getActionIcon(log.action_type)}
                   </div>
                   <div className="flex-grow min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <Badge className={getActionColor(log.action_type)}>
+                      <Badge className={`${getActionColor(log.action_type)} text-xs`}>
                         {formatActionType(log.action_type)}
                       </Badge>
-                      <span className="text-sm text-gray-500">
+                      <span className="text-xs text-gray-500">
                         {new Date(log.created_at).toLocaleString()}
                       </span>
                     </div>
@@ -129,7 +129,7 @@ export const ActivityLogs = () => {
                       )}
                     </p>
                     {log.details && Object.keys(log.details).length > 0 && (
-                      <div className="text-xs text-gray-600 bg-gray-100 p-2 rounded mt-2">
+                      <div className="text-xs text-gray-600 bg-gray-100 p-2 rounded mt-1">
                         {Object.entries(log.details).map(([key, value]) => (
                           <div key={key}>
                             <span className="font-medium">{key}:</span> {String(value)}

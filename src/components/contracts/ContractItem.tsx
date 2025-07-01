@@ -40,17 +40,17 @@ export const ContractItem = ({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 border border-brand-200/30 rounded-xl hover:shadow-lg transition-all duration-200 gap-4 bg-white/95 backdrop-blur-sm shadow-md">
-      <div className="flex items-start sm:items-center space-x-4 min-w-0 flex-1">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border border-brand-200/30 rounded-lg hover:shadow-md transition-all duration-200 gap-3 bg-white/95 backdrop-blur-sm shadow-sm">
+      <div className="flex items-start sm:items-center space-x-3 min-w-0 flex-1">
         <Checkbox 
           checked={isSelected}
           onCheckedChange={(checked) => onSelect(contract.id, checked as boolean)}
-          className="border-brand-300 data-[state=checked]:bg-brand-400 data-[state=checked]:border-brand-400"
+          className="border-brand-300 data-[state=checked]:bg-brand-400 data-[state=checked]:border-brand-400 mt-1 sm:mt-0"
         />
-        <FileText className="h-8 w-8 text-brand-500 flex-shrink-0" />
+        <FileText className="h-6 w-6 text-brand-500 flex-shrink-0 mt-1 sm:mt-0" />
         <div className="min-w-0 flex-1">
-          <h3 className="font-semibold text-brand-800 truncate text-lg">{contract.title}</h3>
-          <p className="text-sm text-brand-600 font-medium">Status: {getStatusText(contract.status)}</p>
+          <h3 className="font-semibold text-brand-800 truncate">{contract.title}</h3>
+          <p className="text-sm text-brand-600">Status: {getStatusText(contract.status)}</p>
           <div className="flex items-center gap-2 text-xs text-brand-500">
             <span>Created: {new Date(contract.created_at).toLocaleDateString()}</span>
             {contract.updated_at !== contract.created_at && (
@@ -63,20 +63,20 @@ export const ContractItem = ({
         </div>
       </div>
       
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-shrink-0">
-        <Badge className={`${getStatusColor(contract.status)} border-brand-200/50 font-medium`}>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-shrink-0">
+        <Badge className={`${getStatusColor(contract.status)} border-brand-200/50 text-xs`}>
           {getStatusText(contract.status)}
         </Badge>
         
-        <div className="flex space-x-2">
+        <div className="flex space-x-1">
           <Button 
             variant="outline" 
             size="sm"
             onClick={() => onView(contract)}
             title="View Contract"
-            className="border-brand-300 text-brand-700 hover:bg-brand-50 font-medium"
+            className="border-brand-300 text-brand-700 hover:bg-brand-50 h-8 w-8 p-0"
           >
-            <Eye className="h-4 w-4" />
+            <Eye className="h-3 w-3" />
           </Button>
           
           {contract.status === 'pending_admin_signature' && (
@@ -85,9 +85,9 @@ export const ContractItem = ({
               size="sm"
               onClick={() => onAdminSign(contract)}
               title="Admin Sign Contract"
-              className="border-green-300 text-green-700 hover:bg-green-50 font-medium"
+              className="border-green-300 text-green-700 hover:bg-green-50 h-8 w-8 p-0"
             >
-              <PenTool className="h-4 w-4" />
+              <PenTool className="h-3 w-3" />
             </Button>
           )}
           
@@ -96,18 +96,12 @@ export const ContractItem = ({
             size="sm"
             onClick={handleSendClick}
             title={hasBeenSent ? "Resend Contract" : "Send Contract"}
-            className={hasBeenSent ? "border-orange-300 text-orange-700 hover:bg-orange-50 font-medium" : "border-brand-300 text-brand-700 hover:bg-brand-50 font-medium"}
+            className={hasBeenSent ? "border-orange-300 text-orange-700 hover:bg-orange-50 h-8 w-8 p-0" : "border-brand-300 text-brand-700 hover:bg-brand-50 h-8 w-8 p-0"}
           >
             {hasBeenSent ? (
-              <>
-                <RotateCcw className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">Resend</span>
-              </>
+              <RotateCcw className="h-3 w-3" />
             ) : (
-              <>
-                <Send className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">Send</span>
-              </>
+              <Send className="h-3 w-3" />
             )}
           </Button>
           
@@ -115,10 +109,10 @@ export const ContractItem = ({
             variant="outline" 
             size="sm"
             onClick={() => onDelete(contract.id)}
-            className="border-red-300 text-red-700 hover:bg-red-50 font-medium"
+            className="border-red-300 text-red-700 hover:bg-red-50 h-8 w-8 p-0"
             title="Delete Contract"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-3 w-3" />
           </Button>
         </div>
       </div>

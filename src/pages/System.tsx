@@ -61,13 +61,13 @@ const System = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900">
-      <div className="container mx-auto px-4 py-6">
-        <div className="glass-card p-6 mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">System Administration</h1>
-          <p className="text-lg text-white/70">Comprehensive system management and monitoring</p>
+      <div className="container mx-auto px-4 py-4">
+        <div className="glass-card p-4 mb-4">
+          <h1 className="text-2xl font-bold text-white mb-1">System Administration</h1>
+          <p className="text-base text-white/70">Comprehensive system management and monitoring</p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="glass border-spelman-400/30">
             <TabsTrigger value="dashboard" className="text-white data-[state=active]:bg-spelman-500/30">
               <BarChart3 className="h-4 w-4 mr-2" />
