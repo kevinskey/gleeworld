@@ -2,7 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Plus, TrendingUp, Users, RefreshCw, Sync } from "lucide-react";
+import { DollarSign, Plus, TrendingUp, Users, RefreshCw } from "lucide-react";
 import { useAdminStipends } from "@/hooks/useAdminStipends";
 
 export const StipendManagement = () => {
@@ -102,7 +102,7 @@ export const StipendManagement = () => {
             </div>
             <div className="flex gap-2">
               <Button onClick={syncContractStipends} variant="outline" size="sm">
-                <Sync className="h-4 w-4 mr-2" />
+                <RefreshCw className="h-4 w-4 mr-2" />
                 Sync Contracts
               </Button>
               <Button onClick={refetch} variant="outline" size="sm">
@@ -123,7 +123,7 @@ export const StipendManagement = () => {
               <h3 className="text-lg font-medium mb-2">No stipends found</h3>
               <p className="text-sm mb-4">Stipend records will appear here as they are created or synced from contracts.</p>
               <Button onClick={syncContractStipends} variant="outline">
-                <Sync className="h-4 w-4 mr-2" />
+                <RefreshCw className="h-4 w-4 mr-2" />
                 Sync from Contracts
               </Button>
             </div>

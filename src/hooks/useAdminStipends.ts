@@ -51,13 +51,10 @@ export const useAdminStipends = () => {
 
       console.log('Fetching comprehensive contract and stipend data...');
 
-      // Fetch stipend records from finance_records with user data
+      // Fetch stipend records from finance_records
       const { data: financeRecords, error: financeError } = await supabase
         .from('finance_records')
-        .select(`
-          *,
-          profiles!inner(id, full_name, email)
-        `)
+        .select('*')
         .eq('type', 'stipend')
         .order('date', { ascending: false });
 
@@ -66,17 +63,23 @@ export const useAdminStipends = () => {
         throw financeError;
       }
 
+      // Fetch user profiles to get names and emails
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, email');
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        throw profilesError;
+      }
+
+      // Create a map for quick profile lookup
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
       // Fetch contracts with stipend amounts
       const { data: contractsV2, error: contractsError } = await supabase
         .from('contracts_v2')
-        .select(`
-          id,
-          title,
-          stipend_amount,
-          created_at,
-          created_by,
-          profiles!inner(id, full_name, email)
-        `)
+        .select('id, title, stipend_amount, created_at, created_by')
         .not('stipend_amount', 'is', null)
         .gt('stipend_amount', 0);
 
@@ -87,14 +90,7 @@ export const useAdminStipends = () => {
       // Fetch generated contracts with stipends
       const { data: generatedContracts, error: generatedError } = await supabase
         .from('generated_contracts')
-        .select(`
-          id,
-          event_name,
-          stipend,
-          created_at,
-          created_by,
-          profiles!inner(id, full_name, email)
-        `)
+        .select('id, event_name, stipend, created_at, created_by')
         .not('stipend', 'is', null)
         .gt('stipend', 0);
 
@@ -109,45 +105,54 @@ export const useAdminStipends = () => {
       });
 
       // Process existing finance records
-      const existingStipends = financeRecords?.map(record => ({
-        amount: record.amount || 0,
-        description: record.description,
-        user_name: record.profiles?.full_name || '',
-        user_email: record.profiles?.email || '',
-        date: record.date,
-        category: record.category,
-        reference: record.reference,
-        contract_title: record.description.includes('Stipend from') ? 
-          record.description.replace('Stipend from ', '') : undefined,
-        contract_id: record.reference?.includes('Contract ID:') ?
-          record.reference.replace('Contract ID: ', '') : undefined
-      })) || [];
+      const existingStipends = financeRecords?.map(record => {
+        const userProfile = profileMap.get(record.user_id);
+        return {
+          amount: record.amount || 0,
+          description: record.description,
+          user_name: userProfile?.full_name || '',
+          user_email: userProfile?.email || '',
+          date: record.date,
+          category: record.category,
+          reference: record.reference,
+          contract_title: record.description.includes('Stipend from') ? 
+            record.description.replace('Stipend from ', '') : undefined,
+          contract_id: record.reference?.includes('Contract ID:') ?
+            record.reference.replace('Contract ID: ', '') : undefined
+        };
+      }) || [];
 
       // Process contracts_v2 that might not be in finance_records yet
-      const contractStipends = contractsV2?.map(contract => ({
-        amount: Number(contract.stipend_amount) || 0,
-        description: `Stipend from ${contract.title}`,
-        user_name: contract.profiles?.full_name || '',
-        user_email: contract.profiles?.email || '',
-        date: new Date(contract.created_at).toISOString().split('T')[0],
-        category: 'Performance',
-        reference: `Contract ID: ${contract.id}`,
-        contract_title: contract.title,
-        contract_id: contract.id
-      })) || [];
+      const contractStipends = contractsV2?.map(contract => {
+        const userProfile = profileMap.get(contract.created_by);
+        return {
+          amount: Number(contract.stipend_amount) || 0,
+          description: `Stipend from ${contract.title}`,
+          user_name: userProfile?.full_name || '',
+          user_email: userProfile?.email || '',
+          date: new Date(contract.created_at).toISOString().split('T')[0],
+          category: 'Performance',
+          reference: `Contract ID: ${contract.id}`,
+          contract_title: contract.title,
+          contract_id: contract.id
+        };
+      }) || [];
 
       // Process generated contracts that might not be in finance_records yet
-      const generatedStipends = generatedContracts?.map(contract => ({
-        amount: Number(contract.stipend) || 0,
-        description: `Stipend for ${contract.event_name}`,
-        user_name: contract.profiles?.full_name || '',
-        user_email: contract.profiles?.email || '',
-        date: new Date(contract.created_at).toISOString().split('T')[0],
-        category: 'Performance',
-        reference: `Generated Contract ID: ${contract.id}`,
-        contract_title: contract.event_name,
-        contract_id: contract.id
-      })) || [];
+      const generatedStipends = generatedContracts?.map(contract => {
+        const userProfile = profileMap.get(contract.created_by);
+        return {
+          amount: Number(contract.stipend) || 0,
+          description: `Stipend for ${contract.event_name}`,
+          user_name: userProfile?.full_name || '',
+          user_email: userProfile?.email || '',
+          date: new Date(contract.created_at).toISOString().split('T')[0],
+          category: 'Performance',
+          reference: `Generated Contract ID: ${contract.id}`,
+          contract_title: contract.event_name,
+          contract_id: contract.id
+        };
+      }) || [];
 
       // Combine all stipends and remove duplicates based on reference
       const allStipends = [...existingStipends, ...contractStipends, ...generatedStipends];
