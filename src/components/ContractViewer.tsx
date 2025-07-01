@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ContractViewerContent } from "./ContractViewerContent";
@@ -70,12 +69,22 @@ export const ContractViewer = ({ contract, open, onOpenChange }: ContractViewerP
             .maybeSingle();
 
           if (!error && signatureRecord?.embedded_signatures) {
+            console.log('Found signature record with embedded signatures:', signatureRecord.embedded_signatures);
+            
             // Check if contract content already has embedded signatures
             const hasEmbeddedSignatures = contract.content.includes('[EMBEDDED_SIGNATURES]');
             
             if (!hasEmbeddedSignatures) {
+              console.log('Adding embedded signatures to contract content for viewing');
               // Add embedded signatures to contract content for display
-              const signaturesSection = `\n\n[EMBEDDED_SIGNATURES]${JSON.stringify(signatureRecord.embedded_signatures)}[/EMBEDDED_SIGNATURES]`;
+              let signaturesData = signatureRecord.embedded_signatures;
+              
+              // If it's a string, keep it as is, if it's an object, stringify it
+              if (typeof signaturesData === 'object') {
+                signaturesData = JSON.stringify(signaturesData);
+              }
+              
+              const signaturesSection = `\n\n[EMBEDDED_SIGNATURES]${signaturesData}[/EMBEDDED_SIGNATURES]`;
               const enhancedContent = contract.content + signaturesSection;
               
               setEnhancedContract({
@@ -83,7 +92,11 @@ export const ContractViewer = ({ contract, open, onOpenChange }: ContractViewerP
                 content: enhancedContent
               });
               return;
+            } else {
+              console.log('Contract already has embedded signatures in content');
             }
+          } else {
+            console.log('No signature record found or no embedded signatures');
           }
         } catch (error) {
           console.error('Error fetching signature data for contract viewer:', error);
@@ -101,7 +114,8 @@ export const ContractViewer = ({ contract, open, onOpenChange }: ContractViewerP
   console.log('ContractViewer rendering contract:', {
     title: enhancedContract.title,
     status: enhancedContract.status,
-    contentLength: enhancedContract.content?.length || 0
+    contentLength: enhancedContract.content?.length || 0,
+    hasEmbeddedSignatures: enhancedContract.content?.includes('[EMBEDDED_SIGNATURES]') || false
   });
 
   return (

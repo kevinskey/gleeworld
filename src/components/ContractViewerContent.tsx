@@ -48,6 +48,7 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
     if (signatureMatch) {
       try {
         embeddedSignatures = JSON.parse(signatureMatch[1]);
+        console.log('Found embedded signatures:', embeddedSignatures);
       } catch (e) {
         console.error('Error parsing embedded signatures in viewer:', e);
       }
@@ -73,16 +74,31 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
     });
     
     lines.forEach((line, index) => {
-      // Check if this line contains "Printed Name: Dr. Kevin P. Johnson"
-      if (line.includes('Printed Name:') && line.includes('Dr. Kevin P. Johnson')) {
+      // Add artist signature after lines containing "Artist:" or "Signature" (but not admin lines)
+      if ((line.toLowerCase().includes('artist:') || 
+           (line.toLowerCase().includes('signature') && 
+            !line.toLowerCase().includes('dr.') && 
+            !line.toLowerCase().includes('kevin') && 
+            !line.toLowerCase().includes('johnson'))) && 
+          artistSignature) {
+        
+        processedLines.push(line);
+        processedLines.push(
+          <div key={`embedded-artist-signature-${artistSignature.fieldId}`} className="my-4">
+            <EmbeddedSignatureDisplay signature={artistSignature} />
+          </div>
+        );
+        return;
+      }
+      
+      // Add admin signature before lines containing "Dr. Kevin P. Johnson"
+      if (line.includes('Printed Name:') && line.includes('Dr. Kevin P. Johnson') && adminSignature) {
         // Add admin signature BEFORE this line
-        if (adminSignature) {
-          processedLines.push(
-            <div key={`embedded-admin-signature-${adminSignature.fieldId}`} className="mb-4">
-              <EmbeddedSignatureDisplay signature={adminSignature} />
-            </div>
-          );
-        }
+        processedLines.push(
+          <div key={`embedded-admin-signature-${adminSignature.fieldId}`} className="mb-4">
+            <EmbeddedSignatureDisplay signature={adminSignature} />
+          </div>
+        );
         
         // Add the printed name line
         processedLines.push(line);
@@ -112,18 +128,7 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
       
       processedLines.push(line);
       
-      // Add artist signature after signature-related lines
-      if (line.toLowerCase().includes('artist:') || line.toLowerCase().includes('signature')) {
-        if (artistSignature) {
-          processedLines.push(
-            <div key={`embedded-artist-signature-${artistSignature.fieldId}`}>
-              <EmbeddedSignatureDisplay signature={artistSignature} />
-            </div>
-          );
-        }
-      }
-      
-      // Add date signature if embedded
+      // Add date signature if this is the last line or contains "date executed"
       if ((index === lines.length - 1 || line.toLowerCase().includes('date executed')) && artistSignature) {
         const embeddedDateSignature = embeddedSignatures.find(sig => sig.fieldId === 2);
         if (embeddedDateSignature) {
@@ -142,7 +147,20 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
     )) {
       processedLines.push(
         <div key={`embedded-admin-signature-fallback-${adminSignature.fieldId}`} className="mt-6">
+          <h4 className="font-semibold mb-2">Administrator Signature:</h4>
           <EmbeddedSignatureDisplay signature={adminSignature} />
+        </div>
+      );
+    }
+    
+    // If artist signature exists but wasn't placed above, add it at the end
+    if (artistSignature && !processedLines.some(line => 
+      typeof line === 'object' && line.key && line.key.includes('artist-signature')
+    )) {
+      processedLines.push(
+        <div key={`embedded-artist-signature-fallback-${artistSignature.fieldId}`} className="mt-6">
+          <h4 className="font-semibold mb-2">Artist Signature:</h4>
+          <EmbeddedSignatureDisplay signature={artistSignature} />
         </div>
       );
     }
