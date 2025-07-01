@@ -21,6 +21,7 @@ interface ContractContentRendererProps {
   onFieldComplete: (fieldId: number, value: string) => void;
   getCompletionProgress: () => string;
   embeddedSignatures: any[];
+  onSignContract?: (signatureData: string) => Promise<void>;
 }
 
 export const ContractContentRenderer = ({
@@ -32,7 +33,8 @@ export const ContractContentRenderer = ({
   isArtistDateField,
   onFieldComplete,
   getCompletionProgress,
-  embeddedSignatures
+  embeddedSignatures,
+  onSignContract
 }: ContractContentRendererProps) => {
   const [finalSignature, setFinalSignature] = useState<string | null>(null);
   const [signingInProgress, setSigningInProgress] = useState(false);
@@ -48,10 +50,20 @@ export const ContractContentRenderer = ({
       return;
     }
 
+    if (!onSignContract) {
+      toast({
+        title: "Error",
+        description: "Contract signing function not available.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSigningInProgress(true);
     try {
-      // Here you would call your contract signing function
-      // For now, we'll just show a success message
+      console.log('Calling onSignContract with signature data');
+      await onSignContract(finalSignature);
+      
       toast({
         title: "Contract Signed",
         description: "Your contract has been signed successfully!",

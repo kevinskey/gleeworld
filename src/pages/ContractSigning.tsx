@@ -190,6 +190,7 @@ const ContractSigning = () => {
               onFieldComplete={handleFieldComplete}
               getCompletionProgress={getCompletionProgress}
               embeddedSignatures={safeEmbeddedSignatures}
+              onSignContract={handleSignContract}
             />
             
             {/* Contact Information */}
