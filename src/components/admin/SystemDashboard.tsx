@@ -1,3 +1,4 @@
+
 import { AdminSummaryStats } from "./AdminSummaryStats";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,20 +60,20 @@ export const SystemDashboard = ({ users, loading, activityLogs, onQuickAction }:
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <AdminSummaryStats 
         users={users}
         loading={loading}
         activityLogs={activityLogs}
       />
       
-      <Card className="glass-card border-white/10">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
+      <Card className="bg-white shadow-sm border border-gray-200">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-gray-900">
             <BarChart3 className="h-5 w-5" />
             Quick Actions
           </CardTitle>
-          <CardDescription className="text-white/70">
+          <CardDescription className="text-gray-600">
             Common administrative tasks and shortcuts
           </CardDescription>
         </CardHeader>
@@ -84,14 +85,14 @@ export const SystemDashboard = ({ users, loading, activityLogs, onQuickAction }:
                 <Button
                   key={action.id}
                   variant="outline"
-                  className={`h-auto p-4 flex flex-col items-start gap-2 text-white border-white/20 hover:border-white/40 ${action.color} border-0`}
+                  className={`h-auto p-4 flex flex-col items-start gap-2 text-white border-0 ${action.color} hover:shadow-md transition-all`}
                   onClick={() => onQuickAction(action.id)}
                 >
                   <div className="flex items-center gap-2 w-full">
                     <Icon className="h-5 w-5" />
                     <span className="font-medium">{action.label}</span>
                   </div>
-                  <span className="text-sm text-white/80 text-left">
+                  <span className="text-sm text-white/90 text-left">
                     {action.description}
                   </span>
                 </Button>
