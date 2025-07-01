@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -164,29 +165,47 @@ const System = () => {
                     <ChevronDown className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg">
-                  <DropdownMenuItem onClick={() => setActiveTab('financial-overview')}>
+                <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg z-50">
+                  <DropdownMenuItem 
+                    onClick={() => setActiveTab('financial-overview')}
+                    className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                  >
                     <TrendingUp className="h-4 w-4 mr-2" />
                     Overview
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setActiveTab('user-records')}>
+                  <DropdownMenuItem 
+                    onClick={() => setActiveTab('user-records')}
+                    className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                  >
                     <FileText className="h-4 w-4 mr-2" />
                     User Records
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setActiveTab('payment-tracking')}>
+                  <DropdownMenuItem 
+                    onClick={() => setActiveTab('payment-tracking')}
+                    className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                  >
                     <CreditCard className="h-4 w-4 mr-2" />
                     Payment Tracking
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setActiveTab('stipends')}>
+                  <DropdownMenuItem 
+                    onClick={() => setActiveTab('stipends')}
+                    className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                  >
                     <DollarSign className="h-4 w-4 mr-2" />
                     Stipends
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setActiveTab('budget')}>
+                  <DropdownMenuItem 
+                    onClick={() => setActiveTab('budget')}
+                    className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                  >
                     <PieChart className="h-4 w-4 mr-2" />
                     Budget
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setActiveTab('reports')}>
+                  <DropdownMenuItem 
+                    onClick={() => setActiveTab('reports')}
+                    className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                  >
                     <BarChart3 className="h-4 w-4 mr-2" />
                     Reports
                   </DropdownMenuItem>
@@ -205,17 +224,26 @@ const System = () => {
                     <ChevronDown className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg">
-                  <DropdownMenuItem onClick={() => console.log('System settings')}>
+                <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg z-50">
+                  <DropdownMenuItem 
+                    onClick={() => console.log('System settings')}
+                    className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                  >
                     <Settings className="h-4 w-4 mr-2" />
                     System Settings
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => console.log('Activity logs')}>
+                  <DropdownMenuItem 
+                    onClick={() => console.log('Activity logs')}
+                    className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                  >
                     <Shield className="h-4 w-4 mr-2" />
                     Activity Logs
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => console.log('Bulk actions')}>
+                  <DropdownMenuItem 
+                    onClick={() => console.log('Bulk actions')}
+                    className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                  >
                     <FileText className="h-4 w-4 mr-2" />
                     Bulk Actions
                   </DropdownMenuItem>
