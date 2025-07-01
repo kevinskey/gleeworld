@@ -33,9 +33,11 @@ export const useContracts = () => {
       setError(null);
       console.log('Fetching contracts for user:', user.id);
       
+      // Filter contracts to only show those created by the current user
       const { data, error } = await supabase
         .from('contracts_v2')
         .select('*')
+        .eq('created_by', user.id)
         .order('created_at', { ascending: false });
 
       console.log('Contracts query result:', { data, error });
@@ -205,7 +207,8 @@ export const useContracts = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'contracts_v2'
+          table: 'contracts_v2',
+          filter: `created_by=eq.${user.id}` // Only listen to changes for this user's contracts
         },
         (payload) => {
           console.log('Real-time update:', payload);
