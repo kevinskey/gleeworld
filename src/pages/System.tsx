@@ -8,13 +8,36 @@ import { PaymentManagement } from "@/components/admin/PaymentManagement";
 import { W9Management } from "@/components/admin/W9Management";
 import { FinancialSystem } from "@/components/admin/FinancialSystem";
 import { useUsers } from "@/hooks/useUsers";
+import { useActivityLogs } from "@/hooks/useActivityLogs";
 import { useAuth } from "@/contexts/AuthContext";
 import { Settings, Users, DollarSign, FileText, Calculator, Shield } from "lucide-react";
 
-export const System = () => {
+const System = () => {
   const { user } = useAuth();
   const { users, loading, error, refetch } = useUsers();
+  const { logs: activityLogs } = useActivityLogs();
   const [activeTab, setActiveTab] = useState("dashboard");
+
+  const handleQuickAction = (action: string) => {
+    // Handle quick actions from dashboard
+    switch (action) {
+      case 'users':
+        setActiveTab('users');
+        break;
+      case 'w9-forms':
+        setActiveTab('w9');
+        break;
+      case 'contracts':
+      case 'bulk-w9':
+      case 'settings':
+      case 'activity':
+        // These could navigate to other pages or trigger modals
+        console.log(`Quick action: ${action}`);
+        break;
+      default:
+        break;
+    }
+  };
 
   if (!user) {
     return (
@@ -64,7 +87,12 @@ export const System = () => {
         </TabsList>
 
         <TabsContent value="dashboard" className="space-y-6">
-          <SystemDashboard />
+          <SystemDashboard 
+            users={users}
+            loading={loading}
+            activityLogs={activityLogs}
+            onQuickAction={handleQuickAction}
+          />
         </TabsContent>
 
         <TabsContent value="users" className="space-y-6">
@@ -91,3 +119,5 @@ export const System = () => {
     </div>
   );
 };
+
+export default System;
