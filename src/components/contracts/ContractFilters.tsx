@@ -73,7 +73,7 @@ export const ContractFilters = ({
             variant="outline"
             size="sm"
             onClick={() => handleSortClick('created_at')}
-            className={sortBy === 'created_at' ? 'bg-blue-50' : ''}
+            className={`${sortBy === 'created_at' ? 'bg-blue-100 border-blue-300 text-blue-800' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
           >
             <Calendar className="h-4 w-4 mr-1" />
             Date
@@ -86,7 +86,7 @@ export const ContractFilters = ({
             variant="outline"
             size="sm"
             onClick={() => handleSortClick('title')}
-            className={sortBy === 'title' ? 'bg-blue-50' : ''}
+            className={`${sortBy === 'title' ? 'bg-blue-100 border-blue-300 text-blue-800' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
           >
             Name
             {sortBy === 'title' && (
