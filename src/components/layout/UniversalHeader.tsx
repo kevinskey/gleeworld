@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarContent, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { LogOut, User, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -55,9 +55,9 @@ export const UniversalHeader = () => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                       <Avatar className="h-8 w-8">
-                        <AvatarContent className="bg-white/20 text-white">
-                          {getInitials(user.email || '')}
-                        </AvatarContent>
+                        <AvatarImage className="bg-white/20 text-white flex items-center justify-center">
+                          <span className="text-white text-sm">{getInitials(user.email || '')}</span>
+                        </AvatarImage>
                         <AvatarFallback className="bg-white/20 text-white">
                           <User className="h-4 w-4" />
                         </AvatarFallback>
