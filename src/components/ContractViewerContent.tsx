@@ -31,7 +31,8 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
       title: contract?.title,
       status: contract?.status,
       contentLength: content.length,
-      hasContent: !!content
+      hasContent: !!content,
+      hasEmbeddedSignatures: content.includes('[EMBEDDED_SIGNATURES]')
     });
 
     // For draft contracts, display content as-is without signature processing
@@ -78,36 +79,38 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
       adminSignature: !!adminSignature
     });
     
+    let artistSignaturePlaced = false;
+    let adminSignaturePlaced = false;
+    
     lines.forEach((line, index) => {
-      // Check for artist signature placement first
-      if ((line.toLowerCase().includes('artist:') || 
-           line.toLowerCase().includes('agreed and accepted by:') ||
-           (line.toLowerCase().includes('signature') && 
-            !line.toLowerCase().includes('dr.') && 
-            !line.toLowerCase().includes('kevin') && 
-            !line.toLowerCase().includes('johnson'))) && 
-          artistSignature && 
-          !processedLines.some(item => 
-            typeof item === 'object' && item.key && item.key.includes('artist-signature')
-          )) {
-        
+      // Check for artist signature placement - look for lines that indicate artist signature area
+      if (!artistSignaturePlaced && artistSignature && (
+        line.toLowerCase().includes('artist:') || 
+        line.toLowerCase().includes('agreed and accepted by:') ||
+        (line.toLowerCase().includes('signature') && 
+         !line.toLowerCase().includes('dr.') && 
+         !line.toLowerCase().includes('kevin') && 
+         !line.toLowerCase().includes('johnson'))
+      )) {
         processedLines.push(line);
         processedLines.push(
           <div key={`embedded-artist-signature-${artistSignature.fieldId}`} className="my-4">
             <EmbeddedSignatureDisplay signature={artistSignature} />
           </div>
         );
+        artistSignaturePlaced = true;
         return;
       }
       
       // Check for admin signature placement - before "Printed Name: Dr. Kevin P. Johnson"
-      if (line.includes('Printed Name:') && line.includes('Dr. Kevin P. Johnson') && adminSignature) {
+      if (!adminSignaturePlaced && adminSignature && line.includes('Printed Name:') && line.includes('Dr. Kevin P. Johnson')) {
         // Add admin signature BEFORE this line
         processedLines.push(
           <div key={`embedded-admin-signature-${adminSignature.fieldId}`} className="mb-4">
             <EmbeddedSignatureDisplay signature={adminSignature} />
           </div>
         );
+        adminSignaturePlaced = true;
         
         // Add the printed name line
         processedLines.push(line);
@@ -118,34 +121,25 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
       processedLines.push(line);
     });
     
-    // If no signatures were placed inline, add them at the end
-    if (embeddedSignatures.length > 0) {
-      const artistSignaturePlaced = processedLines.some(line => 
-        typeof line === 'object' && line.key && line.key.includes('artist-signature')
+    // If signatures weren't placed inline, add them at the end
+    if (artistSignature && !artistSignaturePlaced) {
+      console.log('Adding artist signature at the end');
+      processedLines.push(
+        <div key={`embedded-artist-signature-fallback-${artistSignature.fieldId}`} className="mt-6">
+          <h4 className="font-semibold mb-2">Artist Signature:</h4>
+          <EmbeddedSignatureDisplay signature={artistSignature} />
+        </div>
       );
-      const adminSignaturePlaced = processedLines.some(line => 
-        typeof line === 'object' && line.key && line.key.includes('admin-signature')
+    }
+    
+    if (adminSignature && !adminSignaturePlaced) {
+      console.log('Adding admin signature at the end');
+      processedLines.push(
+        <div key={`embedded-admin-signature-fallback-${adminSignature.fieldId}`} className="mt-6">
+          <h4 className="font-semibold mb-2">Administrator Signature:</h4>
+          <EmbeddedSignatureDisplay signature={adminSignature} />
+        </div>
       );
-      
-      if (!artistSignaturePlaced && artistSignature) {
-        console.log('Adding artist signature at the end');
-        processedLines.push(
-          <div key={`embedded-artist-signature-fallback-${artistSignature.fieldId}`} className="mt-6">
-            <h4 className="font-semibold mb-2">Artist Signature:</h4>
-            <EmbeddedSignatureDisplay signature={artistSignature} />
-          </div>
-        );
-      }
-      
-      if (!adminSignaturePlaced && adminSignature) {
-        console.log('Adding admin signature at the end');
-        processedLines.push(
-          <div key={`embedded-admin-signature-fallback-${adminSignature.fieldId}`} className="mt-6">
-            <h4 className="font-semibold mb-2">Administrator Signature:</h4>
-            <EmbeddedSignatureDisplay signature={adminSignature} />
-          </div>
-        );
-      }
     }
     
     console.log('Final processed lines count:', processedLines.length);
