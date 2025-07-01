@@ -94,20 +94,20 @@ export const ContractsSection = ({ onViewContract }: ContractsSectionProps) => {
           {recentContracts.map((contract) => (
             <div 
               key={contract.id}
-              className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 transition-colors gap-3"
+              className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors gap-3"
             >
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
+              <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
+                <FileText className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5 sm:mt-0" />
                 <div className="min-w-0 flex-1">
-                  <h4 className="font-medium text-gray-900 truncate text-sm sm:text-base">{contract.title}</h4>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <h4 className="font-medium text-gray-900 truncate text-sm sm:text-base leading-tight">{contract.title}</h4>
+                  <div className="flex flex-col gap-1 mt-1 text-xs text-gray-600">
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="h-3 w-3 flex-shrink-0" />
                       <span>Created {new Date(contract.created_at).toLocaleDateString()}</span>
                     </div>
                     {contract.creator_name && (
-                      <div className="flex items-center gap-2">
-                        <User className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <div className="flex items-center gap-1.5">
+                        <User className="h-3 w-3 flex-shrink-0" />
                         <span>by {contract.creator_name}</span>
                       </div>
                     )}
@@ -115,18 +115,18 @@ export const ContractsSection = ({ onViewContract }: ContractsSectionProps) => {
                 </div>
               </div>
               
-              <div className="flex items-center justify-between sm:justify-end gap-3">
-                <Badge className={`${getStatusColor(contract.status)} text-xs whitespace-nowrap`}>
+              <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 flex-shrink-0">
+                <Badge className={`${getStatusColor(contract.status)} text-xs px-2 py-1 whitespace-nowrap`}>
                   {getStatusText(contract.status)}
                 </Badge>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onViewContract(contract)}
-                  className="flex-shrink-0 text-xs sm:text-sm"
+                  className="flex-shrink-0 h-8 px-3 text-xs"
                 >
-                  <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  View
+                  <Eye className="h-3 w-3 mr-1" />
+                  <span className="hidden xs:inline">View</span>
                 </Button>
               </div>
             </div>
