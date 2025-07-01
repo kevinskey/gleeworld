@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +11,8 @@ export interface Contract {
   created_at: string;
   updated_at: string;
   created_by: string;
+  creator_name?: string;
+  creator_email?: string;
 }
 
 export const useContracts = () => {
@@ -34,9 +35,16 @@ export const useContracts = () => {
       console.log('Fetching contracts for user:', user.id);
       
       // Filter contracts to only show those created by the current user
+      // Join with profiles to get creator information
       const { data, error } = await supabase
         .from('contracts_v2')
-        .select('*')
+        .select(`
+          *,
+          profiles!contracts_v2_created_by_fkey (
+            full_name,
+            email
+          )
+        `)
         .eq('created_by', user.id)
         .order('created_at', { ascending: false });
 
@@ -48,7 +56,13 @@ export const useContracts = () => {
       }
       
       if (mountedRef.current) {
-        setContracts(data || []);
+        // Transform the data to include creator information
+        const transformedContracts = (data || []).map(contract => ({
+          ...contract,
+          creator_name: contract.profiles?.full_name || 'Unknown',
+          creator_email: contract.profiles?.email || 'Unknown'
+        }));
+        setContracts(transformedContracts);
       }
     } catch (error) {
       console.error('Error fetching contracts:', error);

@@ -2,7 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Eye, Calendar } from "lucide-react";
+import { FileText, Eye, Calendar, User } from "lucide-react";
 import { useContracts } from "@/hooks/useContracts";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import type { Contract } from "@/hooks/useContracts";
@@ -100,9 +100,17 @@ export const ContractsSection = ({ onViewContract }: ContractsSectionProps) => {
                 <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
                 <div className="min-w-0 flex-1">
                   <h4 className="font-medium text-gray-900 truncate text-sm sm:text-base">{contract.title}</h4>
-                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                    <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span>Created {new Date(contract.created_at).toLocaleDateString()}</span>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <span>Created {new Date(contract.created_at).toLocaleDateString()}</span>
+                    </div>
+                    {contract.creator_name && (
+                      <div className="flex items-center gap-2">
+                        <User className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <span>by {contract.creator_name}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
