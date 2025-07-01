@@ -2,25 +2,38 @@
 import { ReactNode } from "react";
 import { UniversalHeader } from "./UniversalHeader";
 import { UniversalFooter } from "./UniversalFooter";
+import { ResponsiveContainer } from "@/components/shared/ResponsiveContainer";
 
 interface UniversalLayoutProps {
   children: ReactNode;
   showHeader?: boolean;
   showFooter?: boolean;
   className?: string;
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
+  containerized?: boolean;
 }
 
 export const UniversalLayout = ({ 
   children, 
   showHeader = true, 
   showFooter = true,
-  className = ""
+  className = "",
+  maxWidth = "full",
+  containerized = true
 }: UniversalLayoutProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900 flex flex-col">
       {showHeader && <UniversalHeader />}
       <main className={`flex-1 ${className}`}>
-        {children}
+        {containerized ? (
+          <ResponsiveContainer maxWidth={maxWidth}>
+            <div className="py-6">
+              {children}
+            </div>
+          </ResponsiveContainer>
+        ) : (
+          children
+        )}
       </main>
       {showFooter && <UniversalFooter />}
     </div>

@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,8 @@ import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { Library } from "@/components/Library";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ErrorState } from "@/components/shared/ErrorState";
+import { AIAssist } from "@/components/shared/AIAssist";
+import { DocumentManager } from "@/components/shared/DocumentManager";
 import { 
   FileText, 
   CheckCircle, 
@@ -75,9 +78,28 @@ export const UserDashboard = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "library":
-        return <Library />;
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-white">My Documents</h2>
+              <AIAssist context="personal document management" />
+            </div>
+            <Library />
+            <DocumentManager bucket="user-files" />
+          </div>
+        );
       case "finance":
-        return <div>Finance content coming soon...</div>;
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-white">My Finance</h2>
+              <AIAssist context="personal finance tracking" />
+            </div>
+            <div className="bg-white/95 backdrop-blur-sm rounded-xl p-6">
+              <p className="text-gray-600">Personal finance features coming soon...</p>
+            </div>
+          </div>
+        );
       case "dashboard":
       default:
         return (
@@ -100,14 +122,17 @@ export const UserDashboard = () => {
                     </div>
                   </div>
                 </div>
-                <Button 
-                  onClick={refetch} 
-                  variant="outline" 
-                  className="border-brand-400/50 text-brand-700 hover:bg-brand-50"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh
-                </Button>
+                <div className="flex items-center gap-2">
+                  <AIAssist context="user dashboard" />
+                  <Button 
+                    onClick={refetch} 
+                    variant="outline" 
+                    className="border-brand-400/50 text-brand-700 hover:bg-brand-50"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Refresh
+                  </Button>
+                </div>
               </div>
             </div>
 
@@ -201,9 +226,19 @@ export const UserDashboard = () => {
   };
 
   return (
-    <UniversalLayout>
+    <UniversalLayout containerized={false}>
       <div className="container mx-auto px-4 py-6">
-        {renderContent()}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="bg-white/95 backdrop-blur-sm">
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="library">Library</TabsTrigger>
+            <TabsTrigger value="finance">Finance</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value={activeTab}>
+            {renderContent()}
+          </TabsContent>
+        </Tabs>
       </div>
     </UniversalLayout>
   );

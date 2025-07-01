@@ -10,6 +10,8 @@ import { Library } from "@/components/Library";
 import { FinanceManagement } from "@/components/finance/FinanceManagement";
 import { ContractViewer } from "@/components/ContractViewer";
 import { EditTemplateDialog } from "@/components/templates/EditTemplateDialog";
+import { DocumentManager } from "@/components/shared/DocumentManager";
+import { AIAssist } from "@/components/shared/AIAssist";
 import { useContracts } from "@/hooks/useContracts";
 import { useContractTemplates } from "@/hooks/useContractTemplates";
 import { useTemplateOperations } from "@/hooks/useTemplateOperations";
@@ -17,16 +19,18 @@ import { useSearchParams } from "react-router-dom";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ErrorState } from "@/components/shared/ErrorState";
 import type { Contract } from "@/hooks/useContracts";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
   console.log('Index: Component is rendering');
   
-  const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [contractViewerOpen, setContractViewerOpen] = useState(false);
   const [editTemplateOpen, setEditTemplateOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [searchParams, setSearchParams] = useSearchParams();
+  
+  const activeTab = searchParams.get('tab') || 'dashboard';
   
   const { contracts, loading, error, deleteContract, refetch } = useContracts();
   const { templates } = useContractTemplates();
@@ -54,6 +58,16 @@ const Index = () => {
       newSearchParams.delete('edit-template');
       setSearchParams(newSearchParams);
     }
+  };
+
+  const setActiveTab = (tab: string) => {
+    const newSearchParams = new URLSearchParams(searchParams);
+    if (tab === 'dashboard') {
+      newSearchParams.delete('tab');
+    } else {
+      newSearchParams.set('tab', tab);
+    }
+    setSearchParams(newSearchParams);
   };
 
   console.log('Index: State initialized', { 
@@ -120,35 +134,68 @@ const Index = () => {
     switch (activeTab) {
       case "library":
         console.log('Index: Rendering Library component');
-        return <Library />;
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h1 className="text-3xl font-bold text-white">Document Library</h1>
+              <AIAssist context="document management" />
+            </div>
+            <Library />
+            <DocumentManager />
+          </div>
+        );
       case "finance":
         console.log('Index: Rendering FinanceManagement component');
-        return <FinanceManagement />;
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h1 className="text-3xl font-bold text-white">Finance Management</h1>
+              <AIAssist context="finance and payments" />
+            </div>
+            <FinanceManagement />
+          </div>
+        );
       case "dashboard":
       default:
         console.log('Index: Rendering Dashboard content');
         return (
           <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+              <AIAssist context="contract management dashboard" />
+            </div>
+            
             <StatsCards 
               totalContracts={totalContracts}
               completedCount={completedCount}
               pendingCount={pendingCount}
             />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-6">
-                <ContractCreationCollapsible onContractCreated={refetch} />
-                <ContractTemplatesCollapsible 
-                  onUseTemplate={handleUseTemplate}
-                  onContractCreated={refetch}
-                />
-                <RecentContractsTemplatesCollapsible
-                  onNewContract={handleNewContract}
-                  onNewTemplate={handleNewTemplate}
-                  onViewContract={handleViewContractById}
-                />
-                <W9FormsListCollapsible />
-              </div>
-            </div>
+            
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="bg-white/95 backdrop-blur-sm">
+                <TabsTrigger value="dashboard">Overview</TabsTrigger>
+                <TabsTrigger value="library">Library</TabsTrigger>
+                <TabsTrigger value="finance">Finance</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="dashboard">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-6">
+                    <ContractCreationCollapsible onContractCreated={refetch} />
+                    <ContractTemplatesCollapsible 
+                      onUseTemplate={handleUseTemplate}
+                      onContractCreated={refetch}
+                    />
+                    <RecentContractsTemplatesCollapsible
+                      onNewContract={handleNewContract}
+                      onNewTemplate={handleNewTemplate}
+                      onViewContract={handleViewContractById}
+                    />
+                    <W9FormsListCollapsible />
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         );
     }
@@ -157,7 +204,7 @@ const Index = () => {
   console.log('Index: About to render main component');
 
   return (
-    <UniversalLayout>
+    <UniversalLayout containerized={false}>
       <div className="container mx-auto px-4 py-6">
         {renderContent()}
       </div>
