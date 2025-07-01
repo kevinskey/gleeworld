@@ -34,34 +34,39 @@ export const useContracts = () => {
       setError(null);
       console.log('Fetching contracts for user:', user.id);
       
-      // Filter contracts to only show those created by the current user
-      // Join with profiles to get creator information
-      const { data, error } = await supabase
+      // First get contracts created by the current user
+      const { data: contractsData, error: contractsError } = await supabase
         .from('contracts_v2')
-        .select(`
-          *,
-          profiles!contracts_v2_created_by_fkey (
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .eq('created_by', user.id)
         .order('created_at', { ascending: false });
 
-      console.log('Contracts query result:', { data, error });
+      console.log('Contracts query result:', { data: contractsData, error: contractsError });
 
-      if (error) {
-        console.error('Error fetching contracts:', error);
-        throw error;
+      if (contractsError) {
+        console.error('Error fetching contracts:', contractsError);
+        throw contractsError;
+      }
+
+      // Then get the creator profile information
+      let transformedContracts = contractsData || [];
+      
+      if (contractsData && contractsData.length > 0 && user.id) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('full_name, email')
+          .eq('id', user.id)
+          .single();
+
+        // Transform the data to include creator information
+        transformedContracts = contractsData.map(contract => ({
+          ...contract,
+          creator_name: profileData?.full_name || 'Unknown',
+          creator_email: profileData?.email || 'Unknown'
+        }));
       }
       
       if (mountedRef.current) {
-        // Transform the data to include creator information
-        const transformedContracts = (data || []).map(contract => ({
-          ...contract,
-          creator_name: contract.profiles?.full_name || 'Unknown',
-          creator_email: contract.profiles?.email || 'Unknown'
-        }));
         setContracts(transformedContracts);
       }
     } catch (error) {
