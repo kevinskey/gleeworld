@@ -106,146 +106,149 @@ const System = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          {/* Mobile/Desktop Responsive Tab Layout */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 p-1">
-            <TabsList className="w-full bg-transparent p-0 h-auto flex-wrap gap-1 justify-start lg:grid lg:grid-cols-7">
+          {/* Improved Tab Layout with Better Readability */}
+          <div className="bg-white/95 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm p-2">
+            <TabsList className="w-full bg-white p-1 h-auto flex-wrap gap-1 justify-start lg:grid lg:grid-cols-7 border border-gray-100 rounded-md shadow-sm">
               <TabsTrigger 
                 value="dashboard" 
-                className="flex items-center gap-1 data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white text-xs px-2 py-2 rounded"
+                className="flex items-center gap-2 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-sm px-3 py-2.5 rounded font-medium transition-all duration-200"
               >
-                <Settings className="h-3 w-3" />
+                <Settings className="h-4 w-4" />
                 <span className="hidden sm:inline">Dashboard</span>
+                <span className="sm:hidden">Dash</span>
               </TabsTrigger>
               
               <TabsTrigger 
                 value="users" 
-                className="flex items-center gap-1 data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white text-xs px-2 py-2 rounded"
+                className="flex items-center gap-2 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-sm px-3 py-2.5 rounded font-medium transition-all duration-200"
               >
-                <Users className="h-3 w-3" />
+                <Users className="h-4 w-4" />
                 <span className="hidden sm:inline">Users</span>
               </TabsTrigger>
 
               <TabsTrigger 
                 value="contracts" 
-                className="flex items-center gap-1 data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white text-xs px-2 py-2 rounded"
+                className="flex items-center gap-2 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-sm px-3 py-2.5 rounded font-medium transition-all duration-200"
               >
-                <FileText className="h-3 w-3" />
+                <FileText className="h-4 w-4" />
                 <span className="hidden sm:inline">Contracts</span>
               </TabsTrigger>
               
               <TabsTrigger 
                 value="payments" 
-                className="flex items-center gap-1 data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white text-xs px-2 py-2 rounded"
+                className="flex items-center gap-2 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-sm px-3 py-2.5 rounded font-medium transition-all duration-200"
               >
-                <DollarSign className="h-3 w-3" />
+                <DollarSign className="h-4 w-4" />
                 <span className="hidden sm:inline">Payments</span>
               </TabsTrigger>
               
               <TabsTrigger 
                 value="w9" 
-                className="flex items-center gap-1 data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white text-xs px-2 py-2 rounded"
+                className="flex items-center gap-2 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-sm px-3 py-2.5 rounded font-medium transition-all duration-200"
               >
-                <FileText className="h-3 w-3" />
+                <FileText className="h-4 w-4" />
                 <span className="hidden sm:inline">W9 Forms</span>
+                <span className="sm:hidden">W9</span>
               </TabsTrigger>
 
-              {/* Financial Dropdown */}
+              {/* Financial Dropdown with Improved Styling */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="ghost" 
-                    className={`flex items-center gap-1 text-white/70 hover:text-white hover:bg-white/10 text-xs px-2 py-2 h-auto rounded ${
+                    className={`flex items-center gap-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-sm px-3 py-2.5 h-auto rounded font-medium transition-all duration-200 border border-transparent ${
                       ['financial-overview', 'user-records', 'payment-tracking', 'stipends', 'budget', 'reports'].includes(activeTab) 
-                        ? 'bg-white/20 text-white' 
-                        : ''
+                        ? 'bg-brand-500 text-white shadow-md border-brand-600' 
+                        : 'hover:border-gray-200'
                     }`}
                   >
-                    <Calculator className="h-3 w-3" />
+                    <Calculator className="h-4 w-4" />
                     <span className="hidden sm:inline">Financial</span>
+                    <span className="sm:hidden">Fin</span>
                     <ChevronDown className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg z-50">
+                <DropdownMenuContent align="end" className="w-52 bg-white border border-gray-200 shadow-xl rounded-lg z-50 p-1">
                   <DropdownMenuItem 
                     onClick={() => setActiveTab('financial-overview')}
-                    className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                    className="text-gray-900 hover:bg-brand-50 hover:text-brand-700 cursor-pointer rounded px-3 py-2 transition-colors duration-150"
                   >
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Overview
+                    <TrendingUp className="h-4 w-4 mr-3 text-brand-500" />
+                    <span className="font-medium">Overview</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => setActiveTab('user-records')}
-                    className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                    className="text-gray-900 hover:bg-brand-50 hover:text-brand-700 cursor-pointer rounded px-3 py-2 transition-colors duration-150"
                   >
-                    <FileText className="h-4 w-4 mr-2" />
-                    User Records
+                    <FileText className="h-4 w-4 mr-3 text-brand-500" />
+                    <span className="font-medium">User Records</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => setActiveTab('payment-tracking')}
-                    className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                    className="text-gray-900 hover:bg-brand-50 hover:text-brand-700 cursor-pointer rounded px-3 py-2 transition-colors duration-150"
                   >
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Payment Tracking
+                    <CreditCard className="h-4 w-4 mr-3 text-brand-500" />
+                    <span className="font-medium">Payment Tracking</span>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="my-1 bg-gray-100" />
                   <DropdownMenuItem 
                     onClick={() => setActiveTab('stipends')}
-                    className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                    className="text-gray-900 hover:bg-brand-50 hover:text-brand-700 cursor-pointer rounded px-3 py-2 transition-colors duration-150"
                   >
-                    <DollarSign className="h-4 w-4 mr-2" />
-                    Stipends
+                    <DollarSign className="h-4 w-4 mr-3 text-brand-500" />
+                    <span className="font-medium">Stipends</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => setActiveTab('budget')}
-                    className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                    className="text-gray-900 hover:bg-brand-50 hover:text-brand-700 cursor-pointer rounded px-3 py-2 transition-colors duration-150"
                   >
-                    <PieChart className="h-4 w-4 mr-2" />
-                    Budget
+                    <PieChart className="h-4 w-4 mr-3 text-brand-500" />
+                    <span className="font-medium">Budget</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => setActiveTab('reports')}
-                    className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                    className="text-gray-900 hover:bg-brand-50 hover:text-brand-700 cursor-pointer rounded px-3 py-2 transition-colors duration-150"
                   >
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                    Reports
+                    <BarChart3 className="h-4 w-4 mr-3 text-brand-500" />
+                    <span className="font-medium">Reports</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* System Tools Dropdown */}
+              {/* System Tools Dropdown with Improved Styling */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="ghost" 
-                    className="flex items-center gap-1 text-white/70 hover:text-white hover:bg-white/10 text-xs px-2 py-2 h-auto rounded"
+                    className="flex items-center gap-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 hover:border-gray-200 text-sm px-3 py-2.5 h-auto rounded font-medium transition-all duration-200 border border-transparent"
                   >
-                    <Settings className="h-3 w-3" />
+                    <Settings className="h-4 w-4" />
                     <span className="hidden sm:inline">Tools</span>
                     <ChevronDown className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg z-50">
+                <DropdownMenuContent align="end" className="w-52 bg-white border border-gray-200 shadow-xl rounded-lg z-50 p-1">
                   <DropdownMenuItem 
                     onClick={() => console.log('System settings')}
-                    className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                    className="text-gray-900 hover:bg-gray-50 hover:text-gray-900 cursor-pointer rounded px-3 py-2 transition-colors duration-150"
                   >
-                    <Settings className="h-4 w-4 mr-2" />
-                    System Settings
+                    <Settings className="h-4 w-4 mr-3 text-gray-500" />
+                    <span className="font-medium">System Settings</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => console.log('Activity logs')}
-                    className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                    className="text-gray-900 hover:bg-gray-50 hover:text-gray-900 cursor-pointer rounded px-3 py-2 transition-colors duration-150"
                   >
-                    <Shield className="h-4 w-4 mr-2" />
-                    Activity Logs
+                    <Shield className="h-4 w-4 mr-3 text-gray-500" />
+                    <span className="font-medium">Activity Logs</span>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="my-1 bg-gray-100" />
                   <DropdownMenuItem 
                     onClick={() => console.log('Bulk actions')}
-                    className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                    className="text-gray-900 hover:bg-gray-50 hover:text-gray-900 cursor-pointer rounded px-3 py-2 transition-colors duration-150"
                   >
-                    <FileText className="h-4 w-4 mr-2" />
-                    Bulk Actions
+                    <FileText className="h-4 w-4 mr-3 text-gray-500" />
+                    <span className="font-medium">Bulk Actions</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -283,7 +286,6 @@ const System = () => {
             <W9Management />
           </TabsContent>
 
-          {/* Financial System Tabs */}
           <TabsContent value="financial-overview" className="space-y-4">
             <FinancialOverview />
           </TabsContent>
