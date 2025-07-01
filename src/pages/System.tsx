@@ -9,6 +9,7 @@ import { UserManagement } from "@/components/admin/UserManagement";
 import { PaymentManagement } from "@/components/admin/PaymentManagement";
 import { W9Management } from "@/components/admin/W9Management";
 import { FinancialSystem } from "@/components/admin/FinancialSystem";
+import { ContractManagement } from "@/components/admin/ContractManagement";
 import { FinancialOverview } from "@/components/admin/financial/FinancialOverview";
 import { UserFinancialRecords } from "@/components/admin/financial/UserFinancialRecords";
 import { PaymentTracking } from "@/components/admin/financial/PaymentTracking";
@@ -46,6 +47,9 @@ const System = () => {
       case 'w9-forms':
         setActiveTab('w9');
         break;
+      case 'contracts':
+        setActiveTab('contracts');
+        break;
       case 'financial-overview':
         setActiveTab('financial-overview');
         break;
@@ -64,7 +68,6 @@ const System = () => {
       case 'reports':
         setActiveTab('reports');
         break;
-      case 'contracts':
       case 'bulk-w9':
       case 'settings':
       case 'activity':
@@ -102,7 +105,7 @@ const System = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-6 bg-white border border-gray-200 p-1 h-auto">
+          <TabsList className="grid w-full grid-cols-7 bg-white border border-gray-200 p-1 h-auto">
             <TabsTrigger 
               value="dashboard" 
               className="flex items-center gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-700 hover:text-gray-900 text-xs px-2 py-2"
@@ -117,6 +120,14 @@ const System = () => {
             >
               <Users className="h-3 w-3" />
               Users
+            </TabsTrigger>
+
+            <TabsTrigger 
+              value="contracts" 
+              className="flex items-center gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-700 hover:text-gray-900 text-xs px-2 py-2"
+            >
+              <FileText className="h-3 w-3" />
+              Contracts
             </TabsTrigger>
             
             <TabsTrigger 
@@ -226,6 +237,10 @@ const System = () => {
               error={error} 
               onRefetch={refetch}
             />
+          </TabsContent>
+
+          <TabsContent value="contracts" className="space-y-4">
+            <ContractManagement />
           </TabsContent>
 
           <TabsContent value="payments" className="space-y-4">
