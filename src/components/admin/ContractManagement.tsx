@@ -55,6 +55,59 @@ export const ContractManagement = () => {
     }
   };
 
+  const handleViewContract = (contract: any) => {
+    // Open contract in a new window/tab for viewing
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+      newWindow.document.write(`
+        <html>
+          <head>
+            <title>${contract.title}</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; line-height: 1.6; }
+              h1 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+              .contract-content { white-space: pre-wrap; }
+            </style>
+          </head>
+          <body>
+            <h1>${contract.title}</h1>
+            <div class="contract-content">${contract.content}</div>
+          </body>
+        </html>
+      `);
+      newWindow.document.close();
+    }
+    
+    toast({
+      title: "Contract Opened",
+      description: `Viewing contract: ${contract.title}`,
+    });
+  };
+
+  const handleSendContract = (contract: any) => {
+    // Placeholder for send contract functionality
+    toast({
+      title: "Send Contract",
+      description: `Send functionality for "${contract.title}" would be implemented here`,
+    });
+  };
+
+  const handleDownloadContract = (contract: any) => {
+    // Create a simple text download of the contract
+    const element = document.createElement("a");
+    const file = new Blob([`${contract.title}\n\n${contract.content}`], {type: 'text/plain'});
+    element.href = URL.createObjectURL(file);
+    element.download = `${contract.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    
+    toast({
+      title: "Download Started",
+      description: `Downloading contract: ${contract.title}`,
+    });
+  };
+
   // Filter and sort contracts
   const filteredContracts = contracts.filter(contract => {
     const matchesSearch = contract.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -272,6 +325,7 @@ export const ContractManagement = () => {
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => handleViewContract(contract)}
                       title="View Contract"
                       className="h-8 w-8 p-0"
                     >
@@ -280,6 +334,7 @@ export const ContractManagement = () => {
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => handleSendContract(contract)}
                       title="Send Contract"
                       className="h-8 w-8 p-0"
                     >
@@ -288,6 +343,7 @@ export const ContractManagement = () => {
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => handleDownloadContract(contract)}
                       title="Download"
                       className="h-8 w-8 p-0"
                     >
