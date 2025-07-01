@@ -5,11 +5,14 @@ import { AdminPanel } from "@/components/AdminPanel";
 import { SystemDashboard } from "@/components/admin/SystemDashboard";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { PaymentManagement } from "@/components/admin/PaymentManagement";
+import { ContractManagement } from "@/components/admin/ContractManagement";
+import { ContractSummaryStats } from "@/components/admin/ContractSummaryStats";
 import { useUsers } from "@/hooks/useUsers";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
+import { useContracts } from "@/hooks/useContracts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, Users, DollarSign, BarChart3 } from "lucide-react";
+import { Shield, Users, DollarSign, BarChart3, FileText } from "lucide-react";
 import { useState } from "react";
 import { BulkW9EmailDialog } from "@/components/admin/BulkW9EmailDialog";
 
@@ -18,6 +21,7 @@ const System = () => {
   const { userProfile } = useUserProfile(user);
   const { users, loading, error, refetch } = useUsers();
   const { logs: activityLogs } = useActivityLogs();
+  const { contracts, loading: contractsLoading } = useContracts();
   const [bulkW9EmailOpen, setBulkW9EmailOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
 
@@ -31,6 +35,9 @@ const System = () => {
         break;
       case 'users':
         setActiveTab('users');
+        break;
+      case 'contracts':
+        setActiveTab('contracts');
         break;
       case 'settings':
         setActiveTab('admin');
@@ -73,6 +80,10 @@ const System = () => {
               <BarChart3 className="h-4 w-4 mr-2" />
               Dashboard
             </TabsTrigger>
+            <TabsTrigger value="contracts" className="text-white data-[state=active]:bg-spelman-500/30">
+              <FileText className="h-4 w-4 mr-2" />
+              Contracts
+            </TabsTrigger>
             <TabsTrigger value="admin" className="text-white data-[state=active]:bg-spelman-500/30">
               <Shield className="h-4 w-4 mr-2" />
               Admin Panel
@@ -94,6 +105,16 @@ const System = () => {
               activityLogs={activityLogs}
               onQuickAction={handleQuickAction}
             />
+          </TabsContent>
+
+          <TabsContent value="contracts">
+            <div className="space-y-4">
+              <ContractSummaryStats 
+                contracts={contracts}
+                loading={contractsLoading}
+              />
+              <ContractManagement />
+            </div>
           </TabsContent>
 
           <TabsContent value="admin">
