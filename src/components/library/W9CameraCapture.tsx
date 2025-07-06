@@ -37,6 +37,15 @@ export const W9CameraCapture = () => {
         throw new Error('Camera not supported in this browser');
       }
       
+      // Check if video element exists first
+      if (!videoRef.current) {
+        console.log('Video element not ready, waiting...');
+        await new Promise(resolve => setTimeout(resolve, 300));
+        if (!videoRef.current) {
+          throw new Error('Video element not available. Please close and reopen the dialog.');
+        }
+      }
+      
       const constraints = {
         video: { 
           facingMode: 'environment',
@@ -46,83 +55,83 @@ export const W9CameraCapture = () => {
         audio: false
       };
       
+      console.log('Requesting camera access...');
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-      console.log('Camera stream obtained:', mediaStream.getTracks().length, 'tracks');
       
-      // Wait a bit for the video element to be ready
-      await new Promise(resolve => setTimeout(resolve, 200));
+      const videoTracks = mediaStream.getVideoTracks();
+      console.log('Camera stream obtained:', videoTracks.length, 'video tracks');
       
-      if (!videoRef.current) {
-        throw new Error('Video element not available. Please try again.');
-      }
-      
-      if (mediaStream.getTracks().length === 0) {
+      if (videoTracks.length === 0) {
+        mediaStream.getTracks().forEach(track => track.stop());
         throw new Error('No video tracks available from camera');
       }
 
       const video = videoRef.current;
+      console.log('Setting up video element...');
       
-      // Set video properties first
+      // Set video properties for maximum compatibility
       video.setAttribute('playsinline', 'true');  
       video.setAttribute('webkit-playsinline', 'true');
+      video.setAttribute('controls', 'false');
       video.muted = true;
       video.autoplay = true;
+      video.defaultMuted = true;
+      video.playsInline = true;
       
-      // Assign stream and set state immediately
+      // Set up event handlers before assigning stream
+      video.onloadedmetadata = () => {
+        console.log('Video metadata loaded, dimensions:', video.videoWidth, 'x', video.videoHeight);
+      };
+      
+      video.onerror = (e) => {
+        console.error('Video element error:', e);
+      };
+      
+      // Assign stream and update state
       video.srcObject = mediaStream;
       setStream(mediaStream);
       setIsCapturing(true);
       
-      // Wait for the video to load metadata before playing
-      const playVideo = async () => {
-        try {
-          // First wait for loadedmetadata
-          await new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => reject(new Error('Video metadata timeout')), 5000);
-            video.onloadedmetadata = () => {
-              clearTimeout(timeout);
-              console.log('Video metadata loaded, dimensions:', video.videoWidth, 'x', video.videoHeight);
-              resolve(true);
-            };
-            video.onerror = () => {
-              clearTimeout(timeout);
-              reject(new Error('Video loading error'));
-            };
-          });
-          
-          // Then try to play
-          await video.play();
+      // Try to play the video
+      try {
+        console.log('Attempting to play video...');
+        const playPromise = video.play();
+        
+        if (playPromise !== undefined) {
+          await playPromise;
           console.log('Video playing successfully');
-        } catch (playError) {
-          console.error('Error playing video:', playError);
-          // Final retry
-          setTimeout(async () => {
-            try {
-              await video.play();
-              console.log('Video playing on retry');
-            } catch (retryError) {
-              console.error('Final retry failed:', retryError);
-            }
-          }, 500);
         }
-      };
+      } catch (playError) {
+        console.error('Error playing video:', playError);
+        // Don't throw here, the video might still work for capturing
+        console.log('Video play error, but continuing...');
+      }
       
-      await playVideo();
-      console.log('Video element setup complete');
+      console.log('Camera initialization complete');
       
     } catch (error) {
       console.error('Error accessing camera:', error);
+      
+      // Clean up any partial stream
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        setStream(null);
+      }
+      
       let errorMessage = 'Unable to access camera. ';
       
       if (error instanceof Error) {
+        console.log('Error details:', error.name, error.message);
         if (error.name === 'NotAllowedError') {
           errorMessage += 'Please allow camera access in your browser settings and try again.';
         } else if (error.name === 'NotFoundError') {
           errorMessage += 'No camera found. Please connect a camera and try again.';
         } else if (error.name === 'NotSupportedError') {
           errorMessage += 'Camera not supported on this device.';
+        } else if (error.name === 'NotReadableError') {
+          errorMessage += 'Camera is being used by another application. Please close other apps and try again.';
         } else {
-          errorMessage += 'Please check camera permissions and ensure you\'re using HTTPS.';
+          errorMessage += `${error.message}. Please check camera permissions and ensure you\'re using HTTPS.`;
         }
       }
       
