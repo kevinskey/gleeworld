@@ -20,6 +20,7 @@ import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useUsers } from "@/hooks/useUsers";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
 import { useAuth } from "@/contexts/AuthContext";
+import { Library } from "@/components/Library";
 import { 
   Settings, 
   Users, 
@@ -31,7 +32,8 @@ import {
   TrendingUp,
   CreditCard,
   PieChart,
-  BarChart3
+  BarChart3,
+  Library as LibraryIcon
 } from "lucide-react";
 
 const System = () => {
@@ -108,7 +110,7 @@ const System = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           {/* Mobile-Optimized Tab Layout */}
           <div className="bg-white/95 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm p-2">
-            <TabsList className="w-full bg-white p-1 h-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-1 border border-gray-100 rounded-md shadow-sm">
+            <TabsList className="w-full bg-white p-1 h-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-1 border border-gray-100 rounded-md shadow-sm">
               <TabsTrigger 
                 value="dashboard" 
                 className="flex items-center justify-center gap-1 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 rounded font-medium transition-all duration-200 min-h-[2.5rem]"
@@ -149,6 +151,14 @@ const System = () => {
                 <FileText className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                 <span className="hidden sm:inline lg:hidden truncate">W9</span>
                 <span className="hidden lg:inline truncate">W9 Forms</span>
+              </TabsTrigger>
+
+              <TabsTrigger 
+                value="library" 
+                className="flex items-center justify-center gap-1 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 rounded font-medium transition-all duration-200 min-h-[2.5rem]"
+              >
+                <LibraryIcon className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span className="hidden sm:inline truncate">Library</span>
               </TabsTrigger>
 
               {/* Financial Dropdown with Mobile Optimization */}
@@ -308,6 +318,10 @@ const System = () => {
 
           <TabsContent value="reports" className="space-y-4">
             <FinancialReports />
+          </TabsContent>
+
+          <TabsContent value="library" className="space-y-4">
+            <Library />
           </TabsContent>
         </Tabs>
       </div>
