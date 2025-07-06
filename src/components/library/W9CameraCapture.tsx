@@ -37,22 +37,16 @@ export const W9CameraCapture = () => {
         throw new Error('Camera not supported in this browser');
       }
       
-      // First set capturing state to render the video element
+      // Set capturing state first to render video element
       setIsCapturing(true);
       
-      // Wait for video element to be rendered
-      let attempts = 0;
-      const maxAttempts = 20;
-      
-      while (!videoRef.current && attempts < maxAttempts) {
-        console.log(`Waiting for video element... (attempt ${attempts + 1}/${maxAttempts})`);
-        await new Promise(resolve => setTimeout(resolve, 100));
-        attempts++;
-      }
+      // Use requestAnimationFrame to ensure DOM is updated
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       if (!videoRef.current) {
         setIsCapturing(false);
-        throw new Error('Camera interface failed to load. Please try again.');
+        throw new Error('Camera interface failed to load. Please close and reopen the dialog.');
       }
       
       const constraints = {
