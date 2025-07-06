@@ -214,30 +214,47 @@ export const W9CameraCapture = () => {
       return;
     }
 
-    console.log('Capturing photo...');
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
-    const context = canvas.getContext('2d');
+    try {
+      console.log('Capturing photo...');
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      const context = canvas.getContext('2d');
 
-    if (!context) {
-      console.error('Canvas context not available');
-      return;
+      if (!context) {
+        console.error('Canvas context not available');
+        return;
+      }
+
+      // Set canvas dimensions to match video
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      
+      console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
+      
+      // Draw the video frame to canvas with timeout protection
+      const drawPromise = new Promise<void>((resolve) => {
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        // Use requestAnimationFrame to prevent blocking
+        requestAnimationFrame(() => resolve());
+      });
+
+      await drawPromise;
+
+      // Reduce image quality to prevent system lockup
+      const imageDataUrl = canvas.toDataURL('image/jpeg', 0.6);
+      console.log('Image captured, data URL length:', imageDataUrl.length);
+      
+      setCapturedImage(imageDataUrl);
+      stopCamera();
+      
+    } catch (error) {
+      console.error('Error capturing photo:', error);
+      toast({
+        title: "Capture Error",
+        description: "Failed to capture photo. Please try again.",
+        variant: "destructive",
+      });
     }
-
-    // Set canvas dimensions to match video
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
-    
-    console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
-    
-    // Draw the video frame to canvas
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    // Reduce image quality to prevent system lockup
-    const imageDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-    console.log('Image captured, data URL length:', imageDataUrl.length);
-    setCapturedImage(imageDataUrl);
-    stopCamera();
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -255,6 +272,17 @@ export const W9CameraCapture = () => {
     if (!capturedImage || !user) return;
 
     setIsProcessing(true);
+    
+    // Add timeout protection for the entire process
+    const processTimeout = setTimeout(() => {
+      setIsProcessing(false);
+      toast({
+        title: "Processing Timeout",
+        description: "Processing took too long. Please try again with a smaller image.",
+        variant: "destructive",
+      });
+    }, 30000); // 30 second timeout
+
     try {
       console.log('Starting W9 processing...');
       
@@ -264,40 +292,22 @@ export const W9CameraCapture = () => {
       // Save form immediately without waiting for OCR
       const fileName = `${user.id}/w9-form-${Date.now()}.pdf`;
       
-      // Convert image to PDF with async processing
-      const pdf = new jsPDF();
-      const img = new Image();
+      // Make PDF generation non-blocking
+      const pdfBlob = await createPDFFromImage(capturedImage);
       
-      await new Promise((resolve) => {
-        img.onload = () => {
-          // Small delay to prevent blocking
-          setTimeout(resolve, 50);
-        };
-        img.src = capturedImage;
-      });
-
-      // Calculate dimensions to fit the page
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgRatio = img.width / img.height;
-      const pdfRatio = pdfWidth / pdfHeight;
-
-      let finalWidth, finalHeight;
-      if (imgRatio > pdfRatio) {
-        finalWidth = pdfWidth;
-        finalHeight = pdfWidth / imgRatio;
-      } else {
-        finalHeight = pdfHeight;
-        finalWidth = pdfHeight * imgRatio;
-      }
-
-      pdf.addImage(capturedImage, 'JPEG', 0, 0, finalWidth, finalHeight);
-      const pdfBlob = pdf.output('blob');
-
-      // Upload to storage first
-      const { error: uploadError } = await supabase.storage
+      // Upload to storage with timeout
+      const uploadPromise = supabase.storage
         .from('w9-forms')
         .upload(fileName, pdfBlob);
+        
+      const uploadTimeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Upload timeout')), 15000)
+      );
+      
+      const { error: uploadError } = await Promise.race([
+        uploadPromise,
+        uploadTimeout
+      ]) as any;
 
       if (uploadError) {
         throw uploadError;
@@ -322,6 +332,8 @@ export const W9CameraCapture = () => {
         throw dbError;
       }
 
+      clearTimeout(processTimeout);
+
       toast({
         title: "W9 Form Saved",
         description: "W9 form captured successfully. OCR processing will happen in the background.",
@@ -336,14 +348,62 @@ export const W9CameraCapture = () => {
       
     } catch (error) {
       console.error('Error processing W9 form:', error);
+      clearTimeout(processTimeout);
       toast({
         title: "Processing Error",
-        description: "Failed to process W9 form. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to process W9 form. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  // Helper function to make PDF generation non-blocking
+  const createPDFFromImage = async (imageDataUrl: string): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      try {
+        const pdf = new jsPDF();
+        const img = new Image();
+        
+        img.onload = () => {
+          // Use requestAnimationFrame to prevent blocking
+          requestAnimationFrame(() => {
+            try {
+              // Calculate dimensions to fit the page
+              const pdfWidth = pdf.internal.pageSize.getWidth();
+              const pdfHeight = pdf.internal.pageSize.getHeight();
+              const imgRatio = img.width / img.height;
+              const pdfRatio = pdfWidth / pdfHeight;
+
+              let finalWidth, finalHeight;
+              if (imgRatio > pdfRatio) {
+                finalWidth = pdfWidth;
+                finalHeight = pdfWidth / imgRatio;
+              } else {
+                finalHeight = pdfHeight;
+                finalWidth = pdfHeight * imgRatio;
+              }
+
+              pdf.addImage(imageDataUrl, 'JPEG', 0, 0, finalWidth, finalHeight);
+              const pdfBlob = pdf.output('blob');
+              resolve(pdfBlob);
+            } catch (error) {
+              reject(error);
+            }
+          });
+        };
+        
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = imageDataUrl;
+        
+        // Add timeout for image loading
+        setTimeout(() => reject(new Error('Image loading timeout')), 10000);
+        
+      } catch (error) {
+        reject(error);
+      }
+    });
   };
 
   const processOCRInBackground = async (fileName: string) => {
