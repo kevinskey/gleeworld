@@ -37,13 +37,17 @@ export const W9CameraCapture = () => {
         throw new Error('Camera not supported in this browser');
       }
       
-      // Check if video element exists first
+      // Wait for video element to be available with retries
+      let retries = 0;
+      const maxRetries = 10;
+      while (!videoRef.current && retries < maxRetries) {
+        console.log(`Waiting for video element... (attempt ${retries + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, 200));
+        retries++;
+      }
+      
       if (!videoRef.current) {
-        console.log('Video element not ready, waiting...');
-        await new Promise(resolve => setTimeout(resolve, 300));
-        if (!videoRef.current) {
-          throw new Error('Video element not available. Please close and reopen the dialog.');
-        }
+        throw new Error('Camera dialog not ready. Please try again.');
       }
       
       const constraints = {
