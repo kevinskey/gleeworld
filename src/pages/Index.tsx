@@ -135,10 +135,12 @@ const Index = () => {
       case "library":
         console.log('Index: Rendering Library component');
         return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold text-white">Document Library</h1>
-              <AIAssist context="document management" />
+          <div className="space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Document Library</h1>
+              <div className="flex-shrink-0">
+                <AIAssist context="document management" />
+              </div>
             </div>
             <Library />
             <DocumentManager />
@@ -147,10 +149,12 @@ const Index = () => {
       case "finance":
         console.log('Index: Rendering FinanceManagement component');
         return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold text-white">Finance Management</h1>
-              <AIAssist context="finance and payments" />
+          <div className="space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Finance Management</h1>
+              <div className="flex-shrink-0">
+                <AIAssist context="finance and payments" />
+              </div>
             </div>
             <FinanceManagement />
           </div>
@@ -159,10 +163,12 @@ const Index = () => {
       default:
         console.log('Index: Rendering Dashboard content');
         return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-              <AIAssist context="contract management dashboard" />
+          <div className="space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Dashboard</h1>
+              <div className="flex-shrink-0">
+                <AIAssist context="contract management dashboard" />
+              </div>
             </div>
             
             <StatsCards 
@@ -171,8 +177,8 @@ const Index = () => {
               pendingCount={pendingCount}
             />
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              <div className="space-y-4 sm:space-y-6">
                 <ContractCreationCollapsible onContractCreated={refetch} />
                 <ContractTemplatesCollapsible 
                   onUseTemplate={handleUseTemplate}
@@ -186,7 +192,7 @@ const Index = () => {
                 <W9FormsListCollapsible />
               </div>
               
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 <ContractsSection onViewContract={handleViewContract} />
               </div>
             </div>
@@ -199,7 +205,7 @@ const Index = () => {
 
   return (
     <UniversalLayout containerized={false}>
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6">
         {renderContent()}
       </div>
       
