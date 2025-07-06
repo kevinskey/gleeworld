@@ -145,7 +145,7 @@ export const W9FormsList = () => {
                   </div>
                   <div className="flex gap-2">
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
                       onClick={() => handlePreview(form)}
                       title="Preview Form"
@@ -155,7 +155,7 @@ export const W9FormsList = () => {
                     </Button>
                     
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
                       onClick={() => handleDownload(form)}
                       title="Download PDF"
@@ -167,9 +167,9 @@ export const W9FormsList = () => {
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
-                          variant="outline"
+                          variant="secondary"
                           size="sm"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="text-destructive hover:text-destructive"
                           disabled={deletingFormId === form.id}
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
