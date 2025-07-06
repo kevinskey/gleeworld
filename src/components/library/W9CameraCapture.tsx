@@ -410,14 +410,30 @@ export const W9CameraCapture = () => {
     try {
       console.log('Starting background OCR processing...');
       
+      if (!capturedImage) {
+        console.error('No captured image available for OCR');
+        return;
+      }
+      
       // Reduce image size for OCR to prevent API timeouts
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        console.error('Cannot get canvas context');
+        return;
+      }
+      
       const img = new Image();
       
-      await new Promise((resolve) => {
+      // Load image with error handling
+      await new Promise((resolve, reject) => {
         img.onload = resolve;
-        img.src = capturedImage!;
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = capturedImage;
+        
+        // Timeout for image loading
+        setTimeout(() => reject(new Error('Image loading timeout')), 5000);
       });
       
       // Resize image for OCR (max 800px width to stay under 2MB)
@@ -426,46 +442,96 @@ export const W9CameraCapture = () => {
       canvas.width = img.width * ratio;
       canvas.height = img.height * ratio;
       
-      ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       const resizedImage = canvas.toDataURL('image/jpeg', 0.5); // Lower quality for OCR
       
-      // Add timeout to OCR call
-      const ocrPromise = supabase.functions.invoke('w9-ocr-extract', {
+      console.log('Calling OCR function with image size:', resizedImage.length);
+      
+      // Call OCR function with proper error handling
+      const { data: ocrData, error: ocrError } = await supabase.functions.invoke('w9-ocr-extract', {
         body: { imageBase64: resizedImage }
       });
-      
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('OCR timeout')), 20000) // 20 second timeout
-      );
-      
-      const { data: ocrData, error: ocrError } = await Promise.race([
-        ocrPromise,
-        timeoutPromise
-      ]) as any;
 
-      if (!ocrError && ocrData && !ocrData.error) {
-        // Update the W9 form with OCR data
+      console.log('OCR function response:', { data: ocrData, error: ocrError });
+
+      if (ocrError) {
+        console.error('OCR function error:', ocrError);
+        // Update form to mark OCR as attempted but failed
         await supabase
+          .from('w9_forms')
+          .update({
+            form_data: {
+              capture_method: 'camera_manual',
+              captured_at: new Date().toISOString(),
+              ocr_attempted: true,
+              ocr_successful: false,
+              ocr_error: ocrError.message || 'Unknown OCR error'
+            }
+          })
+          .eq('storage_path', fileName);
+        return;
+      }
+
+      if (ocrData && ocrData.success && ocrData.extractedData) {
+        console.log('OCR extraction successful:', ocrData.extractedData);
+        
+        // Update the W9 form with OCR data
+        const { error: updateError } = await supabase
           .from('w9_forms')
           .update({
             form_data: {
               ...ocrData.extractedData,
               capture_method: 'camera_ocr',
               captured_at: new Date().toISOString(),
-              raw_text: ocrData.rawText,
+              raw_text: ocrData.rawText || '',
               ocr_attempted: true,
               ocr_successful: true
             }
           })
           .eq('storage_path', fileName);
         
-        console.log('OCR processing completed successfully');
+        if (updateError) {
+          console.error('Failed to update W9 form with OCR data:', updateError);
+        } else {
+          console.log('OCR processing completed successfully');
+        }
       } else {
-        console.warn('OCR processing failed:', ocrError || ocrData?.error);
+        console.warn('OCR processing failed - no data returned');
+        
+        // Update form to mark OCR as attempted but failed
+        await supabase
+          .from('w9_forms')
+          .update({
+            form_data: {
+              capture_method: 'camera_manual',
+              captured_at: new Date().toISOString(),
+              ocr_attempted: true,
+              ocr_successful: false,
+              ocr_error: 'No OCR data returned'
+            }
+          })
+          .eq('storage_path', fileName);
       }
     } catch (error) {
-      console.warn('Background OCR processing failed:', error);
-      // Don't show error to user since form was already saved
+      console.error('Background OCR processing failed:', error);
+      
+      // Update form to mark OCR as attempted but failed
+      try {
+        await supabase
+          .from('w9_forms')
+          .update({
+            form_data: {
+              capture_method: 'camera_manual',
+              captured_at: new Date().toISOString(),
+              ocr_attempted: true,
+              ocr_successful: false,
+              ocr_error: error instanceof Error ? error.message : 'Unknown error'
+            }
+          })
+          .eq('storage_path', fileName);
+      } catch (updateError) {
+        console.error('Failed to update error status:', updateError);
+      }
     }
   };
 
