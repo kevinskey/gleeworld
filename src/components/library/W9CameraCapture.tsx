@@ -49,12 +49,12 @@ export const W9CameraCapture = () => {
         throw new Error('Camera interface failed to load. Please close and reopen the dialog.');
       }
       
-      // Try with more flexible constraints for better mobile compatibility
+      // Portrait constraints for 8.5x11 document capture
       let constraints = {
         video: { 
           facingMode: { ideal: 'environment' },
-          width: { ideal: 1280, min: 480 },
-          height: { ideal: 720, min: 360 }
+          width: { ideal: 720, min: 480 },
+          height: { ideal: 960, min: 640 }  // Portrait ratio for documents
         },
         audio: false
       };
@@ -233,7 +233,8 @@ export const W9CameraCapture = () => {
     // Draw the video frame to canvas
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    // Reduce image quality to prevent system lockup
+    const imageDataUrl = canvas.toDataURL('image/jpeg', 0.7);
     console.log('Image captured, data URL length:', imageDataUrl.length);
     setCapturedImage(imageDataUrl);
     stopCamera();
@@ -260,6 +261,9 @@ export const W9CameraCapture = () => {
       let extractedData = {};
       let rawText = '';
       
+      // Add small delay to prevent UI lockup
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Try OCR extraction, but continue without it if it fails
       try {
         console.log('Attempting OCR extraction with image size:', capturedImage.length);
@@ -284,12 +288,15 @@ export const W9CameraCapture = () => {
         // Continue without OCR - this is not a fatal error
       }
 
-      // Convert image to PDF
+      // Convert image to PDF with async processing
       const pdf = new jsPDF();
       const img = new Image();
       
       await new Promise((resolve) => {
-        img.onload = resolve;
+        img.onload = () => {
+          // Small delay to prevent blocking
+          setTimeout(resolve, 50);
+        };
         img.src = capturedImage;
       });
 
