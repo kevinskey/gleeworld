@@ -2,14 +2,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Calendar, Download, Eye, Plus } from "lucide-react";
+import { FileText, Calendar, Download, Eye, Plus, Trash2 } from "lucide-react";
 import { useW9Forms } from "@/hooks/useW9Forms";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { W9PreviewDialog } from "@/components/W9PreviewDialog";
 
 export const UserW9FormsList = () => {
-  const { w9Forms, loading, error, downloadW9Form } = useW9Forms();
+  const { w9Forms, loading, error, downloadW9Form, deleteW9Form } = useW9Forms();
   const navigate = useNavigate();
   const [previewForm, setPreviewForm] = useState<any>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -24,6 +24,16 @@ export const UserW9FormsList = () => {
       await downloadW9Form(form);
     } catch (error) {
       console.error('Error downloading form:', error);
+    }
+  };
+
+  const handleDelete = async (form: any) => {
+    if (window.confirm('Are you sure you want to delete this W9 form? This action cannot be undone.')) {
+      try {
+        await deleteW9Form(form.id);
+      } catch (error) {
+        console.error('Error deleting form:', error);
+      }
     }
   };
 
@@ -113,26 +123,35 @@ export const UserW9FormsList = () => {
                   </div>
                   <p>Form ID: {form.id.slice(0, 8)}...</p>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePreview(form)}
-                    className="glass border-spelman-400/30 text-spelman-300 hover:bg-spelman-500/20"
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    Preview
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDownload(form)}
-                    className="glass border-spelman-400/30 text-spelman-300 hover:bg-spelman-500/20"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </Button>
-                </div>
+                 <div className="flex gap-2">
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={() => handlePreview(form)}
+                     className="glass border-spelman-400/30 text-spelman-300 hover:bg-spelman-500/20"
+                   >
+                     <Eye className="h-4 w-4 mr-2" />
+                     Preview
+                   </Button>
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={() => handleDownload(form)}
+                     className="glass border-spelman-400/30 text-spelman-300 hover:bg-spelman-500/20"
+                   >
+                     <Download className="h-4 w-4 mr-2" />
+                     Download
+                   </Button>
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={() => handleDelete(form)}
+                     className="glass border-red-400/30 text-red-300 hover:bg-red-500/20"
+                   >
+                     <Trash2 className="h-4 w-4 mr-2" />
+                     Delete
+                   </Button>
+                 </div>
               </div>
             </CardContent>
           </Card>
