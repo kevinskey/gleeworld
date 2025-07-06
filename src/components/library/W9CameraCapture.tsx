@@ -26,6 +26,17 @@ export const W9CameraCapture = () => {
       setCameraError(null);
       console.log('Starting camera...');
       
+      // Check if we already have a stream
+      if (stream) {
+        console.log('Camera already active');
+        return;
+      }
+      
+      // Check for camera support
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera not supported in this browser');
+      }
+      
       const constraints = {
         video: { 
           facingMode: 'environment',
@@ -36,17 +47,22 @@ export const W9CameraCapture = () => {
       };
       
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-      console.log('Camera stream obtained:', mediaStream);
+      console.log('Camera stream obtained:', mediaStream.getTracks().length, 'tracks');
       
-      if (videoRef.current) {
+      if (videoRef.current && mediaStream.getTracks().length > 0) {
         const video = videoRef.current;
         
-        // Set video properties first
+        // Set video properties
         video.setAttribute('playsinline', 'true');
         video.muted = true;
         video.autoplay = true;
         
-        // Assign stream and start capturing immediately
+        // Wait for video to be ready
+        video.onloadedmetadata = () => {
+          console.log('Video metadata loaded, dimensions:', video.videoWidth, 'x', video.videoHeight);
+        };
+        
+        // Assign stream
         video.srcObject = mediaStream;
         setStream(mediaStream);
         setIsCapturing(true);
@@ -57,10 +73,15 @@ export const W9CameraCapture = () => {
           console.log('Video playing successfully');
         } catch (playError) {
           console.error('Error playing video:', playError);
-          // Don't throw here, the video might still work
+          // Try playing again after a short delay
+          setTimeout(() => {
+            video.play().catch(e => console.error('Retry play failed:', e));
+          }, 100);
         }
         
         console.log('Video element setup complete');
+      } else {
+        throw new Error('Failed to initialize video element or no video tracks available');
       }
       
     } catch (error) {
@@ -72,31 +93,37 @@ export const W9CameraCapture = () => {
           errorMessage += 'Please allow camera access in your browser settings and try again.';
         } else if (error.name === 'NotFoundError') {
           errorMessage += 'No camera found. Please connect a camera and try again.';
+        } else if (error.name === 'NotSupportedError') {
+          errorMessage += 'Camera not supported on this device.';
         } else {
           errorMessage += 'Please check camera permissions and ensure you\'re using HTTPS.';
         }
       }
       
       setCameraError(errorMessage);
+      setIsCapturing(false);
       toast({
         title: "Camera Error",
         description: errorMessage,
         variant: "destructive",
       });
     }
-  }, [toast]);
+  }, [stream, toast]);
 
   const stopCamera = useCallback(() => {
     console.log('Stopping camera...');
     if (stream) {
       stream.getTracks().forEach(track => {
-        track.stop();
-        console.log('Camera track stopped');
+        if (track.readyState === 'live') {
+          track.stop();
+          console.log('Camera track stopped:', track.kind);
+        }
       });
       setStream(null);
     }
     if (videoRef.current) {
       videoRef.current.srcObject = null;
+      videoRef.current.load(); // Reset video element
     }
     setIsCapturing(false);
     setCameraError(null);
@@ -108,7 +135,14 @@ export const W9CameraCapture = () => {
       stopCamera();
       setCapturedImage(null);
     }
-  }, [isOpen, stopCamera]);
+    
+    // Cleanup on unmount
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [isOpen, stopCamera, stream]);
 
   const capturePhoto = async () => {
     if (!videoRef.current || !canvasRef.current) {
@@ -316,14 +350,26 @@ export const W9CameraCapture = () => {
                   playsInline
                   muted
                   className="w-full h-full object-cover"
+                  onLoadedMetadata={() => console.log('Video metadata loaded')}
+                  onError={(e) => console.error('Video error:', e)}
                 />
                 <canvas ref={canvasRef} className="hidden" />
-                {!stream && (
+                {(!stream || cameraError) && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75">
                     <div className="text-white text-center">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                      <p>Loading camera...</p>
-                      <p className="text-sm mt-2">Please allow camera access if prompted</p>
+                      {!cameraError ? (
+                        <>
+                          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                          <p>Loading camera...</p>
+                          <p className="text-sm mt-2">Please allow camera access if prompted</p>
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="h-8 w-8 mx-auto mb-2 text-red-400" />
+                          <p className="text-red-300">Camera Error</p>
+                          <p className="text-sm mt-2">{cameraError}</p>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
