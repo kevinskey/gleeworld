@@ -73,7 +73,7 @@ export const ContractFilters = ({
             variant="outline"
             size="sm"
             onClick={() => handleSortClick('created_at')}
-            className={`${sortBy === 'created_at' ? 'bg-blue-100 border-blue-300 text-blue-800' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+            className={`${sortBy === 'created_at' ? 'bg-brand-100 border-brand-400 text-brand-800' : 'bg-background text-foreground hover:bg-muted'}`}
           >
             <Calendar className="h-4 w-4 mr-1" />
             Date
@@ -86,7 +86,7 @@ export const ContractFilters = ({
             variant="outline"
             size="sm"
             onClick={() => handleSortClick('title')}
-            className={`${sortBy === 'title' ? 'bg-blue-100 border-blue-300 text-blue-800' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+            className={`${sortBy === 'title' ? 'bg-brand-100 border-brand-400 text-brand-800' : 'bg-background text-foreground hover:bg-muted'}`}
           >
             Name
             {sortBy === 'title' && (
@@ -97,7 +97,7 @@ export const ContractFilters = ({
       </div>
 
       <CollapsibleContent>
-        <div className="bg-gray-50 p-4 rounded-lg space-y-4 mb-4">
+        <div className="bg-muted/50 p-4 rounded-lg space-y-4 mb-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="template-filter">Filter by Template</Label>

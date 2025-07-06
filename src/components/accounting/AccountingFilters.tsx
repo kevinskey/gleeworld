@@ -76,7 +76,7 @@ export const AccountingFilters = ({
             variant="outline"
             size="sm"
             onClick={() => handleSortClick('dateSigned')}
-            className={sortBy === 'dateSigned' ? 'bg-blue-50' : ''}
+            className={sortBy === 'dateSigned' ? 'bg-brand-100 border-brand-400 text-brand-800' : ''}
           >
             <Calendar className="h-4 w-4 mr-1" />
             Date
@@ -89,7 +89,7 @@ export const AccountingFilters = ({
             variant="outline"
             size="sm"
             onClick={() => handleSortClick('name')}
-            className={sortBy === 'name' ? 'bg-blue-50' : ''}
+            className={sortBy === 'name' ? 'bg-brand-100 border-brand-400 text-brand-800' : ''}
           >
             Name
             {sortBy === 'name' && (
@@ -101,7 +101,7 @@ export const AccountingFilters = ({
             variant="outline"
             size="sm"
             onClick={() => handleSortClick('stipend')}
-            className={sortBy === 'stipend' ? 'bg-blue-50' : ''}
+            className={sortBy === 'stipend' ? 'bg-brand-100 border-brand-400 text-brand-800' : ''}
           >
             <DollarSign className="h-4 w-4 mr-1" />
             Amount
@@ -113,12 +113,12 @@ export const AccountingFilters = ({
       </div>
 
       <CollapsibleContent>
-        <div className="bg-gray-50 p-4 rounded-lg space-y-4 mb-4">
+        <div className="bg-muted/50 p-4 rounded-lg space-y-4 mb-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="search-filter">Search</Label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search-filter"
                   type="text"
