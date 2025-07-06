@@ -234,19 +234,30 @@ export const W9CameraCapture = () => {
 
     setIsProcessing(true);
     try {
-      console.log('Starting W9 OCR processing...');
+      console.log('Starting W9 processing...');
       
-      // Extract data using OCR
-      const { data: ocrData, error: ocrError } = await supabase.functions.invoke('w9-ocr-extract', {
-        body: { imageBase64: capturedImage }
-      });
+      let extractedData = {};
+      let rawText = '';
+      
+      // Try OCR extraction, but continue without it if it fails
+      try {
+        console.log('Attempting OCR extraction...');
+        const { data: ocrData, error: ocrError } = await supabase.functions.invoke('w9-ocr-extract', {
+          body: { imageBase64: capturedImage }
+        });
 
-      if (ocrError) {
-        console.error('OCR Error:', ocrError);
-        throw new Error('Failed to extract W9 data from image');
+        if (ocrError) {
+          console.warn('OCR extraction failed:', ocrError);
+          // Continue without OCR data
+        } else if (ocrData) {
+          console.log('OCR extraction successful:', ocrData);
+          extractedData = ocrData.extractedData || {};
+          rawText = ocrData.rawText || '';
+        }
+      } catch (ocrError) {
+        console.warn('OCR service unavailable, saving without text extraction:', ocrError);
+        // Continue without OCR - this is not a fatal error
       }
-
-      console.log('OCR extraction successful:', ocrData);
 
       // Convert image to PDF
       const pdf = new jsPDF();
@@ -285,7 +296,7 @@ export const W9CameraCapture = () => {
         throw uploadError;
       }
 
-      // Create W9 form record with extracted data
+      // Create W9 form record with extracted data (if any)
       const { error: dbError } = await supabase
         .from('w9_forms')
         .insert({
@@ -293,10 +304,12 @@ export const W9CameraCapture = () => {
           storage_path: fileName,
           status: 'submitted',
           form_data: {
-            ...ocrData.extractedData,
-            capture_method: 'camera_ocr',
+            ...extractedData,
+            capture_method: rawText ? 'camera_ocr' : 'camera_manual',
             captured_at: new Date().toISOString(),
-            raw_text: ocrData.rawText
+            raw_text: rawText,
+            ocr_attempted: true,
+            ocr_successful: Object.keys(extractedData).length > 0
           }
         });
 
@@ -304,11 +317,13 @@ export const W9CameraCapture = () => {
         throw dbError;
       }
 
+      const successMessage = Object.keys(extractedData).length > 0 && (extractedData as any).name
+        ? `W9 form captured and data extracted for ${(extractedData as any).name}`
+        : "W9 form captured successfully. OCR data extraction will be available once the service is fully deployed.";
+
       toast({
-        title: "W9 Form Processed",
-        description: ocrData.extractedData?.name 
-          ? `W9 form captured and data extracted for ${ocrData.extractedData.name}`
-          : "W9 form captured successfully with OCR processing",
+        title: "W9 Form Saved",
+        description: successMessage,
       });
 
       // Reset state
