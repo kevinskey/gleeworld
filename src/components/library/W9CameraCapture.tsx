@@ -241,18 +241,22 @@ export const W9CameraCapture = () => {
       
       // Try OCR extraction, but continue without it if it fails
       try {
-        console.log('Attempting OCR extraction...');
+        console.log('Attempting OCR extraction with image size:', capturedImage.length);
         const { data: ocrData, error: ocrError } = await supabase.functions.invoke('w9-ocr-extract', {
           body: { imageBase64: capturedImage }
         });
 
+        console.log('OCR response received:', { ocrData, ocrError });
+
         if (ocrError) {
           console.warn('OCR extraction failed:', ocrError);
           // Continue without OCR data
-        } else if (ocrData) {
+        } else if (ocrData && !ocrData.error) {
           console.log('OCR extraction successful:', ocrData);
           extractedData = ocrData.extractedData || {};
           rawText = ocrData.rawText || '';
+        } else if (ocrData && ocrData.error) {
+          console.warn('OCR API returned error:', ocrData.error);
         }
       } catch (ocrError) {
         console.warn('OCR service unavailable, saving without text extraction:', ocrError);
