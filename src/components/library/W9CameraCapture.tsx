@@ -49,40 +49,47 @@ export const W9CameraCapture = () => {
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       console.log('Camera stream obtained:', mediaStream.getTracks().length, 'tracks');
       
-      if (videoRef.current && mediaStream.getTracks().length > 0) {
-        const video = videoRef.current;
-        
-        // Set video properties
-        video.setAttribute('playsinline', 'true');
-        video.muted = true;
-        video.autoplay = true;
-        
-        // Wait for video to be ready
-        video.onloadedmetadata = () => {
-          console.log('Video metadata loaded, dimensions:', video.videoWidth, 'x', video.videoHeight);
-        };
-        
-        // Assign stream
-        video.srcObject = mediaStream;
-        setStream(mediaStream);
-        setIsCapturing(true);
-        
-        // Play the video
-        try {
-          await video.play();
-          console.log('Video playing successfully');
-        } catch (playError) {
-          console.error('Error playing video:', playError);
-          // Try playing again after a short delay
-          setTimeout(() => {
-            video.play().catch(e => console.error('Retry play failed:', e));
-          }, 100);
-        }
-        
-        console.log('Video element setup complete');
-      } else {
-        throw new Error('Failed to initialize video element or no video tracks available');
+      // Wait a bit for the video element to be ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      if (!videoRef.current) {
+        throw new Error('Video element not available. Please try again.');
       }
+      
+      if (mediaStream.getTracks().length === 0) {
+        throw new Error('No video tracks available from camera');
+      }
+
+      const video = videoRef.current;
+      
+      // Set video properties
+      video.setAttribute('playsinline', 'true');
+      video.muted = true;
+      video.autoplay = true;
+      
+      // Wait for video to be ready
+      video.onloadedmetadata = () => {
+        console.log('Video metadata loaded, dimensions:', video.videoWidth, 'x', video.videoHeight);
+      };
+      
+      // Assign stream
+      video.srcObject = mediaStream;
+      setStream(mediaStream);
+      setIsCapturing(true);
+      
+      // Play the video
+      try {
+        await video.play();
+        console.log('Video playing successfully');
+      } catch (playError) {
+        console.error('Error playing video:', playError);
+        // Try playing again after a short delay
+        setTimeout(() => {
+          video.play().catch(e => console.error('Retry play failed:', e));
+        }, 100);
+      }
+      
+      console.log('Video element setup complete');
       
     } catch (error) {
       console.error('Error accessing camera:', error);
