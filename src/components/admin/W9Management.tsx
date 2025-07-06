@@ -289,41 +289,41 @@ export const W9Management = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 p-2 sm:p-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold">W9 Forms Management</h2>
-          <p className="text-gray-600">Manage and review W9 tax forms</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-white">W9 Forms Management</h2>
+          <p className="text-gray-300 text-sm">Manage and review W9 tax forms</p>
         </div>
-        <Button onClick={fetchW9Forms}>
+        <Button onClick={fetchW9Forms} size="sm" className="self-start sm:self-auto">
           <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
+          <span className="hidden sm:inline">Refresh</span>
         </Button>
       </div>
 
       {/* Filters and Search */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filters
+      <Card className="bg-white/95 backdrop-blur-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+            <Filter className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="hidden xs:inline">Filters</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search by name or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            
+        <CardContent className="space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search by name or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 text-sm"
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by status" />
+              <SelectTrigger className="text-sm">
+                <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
@@ -334,24 +334,24 @@ export const W9Management = () => {
             </Select>
 
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger>
+              <SelectTrigger className="text-sm">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="submitted_at">Submission Date</SelectItem>
-                <SelectItem value="user_name">User Name</SelectItem>
+                <SelectItem value="submitted_at">Date</SelectItem>
+                <SelectItem value="user_name">Name</SelectItem>
                 <SelectItem value="user_email">Email</SelectItem>
                 <SelectItem value="status">Status</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={sortOrder} onValueChange={(value: "asc" | "desc") => setSortOrder(value)}>
-              <SelectTrigger>
+              <SelectTrigger className="text-sm">
                 <SelectValue placeholder="Order" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="desc">Descending</SelectItem>
-                <SelectItem value="asc">Ascending</SelectItem>
+                <SelectItem value="desc">Newest</SelectItem>
+                <SelectItem value="asc">Oldest</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -359,30 +359,28 @@ export const W9Management = () => {
       </Card>
 
       {/* Results */}
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>
+      <Card className="bg-white/95 backdrop-blur-sm">
+        <CardHeader className="pb-3">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+            <CardTitle className="text-sm sm:text-base text-gray-900">
               W9 Forms ({sortedForms.length})
             </CardTitle>
             {selectedForms.size > 0 && (
-              <div className="flex gap-2">
-                <Badge variant="outline">
-                  {selectedForms.size} selected
-                </Badge>
-              </div>
+              <Badge variant="outline" className="self-start sm:self-auto">
+                {selectedForms.size} selected
+              </Badge>
             )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           {sortedForms.length === 0 ? (
             <div className="text-center py-8">
-              <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No W9 Forms Found</h3>
-              <p className="text-gray-600">No forms match your current filters.</p>
+              <FileText className="h-8 w-8 sm:h-12 sm:w-12 mx-auto text-gray-400 mb-4" />
+              <h3 className="text-base sm:text-lg font-semibold mb-2">No W9 Forms Found</h3>
+              <p className="text-gray-600 text-sm">No forms match your current filters.</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {/* Select All */}
               <div className="flex items-center space-x-2 pb-2 border-b">
                 <Checkbox
@@ -397,62 +395,69 @@ export const W9Management = () => {
 
               {/* Forms List */}
               {sortedForms.map((form) => (
-                <div key={form.id} className="border rounded-lg p-4 hover:bg-gray-50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <Checkbox
-                        checked={selectedForms.has(form.id)}
-                        onCheckedChange={(checked) => handleSelectForm(form.id, checked === true)}
-                      />
+                <div key={form.id} className="border rounded-lg p-3 sm:p-4 hover:bg-gray-50 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={selectedForms.has(form.id)}
+                      onCheckedChange={(checked) => handleSelectForm(form.id, checked === true)}
+                      className="mt-1"
+                    />
+                    
+                    <div className="flex-1 space-y-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <h4 className="font-semibold text-sm sm:text-base">{form.user_name}</h4>
+                        <Badge className={`${getStatusColor(form.status)} text-xs self-start`}>
+                          {getStatusIcon(form.status)}
+                          <span className="ml-1">{form.status}</span>
+                        </Badge>
+                      </div>
                       
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h4 className="font-semibold">{form.user_name}</h4>
-                          <Badge className={getStatusColor(form.status)}>
-                            {getStatusIcon(form.status)}
-                            <span className="ml-1">{form.status}</span>
-                          </Badge>
-                        </div>
-                        
-                        <div className="text-sm text-gray-600 space-y-1">
-                          <p><strong>Email:</strong> {form.user_email}</p>
-                          <p><strong>Submitted:</strong> {new Date(form.submitted_at).toLocaleDateString()}</p>
-                          <p><strong>Form ID:</strong> {form.id.slice(0, 8)}...</p>
-                        </div>
+                      <div className="text-xs sm:text-sm text-gray-600 space-y-1">
+                        <p><strong>Email:</strong> {form.user_email}</p>
+                        <p><strong>Submitted:</strong> {new Date(form.submitted_at).toLocaleDateString()}</p>
+                        <p className="sm:hidden"><strong>ID:</strong> {form.id.slice(0, 8)}...</p>
+                        <p className="hidden sm:block"><strong>Form ID:</strong> {form.id.slice(0, 8)}...</p>
                       </div>
                     </div>
+                  </div>
 
-                    <div className="flex items-center gap-2">
-                      <Select
-                        value={form.status}
-                        onValueChange={(newStatus) => updateFormStatus(form.id, newStatus)}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="submitted">Submitted</SelectItem>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      
+                  {/* Actions Section */}
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2 border-t border-gray-100">
+                    <Select
+                      value={form.status}
+                      onValueChange={(newStatus) => updateFormStatus(form.id, newStatus)}
+                    >
+                      <SelectTrigger className="w-full sm:w-32 text-xs sm:text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="submitted">Submitted</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <div className="flex gap-2 sm:gap-3">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handlePreview(form)}
+                        className="flex-1 sm:flex-none text-xs sm:text-sm"
                       >
-                        <Eye className="h-4 w-4 mr-1" />
-                        Preview
+                        <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                        <span className="hidden xs:inline">Preview</span>
+                        <span className="xs:hidden">View</span>
                       </Button>
                       
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => downloadW9Form(form)}
+                        className="flex-1 sm:flex-none text-xs sm:text-sm"
                       >
-                        <Download className="h-4 w-4 mr-1" />
-                        Download
+                        <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                        <span className="hidden xs:inline">Download</span>
+                        <span className="xs:hidden">Get</span>
                       </Button>
                     </div>
                   </div>
