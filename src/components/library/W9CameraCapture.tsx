@@ -49,17 +49,38 @@ export const W9CameraCapture = () => {
         throw new Error('Camera interface failed to load. Please close and reopen the dialog.');
       }
       
-      const constraints = {
+      // Try with more flexible constraints for better mobile compatibility
+      let constraints = {
         video: { 
-          facingMode: 'environment',
-          width: { ideal: 1280, min: 640, max: 1920 },
-          height: { ideal: 720, min: 480, max: 1080 }
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280, min: 480 },
+          height: { ideal: 720, min: 360 }
         },
         audio: false
       };
       
+      // Fallback to basic constraints if environment camera fails
+      let fallbackConstraints = {
+        video: true,
+        audio: false
+      };
+      
       console.log('Requesting camera access...');
-      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      let mediaStream;
+      
+      try {
+        // Try with environment camera first
+        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (error) {
+        console.log('Environment camera failed, trying fallback:', error);
+        // Fallback to any available camera
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+        } catch (fallbackError) {
+          console.error('Both camera attempts failed:', fallbackError);
+          throw fallbackError;
+        }
+      }
       
       const videoTracks = mediaStream.getVideoTracks();
       console.log('Camera stream obtained:', videoTracks.length, 'video tracks');
