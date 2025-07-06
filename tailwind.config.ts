@@ -63,19 +63,19 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom brand colors based on provided hex values
+				// Custom brand colors based on provided hex values - converted to HSL
 				brand: {
-					50: '#f0f9ff',
-					100: '#e0f2fe',
-					200: '#bae6fd',
-					300: '#7dd3fc',
-					400: '#55bbee', // Primary brand color
-					500: '#0ea5e9',
-					600: '#0284c7',
-					700: '#11448e', // Secondary brand color
-					800: '#075985',
-					900: '#0c4a6e',
-					950: '#082f49'
+					50: 'hsl(204, 100%, 97%)',
+					100: 'hsl(204, 94%, 94%)',
+					200: 'hsl(204, 94%, 87%)',
+					300: 'hsl(204, 93%, 73%)',
+					400: 'hsl(203, 85%, 63%)', // Primary brand color
+					500: 'hsl(199, 89%, 48%)',
+					600: 'hsl(198, 93%, 36%)',
+					700: 'hsl(220, 78%, 31%)', // Secondary brand color
+					800: 'hsl(197, 85%, 27%)',
+					900: 'hsl(198, 70%, 24%)',
+					950: 'hsl(200, 69%, 16%)'
 				}
 			},
 			borderRadius: {
