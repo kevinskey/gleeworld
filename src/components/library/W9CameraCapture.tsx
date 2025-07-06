@@ -50,7 +50,7 @@ export const W9CameraCapture = () => {
       console.log('Camera stream obtained:', mediaStream.getTracks().length, 'tracks');
       
       // Wait a bit for the video element to be ready
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 200));
       
       if (!videoRef.current) {
         throw new Error('Video element not available. Please try again.');
@@ -62,33 +62,52 @@ export const W9CameraCapture = () => {
 
       const video = videoRef.current;
       
-      // Set video properties
-      video.setAttribute('playsinline', 'true');
+      // Set video properties first
+      video.setAttribute('playsinline', 'true');  
+      video.setAttribute('webkit-playsinline', 'true');
       video.muted = true;
       video.autoplay = true;
       
-      // Wait for video to be ready
-      video.onloadedmetadata = () => {
-        console.log('Video metadata loaded, dimensions:', video.videoWidth, 'x', video.videoHeight);
-      };
-      
-      // Assign stream
+      // Assign stream and set state immediately
       video.srcObject = mediaStream;
       setStream(mediaStream);
       setIsCapturing(true);
       
-      // Play the video
-      try {
-        await video.play();
-        console.log('Video playing successfully');
-      } catch (playError) {
-        console.error('Error playing video:', playError);
-        // Try playing again after a short delay
-        setTimeout(() => {
-          video.play().catch(e => console.error('Retry play failed:', e));
-        }, 100);
-      }
+      // Wait for the video to load metadata before playing
+      const playVideo = async () => {
+        try {
+          // First wait for loadedmetadata
+          await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('Video metadata timeout')), 5000);
+            video.onloadedmetadata = () => {
+              clearTimeout(timeout);
+              console.log('Video metadata loaded, dimensions:', video.videoWidth, 'x', video.videoHeight);
+              resolve(true);
+            };
+            video.onerror = () => {
+              clearTimeout(timeout);
+              reject(new Error('Video loading error'));
+            };
+          });
+          
+          // Then try to play
+          await video.play();
+          console.log('Video playing successfully');
+        } catch (playError) {
+          console.error('Error playing video:', playError);
+          // Final retry
+          setTimeout(async () => {
+            try {
+              await video.play();
+              console.log('Video playing on retry');
+            } catch (retryError) {
+              console.error('Final retry failed:', retryError);
+            }
+          }, 500);
+        }
+      };
       
+      await playVideo();
       console.log('Video element setup complete');
       
     } catch (error) {
