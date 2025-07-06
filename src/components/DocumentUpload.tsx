@@ -597,12 +597,13 @@ export const DocumentUpload = ({
                 onEmailMessageChange={setEmailMessage}
               />
 
-              <div className="flex justify-end gap-3 pt-4">
+              <div className="flex flex-wrap justify-end gap-2 sm:gap-3 pt-4">
                 <Button 
                   onClick={saveAsDraft} 
-                  variant="outline" 
+                  variant="secondary" 
                   size="lg"
                   disabled={isLoading || !contractTitle.trim()}
+                  className="flex-1 sm:flex-none"
                 >
                   {isLoading ? (
                     <>
@@ -613,7 +614,12 @@ export const DocumentUpload = ({
                     "Save as Draft"
                   )}
                 </Button>
-                <Button onClick={handlePreviewContract} variant="outline" size="lg">
+                <Button 
+                  onClick={handlePreviewContract} 
+                  variant="secondary" 
+                  size="lg"
+                  className="flex-1 sm:flex-none"
+                >
                   <Eye className="h-4 w-4 mr-2" />
                   Preview Contract
                 </Button>
@@ -621,6 +627,7 @@ export const DocumentUpload = ({
                   onClick={sendContract} 
                   size="lg" 
                   disabled={isLoading || !contractTitle.trim() || !recipientEmail.trim()}
+                  className="flex-1 sm:flex-none"
                 >
                   {isLoading ? (
                     <>
