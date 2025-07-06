@@ -29,15 +29,15 @@ export const UniversalHeader = () => {
 
   return (
     <header className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
-      <div className="container mx-auto px-3 sm:px-4">
-        <div className="flex items-center justify-between h-14 sm:h-16">
+      <div className="container mx-auto px-2 sm:px-4">
+        <div className="flex items-center justify-between h-12 sm:h-14 md:h-16">
           {/* Logo and Navigation */}
-          <div className="flex items-center gap-3 sm:gap-6">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-white/20 rounded-lg flex items-center justify-center">
+          <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
+            <Link to="/" className="flex items-center gap-1 sm:gap-2">
+              <div className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 bg-white/20 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-xs sm:text-sm">CM</span>
               </div>
-              <span className="text-white font-semibold text-base sm:text-lg hidden xs:block">
+              <span className="text-white font-semibold text-sm sm:text-base md:text-lg hidden xs:block">
                 Contract Manager
               </span>
             </Link>
@@ -47,15 +47,15 @@ export const UniversalHeader = () => {
           </div>
 
           {/* Right side actions */}
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
             {user && (
               <>
                 {/* Mobile Navigation */}
                 {isMobile && (
                   <Sheet>
                     <SheetTrigger asChild>
-                      <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 p-2">
-                        <Menu className="h-5 w-5" />
+                      <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 p-1 sm:p-2">
+                        <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
                       </Button>
                     </SheetTrigger>
                     <SheetContent side="left" className="w-64">
@@ -76,8 +76,8 @@ export const UniversalHeader = () => {
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-7 w-7 sm:h-8 sm:w-8 rounded-full p-0">
-                      <Avatar className="h-7 w-7 sm:h-8 sm:w-8">
+                    <Button variant="ghost" className="relative h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 rounded-full p-0">
+                      <Avatar className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8">
                         <AvatarImage className="bg-white/20 text-white flex items-center justify-center">
                           <span className="text-white text-xs sm:text-sm">{getInitials(user.email || '')}</span>
                         </AvatarImage>

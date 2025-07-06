@@ -91,11 +91,11 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
 
   return (
     <header className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+      <div className="container mx-auto px-2 sm:px-4">
+        <div className="flex items-center justify-between h-12 sm:h-14 md:h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-4 min-w-0">
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white truncate">
+          <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
+            <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white truncate">
               Contract Manager
             </h1>
           </div>
@@ -164,7 +164,7 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
           </nav>
 
           {/* Right side actions */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             {/* Mobile Menu Button */}
             <div className="lg:hidden">
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -172,9 +172,9 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-white hover:bg-white/20 h-10 w-10"
+                    className="text-white hover:bg-white/20 h-8 w-8 sm:h-10 sm:w-10"
                   >
-                    <Menu className="h-5 w-5" />
+                    <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-80 bg-gradient-to-br from-brand-700 via-brand-800 to-slate-900 border-l border-white/20">
@@ -247,8 +247,8 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
             {/* User Avatar and Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
+                <Button variant="ghost" className="relative h-6 w-6 sm:h-8 sm:w-8 rounded-full">
+                  <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
                     <AvatarFallback className="bg-spelman-500 text-white">
                       {getInitials(displayName)}
                     </AvatarFallback>

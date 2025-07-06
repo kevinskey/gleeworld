@@ -38,7 +38,7 @@ export const DashboardSwitcher = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex items-center gap-1 sm:gap-2 text-white hover:bg-white/10 text-xs sm:text-sm px-2 sm:px-3">
+        <Button variant="ghost" className="flex items-center gap-1 sm:gap-2 text-white hover:bg-white/10 text-xs sm:text-sm px-1 sm:px-2 md:px-3 h-8 sm:h-9">
           {getCurrentIcon()}
           {!isMobile && <span className="hidden sm:inline">{getCurrentContext()}</span>}
           <Badge variant="secondary" className="bg-white/20 text-white border-0 text-xs px-1 sm:px-2">

@@ -154,14 +154,14 @@ export const AppNavigation = () => {
       <div className="md:hidden">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="sm" className="md:hidden">
-              <Menu className="h-5 w-5" />
+            <Button variant="ghost" size="sm" className="md:hidden p-1 sm:p-2">
+              <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0">
+          <SheetContent side="left" className="w-56 sm:w-64 p-0">
             <div className="flex flex-col h-full">
-              <div className="flex items-center h-16 px-4 border-b">
-                <h1 className="text-lg font-bold text-gray-900">Contract Manager</h1>
+              <div className="flex items-center h-12 sm:h-16 px-4 border-b">
+                <h1 className="text-base sm:text-lg font-bold text-gray-900">Contract Manager</h1>
               </div>
               <div className="flex-1 px-4 py-4">
                 <NavigationContent />
