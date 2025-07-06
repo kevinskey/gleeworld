@@ -40,7 +40,7 @@ export const StipendManagement = () => {
         <CardContent className="pt-6">
           <div className="text-center py-8">
             <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={refetch} variant="outline">
+            <Button onClick={refetch} variant="secondary">
               <RefreshCw className="h-4 w-4 mr-2" />
               Retry
             </Button>
@@ -101,15 +101,15 @@ export const StipendManagement = () => {
               <CardDescription>All stipend transactions from contracts and manual entries</CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button onClick={syncContractStipends} variant="outline" size="sm">
+              <Button onClick={syncContractStipends} variant="secondary" size="sm">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Sync Contracts
               </Button>
-              <Button onClick={refetch} variant="outline" size="sm">
+              <Button onClick={refetch} variant="secondary" size="sm">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="secondary" size="sm">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Manual
               </Button>
@@ -122,7 +122,7 @@ export const StipendManagement = () => {
               <DollarSign className="h-12 w-12 mx-auto mb-4 text-gray-300" />
               <h3 className="text-lg font-medium mb-2">No stipends found</h3>
               <p className="text-sm mb-4">Stipend records will appear here as they are created or synced from contracts.</p>
-              <Button onClick={syncContractStipends} variant="outline">
+              <Button onClick={syncContractStipends} variant="secondary">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Sync from Contracts
               </Button>
@@ -159,7 +159,7 @@ export const StipendManagement = () => {
               ))}
               {(stipends?.length || 0) > 20 && (
                 <div className="text-center py-4">
-                  <Button variant="outline">
+                  <Button variant="secondary">
                     View All {stipends?.length} Stipends
                   </Button>
                 </div>

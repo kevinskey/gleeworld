@@ -30,7 +30,7 @@ export const PaymentManagement = () => {
         <CardContent className="pt-6">
           <div className="text-center py-8">
             <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={refetch} variant="outline">
+            <Button onClick={refetch} variant="secondary">
               Try Again
             </Button>
           </div>

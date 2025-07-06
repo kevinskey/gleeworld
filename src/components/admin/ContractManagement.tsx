@@ -165,7 +165,7 @@ export const ContractManagement = () => {
         <CardContent>
           <div className="text-center py-8">
             <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={refetch} variant="outline">
+            <Button onClick={refetch} variant="secondary">
               <RefreshCw className="h-4 w-4 mr-2" />
               Retry
             </Button>
@@ -188,7 +188,7 @@ export const ContractManagement = () => {
               Manage all contracts in the system ({filteredContracts.length} of {contracts.length} contracts)
             </CardDescription>
           </div>
-          <Button onClick={refetch} variant="outline" size="sm">
+          <Button onClick={refetch} variant="secondary" size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
@@ -198,7 +198,7 @@ export const ContractManagement = () => {
         {/* Filters and Search */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search contracts..."
               value={searchTerm}
@@ -240,12 +240,12 @@ export const ContractManagement = () => {
 
         {/* Bulk Actions */}
         {selectedContracts.size > 0 && (
-          <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <span className="text-sm font-medium text-blue-800">
+          <div className="flex items-center gap-3 p-3 bg-muted/50 border border-muted-foreground/20 rounded-lg">
+            <span className="text-sm font-medium text-foreground">
               {selectedContracts.size} contract(s) selected
             </span>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => setSelectedContracts(new Set())}>
+              <Button size="sm" variant="secondary" onClick={() => setSelectedContracts(new Set())}>
                 Clear Selection
               </Button>
               <Button size="sm" variant="destructive" onClick={handleBulkDelete}>
@@ -274,7 +274,7 @@ export const ContractManagement = () => {
                   <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
                   <p>No contracts match your current filters</p>
                   <Button 
-                    variant="outline" 
+                    variant="secondary" 
                     onClick={() => {
                       setSearchTerm("");
                       setStatusFilter("all");
@@ -323,37 +323,37 @@ export const ContractManagement = () => {
 
                   <div className="flex space-x-1">
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
                       onClick={() => handleViewContract(contract)}
                       title="View Contract"
-                      className="h-8 w-8 p-0 bg-white border-brand-300 text-brand-700 hover:bg-brand-50 hover:text-brand-800"
+                      className="h-8 w-8 p-0"
                     >
                       <Eye className="h-3 w-3" />
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
                       onClick={() => handleSendContract(contract)}
                       title="Send Contract"
-                      className="h-8 w-8 p-0 bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:text-blue-800"
+                      className="h-8 w-8 p-0"
                     >
                       <Send className="h-3 w-3" />
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
                       onClick={() => handleDownloadContract(contract)}
                       title="Download"
-                      className="h-8 w-8 p-0 bg-white border-green-300 text-green-700 hover:bg-green-50 hover:text-green-800"
+                      className="h-8 w-8 p-0"
                     >
                       <Download className="h-3 w-3" />
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="destructive"
                       size="sm"
                       onClick={() => deleteContract(contract.id)}
-                      className="h-8 w-8 p-0 bg-white border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800"
+                      className="h-8 w-8 p-0"
                       title="Delete Contract"
                     >
                       <Trash2 className="h-3 w-3" />

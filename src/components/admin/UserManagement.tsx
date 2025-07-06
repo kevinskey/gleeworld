@@ -154,7 +154,7 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
         <CardContent>
           <div className="text-center py-8">
             <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={onRefetch} variant="outline">
+            <Button onClick={onRefetch} variant="secondary">
               <RefreshCw className="h-4 w-4 mr-2" />
               Retry
             </Button>
@@ -179,13 +179,13 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
               </CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
-              <Button onClick={onRefetch} variant="outline" size="sm" className="w-full sm:w-auto">
+              <Button onClick={onRefetch} variant="secondary" size="sm" className="w-full sm:w-auto">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                  <Button variant="secondary" size="sm" className="w-full sm:w-auto">
                     <MoreHorizontal className="h-4 w-4 mr-2" />
                     Actions
                   </Button>
@@ -251,7 +251,7 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
               </Select>
               
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
                 className="w-full sm:w-auto"
@@ -315,7 +315,7 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
                       <div className="flex gap-2 flex-shrink-0">
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="secondary"
                           onClick={() => handleEditUser(user)}
                           className="flex-1 sm:flex-none"
                         >
@@ -324,7 +324,7 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="secondary"
                           onClick={() => handleDeleteUser(user)}
                           className="text-red-600 hover:text-red-700 flex-1 sm:flex-none"
                         >
