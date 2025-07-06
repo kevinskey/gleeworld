@@ -5,6 +5,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Timeout controller for API calls
+const VISION_API_TIMEOUT = 15000; // 15 seconds
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -33,65 +36,98 @@ serve(async (req) => {
 
     // Remove data URL prefix if present
     const base64Data = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
-
-    // Call Google Vision API
-    const visionResponse = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${googleVisionApiKey}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          requests: [
-            {
-              image: {
-                content: base64Data,
-              },
-              features: [
-                {
-                  type: 'TEXT_DETECTION',
-                  maxResults: 1,
-                },
-              ],
-            },
-          ],
-        }),
-      }
-    );
-
-    if (!visionResponse.ok) {
-      const errorText = await visionResponse.text();
-      console.error('Google Vision API error:', errorText);
-      return new Response(
-        JSON.stringify({ error: 'Failed to process image with Google Vision API' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const visionData = await visionResponse.json();
     
-    if (!visionData.responses || !visionData.responses[0]) {
+    // Check image size to prevent timeouts
+    const imageSizeKB = (base64Data.length * 3) / 4 / 1024;
+    console.log(`Processing image of size: ${imageSizeKB.toFixed(2)} KB`);
+    
+    if (imageSizeKB > 2048) { // 2MB limit
       return new Response(
-        JSON.stringify({ error: 'No text detected in image' }),
+        JSON.stringify({ error: 'Image too large. Please use an image smaller than 2MB.' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const textAnnotations = visionData.responses[0].textAnnotations;
-    const fullText = textAnnotations && textAnnotations[0] ? textAnnotations[0].description : '';
+    // Create timeout controller
+    const timeoutController = new AbortController();
+    const timeoutId = setTimeout(() => timeoutController.abort(), VISION_API_TIMEOUT);
 
-    // Extract W9 form data using simple text parsing
-    const extractedData = extractW9Data(fullText);
+    try {
+      // Call Google Vision API with timeout
+      const visionResponse = await fetch(
+        `https://vision.googleapis.com/v1/images:annotate?key=${googleVisionApiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            requests: [
+              {
+                image: {
+                  content: base64Data,
+                },
+                features: [
+                  {
+                    type: 'TEXT_DETECTION',
+                    maxResults: 1,
+                  },
+                ],
+              },
+            ],
+          }),
+          signal: timeoutController.signal,
+        }
+      );
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        extractedData,
-        rawText: fullText,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      clearTimeout(timeoutId);
+
+      if (!visionResponse.ok) {
+        const errorText = await visionResponse.text();
+        console.error('Google Vision API error:', errorText);
+        return new Response(
+          JSON.stringify({ error: 'Failed to process image with Google Vision API' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const visionData = await visionResponse.json();
+      
+      if (!visionData.responses || !visionData.responses[0]) {
+        return new Response(
+          JSON.stringify({ error: 'No text detected in image' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const textAnnotations = visionData.responses[0].textAnnotations;
+      const fullText = textAnnotations && textAnnotations[0] ? textAnnotations[0].description : '';
+
+      // Extract W9 form data using simple text parsing
+      const extractedData = extractW9Data(fullText);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          extractedData,
+          rawText: fullText,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      
+      if (fetchError.name === 'AbortError') {
+        console.error('Vision API request timed out');
+        return new Response(
+          JSON.stringify({ error: 'OCR processing timed out. Please try with a smaller image.' }),
+          { status: 408, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      throw fetchError; // Re-throw other errors
+    }
 
   } catch (error) {
     console.error('Error in w9-ocr-extract function:', error);

@@ -360,18 +360,28 @@ export const W9CameraCapture = () => {
         img.src = capturedImage!;
       });
       
-      // Resize image for OCR (max 1024px width)
-      const maxWidth = 1024;
+      // Resize image for OCR (max 800px width to stay under 2MB)
+      const maxWidth = 800;
       const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
       canvas.width = img.width * ratio;
       canvas.height = img.height * ratio;
       
       ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const resizedImage = canvas.toDataURL('image/jpeg', 0.6);
+      const resizedImage = canvas.toDataURL('image/jpeg', 0.5); // Lower quality for OCR
       
-      const { data: ocrData, error: ocrError } = await supabase.functions.invoke('w9-ocr-extract', {
+      // Add timeout to OCR call
+      const ocrPromise = supabase.functions.invoke('w9-ocr-extract', {
         body: { imageBase64: resizedImage }
       });
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('OCR timeout')), 20000) // 20 second timeout
+      );
+      
+      const { data: ocrData, error: ocrError } = await Promise.race([
+        ocrPromise,
+        timeoutPromise
+      ]) as any;
 
       if (!ocrError && ocrData && !ocrData.error) {
         // Update the W9 form with OCR data
