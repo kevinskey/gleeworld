@@ -37,14 +37,25 @@ export const ContractManagement = () => {
       // Fetch all contracts from contracts_v2 with creator profiles
       const { data: contractsData, error: contractsError } = await supabase
         .from('contracts_v2')
-        .select(`
-          *,
-          profiles:created_by (
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
+
+      // Fetch creator profiles separately if contracts exist
+      let contractsWithProfiles = contractsData || [];
+      if (contractsData && contractsData.length > 0) {
+        const creatorIds = [...new Set(contractsData.map(c => c.created_by).filter(Boolean))];
+        if (creatorIds.length > 0) {
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('id, full_name, email')
+            .in('id', creatorIds);
+
+          contractsWithProfiles = contractsData.map(contract => ({
+            ...contract,
+            profiles: profilesData?.find(p => p.id === contract.created_by) || null
+          }));
+        }
+      }
 
       if (contractsError) throw contractsError;
 
@@ -53,16 +64,36 @@ export const ContractManagement = () => {
         .from('contract_signatures_v2')
         .select(`
           *,
-          contracts_v2 (
+          contracts_v2!contract_signatures_v2_contract_id_fkey (
             title,
             created_at,
-            profiles:created_by (
-              full_name,
-              email
-            )
+            created_by
           )
         `)
         .order('created_at', { ascending: false });
+
+      // Add creator profiles to signatures
+      let signaturesWithProfiles = signaturesData || [];
+      if (signaturesData && signaturesData.length > 0) {
+        const creatorIds = [...new Set(signaturesData
+          .map(s => s.contracts_v2?.created_by)
+          .filter(Boolean))];
+        
+        if (creatorIds.length > 0) {
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('id, full_name, email')
+            .in('id', creatorIds);
+
+          signaturesWithProfiles = signaturesData.map(signature => ({
+            ...signature,
+            contracts_v2: signature.contracts_v2 ? {
+              ...signature.contracts_v2,
+              profiles: profilesData?.find(p => p.id === signature.contracts_v2.created_by) || null
+            } : null
+          }));
+        }
+      }
 
       if (signaturesError) throw signaturesError;
 
@@ -74,8 +105,8 @@ export const ContractManagement = () => {
 
       if (templatesError) throw templatesError;
 
-      setAllContracts(contractsData || []);
-      setContractSignatures(signaturesData || []);
+      setAllContracts(contractsWithProfiles || []);
+      setContractSignatures(signaturesWithProfiles || []);
       setContractTemplates(templatesData || []);
     } catch (error) {
       console.error('Error fetching contracts data:', error);
