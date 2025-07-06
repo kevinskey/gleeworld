@@ -1,72 +1,9 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-interface W9Data {
-  name?: string;
-  businessName?: string;
-  taxClassification?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  zipCode?: string;
-  ssn?: string;
-  ein?: string;
-}
-
-function extractW9Data(text: string): W9Data {
-  const data: W9Data = {};
-  
-  // Extract name (look for "Name" field)
-  const nameMatch = text.match(/Name[:\s]*([A-Za-z\s,.-]+)/i);
-  if (nameMatch) {
-    data.name = nameMatch[1].trim().replace(/[,.-]*$/, '');
-  }
-  
-  // Extract business name
-  const businessMatch = text.match(/Business name[:\s]*([A-Za-z\s&,.-]+)/i);
-  if (businessMatch) {
-    data.businessName = businessMatch[1].trim().replace(/[,.-]*$/, '');
-  }
-  
-  // Extract address
-  const addressMatch = text.match(/Address[:\s]*([0-9A-Za-z\s,.-]+)/i);
-  if (addressMatch) {
-    data.address = addressMatch[1].trim().replace(/[,.-]*$/, '');
-  }
-  
-  // Extract city, state, zip
-  const cityStateZipMatch = text.match(/City[:\s]*([A-Za-z\s]+)[,\s]*State[:\s]*([A-Za-z]{2})[,\s]*ZIP[:\s]*([0-9-]+)/i);
-  if (cityStateZipMatch) {
-    data.city = cityStateZipMatch[1].trim();
-    data.state = cityStateZipMatch[2].trim();
-    data.zipCode = cityStateZipMatch[3].trim();
-  }
-  
-  // Extract SSN
-  const ssnMatch = text.match(/(?:SSN|Social Security)[:\s]*([0-9-]{9,11})/i);
-  if (ssnMatch) {
-    data.ssn = ssnMatch[1].replace(/[^0-9]/g, '');
-  }
-  
-  // Extract EIN
-  const einMatch = text.match(/(?:EIN|Employer ID)[:\s]*([0-9-]{9,11})/i);
-  if (einMatch) {
-    data.ein = einMatch[1].replace(/[^0-9]/g, '');
-  }
-  
-  // Extract tax classification
-  const taxClassMatch = text.match(/(?:Individual|LLC|Corporation|Partnership|Trust)/i);
-  if (taxClassMatch) {
-    data.taxClassification = taxClassMatch[0].toLowerCase();
-  }
-  
-  return data;
-}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -78,14 +15,28 @@ serve(async (req) => {
     const { imageBase64 } = await req.json();
     
     if (!imageBase64) {
-      throw new Error('No image data provided');
+      return new Response(
+        JSON.stringify({ error: 'No image data provided' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    console.log('Processing W9 OCR request...');
+    const googleVisionApiKey = Deno.env.get('GOOGLE_VISION_API_KEY');
+    
+    if (!googleVisionApiKey) {
+      console.error('Google Vision API key not found');
+      return new Response(
+        JSON.stringify({ error: 'Google Vision API key not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Remove data URL prefix if present
+    const base64Data = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
 
     // Call Google Vision API
     const visionResponse = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${Deno.env.get('GOOGLE_VISION_API_KEY')}`,
+      `https://vision.googleapis.com/v1/images:annotate?key=${googleVisionApiKey}`,
       {
         method: 'POST',
         headers: {
@@ -95,7 +46,7 @@ serve(async (req) => {
           requests: [
             {
               image: {
-                content: imageBase64.replace(/^data:image\/[a-z]+;base64,/, ''),
+                content: base64Data,
               },
               features: [
                 {
@@ -112,44 +63,127 @@ serve(async (req) => {
     if (!visionResponse.ok) {
       const errorText = await visionResponse.text();
       console.error('Google Vision API error:', errorText);
-      throw new Error(`Google Vision API error: ${visionResponse.status}`);
+      return new Response(
+        JSON.stringify({ error: 'Failed to process image with Google Vision API' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const visionData = await visionResponse.json();
-    console.log('Vision API response received');
-
-    if (visionData.responses?.[0]?.error) {
-      throw new Error(`Vision API error: ${visionData.responses[0].error.message}`);
+    
+    if (!visionData.responses || !visionData.responses[0]) {
+      return new Response(
+        JSON.stringify({ error: 'No text detected in image' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    const detectedText = visionData.responses?.[0]?.fullTextAnnotation?.text || '';
-    console.log('Detected text length:', detectedText.length);
+    const textAnnotations = visionData.responses[0].textAnnotations;
+    const fullText = textAnnotations && textAnnotations[0] ? textAnnotations[0].description : '';
 
-    // Extract W9 specific data
-    const extractedData = extractW9Data(detectedText);
-    console.log('Extracted W9 data:', extractedData);
+    // Extract W9 form data using simple text parsing
+    const extractedData = extractW9Data(fullText);
 
     return new Response(
       JSON.stringify({
         success: true,
         extractedData,
-        rawText: detectedText,
+        rawText: fullText,
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+
   } catch (error) {
     console.error('Error in w9-ocr-extract function:', error);
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message,
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
+
+function extractW9Data(text: string) {
+  const data: any = {};
+  
+  if (!text) return data;
+
+  const lines = text.split('\n').map(line => line.trim());
+  const allText = text.toLowerCase();
+
+  // Extract name (look for "name" field or first substantial text)
+  const namePatterns = [
+    /name[:\s]+([a-zA-Z\s]+)/i,
+    /^([A-Z][a-z]+\s+[A-Z][a-z]+)/m,
+  ];
+  
+  for (const pattern of namePatterns) {
+    const match = text.match(pattern);
+    if (match && match[1] && match[1].trim().length > 2) {
+      data.name = match[1].trim();
+      break;
+    }
+  }
+
+  // Extract business name
+  const businessPatterns = [
+    /business name[:\s]+([^\n]+)/i,
+    /company[:\s]+([^\n]+)/i,
+  ];
+  
+  for (const pattern of businessPatterns) {
+    const match = text.match(pattern);
+    if (match && match[1] && match[1].trim().length > 2) {
+      data.business_name = match[1].trim();
+      break;
+    }
+  }
+
+  // Extract address
+  const addressPatterns = [
+    /address[:\s]+([^\n]+)/i,
+    /street[:\s]+([^\n]+)/i,
+  ];
+  
+  for (const pattern of addressPatterns) {
+    const match = text.match(pattern);
+    if (match && match[1] && match[1].trim().length > 5) {
+      data.address = match[1].trim();
+      break;
+    }
+  }
+
+  // Extract SSN or EIN
+  const ssnPattern = /(\d{3}[-\s]?\d{2}[-\s]?\d{4})/;
+  const einPattern = /(\d{2}[-\s]?\d{7})/;
+  
+  const ssnMatch = text.match(ssnPattern);
+  const einMatch = text.match(einPattern);
+  
+  if (ssnMatch) {
+    data.ssn = ssnMatch[1].replace(/[-\s]/g, '');
+  }
+  
+  if (einMatch) {
+    data.ein = einMatch[1].replace(/[-\s]/g, '');
+  }
+
+  // Extract city, state, zip
+  const cityStateZipPattern = /([A-Za-z\s]+),\s*([A-Z]{2})\s+(\d{5})/;
+  const match = text.match(cityStateZipPattern);
+  if (match) {
+    data.city = match[1].trim();
+    data.state = match[2];
+    data.zip = match[3];
+  }
+
+  // Try to find checkbox selections (Individual, LLC, etc.)
+  const taxClassifications = ['individual', 'llc', 'corporation', 'partnership', 's corporation'];
+  for (const classification of taxClassifications) {
+    if (allText.includes(classification)) {
+      data.tax_classification = classification;
+      break;
+    }
+  }
+
+  return data;
+}
