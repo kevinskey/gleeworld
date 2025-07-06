@@ -258,36 +258,12 @@ export const W9CameraCapture = () => {
     try {
       console.log('Starting W9 processing...');
       
-      let extractedData = {};
-      let rawText = '';
-      
       // Add small delay to prevent UI lockup
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Try OCR extraction, but continue without it if it fails
-      try {
-        console.log('Attempting OCR extraction with image size:', capturedImage.length);
-        const { data: ocrData, error: ocrError } = await supabase.functions.invoke('w9-ocr-extract', {
-          body: { imageBase64: capturedImage }
-        });
-
-        console.log('OCR response received:', { ocrData, ocrError });
-
-        if (ocrError) {
-          console.warn('OCR extraction failed:', ocrError);
-          // Continue without OCR data
-        } else if (ocrData && !ocrData.error) {
-          console.log('OCR extraction successful:', ocrData);
-          extractedData = ocrData.extractedData || {};
-          rawText = ocrData.rawText || '';
-        } else if (ocrData && ocrData.error) {
-          console.warn('OCR API returned error:', ocrData.error);
-        }
-      } catch (ocrError) {
-        console.warn('OCR service unavailable, saving without text extraction:', ocrError);
-        // Continue without OCR - this is not a fatal error
-      }
-
+      // Save form immediately without waiting for OCR
+      const fileName = `${user.id}/w9-form-${Date.now()}.pdf`;
+      
       // Convert image to PDF with async processing
       const pdf = new jsPDF();
       const img = new Image();
@@ -318,8 +294,7 @@ export const W9CameraCapture = () => {
       pdf.addImage(capturedImage, 'JPEG', 0, 0, finalWidth, finalHeight);
       const pdfBlob = pdf.output('blob');
 
-      // Upload to storage
-      const fileName = `${user.id}/w9-form-${Date.now()}.pdf`;
+      // Upload to storage first
       const { error: uploadError } = await supabase.storage
         .from('w9-forms')
         .upload(fileName, pdfBlob);
@@ -328,7 +303,7 @@ export const W9CameraCapture = () => {
         throw uploadError;
       }
 
-      // Create W9 form record with extracted data (if any)
+      // Create W9 form record immediately
       const { error: dbError } = await supabase
         .from('w9_forms')
         .insert({
@@ -336,12 +311,10 @@ export const W9CameraCapture = () => {
           storage_path: fileName,
           status: 'submitted',
           form_data: {
-            ...extractedData,
-            capture_method: rawText ? 'camera_ocr' : 'camera_manual',
+            capture_method: 'camera_manual',
             captured_at: new Date().toISOString(),
-            raw_text: rawText,
-            ocr_attempted: true,
-            ocr_successful: Object.keys(extractedData).length > 0
+            ocr_attempted: false,
+            ocr_successful: false
           }
         });
 
@@ -349,18 +322,18 @@ export const W9CameraCapture = () => {
         throw dbError;
       }
 
-      const successMessage = Object.keys(extractedData).length > 0 && (extractedData as any).name
-        ? `W9 form captured and data extracted for ${(extractedData as any).name}`
-        : "W9 form captured successfully. OCR data extraction will be available once the service is fully deployed.";
-
       toast({
         title: "W9 Form Saved",
-        description: successMessage,
+        description: "W9 form captured successfully. OCR processing will happen in the background.",
       });
 
-      // Reset state
+      // Reset state immediately
       setCapturedImage(null);
       setIsOpen(false);
+      
+      // Process OCR in background without blocking UI
+      processOCRInBackground(fileName);
+      
     } catch (error) {
       console.error('Error processing W9 form:', error);
       toast({
@@ -370,6 +343,59 @@ export const W9CameraCapture = () => {
       });
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const processOCRInBackground = async (fileName: string) => {
+    try {
+      console.log('Starting background OCR processing...');
+      
+      // Reduce image size for OCR to prevent API timeouts
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      await new Promise((resolve) => {
+        img.onload = resolve;
+        img.src = capturedImage!;
+      });
+      
+      // Resize image for OCR (max 1024px width)
+      const maxWidth = 1024;
+      const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+      canvas.width = img.width * ratio;
+      canvas.height = img.height * ratio;
+      
+      ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const resizedImage = canvas.toDataURL('image/jpeg', 0.6);
+      
+      const { data: ocrData, error: ocrError } = await supabase.functions.invoke('w9-ocr-extract', {
+        body: { imageBase64: resizedImage }
+      });
+
+      if (!ocrError && ocrData && !ocrData.error) {
+        // Update the W9 form with OCR data
+        await supabase
+          .from('w9_forms')
+          .update({
+            form_data: {
+              ...ocrData.extractedData,
+              capture_method: 'camera_ocr',
+              captured_at: new Date().toISOString(),
+              raw_text: ocrData.rawText,
+              ocr_attempted: true,
+              ocr_successful: true
+            }
+          })
+          .eq('storage_path', fileName);
+        
+        console.log('OCR processing completed successfully');
+      } else {
+        console.warn('OCR processing failed:', ocrError || ocrData?.error);
+      }
+    } catch (error) {
+      console.warn('Background OCR processing failed:', error);
+      // Don't show error to user since form was already saved
     }
   };
 
