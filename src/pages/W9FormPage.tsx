@@ -1,5 +1,5 @@
 
-import { W9Form } from "@/components/W9Form";
+import { SmartW9Form } from "@/components/SmartW9Form";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,7 +28,7 @@ const W9FormPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
-        <W9Form onSuccess={handleSuccess} />
+        <SmartW9Form onSuccess={handleSuccess} />
       </div>
     </div>
   );

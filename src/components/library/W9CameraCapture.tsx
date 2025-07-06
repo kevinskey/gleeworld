@@ -162,6 +162,20 @@ export const W9CameraCapture = () => {
 
     setIsProcessing(true);
     try {
+      console.log('Starting W9 OCR processing...');
+      
+      // Extract data using OCR
+      const { data: ocrData, error: ocrError } = await supabase.functions.invoke('w9-ocr-extract', {
+        body: { imageBase64: capturedImage }
+      });
+
+      if (ocrError) {
+        console.error('OCR Error:', ocrError);
+        throw new Error('Failed to extract W9 data from image');
+      }
+
+      console.log('OCR extraction successful:', ocrData);
+
       // Convert image to PDF
       const pdf = new jsPDF();
       const img = new Image();
@@ -199,7 +213,7 @@ export const W9CameraCapture = () => {
         throw uploadError;
       }
 
-      // Create W9 form record
+      // Create W9 form record with extracted data
       const { error: dbError } = await supabase
         .from('w9_forms')
         .insert({
@@ -207,8 +221,10 @@ export const W9CameraCapture = () => {
           storage_path: fileName,
           status: 'submitted',
           form_data: {
-            capture_method: 'camera',
-            captured_at: new Date().toISOString()
+            ...ocrData.extractedData,
+            capture_method: 'camera_ocr',
+            captured_at: new Date().toISOString(),
+            raw_text: ocrData.rawText
           }
         });
 
@@ -217,8 +233,10 @@ export const W9CameraCapture = () => {
       }
 
       toast({
-        title: "W9 Form Captured",
-        description: "Your W9 form has been successfully captured and saved.",
+        title: "W9 Form Processed",
+        description: ocrData.extractedData?.name 
+          ? `W9 form captured and data extracted for ${ocrData.extractedData.name}`
+          : "W9 form captured successfully with OCR processing",
       });
 
       // Reset state
@@ -253,7 +271,7 @@ export const W9CameraCapture = () => {
         <DialogHeader>
           <DialogTitle>Capture W9 Form</DialogTitle>
           <DialogDescription>
-            Take a photo of your W9 form or upload an image to convert it to PDF
+            Take a photo of your W9 form or upload an image - OCR will automatically extract and populate form data
           </DialogDescription>
         </DialogHeader>
 
