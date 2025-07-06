@@ -99,73 +99,73 @@ const System = () => {
 
   return (
     <UniversalLayout containerized={false}>
-      <div className="container mx-auto px-4 py-3">
+      <div className="container mx-auto px-2 sm:px-4 py-3">
         <div className="mb-4">
-          <h1 className="text-xl font-bold text-white mb-1">System Administration</h1>
-          <p className="text-gray-300 text-sm">Comprehensive management and oversight tools</p>
+          <h1 className="text-lg sm:text-xl font-bold text-white mb-1">System Administration</h1>
+          <p className="text-gray-300 text-xs sm:text-sm">Comprehensive management and oversight tools</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          {/* Improved Tab Layout with Better Readability */}
+          {/* Mobile-Optimized Tab Layout */}
           <div className="bg-white/95 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm p-2">
-            <TabsList className="w-full bg-white p-1 h-auto flex-wrap gap-1 justify-start lg:grid lg:grid-cols-7 border border-gray-100 rounded-md shadow-sm">
+            <TabsList className="w-full bg-white p-1 h-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-1 border border-gray-100 rounded-md shadow-sm">
               <TabsTrigger 
                 value="dashboard" 
-                className="flex items-center gap-2 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-sm px-3 py-2.5 rounded font-medium transition-all duration-200"
+                className="flex items-center justify-center gap-1 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 rounded font-medium transition-all duration-200 min-h-[2.5rem]"
               >
-                <Settings className="h-4 w-4" />
-                <span className="hidden sm:inline">Dashboard</span>
-                <span className="sm:hidden">Dash</span>
+                <Settings className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span className="hidden xs:inline sm:hidden lg:inline truncate">Dashboard</span>
+                <span className="xs:hidden sm:inline lg:hidden truncate">Dash</span>
               </TabsTrigger>
               
               <TabsTrigger 
                 value="users" 
-                className="flex items-center gap-2 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-sm px-3 py-2.5 rounded font-medium transition-all duration-200"
+                className="flex items-center justify-center gap-1 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 rounded font-medium transition-all duration-200 min-h-[2.5rem]"
               >
-                <Users className="h-4 w-4" />
-                <span className="hidden sm:inline">Users</span>
+                <Users className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span className="hidden sm:inline truncate">Users</span>
               </TabsTrigger>
 
               <TabsTrigger 
                 value="contracts" 
-                className="flex items-center gap-2 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-sm px-3 py-2.5 rounded font-medium transition-all duration-200"
+                className="flex items-center justify-center gap-1 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 rounded font-medium transition-all duration-200 min-h-[2.5rem]"
               >
-                <FileText className="h-4 w-4" />
-                <span className="hidden sm:inline">Contracts</span>
+                <FileText className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span className="hidden sm:inline truncate">Contracts</span>
               </TabsTrigger>
               
               <TabsTrigger 
                 value="payments" 
-                className="flex items-center gap-2 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-sm px-3 py-2.5 rounded font-medium transition-all duration-200"
+                className="flex items-center justify-center gap-1 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 rounded font-medium transition-all duration-200 min-h-[2.5rem]"
               >
-                <DollarSign className="h-4 w-4" />
-                <span className="hidden sm:inline">Payments</span>
+                <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span className="hidden sm:inline truncate">Payments</span>
               </TabsTrigger>
               
               <TabsTrigger 
                 value="w9" 
-                className="flex items-center gap-2 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-sm px-3 py-2.5 rounded font-medium transition-all duration-200"
+                className="flex items-center justify-center gap-1 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 rounded font-medium transition-all duration-200 min-h-[2.5rem]"
               >
-                <FileText className="h-4 w-4" />
-                <span className="hidden sm:inline">W9 Forms</span>
-                <span className="sm:hidden">W9</span>
+                <FileText className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span className="hidden sm:inline lg:hidden truncate">W9</span>
+                <span className="hidden lg:inline truncate">W9 Forms</span>
               </TabsTrigger>
 
-              {/* Financial Dropdown with Improved Styling */}
+              {/* Financial Dropdown with Mobile Optimization */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="ghost" 
-                    className={`flex items-center gap-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-sm px-3 py-2.5 h-auto rounded font-medium transition-all duration-200 border border-transparent ${
+                    className={`flex items-center justify-center gap-1 text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 h-auto rounded font-medium transition-all duration-200 border border-transparent min-h-[2.5rem] ${
                       ['financial-overview', 'user-records', 'payment-tracking', 'stipends', 'budget', 'reports'].includes(activeTab) 
                         ? 'bg-brand-500 text-white shadow-md border-brand-600' 
                         : 'hover:border-gray-200'
                     }`}
                   >
-                    <Calculator className="h-4 w-4" />
-                    <span className="hidden sm:inline">Financial</span>
-                    <span className="sm:hidden">Fin</span>
-                    <ChevronDown className="h-3 w-3" />
+                    <Calculator className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span className="hidden sm:inline lg:hidden truncate">Fin</span>
+                    <span className="hidden lg:inline truncate">Financial</span>
+                    <ChevronDown className="h-2 w-2 sm:h-3 sm:w-3 flex-shrink-0" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52 bg-white border border-gray-200 shadow-xl rounded-lg z-50 p-1">
@@ -215,16 +215,16 @@ const System = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* System Tools Dropdown with Improved Styling */}
+              {/* System Tools Dropdown with Mobile Optimization */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="ghost" 
-                    className="flex items-center gap-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 hover:border-gray-200 text-sm px-3 py-2.5 h-auto rounded font-medium transition-all duration-200 border border-transparent"
+                    className="flex items-center justify-center gap-1 text-gray-700 hover:text-gray-900 hover:bg-gray-100 hover:border-gray-200 text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 h-auto rounded font-medium transition-all duration-200 border border-transparent min-h-[2.5rem]"
                   >
-                    <Settings className="h-4 w-4" />
-                    <span className="hidden sm:inline">Tools</span>
-                    <ChevronDown className="h-3 w-3" />
+                    <Settings className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span className="hidden sm:inline truncate">Tools</span>
+                    <ChevronDown className="h-2 w-2 sm:h-3 sm:w-3 flex-shrink-0" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52 bg-white border border-gray-200 shadow-xl rounded-lg z-50 p-1">
