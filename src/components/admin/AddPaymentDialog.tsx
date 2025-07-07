@@ -187,6 +187,7 @@ export const AddPaymentDialog = ({ open, onOpenChange, onSuccess }: AddPaymentDi
                 <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
                 <SelectItem value="paypal">PayPal</SelectItem>
                 <SelectItem value="venmo">Venmo</SelectItem>
+                <SelectItem value="zelle">Zelle</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
