@@ -172,7 +172,7 @@ export const UserFinancialRecords = () => {
             if (record.type === 'stipend' || record.type === 'credit') {
               runningBalance += amount;
             } else if (record.type === 'receipt' || record.type === 'payment' || record.type === 'debit') {
-              runningBalance -= amount;
+              runningBalance += amount; // Payment amounts are already negative, so we add them
             }
             
             await supabase
