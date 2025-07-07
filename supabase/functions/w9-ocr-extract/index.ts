@@ -143,83 +143,139 @@ function extractW9Data(text: string) {
   
   if (!text) return data;
 
-  const lines = text.split('\n').map(line => line.trim());
+  console.log('Raw OCR text:', text);
+  const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
   const allText = text.toLowerCase();
 
-  // Extract name (look for "name" field or first substantial text)
+  // More comprehensive name extraction patterns
   const namePatterns = [
-    /name[:\s]+([a-zA-Z\s]+)/i,
-    /^([A-Z][a-z]+\s+[A-Z][a-z]+)/m,
+    /(?:name|full\s+name)[:\s]*([a-zA-Z](?:[a-zA-Z'\s\-\.]{1,48}[a-zA-Z])?)/i,
+    /^(?:1\.?\s*)?([A-Z][a-z]+(?:\s+[A-Z][a-z']+)+)(?:\s|$)/m,
+    /line\s*1[:\s]*([a-zA-Z](?:[a-zA-Z'\s\-\.]{1,48}[a-zA-Z])?)/i,
   ];
   
   for (const pattern of namePatterns) {
     const match = text.match(pattern);
-    if (match && match[1] && match[1].trim().length > 2) {
+    if (match && match[1] && match[1].trim().length > 2 && !match[1].toLowerCase().includes('business')) {
       data.name = match[1].trim();
+      console.log('Extracted name:', data.name);
       break;
     }
   }
 
-  // Extract business name
+  // Business name patterns - look for common W9 business name fields
   const businessPatterns = [
-    /business name[:\s]+([^\n]+)/i,
-    /company[:\s]+([^\n]+)/i,
+    /(?:business\s+name|company)[:\s]*([^\n\r]{3,})/i,
+    /(?:dba|d\.b\.a\.?)[:\s]*([^\n\r]{3,})/i,
+    /(?:line\s*2|2\.)[:\s]*([^\n\r]{3,})/i,
   ];
   
   for (const pattern of businessPatterns) {
     const match = text.match(pattern);
     if (match && match[1] && match[1].trim().length > 2) {
       data.business_name = match[1].trim();
+      console.log('Extracted business name:', data.business_name);
       break;
     }
   }
 
-  // Extract address
+  // Address extraction - look for street addresses
   const addressPatterns = [
-    /address[:\s]+([^\n]+)/i,
-    /street[:\s]+([^\n]+)/i,
+    /(?:address|street)[:\s]*([^\n\r]*\d+[^\n\r]*)/i,
+    /(?:line\s*3|3\.)[:\s]*([^\n\r]*\d+[^\n\r]*)/i,
+    /(\d+\s+[a-zA-Z\s]+(?:street|st|avenue|ave|road|rd|drive|dr|lane|ln|boulevard|blvd))/i,
   ];
   
   for (const pattern of addressPatterns) {
     const match = text.match(pattern);
     if (match && match[1] && match[1].trim().length > 5) {
       data.address = match[1].trim();
+      console.log('Extracted address:', data.address);
       break;
     }
   }
 
-  // Extract SSN or EIN
-  const ssnPattern = /(\d{3}[-\s]?\d{2}[-\s]?\d{4})/;
-  const einPattern = /(\d{2}[-\s]?\d{7})/;
+  // Enhanced SSN and EIN extraction
+  const ssnPattern = /(?:ssn|social\s+security)[:\s]*(\d{3}[-\s]?\d{2}[-\s]?\d{4})/i;
+  const einPattern = /(?:ein|employer\s+id)[:\s]*(\d{2}[-\s]?\d{7})/i;
+  const taxIdPattern = /(?:tax\s+id)[:\s]*(\d{2,3}[-\s]?\d{2,7}[-\s]?\d{4})/i;
   
-  const ssnMatch = text.match(ssnPattern);
-  const einMatch = text.match(einPattern);
+  let ssnMatch = text.match(ssnPattern);
+  let einMatch = text.match(einPattern);
+  let taxIdMatch = text.match(taxIdPattern);
+  
+  // Fallback to any 9-digit number pattern
+  if (!ssnMatch && !einMatch) {
+    const numberPattern = /(\d{3}[-\s]?\d{2}[-\s]?\d{4})/;
+    ssnMatch = text.match(numberPattern);
+  }
   
   if (ssnMatch) {
     data.ssn = ssnMatch[1].replace(/[-\s]/g, '');
+    console.log('Extracted SSN:', data.ssn);
   }
   
   if (einMatch) {
     data.ein = einMatch[1].replace(/[-\s]/g, '');
+    console.log('Extracted EIN:', data.ein);
+  } else if (taxIdMatch) {
+    data.ein = taxIdMatch[1].replace(/[-\s]/g, '');
+    console.log('Extracted Tax ID as EIN:', data.ein);
   }
 
-  // Extract city, state, zip
-  const cityStateZipPattern = /([A-Za-z\s]+),\s*([A-Z]{2})\s+(\d{5})/;
-  const match = text.match(cityStateZipPattern);
-  if (match) {
-    data.city = match[1].trim();
-    data.state = match[2];
-    data.zip = match[3];
-  }
-
-  // Try to find checkbox selections (Individual, LLC, etc.)
-  const taxClassifications = ['individual', 'llc', 'corporation', 'partnership', 's corporation'];
-  for (const classification of taxClassifications) {
-    if (allText.includes(classification)) {
-      data.tax_classification = classification;
+  // City, state, zip extraction with more flexible patterns
+  const cityStateZipPatterns = [
+    /([a-zA-Z\s]+),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)/,
+    /(?:city|line\s*4)[:\s]*([^,\n\r]+),?\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)/i,
+  ];
+  
+  for (const pattern of cityStateZipPatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      data.city = match[1].trim();
+      data.state = match[2];
+      data.zip = match[3];
+      console.log('Extracted location:', { city: data.city, state: data.state, zip: data.zip });
       break;
     }
   }
 
+  // Enhanced tax classification detection
+  const taxClassifications = [
+    { key: 'individual', patterns: ['individual', 'sole proprietor', 'single member llc'] },
+    { key: 'llc', patterns: ['llc', 'limited liability company'] },
+    { key: 'corporation', patterns: ['corporation', 'c corp', 'c-corp'] },
+    { key: 's-corporation', patterns: ['s corp', 's-corp', 's corporation'] },
+    { key: 'partnership', patterns: ['partnership', 'general partnership'] },
+    { key: 'trust', patterns: ['trust', 'estate'] },
+  ];
+  
+  for (const classification of taxClassifications) {
+    for (const pattern of classification.patterns) {
+      if (allText.includes(pattern)) {
+        data.tax_classification = classification.key;
+        console.log('Extracted tax classification:', data.tax_classification);
+        break;
+      }
+    }
+    if (data.tax_classification) break;
+  }
+
+  // Look for any filled checkboxes or marked boxes
+  const checkboxPatterns = [
+    /[x✓✗☑☒]\s*([a-zA-Z\s]+)/gi,
+    /\[\s*[x✓]\s*\]\s*([a-zA-Z\s]+)/gi,
+  ];
+  
+  for (const pattern of checkboxPatterns) {
+    const matches = text.matchAll(pattern);
+    for (const match of matches) {
+      const checkedItem = match[1].toLowerCase().trim();
+      console.log('Found checked item:', checkedItem);
+      // Could add logic to map checked items to form fields
+    }
+  }
+
+  console.log('Final extracted data:', data);
   return data;
 }
