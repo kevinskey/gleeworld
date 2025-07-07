@@ -262,12 +262,21 @@ export const AddBatchStipendDialog = ({ onSuccess }: AddBatchStipendDialogProps)
               
               <div className="col-span-3">
                 <Label htmlFor={`description-${index}`}>Description</Label>
-                <Input
-                  id={`description-${index}`}
-                  placeholder="Stipend description"
+                <Select
                   value={entry.description}
-                  onChange={(e) => updateEntry(index, 'description', e.target.value)}
-                />
+                  onValueChange={(value) => updateEntry(index, 'description', value)}
+                >
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border z-50">
+                    <SelectItem value="Singer">Singer</SelectItem>
+                    <SelectItem value="Director">Director</SelectItem>
+                    <SelectItem value="Instrumentalist">Instrumentalist</SelectItem>
+                    <SelectItem value="Coordinator">Coordinator</SelectItem>
+                    <SelectItem value="Manager">Manager</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="col-span-1 flex items-end">
