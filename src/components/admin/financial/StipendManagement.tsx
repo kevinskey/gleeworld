@@ -40,7 +40,7 @@ export const StipendManagement = () => {
         <CardContent className="pt-6">
           <div className="text-center py-8">
             <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={refetch} variant="secondary">
+            <Button onClick={() => refetch()} variant="secondary">
               <RefreshCw className="h-4 w-4 mr-2" />
               Retry
             </Button>
@@ -105,7 +105,7 @@ export const StipendManagement = () => {
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Sync Contracts
               </Button>
-              <Button onClick={refetch} variant="secondary" size="sm">
+              <Button onClick={() => refetch()} variant="secondary" size="sm">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>

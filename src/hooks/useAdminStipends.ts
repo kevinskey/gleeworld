@@ -30,8 +30,9 @@ export const useAdminStipends = () => {
   const [summary, setSummary] = useState<StipendSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState(true);
 
-  const fetchStipends = async () => {
+  const fetchStipends = async (autoSync = true) => {
     if (!user) return;
 
     try {
@@ -47,6 +48,11 @@ export const useAdminStipends = () => {
 
       if (!profile || !['admin', 'super-admin'].includes(profile.role)) {
         throw new Error('Access denied: Admin privileges required');
+      }
+
+      // Auto-sync contract stipends to finance records first if enabled
+      if (autoSync && autoSyncEnabled) {
+        await autoSyncContractStipends();
       }
 
       console.log('Fetching all contract stipend data...');
@@ -195,6 +201,105 @@ export const useAdminStipends = () => {
     }
   };
 
+  const autoSyncContractStipends = async () => {
+    try {
+      console.log('Auto-syncing contract stipends to finance records...');
+
+      // Get all existing finance records that were auto-synced to avoid duplicates
+      const { data: existingRecords } = await supabase
+        .from('finance_records')
+        .select('reference')
+        .eq('type', 'stipend')
+        .like('notes', '%Auto-synced%');
+
+      const existingReferences = new Set(existingRecords?.map(r => r.reference) || []);
+
+      let syncedCount = 0;
+
+      // Auto-sync contracts_v2 stipends - but assign to contract recipients, not creators
+      const { data: contractSignatures } = await supabase
+        .from('contract_signatures')
+        .select(`
+          id,
+          user_id,
+          contract_id,
+          contracts_v2!inner(id, title, stipend_amount, created_at)
+        `)
+        .not('contracts_v2.stipend_amount', 'is', null)
+        .gt('contracts_v2.stipend_amount', 0);
+
+      for (const signature of contractSignatures || []) {
+        const contract = signature.contracts_v2 as any;
+        const reference = `Contract Signature: ${signature.id}`;
+        
+        if (!existingReferences.has(reference)) {
+          const { error } = await supabase
+            .from('finance_records')
+            .insert({
+              user_id: signature.user_id, // Assign to the contract recipient, not creator
+              date: new Date(contract.created_at).toISOString().split('T')[0],
+              type: 'stipend',
+              category: 'Performance',
+              description: `Stipend from ${contract.title}`,
+              amount: Number(contract.stipend_amount),
+              balance: 0,
+              reference: reference,
+              notes: 'Auto-synced from contract system'
+            });
+
+          if (!error) {
+            syncedCount++;
+          }
+        }
+      }
+
+      // Auto-sync generated_contracts stipends - assign to assignment recipients
+      const { data: contractAssignments } = await supabase
+        .from('contract_user_assignments')
+        .select(`
+          id,
+          user_id,
+          contract_id,
+          generated_contracts!inner(id, event_name, stipend, created_at)
+        `)
+        .not('generated_contracts.stipend', 'is', null)
+        .gt('generated_contracts.stipend', 0);
+
+      for (const assignment of contractAssignments || []) {
+        const contract = assignment.generated_contracts as any;
+        const reference = `Contract Assignment: ${assignment.id}`;
+        
+        if (!existingReferences.has(reference)) {
+          const { error } = await supabase
+            .from('finance_records')
+            .insert({
+              user_id: assignment.user_id, // Assign to the user who was assigned the contract
+              date: new Date(contract.created_at).toISOString().split('T')[0],
+              type: 'stipend',
+              category: 'Performance',
+              description: `Stipend for ${contract.event_name}`,
+              amount: Number(contract.stipend),
+              balance: 0,
+              reference: reference,
+              notes: 'Auto-synced from contract system'
+            });
+
+          if (!error) {
+            syncedCount++;
+          }
+        }
+      }
+
+      if (syncedCount > 0) {
+        console.log(`Auto-synced ${syncedCount} new stipend records`);
+      }
+
+    } catch (error) {
+      console.error('Error in auto-sync:', error);
+      // Don't throw error here to prevent disrupting the main fetch
+    }
+  };
+
   const syncContractStipends = async () => {
     if (!user) return;
 
@@ -320,6 +425,8 @@ export const useAdminStipends = () => {
     loading,
     error,
     refetch: fetchStipends,
-    syncContractStipends
+    syncContractStipends,
+    autoSyncEnabled,
+    setAutoSyncEnabled
   };
 };
