@@ -86,7 +86,7 @@ export const StipendManagement = () => {
         <CardContent className="pt-6">
           <div className="text-center py-8">
             <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={() => refetch()} variant="secondary">
+            <Button onClick={() => refetch()} variant="default">
               <RefreshCw className="h-4 w-4 mr-2" />
               Retry
             </Button>
@@ -147,11 +147,11 @@ export const StipendManagement = () => {
               <CardDescription>All stipend transactions from contracts and manual entries</CardDescription>
             </div>
             <div className="flex flex-col gap-2 md:flex-row">
-              <Button onClick={syncContractStipends} variant="secondary" size="sm" className="w-full md:w-auto">
+              <Button onClick={syncContractStipends} variant="default" size="sm" className="w-full md:w-auto">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Update from Signed Contracts
               </Button>
-              <Button onClick={() => refetch()} variant="secondary" size="sm" className="w-full md:w-auto">
+              <Button onClick={() => refetch()} variant="default" size="sm" className="w-full md:w-auto">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
@@ -165,7 +165,7 @@ export const StipendManagement = () => {
               <DollarSign className="h-12 w-12 mx-auto mb-4 text-gray-300" />
               <h3 className="text-lg font-medium mb-2">No stipends found</h3>
               <p className="text-sm mb-4">Stipend records will appear here as they are created or synced from contracts.</p>
-              <Button onClick={syncContractStipends} variant="secondary">
+              <Button onClick={syncContractStipends} variant="default">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Sync from Contracts
               </Button>
@@ -221,11 +221,11 @@ export const StipendManagement = () => {
                 );
               })}
               {(stipends?.length || 0) > 20 && (
-                <div className="text-center py-4">
-                  <Button variant="secondary">
-                    View All {stipends?.length} Stipends
-                  </Button>
-                </div>
+                 <div className="text-center py-4">
+                   <Button variant="default">
+                     View All {stipends?.length} Stipends
+                   </Button>
+                 </div>
               )}
             </div>
           )}
