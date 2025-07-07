@@ -11,7 +11,9 @@ import { useToast } from "@/hooks/use-toast";
 import { W9PreviewDialog } from "./W9PreviewDialog";
 
 export const W9FormsListCollapsible = () => {
+  console.log('W9FormsListCollapsible - Component rendering');
   const { w9Forms, loading, error, downloadW9Form, deleteW9Form } = useW9Forms();
+  console.log('W9FormsListCollapsible - Hook returned:', { w9Forms: w9Forms?.length, loading, error });
   const navigate = useNavigate();
   const { toast } = useToast();
   const [deletingFormId, setDeletingFormId] = useState<string | null>(null);
