@@ -63,6 +63,17 @@ export const useAdminStipends = () => {
         throw financeError;
       }
 
+      // Fetch actual payments from user_payments table
+      const { data: userPayments, error: paymentsError } = await supabase
+        .from('user_payments')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (paymentsError) {
+        console.error('Error fetching user payments:', paymentsError);
+        throw paymentsError;
+      }
+
       // Fetch user profiles to get names and emails
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
@@ -100,6 +111,7 @@ export const useAdminStipends = () => {
 
       console.log('Data fetched:', {
         financeRecords: financeRecords?.length || 0,
+        userPayments: userPayments?.length || 0,
         contractsV2: contractsV2?.length || 0,
         generatedContracts: generatedContracts?.length || 0
       });
@@ -119,6 +131,22 @@ export const useAdminStipends = () => {
             record.description.replace('Stipend from ', '') : undefined,
           contract_id: record.reference?.includes('Contract ID:') ?
             record.reference.replace('Contract ID: ', '') : undefined
+        };
+      }) || [];
+
+      // Process actual payments from user_payments table
+      const actualPayments = userPayments?.map(payment => {
+        const userProfile = profileMap.get(payment.user_id);
+        return {
+          amount: Number(payment.amount) || 0,
+          description: `Payment - ${payment.notes || 'Stipend payment'}`,
+          user_name: userProfile?.full_name || '',
+          user_email: userProfile?.email || '',
+          date: payment.payment_date || new Date(payment.created_at).toISOString().split('T')[0],
+          category: 'Payment',
+          reference: `Payment ID: ${payment.id}`,
+          contract_title: payment.contract_id ? 'Contract Payment' : 'Manual Payment',
+          contract_id: payment.contract_id
         };
       }) || [];
 
@@ -155,7 +183,7 @@ export const useAdminStipends = () => {
       }) || [];
 
       // Combine all stipends and remove duplicates based on reference
-      const allStipends = [...existingStipends, ...contractStipends, ...generatedStipends];
+      const allStipends = [...existingStipends, ...actualPayments, ...contractStipends, ...generatedStipends];
       const uniqueStipends = allStipends.filter((stipend, index, self) => 
         index === self.findIndex(s => s.reference === stipend.reference)
       );
