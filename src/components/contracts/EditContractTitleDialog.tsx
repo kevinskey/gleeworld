@@ -5,13 +5,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import type { Contract } from "@/hooks/useContracts";
+
+interface ContractOrTemplate {
+  id: string;
+  title?: string;
+  name?: string;
+  updated_at?: string;
+  created_at?: string;
+}
 
 interface EditContractTitleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  contract: Contract | null;
-  onContractUpdated: (contract: Contract) => void;
+  contract: ContractOrTemplate | null;
+  onContractUpdated: (contract: ContractOrTemplate) => void;
 }
 
 export const EditContractTitleDialog = ({
@@ -27,7 +34,8 @@ export const EditContractTitleDialog = ({
   // Update local title when contract changes
   useEffect(() => {
     if (contract) {
-      setTitle(contract.title);
+      // Handle both contracts (title) and templates (name)
+      setTitle(contract.title || contract.name || '');
     }
   }, [contract]);
 
@@ -43,27 +51,44 @@ export const EditContractTitleDialog = ({
 
     setSaving(true);
     try {
-      const { data, error } = await supabase
-        .from('contracts_v2')
-        .update({ 
-          title: title.trim(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', contract.id)
-        .select()
-        .single();
+      let data, error;
+      
+      // Determine if this is a template or contract based on the presence of 'name' field
+      const isTemplate = 'name' in contract && !('title' in contract);
+      
+      if (isTemplate) {
+        ({ data, error } = await supabase
+          .from('contract_templates')
+          .update({ 
+            name: title.trim(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', contract.id)
+          .select()
+          .single());
+      } else {
+        ({ data, error } = await supabase
+          .from('contracts_v2')
+          .update({ 
+            title: title.trim(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', contract.id)
+          .select()
+          .single());
+      }
 
       if (error) throw error;
-
+      
       onContractUpdated({
         ...contract,
-        title: title.trim(),
+        ...(isTemplate ? { name: title.trim() } : { title: title.trim() }),
         updated_at: data.updated_at
       });
 
       toast({
         title: "Success",
-        description: "Contract title updated successfully",
+        description: `${isTemplate ? 'Template' : 'Contract'} title updated successfully`,
       });
 
       onOpenChange(false);
@@ -81,7 +106,7 @@ export const EditContractTitleDialog = ({
 
   const handleCancel = () => {
     if (contract) {
-      setTitle(contract.title);
+      setTitle(contract.title || contract.name || '');
     }
     onOpenChange(false);
   };
@@ -90,20 +115,20 @@ export const EditContractTitleDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Contract Title</DialogTitle>
+          <DialogTitle>Edit {contract && 'name' in contract ? 'Template' : 'Contract'} Title</DialogTitle>
           <DialogDescription>
-            Update the title for this contract
+            Update the title for this {contract && 'name' in contract ? 'template' : 'contract'}
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Contract Title</Label>
+            <Label htmlFor="title">{contract && 'name' in contract ? 'Template' : 'Contract'} Title</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter contract title"
+              placeholder={`Enter ${contract && 'name' in contract ? 'template' : 'contract'} title`}
               disabled={saving}
             />
           </div>

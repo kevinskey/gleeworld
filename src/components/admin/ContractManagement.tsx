@@ -4,12 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileText, Search, Filter, Trash2, Eye, Send, Download, RefreshCw } from "lucide-react";
+import { FileText, Search, Filter, Trash2, Eye, Send, Download, RefreshCw, Edit } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { getStatusColor, getStatusText } from "@/components/contracts/contractUtils";
+import { EditContractTitleDialog } from "@/components/contracts/EditContractTitleDialog";
 
 export const ContractManagement = () => {
   const { user } = useAuth();
@@ -27,6 +28,10 @@ export const ContractManagement = () => {
   const [contractTemplates, setContractTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Edit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [contractToEdit, setContractToEdit] = useState<any>(null);
 
   // Fetch all contracts data for admin view
   const fetchAllContractsData = async () => {
@@ -270,6 +275,22 @@ export const ContractManagement = () => {
       title: "Download Started",
       description: `Downloading: ${title}`,
     });
+  };
+
+  const handleEditContract = (contract: any) => {
+    setContractToEdit(contract);
+    setEditDialogOpen(true);
+  };
+
+  const handleContractUpdated = (updatedContract: any) => {
+    if (activeTab === "all-contracts") {
+      setAllContracts(prev => prev.map(c => c.id === updatedContract.id ? { ...c, ...updatedContract } : c));
+    }
+    if (activeTab === "templates") {
+      setContractTemplates(prev => prev.map(t => t.id === updatedContract.id ? { ...t, ...updatedContract } : t));
+    }
+    // Refresh data to ensure consistency
+    fetchAllContractsData();
   };
 
   // Filter and sort current data
@@ -580,6 +601,17 @@ export const ContractManagement = () => {
                       >
                         <Eye className="h-3 w-3" />
                       </Button>
+                      {(activeTab === "all-contracts" || activeTab === "templates") && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleEditContract(item)}
+                          title="Edit Title"
+                          className="h-8 w-8 p-0"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                      )}
                       {activeTab !== "signatures" && (
                         <Button
                           variant="secondary"
@@ -621,6 +653,14 @@ export const ContractManagement = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Contract Dialog */}
+      <EditContractTitleDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        contract={contractToEdit}
+        onContractUpdated={handleContractUpdated}
+      />
     </div>
   );
 };
