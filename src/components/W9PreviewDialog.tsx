@@ -58,18 +58,25 @@ export const W9PreviewDialog = ({ open, onOpenChange, form, onDownload }: W9Prev
         }
       } else {
         console.log('W9PreviewDialog: Not loading file', { hasFile, open: !!open, form: !!form });
+        // Clear the URL if dialog is closed or no file
+        if (!open && pdfUrl) {
+          URL.revokeObjectURL(pdfUrl);
+          setPdfUrl(null);
+        }
       }
     };
 
     loadFile();
+  }, [hasFile, hasJpgFile, open, form?.id, formData.jpg_storage_path, form?.storage_path]);
 
+  // Cleanup effect for URL revocation
+  useEffect(() => {
     return () => {
       if (pdfUrl) {
         URL.revokeObjectURL(pdfUrl);
-        setPdfUrl(null);
       }
     };
-  }, [hasFile, hasJpgFile, open, form?.storage_path, pdfUrl, form]);
+  }, [pdfUrl]);
 
   if (!form) {
     return (
