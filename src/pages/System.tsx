@@ -6,16 +6,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from "@/components/ui/button";
 import { SystemDashboard } from "@/components/admin/SystemDashboard";
 import { UserManagement } from "@/components/admin/UserManagement";
-import { PaymentManagement } from "@/components/admin/PaymentManagement";
 import { W9Management } from "@/components/admin/W9Management";
 import { FinancialSystem } from "@/components/admin/FinancialSystem";
 import { ContractManagement } from "@/components/admin/ContractManagement";
-import { FinancialOverview } from "@/components/admin/financial/FinancialOverview";
-import { UserFinancialRecords } from "@/components/admin/financial/UserFinancialRecords";
-import { PaymentTracking } from "@/components/admin/financial/PaymentTracking";
-import { StipendManagement } from "@/components/admin/financial/StipendManagement";
-import { BudgetTracking } from "@/components/admin/financial/BudgetTracking";
-import { FinancialReports } from "@/components/admin/financial/FinancialReports";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useUsers } from "@/hooks/useUsers";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
@@ -288,36 +281,12 @@ const System = () => {
             <ContractManagement />
           </TabsContent>
 
-          <TabsContent value="payments" className="space-y-4">
-            <PaymentManagement />
-          </TabsContent>
-
           <TabsContent value="w9" className="space-y-4">
             <W9Management />
           </TabsContent>
 
-          <TabsContent value="financial-overview" className="space-y-4">
-            <FinancialOverview />
-          </TabsContent>
-
-          <TabsContent value="user-records" className="space-y-4">
-            <UserFinancialRecords />
-          </TabsContent>
-
-          <TabsContent value="payment-tracking" className="space-y-4">
-            <PaymentTracking />
-          </TabsContent>
-
-          <TabsContent value="stipends" className="space-y-4">
-            <StipendManagement />
-          </TabsContent>
-
-          <TabsContent value="budget" className="space-y-4">
-            <BudgetTracking />
-          </TabsContent>
-
-          <TabsContent value="reports" className="space-y-4">
-            <FinancialReports />
+          <TabsContent value="financial" className="space-y-4">
+            <FinancialSystem />
           </TabsContent>
 
           <TabsContent value="library" className="space-y-4">
