@@ -5,14 +5,46 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter, Download, Eye, User } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Search, Filter, Download, Eye, User, DollarSign, Activity, Calendar } from "lucide-react";
 import { useAdminUserRecords } from "@/hooks/useAdminUserRecords";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface UserRecord {
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  totalRecords: number;
+  currentBalance: number;
+  hasRecords: boolean;
+  lastActivity: string | null;
+}
+
+interface FinanceRecord {
+  id: string;
+  amount: number;
+  balance: number;
+  category: string;
+  date: string;
+  description: string;
+  type: string;
+  notes?: string;
+  reference?: string;
+  created_at: string;
+}
 
 export const UserFinancialRecords = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null);
+  const [userFinanceRecords, setUserFinanceRecords] = useState<FinanceRecord[]>([]);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  
   const { userRecords, loading, error } = useAdminUserRecords();
+  const { toast } = useToast();
 
   const filteredRecords = userRecords?.filter(record => {
     const matchesSearch = !searchTerm || 
@@ -29,6 +61,62 @@ export const UserFinancialRecords = () => {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
+  };
+
+  const handlePreviewUser = async (record: UserRecord) => {
+    setSelectedUser(record);
+    setLoadingPreview(true);
+    setPreviewOpen(true);
+
+    try {
+      const { data: financeData, error } = await supabase
+        .from('finance_records')
+        .select('*')
+        .eq('user_id', record.user_id)
+        .order('date', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      setUserFinanceRecords(financeData || []);
+    } catch (error) {
+      console.error('Error loading user finance records:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load user finance records",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
+  const exportUserRecords = () => {
+    const csvContent = [
+      ['Name', 'Email', 'Current Balance', 'Total Records', 'Status', 'Last Activity'].join(','),
+      ...filteredRecords.map(record => [
+        record.user_name || 'N/A',
+        record.user_email || 'N/A',
+        record.currentBalance.toString(),
+        record.totalRecords.toString(),
+        record.hasRecords ? 'Active' : 'No Records',
+        record.lastActivity ? new Date(record.lastActivity).toLocaleDateString() : 'N/A'
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `user-financial-records-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+    toast({
+      title: "Export Complete",
+      description: `Exported ${filteredRecords.length} user records to CSV`,
+    });
   };
 
   if (loading) {
@@ -57,27 +145,28 @@ export const UserFinancialRecords = () => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              User Financial Records
-            </CardTitle>
-            <CardDescription>
-              Overview of all user financial activities and balances
-            </CardDescription>
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                User Financial Records
+              </CardTitle>
+              <CardDescription>
+                Overview of all user financial activities and balances ({filteredRecords.length} users)
+              </CardDescription>
+            </div>
+            <Button variant="outline" onClick={exportUserRecords} className="w-full sm:w-auto">
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
           </div>
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1">
+        </CardHeader>
+        <CardContent>
+          {/* Mobile-First Filters */}
+          <div className="space-y-4 mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
@@ -87,66 +176,213 @@ export const UserFinancialRecords = () => {
                 className="pl-9"
               />
             </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Users</SelectItem>
+                  <SelectItem value="has_records">Has Records</SelectItem>
+                  <SelectItem value="no_records">No Records</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[180px]">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Users</SelectItem>
-              <SelectItem value="has_records">Has Records</SelectItem>
-              <SelectItem value="no_records">No Records</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
 
-        <div className="space-y-4">
-          {filteredRecords.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <User className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-medium mb-2">No records found</h3>
-              <p className="text-sm">
-                {searchTerm ? "Try adjusting your search terms" : "No financial records available"}
-              </p>
+          {/* Mobile-Optimized Records List */}
+          <div className="space-y-3">
+            {filteredRecords.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <User className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <h3 className="text-lg font-medium mb-2">No records found</h3>
+                <p className="text-sm">
+                  {searchTerm ? "Try adjusting your search terms" : "No financial records available"}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredRecords.map((record) => (
+                  <Card key={record.user_id} className="hover:shadow-md transition-all duration-200 animate-fade-in">
+                    <CardContent className="p-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        {/* User Info */}
+                        <div className="flex items-start gap-3 min-w-0 flex-1">
+                          <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full flex-shrink-0">
+                            <User className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm sm:text-base truncate">
+                              {record.user_name || 'No name'}
+                            </p>
+                            <p className="text-xs sm:text-sm text-gray-600 truncate">
+                              {record.user_email}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge variant={record.hasRecords ? "default" : "secondary"} className="text-xs">
+                                {record.hasRecords ? "Active" : "No Records"}
+                              </Badge>
+                              {record.lastActivity && (
+                                <span className="text-xs text-gray-500 hidden sm:inline">
+                                  Last: {new Date(record.lastActivity).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Financial Stats - Mobile Layout */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                          <div className="flex flex-row sm:flex-col gap-4 sm:gap-0 text-left sm:text-right">
+                            <div>
+                              <p className="font-medium text-sm sm:text-base">{formatCurrency(record.currentBalance)}</p>
+                              <p className="text-xs text-gray-500">Balance</p>
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm sm:text-base">{record.totalRecords}</p>
+                              <p className="text-xs text-gray-500">Records</p>
+                            </div>
+                          </div>
+                          
+                          {/* Action Button */}
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handlePreviewUser(record)}
+                            className="w-full sm:w-auto hover-scale"
+                          >
+                            <Eye className="h-4 w-4 sm:mr-0 mr-2" />
+                            <span className="sm:hidden">View Details</span>
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Preview Dialog */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Financial Records: {selectedUser?.user_name || selectedUser?.user_email}
+            </DialogTitle>
+            <DialogDescription>
+              Detailed financial activity for this user
+            </DialogDescription>
+          </DialogHeader>
+          
+          {loadingPreview ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-2">Loading records...</span>
             </div>
           ) : (
-            <div className="space-y-2">
-              {filteredRecords.map((record) => (
-                <div key={record.user_id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full">
-                      <User className="h-5 w-5 text-blue-600" />
+            <div className="space-y-6 max-h-[60vh] overflow-y-auto">
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-green-600" />
+                      <div>
+                        <p className="text-sm text-gray-600">Current Balance</p>
+                        <p className="text-lg font-bold">{formatCurrency(selectedUser?.currentBalance || 0)}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">{record.user_name || 'No name'}</p>
-                      <p className="text-sm text-gray-600">{record.user_email}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-4 w-4 text-blue-600" />
+                      <div>
+                        <p className="text-sm text-gray-600">Total Records</p>
+                        <p className="text-lg font-bold">{selectedUser?.totalRecords || 0}</p>
+                      </div>
                     </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-purple-600" />
+                      <div>
+                        <p className="text-sm text-gray-600">Last Activity</p>
+                        <p className="text-lg font-bold">
+                          {selectedUser?.lastActivity 
+                            ? new Date(selectedUser.lastActivity).toLocaleDateString() 
+                            : 'None'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Records List */}
+              <div className="space-y-3">
+                <h4 className="font-medium">Transaction History</h4>
+                {userFinanceRecords.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Activity className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                    <p>No financial records found</p>
                   </div>
-                  <div className="flex items-center gap-4 text-right">
-                    <div>
-                      <p className="font-medium">{formatCurrency(record.currentBalance)}</p>
-                      <p className="text-sm text-gray-500">Current Balance</p>
-                    </div>
-                    <div>
-                      <p className="font-medium">{record.totalRecords}</p>
-                      <p className="text-sm text-gray-500">Records</p>
-                    </div>
-                    <div>
-                      <Badge variant={record.hasRecords ? "default" : "secondary"}>
-                        {record.hasRecords ? "Active" : "No Records"}
-                      </Badge>
-                    </div>
-                    <Button size="sm" variant="outline">
-                      <Eye className="h-4 w-4" />
-                    </Button>
+                ) : (
+                  <div className="space-y-2">
+                    {userFinanceRecords.map((record) => (
+                      <div key={record.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="flex-1">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <p className="font-medium">{record.description}</p>
+                            <Badge variant="outline" className="text-xs w-fit">
+                              {record.category}
+                            </Badge>
+                          </div>
+                          <div className="flex flex-col sm:flex-row gap-2 mt-1 text-sm text-gray-600">
+                            <span>{new Date(record.date).toLocaleDateString()}</span>
+                            <span className="hidden sm:inline">•</span>
+                            <span className="capitalize">{record.type}</span>
+                            {record.reference && (
+                              <>
+                                <span className="hidden sm:inline">•</span>
+                                <span>Ref: {record.reference}</span>
+                              </>
+                            )}
+                          </div>
+                          {record.notes && (
+                            <p className="text-sm text-gray-500 mt-1">{record.notes}</p>
+                          )}
+                        </div>
+                        <div className="flex flex-row sm:flex-col gap-4 sm:gap-1 text-right mt-2 sm:mt-0">
+                          <div>
+                            <p className={`font-medium ${record.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {record.amount >= 0 ? '+' : ''}{formatCurrency(record.amount)}
+                            </p>
+                            <p className="text-xs text-gray-500">Amount</p>
+                          </div>
+                          <div>
+                            <p className="font-medium">{formatCurrency(record.balance)}</p>
+                            <p className="text-xs text-gray-500">Balance</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              ))}
+                )}
+              </div>
             </div>
           )}
-        </div>
-      </CardContent>
-    </Card>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
