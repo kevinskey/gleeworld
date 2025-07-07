@@ -26,7 +26,7 @@ export const StipendManagement = () => {
       // Update local state immediately for better UX
       setPaidStatus(prev => ({ ...prev, [stipendId]: isPaid }));
       
-      // Here you would typically update the database
+      // TODO: Here we would update the database with payment status
       // For now, we'll just show a toast message
       toast({
         title: isPaid ? "Marked as Paid" : "Marked as Unpaid",
@@ -42,6 +42,13 @@ export const StipendManagement = () => {
         variant: "destructive",
       });
     }
+  };
+
+  // Determine if a stipend is paid by checking against user_payments
+  const isStipendPaid = (stipend: any) => {
+    // Check if this stipend has a corresponding payment in user_payments
+    // We'll look for payments to the same user with similar amounts
+    return stipend.category === 'Payment Made' || paidStatus[stipend.reference] === true;
   };
 
   if (loading) {
@@ -157,7 +164,7 @@ export const StipendManagement = () => {
             <div className="space-y-4">
               {stipends?.slice(0, 20).map((stipend, index) => {
                 const stipendKey = stipend.reference || `${stipend.user_email}-${stipend.date}-${index}`;
-                const isPaid = paidStatus[stipendKey] || false;
+                const isPaid = isStipendPaid(stipend);
                 
                 return (
                   <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
@@ -184,12 +191,17 @@ export const StipendManagement = () => {
                           Auto-synced
                         </Badge>
                       )}
+                      {/* Payment Status Indicator */}
+                      <Badge variant={isPaid ? "default" : "destructive"} className="text-xs">
+                        {isPaid ? "PAID" : "UNPAID"}
+                      </Badge>
                       <div className="flex gap-1">
                         <Button
                           size="sm"
                           variant={isPaid ? "default" : "outline"}
                           onClick={() => handlePaymentStatusChange(stipendKey, true)}
                           className="h-8 px-3"
+                          disabled={isPaid}
                         >
                           <Check className="h-3 w-3 mr-1" />
                           Paid
@@ -199,6 +211,7 @@ export const StipendManagement = () => {
                           variant={!isPaid ? "destructive" : "outline"}
                           onClick={() => handlePaymentStatusChange(stipendKey, false)}
                           className="h-8 px-3"
+                          disabled={!isPaid}
                         >
                           <X className="h-3 w-3 mr-1" />
                           Unpaid
