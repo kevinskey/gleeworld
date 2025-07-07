@@ -106,13 +106,22 @@ export const AddBatchStipendDialog = ({ onSuccess }: AddBatchStipendDialogProps)
   const processBatch = async () => {
     setLoading(true);
     try {
+      console.log('Starting batch process with entries:', entries);
+      
       const recordsToInsert = [];
       
       for (const entry of entries) {
-        if (!entry.username || !entry.amount || !entry.description) continue;
+        console.log('Processing entry:', entry);
+        
+        if (!entry.username || !entry.amount || !entry.description) {
+          console.log('Skipping entry due to missing fields:', { username: entry.username, amount: entry.amount, description: entry.description });
+          continue;
+        }
         
         // Find user by the selected value
         const selectedUser = users.find(user => user.value === entry.username);
+        console.log('Found user:', selectedUser);
+        
         if (!selectedUser) {
           toast({
             title: "User Not Found",
@@ -122,7 +131,7 @@ export const AddBatchStipendDialog = ({ onSuccess }: AddBatchStipendDialogProps)
           continue;
         }
 
-        recordsToInsert.push({
+        const recordToInsert = {
           user_id: selectedUser.id,
           date: new Date().toISOString().split('T')[0],
           type: 'stipend',
@@ -132,23 +141,35 @@ export const AddBatchStipendDialog = ({ onSuccess }: AddBatchStipendDialogProps)
           balance: 0,
           reference: `Manual Entry: ${entry.contractTitle || 'Batch Process'}`,
           notes: `Batch entry - Contract: ${entry.contractTitle || 'N/A'}`
-        });
+        };
+        
+        console.log('Adding record to insert:', recordToInsert);
+        recordsToInsert.push(recordToInsert);
       }
+
+      console.log('Records to insert:', recordsToInsert);
 
       if (recordsToInsert.length === 0) {
         toast({
           title: "No Valid Entries",
-          description: "Please fill in all required fields",
+          description: "Please fill in username, amount, and description for each entry",
           variant: "destructive",
         });
         return;
       }
 
-      const { error } = await supabase
+      console.log('Inserting records into finance_records table...');
+      const { error, data } = await supabase
         .from('finance_records')
-        .insert(recordsToInsert);
+        .insert(recordsToInsert)
+        .select();
 
-      if (error) throw error;
+      console.log('Insert result:', { error, data });
+
+      if (error) {
+        console.error('Database insert error:', error);
+        throw error;
+      }
 
       toast({
         title: "Batch Process Complete",
@@ -163,7 +184,7 @@ export const AddBatchStipendDialog = ({ onSuccess }: AddBatchStipendDialogProps)
       console.error('Error processing batch:', error);
       toast({
         title: "Batch Process Failed",
-        description: "Failed to process stipend entries",
+        description: error.message || "Failed to process stipend entries",
         variant: "destructive",
       });
     } finally {
