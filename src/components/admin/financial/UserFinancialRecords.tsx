@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Search, Filter, Download, Eye, User, DollarSign, Activity, Calendar } from "lucide-react";
+import { Search, Filter, Download, Eye, User, DollarSign, Activity, Calendar, RefreshCw } from "lucide-react";
 import { useAdminUserRecords } from "@/hooks/useAdminUserRecords";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -42,8 +42,9 @@ export const UserFinancialRecords = () => {
   const [userFinanceRecords, setUserFinanceRecords] = useState<FinanceRecord[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [loadingPreview, setLoadingPreview] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   
-  const { userRecords, loading, error } = useAdminUserRecords();
+  const { userRecords, loading, error, refetch } = useAdminUserRecords();
   const { toast } = useToast();
 
   const filteredRecords = userRecords?.filter(record => {
@@ -89,6 +90,115 @@ export const UserFinancialRecords = () => {
       });
     } finally {
       setLoadingPreview(false);
+    }
+  };
+
+  const syncAllUserRecords = async () => {
+    setSyncing(true);
+    try {
+      // Get all users first
+      const { data: users } = await supabase
+        .from('profiles')
+        .select('id, full_name, email');
+
+      if (!users) {
+        throw new Error('No users found');
+      }
+
+      let totalSynced = 0;
+
+      // Process each user's contracts and sync their financial records
+      for (const user of users) {
+        try {
+          // Get user's contracts with stipend amounts
+          const { data: userContracts } = await supabase
+            .from('contracts_v2')
+            .select('*')
+            .eq('created_by', user.id)
+            .not('stipend_amount', 'is', null)
+            .gt('stipend_amount', 0);
+
+          if (userContracts && userContracts.length > 0) {
+            for (const contract of userContracts) {
+              // Check if finance record already exists for this contract
+              const { data: existingRecord } = await supabase
+                .from('finance_records')
+                .select('id')
+                .eq('user_id', user.id)
+                .eq('reference', `Contract ID: ${contract.id}`)
+                .single();
+
+              if (!existingRecord) {
+                const recordDate = new Date(contract.created_at).toISOString().split('T')[0];
+                
+                const { error: insertError } = await supabase
+                  .from('finance_records')
+                  .insert({
+                    user_id: user.id,
+                    date: recordDate,
+                    type: 'stipend',
+                    category: 'Performance',
+                    description: `Stipend from ${contract.title}`,
+                    amount: Number(contract.stipend_amount),
+                    balance: 0, // Will be recalculated
+                    reference: `Contract ID: ${contract.id}`,
+                    notes: 'Auto-synced from contract system'
+                  });
+
+                if (!insertError) {
+                  totalSynced++;
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error(`Error syncing records for user ${user.email}:`, error);
+        }
+      }
+
+      // Recalculate balances for all users
+      for (const user of users) {
+        const { data: userRecords } = await supabase
+          .from('finance_records')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: true })
+          .order('created_at', { ascending: true });
+
+        if (userRecords && userRecords.length > 0) {
+          let runningBalance = 0;
+          for (const record of userRecords) {
+            const amount = Number(record.amount);
+            if (record.type === 'stipend' || record.type === 'credit') {
+              runningBalance += amount;
+            } else if (record.type === 'receipt' || record.type === 'payment' || record.type === 'debit') {
+              runningBalance -= amount;
+            }
+            
+            await supabase
+              .from('finance_records')
+              .update({ balance: runningBalance })
+              .eq('id', record.id);
+          }
+        }
+      }
+
+      toast({
+        title: "Sync Complete",
+        description: `Synced ${totalSynced} new financial records from contracts`,
+      });
+
+      // Refresh the data
+      refetch();
+    } catch (error) {
+      console.error('Error syncing user records:', error);
+      toast({
+        title: "Sync Failed",
+        description: "Failed to sync financial records from contracts",
+        variant: "destructive",
+      });
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -158,10 +268,21 @@ export const UserFinancialRecords = () => {
                 Overview of all user financial activities and balances ({filteredRecords.length} users)
               </CardDescription>
             </div>
-            <Button variant="outline" onClick={exportUserRecords} className="w-full sm:w-auto">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button 
+                variant="default" 
+                onClick={syncAllUserRecords} 
+                disabled={syncing}
+                className="w-full sm:w-auto"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                {syncing ? 'Syncing...' : 'Sync Records'}
+              </Button>
+              <Button variant="outline" onClick={exportUserRecords} className="w-full sm:w-auto">
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
