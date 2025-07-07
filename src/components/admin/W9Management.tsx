@@ -24,6 +24,8 @@ interface W9FormAdmin {
   user_name?: string;
 }
 
+import { BatchW9ConversionDialog } from "./BatchW9ConversionDialog";
+
 export const W9Management = () => {
   const [w9Forms, setW9Forms] = useState<W9FormAdmin[]>([]);
   const [loading, setLoading] = useState(true);
@@ -324,10 +326,13 @@ export const W9Management = () => {
           <h2 className="text-xl sm:text-2xl font-bold text-white">W9 Forms Management</h2>
           <p className="text-gray-300 text-sm">Manage and review W9 tax forms</p>
         </div>
-        <Button onClick={fetchW9Forms} size="sm" className="self-start sm:self-auto">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Refresh</span>
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={fetchW9Forms} size="sm" className="self-start sm:self-auto">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Refresh</span>
+          </Button>
+          <BatchW9ConversionDialog />
+        </div>
       </div>
 
       {/* Filters and Search */}

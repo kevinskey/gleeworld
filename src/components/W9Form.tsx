@@ -393,6 +393,9 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
       // Attempt simple insert with minimal logging to avoid potential interference
       console.log('=== ATTEMPTING DATABASE INSERT ===');
       
+      // Add PDF generated flag to payload
+      (dbPayload.form_data as any).pdf_generated = true;
+      
       const { error: dbError, data: insertedData } = await supabase
         .from('w9_forms')
         .insert([dbPayload])
@@ -422,11 +425,28 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
       } else {
         console.log('=== SUCCESS: FORM SAVED TO DATABASE ===');
         console.log('Inserted data:', insertedData);
+        
+        // Convert PDF to JPG in the background
+        if (insertedData?.id) {
+          console.log('Starting background JPG conversion for form:', insertedData.id);
+          supabase.functions.invoke('convert-w9-to-jpg', {
+            body: {
+              pdfStoragePath: fileName,
+              w9FormId: insertedData.id
+            }
+          }).then(({ error: conversionError }) => {
+            if (conversionError) {
+              console.error('JPG conversion failed:', conversionError);
+            } else {
+              console.log('JPG conversion completed successfully');
+            }
+          });
+        }
       }
 
       toast({
         title: "W9 Form Submitted Successfully",
-        description: "Your W9 form has been submitted and saved as a PDF with your signature.",
+        description: "Your W9 form has been submitted and saved as PDF and JPG with your signature.",
       });
 
       if (onSuccess) {

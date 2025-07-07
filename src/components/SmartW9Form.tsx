@@ -347,7 +347,7 @@ export const SmartW9Form = ({ onSuccess, initialData }: SmartW9FormProps) => {
         throw new Error('Failed to upload PDF: ' + uploadError.message);
       }
       
-      const { error: dbError } = await supabase
+      const { error: dbError, data: insertedForm } = await supabase
         .from('w9_forms')
         .insert({
           user_id: user?.id || null,
@@ -357,18 +357,38 @@ export const SmartW9Form = ({ onSuccess, initialData }: SmartW9FormProps) => {
             email: emailToUse,
             submissionType: user ? 'authenticated' : 'guest',
             submissionTimestamp: new Date().toISOString(),
-            ocrProcessed: !!initialData
+            ocrProcessed: !!initialData,
+            pdf_generated: true
           },
           status: 'submitted'
-        });
+        })
+        .select()
+        .single();
 
       if (dbError) {
         throw new Error(`Database insertion failed: ${dbError.message}`);
       }
 
+      // Convert PDF to JPG in the background
+      if (insertedForm?.id) {
+        console.log('Starting background JPG conversion for form:', insertedForm.id);
+        supabase.functions.invoke('convert-w9-to-jpg', {
+          body: {
+            pdfStoragePath: fileName,
+            w9FormId: insertedForm.id
+          }
+        }).then(({ error: conversionError }) => {
+          if (conversionError) {
+            console.error('JPG conversion failed:', conversionError);
+          } else {
+            console.log('JPG conversion completed successfully');
+          }
+        });
+      }
+
       toast({
         title: "W9 Form Submitted Successfully",
-        description: "Your W9 form has been submitted and saved.",
+        description: "Your W9 form has been submitted and saved as PDF and JPG.",
       });
 
       if (onSuccess) {
