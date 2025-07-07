@@ -34,6 +34,7 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
   const [importUsersOpen, setImportUsersOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userReadyToPayStatus, setUserReadyToPayStatus] = useState<Record<string, boolean>>({});
+  const [userStipendAmounts, setUserStipendAmounts] = useState<Record<string, number>>({});
   const { toast } = useToast();
 
   const getRoleBadgeVariant = (role: string) => {
@@ -125,6 +126,45 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
     });
   };
 
+  // Fetch stipend amounts from current contracts
+  const fetchUserStipendAmounts = async () => {
+    try {
+      const stipendMap: Record<string, number> = {};
+      
+      for (const user of users) {
+        console.log('Fetching stipend amount for user:', user.email);
+        
+        // Get the most recent completed contract with stipend amount
+        const { data: contractData, error: contractError } = await supabase
+          .from('contracts_v2')
+          .select(`
+            stipend_amount,
+            contract_signatures_v2!inner(status)
+          `)
+          .eq('created_by', user.id)
+          .eq('contract_signatures_v2.status', 'completed')
+          .not('stipend_amount', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (contractError) {
+          console.error('Error fetching contract stipend for user:', user.email, contractError);
+          continue;
+        }
+
+        if (contractData && contractData.length > 0 && contractData[0].stipend_amount) {
+          stipendMap[user.id] = Number(contractData[0].stipend_amount);
+          console.log('Stipend found for', user.email, ':', contractData[0].stipend_amount);
+        }
+      }
+      
+      console.log('Stipend amounts map:', stipendMap);
+      setUserStipendAmounts(stipendMap);
+    } catch (error) {
+      console.error('Error fetching user stipend amounts:', error);
+    }
+  };
+
   // Check if user has completed contracts/W9s and is ready to pay
   const checkUserReadyToPayStatus = async () => {
     try {
@@ -183,10 +223,30 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
     }
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  };
+
+  const handlePayoutUser = (user: User) => {
+    const stipendAmount = userStipendAmounts[user.id];
+    console.log('Payout clicked for user:', user, 'Amount:', stipendAmount);
+    toast({
+      title: "Payout Initiated",
+      description: `Processing ${formatCurrency(stipendAmount)} payout for ${user.full_name || user.email}`,
+    });
+    
+    // You can add actual payout processing logic here
+    // For example, navigate to payment processing page or open payment dialog
+  };
+
   // Check status when component mounts or users change
   useEffect(() => {
     if (users.length > 0 && !loading) {
       checkUserReadyToPayStatus();
+      fetchUserStipendAmounts();
     }
   }, [users, loading]);
 
@@ -389,19 +449,31 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
                         </div>
                       </div>
                       
-                      {/* Action Buttons */}
-                      <div className="flex gap-2 flex-shrink-0">
-                        {userReadyToPayStatus[user.id] && (
-                          <Button
-                            size="sm"
-                            variant="default"
-                            onClick={() => handleReadyToPay(user)}
-                            className="bg-green-600 hover:bg-green-700 text-white flex-1 sm:flex-none"
-                          >
-                            <DollarSign className="h-4 w-4 sm:mr-0 mr-2" />
-                            <span className="sm:hidden">Ready to Pay</span>
-                          </Button>
-                        )}
+                       {/* Action Buttons */}
+                       <div className="flex gap-2 flex-shrink-0">
+                         {userStipendAmounts[user.id] && (
+                           <Button
+                             size="sm"
+                             variant="default"
+                             onClick={() => handlePayoutUser(user)}
+                             className="bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none"
+                           >
+                             <DollarSign className="h-4 w-4 sm:mr-0 mr-2" />
+                             <span className="sm:hidden">Payout {formatCurrency(userStipendAmounts[user.id])}</span>
+                             <span className="hidden sm:inline">{formatCurrency(userStipendAmounts[user.id])}</span>
+                           </Button>
+                         )}
+                         {userReadyToPayStatus[user.id] && (
+                           <Button
+                             size="sm"
+                             variant="default"
+                             onClick={() => handleReadyToPay(user)}
+                             className="bg-green-600 hover:bg-green-700 text-white flex-1 sm:flex-none"
+                           >
+                             <DollarSign className="h-4 w-4 sm:mr-0 mr-2" />
+                             <span className="sm:hidden">Ready to Pay</span>
+                           </Button>
+                         )}
                         <Button
                           size="sm"
                           variant="secondary"
