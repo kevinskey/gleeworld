@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useAdminPayments } from "@/hooks/useAdminPayments";
 import { useUsers } from "@/hooks/useUsers";
-import { useContracts } from "@/hooks/useContracts";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AddPaymentDialogProps {
   open: boolean;
@@ -16,10 +16,16 @@ interface AddPaymentDialogProps {
   onSuccess: () => void;
 }
 
+interface AllContracts {
+  id: string;
+  title: string;
+  type: 'contract_v2' | 'generated_contract';
+}
+
 export const AddPaymentDialog = ({ open, onOpenChange, onSuccess }: AddPaymentDialogProps) => {
   const { createPayment } = useAdminPayments();
   const { users } = useUsers();
-  const { contracts } = useContracts();
+  const [allContracts, setAllContracts] = useState<AllContracts[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     user_id: '',
@@ -29,6 +35,38 @@ export const AddPaymentDialog = ({ open, onOpenChange, onSuccess }: AddPaymentDi
     payment_method: 'check',
     notes: '',
   });
+
+  // Fetch all contracts from both tables
+  useEffect(() => {
+    const fetchAllContracts = async () => {
+      try {
+        // Fetch from contracts_v2
+        const { data: contractsV2 } = await supabase
+          .from('contracts_v2')
+          .select('id, title')
+          .order('title');
+
+        // Fetch from generated_contracts
+        const { data: generatedContracts } = await supabase
+          .from('generated_contracts')
+          .select('id, event_name')
+          .order('event_name');
+
+        const combined: AllContracts[] = [
+          ...(contractsV2?.map(c => ({ id: c.id, title: c.title, type: 'contract_v2' as const })) || []),
+          ...(generatedContracts?.map(c => ({ id: c.id, title: c.event_name, type: 'generated_contract' as const })) || [])
+        ];
+
+        setAllContracts(combined);
+      } catch (error) {
+        console.error('Error fetching contracts:', error);
+      }
+    };
+
+    if (open) {
+      fetchAllContracts();
+    }
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,9 +140,9 @@ export const AddPaymentDialog = ({ open, onOpenChange, onSuccess }: AddPaymentDi
                 <SelectValue placeholder="Select a contract (optional)" />
               </SelectTrigger>
               <SelectContent>
-                {contracts.map((contract) => (
+                {allContracts.map((contract) => (
                   <SelectItem key={contract.id} value={contract.id}>
-                    {contract.title}
+                    {contract.title} ({contract.type === 'contract_v2' ? 'Contract' : 'Event'})
                   </SelectItem>
                 ))}
               </SelectContent>
