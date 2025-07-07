@@ -111,6 +111,21 @@ export const useAdminPayments = () => {
 
       if (error) throw error;
 
+      // Create corresponding finance record
+      await supabase
+        .from('finance_records')
+        .insert([{
+          user_id: paymentData.user_id,
+          date: paymentData.payment_date,
+          type: 'payment',
+          category: 'Payment',
+          description: `Payment received via ${paymentData.payment_method}`,
+          amount: -paymentData.amount, // Negative because it's money going out to the user
+          balance: 0, // Will be recalculated by sync function
+          reference: paymentData.contract_id ? `Contract ID: ${paymentData.contract_id}` : `Payment ID: ${data.id}`,
+          notes: paymentData.notes || 'Payment processed through admin panel'
+        }]);
+
       // Create notification for the user
       await supabase
         .from('user_notifications')
