@@ -103,7 +103,7 @@ export const StipendManagement = () => {
             <div className="flex gap-2">
               <Button onClick={syncContractStipends} variant="secondary" size="sm">
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Sync Contracts
+                Update from Signed Contracts
               </Button>
               <Button onClick={() => refetch()} variant="secondary" size="sm">
                 <RefreshCw className="h-4 w-4 mr-2" />
