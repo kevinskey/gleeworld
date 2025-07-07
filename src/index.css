@@ -19,8 +19,8 @@
     --primary: 203 85% 63%; /* #55bbee converted to HSL */
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 217 32% 17%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 217 32% 20%;
+    --secondary-foreground: 210 40% 95%;
 
     --muted: 217 32% 17%;
     --muted-foreground: 215 20% 65%;
@@ -32,7 +32,7 @@
     --destructive-foreground: 210 40% 98%;
 
     --border: 217 32% 17%;
-    --input: 0 0% 100%; /* White background for inputs */
+    --input: 217 32% 17%; /* Dark input background for better contrast */
     --ring: 203 85% 63%; /* #55bbee ring */
 
     --radius: 0.75rem;
