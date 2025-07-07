@@ -49,12 +49,12 @@ export const W9CameraCapture = () => {
         throw new Error('Camera interface failed to load. Please close and reopen the dialog.');
       }
       
-      // Portrait constraints for 8.5x11 document capture
+      // Portrait constraints for 8.5x11 document capture (8.5:11 ratio ≈ 0.77:1)
       let constraints = {
         video: { 
           facingMode: { ideal: 'environment' },
-          width: { ideal: 720, min: 480 },
-          height: { ideal: 960, min: 640 }  // Portrait ratio for documents
+          width: { ideal: 1056, min: 720 },   // 8.5 * 124 ≈ 1056
+          height: { ideal: 1364, min: 936 }   // 11 * 124 ≈ 1364 (8.5:11 ratio)
         },
         audio: false
       };
@@ -344,7 +344,7 @@ export const W9CameraCapture = () => {
       setIsOpen(false);
       
       // Process OCR in background without blocking UI
-      processOCRInBackground(fileName);
+      setTimeout(() => processOCRInBackground(fileName, capturedImage), 1000);
       
     } catch (error) {
       console.error('Error processing W9 form:', error);
@@ -406,12 +406,25 @@ export const W9CameraCapture = () => {
     });
   };
 
-  const processOCRInBackground = async (fileName: string) => {
+  const processOCRInBackground = async (fileName: string, imageDataUrl: string) => {
     try {
-      console.log('Starting background OCR processing...');
+      console.log('Starting background OCR processing for:', fileName);
       
-      if (!capturedImage) {
+      if (!imageDataUrl) {
         console.error('No captured image available for OCR');
+        // Mark OCR as attempted but failed due to no image
+        await supabase
+          .from('w9_forms')
+          .update({
+            form_data: {
+              capture_method: 'camera_manual',
+              captured_at: new Date().toISOString(),
+              ocr_attempted: true,
+              ocr_successful: false,
+              ocr_error: 'No captured image available'
+            }
+          })
+          .eq('storage_path', fileName);
         return;
       }
       
@@ -430,7 +443,7 @@ export const W9CameraCapture = () => {
       await new Promise((resolve, reject) => {
         img.onload = resolve;
         img.onerror = () => reject(new Error('Failed to load image'));
-        img.src = capturedImage;
+        img.src = imageDataUrl;
         
         // Timeout for image loading
         setTimeout(() => reject(new Error('Image loading timeout')), 5000);
@@ -590,7 +603,7 @@ export const W9CameraCapture = () => {
 
           {isCapturing && (
             <div className="space-y-4">
-              <div className="relative bg-black rounded-lg overflow-hidden" style={{ aspectRatio: '16/9', minHeight: '300px' }}>
+              <div className="relative bg-black rounded-lg overflow-hidden" style={{ aspectRatio: '8.5/11', minHeight: '400px' }}>
                 <video
                   ref={videoRef}
                   autoPlay
