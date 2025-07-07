@@ -25,10 +25,22 @@ export const W9PreviewDialog = ({ open, onOpenChange, form, onDownload }: W9Prev
   useEffect(() => {
     const loadFile = async () => {
       if (hasFile && open && form) {
+        console.log('W9PreviewDialog: Loading file...', {
+          hasFile,
+          hasJpgFile,
+          hasPdfFile,
+          filePath: hasJpgFile ? formData.jpg_storage_path : form.storage_path,
+          formData
+        });
+        
         setLoading(true);
         try {
           // Prefer JPG over PDF if available
           const filePath = hasJpgFile ? formData.jpg_storage_path : form.storage_path;
+          
+          if (!filePath) {
+            throw new Error('No file path available');
+          }
           
           const { data, error } = await supabase.storage
             .from('w9-forms')
@@ -37,12 +49,15 @@ export const W9PreviewDialog = ({ open, onOpenChange, form, onDownload }: W9Prev
           if (error) throw error;
 
           const url = URL.createObjectURL(data);
+          console.log('W9PreviewDialog: File loaded successfully', { url, fileSize: data.size });
           setPdfUrl(url);
         } catch (error) {
-          console.error('Error loading file:', error);
+          console.error('W9PreviewDialog: Error loading file:', error);
         } finally {
           setLoading(false);
         }
+      } else {
+        console.log('W9PreviewDialog: Not loading file', { hasFile, open: !!open, form: !!form });
       }
     };
 
