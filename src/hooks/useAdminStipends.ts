@@ -58,6 +58,7 @@ export const useAdminStipends = () => {
       console.log('Fetching all contract stipend data...');
 
       // Fetch all contract signatures with stipend amounts (these represent user assignments to contracts)
+      // Only show COMPLETED contracts
       const { data: contractSignatures, error: signaturesError } = await supabase
         .from('contract_signatures')
         .select(`
@@ -67,7 +68,8 @@ export const useAdminStipends = () => {
           contracts_v2!inner(id, title, stipend_amount, created_at, status)
         `)
         .not('contracts_v2.stipend_amount', 'is', null)
-        .gt('contracts_v2.stipend_amount', 0);
+        .gt('contracts_v2.stipend_amount', 0)
+        .eq('contracts_v2.status', 'completed');
 
       if (signaturesError) {
         console.error('Error fetching contract signatures:', signaturesError);
@@ -75,6 +77,7 @@ export const useAdminStipends = () => {
       }
 
       // Fetch all contract user assignments with stipend amounts
+      // Only show COMPLETED contracts
       const { data: contractAssignments, error: assignmentsError } = await supabase
         .from('contract_user_assignments')
         .select(`
@@ -84,7 +87,8 @@ export const useAdminStipends = () => {
           generated_contracts!inner(id, event_name, stipend, created_at, status)
         `)
         .not('generated_contracts.stipend', 'is', null)
-        .gt('generated_contracts.stipend', 0);
+        .gt('generated_contracts.stipend', 0)
+        .eq('generated_contracts.status', 'completed');
 
       if (assignmentsError) {
         console.error('Error fetching contract assignments:', assignmentsError);
@@ -217,16 +221,18 @@ export const useAdminStipends = () => {
       let syncedCount = 0;
 
       // Auto-sync contracts_v2 stipends - but assign to contract recipients, not creators
+      // Only sync from COMPLETED contracts
       const { data: contractSignatures } = await supabase
         .from('contract_signatures')
         .select(`
           id,
           user_id,
           contract_id,
-          contracts_v2!inner(id, title, stipend_amount, created_at)
+          contracts_v2!inner(id, title, stipend_amount, created_at, status)
         `)
         .not('contracts_v2.stipend_amount', 'is', null)
-        .gt('contracts_v2.stipend_amount', 0);
+        .gt('contracts_v2.stipend_amount', 0)
+        .eq('contracts_v2.status', 'completed');
 
       for (const signature of contractSignatures || []) {
         const contract = signature.contracts_v2 as any;
@@ -254,16 +260,18 @@ export const useAdminStipends = () => {
       }
 
       // Auto-sync generated_contracts stipends - assign to assignment recipients
+      // Only sync from COMPLETED contracts
       const { data: contractAssignments } = await supabase
         .from('contract_user_assignments')
         .select(`
           id,
           user_id,
           contract_id,
-          generated_contracts!inner(id, event_name, stipend, created_at)
+          generated_contracts!inner(id, event_name, stipend, created_at, status)
         `)
         .not('generated_contracts.stipend', 'is', null)
-        .gt('generated_contracts.stipend', 0);
+        .gt('generated_contracts.stipend', 0)
+        .eq('generated_contracts.status', 'completed');
 
       for (const assignment of contractAssignments || []) {
         const contract = assignment.generated_contracts as any;
@@ -328,12 +336,13 @@ export const useAdminStipends = () => {
 
       let syncedCount = 0;
 
-      // Sync contracts_v2 stipends
+      // Sync contracts_v2 stipends - only COMPLETED contracts
       const { data: contractsV2 } = await supabase
         .from('contracts_v2')
         .select('*')
         .not('stipend_amount', 'is', null)
-        .gt('stipend_amount', 0);
+        .gt('stipend_amount', 0)
+        .eq('status', 'completed');
 
       for (const contract of contractsV2 || []) {
         const reference = `Contract ID: ${contract.id}`;
@@ -359,12 +368,13 @@ export const useAdminStipends = () => {
         }
       }
 
-      // Sync generated_contracts stipends
+      // Sync generated_contracts stipends - only COMPLETED contracts
       const { data: generatedContracts } = await supabase
         .from('generated_contracts')
         .select('*')
         .not('stipend', 'is', null)
-        .gt('stipend', 0);
+        .gt('stipend', 0)
+        .eq('status', 'completed');
 
       for (const contract of generatedContracts || []) {
         const reference = `Generated Contract ID: ${contract.id}`;
