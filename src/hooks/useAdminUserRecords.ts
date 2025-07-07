@@ -35,7 +35,8 @@ export const useAdminUserRecords = () => {
         .eq('id', user.id)
         .single();
 
-      if (!profile || !['admin', 'super-admin'].includes(profile.role)) {
+      if (!profile || !['admin', 'super-admin'].includes(profile.role || '')) {
+        console.log('Current user role:', profile?.role);
         throw new Error('Access denied: Admin privileges required');
       }
 
