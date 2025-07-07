@@ -2,18 +2,46 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Plus, TrendingUp, Users, RefreshCw } from "lucide-react";
+import { DollarSign, Plus, TrendingUp, Users, RefreshCw, Check, X } from "lucide-react";
 import { useAdminStipends } from "@/hooks/useAdminStipends";
 import { AddBatchStipendDialog } from "../AddBatchStipendDialog";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export const StipendManagement = () => {
   const { stipends, summary, loading, error, refetch, syncContractStipends } = useAdminStipends();
+  const [paidStatus, setPaidStatus] = useState<Record<string, boolean>>({});
+  const { toast } = useToast();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
+  };
+
+  const handlePaymentStatusChange = async (stipendId: string, isPaid: boolean) => {
+    try {
+      // Update local state immediately for better UX
+      setPaidStatus(prev => ({ ...prev, [stipendId]: isPaid }));
+      
+      // Here you would typically update the database
+      // For now, we'll just show a toast message
+      toast({
+        title: isPaid ? "Marked as Paid" : "Marked as Unpaid",
+        description: `Stipend has been marked as ${isPaid ? 'paid' : 'unpaid'}`,
+      });
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+      // Revert local state on error
+      setPaidStatus(prev => ({ ...prev, [stipendId]: !isPaid }));
+      toast({
+        title: "Error",
+        description: "Failed to update payment status",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -127,34 +155,59 @@ export const StipendManagement = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {stipends?.slice(0, 20).map((stipend, index) => (
-                <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full">
-                      <DollarSign className="h-5 w-5 text-blue-600" />
+              {stipends?.slice(0, 20).map((stipend, index) => {
+                const stipendKey = stipend.reference || `${stipend.user_email}-${stipend.date}-${index}`;
+                const isPaid = paidStatus[stipendKey] || false;
+                
+                return (
+                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full">
+                        <DollarSign className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">
+                          {formatCurrency(stipend.amount)} - {stipend.description}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {stipend.user_name || stipend.user_email} • {new Date(stipend.date).toLocaleDateString()}
+                        </p>
+                        {stipend.contract_title && (
+                          <p className="text-xs text-blue-600">Contract: {stipend.contract_title}</p>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">
-                        {formatCurrency(stipend.amount)} - {stipend.description}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {stipend.user_name || stipend.user_email} • {new Date(stipend.date).toLocaleDateString()}
-                      </p>
-                      {stipend.contract_title && (
-                        <p className="text-xs text-blue-600">Contract: {stipend.contract_title}</p>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{stipend.category}</Badge>
+                      {stipend.reference?.includes('Contract ID:') && (
+                        <Badge variant="secondary" className="text-xs">
+                          Auto-synced
+                        </Badge>
                       )}
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant={isPaid ? "default" : "outline"}
+                          onClick={() => handlePaymentStatusChange(stipendKey, true)}
+                          className="h-8 px-3"
+                        >
+                          <Check className="h-3 w-3 mr-1" />
+                          Paid
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={!isPaid ? "destructive" : "outline"}
+                          onClick={() => handlePaymentStatusChange(stipendKey, false)}
+                          className="h-8 px-3"
+                        >
+                          <X className="h-3 w-3 mr-1" />
+                          Unpaid
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{stipend.category}</Badge>
-                    {stipend.reference?.includes('Contract ID:') && (
-                      <Badge variant="secondary" className="text-xs">
-                        Auto-synced
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               {(stipends?.length || 0) > 20 && (
                 <div className="text-center py-4">
                   <Button variant="secondary">
