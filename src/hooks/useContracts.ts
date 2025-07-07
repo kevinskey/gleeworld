@@ -87,7 +87,7 @@ export const useContracts = () => {
     }
   };
 
-  const createContract = async (contractData: { title: string; content: string }) => {
+  const createContract = async (contractData: { title: string; content: string; stipend_amount?: number }) => {
     try {
       if (!user) {
         throw new Error("User not authenticated");
@@ -101,7 +101,8 @@ export const useContracts = () => {
           title: contractData.title,
           content: contractData.content,
           created_by: user.id,
-          status: 'draft'
+          status: 'draft',
+          stipend_amount: contractData.stipend_amount || null
         }])
         .select()
         .single();

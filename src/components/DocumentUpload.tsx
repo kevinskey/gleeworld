@@ -91,6 +91,7 @@ export const DocumentUpload = ({
       const contractData = await createContract({
         title: contractTitle,
         content: finalContent,
+        stipend_amount: stipendAmount ? parseFloat(stipendAmount) : undefined,
       });
 
       if (!contractData) {
@@ -161,6 +162,7 @@ export const DocumentUpload = ({
       const contractData = await createContract({
         title: contractTitle,
         content: finalContent,
+        stipend_amount: stipendAmount ? parseFloat(stipendAmount) : undefined,
       });
 
       if (!contractData) {
