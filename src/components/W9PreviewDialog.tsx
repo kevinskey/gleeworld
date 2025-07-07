@@ -17,26 +17,14 @@ export const W9PreviewDialog = ({ open, onOpenChange, form, onDownload }: W9Prev
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  if (!form) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>No Form Selected</DialogTitle>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  const formData = form.form_data || {};
-  const hasJpgFile = form.storage_path && formData.jpg_generated && formData.jpg_storage_path;
-  const hasPdfFile = form.storage_path && formData.pdf_generated;
+  const formData = form?.form_data || {};
+  const hasJpgFile = form?.storage_path && formData.jpg_generated && formData.jpg_storage_path;
+  const hasPdfFile = form?.storage_path && formData.pdf_generated;
   const hasFile = hasJpgFile || hasPdfFile;
 
   useEffect(() => {
     const loadFile = async () => {
-      if (hasFile && open) {
+      if (hasFile && open && form) {
         setLoading(true);
         try {
           // Prefer JPG over PDF if available
@@ -66,7 +54,19 @@ export const W9PreviewDialog = ({ open, onOpenChange, form, onDownload }: W9Prev
         setPdfUrl(null);
       }
     };
-  }, [hasFile, hasJpgFile, open, form.storage_path, pdfUrl]);
+  }, [hasFile, hasJpgFile, open, form?.storage_path, pdfUrl, form]);
+
+  if (!form) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>No Form Selected</DialogTitle>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
