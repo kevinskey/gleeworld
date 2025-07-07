@@ -94,7 +94,13 @@
 
   body {
     @apply bg-gradient-to-br from-brand-700 via-brand-800 to-slate-900 text-foreground min-h-screen;
-    background-attachment: fixed;
+  }
+  
+  /* Only apply fixed background on larger screens */
+  @media (min-width: 768px) {
+    body {
+      background-attachment: fixed;
+    }
   }
 }
 
