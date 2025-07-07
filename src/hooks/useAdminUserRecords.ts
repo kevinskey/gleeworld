@@ -72,10 +72,13 @@ export const useAdminUserRecords = () => {
           userRecord.totalRecords += 1;
           userRecord.hasRecords = true;
           
-          // Update current balance (assuming most recent record has current balance)
-          if (!userRecord.lastActivity || new Date(record.date) > new Date(userRecord.lastActivity)) {
-            userRecord.currentBalance = record.balance || 0;
-            userRecord.lastActivity = record.date;
+          // Update current balance and last activity
+          const recordDate = new Date(record.date || record.created_at);
+          const lastActivityDate = userRecord.lastActivity ? new Date(userRecord.lastActivity) : null;
+          
+          if (!lastActivityDate || recordDate >= lastActivityDate) {
+            userRecord.currentBalance = Number(record.balance) || 0;
+            userRecord.lastActivity = record.date || record.created_at;
           }
         }
       });
