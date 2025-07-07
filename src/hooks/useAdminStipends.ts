@@ -49,92 +49,96 @@ export const useAdminStipends = () => {
         throw new Error('Access denied: Admin privileges required');
       }
 
-      console.log('Fetching comprehensive contract and stipend data...');
+      console.log('Fetching all contract stipend data...');
 
-      // Fetch stipend records from finance_records
-      const { data: financeRecords, error: financeError } = await supabase
-        .from('finance_records')
-        .select('*')
-        .eq('type', 'stipend')
-        .order('date', { ascending: false });
+      // Fetch all contract signatures with stipend amounts (these represent user assignments to contracts)
+      const { data: contractSignatures, error: signaturesError } = await supabase
+        .from('contract_signatures')
+        .select(`
+          id,
+          user_id,
+          contract_id,
+          contracts_v2!inner(id, title, stipend_amount, created_at, status)
+        `)
+        .not('contracts_v2.stipend_amount', 'is', null)
+        .gt('contracts_v2.stipend_amount', 0);
 
-      if (financeError) {
-        console.error('Error fetching finance records:', financeError);
-        throw financeError;
+      if (signaturesError) {
+        console.error('Error fetching contract signatures:', signaturesError);
+        throw signaturesError;
       }
 
-      // Fetch actual payments from user_payments table
-      const { data: userPayments, error: paymentsError } = await supabase
+      // Fetch all contract user assignments with stipend amounts
+      const { data: contractAssignments, error: assignmentsError } = await supabase
+        .from('contract_user_assignments')
+        .select(`
+          id,
+          user_id,
+          contract_id,
+          generated_contracts!inner(id, event_name, stipend, created_at, status)
+        `)
+        .not('generated_contracts.stipend', 'is', null)
+        .gt('generated_contracts.stipend', 0);
+
+      if (assignmentsError) {
+        console.error('Error fetching contract assignments:', assignmentsError);
+        throw assignmentsError;
+      }
+
+      // Fetch all user profiles
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, email');
+
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
+      // Also fetch any actual payments for context
+      const { data: userPayments } = await supabase
         .from('user_payments')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (paymentsError) {
-        console.error('Error fetching user payments:', paymentsError);
-        throw paymentsError;
-      }
-
-      // Fetch user profiles to get names and emails
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, full_name, email');
-
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-        throw profilesError;
-      }
-
-      // Create a map for quick profile lookup
-      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
-
-      // Fetch contracts with stipend amounts
-      const { data: contractsV2, error: contractsError } = await supabase
-        .from('contracts_v2')
-        .select('id, title, stipend_amount, created_at, created_by')
-        .not('stipend_amount', 'is', null)
-        .gt('stipend_amount', 0);
-
-      if (contractsError) {
-        console.error('Error fetching contracts_v2:', contractsError);
-      }
-
-      // Fetch generated contracts with stipends
-      const { data: generatedContracts, error: generatedError } = await supabase
-        .from('generated_contracts')
-        .select('id, event_name, stipend, created_at, created_by')
-        .not('stipend', 'is', null)
-        .gt('stipend', 0);
-
-      if (generatedError) {
-        console.error('Error fetching generated_contracts:', generatedError);
-      }
-
       console.log('Data fetched:', {
-        financeRecords: financeRecords?.length || 0,
-        userPayments: userPayments?.length || 0,
-        contractsV2: contractsV2?.length || 0,
-        generatedContracts: generatedContracts?.length || 0
+        contractSignatures: contractSignatures?.length || 0,
+        contractAssignments: contractAssignments?.length || 0,
+        userPayments: userPayments?.length || 0
       });
 
-      // Process existing finance records
-      const existingStipends = financeRecords?.map(record => {
-        const userProfile = profileMap.get(record.user_id);
+      // Process contract signatures (contracts_v2 assigned to users)
+      const contractSignatureStipends = contractSignatures?.map(signature => {
+        const userProfile = profileMap.get(signature.user_id);
+        const contract = signature.contracts_v2 as any;
         return {
-          amount: record.amount || 0,
-          description: record.description,
+          amount: Number(contract?.stipend_amount) || 0,
+          description: `Stipend from ${contract?.title}`,
           user_name: userProfile?.full_name || '',
           user_email: userProfile?.email || '',
-          date: record.date,
-          category: record.category,
-          reference: record.reference,
-          contract_title: record.description.includes('Stipend from') ? 
-            record.description.replace('Stipend from ', '') : undefined,
-          contract_id: record.reference?.includes('Contract ID:') ?
-            record.reference.replace('Contract ID: ', '') : undefined
+          date: new Date(contract?.created_at).toISOString().split('T')[0],
+          category: 'Contract Stipend',
+          reference: `Contract Signature: ${signature.id}`,
+          contract_title: contract?.title,
+          contract_id: contract?.id
         };
       }) || [];
 
-      // Process actual payments from user_payments table
+      // Process contract assignments (generated_contracts assigned to users)
+      const contractAssignmentStipends = contractAssignments?.map(assignment => {
+        const userProfile = profileMap.get(assignment.user_id);
+        const contract = assignment.generated_contracts as any;
+        return {
+          amount: Number(contract?.stipend) || 0,
+          description: `Stipend for ${contract?.event_name}`,
+          user_name: userProfile?.full_name || '',
+          user_email: userProfile?.email || '',
+          date: new Date(contract?.created_at).toISOString().split('T')[0],
+          category: 'Event Stipend',
+          reference: `Assignment: ${assignment.id}`,
+          contract_title: contract?.event_name,
+          contract_id: contract?.id
+        };
+      }) || [];
+
+      // Process actual payments
       const actualPayments = userPayments?.map(payment => {
         const userProfile = profileMap.get(payment.user_id);
         return {
@@ -143,61 +147,27 @@ export const useAdminStipends = () => {
           user_name: userProfile?.full_name || '',
           user_email: userProfile?.email || '',
           date: payment.payment_date || new Date(payment.created_at).toISOString().split('T')[0],
-          category: 'Payment',
-          reference: `Payment ID: ${payment.id}`,
+          category: 'Payment Made',
+          reference: `Payment: ${payment.id}`,
           contract_title: payment.contract_id ? 'Contract Payment' : 'Manual Payment',
           contract_id: payment.contract_id
         };
       }) || [];
 
-      // Process contracts_v2 that might not be in finance_records yet
-      const contractStipends = contractsV2?.map(contract => {
-        const userProfile = profileMap.get(contract.created_by);
-        return {
-          amount: Number(contract.stipend_amount) || 0,
-          description: `Stipend from ${contract.title}`,
-          user_name: userProfile?.full_name || '',
-          user_email: userProfile?.email || '',
-          date: new Date(contract.created_at).toISOString().split('T')[0],
-          category: 'Performance',
-          reference: `Contract ID: ${contract.id}`,
-          contract_title: contract.title,
-          contract_id: contract.id
-        };
-      }) || [];
+      // Combine all stipend records
+      const allStipends = [...contractSignatureStipends, ...contractAssignmentStipends, ...actualPayments];
+      
+      // Filter out zero amounts and sort by date (most recent first)
+      const validStipends = allStipends.filter(stipend => stipend.amount > 0);
+      validStipends.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-      // Process generated contracts that might not be in finance_records yet
-      const generatedStipends = generatedContracts?.map(contract => {
-        const userProfile = profileMap.get(contract.created_by);
-        return {
-          amount: Number(contract.stipend) || 0,
-          description: `Stipend for ${contract.event_name}`,
-          user_name: userProfile?.full_name || '',
-          user_email: userProfile?.email || '',
-          date: new Date(contract.created_at).toISOString().split('T')[0],
-          category: 'Performance',
-          reference: `Generated Contract ID: ${contract.id}`,
-          contract_title: contract.event_name,
-          contract_id: contract.id
-        };
-      }) || [];
-
-      // Combine all stipends and remove duplicates based on reference
-      const allStipends = [...existingStipends, ...actualPayments, ...contractStipends, ...generatedStipends];
-      const uniqueStipends = allStipends.filter((stipend, index, self) => 
-        index === self.findIndex(s => s.reference === stipend.reference)
-      );
-
-      // Sort by date (most recent first)
-      uniqueStipends.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-      setStipends(uniqueStipends);
+      setStipends(validStipends);
 
       // Calculate summary
-      const totalAmount = uniqueStipends.reduce((sum, record) => sum + record.amount, 0);
-      const totalCount = uniqueStipends.length;
+      const totalAmount = validStipends.reduce((sum, record) => sum + record.amount, 0);
+      const totalCount = validStipends.length;
       const averageAmount = totalCount > 0 ? totalAmount / totalCount : 0;
-      const uniqueUsers = new Set(uniqueStipends.map(s => s.user_email)).size;
+      const uniqueUsers = new Set(validStipends.map(s => s.user_email)).size;
 
       setSummary({
         totalAmount,
@@ -207,7 +177,7 @@ export const useAdminStipends = () => {
       });
 
       console.log('Stipend processing complete:', {
-        totalStipends: uniqueStipends.length,
+        totalStipends: validStipends.length,
         totalAmount,
         uniqueUsers
       });
