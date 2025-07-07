@@ -53,7 +53,7 @@ export const PaymentManagement = () => {
                 Track and manage user payments
               </CardDescription>
             </div>
-            <Button onClick={() => setShowAddDialog(true)} className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button onClick={() => setShowAddDialog(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Record Payment
             </Button>
@@ -65,7 +65,7 @@ export const PaymentManagement = () => {
               <DollarSign className="h-12 w-12 mx-auto text-gray-400 mb-4" />
               <h3 className="text-lg font-semibold mb-2 text-gray-900">No Payments Recorded</h3>
               <p className="text-gray-600 mb-4">Start by recording your first payment.</p>
-              <Button onClick={() => setShowAddDialog(true)} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button onClick={() => setShowAddDialog(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Record Payment
               </Button>
