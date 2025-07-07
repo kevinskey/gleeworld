@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DollarSign, Plus, TrendingUp, Users, RefreshCw } from "lucide-react";
 import { useAdminStipends } from "@/hooks/useAdminStipends";
+import { AddBatchStipendDialog } from "../AddBatchStipendDialog";
 
 export const StipendManagement = () => {
   const { stipends, summary, loading, error, refetch, syncContractStipends } = useAdminStipends();
@@ -109,10 +110,7 @@ export const StipendManagement = () => {
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
-              <Button variant="secondary" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Manual
-              </Button>
+              <AddBatchStipendDialog onSuccess={refetch} />
             </div>
           </div>
         </CardHeader>
