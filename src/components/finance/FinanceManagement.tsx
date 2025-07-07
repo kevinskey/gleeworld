@@ -97,15 +97,15 @@ export const FinanceManagement = () => {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 md:space-y-6 p-4 md:p-6">
       {/* Header with Controls */}
       <div className="glass-card p-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h2 className="text-3xl font-bold text-gradient mb-2">Finance Management</h2>
-            <p className="text-lg text-white/70">Manage stipends, receipts, payments, debits, credits, and balances with Excel-like functionality.</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-gradient mb-2">Finance Management</h2>
+            <p className="text-base md:text-lg text-white/70">Manage stipends, receipts, payments, debits, credits, and balances with Excel-like functionality.</p>
           </div>
-          <div className="flex gap-3 w-full sm:w-auto">
+          <div className="flex flex-col gap-2 md:flex-row md:gap-3 w-full md:w-auto">
             <Button 
               onClick={() => setShowAddDialog(true)}
               className="glass-button text-white font-medium flex-1 sm:flex-none"

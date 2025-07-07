@@ -97,8 +97,8 @@ export const StipendManagement = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="space-y-4 md:space-y-6 p-4 md:p-0">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Stipends</CardTitle>
@@ -141,17 +141,17 @@ export const StipendManagement = () => {
 
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
             <div>
               <CardTitle>Stipend Records</CardTitle>
               <CardDescription>All stipend transactions from contracts and manual entries</CardDescription>
             </div>
-            <div className="flex gap-2">
-              <Button onClick={syncContractStipends} variant="secondary" size="sm">
+            <div className="flex flex-col gap-2 md:flex-row">
+              <Button onClick={syncContractStipends} variant="secondary" size="sm" className="w-full md:w-auto">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Update from Signed Contracts
               </Button>
-              <Button onClick={() => refetch()} variant="secondary" size="sm">
+              <Button onClick={() => refetch()} variant="secondary" size="sm" className="w-full md:w-auto">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
