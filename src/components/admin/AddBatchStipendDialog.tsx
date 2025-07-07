@@ -219,7 +219,6 @@ export const AddBatchStipendDialog = ({ onSuccess }: AddBatchStipendDialogProps)
                     <SelectValue placeholder="Select contract (optional)" />
                   </SelectTrigger>
                   <SelectContent className="bg-background border z-50">
-                    <SelectItem value="">No contract</SelectItem>
                     {contracts.map((contract) => (
                       <SelectItem key={contract.id} value={contract.value}>
                         {contract.title}
