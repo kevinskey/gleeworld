@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +23,69 @@ export const AddBatchStipendDialog = ({ onSuccess }: AddBatchStipendDialogProps)
   const [open, setOpen] = useState(false);
   const [entries, setEntries] = useState<StipendEntry[]>([{ username: "", contractTitle: "", amount: 0, description: "" }]);
   const [loading, setLoading] = useState(false);
+  const [users, setUsers] = useState<Array<{ id: string; label: string; value: string }>>([]);
+  const [contracts, setContracts] = useState<Array<{ id: string; title: string; value: string }>>([]);
   const { toast } = useToast();
+
+  // Fetch users and contracts when dialog opens
+  useEffect(() => {
+    if (open) {
+      fetchUsersAndContracts();
+    }
+  }, [open]);
+
+  const fetchUsersAndContracts = async () => {
+    try {
+      // Fetch users
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .order('full_name');
+
+      if (profiles) {
+        const userOptions = profiles.map(profile => ({
+          id: profile.id,
+          label: profile.full_name || profile.email || 'Unknown',
+          value: profile.full_name || profile.email || profile.id
+        }));
+        setUsers(userOptions);
+      }
+
+      // Fetch contracts from both sources
+      const [contractsV2Response, generatedContractsResponse] = await Promise.all([
+        supabase.from('contracts_v2').select('id, title').order('title'),
+        supabase.from('generated_contracts').select('id, event_name').order('event_name')
+      ]);
+
+      const contractOptions = [];
+      
+      if (contractsV2Response.data) {
+        contractOptions.push(...contractsV2Response.data.map(contract => ({
+          id: contract.id,
+          title: contract.title,
+          value: contract.title
+        })));
+      }
+
+      if (generatedContractsResponse.data) {
+        contractOptions.push(...generatedContractsResponse.data.map(contract => ({
+          id: contract.id,
+          title: contract.event_name,
+          value: contract.event_name
+        })));
+      }
+
+      setContracts(contractOptions);
+
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load users and contracts",
+        variant: "destructive",
+      });
+    }
+  };
 
   const addEntry = () => {
     setEntries([...entries, { username: "", contractTitle: "", amount: 0, description: "" }]);
@@ -44,28 +106,14 @@ export const AddBatchStipendDialog = ({ onSuccess }: AddBatchStipendDialogProps)
   const processBatch = async () => {
     setLoading(true);
     try {
-      // Get all user profiles to match usernames
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name, email');
-
-      if (!profiles) {
-        throw new Error('Failed to fetch user profiles');
-      }
-
-      const profileMap = new Map();
-      profiles.forEach(profile => {
-        if (profile.full_name) profileMap.set(profile.full_name.toLowerCase(), profile);
-        if (profile.email) profileMap.set(profile.email.toLowerCase(), profile);
-      });
-
       const recordsToInsert = [];
       
       for (const entry of entries) {
         if (!entry.username || !entry.amount || !entry.description) continue;
         
-        const userProfile = profileMap.get(entry.username.toLowerCase());
-        if (!userProfile) {
+        // Find user by the selected value
+        const selectedUser = users.find(user => user.value === entry.username);
+        if (!selectedUser) {
           toast({
             title: "User Not Found",
             description: `Could not find user: ${entry.username}`,
@@ -75,7 +123,7 @@ export const AddBatchStipendDialog = ({ onSuccess }: AddBatchStipendDialogProps)
         }
 
         recordsToInsert.push({
-          user_id: userProfile.id,
+          user_id: selectedUser.id,
           date: new Date().toISOString().split('T')[0],
           type: 'stipend',
           category: 'Performance',
@@ -144,22 +192,41 @@ export const AddBatchStipendDialog = ({ onSuccess }: AddBatchStipendDialogProps)
             <div key={index} className="grid grid-cols-12 gap-4 p-4 border rounded-lg">
               <div className="col-span-3">
                 <Label htmlFor={`username-${index}`}>Username/Email</Label>
-                <Input
-                  id={`username-${index}`}
-                  placeholder="Enter username or email"
+                <Select
                   value={entry.username}
-                  onChange={(e) => updateEntry(index, 'username', e.target.value)}
-                />
+                  onValueChange={(value) => updateEntry(index, 'username', value)}
+                >
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Select user" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border z-50">
+                    {users.map((user) => (
+                      <SelectItem key={user.id} value={user.value}>
+                        {user.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="col-span-3">
                 <Label htmlFor={`contract-${index}`}>Contract Title</Label>
-                <Input
-                  id={`contract-${index}`}
-                  placeholder="Contract title (optional)"
+                <Select
                   value={entry.contractTitle}
-                  onChange={(e) => updateEntry(index, 'contractTitle', e.target.value)}
-                />
+                  onValueChange={(value) => updateEntry(index, 'contractTitle', value)}
+                >
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Select contract (optional)" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border z-50">
+                    <SelectItem value="">No contract</SelectItem>
+                    {contracts.map((contract) => (
+                      <SelectItem key={contract.id} value={contract.value}>
+                        {contract.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="col-span-2">
