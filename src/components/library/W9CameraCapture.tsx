@@ -2,7 +2,9 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Camera, Upload, FileText, Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Camera, Upload, FileText, Loader2, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +17,12 @@ export const W9CameraCapture = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [users, setUsers] = useState<Array<{id: string, full_name: string, email: string}>>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [existingW9, setExistingW9] = useState<any>(null);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [showUserSelection, setShowUserSelection] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -193,6 +201,10 @@ export const W9CameraCapture = () => {
     if (!isOpen) {
       stopCamera();
       setCapturedImage(null);
+      setShowUserSelection(false);
+      setSelectedUserId("");
+      setExistingW9(null);
+      setShowDuplicateDialog(false);
     }
     
     // Cleanup on unmount
@@ -202,6 +214,76 @@ export const W9CameraCapture = () => {
       }
     };
   }, [isOpen, stopCamera, stream]);
+
+  // Fetch all users when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchUsers();
+    }
+  }, [isOpen]);
+
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .order('full_name');
+
+      if (error) throw error;
+
+      setUsers(data || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load users",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const checkExistingW9 = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('w9_forms')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error checking for existing W9:', error);
+      return null;
+    }
+  };
+
+  const handleUserSelection = async (userId: string) => {
+    setSelectedUserId(userId);
+    
+    if (userId) {
+      const existing = await checkExistingW9(userId);
+      if (existing) {
+        setExistingW9(existing);
+        setShowDuplicateDialog(true);
+      }
+    }
+  };
+
+  const handleContinueWithDuplicate = (keepBoth: boolean) => {
+    setShowDuplicateDialog(false);
+    processW9FormForUser(selectedUserId, keepBoth);
+  };
+
+  const proceedToUserSelection = () => {
+    setShowUserSelection(true);
+  };
 
   const capturePhoto = async () => {
     if (!videoRef.current || !canvasRef.current) {
@@ -268,16 +350,39 @@ export const W9CameraCapture = () => {
     }
   };
 
-  const processW9Form = async () => {
-    if (!capturedImage || !user) return;
+  const processW9FormForUser = async (userId: string, keepBoth: boolean = true) => {
+    if (!capturedImage) return;
 
     setIsProcessing(true);
 
     try {
-      console.log('Starting W9 processing (PDF only)...');
+      console.log('Starting W9 processing for user:', userId);
+      
+      // If not keeping both and there's an existing W9, delete the old one first
+      if (!keepBoth && existingW9) {
+        const { error: deleteError } = await supabase
+          .from('w9_forms')
+          .delete()
+          .eq('id', existingW9.id);
+
+        if (deleteError) {
+          console.warn('Failed to delete existing W9:', deleteError);
+        }
+
+        // Also try to delete the old file from storage
+        if (existingW9.storage_path) {
+          const { error: storageDeleteError } = await supabase.storage
+            .from('w9-forms')
+            .remove([existingW9.storage_path]);
+
+          if (storageDeleteError) {
+            console.warn('Failed to delete existing W9 file:', storageDeleteError);
+          }
+        }
+      }
       
       // Create PDF from captured image
-      const fileName = `${user.id}/w9-form-${Date.now()}.pdf`;
+      const fileName = `${userId}/w9-form-${Date.now()}.pdf`;
       const pdfBlob = await createPDFFromImage(capturedImage);
       
       // Upload to storage
@@ -293,14 +398,15 @@ export const W9CameraCapture = () => {
       const { error: dbError } = await supabase
         .from('w9_forms')
         .insert({
-          user_id: user.id,
+          user_id: userId,
           storage_path: fileName,
           status: 'submitted',
           form_data: {
-            capture_method: 'camera_capture',
+            capture_method: 'admin_assigned',
             captured_at: new Date().toISOString(),
             pdf_generated: true,
-            requires_manual_review: true
+            requires_manual_review: true,
+            assigned_by_admin: user?.id
           }
         });
 
@@ -308,13 +414,17 @@ export const W9CameraCapture = () => {
         throw dbError;
       }
 
+      const selectedUser = users.find(u => u.id === userId);
       toast({
         title: "W9 Form Saved",
-        description: "W9 form saved successfully as PDF. Ready for admin review.",
+        description: `W9 form saved for ${selectedUser?.full_name || 'selected user'}. ${!keepBoth && existingW9 ? 'Previous W9 replaced.' : 'Ready for admin review.'}`,
       });
 
       // Reset state immediately
       setCapturedImage(null);
+      setShowUserSelection(false);
+      setSelectedUserId("");
+      setExistingW9(null);
       setIsOpen(false);
       
     } catch (error) {
@@ -326,6 +436,23 @@ export const W9CameraCapture = () => {
       });
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const processW9Form = async () => {
+    if (!selectedUserId) {
+      toast({
+        title: "Error",
+        description: "Please select a user first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // If there's an existing W9, the duplicate dialog should have handled this
+    // If no existing W9, proceed directly
+    if (!existingW9) {
+      processW9FormForUser(selectedUserId, true);
     }
   };
 
@@ -483,7 +610,7 @@ export const W9CameraCapture = () => {
             </div>
           )}
 
-          {capturedImage && (
+          {capturedImage && !showUserSelection && (
             <div className="space-y-4">
               <div className="relative">
                 <img
@@ -494,21 +621,11 @@ export const W9CameraCapture = () => {
               </div>
               <div className="flex gap-2">
                 <Button 
-                  onClick={processW9Form} 
-                  disabled={isProcessing}
+                  onClick={proceedToUserSelection} 
                   className="flex-1"
                 >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <FileText className="h-4 w-4 mr-2" />
-                      Save W9 Form
-                    </>
-                  )}
+                  <User className="h-4 w-4 mr-2" />
+                  Select User
                 </Button>
                 <Button onClick={retakePhoto} variant="outline">
                   Retake
@@ -516,7 +633,102 @@ export const W9CameraCapture = () => {
               </div>
             </div>
           )}
+
+          {capturedImage && showUserSelection && (
+            <div className="space-y-4">
+              <div className="relative mb-4">
+                <img
+                  src={capturedImage}
+                  alt="Captured W9 Form"
+                  className="w-full h-32 object-cover rounded-lg border"
+                />
+              </div>
+              
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    Assign W9 Form to User
+                  </label>
+                  {loadingUsers ? (
+                    <div className="flex items-center justify-center p-4">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Loading users...
+                    </div>
+                  ) : (
+                    <Select value={selectedUserId} onValueChange={handleUserSelection}>
+                      <SelectTrigger className="w-full bg-white">
+                        <SelectValue placeholder="Select a user..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        {users.map((user) => (
+                          <SelectItem key={user.id} value={user.id}>
+                            <div className="flex flex-col">
+                              <span>{user.full_name || 'Unnamed User'}</span>
+                              <span className="text-xs text-gray-500">{user.email}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={processW9Form} 
+                    disabled={isProcessing || !selectedUserId}
+                    className="flex-1"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Save W9 Form
+                      </>
+                    )}
+                  </Button>
+                  <Button onClick={retakePhoto} variant="outline">
+                    Retake
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Duplicate W9 Handling Dialog */}
+        <AlertDialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
+          <AlertDialogContent className="bg-white">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Existing W9 Form Found</AlertDialogTitle>
+              <AlertDialogDescription>
+                {users.find(u => u.id === selectedUserId)?.full_name || 'This user'} already has a W9 form on file. 
+                What would you like to do?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setShowDuplicateDialog(false)}>
+                Cancel
+              </AlertDialogCancel>
+              <Button 
+                variant="outline" 
+                onClick={() => handleContinueWithDuplicate(true)}
+              >
+                Keep Both
+              </Button>
+              <AlertDialogAction 
+                onClick={() => handleContinueWithDuplicate(false)}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Replace Existing
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );
