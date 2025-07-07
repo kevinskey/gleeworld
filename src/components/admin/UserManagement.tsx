@@ -131,11 +131,10 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
       const statusMap: Record<string, boolean> = {};
       
       for (const user of users) {
-        let hasValidContracts = false;
-        let hasValidW9s = false;
-
-        // Check for completed contracts with valid PDFs
-        const { data: contractData } = await supabase
+        console.log('Checking ready to pay status for user:', user.email);
+        
+        // Check for completed contracts with PDFs
+        const { data: contractData, error: contractError } = await supabase
           .from('contracts_v2')
           .select(`
             id,
@@ -145,65 +144,42 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
           .eq('contract_signatures_v2.status', 'completed')
           .not('contract_signatures_v2.pdf_storage_path', 'is', null);
 
-        if (contractData && contractData.length > 0) {
-          // Verify PDFs still exist in storage
-          for (const contract of contractData) {
-            const signatures = contract.contract_signatures_v2;
-            if (Array.isArray(signatures)) {
-              for (const sig of signatures) {
-                if (sig.pdf_storage_path) {
-                  try {
-                    const { data: fileData, error } = await supabase.storage
-                      .from('signed-contracts')
-                      .download(sig.pdf_storage_path);
-                    if (!error && fileData) {
-                      hasValidContracts = true;
-                      break;
-                    }
-                  } catch (error) {
-                    console.log('Contract PDF not found:', sig.pdf_storage_path);
-                  }
-                }
-              }
-            }
-            if (hasValidContracts) break;
-          }
+        if (contractError) {
+          console.error('Error fetching contracts for user:', user.email, contractError);
+          continue;
         }
 
-        // Check for submitted W9 forms with valid files
-        const { data: w9Data } = await supabase
+        // Check for submitted W9 forms
+        const { data: w9Data, error: w9Error } = await supabase
           .from('w9_forms')
           .select('id, storage_path')
           .eq('user_id', user.id)
           .eq('status', 'submitted')
           .not('storage_path', 'is', null);
 
-        if (w9Data && w9Data.length > 0) {
-          // Verify W9 files still exist in storage
-          for (const w9 of w9Data) {
-            if (w9.storage_path) {
-              try {
-                const { data: fileData, error } = await supabase.storage
-                  .from('w9-forms')
-                  .download(w9.storage_path);
-                if (!error && fileData) {
-                  hasValidW9s = true;
-                  break;
-                }
-              } catch (error) {
-                console.log('W9 file not found:', w9.storage_path);
-              }
-            }
-          }
+        if (w9Error) {
+          console.error('Error fetching W9s for user:', user.email, w9Error);
+          continue;
         }
 
-        // User is ready to pay only if they have both valid contracts and valid W9s
-        statusMap[user.id] = hasValidContracts && hasValidW9s;
+        const hasContracts = contractData && contractData.length > 0;
+        const hasW9s = w9Data && w9Data.length > 0;
+        
+        console.log('User', user.email, 'has contracts:', hasContracts, 'has W9s:', hasW9s);
+        
+        // User is ready to pay if they have both completed contracts and submitted W9s
+        statusMap[user.id] = hasContracts && hasW9s;
       }
       
+      console.log('Ready to pay status map:', statusMap);
       setUserReadyToPayStatus(statusMap);
     } catch (error) {
       console.error('Error checking user ready to pay status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to check user payment readiness status",
+        variant: "destructive",
+      });
     }
   };
 
@@ -215,10 +191,14 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
   }, [users, loading]);
 
   const handleReadyToPay = (user: User) => {
+    console.log('Ready to pay clicked for user:', user);
     toast({
       title: "Ready to Pay",
       description: `${user.full_name || user.email} is ready to receive payment with completed contracts and W9 forms.`,
     });
+    
+    // You can add actual payment processing logic here
+    // For example, navigate to payment page or open payment dialog
   };
 
   if (loading) {
