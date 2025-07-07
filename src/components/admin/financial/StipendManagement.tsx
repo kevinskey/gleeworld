@@ -206,16 +206,16 @@ export const StipendManagement = () => {
                         {isPaid ? "PAID" : "UNPAID"}
                       </Badge>
                        {!isPaid && (
-                         <Button
-                           size="sm"
-                           variant="outline"
-                           onClick={() => handleMarkAsPaid(stipend)}
-                           className="h-8 px-3"
-                         >
-                           <Check className="h-3 w-3 mr-1" />
-                           Mark as Paid
-                         </Button>
-                       )}
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => handleMarkAsPaid(stipend)}
+                            className="h-8 px-3"
+                          >
+                            <Check className="h-3 w-3 mr-1" />
+                            Mark as Paid
+                          </Button>
+                        )}
                     </div>
                   </div>
                 );
