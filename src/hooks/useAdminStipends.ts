@@ -108,10 +108,18 @@ export const useAdminStipends = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
+      // Fetch manually inserted finance records (stipends)
+      const { data: financeRecords } = await supabase
+        .from('finance_records')
+        .select('*')
+        .eq('type', 'stipend')
+        .order('created_at', { ascending: false });
+
       console.log('Data fetched:', {
         contractSignatures: contractSignatures?.length || 0,
         contractAssignments: contractAssignments?.length || 0,
-        userPayments: userPayments?.length || 0
+        userPayments: userPayments?.length || 0,
+        financeRecords: financeRecords?.length || 0
       });
 
       // Process contract signatures (contracts_v2 assigned to users)
@@ -164,8 +172,25 @@ export const useAdminStipends = () => {
         };
       }) || [];
 
+      // Process manually inserted finance records (stipends)
+      const manualFinanceStipends = financeRecords?.map(record => {
+        const userProfile = profileMap.get(record.user_id);
+        return {
+          amount: Number(record.amount) || 0,
+          description: record.description,
+          user_name: userProfile?.full_name || '',
+          user_email: userProfile?.email || '',
+          date: record.date,
+          category: record.category,
+          reference: record.reference || `Finance Record: ${record.id}`,
+          contract_title: record.notes?.includes('Contract:') ? 
+            record.notes.split('Contract: ')[1] : 'Manual Entry',
+          contract_id: record.id
+        };
+      }) || [];
+
       // Combine all stipend records
-      const allStipends = [...contractSignatureStipends, ...contractAssignmentStipends, ...actualPayments];
+      const allStipends = [...contractSignatureStipends, ...contractAssignmentStipends, ...actualPayments, ...manualFinanceStipends];
       
       // Filter out zero amounts and sort by date (most recent first)
       const validStipends = allStipends.filter(stipend => stipend.amount > 0);
