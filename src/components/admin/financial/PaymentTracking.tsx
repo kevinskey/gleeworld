@@ -73,7 +73,7 @@ export const PaymentTracking = () => {
                 Monitor and manage all payments ({filteredPayments.length} payments, {formatCurrency(totalAmount)} total)
               </CardDescription>
             </div>
-            <Button onClick={() => setShowAddDialog(true)}>
+            <Button onClick={() => setShowAddDialog(true)} variant="default">
               <Plus className="h-4 w-4 mr-2" />
               Record Payment
             </Button>
