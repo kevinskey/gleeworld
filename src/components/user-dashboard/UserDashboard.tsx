@@ -27,6 +27,7 @@ import { UserContractsList } from "./UserContractsList";
 import { UserPaymentsList } from "./UserPaymentsList";
 import { UserNotificationsList } from "./UserNotificationsList";
 import { UserW9FormsList } from "./UserW9FormsList";
+import { FinanceManagement } from "@/components/finance/FinanceManagement";
 import { useState } from "react";
 
 export const UserDashboard = () => {
@@ -95,9 +96,7 @@ export const UserDashboard = () => {
               <h2 className="text-2xl font-bold text-white">My Finance</h2>
               <AIAssist context="personal finance tracking" />
             </div>
-            <div className="bg-white/95 backdrop-blur-sm rounded-xl p-6">
-              <p className="text-gray-600">Personal finance features coming soon...</p>
-            </div>
+            <FinanceManagement />
           </div>
         );
       case "dashboard":
