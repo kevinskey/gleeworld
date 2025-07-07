@@ -2,16 +2,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Plus, TrendingUp, Users, RefreshCw, Check, X } from "lucide-react";
+import { DollarSign, Plus, TrendingUp, Users, RefreshCw, Check } from "lucide-react";
 import { useAdminStipends } from "@/hooks/useAdminStipends";
 import { AddBatchStipendDialog } from "../AddBatchStipendDialog";
-import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 export const StipendManagement = () => {
   const { stipends, summary, loading, error, refetch, syncContractStipends } = useAdminStipends();
-  const [paidStatus, setPaidStatus] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   const formatCurrency = (amount: number) => {
@@ -21,24 +19,37 @@ export const StipendManagement = () => {
     }).format(amount);
   };
 
-  const handlePaymentStatusChange = async (stipendId: string, isPaid: boolean) => {
+  const handleMarkAsPaid = async (stipend: any) => {
     try {
-      // Update local state immediately for better UX
-      setPaidStatus(prev => ({ ...prev, [stipendId]: isPaid }));
-      
-      // TODO: Here we would update the database with payment status
-      // For now, we'll just show a toast message
+      // Create a payment record in user_payments table
+      const { error } = await supabase
+        .from('user_payments')
+        .insert({
+          user_id: stipend.user_id || (await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', stipend.user_email)
+            .single()).data?.id,
+          amount: stipend.amount,
+          payment_date: new Date().toISOString().split('T')[0],
+          payment_method: 'manual',
+          notes: `Payment for: ${stipend.description}`,
+        });
+
+      if (error) throw error;
+
       toast({
-        title: isPaid ? "Marked as Paid" : "Marked as Unpaid",
-        description: `Stipend has been marked as ${isPaid ? 'paid' : 'unpaid'}`,
+        title: "Marked as Paid",
+        description: "Payment record created successfully",
       });
+      
+      // Refresh the data
+      refetch();
     } catch (error) {
-      console.error('Error updating payment status:', error);
-      // Revert local state on error
-      setPaidStatus(prev => ({ ...prev, [stipendId]: !isPaid }));
+      console.error('Error creating payment record:', error);
       toast({
         title: "Error",
-        description: "Failed to update payment status",
+        description: "Failed to create payment record",
         variant: "destructive",
       });
     }
@@ -46,9 +57,8 @@ export const StipendManagement = () => {
 
   // Determine if a stipend is paid by checking against user_payments
   const isStipendPaid = (stipend: any) => {
-    // Check if this stipend has a corresponding payment in user_payments
-    // We'll look for payments to the same user with similar amounts
-    return stipend.category === 'Payment Made' || paidStatus[stipend.reference] === true;
+    // Check if this stipend is a payment record
+    return stipend.category === 'Payment Made';
   };
 
   if (loading) {
@@ -195,28 +205,17 @@ export const StipendManagement = () => {
                       <Badge variant={isPaid ? "default" : "destructive"} className="text-xs">
                         {isPaid ? "PAID" : "UNPAID"}
                       </Badge>
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant={isPaid ? "default" : "outline"}
-                          onClick={() => handlePaymentStatusChange(stipendKey, true)}
-                          className="h-8 px-3"
-                          disabled={isPaid}
-                        >
-                          <Check className="h-3 w-3 mr-1" />
-                          Paid
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant={!isPaid ? "destructive" : "outline"}
-                          onClick={() => handlePaymentStatusChange(stipendKey, false)}
-                          className="h-8 px-3"
-                          disabled={!isPaid}
-                        >
-                          <X className="h-3 w-3 mr-1" />
-                          Unpaid
-                        </Button>
-                      </div>
+                       {!isPaid && (
+                         <Button
+                           size="sm"
+                           variant="outline"
+                           onClick={() => handleMarkAsPaid(stipend)}
+                           className="h-8 px-3"
+                         >
+                           <Check className="h-3 w-3 mr-1" />
+                           Mark as Paid
+                         </Button>
+                       )}
                     </div>
                   </div>
                 );
