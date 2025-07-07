@@ -46,9 +46,12 @@ export const useAdminUserRecords = () => {
         .select('id, full_name, email');
 
       // Fetch all finance records
-      const { data: financeRecords } = await supabase
+      const { data: financeRecords, error: financeError } = await supabase
         .from('finance_records')
         .select('user_id, amount, balance, date, created_at');
+
+      console.log('Finance records fetched:', financeRecords?.length || 0);
+      console.log('Finance records data:', financeRecords);
 
       // Process user records
       const userRecordsMap = new Map();
@@ -66,9 +69,12 @@ export const useAdminUserRecords = () => {
         });
       });
 
+      console.log('Total users initialized:', userRecordsMap.size);
+
       // Process finance records
       financeRecords?.forEach(record => {
         const userRecord = userRecordsMap.get(record.user_id);
+        console.log('Processing record for user:', record.user_id, 'Found user:', !!userRecord);
         if (userRecord) {
           userRecord.totalRecords += 1;
           userRecord.hasRecords = true;
@@ -81,10 +87,13 @@ export const useAdminUserRecords = () => {
             userRecord.currentBalance = Number(record.balance) || 0;
             userRecord.lastActivity = record.date || record.created_at;
           }
+          console.log('Updated user record:', userRecord);
         }
       });
 
-      setUserRecords(Array.from(userRecordsMap.values()));
+      const finalRecords = Array.from(userRecordsMap.values());
+      console.log('Final user records:', finalRecords.filter(r => r.hasRecords));
+      setUserRecords(finalRecords);
 
     } catch (err) {
       console.error('Error fetching user records:', err);
