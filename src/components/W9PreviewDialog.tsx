@@ -17,7 +17,17 @@ export const W9PreviewDialog = ({ open, onOpenChange, form, onDownload }: W9Prev
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  if (!form) return null;
+  if (!form) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>No Form Selected</DialogTitle>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   const formData = form.form_data || {};
   const hasPdfFile = form.storage_path && formData.pdf_generated;
