@@ -244,8 +244,28 @@ export const useW9Forms = () => {
         },
         (payload) => {
           console.log('useW9Forms: Real-time W9 forms change:', payload);
-          // Refetch data to ensure consistency
-          fetchW9Forms();
+          
+          // Handle different types of changes more efficiently
+          if (payload.eventType === 'INSERT' && payload.new) {
+            console.log('useW9Forms: New W9 form inserted, adding to state immediately');
+            setW9Forms(prev => {
+              // Check if form already exists (avoid duplicates)
+              const exists = prev.some(form => form.id === payload.new.id);
+              if (exists) return prev;
+              return [payload.new as W9Form, ...prev];
+            });
+          } else if (payload.eventType === 'UPDATE' && payload.new) {
+            console.log('useW9Forms: W9 form updated, updating state immediately');
+            setW9Forms(prev => prev.map(form => 
+              form.id === payload.new.id ? payload.new as W9Form : form
+            ));
+          } else if (payload.eventType === 'DELETE' && payload.old) {
+            console.log('useW9Forms: W9 form deleted, removing from state immediately');
+            setW9Forms(prev => prev.filter(form => form.id !== payload.old.id));
+          } else {
+            // Fallback to full refetch for other cases
+            fetchW9Forms();
+          }
         }
       )
       .subscribe();
@@ -256,6 +276,25 @@ export const useW9Forms = () => {
     };
   }, [user?.id, authLoading]); // Only depend on user.id and authLoading
 
+  // Add optimistic update for immediate UI updates
+  const addOptimisticW9Form = (newForm: Partial<W9Form>) => {
+    console.log('useW9Forms: Adding optimistic W9 form:', newForm);
+    setW9Forms(prev => {
+      const optimisticForm: W9Form = {
+        id: newForm.id || `temp-${Date.now()}`,
+        user_id: user?.id || '',
+        form_data: newForm.form_data || {},
+        status: newForm.status || 'processing',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        submitted_at: new Date().toISOString(),
+        storage_path: newForm.storage_path || '',
+        ...newForm
+      };
+      return [optimisticForm, ...prev];
+    });
+  };
+
   return {
     w9Forms,
     loading: authLoading || loading,
@@ -263,5 +302,6 @@ export const useW9Forms = () => {
     deleteW9Form,
     downloadW9Form,
     refetch: fetchW9Forms,
+    addOptimisticW9Form,
   };
 };
