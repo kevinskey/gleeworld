@@ -3,6 +3,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Download, FileText } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface W9PreviewDialogProps {
   open: boolean;
@@ -12,9 +14,44 @@ interface W9PreviewDialogProps {
 }
 
 export const W9PreviewDialog = ({ open, onOpenChange, form, onDownload }: W9PreviewDialogProps) => {
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
   if (!form) return null;
 
   const formData = form.form_data || {};
+  const hasPdfFile = form.storage_path && formData.pdf_generated;
+
+  useEffect(() => {
+    const loadPdf = async () => {
+      if (hasPdfFile && open) {
+        setLoading(true);
+        try {
+          const { data, error } = await supabase.storage
+            .from('w9-forms')
+            .download(form.storage_path);
+
+          if (error) throw error;
+
+          const url = URL.createObjectURL(data);
+          setPdfUrl(url);
+        } catch (error) {
+          console.error('Error loading PDF:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadPdf();
+
+    return () => {
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+        setPdfUrl(null);
+      }
+    };
+  }, [hasPdfFile, open, form.storage_path, pdfUrl]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -30,12 +67,33 @@ export const W9PreviewDialog = ({ open, onOpenChange, form, onDownload }: W9Prev
         </DialogHeader>
 
         <ScrollArea className="h-[70vh] pr-4">
-          <div className="space-y-6 p-4 bg-white">
-            {/* Form Header */}
-            <div className="text-center border-b border-gray-300 pb-4">
-              <h1 className="text-2xl font-bold text-gray-900">Form W-9</h1>
-              <p className="text-lg text-gray-800">Request for Taxpayer Identification Number and Certification</p>
+          {hasPdfFile ? (
+            <div className="p-4 bg-white">
+              {loading ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-2">Loading PDF...</span>
+                </div>
+              ) : pdfUrl ? (
+                <iframe
+                  src={pdfUrl}
+                  className="w-full h-[60vh] border rounded"
+                  title="W9 Form PDF"
+                />
+              ) : (
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-600">Unable to load PDF preview</p>
+                </div>
+              )}
             </div>
+          ) : (
+            <div className="space-y-6 p-4 bg-white">
+              {/* Form Header */}
+              <div className="text-center border-b border-gray-300 pb-4">
+                <h1 className="text-2xl font-bold text-gray-900">Form W-9</h1>
+                <p className="text-lg text-gray-800">Request for Taxpayer Identification Number and Certification</p>
+              </div>
 
             {/* Basic Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -126,14 +184,15 @@ export const W9PreviewDialog = ({ open, onOpenChange, form, onDownload }: W9Prev
               </div>
             </div>
 
-            {/* Form Metadata */}
-            <div className="border-t border-gray-300 pt-4 text-sm text-gray-600">
-              <p className="text-gray-700">Form ID: {form.id}</p>
-              <p className="text-gray-700">Status: {form.status}</p>
-              <p className="text-gray-700">Created: {new Date(form.created_at).toLocaleString()}</p>
-              <p className="text-gray-700">Submitted: {new Date(form.submitted_at).toLocaleString()}</p>
+              {/* Form Metadata */}
+              <div className="border-t border-gray-300 pt-4 text-sm text-gray-600">
+                <p className="text-gray-700">Form ID: {form.id}</p>
+                <p className="text-gray-700">Status: {form.status}</p>
+                <p className="text-gray-700">Created: {new Date(form.created_at).toLocaleString()}</p>
+                <p className="text-gray-700">Submitted: {new Date(form.submitted_at).toLocaleString()}</p>
+              </div>
             </div>
-          </div>
+          )}
         </ScrollArea>
 
         <div className="flex justify-end gap-2 pt-4 border-t border-gray-300 bg-white">
