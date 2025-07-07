@@ -518,7 +518,12 @@ export const W9CameraCapture = () => {
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Capture W9 Form</DialogTitle>
+          <DialogTitle>
+            {selectedUserId && users.find(u => u.id === selectedUserId) 
+              ? `Capture W9 Form - ${users.find(u => u.id === selectedUserId)?.full_name || users.find(u => u.id === selectedUserId)?.email}`
+              : 'Capture W9 Form'
+            }
+          </DialogTitle>
           <DialogDescription>
             Take a photo of your W9 form or upload an image - it will be saved as a PDF for admin review
           </DialogDescription>
