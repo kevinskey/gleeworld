@@ -10,6 +10,7 @@ import { ContractItem } from "@/components/contracts/ContractItem";
 import { AdminSignatureModal } from "@/components/contracts/AdminSignatureModal";
 import { EmptyState } from "@/components/contracts/EmptyState";
 import { ContractFilters } from "@/components/contracts/ContractFilters";
+import { EditContractTitleDialog } from "@/components/contracts/EditContractTitleDialog";
 import { useContractSendHistory } from "@/hooks/useContractSendHistory";
 import { useAdminSigning } from "@/hooks/useAdminSigning";
 import { useLastRecipient } from "@/hooks/useLastRecipient";
@@ -24,6 +25,7 @@ interface ContractsListProps {
   onDeleteContract: (contractId: string) => void;
   onUploadContract: () => void;
   onRetry?: () => void;
+  onContractUpdated?: (contract: Contract) => void;
 }
 
 export const ContractsList = ({ 
@@ -33,13 +35,16 @@ export const ContractsList = ({
   onViewContract, 
   onDeleteContract, 
   onUploadContract,
-  onRetry
+  onRetry,
+  onContractUpdated
 }: ContractsListProps) => {
   const { toast } = useToast();
   const [selectedContracts, setSelectedContracts] = useState<Set<string>>(new Set());
   const [sendDialogContract, setSendDialogContract] = useState<Contract | null>(null);
   const [isResendMode, setIsResendMode] = useState(false);
   const [isOpen, setIsOpen] = useState(true); // Changed from false to true to open by default
+  const [editTitleDialogOpen, setEditTitleDialogOpen] = useState(false);
+  const [selectedEditContract, setSelectedEditContract] = useState<Contract | null>(null);
   
   const { contractSendHistory, reloadSendHistory } = useContractSendHistory(contracts);
   const { lastRecipient, loading: lastRecipientLoading } = useLastRecipient(
@@ -133,6 +138,15 @@ export const ContractsList = ({
     reloadSendHistory();
   };
 
+  const handleEditTitle = (contract: Contract) => {
+    setSelectedEditContract(contract);
+    setEditTitleDialogOpen(true);
+  };
+
+  const handleContractUpdated = (updatedContract: Contract) => {
+    onContractUpdated?.(updatedContract);
+  };
+
   console.log('ContractsList render - lastRecipient:', lastRecipient, 'loading:', lastRecipientLoading);
 
   return (
@@ -202,6 +216,7 @@ export const ContractsList = ({
                         onAdminSign={handleAdminSign}
                         onSend={(contract) => handleOpenSendDialog(contract, false)}
                         onResend={(contract) => handleOpenSendDialog(contract, true)}
+                        onEditTitle={handleEditTitle}
                       />
                     );
                   })}
@@ -244,6 +259,14 @@ export const ContractsList = ({
         onSignatureChange={setAdminSignature}
         onClose={closeSignatureModal}
         onComplete={handleCompleteAdminSigning}
+      />
+
+      {/* Edit Contract Title Dialog */}
+      <EditContractTitleDialog
+        open={editTitleDialogOpen}
+        onOpenChange={setEditTitleDialogOpen}
+        contract={selectedEditContract}
+        onContractUpdated={handleContractUpdated}
       />
     </>
   );

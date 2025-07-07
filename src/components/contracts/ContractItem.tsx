@@ -2,8 +2,11 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileText, Eye, Send, Trash2, PenTool, RotateCcw } from "lucide-react";
+import { FileText, Eye, Send, Trash2, PenTool, RotateCcw, Edit } from "lucide-react";
 import { getStatusColor, getStatusText } from "./contractUtils";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { isAdmin } from "@/constants/permissions";
 import type { Contract } from "@/hooks/useContracts";
 
 interface ContractItemProps {
@@ -16,6 +19,7 @@ interface ContractItemProps {
   onAdminSign: (contract: Contract) => void;
   onSend: (contract: Contract) => void;
   onResend?: (contract: Contract) => void;
+  onEditTitle?: (contract: Contract) => void;
 }
 
 export const ContractItem = ({
@@ -27,9 +31,13 @@ export const ContractItem = ({
   onDelete,
   onAdminSign,
   onSend,
-  onResend
+  onResend,
+  onEditTitle
 }: ContractItemProps) => {
+  const { user } = useAuth();
+  const { userProfile } = useUserProfile(user);
   const hasBeenSent = sendCount > 0;
+  const userIsAdmin = user && userProfile && isAdmin(userProfile.role);
 
   const handleSendClick = () => {
     if (hasBeenSent && onResend) {
@@ -79,6 +87,18 @@ export const ContractItem = ({
             <Eye className="h-3 w-3" />
           </Button>
           
+          {userIsAdmin && onEditTitle && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => onEditTitle(contract)}
+              title="Edit Contract Title"
+              className="border-blue-300 text-blue-700 hover:bg-blue-50 h-8 w-8 p-0"
+            >
+              <Edit className="h-3 w-3" />
+            </Button>
+          )}
+          
           {contract.status === 'pending_admin_signature' && (
             <Button 
               variant="outline" 
@@ -105,15 +125,17 @@ export const ContractItem = ({
             )}
           </Button>
           
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => onDelete(contract.id)}
-            className="border-red-300 text-red-700 hover:bg-red-50 h-8 w-8 p-0"
-            title="Delete Contract"
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
+          {userIsAdmin && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => onDelete(contract.id)}
+              className="border-red-300 text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+              title="Delete Contract"
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          )}
         </div>
       </div>
     </div>

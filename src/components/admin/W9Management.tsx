@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileText, Search, Filter, Download, Eye, RefreshCw, Mail, CheckCircle, XCircle, Clock } from "lucide-react";
+import { FileText, Search, Filter, Download, Eye, RefreshCw, Mail, CheckCircle, XCircle, Clock, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -192,6 +192,35 @@ export const W9Management = () => {
   const handlePreview = (form: W9FormAdmin) => {
     setPreviewForm(form);
     setShowPreview(true);
+  };
+
+  const handleDeleteW9Form = async (formId: string) => {
+    if (!window.confirm('Are you sure you want to delete this W9 form? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('w9_forms')
+        .delete()
+        .eq('id', formId);
+
+      if (error) throw error;
+
+      setW9Forms(prev => prev.filter(form => form.id !== formId));
+      
+      toast({
+        title: "Success",
+        description: "W9 form deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting W9 form:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete W9 form",
+        variant: "destructive",
+      });
+    }
   };
 
   // Filter and sort forms
@@ -458,6 +487,17 @@ export const W9Management = () => {
                         <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                         <span className="hidden xs:inline">Download</span>
                         <span className="xs:hidden">Get</span>
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteW9Form(form.id)}
+                        className="flex-1 sm:flex-none text-xs sm:text-sm border-red-300 text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                        <span className="hidden xs:inline">Delete</span>
+                        <span className="xs:hidden">Del</span>
                       </Button>
                     </div>
                   </div>
