@@ -131,7 +131,10 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
       const statusMap: Record<string, boolean> = {};
       
       for (const user of users) {
-        // Check for completed contracts
+        let hasValidContracts = false;
+        let hasValidW9s = false;
+
+        // Check for completed contracts with valid PDFs
         const { data: contractData } = await supabase
           .from('contracts_v2')
           .select(`
@@ -142,16 +145,60 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
           .eq('contract_signatures_v2.status', 'completed')
           .not('contract_signatures_v2.pdf_storage_path', 'is', null);
 
-        // Check for submitted W9 forms
+        if (contractData && contractData.length > 0) {
+          // Verify PDFs still exist in storage
+          for (const contract of contractData) {
+            const signatures = contract.contract_signatures_v2;
+            if (Array.isArray(signatures)) {
+              for (const sig of signatures) {
+                if (sig.pdf_storage_path) {
+                  try {
+                    const { data: fileData, error } = await supabase.storage
+                      .from('signed-contracts')
+                      .download(sig.pdf_storage_path);
+                    if (!error && fileData) {
+                      hasValidContracts = true;
+                      break;
+                    }
+                  } catch (error) {
+                    console.log('Contract PDF not found:', sig.pdf_storage_path);
+                  }
+                }
+              }
+            }
+            if (hasValidContracts) break;
+          }
+        }
+
+        // Check for submitted W9 forms with valid files
         const { data: w9Data } = await supabase
           .from('w9_forms')
-          .select('id')
+          .select('id, storage_path')
           .eq('user_id', user.id)
           .eq('status', 'submitted')
           .not('storage_path', 'is', null);
 
-        // User is ready to pay if they have both completed contracts and submitted W9s
-        statusMap[user.id] = (contractData && contractData.length > 0) && (w9Data && w9Data.length > 0);
+        if (w9Data && w9Data.length > 0) {
+          // Verify W9 files still exist in storage
+          for (const w9 of w9Data) {
+            if (w9.storage_path) {
+              try {
+                const { data: fileData, error } = await supabase.storage
+                  .from('w9-forms')
+                  .download(w9.storage_path);
+                if (!error && fileData) {
+                  hasValidW9s = true;
+                  break;
+                }
+              } catch (error) {
+                console.log('W9 file not found:', w9.storage_path);
+              }
+            }
+          }
+        }
+
+        // User is ready to pay only if they have both valid contracts and valid W9s
+        statusMap[user.id] = hasValidContracts && hasValidW9s;
       }
       
       setUserReadyToPayStatus(statusMap);
