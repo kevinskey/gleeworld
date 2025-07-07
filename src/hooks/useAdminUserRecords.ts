@@ -45,7 +45,7 @@ export const useAdminUserRecords = () => {
         .from('profiles')
         .select('id, full_name, email');
 
-      // Fetch all finance records
+      // Fetch all finance records  
       const { data: financeRecords, error: financeError } = await supabase
         .from('finance_records')
         .select('user_id, amount, balance, date, created_at');
