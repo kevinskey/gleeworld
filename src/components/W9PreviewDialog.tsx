@@ -30,30 +30,35 @@ export const W9PreviewDialog = ({ open, onOpenChange, form, onDownload }: W9Prev
   }
 
   const formData = form.form_data || {};
+  const hasJpgFile = form.storage_path && formData.jpg_generated && formData.jpg_storage_path;
   const hasPdfFile = form.storage_path && formData.pdf_generated;
+  const hasFile = hasJpgFile || hasPdfFile;
 
   useEffect(() => {
-    const loadPdf = async () => {
-      if (hasPdfFile && open) {
+    const loadFile = async () => {
+      if (hasFile && open) {
         setLoading(true);
         try {
+          // Prefer JPG over PDF if available
+          const filePath = hasJpgFile ? formData.jpg_storage_path : form.storage_path;
+          
           const { data, error } = await supabase.storage
             .from('w9-forms')
-            .download(form.storage_path);
+            .download(filePath);
 
           if (error) throw error;
 
           const url = URL.createObjectURL(data);
           setPdfUrl(url);
         } catch (error) {
-          console.error('Error loading PDF:', error);
+          console.error('Error loading file:', error);
         } finally {
           setLoading(false);
         }
       }
     };
 
-    loadPdf();
+    loadFile();
 
     return () => {
       if (pdfUrl) {
@@ -61,7 +66,7 @@ export const W9PreviewDialog = ({ open, onOpenChange, form, onDownload }: W9Prev
         setPdfUrl(null);
       }
     };
-  }, [hasPdfFile, open, form.storage_path, pdfUrl]);
+  }, [hasFile, hasJpgFile, open, form.storage_path, pdfUrl]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -77,23 +82,31 @@ export const W9PreviewDialog = ({ open, onOpenChange, form, onDownload }: W9Prev
         </DialogHeader>
 
         <ScrollArea className="h-[70vh] pr-4">
-          {hasPdfFile ? (
+          {hasFile ? (
             <div className="p-4 bg-white">
               {loading ? (
                 <div className="flex items-center justify-center h-64">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <span className="ml-2">Loading PDF...</span>
+                  <span className="ml-2">Loading {hasJpgFile ? 'image' : 'PDF'}...</span>
                 </div>
               ) : pdfUrl ? (
-                <iframe
-                  src={pdfUrl}
-                  className="w-full h-[60vh] border rounded"
-                  title="W9 Form PDF"
-                />
+                hasJpgFile ? (
+                  <img
+                    src={pdfUrl}
+                    alt="W9 Form"
+                    className="w-full max-h-[60vh] object-contain border rounded"
+                  />
+                ) : (
+                  <iframe
+                    src={pdfUrl}
+                    className="w-full h-[60vh] border rounded"
+                    title="W9 Form PDF"
+                  />
+                )
               ) : (
                 <div className="text-center py-8">
                   <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                  <p className="text-gray-600">Unable to load PDF preview</p>
+                  <p className="text-gray-600">Unable to load file preview</p>
                 </div>
               )}
             </div>

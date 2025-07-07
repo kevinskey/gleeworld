@@ -85,15 +85,29 @@ serve(async (req) => {
         throw new Error(`Failed to upload JPG: ${uploadError.message}`);
       }
 
-      // Update the database record with JPG path
+      // Get existing form data first to preserve it
+      const { data: existingForm, error: fetchError } = await supabase
+        .from('w9_forms')
+        .select('form_data')
+        .eq('id', w9FormId)
+        .single();
+
+      if (fetchError) {
+        console.error('Failed to fetch existing form data:', fetchError);
+      }
+
+      // Update the database record with JPG path, preserving existing form data
+      const updatedFormData = {
+        ...(existingForm?.form_data || {}),
+        jpg_storage_path: jpgPath,
+        jpg_generated: true,
+        jpg_generated_at: new Date().toISOString()
+      };
+
       const { error: updateError } = await supabase
         .from('w9_forms')
         .update({
-          form_data: {
-            jpg_storage_path: jpgPath,
-            jpg_generated: true,
-            jpg_generated_at: new Date().toISOString()
-          }
+          form_data: updatedFormData
         })
         .eq('id', w9FormId);
 
