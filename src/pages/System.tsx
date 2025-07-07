@@ -102,9 +102,9 @@ const System = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           {/* Mobile-Optimized Tab Layout */}
-          <div className="bg-white/95 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm p-2">
-            <TabsList className="w-full bg-white p-1 h-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-1 border border-gray-100 rounded-md shadow-sm">
-              <TabsTrigger 
+          <div className="bg-white/95 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm p-1 sm:p-2">
+            <TabsList className="w-full bg-white p-1 h-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-1 border border-gray-100 rounded-md shadow-sm overflow-x-auto">
+              <TabsTrigger
                 value="dashboard" 
                 className="flex items-center justify-center gap-1 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 rounded font-medium transition-all duration-200 min-h-[2.5rem]"
               >
@@ -285,7 +285,35 @@ const System = () => {
             <W9Management />
           </TabsContent>
 
+          <TabsContent value="payments" className="space-y-4">
+            <FinancialSystem />
+          </TabsContent>
+
           <TabsContent value="financial" className="space-y-4">
+            <FinancialSystem />
+          </TabsContent>
+
+          <TabsContent value="financial-overview" className="space-y-4">
+            <FinancialSystem />
+          </TabsContent>
+
+          <TabsContent value="user-records" className="space-y-4">
+            <FinancialSystem />
+          </TabsContent>
+
+          <TabsContent value="payment-tracking" className="space-y-4">
+            <FinancialSystem />
+          </TabsContent>
+
+          <TabsContent value="stipends" className="space-y-4">
+            <FinancialSystem />
+          </TabsContent>
+
+          <TabsContent value="budget" className="space-y-4">
+            <FinancialSystem />
+          </TabsContent>
+
+          <TabsContent value="reports" className="space-y-4">
             <FinancialSystem />
           </TabsContent>
 
