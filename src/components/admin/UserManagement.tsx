@@ -1,12 +1,12 @@
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Users, RefreshCw, Shield, User as UserIcon, UserPlus, Edit, Trash2, Search, Filter, Download, MoreHorizontal, Upload } from "lucide-react";
+import { Users, RefreshCw, Shield, User as UserIcon, UserPlus, Edit, Trash2, Search, Filter, Download, MoreHorizontal, Upload, DollarSign } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { User } from "@/hooks/useUsers";
 import { AddUserDialog } from "./AddUserDialog";
@@ -14,6 +14,7 @@ import { EditUserDialog } from "./EditUserDialog";
 import { DeleteUserDialog } from "./DeleteUserDialog";
 import { UserImportDialog } from "./UserImportDialog";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UserManagementProps {
   users: User[];
@@ -32,6 +33,7 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
   const [deleteUserOpen, setDeleteUserOpen] = useState(false);
   const [importUsersOpen, setImportUsersOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userReadyToPayStatus, setUserReadyToPayStatus] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   const getRoleBadgeVariant = (role: string) => {
@@ -120,6 +122,55 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
     toast({
       title: "Export Complete",
       description: `Exported ${filteredAndSortedUsers.length} users to CSV`,
+    });
+  };
+
+  // Check if user has completed contracts/W9s and is ready to pay
+  const checkUserReadyToPayStatus = async () => {
+    try {
+      const statusMap: Record<string, boolean> = {};
+      
+      for (const user of users) {
+        // Check for completed contracts
+        const { data: contractData } = await supabase
+          .from('contracts_v2')
+          .select(`
+            id,
+            contract_signatures_v2!inner(status, pdf_storage_path)
+          `)
+          .eq('created_by', user.id)
+          .eq('contract_signatures_v2.status', 'completed')
+          .not('contract_signatures_v2.pdf_storage_path', 'is', null);
+
+        // Check for submitted W9 forms
+        const { data: w9Data } = await supabase
+          .from('w9_forms')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('status', 'submitted')
+          .not('storage_path', 'is', null);
+
+        // User is ready to pay if they have both completed contracts and submitted W9s
+        statusMap[user.id] = (contractData && contractData.length > 0) && (w9Data && w9Data.length > 0);
+      }
+      
+      setUserReadyToPayStatus(statusMap);
+    } catch (error) {
+      console.error('Error checking user ready to pay status:', error);
+    }
+  };
+
+  // Check status when component mounts or users change
+  useEffect(() => {
+    if (users.length > 0 && !loading) {
+      checkUserReadyToPayStatus();
+    }
+  }, [users, loading]);
+
+  const handleReadyToPay = (user: User) => {
+    toast({
+      title: "Ready to Pay",
+      description: `${user.full_name || user.email} is ready to receive payment with completed contracts and W9 forms.`,
     });
   };
 
@@ -313,6 +364,17 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
                       
                       {/* Action Buttons */}
                       <div className="flex gap-2 flex-shrink-0">
+                        {userReadyToPayStatus[user.id] && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => handleReadyToPay(user)}
+                            className="bg-green-600 hover:bg-green-700 text-white flex-1 sm:flex-none"
+                          >
+                            <DollarSign className="h-4 w-4 sm:mr-0 mr-2" />
+                            <span className="sm:hidden">Ready to Pay</span>
+                          </Button>
+                        )}
                         <Button
                           size="sm"
                           variant="secondary"
