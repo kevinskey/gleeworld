@@ -272,48 +272,24 @@ export const W9CameraCapture = () => {
     if (!capturedImage || !user) return;
 
     setIsProcessing(true);
-    
-    // Add timeout protection for the entire process
-    const processTimeout = setTimeout(() => {
-      setIsProcessing(false);
-      toast({
-        title: "Processing Timeout",
-        description: "Processing took too long. Please try again with a smaller image.",
-        variant: "destructive",
-      });
-    }, 30000); // 30 second timeout
 
     try {
-      console.log('Starting W9 processing...');
+      console.log('Starting W9 processing (PDF only)...');
       
-      // Add small delay to prevent UI lockup
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Save form immediately without waiting for OCR
+      // Create PDF from captured image
       const fileName = `${user.id}/w9-form-${Date.now()}.pdf`;
-      
-      // Make PDF generation non-blocking
       const pdfBlob = await createPDFFromImage(capturedImage);
       
-      // Upload to storage with timeout
-      const uploadPromise = supabase.storage
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
         .from('w9-forms')
         .upload(fileName, pdfBlob);
-        
-      const uploadTimeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Upload timeout')), 15000)
-      );
-      
-      const { error: uploadError } = await Promise.race([
-        uploadPromise,
-        uploadTimeout
-      ]) as any;
 
       if (uploadError) {
         throw uploadError;
       }
 
-      // Create W9 form record immediately
+      // Create W9 form record with basic data
       const { error: dbError } = await supabase
         .from('w9_forms')
         .insert({
@@ -321,10 +297,10 @@ export const W9CameraCapture = () => {
           storage_path: fileName,
           status: 'submitted',
           form_data: {
-            capture_method: 'camera_manual',
+            capture_method: 'camera_capture',
             captured_at: new Date().toISOString(),
-            ocr_attempted: false,
-            ocr_successful: false
+            pdf_generated: true,
+            requires_manual_review: true
           }
         });
 
@@ -332,26 +308,20 @@ export const W9CameraCapture = () => {
         throw dbError;
       }
 
-      clearTimeout(processTimeout);
-
       toast({
         title: "W9 Form Saved",
-        description: "W9 form captured successfully. OCR processing will happen in the background.",
+        description: "W9 form saved successfully as PDF. Ready for admin review.",
       });
 
       // Reset state immediately
       setCapturedImage(null);
       setIsOpen(false);
       
-      // Process OCR in background without blocking UI
-      setTimeout(() => processOCRInBackground(fileName, capturedImage), 1000);
-      
     } catch (error) {
       console.error('Error processing W9 form:', error);
-      clearTimeout(processTimeout);
       toast({
         title: "Processing Error",
-        description: error instanceof Error ? error.message : "Failed to process W9 form. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to save W9 form. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -406,148 +376,6 @@ export const W9CameraCapture = () => {
     });
   };
 
-  const processOCRInBackground = async (fileName: string, imageDataUrl: string) => {
-    try {
-      console.log('Starting background OCR processing for:', fileName);
-      
-      if (!imageDataUrl) {
-        console.error('No captured image available for OCR');
-        // Mark OCR as attempted but failed due to no image
-        await supabase
-          .from('w9_forms')
-          .update({
-            form_data: {
-              capture_method: 'camera_manual',
-              captured_at: new Date().toISOString(),
-              ocr_attempted: true,
-              ocr_successful: false,
-              ocr_error: 'No captured image available'
-            }
-          })
-          .eq('storage_path', fileName);
-        return;
-      }
-      
-      // Reduce image size for OCR to prevent API timeouts
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      if (!ctx) {
-        console.error('Cannot get canvas context');
-        return;
-      }
-      
-      const img = new Image();
-      
-      // Load image with error handling
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = () => reject(new Error('Failed to load image'));
-        img.src = imageDataUrl;
-        
-        // Timeout for image loading
-        setTimeout(() => reject(new Error('Image loading timeout')), 5000);
-      });
-      
-      // Resize image for OCR (max 800px width to stay under 2MB)
-      const maxWidth = 800;
-      const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
-      canvas.width = img.width * ratio;
-      canvas.height = img.height * ratio;
-      
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const resizedImage = canvas.toDataURL('image/jpeg', 0.5); // Lower quality for OCR
-      
-      console.log('Calling OCR function with image size:', resizedImage.length);
-      
-      // Call OCR function with proper error handling
-      const { data: ocrData, error: ocrError } = await supabase.functions.invoke('w9-ocr-extract', {
-        body: { imageBase64: resizedImage }
-      });
-
-      console.log('OCR function response:', { data: ocrData, error: ocrError });
-
-      if (ocrError) {
-        console.error('OCR function error:', ocrError);
-        // Update form to mark OCR as attempted but failed
-        await supabase
-          .from('w9_forms')
-          .update({
-            form_data: {
-              capture_method: 'camera_manual',
-              captured_at: new Date().toISOString(),
-              ocr_attempted: true,
-              ocr_successful: false,
-              ocr_error: ocrError.message || 'Unknown OCR error'
-            }
-          })
-          .eq('storage_path', fileName);
-        return;
-      }
-
-      if (ocrData && ocrData.success && ocrData.extractedData) {
-        console.log('OCR extraction successful:', ocrData.extractedData);
-        
-        // Update the W9 form with OCR data
-        const { error: updateError } = await supabase
-          .from('w9_forms')
-          .update({
-            form_data: {
-              ...ocrData.extractedData,
-              capture_method: 'camera_ocr',
-              captured_at: new Date().toISOString(),
-              raw_text: ocrData.rawText || '',
-              ocr_attempted: true,
-              ocr_successful: true
-            }
-          })
-          .eq('storage_path', fileName);
-        
-        if (updateError) {
-          console.error('Failed to update W9 form with OCR data:', updateError);
-        } else {
-          console.log('OCR processing completed successfully');
-        }
-      } else {
-        console.warn('OCR processing failed - no data returned');
-        
-        // Update form to mark OCR as attempted but failed
-        await supabase
-          .from('w9_forms')
-          .update({
-            form_data: {
-              capture_method: 'camera_manual',
-              captured_at: new Date().toISOString(),
-              ocr_attempted: true,
-              ocr_successful: false,
-              ocr_error: 'No OCR data returned'
-            }
-          })
-          .eq('storage_path', fileName);
-      }
-    } catch (error) {
-      console.error('Background OCR processing failed:', error);
-      
-      // Update form to mark OCR as attempted but failed
-      try {
-        await supabase
-          .from('w9_forms')
-          .update({
-            form_data: {
-              capture_method: 'camera_manual',
-              captured_at: new Date().toISOString(),
-              ocr_attempted: true,
-              ocr_successful: false,
-              ocr_error: error instanceof Error ? error.message : 'Unknown error'
-            }
-          })
-          .eq('storage_path', fileName);
-      } catch (updateError) {
-        console.error('Failed to update error status:', updateError);
-      }
-    }
-  };
-
   const retakePhoto = () => {
     setCapturedImage(null);
     startCamera();
@@ -565,7 +393,7 @@ export const W9CameraCapture = () => {
         <DialogHeader>
           <DialogTitle>Capture W9 Form</DialogTitle>
           <DialogDescription>
-            Take a photo of your W9 form or upload an image - OCR will automatically extract and populate form data
+            Take a photo of your W9 form or upload an image - it will be saved as a PDF for admin review
           </DialogDescription>
         </DialogHeader>
 

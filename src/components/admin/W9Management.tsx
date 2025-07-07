@@ -169,7 +169,7 @@ export const W9Management = () => {
       const url = URL.createObjectURL(data);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `w9-form-${form.user_name || 'unknown'}-${form.submitted_at.split('T')[0]}.txt`;
+      a.download = `w9-form-${form.user_name || 'unknown'}-${form.submitted_at.split('T')[0]}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
