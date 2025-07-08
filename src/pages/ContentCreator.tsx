@@ -5,8 +5,11 @@ import { ContentViewer } from "@/components/shared/ContentViewer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Eye, Edit, Save, FileText } from "lucide-react";
+import { Eye, Edit, Save, FileText, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { CreateBudgetDialog } from "@/components/admin/budget/CreateBudgetDialog";
+import { BudgetCard } from "@/components/admin/budget/BudgetCard";
+import { useBudgets } from "@/hooks/useBudgets";
 
 interface ContentData {
   text: string;
@@ -33,6 +36,7 @@ interface ContentData {
 
 export default function ContentCreator() {
   const { toast } = useToast();
+  const { budgets, loading: budgetsLoading, updateBudget, deleteBudget } = useBudgets();
   const [savedContent, setSavedContent] = useState<ContentData | null>(null);
   const [activeTab, setActiveTab] = useState("create");
 
@@ -130,7 +134,7 @@ export default function ContentCreator() {
         )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="create" className="flex items-center gap-2">
               <Edit className="h-4 w-4" />
               Create Content
@@ -138,6 +142,10 @@ export default function ContentCreator() {
             <TabsTrigger value="preview" className="flex items-center gap-2">
               <Eye className="h-4 w-4" />
               Preview Content
+            </TabsTrigger>
+            <TabsTrigger value="budget" className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              Budget Sandbox
             </TabsTrigger>
           </TabsList>
 
@@ -182,6 +190,54 @@ export default function ContentCreator() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          <TabsContent value="budget" className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold">Budget Sandbox</h2>
+                  <p className="text-muted-foreground">Create and manage budgets for your projects</p>
+                </div>
+                <CreateBudgetDialog onSuccess={() => {}} />
+              </div>
+
+              {budgetsLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[...Array(3)].map((_, i) => (
+                    <Card key={i} className="p-6">
+                      <div className="animate-pulse space-y-4">
+                        <div className="h-4 bg-muted rounded w-3/4"></div>
+                        <div className="h-8 bg-muted rounded"></div>
+                        <div className="h-2 bg-muted rounded"></div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : budgets.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {budgets.map((budget) => (
+                    <BudgetCard
+                      key={budget.id}
+                      budget={budget}
+                      onUpdate={updateBudget}
+                      onDelete={(budget) => deleteBudget(budget.id)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <DollarSign className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-lg font-medium mb-2">No budgets yet</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Create your first budget to start tracking expenses and allocations.
+                    </p>
+                    <CreateBudgetDialog onSuccess={() => {}} />
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
