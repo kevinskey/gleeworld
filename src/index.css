@@ -7,83 +7,77 @@
 
 @layer base {
   :root {
-    --background: 222 84% 4%; /* Dark background */
-    --foreground: 210 40% 98%;
+    /* Primary Brand Color - #11448B */
+    --primary: 219 78% 31%; /* #11448B converted to HSL */
+    --primary-foreground: 0 0% 100%; /* White text */
 
-    --card: 222 84% 4%;
-    --card-foreground: 210 40% 98%;
+    /* Secondary Accent - #55BBEE */
+    --secondary: 203 85% 63%; /* #55BBEE converted to HSL */
+    --secondary-foreground: 0 0% 100%; /* White text */
 
-    --popover: 222 84% 4%;
-    --popover-foreground: 210 40% 98%;
+    /* Neutrals */
+    --background: 0 0% 100%; /* White background */
+    --foreground: 0 0% 0%; /* Black text for content */
 
-    --primary: 203 85% 63%; /* #55bbee converted to HSL */
-    --primary-foreground: 210 40% 98%;
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 0 0% 0%; /* Black text */
 
-    --secondary: 217 32% 20%;
-    --secondary-foreground: 210 40% 95%;
+    --popover: 0 0% 100%; /* White */
+    --popover-foreground: 0 0% 0%; /* Black text */
 
-    --muted: 217 32% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 210 20% 97%; /* #F7F9FC light gray background */
+    --muted-foreground: 0 0% 33%; /* #555555 secondary text */
 
-    --accent: 203 85% 63%; /* #55bbee accent */
-    --accent-foreground: 210 40% 98%;
+    --accent: 203 85% 63%; /* #55BBEE accent */
+    --accent-foreground: 0 0% 100%; /* White text */
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217 32% 17%;
-    --input: 217 32% 17%; /* Dark input background for better contrast */
-    --ring: 203 85% 63%; /* #55bbee ring */
+    --border: 0 0% 87%; /* #DDDDDD borders */
+    --input: 0 0% 100%; /* White input background */
+    --ring: 203 85% 63%; /* #55BBEE focus ring */
 
     --radius: 0.75rem;
 
-    --sidebar-background: 222 84% 4%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 203 85% 63%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217 32% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 32% 17%;
-    --sidebar-ring: 203 85% 63%;
+    /* Disabled states */
+    --disabled-bg: 0 0% 93%; /* #EEEEEE */
+    --disabled-text: 0 0% 67%; /* #AAAAAA */
+
+    /* Custom color tokens */
+    --text-secondary: 0 0% 33%; /* #555555 */
+    --hover-tint: 203 85% 94%; /* #D6F0FB */
   }
 
   .light {
+    /* Same as root - no separate light theme needed with new color system */
     --background: 0 0% 100%;
-    --foreground: 220 78% 31%; /* #11448e converted to HSL for text */
+    --foreground: 0 0% 0%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 78% 31%;
+    --card-foreground: 0 0% 0%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 78% 31%;
+    --popover-foreground: 0 0% 0%;
 
-    --primary: 203 85% 63%; /* #55bbee */
-    --primary-foreground: 210 40% 98%;
+    --primary: 219 78% 31%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 220 78% 31%;
+    --secondary: 203 85% 63%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 220 78% 31%;
+    --muted: 210 20% 97%;
+    --muted-foreground: 0 0% 33%;
 
-    --accent: 210 40% 96%;
-    --accent-foreground: 220 78% 31%;
+    --accent: 203 85% 63%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214 31% 91%;
-    --input: 0 0% 100%; /* White background for inputs */
+    --border: 0 0% 87%;
+    --input: 0 0% 100%;
     --ring: 203 85% 63%;
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 220 78% 31%;
-    --sidebar-primary: 203 85% 63%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 220 78% 31%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 203 85% 63%;
   }
 }
 
@@ -93,42 +87,112 @@
   }
 
   body {
-    @apply bg-gradient-to-br from-brand-700 via-brand-800 to-slate-900 text-foreground min-h-screen;
-  }
-  
-  /* Only apply fixed background on larger screens */
-  @media (min-width: 768px) {
-    body {
-      background-attachment: fixed;
-    }
+    @apply bg-background text-foreground min-h-screen;
   }
 }
 
 @layer components {
-  /* Glass morphism effects with brand colors */
-  .glass {
-    @apply bg-white/10 backdrop-blur-md border border-white/20 shadow-glass;
+  /* Liquid Glass Design System - Strategic Use Only */
+  
+  /* 1. Upload Zone (File/Contract Drop Area) */
+  .glass-upload-zone {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
   }
   
-  .glass-card {
-    @apply bg-white/5 backdrop-blur-lg border border-white/10 shadow-glass-lg rounded-xl;
+  .glass-upload-zone:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(17, 68, 139, 0.3);
   }
   
-  .glass-header {
-    @apply bg-white/10 backdrop-blur-xl border-b border-white/20;
+  /* 2. Signature Panel / Floating Action Panel */
+  .glass-signature-panel {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   }
   
-  .glass-button {
-    @apply bg-brand-600 hover:bg-brand-700 backdrop-blur-sm border border-brand-500 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 text-white font-medium;
+  /* 3. Confirmation Modals & Popups */
+  .glass-modal-overlay {
+    backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.1);
   }
   
-  .glass-input {
-    @apply bg-white/5 backdrop-blur-sm border border-white/20 focus:border-brand-400/50 focus:ring-2 focus:ring-brand-400/20;
+  .glass-modal-content {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* 4. Dashboard Cards (optional) */
+  .glass-dashboard-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* 5. Nav or Footer (optional) */
+  .glass-nav {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   }
 
-  /* Floating animation for glass elements */
-  .float-animation {
-    @apply animate-float;
+  /* Button Styles - New Design System */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 border-primary;
+  }
+  
+  .btn-secondary {
+    @apply bg-background text-primary border border-primary hover:bg-secondary hover:text-secondary-foreground;
+  }
+  
+  .btn-disabled {
+    @apply bg-gray-200 text-gray-400 cursor-not-allowed;
+  }
+
+  /* Dropdown & Filter Styles */
+  .dropdown-border {
+    @apply border-primary;
+  }
+  
+  .filter-active {
+    @apply bg-primary text-primary-foreground;
+  }
+  
+  .filter-hover {
+    background: hsl(var(--hover-tint));
+    color: hsl(var(--primary));
+  }
+  
+  .dropdown-selected {
+    @apply bg-secondary text-secondary-foreground;
+  }
+
+  /* Input Styles */
+  .input-focus {
+    @apply border-primary ring-2 ring-secondary;
+  }
+  
+  .checkbox-active {
+    @apply text-primary;
+  }
+
+  /* Nav & Sidebar */
+  .nav-active {
+    border-bottom: 2px solid hsl(var(--primary));
+  }
+  
+  .nav-hover {
+    border-bottom: 2px solid hsl(var(--secondary));
   }
 
   /* W9 Form specific styles to override dark theme */

@@ -33,8 +33,8 @@ export const FileUploadArea = ({
 
   return (
     <div
-      className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-        dragOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300'
+      className={`glass-upload-zone border-2 border-dashed rounded-lg p-8 text-center transition-all ${
+        dragOver ? 'border-primary bg-secondary/10' : 'border-border hover:border-primary/50'
       }`}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
@@ -42,10 +42,10 @@ export const FileUploadArea = ({
     >
       {uploadedFile ? (
         <div className="space-y-4">
-          <FileText className="h-16 w-16 text-green-600 mx-auto" />
+          <FileText className="h-16 w-16 text-secondary mx-auto" />
           <div>
-            <p className="text-lg font-medium text-gray-900">{uploadedFile.name}</p>
-            <p className="text-sm text-gray-500">
+            <p className="text-lg font-medium text-foreground">{uploadedFile.name}</p>
+            <p className="text-sm text-muted-foreground">
               {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
             </p>
           </div>
@@ -60,12 +60,12 @@ export const FileUploadArea = ({
         </div>
       ) : (
         <div className="space-y-4">
-          <Upload className="h-16 w-16 text-gray-400 mx-auto" />
+          <Upload className="h-16 w-16 text-muted-foreground mx-auto" />
           <div>
-            <p className="text-lg font-medium text-gray-900">
+            <p className="text-lg font-medium text-foreground">
               Drop your document here, or click to browse
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Supports PDF and Word documents (max 10MB)
             </p>
           </div>
