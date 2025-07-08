@@ -266,7 +266,7 @@ export const RichContentCreator = ({ onSave, initialContent }: RichContentCreato
             {/* Toolbar */}
             <div className="flex items-center gap-2 p-2 border-b bg-muted">
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="sm"
                 onClick={() => formatText('bold')}
                 className="h-8 w-8 p-0"
@@ -274,7 +274,7 @@ export const RichContentCreator = ({ onSave, initialContent }: RichContentCreato
                 <Bold className="h-4 w-4" />
               </Button>
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="sm"
                 onClick={() => formatText('italic')}
                 className="h-8 w-8 p-0"
@@ -282,7 +282,7 @@ export const RichContentCreator = ({ onSave, initialContent }: RichContentCreato
                 <Italic className="h-4 w-4" />
               </Button>
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="sm"
                 onClick={() => formatText('underline')}
                 className="h-8 w-8 p-0"
@@ -294,7 +294,7 @@ export const RichContentCreator = ({ onSave, initialContent }: RichContentCreato
               
               <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
                 <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <Button variant="secondary" size="sm" className="h-8 w-8 p-0">
                     <Image className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
@@ -302,7 +302,7 @@ export const RichContentCreator = ({ onSave, initialContent }: RichContentCreato
               
               <Dialog open={showLinkDialog} onOpenChange={setShowLinkDialog}>
                 <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <Button variant="secondary" size="sm" className="h-8 w-8 p-0">
                     <ShoppingCart className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
@@ -310,7 +310,7 @@ export const RichContentCreator = ({ onSave, initialContent }: RichContentCreato
               
               <Dialog open={showDutyDialog} onOpenChange={setShowDutyDialog}>
                 <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <Button variant="secondary" size="sm" className="h-8 w-8 p-0">
                     <Users className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
