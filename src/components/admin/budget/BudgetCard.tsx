@@ -108,71 +108,68 @@ export const BudgetCard = ({ budget, onEdit, onDelete, onViewDetails, onUpdate }
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1 flex-1">
-              {isEditing ? (
-                <Input
-                  value={editData.title}
-                  onChange={(e) => setEditData(prev => ({ ...prev, title: e.target.value }))}
-                  className="text-lg font-semibold"
-                />
-              ) : (
-                <CardTitle className="text-lg">{budget.title}</CardTitle>
-              )}
-              {isEditing ? (
-                <Textarea
-                  value={editData.description}
-                  onChange={(e) => setEditData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Budget description"
-                  className="text-sm"
-                  rows={2}
-                />
-              ) : (
-                <CardDescription className="line-clamp-2">
-                  {budget.description || "No description provided"}
-                </CardDescription>
-              )}
-            </div>
-            
-            <div className="flex items-center space-x-2 ml-4">
-              <Badge variant={getStatusBadgeVariant(budget.status)}>
-                {budget.status.replace("_", " ")}
-              </Badge>
-              <Badge variant={getTypeBadgeVariant(budget.budget_type)}>
-                {budget.budget_type}
-              </Badge>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="pb-3 cursor-pointer hover:bg-gray-50 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1 flex-1 min-w-0">
+                {isEditing ? (
+                  <Input
+                    value={editData.title}
+                    onChange={(e) => setEditData(prev => ({ ...prev, title: e.target.value }))}
+                    className="text-lg font-semibold"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                ) : (
+                  <CardTitle className="text-lg truncate">{budget.title}</CardTitle>
+                )}
+                <div className="flex items-center space-x-2">
+                  <Badge variant={getStatusBadgeVariant(budget.status)} className="text-xs">
+                    {budget.status.replace("_", " ")}
+                  </Badge>
+                  <Badge variant={getTypeBadgeVariant(budget.budget_type)} className="text-xs">
+                    {budget.budget_type}
+                  </Badge>
+                </div>
+              </div>
               
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="p-1">
-                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
-                </Button>
-              </CollapsibleTrigger>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="p-1">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onViewDetails?.(budget)}>
-                    View Details
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onEdit?.(budget)}>
-                    Edit in Modal
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => onDelete?.(budget)}
-                    className="text-red-600"
-                  >
-                    Delete Budget
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="flex items-center space-x-2 ml-4">
+                <div className="text-right text-sm">
+                  <div className="font-semibold">{formatCurrency(budget.total_amount)}</div>
+                  <div className="text-muted-foreground">Total Budget</div>
+                </div>
+                
+                <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="p-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onViewDetails?.(budget)}>
+                      View Details
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onEdit?.(budget)}>
+                      Edit in Modal
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => onDelete?.(budget)}
+                      className="text-red-600"
+                    >
+                      Delete Budget
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
-          </div>
-        </CardHeader>
+          </CardHeader>
+        </CollapsibleTrigger>
         
         <CardContent className="space-y-4">
           {/* Financial Summary */}
