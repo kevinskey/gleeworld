@@ -299,11 +299,11 @@ export const UserFinancialRecords = () => {
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
               <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue />
+                <SelectTrigger className="w-full sm:w-[180px] bg-white/10 border-white/20 text-white">
+                  <Filter className="h-4 w-4 mr-2 text-white" />
+                  <SelectValue className="text-white" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border-gray-200">
                   <SelectItem value="all">All Users</SelectItem>
                   <SelectItem value="has_records">Has Records</SelectItem>
                   <SelectItem value="no_records">No Records</SelectItem>
