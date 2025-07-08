@@ -28,13 +28,6 @@ interface SystemDashboardProps {
 export const SystemDashboard = ({ users, loading, activityLogs, onQuickAction }: SystemDashboardProps) => {
   const quickActions = [
     {
-      id: 'w9-forms',
-      label: 'W9 Management',
-      description: 'Review and approve W9 forms',
-      icon: FileText,
-      color: 'bg-purple-500 hover:bg-purple-600'
-    },
-    {
       id: 'financial-overview',
       label: 'Financial Overview',
       description: 'View financial dashboard',
