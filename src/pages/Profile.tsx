@@ -156,7 +156,13 @@ const Profile = () => {
   };
 
   const onSubmit = async (data: ProfileFormData) => {
-    if (!user) return;
+    console.log("Form submitted with data:", data);
+    console.log("Form errors:", errors);
+    
+    if (!user) {
+      console.log("No user found, cannot save profile");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -166,6 +172,22 @@ const Profile = () => {
         facebook: data.facebook,
         youtube: data.youtube,
       };
+
+      console.log("Attempting to update profile with:", {
+        full_name: data.full_name,
+        bio: data.bio,
+        website_url: data.website_url,
+        phone_number: data.phone_number,
+        student_number: data.student_number,
+        workplace: data.workplace,
+        school_address: data.school_address,
+        home_address: data.home_address,
+        voice_part: data.voice_part,
+        can_dance: data.can_dance,
+        preferred_payment_method: data.preferred_payment_method,
+        instruments_played: selectedInstruments,
+        social_media_links: socialMediaLinks,
+      });
 
       const { error } = await supabase
         .from("profiles")
@@ -187,8 +209,12 @@ const Profile = () => {
         })
         .eq("id", user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
 
+      console.log("Profile updated successfully");
       toast({
         title: "Success",
         description: "Profile updated successfully",
