@@ -70,13 +70,6 @@ export const SystemDashboard = ({ users, loading, activityLogs, onQuickAction }:
       color: 'bg-violet-500 hover:bg-violet-600'
     },
     {
-      id: 'bulk-w9',
-      label: 'Send W9 Forms',
-      description: 'Send W9 forms to users',
-      icon: Mail,
-      color: 'bg-orange-500 hover:bg-orange-600'
-    },
-    {
       id: 'settings',
       label: 'System Settings',
       description: 'Configure system preferences',

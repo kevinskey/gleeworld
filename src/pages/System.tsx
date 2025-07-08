@@ -38,12 +38,6 @@ const System = () => {
 
   const handleQuickAction = (action: string) => {
     switch (action) {
-      case 'users':
-        setActiveTab('users');
-        break;
-      case 'w9-forms':
-        setActiveTab('w9');
-        break;
       case 'contracts':
         setActiveTab('contracts');
         break;
@@ -68,7 +62,6 @@ const System = () => {
       case 'reports':
         setActiveTab('reports');
         break;
-      case 'bulk-w9':
       case 'settings':
       case 'activity':
         console.log(`Quick action: ${action}`);
