@@ -49,38 +49,10 @@ export const AppNavigation = () => {
       permission: "view_own_payments"
     },
     {
-      label: "Accounting",
-      href: "/accounting",
-      icon: DollarSign,
-      permission: "view_all_payments",
-      adminOnly: true
-    },
-    {
-      label: "Admin Signing",
-      href: "/admin-signing",
-      icon: PenTool,
-      permission: "admin_sign_contracts",
-      adminOnly: true
-    },
-    {
       label: "System",
       href: "/system",
       icon: Settings,
       permission: "view_system_settings",
-      adminOnly: true
-    },
-    {
-      label: "Activity",
-      href: "/activity-logs",
-      icon: Activity,
-      permission: "view_activity_logs",
-      adminOnly: true
-    },
-    {
-      label: "Users",
-      href: "/system?tab=users",
-      icon: Users,
-      permission: "manage_users",
       adminOnly: true
     }
   ];
