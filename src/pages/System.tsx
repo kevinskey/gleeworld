@@ -46,6 +46,9 @@ const System = () => {
       case 'contracts':
         setActiveTab('contracts');
         break;
+      case 'payments':
+        setActiveTab('payments');
+        break;
       case 'financial-overview':
         setActiveTab('financial-overview');
         break;
@@ -124,22 +127,6 @@ const System = () => {
                 <span className="hidden sm:inline truncate">Contracts</span>
               </TabsTrigger>
               
-              <TabsTrigger 
-                value="payments" 
-                className="flex items-center justify-center gap-1 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 rounded font-medium transition-all duration-200 min-h-[2.5rem]"
-              >
-                <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                <span className="hidden sm:inline truncate">Payments</span>
-              </TabsTrigger>
-              
-              <TabsTrigger 
-                value="w9" 
-                className="flex items-center justify-center gap-1 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 rounded font-medium transition-all duration-200 min-h-[2.5rem]"
-              >
-                <FileText className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                <span className="hidden sm:inline lg:hidden truncate">W9</span>
-                <span className="hidden lg:inline truncate">W9 Forms</span>
-              </TabsTrigger>
 
               <TabsTrigger 
                 value="library" 
@@ -155,7 +142,7 @@ const System = () => {
                   <Button 
                     variant="ghost" 
                     className={`flex items-center justify-center gap-1 text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 h-auto rounded font-medium transition-all duration-200 border border-transparent min-h-[2.5rem] ${
-                      ['financial-overview', 'user-records', 'payment-tracking', 'stipends', 'budget', 'reports'].includes(activeTab) 
+                      ['financial-overview', 'user-records', 'payment-tracking', 'stipends', 'budget', 'reports', 'payments', 'w9'].includes(activeTab) 
                         ? 'bg-brand-500 text-white shadow-md border-brand-600' 
                         : 'hover:border-gray-200'
                     }`}
@@ -187,6 +174,20 @@ const System = () => {
                   >
                     <CreditCard className="h-4 w-4 mr-3 text-brand-500" />
                     <span className="font-medium">Payment Tracking</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setActiveTab('payments')}
+                    className="text-gray-900 hover:bg-brand-50 hover:text-brand-700 cursor-pointer rounded px-3 py-2 transition-colors duration-150"
+                  >
+                    <DollarSign className="h-4 w-4 mr-3 text-brand-500" />
+                    <span className="font-medium">Payments</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setActiveTab('w9')}
+                    className="text-gray-900 hover:bg-brand-50 hover:text-brand-700 cursor-pointer rounded px-3 py-2 transition-colors duration-150"
+                  >
+                    <FileText className="h-4 w-4 mr-3 text-brand-500" />
+                    <span className="font-medium">W9 Forms</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="my-1 bg-gray-100" />
                   <DropdownMenuItem 
