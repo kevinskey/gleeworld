@@ -305,14 +305,14 @@ const Profile = () => {
             <CardContent className="space-y-6">
               <div className="flex items-center gap-6">
                 <div className="relative">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage src={avatarUrl} />
-                    <AvatarFallback>
-                      <User className="h-12 w-12" />
+                  <Avatar className="h-24 w-24 border-4 border-white/20 shadow-lg">
+                    <AvatarImage src={avatarUrl} className="object-cover" />
+                    <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20">
+                      <User className="h-12 w-12 text-primary" />
                     </AvatarFallback>
                   </Avatar>
                   {isEditing && (
-                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center cursor-pointer">
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center cursor-pointer hover:bg-black/60 transition-colors">
                       <input
                         type="file"
                         accept="image/*"
