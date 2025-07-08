@@ -6,14 +6,12 @@ import {
   Users, 
   FileText, 
   Settings, 
-  Activity, 
   BarChart3, 
-  Mail, 
-  TrendingUp,
-  CreditCard,
   DollarSign,
   PieChart,
-  Calculator
+  Calculator,
+  UserPlus,
+  Plus
 } from "lucide-react";
 import { User } from "@/hooks/useUsers";
 import { ActivityLog } from "@/hooks/useActivityLogs";
@@ -28,53 +26,46 @@ interface SystemDashboardProps {
 export const SystemDashboard = ({ users, loading, activityLogs, onQuickAction }: SystemDashboardProps) => {
   const quickActions = [
     {
-      id: 'financial-overview',
-      label: 'Financial Overview',
-      description: 'View financial dashboard',
-      icon: TrendingUp,
-      color: 'bg-green-500 hover:bg-green-600'
-    },
-    {
-      id: 'user-records',
-      label: 'User Records',
-      description: 'View user financial records',
+      id: 'create-contract',
+      label: 'Create Contract',
+      description: 'Create a new contract',
       icon: FileText,
-      color: 'bg-indigo-500 hover:bg-indigo-600'
+      color: 'bg-primary text-primary-foreground hover:bg-primary/90'
     },
     {
-      id: 'payment-tracking',
-      label: 'Payment Tracking',
-      description: 'Track and manage payments',
-      icon: CreditCard,
-      color: 'bg-emerald-500 hover:bg-emerald-600'
+      id: 'add-user',
+      label: 'Add User',
+      description: 'Add a new user to the system',
+      icon: UserPlus,
+      color: 'bg-secondary text-secondary-foreground hover:bg-secondary/90'
     },
     {
-      id: 'stipends',
-      label: 'Stipend Management',
-      description: 'Manage stipend payments',
-      icon: DollarSign,
-      color: 'bg-yellow-500 hover:bg-yellow-600'
-    },
-    {
-      id: 'budget',
-      label: 'Budget Tracking',
-      description: 'Monitor budget and expenses',
+      id: 'add-budget',
+      label: 'Add Budget',
+      description: 'Create a new budget',
       icon: PieChart,
-      color: 'bg-pink-500 hover:bg-pink-600'
+      color: 'bg-primary text-primary-foreground hover:bg-primary/90'
     },
     {
-      id: 'reports',
-      label: 'Financial Reports',
-      description: 'Generate financial reports',
+      id: 'pay-user',
+      label: 'Pay User',
+      description: 'Process user payment',
+      icon: DollarSign,
+      color: 'bg-secondary text-secondary-foreground hover:bg-secondary/90'
+    },
+    {
+      id: 'run-report',
+      label: 'Run Report',
+      description: 'Generate system reports',
       icon: BarChart3,
-      color: 'bg-violet-500 hover:bg-violet-600'
+      color: 'bg-primary text-primary-foreground hover:bg-primary/90'
     },
     {
-      id: 'settings',
-      label: 'System Settings',
-      description: 'Configure system preferences',
+      id: 'system',
+      label: 'System',
+      description: 'System configuration',
       icon: Settings,
-      color: 'bg-gray-500 hover:bg-gray-600'
+      color: 'bg-secondary text-secondary-foreground hover:bg-secondary/90'
     }
   ];
 
@@ -104,14 +95,14 @@ export const SystemDashboard = ({ users, loading, activityLogs, onQuickAction }:
                 <Button
                   key={action.id}
                   variant="outline"
-                  className={`h-auto p-3 flex flex-col items-start gap-2 text-white border-0 ${action.color} hover:shadow-md transition-all text-left`}
+                  className={`h-auto p-3 flex flex-col items-start gap-2 border-0 ${action.color} hover:shadow-md transition-all text-left`}
                   onClick={() => onQuickAction(action.id)}
                 >
                   <div className="flex items-center gap-2 w-full">
                     <Icon className="h-4 w-4 flex-shrink-0" />
                     <span className="font-medium text-sm">{action.label}</span>
                   </div>
-                  <span className="text-xs text-white/90 text-left leading-tight">
+                  <span className="text-xs opacity-90 text-left leading-tight">
                     {action.description}
                   </span>
                 </Button>

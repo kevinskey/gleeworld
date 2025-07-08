@@ -38,33 +38,23 @@ const System = () => {
 
   const handleQuickAction = (action: string) => {
     switch (action) {
-      case 'contracts':
+      case 'create-contract':
         setActiveTab('contracts');
         break;
-      case 'payments':
-        setActiveTab('payments');
+      case 'add-user':
+        setActiveTab('users');
         break;
-      case 'financial-overview':
-        setActiveTab('financial-overview');
-        break;
-      case 'user-records':
-        setActiveTab('user-records');
-        break;
-      case 'payment-tracking':
-        setActiveTab('payment-tracking');
-        break;
-      case 'stipends':
-        setActiveTab('stipends');
-        break;
-      case 'budget':
+      case 'add-budget':
         setActiveTab('budget');
         break;
-      case 'reports':
+      case 'pay-user':
+        setActiveTab('payments');
+        break;
+      case 'run-report':
         setActiveTab('reports');
         break;
-      case 'settings':
-      case 'activity':
-        console.log(`Quick action: ${action}`);
+      case 'system':
+        console.log('System configuration');
         break;
       default:
         break;
