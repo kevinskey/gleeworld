@@ -1508,6 +1508,18 @@ export type Database = {
         Args: { user_id: string; new_role: string }
         Returns: boolean
       }
+      user_can_edit_budget: {
+        Args: { budget_id_param: string; created_by_param: string }
+        Returns: boolean
+      }
+      user_can_view_budget: {
+        Args: { budget_id_param: string; created_by_param: string }
+        Returns: boolean
+      }
+      user_has_budget_permission: {
+        Args: { budget_id_param: string; permission_type_param: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "user" | "super-admin"
