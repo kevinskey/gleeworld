@@ -95,11 +95,6 @@ const System = () => {
   return (
     <UniversalLayout containerized={false}>
       <div className="container mx-auto px-2 sm:px-4 py-3">
-        <div className="mb-4">
-          <h1 className="text-lg sm:text-xl font-bold text-white mb-1">System Administration</h1>
-          <p className="text-gray-300 text-xs sm:text-sm">Comprehensive management and oversight tools</p>
-        </div>
-
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           {/* Mobile-Optimized Tab Layout */}
           <div className="bg-white/95 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm p-1 sm:p-2">
