@@ -4,13 +4,15 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileText, Search, Filter, Trash2, Eye, Send, Download, RefreshCw, Edit } from "lucide-react";
+import { FileText, Search, Filter, Trash2, Eye, Send, Download, RefreshCw, Edit, Plus, FileImage } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { getStatusColor, getStatusText } from "@/components/contracts/contractUtils";
 import { EditContractTitleDialog } from "@/components/contracts/EditContractTitleDialog";
+import { ContractCreationCollapsible } from "@/components/ContractCreationCollapsible";
+import { ContractTemplatesCollapsible } from "@/components/ContractTemplatesCollapsible";
 
 export const ContractManagement = () => {
   const { user } = useAuth();
@@ -32,6 +34,10 @@ export const ContractManagement = () => {
   // Edit dialog state
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [contractToEdit, setContractToEdit] = useState<any>(null);
+  
+  // Contract creation state
+  const [showContractCreation, setShowContractCreation] = useState(false);
+  const [creationMode, setCreationMode] = useState<'blank' | 'template'>('blank');
 
   // Fetch all contracts data for admin view
   const fetchAllContractsData = async () => {
@@ -293,6 +299,34 @@ export const ContractManagement = () => {
     fetchAllContractsData();
   };
 
+  const handleCreateContractFromBlank = () => {
+    setCreationMode('blank');
+    setShowContractCreation(true);
+  };
+
+  const handleCreateContractFromTemplate = () => {
+    setCreationMode('template');
+    setShowContractCreation(true);
+  };
+
+  const handleContractCreated = () => {
+    setShowContractCreation(false);
+    fetchAllContractsData();
+    toast({
+      title: "Success",
+      description: "Contract created successfully",
+    });
+  };
+
+  const handleUseTemplate = (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => {
+    // This will be handled by the ContractTemplatesCollapsible component
+    setShowContractCreation(false);
+    toast({
+      title: "Template Applied",
+      description: `Template "${templateName}" has been applied`,
+    });
+  };
+
   // Filter and sort current data
   const filteredContracts = currentData.filter(item => {
     const title = activeTab === "signatures" 
@@ -371,6 +405,29 @@ export const ContractManagement = () => {
 
   return (
     <div className="space-y-6">
+      {/* Contract Creation Section */}
+      {showContractCreation && (
+        <div className="space-y-4">
+          {creationMode === 'blank' ? (
+            <ContractCreationCollapsible 
+              onContractCreated={handleContractCreated}
+            />
+          ) : (
+            <ContractTemplatesCollapsible
+              onUseTemplate={handleUseTemplate}
+              onContractCreated={handleContractCreated}
+            />
+          )}
+          <div className="flex justify-end">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowContractCreation(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
       {/* Navigation Tabs */}
       <Card>
         <CardHeader>
@@ -384,10 +441,20 @@ export const ContractManagement = () => {
                 Comprehensive management of all contracts, signatures, and templates ({filteredContracts.length} of {currentData.length} items)
               </CardDescription>
             </div>
-            <Button onClick={fetchAllContractsData} variant="secondary" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleCreateContractFromBlank} variant="default" size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Create from Blank
+              </Button>
+              <Button onClick={handleCreateContractFromTemplate} variant="outline" size="sm">
+                <FileImage className="h-4 w-4 mr-2" />
+                Create from Template
+              </Button>
+              <Button onClick={fetchAllContractsData} variant="secondary" size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
