@@ -34,7 +34,7 @@ export const useUserContracts = () => {
       setError(null);
       console.log('useUserContracts: Fetching contracts for user:', user.id, 'email:', user.email);
 
-      // Fetch contracts sent to this user via email
+      // Only fetch contracts sent to this specific user via email
       const { data: recipientData, error: recipientError } = await supabase
         .from('contract_recipients_v2')
         .select('contract_id')
@@ -42,28 +42,13 @@ export const useUserContracts = () => {
 
       if (recipientError) {
         console.error('useUserContracts: Error fetching recipient data:', recipientError);
+        throw recipientError;
       }
 
-      const contractIdsFromRecipients = recipientData?.map(r => r.contract_id) || [];
-      console.log('useUserContracts: Contract IDs from recipients:', contractIdsFromRecipients);
-
-      // Also fetch contracts where this user has signature records (they are the artist)
-      const { data: signatureData, error: signatureError } = await supabase
-        .from('contract_signatures_v2')
-        .select('contract_id');
-
-      if (signatureError) {
-        console.error('useUserContracts: Error fetching signature data:', signatureError);
-      }
-
-      const contractIdsFromSignatures = signatureData?.map(s => s.contract_id) || [];
-      console.log('useUserContracts: Contract IDs from signatures:', contractIdsFromSignatures);
-
-      // Combine all contract IDs and remove duplicates
-      const allContractIds = [...new Set([...contractIdsFromRecipients, ...contractIdsFromSignatures])];
-      console.log('useUserContracts: All contract IDs:', allContractIds);
+      const contractIds = recipientData?.map(r => r.contract_id) || [];
+      console.log('useUserContracts: Contract IDs sent to user:', contractIds);
       
-      if (allContractIds.length === 0) {
+      if (contractIds.length === 0) {
         console.log('useUserContracts: No contracts found for user');
         setContracts([]);
         return;
@@ -79,7 +64,7 @@ export const useUserContracts = () => {
           status,
           created_at
         `)
-        .in('id', allContractIds)
+        .in('id', contractIds)
         .order('created_at', { ascending: false });
 
       if (contractsError) {
