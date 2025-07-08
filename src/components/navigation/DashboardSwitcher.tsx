@@ -70,12 +70,6 @@ export const DashboardSwitcher = () => {
             )}
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/" className="flex items-center cursor-pointer">
-            <BarChart3 className="mr-2 h-4 w-4" />
-            Main Dashboard
-          </Link>
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
