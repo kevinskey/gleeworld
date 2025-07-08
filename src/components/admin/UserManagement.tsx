@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,9 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Users, RefreshCw, Shield, User as UserIcon, UserPlus, Edit, Trash2, Search, Filter, Download, MoreHorizontal, Upload, DollarSign } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "@/hooks/useUsers";
 import { AddUserDialog } from "./AddUserDialog";
-import { EditUserDialog } from "./EditUserDialog";
 import { DeleteUserDialog } from "./DeleteUserDialog";
 import { UserImportDialog } from "./UserImportDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -24,12 +25,12 @@ interface UserManagementProps {
 }
 
 export const UserManagement = ({ users, loading, error, onRefetch }: UserManagementProps) => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [sortBy, setSortBy] = useState("created_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [addUserOpen, setAddUserOpen] = useState(false);
-  const [editUserOpen, setEditUserOpen] = useState(false);
   const [deleteUserOpen, setDeleteUserOpen] = useState(false);
   const [importUsersOpen, setImportUsersOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -92,8 +93,7 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
     });
 
   const handleEditUser = (user: User) => {
-    setSelectedUser(user);
-    setEditUserOpen(true);
+    navigate(`/profile?userId=${user.id}`);
   };
 
   const handleDeleteUser = (user: User) => {
@@ -426,28 +426,41 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
                 {filteredAndSortedUsers.map((user) => (
                   <div key={user.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                      {/* User Info */}
-                      <div className="flex items-start gap-3 min-w-0 flex-1">
-                        <div className="flex-shrink-0">
-                          {getRoleIcon(user.role)}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium text-sm sm:text-base truncate">
-                            {user.full_name || 'No name provided'}
-                          </p>
-                          <p className="text-xs sm:text-sm text-gray-600 truncate">
-                            {user.email || 'No email'}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant={getRoleBadgeVariant(user.role)} className="text-xs">
-                              {user.role}
-                            </Badge>
-                            <span className="text-xs text-gray-500">
-                              {new Date(user.created_at).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+                       {/* User Info */}
+                       <div className="flex items-start gap-3 min-w-0 flex-1">
+                         <Avatar className="h-10 w-10 border-2 border-brand-200/50 shadow-sm flex-shrink-0">
+                           <AvatarImage 
+                             src="/placeholder.svg" 
+                             alt={user.full_name || user.email || "User"} 
+                             className="object-cover"
+                           />
+                           <AvatarFallback className="bg-gradient-to-br from-brand-100 to-brand-200 text-brand-700">
+                             {user.full_name ? 
+                               user.full_name.split(' ').map(n => n[0]).join('').toUpperCase() :
+                               <UserIcon className="h-4 w-4" />
+                             }
+                           </AvatarFallback>
+                         </Avatar>
+                         <div className="flex-shrink-0">
+                           {getRoleIcon(user.role)}
+                         </div>
+                         <div className="min-w-0 flex-1">
+                           <p className="font-medium text-sm sm:text-base truncate">
+                             {user.full_name || 'No name provided'}
+                           </p>
+                           <p className="text-xs sm:text-sm text-gray-600 truncate">
+                             {user.email || 'No email'}
+                           </p>
+                           <div className="flex items-center gap-2 mt-1">
+                             <Badge variant={getRoleBadgeVariant(user.role)} className="text-xs">
+                               {user.role}
+                             </Badge>
+                             <span className="text-xs text-gray-500">
+                               {new Date(user.created_at).toLocaleDateString()}
+                             </span>
+                           </div>
+                         </div>
+                       </div>
                       
                        {/* Action Buttons */}
                        <div className="flex gap-2 flex-shrink-0">
@@ -507,13 +520,6 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
         open={addUserOpen}
         onOpenChange={setAddUserOpen}
         onUserAdded={onRefetch}
-      />
-
-      <EditUserDialog
-        user={selectedUser}
-        open={editUserOpen}
-        onOpenChange={setEditUserOpen}
-        onUserUpdated={onRefetch}
       />
 
       <DeleteUserDialog
