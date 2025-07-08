@@ -74,10 +74,10 @@ export const CreateBudgetDialog = ({ contractId, eventId, onSuccess }: CreateBud
           Create Budget
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] bg-white text-black">
         <DialogHeader>
-          <DialogTitle>Create New Budget</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-black">Create New Budget</DialogTitle>
+          <DialogDescription className="text-gray-600">
             Create a new budget to track expenses and allocations.
           </DialogDescription>
         </DialogHeader>
@@ -94,13 +94,14 @@ export const CreateBudgetDialog = ({ contractId, eventId, onSuccess }: CreateBud
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description" className="text-black">Description</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Optional description"
-              rows={3}
+              placeholder="Enter a detailed description of this budget..."
+              rows={5}
+              className="bg-white text-black border-gray-300"
             />
           </div>
 
