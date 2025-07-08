@@ -51,21 +51,8 @@ export const UniversalHeader = () => {
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
             {user && (
               <>
-                {/* Mobile Navigation */}
-                {isMobile && (
-                  <Sheet>
-                    <SheetTrigger asChild>
-                      <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 p-1 sm:p-2">
-                        <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
-                      </Button>
-                    </SheetTrigger>
-                    <SheetContent side="left" className="w-64">
-                      <div className="py-4">
-                        <AppNavigation />
-                      </div>
-                    </SheetContent>
-                  </Sheet>
-                )}
+                {/* Mobile Navigation - Handled by AppNavigation component */}
+                {isMobile && <AppNavigation />}
                 
                 <DashboardSwitcher />
                 

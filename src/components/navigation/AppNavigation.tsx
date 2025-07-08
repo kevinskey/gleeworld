@@ -96,7 +96,33 @@ export const AppNavigation = () => {
     return location.pathname === href;
   };
 
-  const NavigationContent = () => (
+  // Desktop horizontal navigation for header
+  const DesktopNavigation = () => (
+    <nav className="flex items-center space-x-1">
+      {filteredItems.map((item) => (
+        <Link
+          key={item.href}
+          to={item.href}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            isActive(item.href)
+              ? "bg-white/20 text-white"
+              : "text-white/80 hover:text-white hover:bg-white/10"
+          }`}
+        >
+          <item.icon className="h-4 w-4" />
+          <span className="hidden lg:inline">{item.label}</span>
+          {item.adminOnly && (
+            <Badge variant="secondary" className="ml-1 text-xs bg-white/20 text-white border-white/30">
+              Admin
+            </Badge>
+          )}
+        </Link>
+      ))}
+    </nav>
+  );
+
+  // Mobile navigation content for sheet
+  const MobileNavigationContent = () => (
     <nav className="space-y-2">
       {filteredItems.map((item) => (
         <Link
@@ -105,8 +131,8 @@ export const AppNavigation = () => {
           onClick={() => setMobileOpen(false)}
           className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
             isActive(item.href)
-              ? "bg-brand-100 text-brand-800"
-              : "text-gray-700 hover:bg-gray-100"
+              ? "bg-primary text-primary-foreground"
+              : "text-foreground hover:bg-accent hover:text-accent-foreground"
           }`}
         >
           <item.icon className="h-4 w-4" />
@@ -123,33 +149,26 @@ export const AppNavigation = () => {
 
   return (
     <>
-      {/* Desktop Navigation */}
-      <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-white border-r border-gray-200">
-        <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
-          <div className="flex items-center flex-shrink-0 px-4 mb-6">
-            <h1 className="text-xl font-bold text-gray-900">Contract Manager</h1>
-          </div>
-          <div className="mt-5 flex-grow flex flex-col px-4">
-            <NavigationContent />
-          </div>
-        </div>
+      {/* Desktop Navigation - Horizontal for header */}
+      <div className="hidden md:block">
+        <DesktopNavigation />
       </div>
 
-      {/* Mobile Navigation */}
+      {/* Mobile Navigation - Sheet sidebar */}
       <div className="md:hidden">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="sm" className="md:hidden p-1 sm:p-2">
+            <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 p-1 sm:p-2">
               <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-56 sm:w-64 p-0">
+          <SheetContent side="left" className="w-56 sm:w-64 p-0 bg-background">
             <div className="flex flex-col h-full">
               <div className="flex items-center h-12 sm:h-16 px-4 border-b">
-                <h1 className="text-base sm:text-lg font-bold text-gray-900">Contract Manager</h1>
+                <h1 className="text-base sm:text-lg font-bold">Contract Manager</h1>
               </div>
               <div className="flex-1 px-4 py-4">
-                <NavigationContent />
+                <MobileNavigationContent />
               </div>
             </div>
           </SheetContent>
