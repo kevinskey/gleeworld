@@ -17,6 +17,7 @@ import W9FormPage from "./pages/W9FormPage";
 import NotFound from "./pages/NotFound";
 import Accounting from "./pages/Accounting";
 import UserDashboard from "./pages/UserDashboard";
+import ContentCreator from "./pages/ContentCreator";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -169,6 +170,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <UserDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/content-creator" 
+                element={
+                  <ProtectedRoute>
+                    <ContentCreator />
                   </ProtectedRoute>
                 } 
               />
