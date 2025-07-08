@@ -13,7 +13,8 @@ import {
   Activity,
   Menu,
   Library,
-  PenTool
+  PenTool,
+  Calendar
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission, isAdmin } from "@/constants/permissions";
@@ -47,6 +48,18 @@ export const AppNavigation = () => {
       href: "/?tab=finance",
       icon: DollarSign,
       permission: "view_own_payments"
+    },
+    {
+      label: "Event Planner",
+      href: "/event-planner",
+      icon: Calendar,
+      permission: null
+    },
+    {
+      label: "Content Creator",
+      href: "/content-creator",
+      icon: PenTool,
+      permission: null
     },
     {
       label: "System",

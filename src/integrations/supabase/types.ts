@@ -853,6 +853,74 @@ export type Database = {
           },
         ]
       }
+      event_line_items: {
+        Row: {
+          amazon_url: string | null
+          assigned_to_id: string | null
+          category: string
+          created_at: string
+          event_id: string
+          id: string
+          item_description: string
+          notes: string | null
+          paid_from: string | null
+          purchase_date_planned: string | null
+          purchase_status: string | null
+          quantity: number | null
+          receipt_url: string | null
+          subtotal: number | null
+          unit_cost: number | null
+          updated_at: string
+          vendor_store: string | null
+        }
+        Insert: {
+          amazon_url?: string | null
+          assigned_to_id?: string | null
+          category?: string
+          created_at?: string
+          event_id: string
+          id?: string
+          item_description: string
+          notes?: string | null
+          paid_from?: string | null
+          purchase_date_planned?: string | null
+          purchase_status?: string | null
+          quantity?: number | null
+          receipt_url?: string | null
+          subtotal?: number | null
+          unit_cost?: number | null
+          updated_at?: string
+          vendor_store?: string | null
+        }
+        Update: {
+          amazon_url?: string | null
+          assigned_to_id?: string | null
+          category?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          item_description?: string
+          notes?: string | null
+          paid_from?: string | null
+          purchase_date_planned?: string | null
+          purchase_status?: string | null
+          quantity?: number | null
+          receipt_url?: string | null
+          subtotal?: number | null
+          unit_cost?: number | null
+          updated_at?: string
+          vendor_store?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_line_items_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_participants: {
         Row: {
           added_at: string
@@ -885,41 +953,121 @@ export type Database = {
           },
         ]
       }
-      events: {
+      event_team_members: {
         Row: {
           created_at: string
+          event_id: string
+          id: string
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_team_members_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          approval_date: string | null
+          approval_needed: boolean | null
+          approved: boolean | null
+          approver_name: string | null
+          brief_description: string | null
+          created_at: string
           created_by: string
+          date_submitted_for_approval: string | null
           description: string | null
           end_date: string | null
+          event_date_end: string | null
+          event_date_start: string | null
+          event_lead_id: string | null
+          event_name: string | null
           event_type: string
+          expected_headcount: number | null
+          faculty_advisor: string | null
           id: string
+          is_travel_involved: boolean | null
           location: string | null
+          no_sing_rest_date_end: string | null
+          no_sing_rest_date_start: string | null
+          no_sing_rest_required: boolean | null
           send_contracts: boolean
           start_date: string
           title: string
           updated_at: string
         }
         Insert: {
+          approval_date?: string | null
+          approval_needed?: boolean | null
+          approved?: boolean | null
+          approver_name?: string | null
+          brief_description?: string | null
           created_at?: string
           created_by: string
+          date_submitted_for_approval?: string | null
           description?: string | null
           end_date?: string | null
+          event_date_end?: string | null
+          event_date_start?: string | null
+          event_lead_id?: string | null
+          event_name?: string | null
           event_type?: string
+          expected_headcount?: number | null
+          faculty_advisor?: string | null
           id?: string
+          is_travel_involved?: boolean | null
           location?: string | null
+          no_sing_rest_date_end?: string | null
+          no_sing_rest_date_start?: string | null
+          no_sing_rest_required?: boolean | null
           send_contracts?: boolean
           start_date: string
           title: string
           updated_at?: string
         }
         Update: {
+          approval_date?: string | null
+          approval_needed?: boolean | null
+          approved?: boolean | null
+          approver_name?: string | null
+          brief_description?: string | null
           created_at?: string
           created_by?: string
+          date_submitted_for_approval?: string | null
           description?: string | null
           end_date?: string | null
+          event_date_end?: string | null
+          event_date_start?: string | null
+          event_lead_id?: string | null
+          event_name?: string | null
           event_type?: string
+          expected_headcount?: number | null
+          faculty_advisor?: string | null
           id?: string
+          is_travel_involved?: boolean | null
           location?: string | null
+          no_sing_rest_date_end?: string | null
+          no_sing_rest_date_start?: string | null
+          no_sing_rest_required?: boolean | null
           send_contracts?: boolean
           start_date?: string
           title?: string

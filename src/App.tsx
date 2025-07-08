@@ -18,6 +18,7 @@ import NotFound from "./pages/NotFound";
 import Accounting from "./pages/Accounting";
 import UserDashboard from "./pages/UserDashboard";
 import ContentCreator from "./pages/ContentCreator";
+import EventPlanner from "./pages/EventPlanner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -178,6 +179,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <ContentCreator />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/event-planner" 
+                element={
+                  <ProtectedRoute>
+                    <EventPlanner />
                   </ProtectedRoute>
                 } 
               />
