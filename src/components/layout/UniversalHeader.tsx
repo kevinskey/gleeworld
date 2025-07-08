@@ -8,7 +8,6 @@ import { LogOut, User, Settings, Menu } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppNavigation } from "@/components/navigation/AppNavigation";
 import { SystemNavigation } from "@/components/navigation/SystemNavigation";
-import { AIAssist } from "@/components/shared/AIAssist";
 import { DashboardSwitcher } from "@/components/navigation/DashboardSwitcher";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TaskNotifications } from "@/components/shared/TaskNotifications";
@@ -85,12 +84,6 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
                 <DashboardSwitcher />
                 
                 <TaskNotifications />
-                
-                <AIAssist 
-                  context="contract management" 
-                  placeholder="How can I help you today?"
-                  className="hidden sm:flex"
-                />
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
