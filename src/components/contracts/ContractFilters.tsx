@@ -70,14 +70,9 @@ export const ContractFilters = ({
         
         <div className="flex items-center gap-2">
           <Button
-            variant="outline"
+            variant={sortBy === 'created_at' ? 'default' : 'glass'}
             size="sm"
             onClick={() => handleSortClick('created_at')}
-            className={`${
-              sortBy === 'created_at' 
-                ? 'bg-brand-500 border-brand-600 text-white hover:bg-brand-600' 
-                : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
-            }`}
           >
             <Calendar className="h-4 w-4 mr-1" />
             Date
@@ -87,14 +82,9 @@ export const ContractFilters = ({
           </Button>
           
           <Button
-            variant="outline"
+            variant={sortBy === 'title' ? 'default' : 'glass'}
             size="sm"
             onClick={() => handleSortClick('title')}
-            className={`${
-              sortBy === 'title' 
-                ? 'bg-brand-500 border-brand-600 text-white hover:bg-brand-600' 
-                : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
-            }`}
           >
             Name
             {sortBy === 'title' && (
