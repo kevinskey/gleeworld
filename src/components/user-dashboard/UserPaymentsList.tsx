@@ -47,36 +47,36 @@ export const UserPaymentsList = () => {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 sm:space-y-4">
       {payments.map((payment) => (
         <Card key={payment.id}>
-          <CardHeader className="pb-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
+          <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-2">
+              <div className="flex-1">
                 <CardTitle className="text-gray-900 flex items-center gap-2 text-lg sm:text-xl">
                   <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
                   ${payment.amount || 0}
                 </CardTitle>
-                <CardDescription className="text-gray-600 text-xs sm:text-sm">
+                <CardDescription className="text-gray-600 text-xs sm:text-sm mt-1">
                   {payment.payment_date 
                     ? `Paid on ${new Date(payment.payment_date).toLocaleDateString()}`
                     : `Recorded on ${new Date(payment.created_at).toLocaleDateString()}`
                   }
                 </CardDescription>
               </div>
-              <Badge className="bg-green-100 text-green-800 text-xs self-start sm:self-center">
+              <Badge className="bg-green-100 text-green-800 text-xs self-start sm:self-center flex-shrink-0">
                 <CreditCard className="h-3 w-3 mr-1" />
                 {payment.payment_method}
               </Badge>
             </div>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="space-y-2">
+          <CardContent className="pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
+            <div className="space-y-2 sm:space-y-3">
               {payment.notes && (
-                <p className="text-sm text-gray-600">{payment.notes}</p>
+                <p className="text-sm text-gray-600 leading-relaxed">{payment.notes}</p>
               )}
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <Calendar className="h-3 w-3" />
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
+                <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>Recorded: {new Date(payment.created_at).toLocaleDateString()}</span>
               </div>
             </div>

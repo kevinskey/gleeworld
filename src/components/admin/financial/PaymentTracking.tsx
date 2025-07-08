@@ -62,25 +62,25 @@ export const PaymentTracking = () => {
   return (
     <>
       <Card>
-        <CardHeader>
-          <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
-            <div>
-              <CardTitle className="flex items-center gap-2">
+        <CardHeader className="px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex flex-col gap-4 sm:gap-3 md:flex-row md:justify-between md:items-center">
+            <div className="flex-1">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                 <CreditCard className="h-5 w-5" />
                 Payment Tracking
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="mt-1 text-sm sm:text-base">
                 Monitor and manage all payments ({filteredPayments.length} payments, {formatCurrency(totalAmount)} total)
               </CardDescription>
             </div>
-            <Button onClick={() => setShowAddDialog(true)} variant="default" className="w-full md:w-auto">
+            <Button onClick={() => setShowAddDialog(true)} variant="default" className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Record Payment
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-3 md:flex-row md:gap-4 mb-4 md:mb-6">
+        <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+          <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:gap-4 mb-4 sm:mb-5 md:mb-6">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -88,12 +88,12 @@ export const PaymentTracking = () => {
                   placeholder="Search by user name or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 h-10 sm:h-11"
                 />
               </div>
             </div>
             <Select value={methodFilter} onValueChange={setMethodFilter}>
-              <SelectTrigger className="w-full md:w-[160px] bg-brand-600 border-brand-700 text-white hover:bg-brand-700">
+              <SelectTrigger className="w-full sm:w-[180px] md:w-[160px] bg-brand-600 border-brand-700 text-white hover:bg-brand-700 h-10 sm:h-11">
                 <SelectValue placeholder="Payment method" className="text-white" />
               </SelectTrigger>
               <SelectContent className="bg-white border-gray-200">
@@ -121,20 +121,20 @@ export const PaymentTracking = () => {
               </p>
             </div>
           ) : (
-            <div className="space-y-3 md:space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {filteredPayments.map((payment) => (
-                <div key={payment.id} className="flex flex-col md:flex-row md:items-center justify-between p-3 md:p-4 border rounded-lg hover:bg-gray-50 transition-colors gap-3 md:gap-0">
-                  <div className="flex items-center gap-3 md:gap-4 flex-1">
-                    <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-full flex-shrink-0">
-                      <DollarSign className="h-5 w-5 text-green-600" />
+                <div key={payment.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 md:p-4 border rounded-lg hover:bg-gray-50 transition-colors gap-4 sm:gap-3 md:gap-0">
+                  <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1">
+                    <div className="flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 bg-green-100 rounded-full flex-shrink-0">
+                      <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm md:text-base">
+                      <p className="font-medium text-base sm:text-lg md:text-base leading-tight">
                         {formatCurrency(payment.amount || 0)} to {payment.user_full_name || payment.user_email}
                       </p>
-                      <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm text-gray-600 mt-1">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3 md:h-4 md:w-4" />
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 text-sm sm:text-base md:text-sm text-gray-600 mt-2 sm:mt-1">
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <Calendar className="h-4 w-4 sm:h-5 sm:w-5 md:h-4 md:w-4" />
                           <span>
                             {payment.payment_date 
                               ? new Date(payment.payment_date).toLocaleDateString()
@@ -143,16 +143,16 @@ export const PaymentTracking = () => {
                           </span>
                         </div>
                         {payment.contract_title && (
-                          <span className="truncate">• {payment.contract_title}</span>
+                          <span className="truncate text-gray-500">• {payment.contract_title}</span>
                         )}
                       </div>
                       {payment.notes && (
-                        <p className="text-xs md:text-sm text-gray-500 mt-1 line-clamp-2">{payment.notes}</p>
+                        <p className="text-sm sm:text-base md:text-sm text-gray-500 mt-2 sm:mt-1 line-clamp-2 leading-relaxed">{payment.notes}</p>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <Badge variant="outline">
+                  <div className="flex items-center gap-2 flex-shrink-0 self-start sm:self-center">
+                    <Badge variant="outline" className="text-xs sm:text-sm">
                       {payment.payment_method}
                     </Badge>
                   </div>
