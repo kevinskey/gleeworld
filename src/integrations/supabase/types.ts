@@ -147,6 +147,220 @@ export type Database = {
           },
         ]
       }
+      budget_categories: {
+        Row: {
+          allocated_amount: number
+          budget_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          remaining_amount: number | null
+          spent_amount: number
+          updated_at: string
+        }
+        Insert: {
+          allocated_amount?: number
+          budget_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          remaining_amount?: number | null
+          spent_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          allocated_amount?: number
+          budget_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          remaining_amount?: number | null
+          spent_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_categories_budget_id_fkey"
+            columns: ["budget_id"]
+            isOneToOne: false
+            referencedRelation: "budgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budget_permissions: {
+        Row: {
+          budget_id: string
+          granted_at: string
+          granted_by: string
+          id: string
+          permission_type: string
+          user_id: string
+        }
+        Insert: {
+          budget_id: string
+          granted_at?: string
+          granted_by: string
+          id?: string
+          permission_type: string
+          user_id: string
+        }
+        Update: {
+          budget_id?: string
+          granted_at?: string
+          granted_by?: string
+          id?: string
+          permission_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_permissions_budget_id_fkey"
+            columns: ["budget_id"]
+            isOneToOne: false
+            referencedRelation: "budgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budget_transactions: {
+        Row: {
+          amount: number
+          budget_category_id: string | null
+          budget_id: string
+          created_at: string
+          description: string | null
+          finance_record_id: string | null
+          id: string
+          payment_id: string | null
+          receipt_id: string | null
+          transaction_date: string
+          transaction_type: string
+        }
+        Insert: {
+          amount: number
+          budget_category_id?: string | null
+          budget_id: string
+          created_at?: string
+          description?: string | null
+          finance_record_id?: string | null
+          id?: string
+          payment_id?: string | null
+          receipt_id?: string | null
+          transaction_date: string
+          transaction_type: string
+        }
+        Update: {
+          amount?: number
+          budget_category_id?: string | null
+          budget_id?: string
+          created_at?: string
+          description?: string | null
+          finance_record_id?: string | null
+          id?: string
+          payment_id?: string | null
+          receipt_id?: string | null
+          transaction_date?: string
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_transactions_budget_category_id_fkey"
+            columns: ["budget_category_id"]
+            isOneToOne: false
+            referencedRelation: "budget_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_transactions_budget_id_fkey"
+            columns: ["budget_id"]
+            isOneToOne: false
+            referencedRelation: "budgets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_transactions_finance_record_id_fkey"
+            columns: ["finance_record_id"]
+            isOneToOne: false
+            referencedRelation: "finance_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_transactions_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "user_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_transactions_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budgets: {
+        Row: {
+          allocated_amount: number
+          budget_type: string
+          contract_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string | null
+          event_id: string | null
+          id: string
+          remaining_amount: number | null
+          spent_amount: number
+          start_date: string
+          status: string
+          title: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          allocated_amount?: number
+          budget_type?: string
+          contract_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date?: string | null
+          event_id?: string | null
+          id?: string
+          remaining_amount?: number | null
+          spent_amount?: number
+          start_date: string
+          status?: string
+          title: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          allocated_amount?: number
+          budget_type?: string
+          contract_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string | null
+          event_id?: string | null
+          id?: string
+          remaining_amount?: number | null
+          spent_amount?: number
+          start_date?: string
+          status?: string
+          title?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contract_documents: {
         Row: {
           content: string

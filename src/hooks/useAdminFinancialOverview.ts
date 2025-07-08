@@ -13,6 +13,10 @@ interface FinancialOverview {
   activeUsers: number;
   thisMonthPayments: number;
   thisMonthCount: number;
+  totalBudgets: number;
+  totalBudgetAmount: number;
+  budgetsAtRisk: number;
+  budgetUtilization: number;
   recentActivity: Array<{
     type: string;
     description: string;
@@ -74,6 +78,15 @@ export const useAdminFinancialOverview = () => {
           balance
         `);
 
+      // Fetch budget data
+      const { data: budgets } = await supabase
+        .from('budgets')
+        .select(`
+          total_amount,
+          spent_amount,
+          status
+        `);
+
       // Fetch user profiles for names
       const { data: profiles } = await supabase
         .from('profiles')
@@ -101,6 +114,15 @@ export const useAdminFinancialOverview = () => {
         .reduce((sum, { balance }) => sum + (balance || 0), 0);
 
       const activeUsers = userBalances.size;
+
+      // Budget calculations
+      const activeBudgets = budgets?.filter(b => b.status === 'active') || [];
+      const totalBudgets = budgets?.length || 0;
+      const totalBudgetAmount = activeBudgets.reduce((sum, b) => sum + (b.total_amount || 0), 0);
+      const budgetsAtRisk = activeBudgets.filter(b => b.spent_amount > b.total_amount * 0.8).length;
+      const budgetUtilization = totalBudgetAmount > 0 
+        ? (activeBudgets.reduce((sum, b) => sum + (b.spent_amount || 0), 0) / totalBudgetAmount) * 100 
+        : 0;
 
       // This month payments
       const thisMonth = new Date();
@@ -161,6 +183,10 @@ export const useAdminFinancialOverview = () => {
         activeUsers,
         thisMonthPayments,
         thisMonthCount,
+        totalBudgets,
+        totalBudgetAmount,
+        budgetsAtRisk,
+        budgetUtilization,
         recentActivity,
         paymentMethods
       });
