@@ -93,16 +93,17 @@ export const PaymentTracking = () => {
               </div>
             </div>
             <Select value={methodFilter} onValueChange={setMethodFilter}>
-              <SelectTrigger className="w-full md:w-[160px]">
-                <SelectValue placeholder="Payment method" />
+              <SelectTrigger className="w-full md:w-[160px] bg-brand-600 border-brand-700 text-white hover:bg-brand-700">
+                <SelectValue placeholder="Payment method" className="text-white" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border-gray-200">
                 <SelectItem value="all">All Methods</SelectItem>
                 <SelectItem value="check">Check</SelectItem>
                 <SelectItem value="cash">Cash</SelectItem>
                 <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
                 <SelectItem value="paypal">PayPal</SelectItem>
                 <SelectItem value="venmo">Venmo</SelectItem>
+                <SelectItem value="zelle">Zelle</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>

@@ -21,10 +21,10 @@ export const FinancialReports = () => {
             </div>
             <div className="flex gap-2">
               <Select defaultValue="monthly">
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue />
+                <SelectTrigger className="w-[140px] bg-brand-600 border-brand-700 text-white hover:bg-brand-700">
+                  <SelectValue className="text-white" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border-gray-200">
                   <SelectItem value="weekly">Weekly</SelectItem>
                   <SelectItem value="monthly">Monthly</SelectItem>
                   <SelectItem value="quarterly">Quarterly</SelectItem>
