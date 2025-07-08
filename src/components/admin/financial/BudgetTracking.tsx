@@ -203,6 +203,7 @@ export const BudgetTracking = () => {
                   onEdit={handleEditBudget}
                   onDelete={handleDeleteBudget}
                   onViewDetails={handleViewDetails}
+                  onUpdate={updateBudget}
                 />
               ))}
             </div>
