@@ -19,6 +19,7 @@ import Accounting from "./pages/Accounting";
 import UserDashboard from "./pages/UserDashboard";
 import ContentCreator from "./pages/ContentCreator";
 import EventPlanner from "./pages/EventPlanner";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -187,6 +188,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <EventPlanner />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <Profile />
                   </ProtectedRoute>
                 } 
               />

@@ -1250,28 +1250,73 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
+          bio: string | null
+          can_dance: boolean | null
           created_at: string | null
           email: string | null
           full_name: string | null
+          home_address: string | null
           id: string
+          instruments_played: string[] | null
+          phone_number: string | null
+          preferred_payment_method:
+            | Database["public"]["Enums"]["payment_method_enum"]
+            | null
           role: string | null
+          school_address: string | null
+          social_media_links: Json | null
+          student_number: string | null
           updated_at: string | null
+          voice_part: Database["public"]["Enums"]["voice_part_enum"] | null
+          website_url: string | null
+          workplace: string | null
         }
         Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          can_dance?: boolean | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
+          home_address?: string | null
           id: string
+          instruments_played?: string[] | null
+          phone_number?: string | null
+          preferred_payment_method?:
+            | Database["public"]["Enums"]["payment_method_enum"]
+            | null
           role?: string | null
+          school_address?: string | null
+          social_media_links?: Json | null
+          student_number?: string | null
           updated_at?: string | null
+          voice_part?: Database["public"]["Enums"]["voice_part_enum"] | null
+          website_url?: string | null
+          workplace?: string | null
         }
         Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          can_dance?: boolean | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
+          home_address?: string | null
           id?: string
+          instruments_played?: string[] | null
+          phone_number?: string | null
+          preferred_payment_method?:
+            | Database["public"]["Enums"]["payment_method_enum"]
+            | null
           role?: string | null
+          school_address?: string | null
+          social_media_links?: Json | null
+          student_number?: string | null
           updated_at?: string | null
+          voice_part?: Database["public"]["Enums"]["voice_part_enum"] | null
+          website_url?: string | null
+          workplace?: string | null
         }
         Relationships: []
       }
@@ -1763,7 +1808,9 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user" | "super-admin"
+      payment_method_enum: "zelle" | "cashapp" | "venmo" | "apple_pay" | "check"
       performer_status: "draft" | "submitted" | "approved"
+      voice_part_enum: "S1" | "S2" | "A1" | "A2" | "T1" | "T2" | "B1" | "B2"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1892,7 +1939,9 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user", "super-admin"],
+      payment_method_enum: ["zelle", "cashapp", "venmo", "apple_pay", "check"],
       performer_status: ["draft", "submitted", "approved"],
+      voice_part_enum: ["S1", "S2", "A1", "A2", "T1", "T2", "B1", "B2"],
     },
   },
 } as const
