@@ -149,7 +149,9 @@ export const FinancialOverview = () => {
               {overview?.paymentMethods?.map((method, index) => (
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <Badge variant="outline">{method.method}</Badge>
+                    <Badge variant="secondary" className="bg-secondary/80 text-secondary-foreground">
+                      {method.method}
+                    </Badge>
                   </div>
                   <div className="text-right">
                     <p className="font-medium">{formatCurrency(method.total)}</p>
