@@ -2,13 +2,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Calendar, Download, Eye } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { FileText, Calendar, Download, Eye, User } from "lucide-react";
 import { useUserContracts } from "@/hooks/useUserContracts";
+import { useProfile } from "@/hooks/useProfile";
 import { useState } from "react";
 import { ContractViewer } from "@/components/ContractViewer";
 
 export const UserContractsList = () => {
   const { contracts, loading, error } = useUserContracts();
+  const { profile } = useProfile();
   const [selectedContract, setSelectedContract] = useState<any>(null);
   const [contractViewerOpen, setContractViewerOpen] = useState(false);
 
@@ -73,14 +76,29 @@ export const UserContractsList = () => {
           <Card key={contract.id}>
             <CardHeader>
               <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-gray-900 flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    {contract.title}
-                  </CardTitle>
-                  <CardDescription className="text-gray-600">
-                    Created on {new Date(contract.created_at).toLocaleDateString()}
-                  </CardDescription>
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-12 w-12 border-2 border-brand-200/50 shadow-sm flex-shrink-0">
+                    <AvatarImage 
+                      src={profile?.avatar_url || undefined} 
+                      alt={profile?.full_name || "User"} 
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="bg-gradient-to-br from-brand-100 to-brand-200 text-brand-700">
+                      {profile?.full_name ? 
+                        profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() :
+                        <User className="h-5 w-5" />
+                      }
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <CardTitle className="text-gray-900 flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      {contract.title}
+                    </CardTitle>
+                    <CardDescription className="text-gray-600">
+                      Created on {new Date(contract.created_at).toLocaleDateString()}
+                    </CardDescription>
+                  </div>
                 </div>
                 <Badge className={getStatusColor(contract.signature_status)}>
                   {contract.signature_status.replace('_', ' ')}

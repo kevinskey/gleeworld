@@ -2,10 +2,12 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileText, Eye, Send, Trash2, PenTool, RotateCcw, Edit } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { FileText, Eye, Send, Trash2, PenTool, RotateCcw, Edit, User } from "lucide-react";
 import { getStatusColor, getStatusText } from "./contractUtils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useProfile } from "@/hooks/useProfile";
 import { isAdmin } from "@/constants/permissions";
 import type { Contract } from "@/hooks/useContracts";
 
@@ -36,6 +38,7 @@ export const ContractItem = ({
 }: ContractItemProps) => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
+  const { profile } = useProfile();
   const hasBeenSent = sendCount > 0;
   const userIsAdmin = user && userProfile && isAdmin(userProfile.role);
 
@@ -55,6 +58,19 @@ export const ContractItem = ({
           onCheckedChange={(checked) => onSelect(contract.id, checked as boolean)}
           className="border-brand-300 data-[state=checked]:bg-brand-400 data-[state=checked]:border-brand-400 mt-1 sm:mt-0"
         />
+        <Avatar className="h-10 w-10 border-2 border-brand-200/50 shadow-sm flex-shrink-0">
+          <AvatarImage 
+            src={profile?.avatar_url || undefined} 
+            alt={profile?.full_name || user?.email || "User"} 
+            className="object-cover"
+          />
+          <AvatarFallback className="bg-gradient-to-br from-brand-100 to-brand-200 text-brand-700">
+            {profile?.full_name ? 
+              profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() :
+              <User className="h-4 w-4" />
+            }
+          </AvatarFallback>
+        </Avatar>
         <FileText className="h-6 w-6 text-brand-500 flex-shrink-0 mt-1 sm:mt-0" />
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold text-brand-800 truncate">{contract.title}</h3>
