@@ -299,17 +299,16 @@ const Profile = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-white">Profile</h1>
-            <p className="text-white/80">Manage your personal information</p>
+            <p className="text-white/80">
+              {isEditing ? "Make changes to your profile information" : "Manage your personal information"}
+            </p>
           </div>
           <Button
             onClick={() => setIsEditing(!isEditing)}
             variant={isEditing ? "outline" : "default"}
           >
             {isEditing ? (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                Cancel
-              </>
+              "Cancel Editing"
             ) : (
               <>
                 <Edit className="h-4 w-4 mr-2" />
@@ -318,6 +317,15 @@ const Profile = () => {
             )}
           </Button>
         </div>
+
+        {!isEditing && (
+          <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <p className="text-blue-100 text-sm">
+              <Edit className="h-4 w-4 inline mr-2" />
+              Click "Edit Profile" above to make changes to your information
+            </p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Profile Picture & Basic Info */}
@@ -351,7 +359,7 @@ const Profile = () => {
                 </div>
                 <div className="flex-1 space-y-4">
                   <div>
-                    <Label htmlFor="full_name">Full Name</Label>
+                    <Label htmlFor="full_name">Full Name *</Label>
                     <Input
                       id="full_name"
                       {...register("full_name")}
@@ -370,6 +378,7 @@ const Profile = () => {
                       disabled={!isEditing}
                       className="mt-1"
                       rows={3}
+                      placeholder="Tell us about yourself..."
                     />
                   </div>
                 </div>
