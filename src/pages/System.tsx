@@ -8,6 +8,7 @@ import { SystemDashboard } from "@/components/admin/SystemDashboard";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { W9Management } from "@/components/admin/W9Management";
 import { FinancialSystem } from "@/components/admin/FinancialSystem";
+import { BudgetTracking } from "@/components/admin/financial/BudgetTracking";
 import { ContractManagement } from "@/components/admin/ContractManagement";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useUsers } from "@/hooks/useUsers";
@@ -306,7 +307,7 @@ const System = () => {
           </TabsContent>
 
           <TabsContent value="budget" className="space-y-4">
-            <FinancialSystem />
+            <BudgetTracking />
           </TabsContent>
 
           <TabsContent value="reports" className="space-y-4">
