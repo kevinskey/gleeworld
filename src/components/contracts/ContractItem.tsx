@@ -7,7 +7,7 @@ import { FileText, Eye, Send, Trash2, PenTool, RotateCcw, Edit, User } from "luc
 import { getStatusColor, getStatusText } from "./contractUtils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { useProfile } from "@/hooks/useProfile";
+import { useContractRecipientProfile } from "@/hooks/useContractRecipientProfile";
 import { isAdmin } from "@/constants/permissions";
 import type { Contract } from "@/hooks/useContracts";
 
@@ -38,7 +38,7 @@ export const ContractItem = ({
 }: ContractItemProps) => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
-  const { profile } = useProfile();
+  const { profile: recipientProfile } = useContractRecipientProfile(contract.id);
   const hasBeenSent = sendCount > 0;
   const userIsAdmin = user && userProfile && isAdmin(userProfile.role);
 
@@ -60,13 +60,13 @@ export const ContractItem = ({
         />
         <Avatar className="h-10 w-10 border-2 border-brand-200/50 shadow-sm flex-shrink-0">
           <AvatarImage 
-            src={profile?.avatar_url || undefined} 
-            alt={profile?.full_name || user?.email || "User"} 
+            src={recipientProfile?.avatar_url || "/placeholder.svg"} 
+            alt={recipientProfile?.full_name || "User"} 
             className="object-cover"
           />
           <AvatarFallback className="bg-gradient-to-br from-brand-100 to-brand-200 text-brand-700">
-            {profile?.full_name ? 
-              profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() :
+            {recipientProfile?.full_name ? 
+              recipientProfile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() :
               <User className="h-4 w-4" />
             }
           </AvatarFallback>

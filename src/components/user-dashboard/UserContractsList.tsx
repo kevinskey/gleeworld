@@ -79,7 +79,7 @@ export const UserContractsList = () => {
                 <div className="flex items-center gap-3">
                   <Avatar className="h-12 w-12 border-2 border-brand-200/50 shadow-sm flex-shrink-0">
                     <AvatarImage 
-                      src={profile?.avatar_url || undefined} 
+                      src={profile?.avatar_url || "/placeholder.svg"} 
                       alt={profile?.full_name || "User"} 
                       className="object-cover"
                     />
