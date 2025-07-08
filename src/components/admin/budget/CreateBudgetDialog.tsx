@@ -37,7 +37,7 @@ export const CreateBudgetDialog = ({ contractId, eventId, onSuccess }: CreateBud
         title: formData.title,
         description: formData.description || undefined,
         total_amount: parseFloat(formData.total_amount),
-        allocated_amount: parseFloat(formData.allocated_amount),
+        allocated_amount: formData.allocated_amount ? parseFloat(formData.allocated_amount) : 0,
         budget_type: formData.budget_type as 'project' | 'event' | 'contract' | 'annual',
         start_date: formData.start_date,
         end_date: formData.end_date || undefined,
