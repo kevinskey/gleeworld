@@ -251,7 +251,7 @@ export const RichContentCreator = ({ onSave, initialContent }: RichContentCreato
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Content Creator</span>
-          <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
+          <Button onClick={handleSave} variant="default">
             <Save className="h-4 w-4 mr-2" />
             Save Content
           </Button>
@@ -264,7 +264,7 @@ export const RichContentCreator = ({ onSave, initialContent }: RichContentCreato
           <Label>Content</Label>
           <div className="border rounded-lg">
             {/* Toolbar */}
-            <div className="flex items-center gap-2 p-2 border-b bg-gray-50">
+            <div className="flex items-center gap-2 p-2 border-b bg-muted">
               <Button
                 variant="ghost"
                 size="sm"
@@ -290,7 +290,7 @@ export const RichContentCreator = ({ onSave, initialContent }: RichContentCreato
                 <Underline className="h-4 w-4" />
               </Button>
               
-              <div className="w-px h-6 bg-gray-300 mx-1" />
+              <div className="w-px h-6 bg-border mx-1" />
               
               <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
                 <DialogTrigger asChild>
@@ -364,12 +364,12 @@ export const RichContentCreator = ({ onSave, initialContent }: RichContentCreato
                 <div key={link.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <ShoppingCart className="h-4 w-4 text-orange-600" />
+                      <ShoppingCart className="h-4 w-4 text-orange-500" />
                       <a
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-medium text-blue-600 hover:underline"
+                        className="font-medium text-primary hover:underline"
                       >
                         {link.title}
                       </a>
@@ -382,7 +382,7 @@ export const RichContentCreator = ({ onSave, initialContent }: RichContentCreato
                     variant="ghost"
                     size="sm"
                     onClick={() => removeLink(link.id)}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-destructive hover:text-destructive/80"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -401,7 +401,7 @@ export const RichContentCreator = ({ onSave, initialContent }: RichContentCreato
                 <div key={duty.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <Users className="h-4 w-4 text-blue-600" />
+                      <Users className="h-4 w-4 text-primary" />
                       <span className="font-medium">{duty.userName}</span>
                       <Badge variant={getPriorityColor(duty.priority)} className="text-xs">
                         {duty.priority}
@@ -416,7 +416,7 @@ export const RichContentCreator = ({ onSave, initialContent }: RichContentCreato
                     variant="ghost"
                     size="sm"
                     onClick={() => removeDuty(duty.id)}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-destructive hover:text-destructive/80"
                   >
                     <X className="h-4 w-4" />
                   </Button>
