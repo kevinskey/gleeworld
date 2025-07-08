@@ -662,9 +662,17 @@ const Profile = () => {
                 Cancel
               </Button>
               <Button 
-                type="submit" 
+                type="button"
                 disabled={loading}
-                onClick={() => console.log("🎯 Save Profile button clicked! isEditing:", isEditing, "loading:", loading)}
+                onClick={async () => {
+                  console.log("🎯 Save Profile button clicked! isEditing:", isEditing, "loading:", loading);
+                  console.log("🎯 Form errors before submit:", errors);
+                  console.log("🎯 Current form values:", watch());
+                  
+                  // Trigger form submission manually
+                  const result = await handleSubmit(onSubmit)();
+                  console.log("🎯 Form submission result:", result);
+                }}
               >
                 {loading ? "Saving..." : "Save Profile"}
               </Button>
