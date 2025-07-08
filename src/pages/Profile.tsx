@@ -46,9 +46,9 @@ const profileSchema = z.object({
   workplace: z.string().optional(),
   school_address: z.string().optional(),
   home_address: z.string().optional(),
-  voice_part: z.enum(["S1", "S2", "A1", "A2", "T1", "T2", "B1", "B2"]).optional(),
+  voice_part: z.enum(["S1", "S2", "A1", "A2", "T1", "T2", "B1", "B2"]).optional().or(z.literal("")),
   can_dance: z.boolean().default(false),
-  preferred_payment_method: z.enum(["zelle", "cashapp", "venmo", "apple_pay", "check"]).optional(),
+  preferred_payment_method: z.enum(["zelle", "cashapp", "venmo", "apple_pay", "check"]).optional().or(z.literal("")),
   instagram: z.string().optional(),
   twitter: z.string().optional(),
   facebook: z.string().optional(),
@@ -130,9 +130,9 @@ const Profile = () => {
         setValue("workplace", data.workplace || "");
         setValue("school_address", data.school_address || "");
         setValue("home_address", data.home_address || "");
-        setValue("voice_part", data.voice_part);
+        setValue("voice_part", data.voice_part || "");
         setValue("can_dance", data.can_dance || false);
-        setValue("preferred_payment_method", data.preferred_payment_method);
+        setValue("preferred_payment_method", data.preferred_payment_method || "");
         
         // Set social media links
         const socialLinks = (data.social_media_links as any) || {};
@@ -202,9 +202,9 @@ const Profile = () => {
           workplace: data.workplace,
           school_address: data.school_address,
           home_address: data.home_address,
-          voice_part: data.voice_part,
+          voice_part: data.voice_part === "" ? null : data.voice_part,
           can_dance: data.can_dance,
-          preferred_payment_method: data.preferred_payment_method,
+          preferred_payment_method: data.preferred_payment_method === "" ? null : data.preferred_payment_method,
           instruments_played: selectedInstruments,
           social_media_links: socialMediaLinks,
           updated_at: new Date().toISOString(),
