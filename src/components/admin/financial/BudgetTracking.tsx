@@ -231,40 +231,103 @@ export const BudgetTracking = () => {
 
       {/* Budget Details Dialog */}
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedBudget?.title} - Budget Details</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">
+              {selectedBudget?.title} - Budget Details
+            </DialogTitle>
           </DialogHeader>
           {selectedBudget && (
             <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h4 className="font-medium mb-2">Budget Information</h4>
-                  <div className="space-y-2 text-sm">
-                    <div><strong>Type:</strong> {selectedBudget.budget_type}</div>
-                    <div><strong>Status:</strong> {selectedBudget.status}</div>
-                    <div><strong>Start Date:</strong> {new Date(selectedBudget.start_date).toLocaleDateString()}</div>
+                  <h4 className="font-semibold mb-3 text-gray-900">Budget Information</h4>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Type:</span>
+                      <span className="font-medium capitalize">{selectedBudget.budget_type}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Status:</span>
+                      <span className="font-medium capitalize">{selectedBudget.status.replace('_', ' ')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Start Date:</span>
+                      <span className="font-medium">{new Date(selectedBudget.start_date).toLocaleDateString()}</span>
+                    </div>
                     {selectedBudget.end_date && (
-                      <div><strong>End Date:</strong> {new Date(selectedBudget.end_date).toLocaleDateString()}</div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">End Date:</span>
+                        <span className="font-medium">{new Date(selectedBudget.end_date).toLocaleDateString()}</span>
+                      </div>
                     )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Created:</span>
+                      <span className="font-medium">{new Date(selectedBudget.created_at).toLocaleDateString()}</span>
+                    </div>
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-medium mb-2">Financial Summary</h4>
-                  <div className="space-y-2 text-sm">
-                    <div><strong>Total Amount:</strong> {formatCurrency(selectedBudget.total_amount)}</div>
-                    <div><strong>Spent Amount:</strong> {formatCurrency(selectedBudget.spent_amount)}</div>
-                    <div><strong>Remaining:</strong> {formatCurrency(selectedBudget.remaining_amount)}</div>
-                    <div><strong>Utilization:</strong> {selectedBudget.total_amount > 0 ? ((selectedBudget.spent_amount / selectedBudget.total_amount) * 100).toFixed(1) : 0}%</div>
+                  <h4 className="font-semibold mb-3 text-gray-900">Financial Summary</h4>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Total Budget:</span>
+                      <span className="font-semibold text-blue-600">{formatCurrency(selectedBudget.total_amount || 0)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Allocated:</span>
+                      <span className="font-medium">{formatCurrency(selectedBudget.allocated_amount || 0)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Spent:</span>
+                      <span className="font-medium text-red-600">{formatCurrency(selectedBudget.spent_amount || 0)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Remaining:</span>
+                      <span className="font-medium text-green-600">
+                        {formatCurrency((selectedBudget.total_amount || 0) - (selectedBudget.spent_amount || 0))}
+                      </span>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t">
+                      <span className="text-gray-600">Utilization:</span>
+                      <span className="font-semibold">
+                        {selectedBudget.total_amount > 0 
+                          ? ((selectedBudget.spent_amount || 0) / selectedBudget.total_amount * 100).toFixed(1) 
+                          : 0}%
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
+              
               {selectedBudget.description && (
                 <div>
-                  <h4 className="font-medium mb-2">Description</h4>
-                  <p className="text-sm text-gray-600">{selectedBudget.description}</p>
+                  <h4 className="font-semibold mb-3 text-gray-900">Description</h4>
+                  <div className="bg-gray-50 p-4 rounded-md">
+                    <p className="text-sm text-gray-700">{selectedBudget.description}</p>
+                  </div>
                 </div>
               )}
+
+              {/* Additional Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {selectedBudget.contract_id && (
+                  <div>
+                    <h4 className="font-semibold mb-3 text-gray-900">Associated Contract</h4>
+                    <div className="bg-blue-50 p-4 rounded-md">
+                      <p className="text-sm text-blue-700">Contract ID: {selectedBudget.contract_id}</p>
+                    </div>
+                  </div>
+                )}
+                {selectedBudget.event_id && (
+                  <div>
+                    <h4 className="font-semibold mb-3 text-gray-900">Associated Event</h4>
+                    <div className="bg-purple-50 p-4 rounded-md">
+                      <p className="text-sm text-purple-700">Event ID: {selectedBudget.event_id}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </DialogContent>
