@@ -129,13 +129,6 @@ const System = () => {
               </TabsTrigger>
               
 
-              <TabsTrigger 
-                value="library" 
-                className="flex items-center justify-center gap-1 data-[state=active]:bg-brand-500 data-[state=active]:text-white data-[state=active]:shadow-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 rounded font-medium transition-all duration-200 min-h-[2.5rem]"
-              >
-                <LibraryIcon className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                <span className="hidden sm:inline truncate">Library</span>
-              </TabsTrigger>
 
               {/* Financial Dropdown with Mobile Optimization */}
               <DropdownMenu>
@@ -314,9 +307,6 @@ const System = () => {
             <FinancialSystem />
           </TabsContent>
 
-          <TabsContent value="library" className="space-y-4">
-            <Library />
-          </TabsContent>
         </Tabs>
       </div>
     </UniversalLayout>
