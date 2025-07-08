@@ -11,6 +11,8 @@ interface UniversalLayoutProps {
   className?: string;
   maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
   containerized?: boolean;
+  systemActiveTab?: string;
+  onSystemTabChange?: (tab: string) => void;
 }
 
 export const UniversalLayout = ({ 
@@ -19,11 +21,18 @@ export const UniversalLayout = ({
   showFooter = true,
   className = "",
   maxWidth = "full",
-  containerized = true
+  containerized = true,
+  systemActiveTab,
+  onSystemTabChange
 }: UniversalLayoutProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900 flex flex-col">
-      {showHeader && <UniversalHeader />}
+      {showHeader && (
+        <UniversalHeader 
+          systemActiveTab={systemActiveTab}
+          onSystemTabChange={onSystemTabChange}
+        />
+      )}
       <main className={`flex-1 ${className}`}>
         {containerized ? (
           <ResponsiveContainer maxWidth={maxWidth}>

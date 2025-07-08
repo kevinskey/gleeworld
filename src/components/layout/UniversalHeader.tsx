@@ -1,5 +1,5 @@
 
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -7,14 +7,23 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { LogOut, User, Settings, Menu } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppNavigation } from "@/components/navigation/AppNavigation";
+import { SystemNavigation } from "@/components/navigation/SystemNavigation";
 import { AIAssist } from "@/components/shared/AIAssist";
 import { DashboardSwitcher } from "@/components/navigation/DashboardSwitcher";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TaskNotifications } from "@/components/shared/TaskNotifications";
 
-export const UniversalHeader = () => {
+interface UniversalHeaderProps {
+  systemActiveTab?: string;
+  onSystemTabChange?: (tab: string) => void;
+}
+
+export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: UniversalHeaderProps) => {
   const { user, signOut } = useAuth();
   const isMobile = useIsMobile();
+  const location = useLocation();
+  
+  const isSystemPage = location.pathname.startsWith('/system');
 
   const handleSignOut = async () => {
     try {
@@ -44,7 +53,16 @@ export const UniversalHeader = () => {
             </Link>
             
             {/* Desktop Navigation */}
-            {user && !isMobile && <AppNavigation />}
+            {user && !isMobile && (
+              isSystemPage && systemActiveTab && onSystemTabChange ? (
+                <SystemNavigation 
+                  activeTab={systemActiveTab} 
+                  onTabChange={onSystemTabChange} 
+                />
+              ) : (
+                <AppNavigation />
+              )
+            )}
           </div>
 
           {/* Right side actions */}
@@ -52,7 +70,17 @@ export const UniversalHeader = () => {
             {user && (
               <>
                 {/* Mobile Navigation - Handled by AppNavigation component */}
-                {isMobile && <AppNavigation />}
+                {isMobile && (
+                  isSystemPage && systemActiveTab && onSystemTabChange ? (
+                    <SystemNavigation 
+                      activeTab={systemActiveTab} 
+                      onTabChange={onSystemTabChange}
+                      isMobile={true}
+                    />
+                  ) : (
+                    <AppNavigation />
+                  )
+                )}
                 
                 <DashboardSwitcher />
                 
