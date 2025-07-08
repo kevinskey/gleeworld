@@ -10,6 +10,7 @@ import { AppNavigation } from "@/components/navigation/AppNavigation";
 import { AIAssist } from "@/components/shared/AIAssist";
 import { DashboardSwitcher } from "@/components/navigation/DashboardSwitcher";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { TaskNotifications } from "@/components/shared/TaskNotifications";
 
 export const UniversalHeader = () => {
   const { user, signOut } = useAuth();
@@ -67,6 +68,8 @@ export const UniversalHeader = () => {
                 )}
                 
                 <DashboardSwitcher />
+                
+                <TaskNotifications />
                 
                 <AIAssist 
                   context="contract management" 

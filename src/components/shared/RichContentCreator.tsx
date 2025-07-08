@@ -21,8 +21,10 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUsers } from "@/hooks/useUsers";
+import { useTasks } from "@/hooks/useTasks";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 interface AssignedDuty {
   id: string;
@@ -63,6 +65,8 @@ interface RichContentCreatorProps {
 
 export const RichContentCreator = ({ onSave, initialContent }: RichContentCreatorProps) => {
   const { users } = useUsers();
+  const { createTask } = useTasks();
+  const { toast } = useToast();
   const [content, setContent] = useState(initialContent?.text || "");
   const [images, setImages] = useState<UploadedImage[]>(initialContent?.images || []);
   const [amazonLinks, setAmazonLinks] = useState<AmazonLink[]>(initialContent?.amazonLinks || []);
@@ -168,27 +172,47 @@ export const RichContentCreator = ({ onSave, initialContent }: RichContentCreato
   };
 
   // Assign duty
-  const assignDuty = () => {
+  const assignDuty = async () => {
     if (!dutyTask || !dutyUserId) return;
 
     const selectedUser = users.find(u => u.id === dutyUserId);
     if (!selectedUser) return;
 
-    const newDuty: AssignedDuty = {
-      id: Math.random().toString(),
-      userId: dutyUserId,
-      userName: selectedUser.full_name || selectedUser.email || 'Unknown User',
-      task: dutyTask,
-      dueDate: dutyDueDate || undefined,
-      priority: dutyPriority
-    };
+    try {
+      // Create the task in the database
+      await createTask({
+        title: dutyTask,
+        description: dutyTask,
+        assigned_to: dutyUserId,
+        priority: dutyPriority,
+        due_date: dutyDueDate || undefined,
+        content_id: Math.random().toString() // You can pass actual content ID if needed
+      });
 
-    setAssignedDuties([...assignedDuties, newDuty]);
-    setDutyTask("");
-    setDutyUserId("");
-    setDutyDueDate("");
-    setDutyPriority('medium');
-    setShowDutyDialog(false);
+      // Also add to local state for immediate display
+      const newDuty: AssignedDuty = {
+        id: Math.random().toString(),
+        userId: dutyUserId,
+        userName: selectedUser.full_name || selectedUser.email || 'Unknown User',
+        task: dutyTask,
+        dueDate: dutyDueDate || undefined,
+        priority: dutyPriority
+      };
+
+      setAssignedDuties([...assignedDuties, newDuty]);
+      setDutyTask("");
+      setDutyUserId("");
+      setDutyDueDate("");
+      setDutyPriority('medium');
+      setShowDutyDialog(false);
+
+      toast({
+        title: "Duty Assigned",
+        description: `Task assigned to ${selectedUser.full_name || selectedUser.email}. They will receive a notification.`,
+      });
+    } catch (error) {
+      console.error('Error assigning duty:', error);
+    }
   };
 
   // Remove items
