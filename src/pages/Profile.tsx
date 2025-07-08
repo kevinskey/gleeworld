@@ -156,11 +156,13 @@ const Profile = () => {
   };
 
   const onSubmit = async (data: ProfileFormData) => {
-    console.log("Form submitted with data:", data);
-    console.log("Form errors:", errors);
+    console.log("🚀 Form submitted with data:", data);
+    console.log("🚀 Form errors:", errors);
+    console.log("🚀 Is editing:", isEditing);
+    console.log("🚀 Loading state:", loading);
     
     if (!user) {
-      console.log("No user found, cannot save profile");
+      console.log("❌ No user found, cannot save profile");
       return;
     }
 
@@ -659,7 +661,11 @@ const Profile = () => {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
+              <Button 
+                type="submit" 
+                disabled={loading}
+                onClick={() => console.log("🎯 Save Profile button clicked! isEditing:", isEditing, "loading:", loading)}
+              >
                 {loading ? "Saving..." : "Save Profile"}
               </Button>
             </div>
