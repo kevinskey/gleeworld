@@ -15,15 +15,21 @@ export const FinancialSystem = () => {
 
   return (
     <div className="space-y-4 md:space-y-6 p-4 md:p-0">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center justify-between">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Financial System</h2>
-          <p className="text-gray-600 mt-1 text-sm md:text-base">Comprehensive financial management and reporting</p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Calculator className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col gap-4 md:flex-row md:items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-2xl md:text-3xl">
+                <Calculator className="h-6 w-6 md:h-8 md:w-8 text-brand-600" />
+                Financial System
+              </CardTitle>
+              <CardDescription className="text-sm md:text-base mt-2">
+                Comprehensive financial management and reporting across all user accounts and transactions
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 h-auto p-1">
