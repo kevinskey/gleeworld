@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { LogOut, User, Settings, Menu } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
 import { AppNavigation } from "@/components/navigation/AppNavigation";
 import { SystemNavigation } from "@/components/navigation/SystemNavigation";
 import { DashboardSwitcher } from "@/components/navigation/DashboardSwitcher";
@@ -21,6 +22,7 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
   const { user, signOut } = useAuth();
   const isMobile = useIsMobile();
   const location = useLocation();
+  const { profile } = useProfile();
   
   const isSystemPage = location.pathname.startsWith('/system');
 
@@ -85,26 +87,33 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
                 
                 <TaskNotifications />
                 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 rounded-full p-0">
-                      <Avatar className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8">
-                        <AvatarImage className="bg-white/20 text-white flex items-center justify-center">
-                          <span className="text-white text-xs sm:text-sm">{getInitials(user.email || '')}</span>
-                        </AvatarImage>
-                        <AvatarFallback className="bg-white/20 text-white">
-                          <User className="h-3 w-3 sm:h-4 sm:w-4" />
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <div className="flex flex-col space-y-1 p-2">
-                      <p className="text-sm font-medium leading-none truncate">{user.email}</p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        Signed in
-                      </p>
-                    </div>
+                 <DropdownMenu>
+                   <DropdownMenuTrigger asChild>
+                     <Button variant="ghost" className="relative h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 rounded-full p-0">
+                       <Avatar className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8">
+                         <AvatarImage 
+                           src={profile?.avatar_url || undefined} 
+                           alt={profile?.full_name || user.email || "Profile"} 
+                           className="object-cover"
+                         />
+                         <AvatarFallback className="bg-white/20 text-white">
+                           {profile?.full_name ? 
+                             profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() :
+                             <User className="h-3 w-3 sm:h-4 sm:w-4" />
+                           }
+                         </AvatarFallback>
+                       </Avatar>
+                     </Button>
+                   </DropdownMenuTrigger>
+                   <DropdownMenuContent className="w-56" align="end" forceMount>
+                     <div className="flex flex-col space-y-1 p-2">
+                       <p className="text-sm font-medium leading-none truncate">
+                         {profile?.full_name || user.email}
+                       </p>
+                       <p className="text-xs leading-none text-muted-foreground">
+                         {user.email}
+                       </p>
+                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link to="/profile" className="flex items-center">
