@@ -224,9 +224,12 @@ export const useTasks = () => {
 
     loadData();
 
-    // Set up real-time subscriptions
+    // Set up real-time subscriptions with unique channel names
+    const tasksChannelName = `tasks_changes_${Date.now()}_${Math.random()}`;
+    const notificationsChannelName = `task_notifications_changes_${Date.now()}_${Math.random()}`;
+    
     const tasksSubscription = supabase
-      .channel('tasks_changes')
+      .channel(tasksChannelName)
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
@@ -237,7 +240,7 @@ export const useTasks = () => {
       .subscribe();
 
     const notificationsSubscription = supabase
-      .channel('task_notifications_changes')
+      .channel(notificationsChannelName)
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
@@ -248,8 +251,8 @@ export const useTasks = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(tasksSubscription);
-      supabase.removeChannel(notificationsSubscription);
+      tasksSubscription.unsubscribe();
+      notificationsSubscription.unsubscribe();
     };
   }, []);
 
