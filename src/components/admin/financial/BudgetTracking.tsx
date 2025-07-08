@@ -7,13 +7,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calculator, TrendingUp, TrendingDown, AlertTriangle, Plus, Search, Filter } from "lucide-react";
 import { useBudgets } from "@/hooks/useBudgets";
 import { CreateBudgetDialog } from "@/components/admin/budget/CreateBudgetDialog";
+import { EditBudgetDialog } from "@/components/admin/budget/EditBudgetDialog";
 import { BudgetCard } from "@/components/admin/budget/BudgetCard";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const BudgetTracking = () => {
-  const { budgets, loading, deleteBudget, refetch } = useBudgets();
+  const { budgets, loading, deleteBudget, updateBudget, refetch } = useBudgets();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [selectedBudget, setSelectedBudget] = useState(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const filteredBudgets = budgets.filter(budget => {
     const matchesSearch = budget.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -39,6 +44,24 @@ export const BudgetTracking = () => {
   const handleDeleteBudget = async (budget: any) => {
     if (confirm(`Are you sure you want to delete "${budget.title}"? This action cannot be undone.`)) {
       await deleteBudget(budget.id);
+    }
+  };
+
+  const handleEditBudget = (budget: any) => {
+    setSelectedBudget(budget);
+    setShowEditDialog(true);
+  };
+
+  const handleViewDetails = (budget: any) => {
+    setSelectedBudget(budget);
+    setShowDetailsDialog(true);
+  };
+
+  const handleUpdateBudget = async (budgetData: any) => {
+    if (selectedBudget) {
+      await updateBudget(selectedBudget.id, budgetData);
+      setShowEditDialog(false);
+      setSelectedBudget(null);
     }
   };
 
@@ -177,8 +200,9 @@ export const BudgetTracking = () => {
                 <BudgetCard
                   key={budget.id}
                   budget={budget}
+                  onEdit={handleEditBudget}
                   onDelete={handleDeleteBudget}
-                  onViewDetails={(budget) => console.log('View details:', budget)}
+                  onViewDetails={handleViewDetails}
                 />
               ))}
             </div>
@@ -204,6 +228,61 @@ export const BudgetTracking = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Budget Details Dialog */}
+      <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>{selectedBudget?.title} - Budget Details</DialogTitle>
+          </DialogHeader>
+          {selectedBudget && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-medium mb-2">Budget Information</h4>
+                  <div className="space-y-2 text-sm">
+                    <div><strong>Type:</strong> {selectedBudget.budget_type}</div>
+                    <div><strong>Status:</strong> {selectedBudget.status}</div>
+                    <div><strong>Start Date:</strong> {new Date(selectedBudget.start_date).toLocaleDateString()}</div>
+                    {selectedBudget.end_date && (
+                      <div><strong>End Date:</strong> {new Date(selectedBudget.end_date).toLocaleDateString()}</div>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-2">Financial Summary</h4>
+                  <div className="space-y-2 text-sm">
+                    <div><strong>Total Amount:</strong> {formatCurrency(selectedBudget.total_amount)}</div>
+                    <div><strong>Spent Amount:</strong> {formatCurrency(selectedBudget.spent_amount)}</div>
+                    <div><strong>Remaining:</strong> {formatCurrency(selectedBudget.remaining_amount)}</div>
+                    <div><strong>Utilization:</strong> {selectedBudget.total_amount > 0 ? ((selectedBudget.spent_amount / selectedBudget.total_amount) * 100).toFixed(1) : 0}%</div>
+                  </div>
+                </div>
+              </div>
+              {selectedBudget.description && (
+                <div>
+                  <h4 className="font-medium mb-2">Description</h4>
+                  <p className="text-sm text-gray-600">{selectedBudget.description}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Budget Edit Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        {selectedBudget && (
+          <EditBudgetDialog 
+            budget={selectedBudget}
+            onSuccess={() => {
+              setShowEditDialog(false);
+              setSelectedBudget(null);
+              refetch();
+            }}
+          />
+        )}
+      </Dialog>
     </div>
   );
 };
