@@ -69,7 +69,7 @@ export const AccountingTable = ({
                   <Button 
                     variant="ghost" 
                     onClick={() => onSort('name')}
-                    className="h-auto p-0 font-medium text-left justify-start"
+                    className="h-auto p-0 font-medium text-left justify-start text-white hover:text-white hover:bg-white/20"
                   >
                     Name {getSortIcon('name')}
                   </Button>
@@ -82,7 +82,7 @@ export const AccountingTable = ({
                   <Button 
                     variant="ghost" 
                     onClick={() => onSort('contractTitle')}
-                    className="h-auto p-0 font-medium text-left justify-start"
+                    className="h-auto p-0 font-medium text-left justify-start text-white hover:text-white hover:bg-white/20"
                   >
                     Contract Title {getSortIcon('contractTitle')}
                   </Button>
@@ -95,7 +95,7 @@ export const AccountingTable = ({
                   <Button 
                     variant="ghost" 
                     onClick={() => onSort('dateSigned')}
-                    className="h-auto p-0 font-medium text-left justify-start"
+                    className="h-auto p-0 font-medium text-left justify-start text-white hover:text-white hover:bg-white/20"
                   >
                     Date Signed {getSortIcon('dateSigned')}
                   </Button>
@@ -108,7 +108,7 @@ export const AccountingTable = ({
                   <Button 
                     variant="ghost" 
                     onClick={() => onSort('stipend')}
-                    className="h-auto p-0 font-medium text-right justify-end"
+                    className="h-auto p-0 font-medium text-right justify-end text-white hover:text-white hover:bg-white/20"
                   >
                     Stipend {getSortIcon('stipend')}
                   </Button>
@@ -121,7 +121,7 @@ export const AccountingTable = ({
                   <Button 
                     variant="ghost" 
                     onClick={() => onSort('status')}
-                    className="h-auto p-0 font-medium text-left justify-start"
+                    className="h-auto p-0 font-medium text-left justify-start text-white hover:text-white hover:bg-white/20"
                   >
                     Status {getSortIcon('status')}
                   </Button>

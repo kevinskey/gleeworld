@@ -76,7 +76,11 @@ export const AccountingFilters = ({
             variant="outline"
             size="sm"
             onClick={() => handleSortClick('dateSigned')}
-            className={sortBy === 'dateSigned' ? 'bg-brand-100 border-brand-400 text-brand-800' : ''}
+            className={`${
+              sortBy === 'dateSigned' 
+                ? 'bg-brand-500 border-brand-600 text-white hover:bg-brand-600' 
+                : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+            }`}
           >
             <Calendar className="h-4 w-4 mr-1" />
             Date
@@ -89,7 +93,11 @@ export const AccountingFilters = ({
             variant="outline"
             size="sm"
             onClick={() => handleSortClick('name')}
-            className={sortBy === 'name' ? 'bg-brand-100 border-brand-400 text-brand-800' : ''}
+            className={`${
+              sortBy === 'name' 
+                ? 'bg-brand-500 border-brand-600 text-white hover:bg-brand-600' 
+                : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+            }`}
           >
             Name
             {sortBy === 'name' && (
@@ -101,7 +109,11 @@ export const AccountingFilters = ({
             variant="outline"
             size="sm"
             onClick={() => handleSortClick('stipend')}
-            className={sortBy === 'stipend' ? 'bg-brand-100 border-brand-400 text-brand-800' : ''}
+            className={`${
+              sortBy === 'stipend' 
+                ? 'bg-brand-500 border-brand-600 text-white hover:bg-brand-600' 
+                : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+            }`}
           >
             <DollarSign className="h-4 w-4 mr-1" />
             Amount
