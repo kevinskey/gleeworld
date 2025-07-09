@@ -4,6 +4,7 @@ import { useContracts } from "@/hooks/useContracts";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { supabase } from "@/integrations/supabase/client";
 import { logActivity, ACTIVITY_TYPES, RESOURCE_TYPES } from "@/utils/activityLogger";
 import type { ContractTemplate } from "@/hooks/useContractTemplates";
 
@@ -106,14 +107,53 @@ export const useContractFromTemplate = (onContractCreated?: () => void) => {
         // Don't fail the contract creation if logging fails
       }
 
+      // Send email to recipient
+      if (selectedUser?.email && selectedUser.email !== user?.email) {
+        try {
+          console.log('useContractFromTemplate: Sending contract email to recipient...');
+          const { data: emailData, error: emailError } = await supabase.functions.invoke('send-contract-email', {
+            body: {
+              contractId: contractData.id,
+              recipientEmail: selectedUser.email,
+              recipientName: recipientName,
+              contractTitle: contractTitle,
+              customMessage: `Please review and sign your contract: ${contractTitle}`,
+              isResend: false
+            }
+          });
+
+          if (emailError) {
+            console.warn('useContractFromTemplate: Failed to send email:', emailError);
+            toast({
+              title: "Contract Created",
+              description: `Contract "${contractTitle}" created successfully, but email notification failed to send`,
+              variant: "destructive",
+            });
+          } else {
+            console.log('useContractFromTemplate: Email sent successfully:', emailData);
+            toast({
+              title: "Success",
+              description: `Contract "${contractTitle}" created and email sent to ${selectedUser.email}`,
+            });
+          }
+        } catch (emailError) {
+          console.warn('useContractFromTemplate: Email sending error:', emailError);
+          toast({
+            title: "Contract Created",
+            description: `Contract "${contractTitle}" created successfully, but email notification failed to send`,
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "Success",
+          description: `Contract "${contractTitle}" created from template`,
+        });
+      }
+
       // Refresh the contracts list to show the new contract
       console.log('useContractFromTemplate: Refreshing contracts list...');
       await refetch();
-      
-      toast({
-        title: "Success",
-        description: `Contract "${contractTitle}" created from template`,
-      });
 
       // Call the callback to update UI (switch to dashboard, etc.)
       if (onContractCreated) {
