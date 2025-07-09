@@ -119,21 +119,24 @@ export const UserDashboard = () => {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    onClick={refetch} 
-                    variant="outline" 
-                    className="border-brand-400/50 text-brand-700 hover:bg-brand-50"
-                  >
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Refresh
-                  </Button>
-                </div>
               </div>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-white">Overview</h2>
+                <Button 
+                  onClick={refetch} 
+                  variant="outline" 
+                  size="sm"
+                  className="border-brand-400/50 text-brand-700 hover:bg-brand-50"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Refresh
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-gray-900">Total Contracts</CardTitle>
@@ -181,6 +184,7 @@ export const UserDashboard = () => {
                   <p className="text-xs text-gray-600">Unread</p>
                 </CardContent>
               </Card>
+            </div>
             </div>
 
             {/* Main Content Tabs */}
