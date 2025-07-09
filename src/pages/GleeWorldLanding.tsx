@@ -12,7 +12,9 @@ import {
   Pause,
   SkipBack,
   SkipForward,
-  Volume2
+  Volume2,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -25,14 +27,15 @@ interface Event {
   event_type: string;
 }
 
-interface HeroSettings {
+interface HeroSlide {
   id: string;
-  title: string;
-  subtitle: string | null;
-  background_image_url: string | null;
-  overlay_opacity: number | null;
-  text_color: string | null;
-  is_active: boolean;
+  title: string | null;
+  description: string | null;
+  image_url: string | null;
+  button_text: string | null;
+  link_url: string | null;
+  display_order: number | null;
+  is_active: boolean | null;
 }
 
 interface Track {
@@ -45,7 +48,8 @@ interface Track {
 export const GleeWorldLanding = () => {
   const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
-  const [heroSettings, setHeroSettings] = useState<HeroSettings | null>(null);
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -53,14 +57,12 @@ export const GleeWorldLanding = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch hero settings
+        // Fetch hero slides
         const { data: heroData } = await supabase
-          .from('gw_hero_settings')
+          .from('gw_hero_slides')
           .select('*')
           .eq('is_active', true)
-          .order('display_order', { ascending: true })
-          .limit(1)
-          .single();
+          .order('display_order', { ascending: true });
 
         // Fetch upcoming events
         const { data: eventsData } = await supabase
@@ -71,7 +73,7 @@ export const GleeWorldLanding = () => {
           .order('start_date', { ascending: true })
           .limit(6);
 
-        if (heroData) setHeroSettings(heroData);
+        if (heroData) setHeroSlides(heroData);
         if (eventsData) setEvents(eventsData);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -82,6 +84,16 @@ export const GleeWorldLanding = () => {
 
     fetchData();
   }, []);
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
+  };
+
+  const currentHeroSlide = heroSlides[currentSlide];
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -151,55 +163,80 @@ export const GleeWorldLanding = () => {
 
       {/* Hero Section */}
       <section className="relative">
-        <div 
-          className="h-[60vh] overflow-hidden relative"
-          style={{
-            backgroundColor: heroSettings?.background_image_url ? 'transparent' : '#f8fafc'
-          }}
-        >
-          {heroSettings?.background_image_url ? (
+        <div className="h-[60vh] overflow-hidden relative">
+          {heroSlides.length > 0 ? (
             <>
               <img 
-                src={heroSettings.background_image_url}
+                src={currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
                 alt="Hero Background"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-opacity duration-500"
                 onError={(e) => {
                   e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
                 }}
               />
-              {heroSettings.overlay_opacity && (
-                <div 
-                  className="absolute inset-0 bg-black"
-                  style={{ opacity: heroSettings.overlay_opacity }}
-                ></div>
+              <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+              
+              {/* Navigation arrows */}
+              {heroSlides.length > 1 && (
+                <>
+                  <button
+                    onClick={prevSlide}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white p-2 rounded-full transition-all"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                  <button
+                    onClick={nextSlide}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white p-2 rounded-full transition-all"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                </>
+              )}
+              
+              {/* Content overlay */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center px-6 max-w-4xl">
+                  {currentHeroSlide?.title && (
+                    <h1 className="text-4xl md:text-6xl font-bold mb-4 text-white">
+                      {currentHeroSlide.title}
+                    </h1>
+                  )}
+                  {currentHeroSlide?.description && (
+                    <p className="text-xl md:text-2xl mb-6 text-white">
+                      {currentHeroSlide.description}
+                    </p>
+                  )}
+                  {currentHeroSlide?.button_text && currentHeroSlide?.link_url && (
+                    <Button size="lg" asChild>
+                      <a href={currentHeroSlide.link_url} target="_blank" rel="noopener noreferrer">
+                        {currentHeroSlide.button_text}
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </div>
+              
+              {/* Slide indicators */}
+              {heroSlides.length > 1 && (
+                <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                  {heroSlides.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentSlide(index)}
+                      className={`w-3 h-3 rounded-full transition-all ${
+                        index === currentSlide ? 'bg-white' : 'bg-white bg-opacity-50'
+                      }`}
+                    />
+                  ))}
+                </div>
               )}
             </>
           ) : (
             <div className="w-full h-full bg-gradient-to-r from-pink-100 to-rose-200 flex items-center justify-center">
               <div className="text-center">
                 <Music className="h-24 w-24 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No hero image configured</p>
-              </div>
-            </div>
-          )}
-          
-          {heroSettings && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center px-6">
-                <h1 
-                  className="text-4xl md:text-6xl font-bold mb-4"
-                  style={{ color: heroSettings.text_color || '#ffffff' }}
-                >
-                  {heroSettings.title}
-                </h1>
-                {heroSettings.subtitle && (
-                  <p 
-                    className="text-xl md:text-2xl"
-                    style={{ color: heroSettings.text_color || '#ffffff' }}
-                  >
-                    {heroSettings.subtitle}
-                  </p>
-                )}
+                <p className="text-gray-600">No hero slides configured</p>
               </div>
             </div>
           )}

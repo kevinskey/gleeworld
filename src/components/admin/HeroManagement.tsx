@@ -4,27 +4,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { Upload, Save, Plus, Trash2, Eye, EyeOff } from "lucide-react";
+import { Upload, Save, Trash2, Eye, EyeOff, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-interface HeroSetting {
+interface HeroSlide {
   id: string;
-  title: string;
-  subtitle: string | null;
-  background_image_url: string | null;
-  overlay_opacity: number | null;
-  text_color: string | null;
-  is_active: boolean;
-  display_order: number;
-  created_at: string;
-  updated_at: string;
+  title: string | null;
+  description: string | null;
+  image_url: string | null;
+  button_text: string | null;
+  link_url: string | null;
+  display_order: number | null;
+  is_active: boolean | null;
+  hero_settings_id: string | null;
+  created_at: string | null;
 }
 
 export const HeroManagement = () => {
-  const [heroSettings, setHeroSettings] = useState<HeroSetting[]>([]);
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -32,32 +31,32 @@ export const HeroManagement = () => {
 
   const [formData, setFormData] = useState({
     title: "",
-    subtitle: "",
-    background_image_url: "",
-    overlay_opacity: 0.5,
-    text_color: "#ffffff",
-    is_active: true,
-    display_order: 0
+    description: "",
+    image_url: "",
+    button_text: "",
+    link_url: "",
+    display_order: 0,
+    is_active: true
   });
 
   useEffect(() => {
-    fetchHeroSettings();
+    fetchHeroSlides();
   }, []);
 
-  const fetchHeroSettings = async () => {
+  const fetchHeroSlides = async () => {
     try {
       const { data, error } = await supabase
-        .from('gw_hero_settings')
+        .from('gw_hero_slides')
         .select('*')
         .order('display_order', { ascending: true });
 
       if (error) throw error;
-      setHeroSettings(data || []);
+      setHeroSlides(data || []);
     } catch (error) {
-      console.error('Error fetching hero settings:', error);
+      console.error('Error fetching hero slides:', error);
       toast({
         title: "Error",
-        description: "Failed to load hero settings",
+        description: "Failed to load hero slides",
         variant: "destructive"
       });
     } finally {
@@ -84,7 +83,7 @@ export const HeroManagement = () => {
         .from('user-files')
         .getPublicUrl(filePath);
 
-      setFormData(prev => ({ ...prev, background_image_url: publicUrl }));
+      setFormData(prev => ({ ...prev, image_url: publicUrl }));
       
       toast({
         title: "Success",
@@ -101,10 +100,10 @@ export const HeroManagement = () => {
   };
 
   const handleSave = async () => {
-    if (!formData.title.trim()) {
+    if (!formData.image_url.trim()) {
       toast({
         title: "Error",
-        description: "Title is required",
+        description: "Image is required",
         variant: "destructive"
       });
       return;
@@ -115,16 +114,15 @@ export const HeroManagement = () => {
       if (editingId) {
         // Update existing
         const { error } = await supabase
-          .from('gw_hero_settings')
+          .from('gw_hero_slides')
           .update({
-            title: formData.title,
-            subtitle: formData.subtitle || null,
-            background_image_url: formData.background_image_url || null,
-            overlay_opacity: formData.overlay_opacity,
-            text_color: formData.text_color,
-            is_active: formData.is_active,
+            title: formData.title || null,
+            description: formData.description || null,
+            image_url: formData.image_url || null,
+            button_text: formData.button_text || null,
+            link_url: formData.link_url || null,
             display_order: formData.display_order,
-            updated_at: new Date().toISOString()
+            is_active: formData.is_active
           })
           .eq('id', editingId);
 
@@ -132,15 +130,15 @@ export const HeroManagement = () => {
       } else {
         // Create new
         const { error } = await supabase
-          .from('gw_hero_settings')
+          .from('gw_hero_slides')
           .insert({
-            title: formData.title,
-            subtitle: formData.subtitle || null,
-            background_image_url: formData.background_image_url || null,
-            overlay_opacity: formData.overlay_opacity,
-            text_color: formData.text_color,
-            is_active: formData.is_active,
-            display_order: formData.display_order
+            title: formData.title || null,
+            description: formData.description || null,
+            image_url: formData.image_url || null,
+            button_text: formData.button_text || null,
+            link_url: formData.link_url || null,
+            display_order: formData.display_order,
+            is_active: formData.is_active
           });
 
         if (error) throw error;
@@ -148,16 +146,16 @@ export const HeroManagement = () => {
 
       toast({
         title: "Success",
-        description: editingId ? "Hero setting updated" : "Hero setting created"
+        description: editingId ? "Hero slide updated" : "Hero slide created"
       });
 
       resetForm();
-      fetchHeroSettings();
+      fetchHeroSlides();
     } catch (error) {
-      console.error('Error saving hero setting:', error);
+      console.error('Error saving hero slide:', error);
       toast({
         title: "Error",
-        description: "Failed to save hero setting",
+        description: "Failed to save hero slide",
         variant: "destructive"
       });
     } finally {
@@ -165,25 +163,25 @@ export const HeroManagement = () => {
     }
   };
 
-  const handleEdit = (setting: HeroSetting) => {
+  const handleEdit = (slide: HeroSlide) => {
     setFormData({
-      title: setting.title,
-      subtitle: setting.subtitle || "",
-      background_image_url: setting.background_image_url || "",
-      overlay_opacity: setting.overlay_opacity || 0.5,
-      text_color: setting.text_color || "#ffffff",
-      is_active: setting.is_active,
-      display_order: setting.display_order
+      title: slide.title || "",
+      description: slide.description || "",
+      image_url: slide.image_url || "",
+      button_text: slide.button_text || "",
+      link_url: slide.link_url || "",
+      display_order: slide.display_order || 0,
+      is_active: slide.is_active ?? true
     });
-    setEditingId(setting.id);
+    setEditingId(slide.id);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this hero setting?')) return;
+    if (!confirm('Are you sure you want to delete this hero slide?')) return;
 
     try {
       const { error } = await supabase
-        .from('gw_hero_settings')
+        .from('gw_hero_slides')
         .delete()
         .eq('id', id);
 
@@ -191,39 +189,39 @@ export const HeroManagement = () => {
 
       toast({
         title: "Success",
-        description: "Hero setting deleted"
+        description: "Hero slide deleted"
       });
 
-      fetchHeroSettings();
+      fetchHeroSlides();
     } catch (error) {
-      console.error('Error deleting hero setting:', error);
+      console.error('Error deleting hero slide:', error);
       toast({
         title: "Error",
-        description: "Failed to delete hero setting",
+        description: "Failed to delete hero slide",
         variant: "destructive"
       });
     }
   };
 
-  const toggleActive = async (id: string, currentStatus: boolean) => {
+  const toggleActive = async (id: string, currentStatus: boolean | null) => {
     try {
       const { error } = await supabase
-        .from('gw_hero_settings')
+        .from('gw_hero_slides')
         .update({ is_active: !currentStatus })
         .eq('id', id);
 
       if (error) throw error;
 
-      fetchHeroSettings();
+      fetchHeroSlides();
       toast({
         title: "Success",
-        description: `Hero ${!currentStatus ? 'activated' : 'deactivated'}`
+        description: `Hero slide ${!currentStatus ? 'activated' : 'deactivated'}`
       });
     } catch (error) {
-      console.error('Error toggling hero status:', error);
+      console.error('Error toggling hero slide status:', error);
       toast({
         title: "Error",
-        description: "Failed to update hero status",
+        description: "Failed to update hero slide status",
         variant: "destructive"
       });
     }
@@ -232,12 +230,12 @@ export const HeroManagement = () => {
   const resetForm = () => {
     setFormData({
       title: "",
-      subtitle: "",
-      background_image_url: "",
-      overlay_opacity: 0.5,
-      text_color: "#ffffff",
-      is_active: true,
-      display_order: 0
+      description: "",
+      image_url: "",
+      button_text: "",
+      link_url: "",
+      display_order: 0,
+      is_active: true
     });
     setEditingId(null);
   };
@@ -246,11 +244,11 @@ export const HeroManagement = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Hero Management</CardTitle>
+          <CardTitle>Hero Slide Management</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
-            <div className="animate-pulse">Loading hero settings...</div>
+            <div className="animate-pulse">Loading hero slides...</div>
           </div>
         </CardContent>
       </Card>
@@ -262,39 +260,50 @@ export const HeroManagement = () => {
       <Card>
         <CardHeader>
           <CardTitle>
-            {editingId ? "Edit Hero Setting" : "Create New Hero Setting"}
+            {editingId ? "Edit Hero Slide" : "Create New Hero Slide"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Title *</Label>
+              <Label htmlFor="title">Title (Optional)</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Hero title"
+                placeholder="Hero title (optional)"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="subtitle">Subtitle</Label>
+              <Label htmlFor="button_text">Button Text (Optional)</Label>
               <Input
-                id="subtitle"
-                value={formData.subtitle}
-                onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
-                placeholder="Hero subtitle"
+                id="button_text"
+                value={formData.button_text}
+                onChange={(e) => setFormData(prev => ({ ...prev, button_text: e.target.value }))}
+                placeholder="Button text (optional)"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="background_image">Background Image</Label>
+            <Label htmlFor="description">Description (Optional)</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Hero description (optional)"
+              rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="image_url">Background Image *</Label>
             <div className="flex gap-2">
               <Input
-                id="background_image"
-                value={formData.background_image_url}
-                onChange={(e) => setFormData(prev => ({ ...prev, background_image_url: e.target.value }))}
+                id="image_url"
+                value={formData.image_url}
+                onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
                 placeholder="Image URL or upload below"
               />
               <div className="relative">
@@ -311,26 +320,14 @@ export const HeroManagement = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="text_color">Text Color</Label>
+              <Label htmlFor="link_url">Link URL (Optional)</Label>
               <Input
-                id="text_color"
-                type="color"
-                value={formData.text_color}
-                onChange={(e) => setFormData(prev => ({ ...prev, text_color: e.target.value }))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Overlay Opacity: {Math.round(formData.overlay_opacity * 100)}%</Label>
-              <Slider
-                value={[formData.overlay_opacity]}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, overlay_opacity: value[0] }))}
-                max={1}
-                min={0}
-                step={0.1}
-                className="w-full"
+                id="link_url"
+                value={formData.link_url}
+                onChange={(e) => setFormData(prev => ({ ...prev, link_url: e.target.value }))}
+                placeholder="https://example.com (optional)"
               />
             </div>
 
@@ -370,36 +367,40 @@ export const HeroManagement = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Existing Hero Settings</CardTitle>
+          <CardTitle>Existing Hero Slides</CardTitle>
         </CardHeader>
         <CardContent>
-          {heroSettings.length === 0 ? (
+          {heroSlides.length === 0 ? (
             <p className="text-center py-8 text-muted-foreground">
-              No hero settings found. Create your first one above.
+              No hero slides found. Create your first one above.
             </p>
           ) : (
             <div className="space-y-4">
-              {heroSettings.map((setting) => (
+              {heroSlides.map((slide) => (
                 <div
-                  key={setting.id}
+                  key={slide.id}
                   className="flex items-center justify-between p-4 border rounded-lg"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">{setting.title}</h3>
-                      {setting.is_active ? (
+                      <h3 className="font-semibold">
+                        {slide.title || "Untitled Slide"}
+                      </h3>
+                      {slide.is_active ? (
                         <Eye className="h-4 w-4 text-green-600" />
                       ) : (
                         <EyeOff className="h-4 w-4 text-gray-400" />
                       )}
+                      {slide.link_url && (
+                        <ExternalLink className="h-4 w-4 text-blue-600" />
+                      )}
                     </div>
-                    {setting.subtitle && (
-                      <p className="text-sm text-muted-foreground">{setting.subtitle}</p>
+                    {slide.description && (
+                      <p className="text-sm text-muted-foreground">{slide.description}</p>
                     )}
                     <div className="text-xs text-muted-foreground mt-1">
-                      Order: {setting.display_order} | 
-                      Color: {setting.text_color} | 
-                      Opacity: {Math.round((setting.overlay_opacity || 0) * 100)}%
+                      Order: {slide.display_order || 0}
+                      {slide.button_text && ` | Button: ${slide.button_text}`}
                     </div>
                   </div>
                   
@@ -407,21 +408,21 @@ export const HeroManagement = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => toggleActive(setting.id, setting.is_active)}
+                      onClick={() => toggleActive(slide.id, slide.is_active)}
                     >
-                      {setting.is_active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {slide.is_active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleEdit(setting)}
+                      onClick={() => handleEdit(slide)}
                     >
                       Edit
                     </Button>
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => handleDelete(setting.id)}
+                      onClick={() => handleDelete(slide.id)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
