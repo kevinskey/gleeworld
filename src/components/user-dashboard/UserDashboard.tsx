@@ -101,26 +101,6 @@ export const UserDashboard = () => {
       default:
         return (
           <div className="space-y-6">
-            {/* Header */}
-            <div className="bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                    Welcome back, {dashboardData?.full_name || user.email}
-                  </h1>
-                  <div className="flex items-center gap-4 text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      <span>{dashboardData?.email}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      <span>Member since {new Date(user.created_at).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {/* Stats Cards */}
             <div className="space-y-4">
