@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, MapPinIcon, ClockIcon, UsersIcon, ExternalLinkIcon } from "lucide-react";
+import { CalendarIcon, MapPinIcon, ClockIcon, UsersIcon, ExternalLinkIcon, FileText, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 
@@ -128,6 +128,41 @@ export const EventDetailDialog = ({ event, open, onOpenChange }: EventDetailDial
                 </div>
               )}
             </div>
+          </div>
+          
+          {/* Contract Management Section */}
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="font-semibold">Event Management</h4>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    // Navigate to contract management for this event
+                    window.location.href = `/event-planner?eventId=${event.id}`;
+                  }}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Manage Contracts
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    // Navigate to budget planning for this event
+                    window.location.href = `/event-planner?eventId=${event.id}&tab=budget`;
+                  }}
+                >
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  Budget Planning
+                </Button>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              This event is automatically synced with the contract and budget management system. 
+              You can manage performer contracts and event budgets from the Event Planner.
+            </p>
           </div>
           
           <div className="flex gap-3 pt-4">
