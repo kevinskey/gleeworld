@@ -2,41 +2,37 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
-import { Library } from "@/components/Library";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ErrorState } from "@/components/shared/ErrorState";
-import { AIAssist } from "@/components/shared/AIAssist";
-import { DocumentManager } from "@/components/shared/DocumentManager";
 import { 
-  FileText, 
+  Music, 
+  Calendar, 
   CheckCircle, 
   DollarSign, 
   Bell, 
-  RefreshCw,
   User,
-  Mail,
-  Calendar
+  Clock,
+  BookOpen,
+  Mic,
+  MessageSquare,
+  ShoppingBag,
+  Star,
+  TrendingUp,
+  Award,
+  Users,
+  Volume2
 } from "lucide-react";
 import { useUserDashboard } from "@/hooks/useUserDashboard";
-import { useUserContracts } from "@/hooks/useUserContracts";
-import { useW9Forms } from "@/hooks/useW9Forms";
 import { useAuth } from "@/contexts/AuthContext";
-import { UserContractsList } from "./UserContractsList";
-import { UserPaymentsList } from "./UserPaymentsList";
-import { UserNotificationsList } from "./UserNotificationsList";
-import { UserW9FormsList } from "./UserW9FormsList";
-import { GleeWorldProfileManager } from "./GleeWorldProfileManager";
-import { FinanceManagement } from "@/components/finance/FinanceManagement";
 import { useState } from "react";
 
 export const UserDashboard = () => {
   const { user } = useAuth();
   const { dashboardData, loading, error, refetch } = useUserDashboard();
-  const { contracts } = useUserContracts();
-  const { w9Forms } = useW9Forms();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
   if (!user) {
     return (
@@ -77,124 +73,319 @@ export const UserDashboard = () => {
     );
   }
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case "profile":
-        return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white">GleeWorld Profile</h2>
-            </div>
-            <GleeWorldProfileManager />
-          </div>
-        );
-      case "library":
-        return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white">My Documents</h2>
-            </div>
-            <Library />
-            <DocumentManager bucket="user-files" />
-          </div>
-        );
-      case "finance":
-        return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white">My Finance</h2>
-            </div>
-            <FinanceManagement />
-          </div>
-        );
-      case "dashboard":
-      default:
-        return (
-          <div className="space-y-6">
-
-            {/* Main Content Tabs */}
-            <Tabs defaultValue="contracts" className="space-y-6">
-              <div className="overflow-x-auto">
-                <TabsList className="bg-white/95 backdrop-blur-sm border border-brand-200/30 w-full grid grid-cols-4 h-auto p-1 gap-1">
-                  <TabsTrigger 
-                    value="contracts" 
-                    className="text-gray-700 data-[state=active]:bg-brand-100 data-[state=active]:text-brand-800 text-xs sm:text-sm px-2 py-2 min-h-[44px] flex flex-col items-center gap-1"
-                  >
-                    <span className="hidden sm:inline">Contracts</span>
-                    <span className="sm:hidden">Contracts</span>
-                    <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
-                      {contracts.length}
-                    </span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="w9forms" 
-                    className="text-gray-700 data-[state=active]:bg-brand-100 data-[state=active]:text-brand-800 text-xs sm:text-sm px-2 py-2 min-h-[44px] flex flex-col items-center gap-1"
-                  >
-                    <span className="hidden sm:inline">W9 Forms</span>
-                    <span className="sm:hidden">W9s</span>
-                    <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
-                      {w9Forms?.length || 0}
-                    </span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="payments" 
-                    className="text-gray-700 data-[state=active]:bg-brand-100 data-[state=active]:text-brand-800 text-xs sm:text-sm px-2 py-2 min-h-[44px] flex flex-col items-center gap-1"
-                  >
-                    <span className="hidden sm:inline">Payments</span>
-                    <span className="sm:hidden">Pay</span>
-                    <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
-                      {dashboardData?.payments_received || 0}
-                    </span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="notifications" 
-                    className="text-gray-700 data-[state=active]:bg-brand-100 data-[state=active]:text-brand-800 text-xs sm:text-sm px-2 py-2 min-h-[44px] flex flex-col items-center gap-1"
-                  >
-                    <span className="hidden sm:inline">Notifications</span>
-                    <span className="sm:hidden">Alerts</span>
-                    <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
-                      {dashboardData?.unread_notifications || 0}
-                    </span>
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-
-              <TabsContent value="contracts">
-                <UserContractsList />
-              </TabsContent>
-
-              <TabsContent value="w9forms">
-                <UserW9FormsList />
-              </TabsContent>
-
-              <TabsContent value="payments">
-                <UserPaymentsList />
-              </TabsContent>
-
-              <TabsContent value="notifications">
-                <UserNotificationsList />
-              </TabsContent>
-            </Tabs>
-          </div>
-        );
-    }
+  // Mock data for demonstration
+  const memberProfile = {
+    name: user.email?.split('@')[0] || 'Member',
+    email: user.email || '',
+    voicePart: 'Soprano I',
+    classYear: '2025',
+    role: 'Active Member',
+    status: 'Good Standing',
+    joinDate: 'Fall 2021'
   };
+
+  const quickStats = {
+    upcomingEvents: 3,
+    sheetMusicCount: 24,
+    attendancePercentage: 87,
+    duesStatus: 'Paid'
+  };
+
+  const upcomingEvents = [
+    { id: 1, title: 'Weekly Rehearsal', date: '2024-01-15', time: '7:00 PM', location: 'Music Hall' },
+    { id: 2, title: 'Holiday Concert', date: '2024-01-20', time: '3:00 PM', location: 'Main Auditorium' },
+    { id: 3, title: 'Alumni Social', date: '2024-01-25', time: '6:00 PM', location: 'Student Center' }
+  ];
+
+  const recentActivity = [
+    { id: 1, action: 'Downloaded "Ave Maria" sheet music', time: '2 hours ago', type: 'music' },
+    { id: 2, action: 'Marked attendance for rehearsal', time: '1 day ago', type: 'attendance' },
+    { id: 3, action: 'Logged 45 minutes of practice', time: '2 days ago', type: 'practice' },
+    { id: 4, action: 'Paid semester dues', time: '1 week ago', type: 'payment' }
+  ];
 
   return (
     <UniversalLayout containerized={false}>
-      <div className="container mx-auto px-4 py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-white/95 backdrop-blur-sm">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="library">Library</TabsTrigger>
-            <TabsTrigger value="finance">Finance</TabsTrigger>
-          </TabsList>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+        <div className="container mx-auto px-4 py-6 space-y-6">
           
-          <TabsContent value={activeTab}>
-            {renderContent()}
-          </TabsContent>
-        </Tabs>
+          {/* Dashboard Header */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div className="flex items-center space-x-4">
+                <Avatar className="h-16 w-16">
+                  <AvatarImage src="/placeholder-avatar.jpg" />
+                  <AvatarFallback className="bg-blue-100 text-blue-600 text-lg font-semibold">
+                    {memberProfile.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Welcome back, {memberProfile.name}!</h1>
+                  <p className="text-gray-600">Spelman College Glee Club Member</p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <Badge variant="secondary">{memberProfile.voicePart}</Badge>
+                    <Badge variant="outline">{memberProfile.classYear}</Badge>
+                    <Badge className="bg-green-100 text-green-800">{memberProfile.status}</Badge>
+                  </div>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-gray-600">Member since</p>
+                <p className="font-medium">{memberProfile.joinDate}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            <Card className="hover:shadow-md transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
+                <Calendar className="h-4 w-4 text-blue-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{quickStats.upcomingEvents}</div>
+                <p className="text-xs text-gray-600">Next: Tomorrow 7PM</p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Sheet Music</CardTitle>
+                <Music className="h-4 w-4 text-green-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{quickStats.sheetMusicCount}</div>
+                <p className="text-xs text-green-600">2 new this week</p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Attendance</CardTitle>
+                <CheckCircle className="h-4 w-4 text-purple-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{quickStats.attendancePercentage}%</div>
+                <Progress value={quickStats.attendancePercentage} className="mt-2 h-2" />
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Dues Status</CardTitle>
+                <DollarSign className="h-4 w-4 text-emerald-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-emerald-600">{quickStats.duesStatus}</div>
+                <p className="text-xs text-gray-600">Spring 2024</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+              <CardDescription>Access your most-used features</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Button className="h-20 flex-col space-y-2" variant="outline">
+                  <Music className="h-6 w-6" />
+                  <span>View Sheet Music</span>
+                </Button>
+                <Button className="h-20 flex-col space-y-2" variant="outline">
+                  <CheckCircle className="h-6 w-6" />
+                  <span>Mark Attendance</span>
+                </Button>
+                <Button className="h-20 flex-col space-y-2" variant="outline">
+                  <Clock className="h-6 w-6" />
+                  <span>Practice Log</span>
+                </Button>
+                <Button className="h-20 flex-col space-y-2" variant="outline">
+                  <Bell className="h-6 w-6" />
+                  <span>Announcements</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Upcoming Events */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Upcoming Events</CardTitle>
+                <CardDescription>Your next rehearsals and performances</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {upcomingEvents.map((event) => (
+                  <div key={event.id} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                    <Calendar className="h-5 w-5 text-blue-600" />
+                    <div className="flex-1">
+                      <h4 className="font-medium">{event.title}</h4>
+                      <p className="text-sm text-gray-600">{event.date} at {event.time}</p>
+                      <p className="text-sm text-gray-500">{event.location}</p>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>Your latest actions and updates</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                    {activity.type === 'music' && <Music className="h-5 w-5 text-blue-600" />}
+                    {activity.type === 'attendance' && <CheckCircle className="h-5 w-5 text-green-600" />}
+                    {activity.type === 'practice' && <Clock className="h-5 w-5 text-purple-600" />}
+                    {activity.type === 'payment' && <DollarSign className="h-5 w-5 text-emerald-600" />}
+                    <div className="flex-1">
+                      <p className="font-medium">{activity.action}</p>
+                      <p className="text-sm text-gray-500">{activity.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Dashboard Modules */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Dashboard Modules</CardTitle>
+              <CardDescription>Access all your Glee Club features</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                {/* Music Category */}
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-gray-900 flex items-center">
+                    <Music className="h-5 w-5 mr-2 text-blue-600" />
+                    Music
+                  </h3>
+                  <div className="space-y-2">
+                    <Button variant="ghost" className="w-full justify-start h-auto p-3">
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      <div className="text-left">
+                        <div>Sheet Music</div>
+                        <div className="text-xs text-gray-500">Access vocal parts</div>
+                      </div>
+                    </Button>
+                    <Button variant="ghost" className="w-full justify-start h-auto p-3">
+                      <Volume2 className="h-4 w-4 mr-2" />
+                      <div className="text-left">
+                        <div>Practice Resources</div>
+                        <div className="text-xs text-gray-500">Audio guides</div>
+                      </div>
+                    </Button>
+                    <Button variant="ghost" className="w-full justify-start h-auto p-3">
+                      <Mic className="h-4 w-4 mr-2" />
+                      <div className="text-left">
+                        <div>SoundCloud Library</div>
+                        <div className="text-xs text-gray-500">Recordings</div>
+                      </div>
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Events Category */}
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-gray-900 flex items-center">
+                    <Calendar className="h-5 w-5 mr-2 text-green-600" />
+                    Events
+                  </h3>
+                  <div className="space-y-2">
+                    <Button variant="ghost" className="w-full justify-start h-auto p-3">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      <div className="text-left">
+                        <div>Calendar</div>
+                        <div className="text-xs text-gray-500">View all events</div>
+                      </div>
+                    </Button>
+                    <Button variant="ghost" className="w-full justify-start h-auto p-3">
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      <div className="text-left">
+                        <div>Attendance</div>
+                        <div className="text-xs text-gray-500">Track participation</div>
+                      </div>
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Account Category */}
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-gray-900 flex items-center">
+                    <User className="h-5 w-5 mr-2 text-purple-600" />
+                    Account
+                  </h3>
+                  <div className="space-y-2">
+                    <Button variant="ghost" className="w-full justify-start h-auto p-3">
+                      <User className="h-4 w-4 mr-2" />
+                      <div className="text-left">
+                        <div>Profile</div>
+                        <div className="text-xs text-gray-500">Manage info</div>
+                      </div>
+                    </Button>
+                    <Button variant="ghost" className="w-full justify-start h-auto p-3">
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      <div className="text-left">
+                        <div>Announcements</div>
+                        <div className="text-xs text-gray-500">Stay updated</div>
+                      </div>
+                    </Button>
+                    <Button variant="ghost" className="w-full justify-start h-auto p-3">
+                      <ShoppingBag className="h-4 w-4 mr-2" />
+                      <div className="text-left">
+                        <div>Store</div>
+                        <div className="text-xs text-gray-500">Merchandise</div>
+                      </div>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Glee Club Spotlight */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Star className="h-5 w-5 mr-2 text-yellow-500" />
+                Glee Club Spotlight
+              </CardTitle>
+              <CardDescription>Member recognition and community updates</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
+                  <div className="flex items-center space-x-3">
+                    <Award className="h-8 w-8 text-yellow-600" />
+                    <div>
+                      <h4 className="font-semibold">Member of the Month</h4>
+                      <p className="text-sm text-gray-600">Congratulations to Sarah Johnson for outstanding dedication!</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center space-x-3">
+                    <TrendingUp className="h-8 w-8 text-blue-600" />
+                    <div>
+                      <h4 className="font-semibold">Latest Achievement</h4>
+                      <p className="text-sm text-gray-600">First place at the Regional Choir Competition!</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </UniversalLayout>
   );
