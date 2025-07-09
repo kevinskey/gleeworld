@@ -108,6 +108,12 @@ export const useContractFromTemplate = (onContractCreated?: () => void) => {
       }
 
       // Send email to recipient
+      console.log('useContractFromTemplate: Email condition check:', {
+        selectedUserEmail: selectedUser?.email,
+        currentUserEmail: user?.email,
+        shouldSendEmail: selectedUser?.email && selectedUser.email !== user?.email
+      });
+      
       if (selectedUser?.email && selectedUser.email !== user?.email) {
         try {
           console.log('useContractFromTemplate: Sending contract email to recipient...');
