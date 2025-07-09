@@ -79,13 +79,26 @@ export const ContractViewer = ({ contract, open, onOpenChange }: ContractViewerP
               // Add embedded signatures to contract content for display
               let signaturesData = signatureRecord.embedded_signatures;
               
-              // If it's a string, keep it as is, if it's an object, stringify it
-              if (typeof signaturesData === 'object') {
-                signaturesData = JSON.stringify(signaturesData);
+              // Handle both string and object formats
+              let signaturesString;
+              if (typeof signaturesData === 'string') {
+                // If it's already a string, try to parse it to validate, then use as-is
+                try {
+                  JSON.parse(signaturesData);
+                  signaturesString = signaturesData;
+                } catch {
+                  // If parsing fails, it might be raw JSON, wrap it
+                  signaturesString = signaturesData;
+                }
+              } else {
+                // If it's an object, stringify it
+                signaturesString = JSON.stringify(signaturesData);
               }
               
-              const signaturesSection = `\n\n[EMBEDDED_SIGNATURES]${signaturesData}[/EMBEDDED_SIGNATURES]`;
+              const signaturesSection = `\n\n[EMBEDDED_SIGNATURES]${signaturesString}[/EMBEDDED_SIGNATURES]`;
               const enhancedContent = contract.content + signaturesSection;
+              
+              console.log('Enhanced contract content with signatures, length:', enhancedContent.length);
               
               setEnhancedContract({
                 ...contract,
