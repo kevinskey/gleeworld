@@ -27,6 +27,7 @@ import { UserContractsList } from "./UserContractsList";
 import { UserPaymentsList } from "./UserPaymentsList";
 import { UserNotificationsList } from "./UserNotificationsList";
 import { UserW9FormsList } from "./UserW9FormsList";
+import { GleeWorldProfileManager } from "./GleeWorldProfileManager";
 import { FinanceManagement } from "@/components/finance/FinanceManagement";
 import { useState } from "react";
 
@@ -78,6 +79,15 @@ export const UserDashboard = () => {
 
   const renderContent = () => {
     switch (activeTab) {
+      case "profile":
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-white">GleeWorld Profile</h2>
+            </div>
+            <GleeWorldProfileManager />
+          </div>
+        );
       case "library":
         return (
           <div className="space-y-6">
@@ -176,6 +186,7 @@ export const UserDashboard = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-white/95 backdrop-blur-sm">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="library">Library</TabsTrigger>
             <TabsTrigger value="finance">Finance</TabsTrigger>
           </TabsList>

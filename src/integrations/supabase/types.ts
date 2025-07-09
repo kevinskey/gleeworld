@@ -2082,43 +2082,115 @@ export type Database = {
       }
       gw_profiles: {
         Row: {
+          account_balance: number | null
           address: string | null
           avatar_url: string | null
           bio: string | null
+          class_year: number | null
           created_at: string | null
+          current_cart_id: string | null
+          default_shipping_address: Json | null
+          design_history_ids: string[] | null
+          disabled: boolean | null
+          dues_paid: boolean | null
+          ecommerce_enabled: boolean | null
           email: string | null
+          exec_board_role: string | null
+          first_name: string | null
           full_name: string | null
           id: string
+          is_admin: boolean | null
+          is_exec_board: boolean | null
+          is_super_admin: boolean | null
+          join_date: string | null
+          last_name: string | null
+          last_sign_in_at: string | null
+          music_role: string | null
+          notes: string | null
+          org: string | null
           phone: string | null
           role: string | null
+          role_tags: string[] | null
+          special_roles: string[] | null
+          status: string | null
+          title: string | null
           updated_at: string | null
           user_id: string | null
+          voice_part: string | null
         }
         Insert: {
+          account_balance?: number | null
           address?: string | null
           avatar_url?: string | null
           bio?: string | null
+          class_year?: number | null
           created_at?: string | null
+          current_cart_id?: string | null
+          default_shipping_address?: Json | null
+          design_history_ids?: string[] | null
+          disabled?: boolean | null
+          dues_paid?: boolean | null
+          ecommerce_enabled?: boolean | null
           email?: string | null
+          exec_board_role?: string | null
+          first_name?: string | null
           full_name?: string | null
           id?: string
+          is_admin?: boolean | null
+          is_exec_board?: boolean | null
+          is_super_admin?: boolean | null
+          join_date?: string | null
+          last_name?: string | null
+          last_sign_in_at?: string | null
+          music_role?: string | null
+          notes?: string | null
+          org?: string | null
           phone?: string | null
           role?: string | null
+          role_tags?: string[] | null
+          special_roles?: string[] | null
+          status?: string | null
+          title?: string | null
           updated_at?: string | null
           user_id?: string | null
+          voice_part?: string | null
         }
         Update: {
+          account_balance?: number | null
           address?: string | null
           avatar_url?: string | null
           bio?: string | null
+          class_year?: number | null
           created_at?: string | null
+          current_cart_id?: string | null
+          default_shipping_address?: Json | null
+          design_history_ids?: string[] | null
+          disabled?: boolean | null
+          dues_paid?: boolean | null
+          ecommerce_enabled?: boolean | null
           email?: string | null
+          exec_board_role?: string | null
+          first_name?: string | null
           full_name?: string | null
           id?: string
+          is_admin?: boolean | null
+          is_exec_board?: boolean | null
+          is_super_admin?: boolean | null
+          join_date?: string | null
+          last_name?: string | null
+          last_sign_in_at?: string | null
+          music_role?: string | null
+          notes?: string | null
+          org?: string | null
           phone?: string | null
           role?: string | null
+          role_tags?: string[] | null
+          special_roles?: string[] | null
+          status?: string | null
+          title?: string | null
           updated_at?: string | null
           user_id?: string | null
+          voice_part?: string | null
         }
         Relationships: []
       }
