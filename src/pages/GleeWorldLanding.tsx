@@ -133,6 +133,7 @@ export const GleeWorldLanding = () => {
               <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Home</a>
               <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">About</a>
               <a href="#events" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Events</a>
+              <Link to="/calendar" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Calendar</Link>
               <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Reader</a>
               <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Studio</a>
               <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Store</a>

@@ -22,6 +22,7 @@ import ContentCreator from "./pages/ContentCreator";
 import EventPlanner from "./pages/EventPlanner";
 import { Shop } from "./pages/Shop";
 import Profile from "./pages/Profile";
+import Calendar from "./pages/Calendar";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -196,6 +197,14 @@ const App = () => {
                 element={
                   <PublicRoute>
                     <Shop />
+                  </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/calendar" 
+                element={
+                  <PublicRoute>
+                    <Calendar />
                   </PublicRoute>
                 } 
               />
