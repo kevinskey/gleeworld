@@ -1,20 +1,16 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calculator, TrendingUp, TrendingDown, AlertTriangle, Plus, Search, Filter, PenTool } from "lucide-react";
+import { Calculator, TrendingUp, TrendingDown, AlertTriangle, Search, Filter } from "lucide-react";
 import { useBudgets } from "@/hooks/useBudgets";
 import { EditBudgetDialog } from "@/components/admin/budget/EditBudgetDialog";
 import { BudgetCard } from "@/components/admin/budget/BudgetCard";
 import { CreateBudgetDialog } from "@/components/admin/budget/CreateBudgetDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ROUTES } from "@/constants/routes";
 
 export const BudgetTracking = () => {
-  const navigate = useNavigate();
   const { budgets, loading, deleteBudget, updateBudget, refetch } = useBudgets();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
