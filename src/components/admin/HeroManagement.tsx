@@ -164,6 +164,7 @@ export const HeroManagement = () => {
   };
 
   const handleEdit = (slide: HeroSlide) => {
+    console.log('Editing slide:', slide);
     setFormData({
       title: slide.title || "",
       description: slide.description || "",
@@ -174,6 +175,7 @@ export const HeroManagement = () => {
       is_active: slide.is_active ?? true
     });
     setEditingId(slide.id);
+    console.log('Set editing ID to:', slide.id);
   };
 
   const handleDelete = async (id: string) => {
