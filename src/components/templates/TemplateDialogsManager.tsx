@@ -41,16 +41,16 @@ export const TemplateDialogsManager = ({
   });
 
   const handleUseTemplate = async (template: ContractTemplate) => {
-    console.log('Using template:', template.name);
+    console.log('TemplateDialogsManager: Using template:', template.name);
     
     try {
       // Try to create contract directly from template
-      console.log('Attempting direct contract creation...');
+      console.log('TemplateDialogsManager: Attempting direct contract creation...');
       const result = await createContractFromTemplate(template);
       
       if (result) {
         // Success - contract was created directly
-        console.log('Contract created successfully:', result.id);
+        console.log('TemplateDialogsManager: Contract created successfully:', result.id);
         onViewOpenChange(false);
         toast({
           title: "Contract Created",
@@ -58,15 +58,15 @@ export const TemplateDialogsManager = ({
         });
         return;
       } else {
-        console.log('Direct contract creation returned null, trying fallback...');
+        console.log('TemplateDialogsManager: Direct contract creation returned null, trying fallback...');
       }
     } catch (error) {
-      console.error('Direct contract creation failed:', error);
+      console.error('TemplateDialogsManager: Direct contract creation failed:', error);
     }
 
     // Fallback to the form-based approach if available
     if (onUseTemplate) {
-      console.log('Using form-based template approach');
+      console.log('TemplateDialogsManager: Using form-based template approach');
       onUseTemplate(template.template_content, template.name, template.header_image_url, template.contract_type);
       onViewOpenChange(false);
       toast({
@@ -75,7 +75,7 @@ export const TemplateDialogsManager = ({
       });
     } else {
       // If no form-based approach is available, show error
-      console.error('No contract creation method available');
+      console.error('TemplateDialogsManager: No contract creation method available');
       toast({
         title: "Error",
         description: "Unable to create contract from template. Please try again or contact support.",
