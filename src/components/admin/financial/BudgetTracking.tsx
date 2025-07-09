@@ -9,6 +9,7 @@ import { Calculator, TrendingUp, TrendingDown, AlertTriangle, Plus, Search, Filt
 import { useBudgets } from "@/hooks/useBudgets";
 import { EditBudgetDialog } from "@/components/admin/budget/EditBudgetDialog";
 import { BudgetCard } from "@/components/admin/budget/BudgetCard";
+import { CreateBudgetDialog } from "@/components/admin/budget/CreateBudgetDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ROUTES } from "@/constants/routes";
 
@@ -153,13 +154,7 @@ export const BudgetTracking = () => {
               <CardTitle>Budget Management</CardTitle>
               <CardDescription>Create, manage, and track project budgets</CardDescription>
             </div>
-            <Button 
-              onClick={() => navigate(ROUTES.CONTENT_CREATOR)}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <PenTool className="h-4 w-4 mr-2" />
-              Plan New Budget
-            </Button>
+            <CreateBudgetDialog onSuccess={refetch} />
           </div>
         </CardHeader>
         <CardContent>
@@ -231,13 +226,7 @@ export const BudgetTracking = () => {
                 }
               </p>
               {(!searchTerm && statusFilter === "all" && typeFilter === "all") && (
-                <Button 
-                  onClick={() => navigate(ROUTES.CONTENT_CREATOR)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <PenTool className="h-4 w-4 mr-2" />
-                  Plan Your First Budget
-                </Button>
+                <CreateBudgetDialog onSuccess={refetch} />
               )}
             </div>
           )}
