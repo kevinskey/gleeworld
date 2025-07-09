@@ -1598,7 +1598,7 @@ export type Database = {
           image_url: string | null
           is_active: boolean | null
           link_url: string | null
-          title: string
+          title: string | null
         }
         Insert: {
           button_text?: string | null
@@ -1610,7 +1610,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           link_url?: string | null
-          title: string
+          title?: string | null
         }
         Update: {
           button_text?: string | null
@@ -1622,7 +1622,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           link_url?: string | null
-          title?: string
+          title?: string | null
         }
         Relationships: [
           {
