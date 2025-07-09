@@ -107,7 +107,7 @@ export const GleeWorldLanding = () => {
                 <Music className="h-8 w-8 text-blue-600" />
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">GleeWorld</h1>
-                  <p className="text-sm text-gray-600">Harvard Glee Club</p>
+                  <p className="text-sm text-gray-600">Spelman College Glee Club</p>
                 </div>
               </div>
             </div>
@@ -144,11 +144,11 @@ export const GleeWorldLanding = () => {
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
               Experience the 
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600"> Magic</span>
-              <br />of Harvard Glee Club
+              <br />of Spelman College Glee Club
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
               Join our community of passionate musicians as we create unforgettable performances, 
-              build lifelong friendships, and carry forward over 150 years of musical excellence.
+              build lifelong friendships, and carry forward our rich tradition of musical excellence.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/auth">
@@ -291,7 +291,7 @@ export const GleeWorldLanding = () => {
                 {[
                   { title: "Classical Repertoire", description: "Traditional choral works and sacred music", icon: Trophy },
                   { title: "Contemporary Pieces", description: "Modern arrangements and popular songs", icon: Mic },
-                  { title: "Harvard Songs", description: "University traditions and fight songs", icon: Heart },
+                  { title: "Spelman Songs", description: "University traditions and fight songs", icon: Heart },
                   { title: "International Music", description: "Songs from around the world", icon: Users },
                   { title: "Holiday Collections", description: "Seasonal and celebratory music", icon: Star },
                   { title: "Original Compositions", description: "Works by club members and alumni", icon: Music }
@@ -383,7 +383,7 @@ export const GleeWorldLanding = () => {
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-gray-900 mb-4">GleeWorld Shop</h2>
                 <p className="text-gray-600 max-w-2xl mx-auto">
-                  Show your Harvard Glee Club pride with our exclusive merchandise and recordings.
+                  Show your Spelman College Glee Club pride with our exclusive merchandise and recordings.
                 </p>
               </div>
 
@@ -427,9 +427,9 @@ export const GleeWorldLanding = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Harvard Glee Club</h3>
+              <h3 className="text-lg font-semibold">Spelman College Glee Club</h3>
               <p className="text-gray-400 text-sm">
-                America's oldest college glee club, founded in 1858. Creating musical excellence and lifelong friendships.
+                Building a legacy of musical excellence and sisterhood. Creating beautiful music and lifelong bonds.
               </p>
             </div>
             <div className="space-y-4">
@@ -453,14 +453,14 @@ export const GleeWorldLanding = () => {
             <div className="space-y-4">
               <h4 className="font-semibold">Contact</h4>
               <div className="space-y-2 text-sm text-gray-400">
-                <div>Harvard University</div>
-                <div>Cambridge, MA 02138</div>
+                <div>Spelman College</div>
+                <div>Atlanta, GA 30314</div>
                 <div>info@gleeworld.org</div>
               </div>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; 2024 Harvard Glee Club. All rights reserved.</p>
+            <p>&copy; 2024 Spelman College Glee Club. All rights reserved.</p>
           </div>
         </div>
       </footer>

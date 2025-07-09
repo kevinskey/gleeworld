@@ -34,7 +34,7 @@ interface Product {
 const SAMPLE_PRODUCTS: Product[] = [
   {
     id: "1",
-    name: "Harvard Glee Club T-Shirt",
+    name: "Spelman College Glee Club T-Shirt",
     description: "Classic cotton t-shirt with our iconic logo",
     price: 25.00,
     category: "apparel",
@@ -55,7 +55,7 @@ const SAMPLE_PRODUCTS: Product[] = [
   {
     id: "3",
     name: "Glee Club Hoodie",
-    description: "Warm and comfortable hoodie perfect for cold Boston weather",
+    description: "Warm and comfortable hoodie perfect for Atlanta's cooler days",
     price: 45.00,
     category: "apparel", 
     stock_quantity: 30,
@@ -84,7 +84,7 @@ const SAMPLE_PRODUCTS: Product[] = [
   },
   {
     id: "6",
-    name: "Harvard Glee Club Mug",
+    name: "Spelman College Glee Club Mug",
     description: "Ceramic mug perfect for your morning coffee",
     price: 18.00,
     category: "accessories",
@@ -194,7 +194,7 @@ export const Shop = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">GleeWorld Shop</h1>
-            <p className="text-gray-600 mt-2">Official Harvard Glee Club merchandise and recordings</p>
+            <p className="text-gray-600 mt-2">Official Spelman College Glee Club merchandise and recordings</p>
           </div>
           
           {user && (
