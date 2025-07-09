@@ -10,7 +10,7 @@ interface RecipientSelectionDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   template: ContractTemplate | null;
-  onCreateContract: (template: ContractTemplate, recipient: { full_name: string; email: string }) => void;
+  onCreateContract: (template: ContractTemplate, recipient: { full_name: string; email: string; stipend_amount?: string }) => void;
   isCreating?: boolean;
 }
 
@@ -23,6 +23,7 @@ export const RecipientSelectionDialog = ({
 }: RecipientSelectionDialogProps) => {
   const [recipientName, setRecipientName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
+  const [stipendAmount, setStipendAmount] = useState("$500.00");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +31,8 @@ export const RecipientSelectionDialog = ({
 
     onCreateContract(template, {
       full_name: recipientName.trim(),
-      email: recipientEmail.trim()
+      email: recipientEmail.trim(),
+      stipend_amount: stipendAmount.trim()
     });
   };
 
@@ -38,6 +40,7 @@ export const RecipientSelectionDialog = ({
     if (!isCreating) {
       setRecipientName("");
       setRecipientEmail("");
+      setStipendAmount("$500.00");
       onOpenChange(false);
     }
   };
@@ -74,6 +77,17 @@ export const RecipientSelectionDialog = ({
               onChange={(e) => setRecipientEmail(e.target.value)}
               placeholder="Enter recipient's email address"
               required
+              disabled={isCreating}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="stipend-amount">Stipend Amount</Label>
+            <Input
+              id="stipend-amount"
+              value={stipendAmount}
+              onChange={(e) => setStipendAmount(e.target.value)}
+              placeholder="Enter stipend amount (e.g., $500.00)"
               disabled={isCreating}
             />
           </div>

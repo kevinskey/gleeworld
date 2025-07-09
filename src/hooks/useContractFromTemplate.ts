@@ -17,7 +17,7 @@ export const useContractFromTemplate = (onContractCreated?: () => void) => {
 
   console.log('useContractFromTemplate: Hook initialized, user:', user?.id, 'displayName:', displayName);
 
-  const createContractFromTemplate = async (template: ContractTemplate, selectedUser?: { full_name?: string; email: string }) => {
+  const createContractFromTemplate = async (template: ContractTemplate, selectedUser?: { full_name?: string; email: string; stipend_amount?: string }) => {
     console.log('useContractFromTemplate: Starting contract creation from template:', template.name);
     
     if (!user) {
@@ -52,6 +52,7 @@ export const useContractFromTemplate = (onContractCreated?: () => void) => {
 
       // Use selected user name if provided, otherwise fall back to current user
       const recipientName = selectedUser?.full_name || selectedUser?.email || displayName || user?.email || 'User';
+      const recipientEmail = selectedUser?.email || user?.email || '';
       
       // Generate contract title with recipient's name + template name
       const contractTitle = `${recipientName} - ${template.name}`;
@@ -60,10 +61,19 @@ export const useContractFromTemplate = (onContractCreated?: () => void) => {
       console.log('useContractFromTemplate: About to call createContract...');
       console.log('useContractFromTemplate: Template content length:', template.template_content.length);
       
-      // Create contract with template content
+      // Replace template variables with actual values
+      const stipendAmount = selectedUser?.stipend_amount || '$500.00';
+      let processedContent = template.template_content
+        .replace(/\{\{username\}\}/g, recipientName)
+        .replace(/\{\{useremail\}\}/g, recipientEmail)
+        .replace(/\{\{stipend\}\}/g, stipendAmount);
+      
+      console.log('useContractFromTemplate: Processed template variables in contract content');
+      
+      // Create contract with processed template content
       const contractData = await createContract({
         title: contractTitle,
-        content: template.template_content,
+        content: processedContent,
       });
 
       console.log('useContractFromTemplate: createContract completed, result:', contractData);

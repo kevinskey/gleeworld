@@ -57,8 +57,9 @@ export const TemplateDialogsManager = ({
     setIsRecipientSelectionOpen(true);
   };
 
-  const handleCreateContractWithRecipient = async (template: ContractTemplate, recipient: { full_name: string; email: string }) => {
+  const handleCreateContractWithRecipient = async (template: ContractTemplate, recipient: { full_name: string; email: string; stipend_amount?: string }) => {
     console.log('TemplateDialogsManager: Creating contract with recipient:', recipient);
+    
     
     try {
       const result = await createContractFromTemplate(template, recipient);
