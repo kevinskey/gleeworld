@@ -433,7 +433,7 @@ export const ContractManagement = () => {
           </div>
         </div>
       )}
-      {/* Navigation Tabs */}
+      {/* Main Management Interface */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -462,7 +462,7 @@ export const ContractManagement = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           {/* Tab Navigation */}
           <div className="flex flex-wrap gap-2 mb-4">
             <Button
@@ -496,28 +496,6 @@ export const ContractManagement = () => {
               Templates ({contractTemplates.length})
             </Button>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Main Management Interface */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>
-                {activeTab === "all-contracts" && "All Contracts"}
-                {activeTab === "signatures" && "Contract Signatures"}
-                {activeTab === "templates" && "Contract Templates"}
-              </CardTitle>
-              <CardDescription>
-                {activeTab === "all-contracts" && "View and manage all contracts in the system"}
-                {activeTab === "signatures" && "Monitor contract signing progress and status"}
-                {activeTab === "templates" && "Manage contract templates and documents"}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
           {/* Filters and Search */}
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
