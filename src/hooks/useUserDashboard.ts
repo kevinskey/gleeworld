@@ -117,6 +117,50 @@ export const useUserDashboard = () => {
     }
   };
 
+  // Set up real-time subscriptions for immediate updates
+  useEffect(() => {
+    if (!user) return;
+
+    const paymentsChannel = supabase
+      .channel('user-payments-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_payments',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          // Refresh payments when user's payments change
+          fetchDashboardData();
+        }
+      )
+      .subscribe();
+
+    const notificationsChannel = supabase
+      .channel('user-notifications-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          // Refresh notifications when user's notifications change
+          fetchDashboardData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(paymentsChannel);
+      supabase.removeChannel(notificationsChannel);
+    };
+  }, [user]);
+
   useEffect(() => {
     fetchDashboardData();
   }, [user]);
