@@ -6,11 +6,12 @@ import { CalendarIcon, ListIcon, Grid3X3Icon } from "lucide-react";
 import { MonthlyCalendar } from "./MonthlyCalendar";
 import { EventsList } from "./EventsList";
 import { WeeklyCalendar } from "./WeeklyCalendar";
+import { CreateEventDialog } from "./CreateEventDialog";
 import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
 
 export const CalendarViews = () => {
   const [activeView, setActiveView] = useState("month");
-  const { events, loading } = useGleeWorldEvents();
+  const { events, loading, fetchEvents } = useGleeWorldEvents();
 
   if (loading) {
     return (
@@ -30,10 +31,13 @@ export const CalendarViews = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <CalendarIcon className="h-5 w-5" />
-          Glee World Calendar
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <CalendarIcon className="h-5 w-5" />
+            Glee World Calendar
+          </CardTitle>
+          <CreateEventDialog onEventCreated={fetchEvents} />
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs value={activeView} onValueChange={setActiveView}>
