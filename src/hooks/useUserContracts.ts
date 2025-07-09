@@ -34,7 +34,7 @@ export const useUserContracts = () => {
       setError(null);
       console.log('useUserContracts: Fetching contracts for user:', user.id, 'email:', user.email);
 
-      // Only fetch contracts sent to this specific user via email
+      // Fetch contracts where user is creator OR recipient
       const { data: recipientData, error: recipientError } = await supabase
         .from('contract_recipients_v2')
         .select('contract_id')
@@ -45,16 +45,10 @@ export const useUserContracts = () => {
         throw recipientError;
       }
 
-      const contractIds = recipientData?.map(r => r.contract_id) || [];
-      console.log('useUserContracts: Contract IDs sent to user:', contractIds);
-      
-      if (contractIds.length === 0) {
-        console.log('useUserContracts: No contracts found for user');
-        setContracts([]);
-        return;
-      }
+      const recipientContractIds = recipientData?.map(r => r.contract_id) || [];
+      console.log('useUserContracts: Contract IDs sent to user:', recipientContractIds);
 
-      // Fetch the actual contracts
+      // Fetch contracts created by user OR sent to user
       const { data: contractsData, error: contractsError } = await supabase
         .from('contracts_v2')
         .select(`
@@ -62,9 +56,10 @@ export const useUserContracts = () => {
           title,
           content,
           status,
-          created_at
+          created_at,
+          created_by
         `)
-        .in('id', contractIds)
+        .or(`created_by.eq.${user.id},id.in.(${recipientContractIds.length > 0 ? recipientContractIds.join(',') : 'null'})`)
         .order('created_at', { ascending: false });
 
       if (contractsError) {
