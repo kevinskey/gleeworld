@@ -83,7 +83,6 @@ export const UserDashboard = () => {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-white">My Documents</h2>
-              <AIAssist context="personal document management" />
             </div>
             <Library />
             <DocumentManager bucket="user-files" />
@@ -94,7 +93,6 @@ export const UserDashboard = () => {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-white">My Finance</h2>
-              <AIAssist context="personal finance tracking" />
             </div>
             <FinanceManagement />
           </div>
@@ -122,7 +120,6 @@ export const UserDashboard = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <AIAssist context="user dashboard" />
                   <Button 
                     onClick={refetch} 
                     variant="outline" 

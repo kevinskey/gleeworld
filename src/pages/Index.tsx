@@ -139,9 +139,6 @@ const Index = () => {
           <div className="space-y-4 sm:space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Document Library</h1>
-              <div className="flex-shrink-0">
-                <AIAssist context="document management" />
-              </div>
             </div>
             <Library />
             <DocumentManager />
@@ -153,9 +150,6 @@ const Index = () => {
           <div className="space-y-4 sm:space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Finance Management</h1>
-              <div className="flex-shrink-0">
-                <AIAssist context="finance and payments" />
-              </div>
             </div>
             <FinanceManagement />
           </div>
@@ -167,9 +161,6 @@ const Index = () => {
           <div className="space-y-4 sm:space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Dashboard</h1>
-              <div className="flex-shrink-0">
-                <AIAssist context="contract management dashboard" />
-              </div>
             </div>
             
             <StatsCards 
