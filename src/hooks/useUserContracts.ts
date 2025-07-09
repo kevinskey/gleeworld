@@ -34,7 +34,7 @@ export const useUserContracts = () => {
       setError(null);
       console.log('useUserContracts: Fetching contracts for user:', user.id, 'email:', user.email);
 
-      // Fetch contracts where user is creator OR recipient
+      // First, check for contracts sent to this user's email
       const { data: recipientData, error: recipientError } = await supabase
         .from('contract_recipients_v2')
         .select('contract_id')
@@ -42,13 +42,13 @@ export const useUserContracts = () => {
 
       if (recipientError) {
         console.error('useUserContracts: Error fetching recipient data:', recipientError);
-        throw recipientError;
+        // Don't throw error here, just log it and continue
       }
 
       const recipientContractIds = recipientData?.map(r => r.contract_id) || [];
-      console.log('useUserContracts: Contract IDs sent to user:', recipientContractIds);
+      console.log('useUserContracts: Contract IDs sent to user email:', recipientContractIds);
 
-      // Fetch contracts created by user OR sent to user
+      // Fetch contracts created by user AND sent to user
       let query = supabase
         .from('contracts_v2')
         .select(`
@@ -60,13 +60,17 @@ export const useUserContracts = () => {
           created_by
         `);
 
-      // Build the OR condition properly
-      if (recipientContractIds.length > 0) {
-        query = query.or(`created_by.eq.${user.id},id.in.(${recipientContractIds.join(',')})`);
+      // Build the OR condition to get both created and received contracts
+      const userCreatedFilter = `created_by.eq.${user.id}`;
+      const recipientFilter = recipientContractIds.length > 0 ? `id.in.(${recipientContractIds.join(',')})` : null;
+      
+      if (recipientFilter) {
+        query = query.or(`${userCreatedFilter},${recipientFilter}`);
       } else {
-        // If no recipient contracts, only fetch contracts created by user
         query = query.eq('created_by', user.id);
       }
+
+      console.log('useUserContracts: Query filters - Created by user:', userCreatedFilter, 'Recipient filter:', recipientFilter);
 
       const { data: contractsData, error: contractsError } = await query
         .order('created_at', { ascending: false });
