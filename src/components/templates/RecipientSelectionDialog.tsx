@@ -31,13 +31,22 @@ export const RecipientSelectionDialog = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!template || !selectedUser) return;
+    console.log('RecipientSelectionDialog: Form submitted with selectedUser:', selectedUser);
+    console.log('RecipientSelectionDialog: Template:', template?.name);
+    
+    if (!template || !selectedUser) {
+      console.error('RecipientSelectionDialog: Missing template or selectedUser');
+      return;
+    }
 
-    onCreateContract(template, {
+    const recipientData = {
       full_name: selectedUser.full_name || selectedUser.email || '',
       email: selectedUser.email || '',
       stipend_amount: stipendAmount.trim()
-    });
+    };
+    
+    console.log('RecipientSelectionDialog: Calling onCreateContract with:', recipientData);
+    onCreateContract(template, recipientData);
   };
 
   const handleClose = () => {

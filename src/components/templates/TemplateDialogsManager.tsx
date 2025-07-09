@@ -59,10 +59,12 @@ export const TemplateDialogsManager = ({
 
   const handleCreateContractWithRecipient = async (template: ContractTemplate, recipient: { full_name: string; email: string; stipend_amount?: string }) => {
     console.log('TemplateDialogsManager: Creating contract with recipient:', recipient);
-    
+    console.log('TemplateDialogsManager: Template:', template.name);
+    console.log('TemplateDialogsManager: About to call createContractFromTemplate...');
     
     try {
       const result = await createContractFromTemplate(template, recipient);
+      console.log('TemplateDialogsManager: createContractFromTemplate returned:', result);
       
       if (result) {
         console.log('TemplateDialogsManager: Contract created successfully:', result.id);
