@@ -25,6 +25,16 @@ interface Event {
   event_type: string;
 }
 
+interface HeroSettings {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  background_image_url: string | null;
+  overlay_opacity: number | null;
+  text_color: string | null;
+  is_active: boolean;
+}
+
 interface Track {
   id: string;
   title: string;
@@ -35,6 +45,7 @@ interface Track {
 export const GleeWorldLanding = () => {
   const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
+  const [heroSettings, setHeroSettings] = useState<HeroSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -42,6 +53,15 @@ export const GleeWorldLanding = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch hero settings
+        const { data: heroData } = await supabase
+          .from('gw_hero_settings')
+          .select('*')
+          .eq('is_active', true)
+          .order('display_order', { ascending: true })
+          .limit(1)
+          .single();
+
         // Fetch upcoming events
         const { data: eventsData } = await supabase
           .from('gw_events')
@@ -51,6 +71,7 @@ export const GleeWorldLanding = () => {
           .order('start_date', { ascending: true })
           .limit(6);
 
+        if (heroData) setHeroSettings(heroData);
         if (eventsData) setEvents(eventsData);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -126,17 +147,60 @@ export const GleeWorldLanding = () => {
         </div>
       </header>
 
-      {/* Hero Image */}
+      {/* Hero Section */}
       <section className="relative">
-        <div className="h-[60vh] bg-gradient-to-r from-pink-100 to-rose-200 overflow-hidden">
-          <img 
-            src="https://gleeworld.org/lovable-uploads/hero-glee-club.jpg"
-            alt="Spelman College Glee Club performers in black dresses with pearl necklaces"
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
-            }}
-          />
+        <div 
+          className="h-[60vh] overflow-hidden relative"
+          style={{
+            backgroundColor: heroSettings?.background_image_url ? 'transparent' : '#f8fafc'
+          }}
+        >
+          {heroSettings?.background_image_url ? (
+            <>
+              <img 
+                src={heroSettings.background_image_url}
+                alt="Hero Background"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                }}
+              />
+              {heroSettings.overlay_opacity && (
+                <div 
+                  className="absolute inset-0 bg-black"
+                  style={{ opacity: heroSettings.overlay_opacity }}
+                ></div>
+              )}
+            </>
+          ) : (
+            <div className="w-full h-full bg-gradient-to-r from-pink-100 to-rose-200 flex items-center justify-center">
+              <div className="text-center">
+                <Music className="h-24 w-24 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">No hero image configured</p>
+              </div>
+            </div>
+          )}
+          
+          {heroSettings && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center px-6">
+                <h1 
+                  className="text-4xl md:text-6xl font-bold mb-4"
+                  style={{ color: heroSettings.text_color || '#ffffff' }}
+                >
+                  {heroSettings.title}
+                </h1>
+                {heroSettings.subtitle && (
+                  <p 
+                    className="text-xl md:text-2xl"
+                    style={{ color: heroSettings.text_color || '#ffffff' }}
+                  >
+                    {heroSettings.subtitle}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
