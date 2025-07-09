@@ -58,6 +58,7 @@ export const useContractFromTemplate = (onContractCreated?: () => void) => {
       
       console.log('useContractFromTemplate: Generated contract title:', contractTitle);
       console.log('useContractFromTemplate: About to call createContract...');
+      console.log('useContractFromTemplate: Template content length:', template.template_content.length);
       
       // Create contract with template content
       const contractData = await createContract({
@@ -65,7 +66,7 @@ export const useContractFromTemplate = (onContractCreated?: () => void) => {
         content: template.template_content,
       });
 
-      console.log('useContractFromTemplate: createContract returned:', contractData);
+      console.log('useContractFromTemplate: createContract completed, result:', contractData);
 
       if (!contractData) {
         console.error('useContractFromTemplate: createContract returned null/undefined');
