@@ -15,6 +15,7 @@ import { BudgetTableWidget } from "./BudgetTableWidget";
 import { BudgetSummaryCard } from "./BudgetSummaryCard";
 import { BudgetAIHelper } from "./BudgetAIHelper";
 import { FileUploadSection } from "./FileUploadSection";
+import { BudgetTaskManagement } from "./BudgetTaskManagement";
 
 interface EventBudgetWorksheetProps {
   eventId: string;
@@ -563,6 +564,12 @@ export const EventBudgetWorksheet = ({ eventId }: EventBudgetWorksheetProps) => 
         attachments={attachments}
         onUpload={uploadAttachment}
         eventId={eventId}
+      />
+
+      {/* Task Management Section */}
+      <BudgetTaskManagement 
+        eventId={eventId}
+        eventName={formData.event_name}
       />
 
       {/* Action Buttons */}
