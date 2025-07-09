@@ -34,6 +34,14 @@ export const PaymentTracking = () => {
     }
   };
 
+  const handlePaymentMethodChange = async (paymentId: string, newMethod: string) => {
+    try {
+      await updatePayment(paymentId, { payment_method: newMethod });
+    } catch (error) {
+      console.error('Error updating payment method:', error);
+    }
+  };
+
   const filteredPayments = payments?.filter(payment => {
     const matchesSearch = !searchTerm || 
       payment.user_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -171,9 +179,20 @@ export const PaymentTracking = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0 self-start sm:self-center">
-                    <Badge variant="outline" className="text-xs sm:text-sm">
-                      {payment.payment_method}
-                    </Badge>
+                    <Select value={payment.payment_method} onValueChange={(value) => handlePaymentMethodChange(payment.id, value)}>
+                      <SelectTrigger className="w-auto min-w-[100px] h-7 text-xs sm:text-sm border">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="check">Check</SelectItem>
+                        <SelectItem value="cash">Cash</SelectItem>
+                        <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                        <SelectItem value="paypal">PayPal</SelectItem>
+                        <SelectItem value="venmo">Venmo</SelectItem>
+                        <SelectItem value="zelle">Zelle</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <div className="flex items-center gap-1 ml-2">
                       <Button
                         variant="outline"
