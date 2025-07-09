@@ -116,7 +116,7 @@ export const HeroManagement = () => {
         const { error } = await supabase
           .from('gw_hero_slides')
           .update({
-            title: formData.title.trim() || 'Untitled Slide',
+            title: formData.title.trim() || null,
             description: formData.description || null,
             image_url: formData.image_url || null,
             button_text: formData.button_text || null,
@@ -132,7 +132,7 @@ export const HeroManagement = () => {
         const { error } = await supabase
           .from('gw_hero_slides')
           .insert({
-            title: formData.title.trim() || 'Untitled Slide',
+            title: formData.title.trim() || null,
             description: formData.description || null,
             image_url: formData.image_url || null,
             button_text: formData.button_text || null,
@@ -386,7 +386,7 @@ export const HeroManagement = () => {
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold">
-                        {slide.title || "Untitled Slide"}
+                        {slide.title || "Slide without title"}
                       </h3>
                       {slide.is_active ? (
                         <Eye className="h-4 w-4 text-green-600" />
