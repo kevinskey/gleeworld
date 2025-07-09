@@ -80,10 +80,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 const RootRoute = () => {
   const { user, loading } = useAuth();
   
-  console.log('RootRoute: rendering with user:', user?.id || 'no user', 'loading:', loading);
-  
   if (loading) {
-    console.log('RootRoute: showing loading spinner');
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900 flex items-center justify-center">
         <LoadingSpinner size="lg" text="Loading..." />
@@ -91,7 +88,6 @@ const RootRoute = () => {
     );
   }
   
-  console.log('RootRoute: showing GleeWorldLanding');
   // Show landing page for everyone, authenticated or not
   return <GleeWorldLanding />;
 };
