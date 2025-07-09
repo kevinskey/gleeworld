@@ -36,7 +36,11 @@ export const TemplateDialogsManager = ({
   onUseTemplate
 }: TemplateDialogsManagerProps) => {
   const { toast } = useToast();
+  
+  console.log('TemplateDialogsManager: Component rendering, onUseTemplate provided:', !!onUseTemplate);
+  
   const { createContractFromTemplate, isCreating } = useContractFromTemplate(() => {
+    console.log('TemplateDialogsManager: Contract creation callback triggered');
     onViewOpenChange(false);
   });
 

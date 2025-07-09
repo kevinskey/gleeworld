@@ -15,6 +15,8 @@ export const useContractFromTemplate = (onContractCreated?: () => void) => {
   const { user } = useAuth();
   const { displayName } = useUserProfile(user);
 
+  console.log('useContractFromTemplate: Hook initialized, user:', user?.id, 'displayName:', displayName);
+
   const createContractFromTemplate = async (template: ContractTemplate, selectedUser?: { full_name?: string; email: string }) => {
     console.log('useContractFromTemplate: Starting contract creation from template:', template.name);
     
