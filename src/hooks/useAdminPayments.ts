@@ -174,11 +174,107 @@ export const useAdminPayments = () => {
     fetchPayments();
   }, [user]);
 
+  const updatePayment = async (paymentId: string, paymentData: {
+    amount?: number;
+    payment_date?: string;
+    payment_method?: string;
+    notes?: string;
+  }) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_payments')
+        .update(paymentData)
+        .eq('id', paymentId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Payment updated successfully",
+      });
+
+      // Refresh the data immediately
+      await fetchPayments();
+      return data;
+    } catch (error) {
+      console.error('Error updating payment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update payment",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const deletePayment = async (paymentId: string) => {
+    try {
+      // First, delete the corresponding finance record if it exists
+      await supabase
+        .from('finance_records')
+        .delete()
+        .like('reference', `%Payment ID: ${paymentId}%`);
+
+      // Delete the payment
+      const { error } = await supabase
+        .from('user_payments')
+        .delete()
+        .eq('id', paymentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Payment deleted successfully",
+      });
+
+      // Refresh the data immediately
+      await fetchPayments();
+    } catch (error) {
+      console.error('Error deleting payment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete payment",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  // Set up real-time subscription for immediate updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('payment-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_payments'
+        },
+        () => {
+          // Refresh payments when any payment changes
+          fetchPayments();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   return {
     payments,
     loading,
     error,
     refetch: fetchPayments,
     createPayment,
+    updatePayment,
+    deletePayment,
   };
 };

@@ -5,15 +5,34 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CreditCard, Plus, Search, Calendar, User, DollarSign } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { CreditCard, Plus, Search, Calendar, User, DollarSign, Edit2, Trash2 } from "lucide-react";
 import { useAdminPayments } from "@/hooks/useAdminPayments";
 import { AddPaymentDialog } from "../AddPaymentDialog";
+import { EditPaymentDialog } from "../EditPaymentDialog";
 
 export const PaymentTracking = () => {
-  const { payments, loading, error, refetch } = useAdminPayments();
+  const { payments, loading, error, refetch, updatePayment, deletePayment } = useAdminPayments();
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingPayment, setEditingPayment] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [methodFilter, setMethodFilter] = useState("all");
+  const [deletingPaymentId, setDeletingPaymentId] = useState<string | null>(null);
+
+  const handleEditPayment = (payment: any) => {
+    setEditingPayment(payment);
+    setShowEditDialog(true);
+  };
+
+  const handleDeletePayment = async (paymentId: string) => {
+    try {
+      setDeletingPaymentId(paymentId);
+      await deletePayment(paymentId);
+    } finally {
+      setDeletingPaymentId(null);
+    }
+  };
 
   const filteredPayments = payments?.filter(payment => {
     const matchesSearch = !searchTerm || 
@@ -155,6 +174,45 @@ export const PaymentTracking = () => {
                     <Badge variant="outline" className="text-xs sm:text-sm">
                       {payment.payment_method}
                     </Badge>
+                    <div className="flex items-center gap-1 ml-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditPayment(payment)}
+                        className="h-8 w-8 p-0 hover:bg-blue-50 hover:border-blue-300"
+                      >
+                        <Edit2 className="h-3 w-3 text-blue-600" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0 hover:bg-red-50 hover:border-red-300"
+                            disabled={deletingPaymentId === payment.id}
+                          >
+                            <Trash2 className="h-3 w-3 text-red-600" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Payment</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete the ${formatCurrency(payment.amount || 0)} payment to {payment.user_full_name || payment.user_email}? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeletePayment(payment.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Delete Payment
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -167,6 +225,13 @@ export const PaymentTracking = () => {
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
         onSuccess={refetch}
+      />
+
+      <EditPaymentDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        payment={editingPayment}
+        onSave={updatePayment}
       />
     </>
   );
