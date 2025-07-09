@@ -1,0 +1,112 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface SSOTokenRequest {
+  user_id: string;
+  target_app: string;
+  expires_in?: number; // seconds, default 300 (5 minutes)
+  permissions?: string[];
+  metadata?: Record<string, any>;
+}
+
+const handler = async (req: Request): Promise<Response> => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
+
+    const { user_id, target_app, expires_in = 300, permissions = [], metadata = {} }: SSOTokenRequest = await req.json();
+
+    console.log("Generating SSO token for:", { user_id, target_app, expires_in });
+
+    // Verify user exists and get user info
+    const { data: user, error: userError } = await supabaseClient
+      .from('gw_profiles')
+      .select('id, user_id, email, full_name, role')
+      .eq('user_id', user_id)
+      .single();
+
+    if (userError || !user) {
+      console.error("User not found:", userError);
+      return new Response(JSON.stringify({
+        success: false,
+        error: "User not found"
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+
+    // Create token payload
+    const tokenPayload = {
+      user_id: user.user_id,
+      profile_id: user.id,
+      email: user.email,
+      full_name: user.full_name,
+      role: user.role,
+      target_app,
+      permissions,
+      metadata,
+      issued_at: Math.floor(Date.now() / 1000),
+      expires_at: Math.floor(Date.now() / 1000) + expires_in,
+      issuer: 'gleeworld-sso'
+    };
+
+    // For demo purposes, we'll use base64 encoding
+    // In production, you'd use proper JWT signing with a secret key
+    const token = encode(JSON.stringify(tokenPayload));
+
+    // Log the token generation (remove in production)
+    console.log("SSO token generated:", {
+      user: user.email,
+      target_app,
+      expires_at: new Date(tokenPayload.expires_at * 1000).toISOString()
+    });
+
+    return new Response(JSON.stringify({
+      success: true,
+      token,
+      expires_at: tokenPayload.expires_at,
+      user: {
+        id: user.user_id,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role
+      }
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    });
+
+  } catch (error: any) {
+    console.error('Error in gw-generate-sso-token:', error);
+    
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message || 'Failed to generate SSO token'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    });
+  }
+};
+
+serve(handler);

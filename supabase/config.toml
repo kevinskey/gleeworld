@@ -21,6 +21,18 @@ verify_jwt = false
 [functions.generate-combined-pdf]
 verify_jwt = true
 
+[functions.gw-generate-sso-token]
+verify_jwt = true
+
+[functions.gw-send-email]
+verify_jwt = true
+
+[functions.gw-send-sms]
+verify_jwt = true
+
+[functions.gw-validate-sso-token]
+verify_jwt = false
+
 [functions.import-users]
 verify_jwt = true
 
