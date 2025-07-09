@@ -1634,6 +1634,57 @@ export type Database = {
           },
         ]
       }
+      gw_music_analytics: {
+        Row: {
+          device_info: Json | null
+          event_type: string
+          id: string
+          location_info: Json | null
+          music_file_id: string | null
+          play_duration: number | null
+          session_id: string | null
+          timestamp_played: string | null
+          user_id: string | null
+        }
+        Insert: {
+          device_info?: Json | null
+          event_type: string
+          id?: string
+          location_info?: Json | null
+          music_file_id?: string | null
+          play_duration?: number | null
+          session_id?: string | null
+          timestamp_played?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          device_info?: Json | null
+          event_type?: string
+          id?: string
+          location_info?: Json | null
+          music_file_id?: string | null
+          play_duration?: number | null
+          session_id?: string | null
+          timestamp_played?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_music_analytics_music_file_id_fkey"
+            columns: ["music_file_id"]
+            isOneToOne: false
+            referencedRelation: "gw_music_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_music_analytics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_music_files: {
         Row: {
           album: string | null
@@ -1690,6 +1741,345 @@ export type Database = {
           },
         ]
       }
+      gw_news_items: {
+        Row: {
+          author_id: string | null
+          category: string | null
+          content: string
+          created_at: string | null
+          excerpt: string | null
+          featured_image_url: string | null
+          id: string
+          is_featured: boolean | null
+          is_published: boolean | null
+          publish_date: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          author_id?: string | null
+          category?: string | null
+          content: string
+          created_at?: string | null
+          excerpt?: string | null
+          featured_image_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_published?: boolean | null
+          publish_date?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          author_id?: string | null
+          category?: string | null
+          content?: string
+          created_at?: string | null
+          excerpt?: string | null
+          featured_image_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_published?: boolean | null
+          publish_date?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_news_items_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_payment_records: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          id: string
+          order_id: string | null
+          payment_id: string
+          payment_method: string
+          status: string | null
+          transaction_data: Json | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          order_id?: string | null
+          payment_id: string
+          payment_method: string
+          status?: string | null
+          transaction_data?: Json | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          order_id?: string | null
+          payment_id?: string
+          payment_method?: string
+          status?: string | null
+          transaction_data?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_payment_records_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "gw_user_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_permissions: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      gw_playlist_tracks: {
+        Row: {
+          added_at: string | null
+          added_by: string | null
+          id: string
+          music_file_id: string | null
+          playlist_id: string | null
+          position: number
+        }
+        Insert: {
+          added_at?: string | null
+          added_by?: string | null
+          id?: string
+          music_file_id?: string | null
+          playlist_id?: string | null
+          position: number
+        }
+        Update: {
+          added_at?: string | null
+          added_by?: string | null
+          id?: string
+          music_file_id?: string | null
+          playlist_id?: string | null
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_playlist_tracks_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_playlist_tracks_music_file_id_fkey"
+            columns: ["music_file_id"]
+            isOneToOne: false
+            referencedRelation: "gw_music_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_playlist_tracks_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "gw_playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_playlists: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          title: string
+          total_duration: number | null
+          track_count: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          title: string
+          total_duration?: number | null
+          track_count?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          title?: string
+          total_duration?: number | null
+          track_count?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_playlists_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_product_variants: {
+        Row: {
+          barcode: string | null
+          compare_at_price: number | null
+          created_at: string | null
+          id: string
+          image_url: string | null
+          inventory_quantity: number | null
+          option1: string | null
+          option2: string | null
+          option3: string | null
+          price: number
+          product_id: string | null
+          sku: string | null
+          title: string
+          weight: number | null
+        }
+        Insert: {
+          barcode?: string | null
+          compare_at_price?: number | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          inventory_quantity?: number | null
+          option1?: string | null
+          option2?: string | null
+          option3?: string | null
+          price: number
+          product_id?: string | null
+          sku?: string | null
+          title: string
+          weight?: number | null
+        }
+        Update: {
+          barcode?: string | null
+          compare_at_price?: number | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          inventory_quantity?: number | null
+          option1?: string | null
+          option2?: string | null
+          option3?: string | null
+          price?: number
+          product_id?: string | null
+          sku?: string | null
+          title?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "gw_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_products: {
+        Row: {
+          compare_at_price: number | null
+          created_at: string | null
+          description: string | null
+          id: string
+          images: string[] | null
+          inventory_quantity: number | null
+          is_active: boolean | null
+          price: number
+          product_type: string | null
+          requires_shipping: boolean | null
+          tags: string[] | null
+          title: string
+          track_inventory: boolean | null
+          updated_at: string | null
+          vendor: string | null
+          weight: number | null
+        }
+        Insert: {
+          compare_at_price?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          inventory_quantity?: number | null
+          is_active?: boolean | null
+          price?: number
+          product_type?: string | null
+          requires_shipping?: boolean | null
+          tags?: string[] | null
+          title: string
+          track_inventory?: boolean | null
+          updated_at?: string | null
+          vendor?: string | null
+          weight?: number | null
+        }
+        Update: {
+          compare_at_price?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          inventory_quantity?: number | null
+          is_active?: boolean | null
+          price?: number
+          product_type?: string | null
+          requires_shipping?: boolean | null
+          tags?: string[] | null
+          title?: string
+          track_inventory?: boolean | null
+          updated_at?: string | null
+          vendor?: string | null
+          weight?: number | null
+        }
+        Relationships: []
+      }
       gw_profiles: {
         Row: {
           address: string | null
@@ -1732,6 +2122,201 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_recordings: {
+        Row: {
+          associated_sheet_music_id: string | null
+          audio_url: string
+          created_at: string | null
+          description: string | null
+          duration: number | null
+          file_size: number | null
+          format: string | null
+          id: string
+          is_processed: boolean | null
+          metadata: Json | null
+          processing_status: string | null
+          quality: string | null
+          recorded_by: string | null
+          recording_date: string | null
+          title: string
+        }
+        Insert: {
+          associated_sheet_music_id?: string | null
+          audio_url: string
+          created_at?: string | null
+          description?: string | null
+          duration?: number | null
+          file_size?: number | null
+          format?: string | null
+          id?: string
+          is_processed?: boolean | null
+          metadata?: Json | null
+          processing_status?: string | null
+          quality?: string | null
+          recorded_by?: string | null
+          recording_date?: string | null
+          title: string
+        }
+        Update: {
+          associated_sheet_music_id?: string | null
+          audio_url?: string
+          created_at?: string | null
+          description?: string | null
+          duration?: number | null
+          file_size?: number | null
+          format?: string | null
+          id?: string
+          is_processed?: boolean | null
+          metadata?: Json | null
+          processing_status?: string | null
+          quality?: string | null
+          recorded_by?: string | null
+          recording_date?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_recordings_associated_sheet_music_id_fkey"
+            columns: ["associated_sheet_music_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sheet_music"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_recordings_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_scores: {
+        Row: {
+          created_at: string | null
+          id: string
+          max_score: number | null
+          notes: string | null
+          performance_date: string | null
+          recorded_by: string | null
+          score_value: number
+          sheet_music_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          max_score?: number | null
+          notes?: string | null
+          performance_date?: string | null
+          recorded_by?: string | null
+          score_value: number
+          sheet_music_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          max_score?: number | null
+          notes?: string | null
+          performance_date?: string | null
+          recorded_by?: string | null
+          score_value?: number
+          sheet_music_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_scores_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_scores_sheet_music_id_fkey"
+            columns: ["sheet_music_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sheet_music"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_scores_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_sheet_music: {
+        Row: {
+          arranger: string | null
+          audio_preview_url: string | null
+          composer: string | null
+          created_at: string | null
+          created_by: string | null
+          difficulty_level: string | null
+          id: string
+          is_public: boolean | null
+          key_signature: string | null
+          language: string | null
+          pdf_url: string | null
+          tags: string[] | null
+          tempo_marking: string | null
+          thumbnail_url: string | null
+          time_signature: string | null
+          title: string
+          voice_parts: string[] | null
+        }
+        Insert: {
+          arranger?: string | null
+          audio_preview_url?: string | null
+          composer?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          difficulty_level?: string | null
+          id?: string
+          is_public?: boolean | null
+          key_signature?: string | null
+          language?: string | null
+          pdf_url?: string | null
+          tags?: string[] | null
+          tempo_marking?: string | null
+          thumbnail_url?: string | null
+          time_signature?: string | null
+          title: string
+          voice_parts?: string[] | null
+        }
+        Update: {
+          arranger?: string | null
+          audio_preview_url?: string | null
+          composer?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          difficulty_level?: string | null
+          id?: string
+          is_public?: boolean | null
+          key_signature?: string | null
+          language?: string | null
+          pdf_url?: string | null
+          tags?: string[] | null
+          tempo_marking?: string | null
+          thumbnail_url?: string | null
+          time_signature?: string | null
+          title?: string
+          voice_parts?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_sheet_music_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_site_settings: {
         Row: {
           description: string | null
@@ -1767,6 +2352,123 @@ export type Database = {
           {
             foreignKeyName: "gw_site_settings_updated_by_fkey"
             columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_user_orders: {
+        Row: {
+          billing_address: Json | null
+          created_at: string | null
+          currency: string | null
+          id: string
+          notes: string | null
+          order_number: string
+          payment_id: string | null
+          payment_method: string | null
+          payment_status: string | null
+          shipping_address: Json | null
+          shipping_amount: number | null
+          status: string | null
+          subtotal: number
+          tax_amount: number | null
+          total_amount: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          billing_address?: Json | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          notes?: string | null
+          order_number: string
+          payment_id?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          shipping_address?: Json | null
+          shipping_amount?: number | null
+          status?: string | null
+          subtotal: number
+          tax_amount?: number | null
+          total_amount: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          billing_address?: Json | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          notes?: string | null
+          order_number?: string
+          payment_id?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          shipping_address?: Json | null
+          shipping_amount?: number | null
+          status?: string | null
+          subtotal?: number
+          tax_amount?: number | null
+          total_amount?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_user_orders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_user_permissions: {
+        Row: {
+          expires_at: string | null
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          permission_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          permission_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          permission_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_user_permissions_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_user_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "gw_permissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_user_permissions_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
             referencedColumns: ["id"]
