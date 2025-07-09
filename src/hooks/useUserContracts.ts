@@ -49,7 +49,7 @@ export const useUserContracts = () => {
       console.log('useUserContracts: Contract IDs sent to user:', recipientContractIds);
 
       // Fetch contracts created by user OR sent to user
-      const { data: contractsData, error: contractsError } = await supabase
+      let query = supabase
         .from('contracts_v2')
         .select(`
           id,
@@ -58,8 +58,17 @@ export const useUserContracts = () => {
           status,
           created_at,
           created_by
-        `)
-        .or(`created_by.eq.${user.id},id.in.(${recipientContractIds.length > 0 ? recipientContractIds.join(',') : 'null'})`)
+        `);
+
+      // Build the OR condition properly
+      if (recipientContractIds.length > 0) {
+        query = query.or(`created_by.eq.${user.id},id.in.(${recipientContractIds.join(',')})`);
+      } else {
+        // If no recipient contracts, only fetch contracts created by user
+        query = query.eq('created_by', user.id);
+      }
+
+      const { data: contractsData, error: contractsError } = await query
         .order('created_at', { ascending: false });
 
       if (contractsError) {
