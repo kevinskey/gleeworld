@@ -2,9 +2,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, User } from "lucide-react";
 import { useState } from "react";
 import type { ContractTemplate } from "@/hooks/useContractTemplates";
+import { useUsers } from "@/hooks/useUsers";
 
 interface RecipientSelectionDialogProps {
   isOpen: boolean;
@@ -21,25 +23,26 @@ export const RecipientSelectionDialog = ({
   onCreateContract,
   isCreating = false 
 }: RecipientSelectionDialogProps) => {
-  const [recipientName, setRecipientName] = useState("");
-  const [recipientEmail, setRecipientEmail] = useState("");
+  const { users, loading: usersLoading } = useUsers();
+  const [selectedUserId, setSelectedUserId] = useState("");
   const [stipendAmount, setStipendAmount] = useState("$500.00");
+
+  const selectedUser = users.find(user => user.id === selectedUserId);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!template || !recipientName.trim() || !recipientEmail.trim()) return;
+    if (!template || !selectedUser) return;
 
     onCreateContract(template, {
-      full_name: recipientName.trim(),
-      email: recipientEmail.trim(),
+      full_name: selectedUser.full_name || selectedUser.email || '',
+      email: selectedUser.email || '',
       stipend_amount: stipendAmount.trim()
     });
   };
 
   const handleClose = () => {
     if (!isCreating) {
-      setRecipientName("");
-      setRecipientEmail("");
+      setSelectedUserId("");
       setStipendAmount("$500.00");
       onOpenChange(false);
     }
@@ -57,28 +60,23 @@ export const RecipientSelectionDialog = ({
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="recipient-name">Recipient Name</Label>
-            <Input
-              id="recipient-name"
-              value={recipientName}
-              onChange={(e) => setRecipientName(e.target.value)}
-              placeholder="Enter recipient's full name"
-              required
-              disabled={isCreating}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="recipient-email">Recipient Email</Label>
-            <Input
-              id="recipient-email"
-              type="email"
-              value={recipientEmail}
-              onChange={(e) => setRecipientEmail(e.target.value)}
-              placeholder="Enter recipient's email address"
-              required
-              disabled={isCreating}
-            />
+            <Label htmlFor="user-select">Select Recipient</Label>
+            <Select value={selectedUserId} onValueChange={setSelectedUserId} disabled={usersLoading || isCreating}>
+              <SelectTrigger>
+                <SelectValue placeholder={usersLoading ? "Loading users..." : "Select a recipient"} />
+              </SelectTrigger>
+              <SelectContent>
+                {users.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    <div className="flex items-center space-x-2">
+                      <User className="h-4 w-4" />
+                      <span>{user.full_name || user.email}</span>
+                      <span className="text-muted-foreground text-sm">({user.email})</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="space-y-2">
@@ -103,7 +101,7 @@ export const RecipientSelectionDialog = ({
             </Button>
             <Button 
               type="submit"
-              disabled={isCreating || !recipientName.trim() || !recipientEmail.trim()}
+              disabled={isCreating || !selectedUser}
             >
               {isCreating ? (
                 <>
