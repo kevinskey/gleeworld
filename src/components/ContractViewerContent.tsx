@@ -101,11 +101,25 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
                     alt="Artist Signature" 
                     className="max-w-[200px] h-[60px] object-contain"
                     style={{ maxWidth: '200px', height: '60px' }}
+                    onError={(e) => {
+                      console.error('Failed to load artist signature image:', e);
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'block';
+                    }}
                   />
+                  <div className="text-sm text-gray-600 bg-white p-2 border rounded" style={{ display: 'none' }}>
+                    [Artist Signature Applied]
+                  </div>
+                </div>
+              ) : artistSignature.signatureData ? (
+                <div className="font-cursive text-2xl text-gray-800 bg-white p-2 border rounded inline-block">
+                  {artistSignature.signatureData}
                 </div>
               ) : (
-                <div className="font-cursive text-2xl text-gray-800 bg-white p-2 border rounded inline-block">
-                  {artistSignature.signatureData || 'Digital signature applied'}
+                <div className="text-sm text-gray-600 bg-white p-2 border rounded inline-block">
+                  [Artist Signature Applied]
                 </div>
               )}
               <div className="text-xs text-green-600 mt-2">
@@ -132,11 +146,25 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
                     alt="Admin Signature" 
                     className="max-w-[200px] h-[60px] object-contain"
                     style={{ maxWidth: '200px', height: '60px' }}
+                    onError={(e) => {
+                      console.error('Failed to load admin signature image:', e);
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'block';
+                    }}
                   />
+                  <div className="text-sm text-gray-600 bg-white p-2 border rounded" style={{ display: 'none' }}>
+                    [Dr. Kevin P. Johnson - Admin Signature]
+                  </div>
+                </div>
+              ) : adminSignature.signatureData ? (
+                <div className="font-cursive text-2xl text-gray-800 bg-white p-2 border rounded inline-block">
+                  {adminSignature.signatureData}
                 </div>
               ) : (
-                <div className="font-cursive text-2xl text-gray-800 bg-white p-2 border rounded inline-block">
-                  {adminSignature.signatureData || 'Dr. Kevin P. Johnson'}
+                <div className="text-sm text-gray-600 bg-white p-2 border rounded inline-block">
+                  [Dr. Kevin P. Johnson - Admin Signature]
                 </div>
               )}
               <div className="text-xs text-blue-600 mt-2">
@@ -172,11 +200,25 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
                   src={artistSignature.signatureData} 
                   alt="Artist Signature" 
                   className="max-w-[200px] h-[60px] object-contain"
+                  onError={(e) => {
+                    console.error('Failed to load artist signature image (fallback):', e);
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const fallback = target.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = 'block';
+                  }}
                 />
+                <div className="text-sm text-gray-600 bg-white p-2 border rounded" style={{ display: 'none' }}>
+                  [Artist Signature Applied]
+                </div>
+              </div>
+            ) : artistSignature.signatureData ? (
+              <div className="font-cursive text-2xl text-gray-800 bg-white p-2 border rounded inline-block">
+                {artistSignature.signatureData}
               </div>
             ) : (
-              <div className="font-cursive text-2xl text-gray-800 bg-white p-2 border rounded inline-block">
-                {artistSignature.signatureData || 'Digital signature applied'}
+              <div className="text-sm text-gray-600 bg-white p-2 border rounded inline-block">
+                [Artist Signature Applied]
               </div>
             )}
             <div className="text-xs text-green-600 mt-2">
@@ -200,11 +242,25 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
                   src={adminSignature.signatureData} 
                   alt="Admin Signature" 
                   className="max-w-[200px] h-[60px] object-contain"
+                  onError={(e) => {
+                    console.error('Failed to load admin signature image (fallback):', e);
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const fallback = target.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = 'block';
+                  }}
                 />
+                <div className="text-sm text-gray-600 bg-white p-2 border rounded" style={{ display: 'none' }}>
+                  [Dr. Kevin P. Johnson - Admin Signature]
+                </div>
+              </div>
+            ) : adminSignature.signatureData ? (
+              <div className="font-cursive text-2xl text-gray-800 bg-white p-2 border rounded inline-block">
+                {adminSignature.signatureData}
               </div>
             ) : (
-              <div className="font-cursive text-2xl text-gray-800 bg-white p-2 border rounded inline-block">
-                {adminSignature.signatureData || 'Dr. Kevin P. Johnson'}
+              <div className="text-sm text-gray-600 bg-white p-2 border rounded inline-block">
+                [Dr. Kevin P. Johnson - Admin Signature]
               </div>
             )}
             <div className="text-xs text-blue-600 mt-2">
