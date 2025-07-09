@@ -147,6 +147,44 @@ export type Database = {
           },
         ]
       }
+      budget_attachments: {
+        Row: {
+          created_at: string
+          event_id: string
+          file_type: string | null
+          file_url: string
+          filename: string
+          id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          file_type?: string | null
+          file_url: string
+          filename: string
+          id?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          file_type?: string | null
+          file_url?: string
+          filename?: string
+          id?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_attachments_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       budget_categories: {
         Row: {
           allocated_amount: number
@@ -987,15 +1025,22 @@ export type Database = {
       }
       events: {
         Row: {
+          admin_fees: number | null
           approval_date: string | null
           approval_needed: boolean | null
           approved: boolean | null
           approver_name: string | null
+          attendees: number | null
           brief_description: string | null
+          budget_status: string | null
+          club_support: number | null
+          contingency: number | null
+          coordinator_id: string | null
           created_at: string
           created_by: string
           date_submitted_for_approval: string | null
           description: string | null
+          donations: number | null
           end_date: string | null
           event_date_end: string | null
           event_date_start: string | null
@@ -1004,27 +1049,43 @@ export type Database = {
           event_type: string
           expected_headcount: number | null
           faculty_advisor: string | null
+          guest_speakers: string | null
+          honoraria: number | null
           id: string
           is_travel_involved: boolean | null
           location: string | null
+          misc_supplies: number | null
+          net_total: number | null
           no_sing_rest_date_end: string | null
           no_sing_rest_date_start: string | null
           no_sing_rest_required: boolean | null
+          purpose: string | null
           send_contracts: boolean
           start_date: string
+          ticket_sales: number | null
           title: string
+          total_expenses: number | null
+          total_income: number | null
           updated_at: string
+          volunteers: number | null
         }
         Insert: {
+          admin_fees?: number | null
           approval_date?: string | null
           approval_needed?: boolean | null
           approved?: boolean | null
           approver_name?: string | null
+          attendees?: number | null
           brief_description?: string | null
+          budget_status?: string | null
+          club_support?: number | null
+          contingency?: number | null
+          coordinator_id?: string | null
           created_at?: string
           created_by: string
           date_submitted_for_approval?: string | null
           description?: string | null
+          donations?: number | null
           end_date?: string | null
           event_date_end?: string | null
           event_date_start?: string | null
@@ -1033,27 +1094,43 @@ export type Database = {
           event_type?: string
           expected_headcount?: number | null
           faculty_advisor?: string | null
+          guest_speakers?: string | null
+          honoraria?: number | null
           id?: string
           is_travel_involved?: boolean | null
           location?: string | null
+          misc_supplies?: number | null
+          net_total?: number | null
           no_sing_rest_date_end?: string | null
           no_sing_rest_date_start?: string | null
           no_sing_rest_required?: boolean | null
+          purpose?: string | null
           send_contracts?: boolean
           start_date: string
+          ticket_sales?: number | null
           title: string
+          total_expenses?: number | null
+          total_income?: number | null
           updated_at?: string
+          volunteers?: number | null
         }
         Update: {
+          admin_fees?: number | null
           approval_date?: string | null
           approval_needed?: boolean | null
           approved?: boolean | null
           approver_name?: string | null
+          attendees?: number | null
           brief_description?: string | null
+          budget_status?: string | null
+          club_support?: number | null
+          contingency?: number | null
+          coordinator_id?: string | null
           created_at?: string
           created_by?: string
           date_submitted_for_approval?: string | null
           description?: string | null
+          donations?: number | null
           end_date?: string | null
           event_date_end?: string | null
           event_date_start?: string | null
@@ -1062,16 +1139,25 @@ export type Database = {
           event_type?: string
           expected_headcount?: number | null
           faculty_advisor?: string | null
+          guest_speakers?: string | null
+          honoraria?: number | null
           id?: string
           is_travel_involved?: boolean | null
           location?: string | null
+          misc_supplies?: number | null
+          net_total?: number | null
           no_sing_rest_date_end?: string | null
           no_sing_rest_date_start?: string | null
           no_sing_rest_required?: boolean | null
+          purpose?: string | null
           send_contracts?: boolean
           start_date?: string
+          ticket_sales?: number | null
           title?: string
+          total_expenses?: number | null
+          total_income?: number | null
           updated_at?: string
+          volunteers?: number | null
         }
         Relationships: []
       }
@@ -1119,6 +1205,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      food_budget: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          item: string
+          qty: number | null
+          total: number | null
+          unit_cost: number | null
+          updated_at: string
+          vendor_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          item: string
+          qty?: number | null
+          total?: number | null
+          unit_cost?: number | null
+          updated_at?: string
+          vendor_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          item?: string
+          qty?: number | null
+          total?: number | null
+          unit_cost?: number | null
+          updated_at?: string
+          vendor_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_budget_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       generated_contracts: {
         Row: {
@@ -1181,6 +1311,91 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "generated_contracts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materials_budget: {
+        Row: {
+          cost: number | null
+          created_at: string
+          event_id: string
+          id: string
+          item: string
+          purpose: string | null
+          qty: number | null
+          updated_at: string
+          vendor_url: string | null
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string
+          event_id: string
+          id?: string
+          item: string
+          purpose?: string | null
+          qty?: number | null
+          updated_at?: string
+          vendor_url?: string | null
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          item?: string
+          purpose?: string | null
+          qty?: number | null
+          updated_at?: string
+          vendor_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materials_budget_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_budget: {
+        Row: {
+          cost: number | null
+          created_at: string
+          event_id: string
+          id: string
+          item: string
+          notes: string | null
+          qty: number | null
+          updated_at: string
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string
+          event_id: string
+          id?: string
+          item: string
+          notes?: string | null
+          qty?: number | null
+          updated_at?: string
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          item?: string
+          notes?: string | null
+          qty?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_budget_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
@@ -1319,6 +1534,47 @@ export type Database = {
           workplace?: string | null
         }
         Relationships: []
+      }
+      promo_budget: {
+        Row: {
+          cost: number | null
+          created_at: string
+          description: string | null
+          event_id: string
+          id: string
+          item: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          event_id: string
+          id?: string
+          item: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          event_id?: string
+          id?: string
+          item?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_budget_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       receipts: {
         Row: {
@@ -1538,6 +1794,47 @@ export type Database = {
         }
         Relationships: []
       }
+      transport_budget: {
+        Row: {
+          cost: number | null
+          created_at: string
+          description: string | null
+          event_id: string
+          id: string
+          item: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          event_id: string
+          id?: string
+          item: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          event_id?: string
+          id?: string
+          item?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transport_budget_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_notifications: {
         Row: {
           created_at: string
@@ -1730,6 +2027,10 @@ export type Database = {
           user_role?: string
         }
         Returns: Json
+      }
+      calculate_event_budget_totals: {
+        Args: { event_id_param: string }
+        Returns: undefined
       }
       create_task_notification: {
         Args: {
