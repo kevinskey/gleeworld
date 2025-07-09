@@ -115,7 +115,7 @@ export const useContractFromTemplate = (onContractCreated?: () => void) => {
         shouldSendEmail: selectedUser?.email && selectedUser.email !== user?.email
       });
       
-      if (selectedUser?.email && selectedUser.email !== user?.email) {
+      if (selectedUser?.email) {
         try {
           console.log('useContractFromTemplate: Sending contract email to recipient...');
           const { data: emailData, error: emailError } = await supabase.functions.invoke('send-contract-email', {
