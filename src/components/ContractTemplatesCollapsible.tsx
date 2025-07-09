@@ -4,15 +4,36 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Button } from "@/components/ui/button";
 import { ChevronDown, FileText } from "lucide-react";
 import { useState } from "react";
-import { ContractTemplates } from "@/components/ContractTemplates";
+import { useContractTemplates } from "@/hooks/useContractTemplates";
+import { TemplateDialogsManager } from "@/components/templates/TemplateDialogsManager";
 
 interface ContractTemplatesCollapsibleProps {
-  onUseTemplate: (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => void;
+  onUseTemplate?: (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => void;
   onContractCreated: () => void;
 }
 
 export const ContractTemplatesCollapsible = ({ onUseTemplate, onContractCreated }: ContractTemplatesCollapsibleProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { templates, loading } = useContractTemplates();
+
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+
+  const handleTemplateSelect = (template: any) => {
+    setSelectedTemplate(template);
+    setIsViewOpen(true);
+  };
+
+  const handleContractCreated = () => {
+    onContractCreated();
+    setIsOpen(false);
+  };
+
+  // Mock functions for template operations (read-only mode)
+  const mockCreateTemplate = async () => {};
+  const mockUpdateTemplate = async () => {};
 
   return (
     <Card className="border-brand-300/40 shadow-lg">
@@ -38,9 +59,53 @@ export const ContractTemplatesCollapsible = ({ onUseTemplate, onContractCreated 
         
         <CollapsibleContent>
           <CardContent className="pt-0">
-            <ContractTemplates 
+            {loading ? (
+              <div className="text-center py-8 text-gray-500">
+                Loading templates...
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {templates.map((template) => (
+                  <div key={template.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold text-lg">{template.name}</h3>
+                        <p className="text-sm text-gray-600">
+                          {template.contract_type} • Created {new Date(template.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Button 
+                        onClick={() => handleTemplateSelect(template)}
+                        variant="outline"
+                        size="sm"
+                      >
+                        Use Template
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                
+                {templates.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    No templates available. Create a template first.
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <TemplateDialogsManager
+              selectedTemplate={selectedTemplate}
+              isCreateOpen={isCreateOpen}
+              isEditOpen={isEditOpen}
+              isViewOpen={isViewOpen}
+              isCreatingTemplate={false}
+              isUpdating={false}
+              onCreateOpenChange={setIsCreateOpen}
+              onEditOpenChange={setIsEditOpen}
+              onViewOpenChange={setIsViewOpen}
+              onCreateTemplate={mockCreateTemplate}
+              onUpdateTemplate={mockUpdateTemplate}
               onUseTemplate={onUseTemplate}
-              onContractCreated={onContractCreated}
             />
           </CardContent>
         </CollapsibleContent>
