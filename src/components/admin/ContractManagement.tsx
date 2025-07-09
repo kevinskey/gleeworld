@@ -319,11 +319,16 @@ export const ContractManagement = () => {
   };
 
   const handleUseTemplate = (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => {
-    // This will be handled by the ContractTemplatesCollapsible component
+    // In the admin panel, templates should create contracts directly
+    // This fallback shouldn't normally be called since the TemplateDialogsManager handles direct creation
+    console.log('Admin panel template fallback called for:', templateName);
+    
+    // Close the template selection and show a message
     setShowContractCreation(false);
     toast({
       title: "Template Applied",
-      description: `Template "${templateName}" has been applied`,
+      description: `Template "${templateName}" was applied but needs recipient information. Please create a contract manually or try again.`,
+      variant: "destructive",
     });
   };
 

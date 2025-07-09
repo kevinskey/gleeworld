@@ -41,29 +41,45 @@ export const TemplateDialogsManager = ({
   });
 
   const handleUseTemplate = async (template: ContractTemplate) => {
-    console.log('Using template via direct contract creation:', template);
+    console.log('Using template:', template.name);
     
     try {
       // Try to create contract directly from template
+      console.log('Attempting direct contract creation...');
       const result = await createContractFromTemplate(template);
       
       if (result) {
         // Success - contract was created directly
-        console.log('Contract created directly from template');
+        console.log('Contract created successfully:', result.id);
+        onViewOpenChange(false);
+        toast({
+          title: "Contract Created",
+          description: `Contract "${result.title}" created successfully from template`,
+        });
         return;
+      } else {
+        console.log('Direct contract creation returned null, trying fallback...');
       }
     } catch (error) {
-      console.error('Direct contract creation failed, falling back to form:', error);
+      console.error('Direct contract creation failed:', error);
     }
 
-    // Fallback to the form-based approach
+    // Fallback to the form-based approach if available
     if (onUseTemplate) {
-      console.log('Falling back to form-based template usage');
+      console.log('Using form-based template approach');
       onUseTemplate(template.template_content, template.name, template.header_image_url, template.contract_type);
       onViewOpenChange(false);
       toast({
         title: "Template Applied",
-        description: `Template "${template.name}" has been applied to the upload form`,
+        description: `Template "${template.name}" has been applied to the contract form`,
+      });
+    } else {
+      // If no form-based approach is available, show error
+      console.error('No contract creation method available');
+      toast({
+        title: "Error",
+        description: "Unable to create contract from template. Please try again or contact support.",
+        variant: "destructive",
       });
     }
   };
