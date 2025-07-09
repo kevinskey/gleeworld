@@ -121,8 +121,11 @@ export const useUserDashboard = () => {
   useEffect(() => {
     if (!user) return;
 
+    const paymentsChannelName = `user-payments-${user.id}-${Date.now()}`;
+    const notificationsChannelName = `user-notifications-${user.id}-${Date.now()}`;
+
     const paymentsChannel = supabase
-      .channel('user-payments-changes')
+      .channel(paymentsChannelName)
       .on(
         'postgres_changes',
         {
@@ -139,7 +142,7 @@ export const useUserDashboard = () => {
       .subscribe();
 
     const notificationsChannel = supabase
-      .channel('user-notifications-changes')
+      .channel(notificationsChannelName)
       .on(
         'postgres_changes',
         {

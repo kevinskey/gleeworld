@@ -247,8 +247,9 @@ export const useAdminPayments = () => {
   useEffect(() => {
     if (!user) return;
 
+    const channelName = `payment-changes-${user.id}-${Date.now()}`;
     const channel = supabase
-      .channel('payment-changes')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
