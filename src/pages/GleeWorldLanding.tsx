@@ -104,10 +104,12 @@ export const GleeWorldLanding = () => {
         <div className="container mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-10 h-10 bg-black flex items-center justify-center rounded">
-                  <span className="text-white font-bold text-sm">SC</span>
-                </div>
+              <div className="flex items-center space-x-3">
+                <img 
+                  src="/lovable-uploads/a07cfbb7-b3ac-4674-acd9-4a037296a3f7.png" 
+                  alt="Spelman College Glee Club"
+                  className="h-12 w-auto"
+                />
                 <div>
                   <h1 className="text-xl font-bold text-gray-900">GleeWorld</h1>
                   <p className="text-xs text-gray-600">Spelman College</p>
