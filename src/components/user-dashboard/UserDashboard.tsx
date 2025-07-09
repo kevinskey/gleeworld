@@ -25,14 +25,17 @@ import {
   Users,
   Volume2
 } from "lucide-react";
-import { useUserDashboard } from "@/hooks/useUserDashboard";
+import { HeroManagement } from "@/components/admin/HeroManagement";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
 import { useState } from "react";
 
 export const UserDashboard = () => {
   const { user } = useAuth();
-  const { dashboardData, loading, error, refetch } = useUserDashboard();
+  const { profile } = useProfile();
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
+
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
 
   if (!user) {
     return (
@@ -55,19 +58,17 @@ export const UserDashboard = () => {
     );
   }
 
-  if (loading) {
+  // Show hero management if admin has selected it
+  if (selectedModule === 'hero-management' && isAdmin) {
     return (
       <UniversalLayout>
-        <LoadingSpinner size="lg" text="Loading your dashboard..." />
-      </UniversalLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <UniversalLayout>
-        <div className="flex items-center justify-center py-20">
-          <ErrorState message={error} onRetry={refetch} />
+        <div className="container mx-auto px-4 py-6">
+          <div className="mb-4">
+            <Button variant="outline" onClick={() => setSelectedModule(null)}>
+              ← Back to Dashboard
+            </Button>
+          </div>
+          <HeroManagement />
         </div>
       </UniversalLayout>
     );
@@ -370,7 +371,29 @@ export const UserDashboard = () => {
                     <div>
                       <h4 className="font-semibold">Member of the Month</h4>
                       <p className="text-sm text-gray-600">Congratulations to Sarah Johnson for outstanding dedication!</p>
-                    </div>
+                 {/* Admin Category - Only show for admins */}
+                 {isAdmin && (
+                   <div className="space-y-3">
+                     <h3 className="font-semibold text-gray-900 flex items-center">
+                       <User className="h-5 w-5 mr-2 text-red-600" />
+                       Admin
+                     </h3>
+                     <div className="space-y-2">
+                       <Button 
+                         variant="ghost" 
+                         className="w-full justify-start h-auto p-3"
+                         onClick={() => setSelectedModule('hero-management')}
+                       >
+                         <Star className="h-4 w-4 mr-2" />
+                         <div className="text-left">
+                           <div>Hero Management</div>
+                           <div className="text-xs text-gray-500">Control landing page hero</div>
+                         </div>
+                       </Button>
+                     </div>
+                   </div>
+                 )}
+               </div>
                   </div>
                 </div>
                 <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
