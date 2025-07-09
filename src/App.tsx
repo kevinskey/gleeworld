@@ -10,6 +10,7 @@ import { useRoleBasedRedirect } from "@/hooks/useRoleBasedRedirect";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import System from "./pages/System";
+import { GleeWorldLanding } from "./pages/GleeWorldLanding";
 import ContractSigning from "./pages/ContractSigning";
 import AdminSigning from "./pages/AdminSigning";
 import ActivityLogs from "./pages/ActivityLogs";
@@ -19,6 +20,7 @@ import Accounting from "./pages/Accounting";
 import UserDashboard from "./pages/UserDashboard";
 import ContentCreator from "./pages/ContentCreator";
 import EventPlanner from "./pages/EventPlanner";
+import { Shop } from "./pages/Shop";
 import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient({
@@ -61,7 +63,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 // Public route wrapper with role-based redirect
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
-  const { userProfile } = useRoleBasedRedirect();
   
   if (loading) {
     return (
@@ -71,18 +72,13 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
   
-  if (user && userProfile) {
-    // Role-based redirect happens in useRoleBasedRedirect hook
-    return null;
-  }
-  
+  // Allow public routes to be accessed by anyone
   return <>{children}</>;
 };
 
-// Root route handler for authenticated users
+// Root route handler - shows landing page or redirects authenticated users
 const RootRoute = () => {
   const { user, loading } = useAuth();
-  const { userProfile } = useRoleBasedRedirect();
   
   if (loading) {
     return (
@@ -92,12 +88,8 @@ const RootRoute = () => {
     );
   }
   
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-  
-  // Let useRoleBasedRedirect handle the redirect
-  return <Index />;
+  // Show landing page for everyone, authenticated or not
+  return <GleeWorldLanding />;
 };
 
 const App = () => {
@@ -200,12 +192,24 @@ const App = () => {
                 } 
               />
               <Route 
-                path="/" 
+                path="/shop" 
+                element={
+                  <PublicRoute>
+                    <Shop />
+                  </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/contracts"
                 element={
                   <ProtectedRoute>
-                    <RootRoute />
+                    <Index />
                   </ProtectedRoute>
                 } 
+              />
+              <Route 
+                path="/" 
+                element={<RootRoute />} 
               />
               <Route path="*" element={<NotFound />} />
             </Routes>
