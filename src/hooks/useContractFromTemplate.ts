@@ -7,6 +7,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { logActivity, ACTIVITY_TYPES, RESOURCE_TYPES } from "@/utils/activityLogger";
 import type { ContractTemplate } from "@/hooks/useContractTemplates";
 
+// Hook for creating contracts from templates
 export const useContractFromTemplate = (onContractCreated?: () => void) => {
   const [isCreating, setIsCreating] = useState(false);
   const { createContract, refetch } = useContracts();
