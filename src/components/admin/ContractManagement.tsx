@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileText, Search, Filter, Trash2, Eye, Send, Download, RefreshCw, Edit, Plus, FileImage } from "lucide-react";
+import { FileText, Search, Filter, Trash2, Eye, Send, Download, RefreshCw, Edit, Plus, FileImage, PenTool } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,8 @@ import { getStatusColor, getStatusText } from "@/components/contracts/contractUt
 import { EditContractTitleDialog } from "@/components/contracts/EditContractTitleDialog";
 import { ContractCreationCollapsible } from "@/components/ContractCreationCollapsible";
 import { ContractTemplatesCollapsible } from "@/components/ContractTemplatesCollapsible";
+import { AdminSignatureModal } from "@/components/contracts/AdminSignatureModal";
+import { useAdminSigning } from "@/hooks/useAdminSigning";
 
 export const ContractManagement = () => {
   const { user } = useAuth();
@@ -38,6 +40,18 @@ export const ContractManagement = () => {
   // Contract creation state
   const [showContractCreation, setShowContractCreation] = useState(false);
   const [creationMode, setCreationMode] = useState<'blank' | 'template'>('blank');
+  
+  // Admin signing functionality
+  const {
+    signingContract,
+    adminSignature,
+    showSignatureModal,
+    contractToSign,
+    handleAdminSign,
+    handleCompleteAdminSigning,
+    closeSignatureModal,
+    setAdminSignature
+  } = useAdminSigning();
 
   // Fetch all contracts data for admin view
   const fetchAllContractsData = async () => {
@@ -673,6 +687,18 @@ export const ContractManagement = () => {
                           <Send className="h-3 w-3" />
                         </Button>
                       )}
+                      {/* Admin Sign Button - only show for contracts pending admin signature */}
+                      {activeTab === "all-contracts" && item.status === 'pending_admin_signature' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAdminSign(item)}
+                          title="Admin Sign Contract"
+                          className="h-8 w-8 p-0 border-green-300 text-green-700 hover:bg-green-50"
+                        >
+                          <PenTool className="h-3 w-3" />
+                        </Button>
+                      )}
                       <Button
                         variant="secondary"
                         size="sm"
@@ -710,6 +736,20 @@ export const ContractManagement = () => {
         onOpenChange={setEditDialogOpen}
         contract={contractToEdit}
         onContractUpdated={handleContractUpdated}
+      />
+      
+      {/* Admin Signature Modal */}
+      <AdminSignatureModal
+        isOpen={showSignatureModal}
+        contract={contractToSign}
+        adminSignature={adminSignature}
+        isSigningContract={signingContract === contractToSign?.id}
+        onSignatureChange={setAdminSignature}
+        onClose={closeSignatureModal}
+        onComplete={() => {
+          handleCompleteAdminSigning();
+          fetchAllContractsData(); // Refresh the contract list after signing
+        }}
       />
     </div>
   );
