@@ -79,43 +79,45 @@ export const GleeWorldLanding = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
+      <header className="bg-white border-b shadow-sm sticky top-0 z-50">
+        <div className="container mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <img 
-                src="/lovable-uploads/1536a1d1-51f6-4121-8f53-423d37672f2e.png" 
-                alt="Spelman College Glee Club" 
-                className="h-12 w-auto"
-              />
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">GleeWorld</h1>
-                <p className="text-sm text-gray-600">Spelman College</p>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-10 h-10 bg-black flex items-center justify-center rounded">
+                  <span className="text-white font-bold text-sm">SC</span>
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-gray-900">GleeWorld</h1>
+                  <p className="text-xs text-gray-600">Spelman College</p>
+                </div>
               </div>
             </div>
             
-            <nav className="hidden md:flex items-center space-x-8">
-              <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors">Home</a>
-              <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors">About</a>
-              <a href="#events" className="text-gray-700 hover:text-gray-900 transition-colors">Events</a>
-              <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors">Reader</a>
-              <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors">Studio</a>
-              <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors">Store</a>
-              <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors">Contact</a>
+            <nav className="hidden lg:flex items-center space-x-8">
+              <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Home</a>
+              <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">About</a>
+              <a href="#events" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Events</a>
+              <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Reader</a>
+              <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Studio</a>
+              <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Store</a>
+              <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Contact</a>
             </nav>
 
             <div className="flex items-center space-x-3">
               {user ? (
                 <div className="flex items-center space-x-3">
                   <Link to="/dashboard">
-                    <Button>Dashboard</Button>
+                    <Button size="sm">Dashboard</Button>
                   </Link>
                 </div>
               ) : (
                 <div className="flex items-center space-x-3">
-                  <Button variant="outline">Sign Up</Button>
                   <Link to="/auth">
-                    <Button>Login</Button>
+                    <Button variant="outline" size="sm">Sign Up</Button>
+                  </Link>
+                  <Link to="/auth">
+                    <Button size="sm">Login</Button>
                   </Link>
                 </div>
               )}
