@@ -116,7 +116,7 @@ export const HeroManagement = () => {
         const { error } = await supabase
           .from('gw_hero_slides')
           .update({
-            title: formData.title || null,
+            title: formData.title.trim() || 'Untitled Slide',
             description: formData.description || null,
             image_url: formData.image_url || null,
             button_text: formData.button_text || null,
@@ -132,7 +132,7 @@ export const HeroManagement = () => {
         const { error } = await supabase
           .from('gw_hero_slides')
           .insert({
-            title: formData.title || null,
+            title: formData.title.trim() || 'Untitled Slide',
             description: formData.description || null,
             image_url: formData.image_url || null,
             button_text: formData.button_text || null,
