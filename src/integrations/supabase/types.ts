@@ -1318,6 +1318,517 @@ export type Database = {
           },
         ]
       }
+      gw_announcements: {
+        Row: {
+          announcement_type: string | null
+          content: string
+          created_at: string | null
+          created_by: string | null
+          expire_date: string | null
+          id: string
+          is_featured: boolean | null
+          publish_date: string | null
+          target_audience: string | null
+          title: string
+        }
+        Insert: {
+          announcement_type?: string | null
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          expire_date?: string | null
+          id?: string
+          is_featured?: boolean | null
+          publish_date?: string | null
+          target_audience?: string | null
+          title: string
+        }
+        Update: {
+          announcement_type?: string | null
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          expire_date?: string | null
+          id?: string
+          is_featured?: boolean | null
+          publish_date?: string | null
+          target_audience?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_announcements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_audio_files: {
+        Row: {
+          bitrate: number | null
+          channels: number | null
+          created_at: string | null
+          file_url: string
+          id: string
+          music_file_id: string | null
+          quality: string | null
+          sample_rate: number | null
+        }
+        Insert: {
+          bitrate?: number | null
+          channels?: number | null
+          created_at?: string | null
+          file_url: string
+          id?: string
+          music_file_id?: string | null
+          quality?: string | null
+          sample_rate?: number | null
+        }
+        Update: {
+          bitrate?: number | null
+          channels?: number | null
+          created_at?: string | null
+          file_url?: string
+          id?: string
+          music_file_id?: string | null
+          quality?: string | null
+          sample_rate?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_audio_files_music_file_id_fkey"
+            columns: ["music_file_id"]
+            isOneToOne: false
+            referencedRelation: "gw_music_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_event_rsvps: {
+        Row: {
+          event_id: string | null
+          id: string
+          notes: string | null
+          response_date: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          response_date?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          response_date?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_event_rsvps_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "gw_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_event_rsvps_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_events: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          event_type: string | null
+          id: string
+          is_public: boolean | null
+          location: string | null
+          max_attendees: number | null
+          registration_required: boolean | null
+          start_date: string
+          status: string | null
+          title: string
+          updated_at: string | null
+          venue_name: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_type?: string | null
+          id?: string
+          is_public?: boolean | null
+          location?: string | null
+          max_attendees?: number | null
+          registration_required?: boolean | null
+          start_date: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          venue_name?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_type?: string | null
+          id?: string
+          is_public?: boolean | null
+          location?: string | null
+          max_attendees?: number | null
+          registration_required?: boolean | null
+          start_date?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          venue_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_fans: {
+        Row: {
+          created_at: string | null
+          fan_level: string | null
+          id: string
+          membership_date: string | null
+          preferences: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          fan_level?: string | null
+          id?: string
+          membership_date?: string | null
+          preferences?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          fan_level?: string | null
+          id?: string
+          membership_date?: string | null
+          preferences?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_fans_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_hero_settings: {
+        Row: {
+          background_image_url: string | null
+          created_at: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          overlay_opacity: number | null
+          subtitle: string | null
+          text_color: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          background_image_url?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          overlay_opacity?: number | null
+          subtitle?: string | null
+          text_color?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          background_image_url?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          overlay_opacity?: number | null
+          subtitle?: string | null
+          text_color?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      gw_hero_slides: {
+        Row: {
+          button_text: string | null
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          hero_settings_id: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          link_url: string | null
+          title: string
+        }
+        Insert: {
+          button_text?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          hero_settings_id?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          link_url?: string | null
+          title: string
+        }
+        Update: {
+          button_text?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          hero_settings_id?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          link_url?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_hero_slides_hero_settings_id_fkey"
+            columns: ["hero_settings_id"]
+            isOneToOne: false
+            referencedRelation: "gw_hero_settings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_music_files: {
+        Row: {
+          album: string | null
+          artist: string | null
+          created_at: string | null
+          duration: number | null
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          genre: string | null
+          id: string
+          is_public: boolean | null
+          play_count: number | null
+          title: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          album?: string | null
+          artist?: string | null
+          created_at?: string | null
+          duration?: number | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          genre?: string | null
+          id?: string
+          is_public?: boolean | null
+          play_count?: number | null
+          title: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          album?: string | null
+          artist?: string | null
+          created_at?: string | null
+          duration?: number | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          genre?: string | null
+          id?: string
+          is_public?: boolean | null
+          play_count?: number | null
+          title?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_music_files_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_profiles: {
+        Row: {
+          address: string | null
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          role: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          role?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          role?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      gw_site_settings: {
+        Row: {
+          description: string | null
+          id: string
+          is_public: boolean | null
+          setting_key: string
+          setting_type: string | null
+          setting_value: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          setting_key: string
+          setting_type?: string | null
+          setting_value?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          setting_key?: string
+          setting_type?: string | null
+          setting_value?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_site_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_youtube_videos: {
+        Row: {
+          added_by: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          duration: number | null
+          id: string
+          is_featured: boolean | null
+          published_at: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          view_count: number | null
+          youtube_id: string
+        }
+        Insert: {
+          added_by?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          duration?: number | null
+          id?: string
+          is_featured?: boolean | null
+          published_at?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          view_count?: number | null
+          youtube_id: string
+        }
+        Update: {
+          added_by?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          duration?: number | null
+          id?: string
+          is_featured?: boolean | null
+          published_at?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          view_count?: number | null
+          youtube_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_youtube_videos_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       materials_budget: {
         Row: {
           cost: number | null
