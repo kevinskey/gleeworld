@@ -123,19 +123,19 @@ export const AppNavigation = () => {
 
   // Mobile navigation content for sheet
   const MobileNavigationContent = () => (
-    <nav className="space-y-2">
+    <nav className="space-y-1">
       {filteredItems.map((item) => (
         <Link
           key={item.href}
           to={item.href}
           onClick={() => setMobileOpen(false)}
-          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors touch-manipulation ${
             isActive(item.href)
               ? "bg-primary text-primary-foreground"
               : "text-foreground hover:bg-accent hover:text-accent-foreground"
           }`}
         >
-          <item.icon className="h-4 w-4" />
+          <item.icon className="h-5 w-5" />
           {item.label}
           {item.adminOnly && (
             <Badge variant="secondary" className="ml-auto text-xs">
@@ -158,16 +158,21 @@ export const AppNavigation = () => {
       <div className="md:hidden">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 p-1 sm:p-2">
-              <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-white hover:bg-white/10 p-2 min-h-[40px] min-w-[40px] touch-manipulation"
+            >
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Open navigation menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-56 sm:w-64 p-0 bg-background">
+          <SheetContent side="left" className="w-64 p-0 bg-background">
             <div className="flex flex-col h-full">
-              <div className="flex items-center h-12 sm:h-16 px-4 border-b">
-                <h1 className="text-base sm:text-lg font-bold">Contract Manager</h1>
+              <div className="flex items-center h-16 px-4 border-b bg-gradient-to-r from-brand-700 to-brand-800">
+                <h1 className="text-lg font-bold text-white">Contract Manager</h1>
               </div>
-              <div className="flex-1 px-4 py-4">
+              <div className="flex-1 px-4 py-6">
                 <MobileNavigationContent />
               </div>
             </div>
