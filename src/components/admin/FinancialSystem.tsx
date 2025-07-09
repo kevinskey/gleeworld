@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calculator, DollarSign, TrendingUp, Users, FileText, CreditCard } from "lucide-react";
@@ -10,8 +10,31 @@ import { FinancialReports } from "./financial/FinancialReports";
 import { StipendManagement } from "./financial/StipendManagement";
 import { BudgetTracking } from "./financial/BudgetTracking";
 
-export const FinancialSystem = () => {
-  const [activeTab, setActiveTab] = useState("overview");
+interface FinancialSystemProps {
+  initialTab?: string;
+}
+
+export const FinancialSystem = ({ initialTab }: FinancialSystemProps) => {
+  // Map external tab names to internal tab names
+  const mapExternalToInternal = (tab: string) => {
+    switch (tab) {
+      case 'payment-tracking': return 'payments';
+      case 'financial-overview': return 'overview';
+      case 'user-records': return 'records';
+      default: return tab;
+    }
+  };
+
+  const [activeTab, setActiveTab] = useState(() => 
+    initialTab ? mapExternalToInternal(initialTab) : "overview"
+  );
+
+  // Update active tab when initialTab prop changes
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(mapExternalToInternal(initialTab));
+    }
+  }, [initialTab]);
 
   return (
     <div className="space-y-4 md:space-y-6 p-4 md:p-0">

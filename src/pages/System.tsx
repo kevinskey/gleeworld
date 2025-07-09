@@ -100,7 +100,7 @@ const System = () => {
           {(activeTab === "payments" || activeTab === "financial" || activeTab === "financial-overview" || 
             activeTab === "user-records" || activeTab === "payment-tracking" || activeTab === "stipends" || 
             activeTab === "reports") && (
-            <FinancialSystem />
+            <FinancialSystem initialTab={activeTab} />
           )}
 
           {activeTab === "budget" && (
