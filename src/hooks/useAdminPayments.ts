@@ -211,11 +211,18 @@ export const useAdminPayments = () => {
 
   const deletePayment = async (paymentId: string) => {
     try {
-      // First, delete the corresponding finance record if it exists
-      await supabase
+      console.log('Deleting payment:', paymentId);
+      
+      // First, delete the corresponding finance record if it exists  
+      const { error: financeError } = await supabase
         .from('finance_records')
         .delete()
         .like('reference', `%Payment ID: ${paymentId}%`);
+      
+      if (financeError) {
+        console.error('Error deleting finance record:', financeError);
+        // Continue with payment deletion even if finance record fails
+      }
 
       // Delete the payment
       const { error } = await supabase
@@ -225,12 +232,17 @@ export const useAdminPayments = () => {
 
       if (error) throw error;
 
+      console.log('Payment deleted successfully');
+
+      // Immediately update the local state to remove the payment
+      setPayments(prev => prev.filter(p => p.id !== paymentId));
+
       toast({
         title: "Success",
         description: "Payment deleted successfully",
       });
 
-      // Refresh the data immediately
+      // Refresh the data to ensure consistency
       await fetchPayments();
     } catch (error) {
       console.error('Error deleting payment:', error);
