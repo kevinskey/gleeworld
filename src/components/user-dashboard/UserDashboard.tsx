@@ -189,20 +189,50 @@ export const UserDashboard = () => {
 
             {/* Main Content Tabs */}
             <Tabs defaultValue="contracts" className="space-y-6">
-              <TabsList className="bg-white/95 backdrop-blur-sm border border-brand-200/30">
-                <TabsTrigger value="contracts" className="text-gray-700 data-[state=active]:bg-brand-100 data-[state=active]:text-brand-800">
-                  Contracts ({contracts.length})
-                </TabsTrigger>
-                <TabsTrigger value="w9forms" className="text-gray-700 data-[state=active]:bg-brand-100 data-[state=active]:text-brand-800">
-                  W9 Forms ({w9Forms?.length || 0})
-                </TabsTrigger>
-                <TabsTrigger value="payments" className="text-gray-700 data-[state=active]:bg-brand-100 data-[state=active]:text-brand-800">
-                  Payments ({dashboardData?.payments_received || 0})
-                </TabsTrigger>
-                <TabsTrigger value="notifications" className="text-gray-700 data-[state=active]:bg-brand-100 data-[state=active]:text-brand-800">
-                  Notifications ({dashboardData?.unread_notifications || 0})
-                </TabsTrigger>
-              </TabsList>
+              <div className="overflow-x-auto">
+                <TabsList className="bg-white/95 backdrop-blur-sm border border-brand-200/30 w-full grid grid-cols-4 h-auto p-1 gap-1">
+                  <TabsTrigger 
+                    value="contracts" 
+                    className="text-gray-700 data-[state=active]:bg-brand-100 data-[state=active]:text-brand-800 text-xs sm:text-sm px-2 py-2 min-h-[44px] flex flex-col items-center gap-1"
+                  >
+                    <span className="hidden sm:inline">Contracts</span>
+                    <span className="sm:hidden">Contracts</span>
+                    <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                      {contracts.length}
+                    </span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="w9forms" 
+                    className="text-gray-700 data-[state=active]:bg-brand-100 data-[state=active]:text-brand-800 text-xs sm:text-sm px-2 py-2 min-h-[44px] flex flex-col items-center gap-1"
+                  >
+                    <span className="hidden sm:inline">W9 Forms</span>
+                    <span className="sm:hidden">W9s</span>
+                    <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                      {w9Forms?.length || 0}
+                    </span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="payments" 
+                    className="text-gray-700 data-[state=active]:bg-brand-100 data-[state=active]:text-brand-800 text-xs sm:text-sm px-2 py-2 min-h-[44px] flex flex-col items-center gap-1"
+                  >
+                    <span className="hidden sm:inline">Payments</span>
+                    <span className="sm:hidden">Pay</span>
+                    <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                      {dashboardData?.payments_received || 0}
+                    </span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="notifications" 
+                    className="text-gray-700 data-[state=active]:bg-brand-100 data-[state=active]:text-brand-800 text-xs sm:text-sm px-2 py-2 min-h-[44px] flex flex-col items-center gap-1"
+                  >
+                    <span className="hidden sm:inline">Notifications</span>
+                    <span className="sm:hidden">Alerts</span>
+                    <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                      {dashboardData?.unread_notifications || 0}
+                    </span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
               <TabsContent value="contracts">
                 <UserContractsList />
