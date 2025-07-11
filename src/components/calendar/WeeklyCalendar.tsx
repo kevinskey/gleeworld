@@ -5,6 +5,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, addWeeks, subWeeks } from "date-fns";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EventDetailDialog } from "./EventDetailDialog";
+import { EditEventDialog } from "./EditEventDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface WeeklyCalendarProps {
   events: GleeWorldEvent[];
@@ -12,8 +14,10 @@ interface WeeklyCalendarProps {
 }
 
 export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) => {
+  const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<GleeWorldEvent | null>(null);
+  const [editingEvent, setEditingEvent] = useState<GleeWorldEvent | null>(null);
 
   const weekStart = startOfWeek(currentDate);
   const weekEnd = endOfWeek(currentDate);
@@ -23,6 +27,16 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
     return events.filter(event => 
       isSameDay(new Date(event.start_date), date)
     );
+  };
+
+  const handleEventClick = (event: GleeWorldEvent) => {
+    const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
+    
+    if (canEdit) {
+      setEditingEvent(event);
+    } else {
+      setSelectedEvent(event);
+    }
   };
 
   const navigateWeek = (direction: 'prev' | 'next') => {
@@ -89,20 +103,24 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
               </div>
               
               <div className="space-y-1 md:space-y-2">
-                {dayEvents.slice(0, window.innerWidth < 768 ? 2 : 4).map(event => (
-                  <Button
-                    key={event.id}
-                    variant="ghost"
-                    size="sm"
-                    className="w-full h-auto p-1 md:p-2 text-xs justify-start hover:bg-primary/20 flex-col items-start"
-                    onClick={() => setSelectedEvent(event)}
-                  >
-                    <Badge variant="secondary" className="text-[10px] md:text-xs mb-0.5 md:mb-1">
-                      {format(new Date(event.start_date), 'HH:mm')}
-                    </Badge>
-                    <span className="text-left text-[10px] md:text-xs line-clamp-2">{event.title}</span>
-                  </Button>
-                ))}
+                {dayEvents.slice(0, window.innerWidth < 768 ? 2 : 4).map(event => {
+                  const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
+                  return (
+                    <Button
+                      key={event.id}
+                      variant="ghost"
+                      size="sm"
+                      className={`w-full h-auto p-1 md:p-2 text-xs justify-start hover:bg-primary/20 flex-col items-start ${canEdit ? 'hover:scale-105' : ''} transition-all`}
+                      onClick={() => handleEventClick(event)}
+                      title={`${event.title}${canEdit ? ' (Click to edit)' : ' (Click for details)'}`}
+                    >
+                      <Badge variant="secondary" className="text-[10px] md:text-xs mb-0.5 md:mb-1">
+                        {format(new Date(event.start_date), 'HH:mm')}
+                      </Badge>
+                      <span className="text-left text-[10px] md:text-xs line-clamp-2">{event.title}</span>
+                    </Button>
+                  );
+                })}
                 {dayEvents.length > (window.innerWidth < 768 ? 2 : 4) && (
                   <div className="text-[10px] md:text-xs text-muted-foreground text-center">
                     +{dayEvents.length - (window.innerWidth < 768 ? 2 : 4)}
@@ -119,6 +137,16 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
         open={!!selectedEvent}
         onOpenChange={(open) => !open && setSelectedEvent(null)}
         onEventUpdated={onEventUpdated}
+      />
+      
+      <EditEventDialog
+        event={editingEvent}
+        open={!!editingEvent}
+        onOpenChange={(open) => !open && setEditingEvent(null)}
+        onEventUpdated={() => {
+          setEditingEvent(null);
+          onEventUpdated?.();
+        }}
       />
     </div>
   );

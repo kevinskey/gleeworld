@@ -2,10 +2,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { CalendarIcon, MapPinIcon, ClockIcon, UsersIcon } from "lucide-react";
+import { CalendarIcon, MapPinIcon, ClockIcon, UsersIcon, EditIcon } from "lucide-react";
 import { format } from "date-fns";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EventDetailDialog } from "./EventDetailDialog";
+import { EditEventDialog } from "./EditEventDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface EventsListProps {
   events: GleeWorldEvent[];
@@ -13,7 +15,9 @@ interface EventsListProps {
 }
 
 export const EventsList = ({ events, onEventUpdated }: EventsListProps) => {
+  const { user } = useAuth();
   const [selectedEvent, setSelectedEvent] = useState<GleeWorldEvent | null>(null);
+  const [editingEvent, setEditingEvent] = useState<GleeWorldEvent | null>(null);
 
   const getEventTypeColor = (type: string | null) => {
     switch (type) {
@@ -38,20 +42,41 @@ export const EventsList = ({ events, onEventUpdated }: EventsListProps) => {
     );
   }
 
+  const handleEventClick = (event: GleeWorldEvent) => {
+    const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
+    
+    if (canEdit) {
+      setEditingEvent(event);
+    } else {
+      setSelectedEvent(event);
+    }
+  };
+
   return (
     <div className="space-y-3 md:space-y-4">
       <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-4">Upcoming Events</h3>
       
-      {events.map(event => (
-        <Card key={event.id} className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardContent className="p-3 md:p-4" onClick={() => setSelectedEvent(event)}>
+      {events.map(event => {
+        const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
+        
+        return (
+        <Card key={event.id} className="hover:shadow-md transition-all duration-200 cursor-pointer hover-scale group">
+          <CardContent className="p-3 md:p-4" onClick={() => handleEventClick(event)}>
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
               <div className="flex-1">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-                  <h4 className="font-semibold text-base md:text-lg">{event.title}</h4>
-                  <Badge className={getEventTypeColor(event.event_type)}>
-                    {event.event_type || 'Event'}
-                  </Badge>
+                  <h4 className="font-semibold text-base md:text-lg group-hover:text-primary transition-colors">{event.title}</h4>
+                  <div className="flex items-center gap-2">
+                    <Badge className={getEventTypeColor(event.event_type)}>
+                      {event.event_type || 'Event'}
+                    </Badge>
+                    {canEdit && (
+                      <Badge variant="outline" className="text-xs">
+                        <EditIcon className="h-3 w-3 mr-1" />
+                        Editable
+                      </Badge>
+                    )}
+                  </div>
                 </div>
                 
                 {event.description && (
@@ -99,21 +124,42 @@ export const EventsList = ({ events, onEventUpdated }: EventsListProps) => {
               </div>
               
               <div className="flex-shrink-0">
-                <Button variant="outline" size="sm" className="text-xs md:text-sm h-7 md:h-8">
-                  <span className="hidden sm:inline">View Details</span>
-                  <span className="sm:hidden">View</span>
+                <Button variant="outline" size="sm" className="text-xs md:text-sm h-7 md:h-8 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  {canEdit ? (
+                    <>
+                      <EditIcon className="h-3 w-3 mr-1" />
+                      <span className="hidden sm:inline">Click to Edit</span>
+                      <span className="sm:hidden">Edit</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="hidden sm:inline">View Details</span>
+                      <span className="sm:hidden">View</span>
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
           </CardContent>
         </Card>
-      ))}
+        );
+      })}
 
       <EventDetailDialog
         event={selectedEvent}
         open={!!selectedEvent}
         onOpenChange={(open) => !open && setSelectedEvent(null)}
         onEventUpdated={onEventUpdated}
+      />
+      
+      <EditEventDialog
+        event={editingEvent}
+        open={!!editingEvent}
+        onOpenChange={(open) => !open && setEditingEvent(null)}
+        onEventUpdated={() => {
+          setEditingEvent(null);
+          onEventUpdated?.();
+        }}
       />
     </div>
   );
