@@ -349,8 +349,8 @@ export const GleeWorldLanding = () => {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="hidden sm:flex" />
-              <CarouselNext className="hidden sm:flex" />
+              <CarouselPrevious className="hidden sm:flex left-4" />
+              <CarouselNext className="hidden sm:flex right-4" />
             </Carousel>
           ) : (
             <Carousel className="w-full">
@@ -378,8 +378,8 @@ export const GleeWorldLanding = () => {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="hidden sm:flex" />
-              <CarouselNext className="hidden sm:flex" />
+              <CarouselPrevious className="hidden sm:flex left-4" />
+              <CarouselNext className="hidden sm:flex right-4" />
             </Carousel>
           )}
         </div>
