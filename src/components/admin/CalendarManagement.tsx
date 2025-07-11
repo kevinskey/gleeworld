@@ -8,7 +8,7 @@ import { CalendarViews } from "@/components/calendar/CalendarViews";
 import { CreateEventDialog } from "@/components/calendar/CreateEventDialog";
 import { EventDetailDialog } from "@/components/calendar/EventDetailDialog";
 import { type GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
-import { Calendar, Plus, Search, Filter, Users, MapPin, Clock } from "lucide-react";
+import { Calendar, Plus, Search, Filter, Users, MapPin, Clock, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -92,17 +92,18 @@ export const CalendarManagement = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Calendar className="h-6 w-6" />
-            Calendar Management
-          </h2>
-          <p className="text-muted-foreground">
-            Manage events, bookings, and calendar settings
-          </p>
+      <div className="text-center mb-6 sm:mb-8">
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-blue-400 animate-pulse" />
+          <h2 className="text-4xl sm:text-6xl font-dancing font-bold text-foreground">Calendar Management</h2>
+          <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-blue-600 animate-pulse" />
         </div>
-        <CreateEventDialog onEventCreated={handleEventCreated} />
+        <p className="text-muted-foreground text-lg">
+          Manage events, bookings, and calendar settings
+        </p>
+        <div className="mt-6">
+          <CreateEventDialog onEventCreated={handleEventCreated} />
+        </div>
       </div>
 
       {/* Stats Cards */}
