@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Save, Trash2, Eye, EyeOff, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +21,15 @@ interface HeroSlide {
   is_active: boolean | null;
   hero_settings_id: string | null;
   slide_duration_seconds: number | null;
+  title_position_horizontal: string | null;
+  title_position_vertical: string | null;
+  description_position_horizontal: string | null;
+  description_position_vertical: string | null;
+  title_size: string | null;
+  description_size: string | null;
+  action_button_text: string | null;
+  action_button_url: string | null;
+  action_button_enabled: boolean | null;
   created_at: string | null;
 }
 
@@ -46,6 +56,15 @@ export const HeroManagement = () => {
     link_url: "",
     display_order: 0,
     slide_duration_seconds: 5,
+    title_position_horizontal: "center",
+    title_position_vertical: "middle",
+    description_position_horizontal: "center", 
+    description_position_vertical: "middle",
+    title_size: "large",
+    description_size: "medium",
+    action_button_text: "",
+    action_button_url: "",
+    action_button_enabled: false,
     is_active: true
   });
 
@@ -165,6 +184,15 @@ export const HeroManagement = () => {
             link_url: formData.link_url || null,
             display_order: formData.display_order,
             slide_duration_seconds: formData.slide_duration_seconds,
+            title_position_horizontal: formData.title_position_horizontal,
+            title_position_vertical: formData.title_position_vertical,
+            description_position_horizontal: formData.description_position_horizontal,
+            description_position_vertical: formData.description_position_vertical,
+            title_size: formData.title_size,
+            description_size: formData.description_size,
+            action_button_text: formData.action_button_text || null,
+            action_button_url: formData.action_button_url || null,
+            action_button_enabled: formData.action_button_enabled,
             is_active: formData.is_active
           })
           .eq('id', editingId);
@@ -182,6 +210,15 @@ export const HeroManagement = () => {
             link_url: formData.link_url || null,
             display_order: formData.display_order,
             slide_duration_seconds: formData.slide_duration_seconds,
+            title_position_horizontal: formData.title_position_horizontal,
+            title_position_vertical: formData.title_position_vertical,
+            description_position_horizontal: formData.description_position_horizontal,
+            description_position_vertical: formData.description_position_vertical,
+            title_size: formData.title_size,
+            description_size: formData.description_size,
+            action_button_text: formData.action_button_text || null,
+            action_button_url: formData.action_button_url || null,
+            action_button_enabled: formData.action_button_enabled,
             is_active: formData.is_active
           });
 
@@ -217,6 +254,15 @@ export const HeroManagement = () => {
       link_url: slide.link_url || "",
       display_order: slide.display_order || 0,
       slide_duration_seconds: slide.slide_duration_seconds || 5,
+      title_position_horizontal: slide.title_position_horizontal || "center",
+      title_position_vertical: slide.title_position_vertical || "middle",
+      description_position_horizontal: slide.description_position_horizontal || "center",
+      description_position_vertical: slide.description_position_vertical || "middle",
+      title_size: slide.title_size || "large",
+      description_size: slide.description_size || "medium",
+      action_button_text: slide.action_button_text || "",
+      action_button_url: slide.action_button_url || "",
+      action_button_enabled: slide.action_button_enabled ?? false,
       is_active: slide.is_active ?? true
     });
     setEditingId(slide.id);
@@ -283,6 +329,15 @@ export const HeroManagement = () => {
       link_url: "",
       display_order: 0,
       slide_duration_seconds: 5,
+      title_position_horizontal: "center",
+      title_position_vertical: "middle",
+      description_position_horizontal: "center",
+      description_position_vertical: "middle", 
+      title_size: "large",
+      description_size: "medium",
+      action_button_text: "",
+      action_button_url: "",
+      action_button_enabled: false,
       is_active: true
     });
     setEditingId(null);
@@ -403,7 +458,159 @@ export const HeroManagement = () => {
             />
           </div>
 
-          <div className="flex items-center space-x-2">
+          {/* Title Positioning and Sizing */}
+          <div className="space-y-4 border-t pt-4">
+            <h3 className="text-lg font-semibold">Title Settings</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Title Horizontal Position</Label>
+                <Select 
+                  value={formData.title_position_horizontal} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, title_position_horizontal: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="left">Left</SelectItem>
+                    <SelectItem value="center">Center</SelectItem>
+                    <SelectItem value="right">Right</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Title Vertical Position</Label>
+                <Select 
+                  value={formData.title_position_vertical} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, title_position_vertical: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="top">Top</SelectItem>
+                    <SelectItem value="middle">Middle</SelectItem>
+                    <SelectItem value="bottom">Bottom</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Title Size</Label>
+                <Select 
+                  value={formData.title_size} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, title_size: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="small">Small</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="large">Large</SelectItem>
+                    <SelectItem value="xl">Extra Large</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Description Positioning and Sizing */}
+          <div className="space-y-4 border-t pt-4">
+            <h3 className="text-lg font-semibold">Description Settings</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Description Horizontal Position</Label>
+                <Select 
+                  value={formData.description_position_horizontal} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, description_position_horizontal: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="left">Left</SelectItem>
+                    <SelectItem value="center">Center</SelectItem>
+                    <SelectItem value="right">Right</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Description Vertical Position</Label>
+                <Select 
+                  value={formData.description_position_vertical} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, description_position_vertical: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="top">Top</SelectItem>
+                    <SelectItem value="middle">Middle</SelectItem>
+                    <SelectItem value="bottom">Bottom</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Description Size</Label>
+                <Select 
+                  value={formData.description_size} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, description_size: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="small">Small</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="large">Large</SelectItem>
+                    <SelectItem value="xl">Extra Large</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Button Settings */}
+          <div className="space-y-4 border-t pt-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="action_button_enabled"
+                checked={formData.action_button_enabled}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, action_button_enabled: checked }))}
+              />
+              <Label htmlFor="action_button_enabled">Enable Action Button</Label>
+            </div>
+            
+            {formData.action_button_enabled && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="action_button_text">Action Button Text</Label>
+                  <Input
+                    id="action_button_text"
+                    value={formData.action_button_text}
+                    onChange={(e) => setFormData(prev => ({ ...prev, action_button_text: e.target.value }))}
+                    placeholder="Button text"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="action_button_url">Action Button URL</Label>
+                  <Input
+                    id="action_button_url"
+                    value={formData.action_button_url}
+                    onChange={(e) => setFormData(prev => ({ ...prev, action_button_url: e.target.value }))}
+                    placeholder="https://example.com"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center space-x-2 border-t pt-4">
             <Switch
               id="is_active"
               checked={formData.is_active}

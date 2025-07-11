@@ -1589,9 +1589,15 @@ export type Database = {
       }
       gw_hero_slides: {
         Row: {
+          action_button_enabled: boolean | null
+          action_button_text: string | null
+          action_button_url: string | null
           button_text: string | null
           created_at: string | null
           description: string | null
+          description_position_horizontal: string | null
+          description_position_vertical: string | null
+          description_size: string | null
           display_order: number | null
           hero_settings_id: string | null
           id: string
@@ -1600,11 +1606,20 @@ export type Database = {
           link_url: string | null
           slide_duration_seconds: number | null
           title: string | null
+          title_position_horizontal: string | null
+          title_position_vertical: string | null
+          title_size: string | null
         }
         Insert: {
+          action_button_enabled?: boolean | null
+          action_button_text?: string | null
+          action_button_url?: string | null
           button_text?: string | null
           created_at?: string | null
           description?: string | null
+          description_position_horizontal?: string | null
+          description_position_vertical?: string | null
+          description_size?: string | null
           display_order?: number | null
           hero_settings_id?: string | null
           id?: string
@@ -1613,11 +1628,20 @@ export type Database = {
           link_url?: string | null
           slide_duration_seconds?: number | null
           title?: string | null
+          title_position_horizontal?: string | null
+          title_position_vertical?: string | null
+          title_size?: string | null
         }
         Update: {
+          action_button_enabled?: boolean | null
+          action_button_text?: string | null
+          action_button_url?: string | null
           button_text?: string | null
           created_at?: string | null
           description?: string | null
+          description_position_horizontal?: string | null
+          description_position_vertical?: string | null
+          description_size?: string | null
           display_order?: number | null
           hero_settings_id?: string | null
           id?: string
@@ -1626,6 +1650,9 @@ export type Database = {
           link_url?: string | null
           slide_duration_seconds?: number | null
           title?: string | null
+          title_position_horizontal?: string | null
+          title_position_vertical?: string | null
+          title_size?: string | null
         }
         Relationships: [
           {

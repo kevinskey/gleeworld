@@ -36,6 +36,15 @@ interface HeroSlide {
   link_url: string | null;
   display_order: number | null;
   slide_duration_seconds: number | null;
+  title_position_horizontal: string | null;
+  title_position_vertical: string | null;
+  description_position_horizontal: string | null;
+  description_position_vertical: string | null;
+  title_size: string | null;
+  description_size: string | null;
+  action_button_text: string | null;
+  action_button_url: string | null;
+  action_button_enabled: boolean | null;
   is_active: boolean | null;
 }
 
@@ -109,6 +118,45 @@ export const GleeWorldLanding = () => {
       day: 'numeric',
       year: 'numeric'
     });
+  };
+
+  // Helper functions for positioning and sizing
+  const getHorizontalAlignment = (position: string | null) => {
+    switch (position) {
+      case 'left': return 'text-left items-start';
+      case 'right': return 'text-right items-end';
+      case 'center':
+      default: return 'text-center items-center';
+    }
+  };
+
+  const getVerticalAlignment = (position: string | null) => {
+    switch (position) {
+      case 'top': return 'justify-start pt-16';
+      case 'bottom': return 'justify-end pb-16';
+      case 'middle':
+      default: return 'justify-center';
+    }
+  };
+
+  const getTitleSize = (size: string | null) => {
+    switch (size) {
+      case 'small': return 'text-2xl md:text-3xl';
+      case 'medium': return 'text-3xl md:text-4xl';
+      case 'large': return 'text-4xl md:text-6xl';
+      case 'xl': return 'text-5xl md:text-7xl';
+      default: return 'text-4xl md:text-6xl';
+    }
+  };
+
+  const getDescriptionSize = (size: string | null) => {
+    switch (size) {
+      case 'small': return 'text-base md:text-lg';
+      case 'medium': return 'text-lg md:text-xl';
+      case 'large': return 'text-xl md:text-2xl';
+      case 'xl': return 'text-2xl md:text-3xl';
+      default: return 'text-xl md:text-2xl';
+    }
   };
 
   const sampleTracks = [
@@ -186,26 +234,46 @@ export const GleeWorldLanding = () => {
               <div className="absolute inset-0 bg-black bg-opacity-40"></div>
               
               {/* Content overlay */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center px-6 max-w-4xl">
-                  {currentHeroSlide?.title && (
-                    <h1 className="text-4xl md:text-6xl font-bold mb-4 text-white">
+              <div className="absolute inset-0 flex flex-col">
+                {/* Title Section */}
+                {currentHeroSlide?.title && (
+                  <div className={`flex ${getVerticalAlignment(currentHeroSlide.title_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.title_position_horizontal)} px-6 flex-1`}>
+                    <h1 className={`${getTitleSize(currentHeroSlide.title_size)} font-bold mb-4 text-white max-w-4xl`}>
                       {currentHeroSlide.title}
                     </h1>
-                  )}
-                  {currentHeroSlide?.description && (
-                    <p className="text-xl md:text-2xl mb-6 text-white">
+                  </div>
+                )}
+                
+                {/* Description Section */}
+                {currentHeroSlide?.description && (
+                  <div className={`flex ${getVerticalAlignment(currentHeroSlide.description_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.description_position_horizontal)} px-6 flex-1`}>
+                    <p className={`${getDescriptionSize(currentHeroSlide.description_size)} mb-6 text-white max-w-4xl`}>
                       {currentHeroSlide.description}
                     </p>
-                  )}
-                  {currentHeroSlide?.button_text && currentHeroSlide?.link_url && (
+                  </div>
+                )}
+                
+                {/* Action Button Section */}
+                {currentHeroSlide?.action_button_enabled && currentHeroSlide?.action_button_text && currentHeroSlide?.action_button_url && (
+                  <div className="flex justify-center items-end pb-16 px-6">
+                    <Button size="lg" asChild>
+                      <a href={currentHeroSlide.action_button_url} target="_blank" rel="noopener noreferrer">
+                        {currentHeroSlide.action_button_text}
+                      </a>
+                    </Button>
+                  </div>
+                )}
+                
+                {/* Legacy button support */}
+                {!currentHeroSlide?.action_button_enabled && currentHeroSlide?.button_text && currentHeroSlide?.link_url && (
+                  <div className="flex justify-center items-end pb-16 px-6">
                     <Button size="lg" asChild>
                       <a href={currentHeroSlide.link_url} target="_blank" rel="noopener noreferrer">
                         {currentHeroSlide.button_text}
                       </a>
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
               
             </>
