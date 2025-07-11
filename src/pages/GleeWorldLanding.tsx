@@ -449,9 +449,9 @@ export const GleeWorldLanding = () => {
             <Carousel className="w-full">
               <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
                 {events.map((event) => (
-                  <CarouselItem key={event.id} className="pl-1 sm:pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
-                    <Card className="hover:shadow-lg transition-shadow h-full">
-                      <div className="h-48 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-lg flex items-center justify-center">
+                  <CarouselItem key={event.id} className="pl-1 sm:pl-2 md:pl-4 basis-full">
+                    <Card className="hover:shadow-lg transition-shadow h-full w-full">
+                      <div className="h-48 sm:h-64 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-lg flex items-center justify-center">
                         <img 
                           src="https://dzzptovqfqausipsgabw.supabase.co/storage/v1/object/public/event-images/event-images/1750597449197-ilkitkdn1ld.png"
                           alt={event.title}
@@ -462,47 +462,50 @@ export const GleeWorldLanding = () => {
                           }}
                         />
                       </div>
-                      <CardContent className="p-4 sm:p-6">
-                        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 line-clamp-2">{event.title}</h3>
-                        <div className="space-y-1 text-gray-600">
+                      <CardContent className="p-6 sm:p-8">
+                        <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-4 line-clamp-2">{event.title}</h3>
+                        <div className="space-y-2 text-gray-600">
                           <div className="flex items-center">
-                            <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
-                            <span className="text-sm sm:text-base">{formatDate(event.start_date)}</span>
+                            <Calendar className="h-5 w-5 mr-3 flex-shrink-0" />
+                            <span className="text-base sm:text-lg">{formatDate(event.start_date)}</span>
                           </div>
                           {event.location && (
                             <div className="flex items-center">
-                              <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                              <span className="text-sm sm:text-base line-clamp-1">{event.location}</span>
+                              <MapPin className="h-5 w-5 mr-3 flex-shrink-0" />
+                              <span className="text-base sm:text-lg line-clamp-1">{event.location}</span>
                             </div>
                           )}
                         </div>
+                        {event.description && (
+                          <p className="text-gray-600 mt-4 line-clamp-3 text-base sm:text-lg">{event.description}</p>
+                        )}
                       </CardContent>
                     </Card>
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="hidden sm:flex left-4" />
-              <CarouselNext className="hidden sm:flex right-4" />
+              <CarouselPrevious className="left-4" />
+              <CarouselNext className="right-4" />
             </Carousel>
           ) : (
             <Carousel className="w-full">
               <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
                 {[...Array(6)].map((_, i) => (
-                  <CarouselItem key={i} className="pl-1 sm:pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
-                    <Card className="hover:shadow-lg transition-shadow h-full">
-                      <div className="h-48 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-lg flex items-center justify-center">
+                  <CarouselItem key={i} className="pl-1 sm:pl-2 md:pl-4 basis-full">
+                    <Card className="hover:shadow-lg transition-shadow h-full w-full">
+                      <div className="h-48 sm:h-64 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-lg flex items-center justify-center">
                         <Music className="h-12 w-12 text-blue-600" />
                       </div>
-                      <CardContent className="p-4 sm:p-6">
-                        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Glee Club Rehearsal</h3>
-                        <div className="space-y-1 text-gray-600">
+                      <CardContent className="p-6 sm:p-8">
+                        <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-4">Glee Club Rehearsal</h3>
+                        <div className="space-y-2 text-gray-600">
                           <div className="flex items-center">
-                            <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
-                            <span className="text-sm sm:text-base">Aug {19 + i * 2}, 2025</span>
+                            <Calendar className="h-5 w-5 mr-3 flex-shrink-0" />
+                            <span className="text-base sm:text-lg">Aug {19 + i * 2}, 2025</span>
                           </div>
                           <div className="flex items-center">
-                            <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                            <span className="text-sm sm:text-base line-clamp-1">350 Spelman Lane SW Atlanta GA 30314</span>
+                            <MapPin className="h-5 w-5 mr-3 flex-shrink-0" />
+                            <span className="text-base sm:text-lg line-clamp-1">350 Spelman Lane SW Atlanta GA 30314</span>
                           </div>
                         </div>
                       </CardContent>
@@ -510,8 +513,8 @@ export const GleeWorldLanding = () => {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="hidden sm:flex left-4" />
-              <CarouselNext className="hidden sm:flex right-4" />
+              <CarouselPrevious className="left-4" />
+              <CarouselNext className="right-4" />
             </Carousel>
            )}
       </section>
