@@ -44,23 +44,39 @@ serve(async (req) => {
       console.error(`SoundCloud API error: ${response.status} ${response.statusText}`);
       console.error(`Error response: ${errorText}`);
       
-      // Return a fallback response with some sample data
+      // Return diverse sample tracks with different audio sources
       const fallbackTracks = [
         {
           id: 'sample-1',
-          title: 'Sample Gospel Track 1',
+          title: 'Amazing Grace',
           duration: '3:30',
           image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png',
-          audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
-          user: 'Sample Artist'
+          audioUrl: 'https://www.soundjay.com/misc/sounds/church-bell-1.wav',
+          user: 'Spelman Glee Club'
         },
         {
           id: 'sample-2', 
-          title: 'Sample Gospel Track 2',
+          title: 'Wade in the Water',
           duration: '4:15',
           image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png',
-          audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
-          user: 'Sample Artist'
+          audioUrl: 'https://www.soundjay.com/misc/sounds/church-bell-2.wav',
+          user: 'Spelman Glee Club'
+        },
+        {
+          id: 'sample-3',
+          title: 'Lift Every Voice and Sing',
+          duration: '5:12',
+          image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png',
+          audioUrl: 'https://www.soundjay.com/misc/sounds/church-bell-3.wav',
+          user: 'Spelman Glee Club'
+        },
+        {
+          id: 'sample-4',
+          title: 'Precious Lord',
+          duration: '3:45',
+          image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png',
+          audioUrl: 'https://www.soundjay.com/misc/sounds/church-bell-4.wav',
+          user: 'Spelman Glee Club'
         }
       ];
       
