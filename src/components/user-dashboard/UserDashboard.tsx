@@ -385,7 +385,11 @@ export const UserDashboard = () => {
                         <div className="text-xs text-gray-500">Audio guides</div>
                       </div>
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start h-auto p-3">
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start h-auto p-3"
+                      onClick={() => window.location.href = '/system?tab=soundcloud'}
+                    >
                       <Mic className="h-4 w-4 mr-2" />
                       <div className="text-left">
                         <div>SoundCloud Library</div>
