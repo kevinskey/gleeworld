@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { AppNavigation } from "@/components/navigation/AppNavigation";
@@ -44,13 +44,22 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
         <div className="flex items-center justify-between h-12 sm:h-14 md:h-16">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
-            <Link to="/" className="flex items-center gap-1 sm:gap-2">
+            <Link to="/landing" className="flex items-center gap-1 sm:gap-2">
               <div className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xs sm:text-sm">CM</span>
+                <span className="text-white font-bold text-xs sm:text-sm">GW</span>
               </div>
               <span className="text-white font-semibold text-sm sm:text-base md:text-lg hidden xs:block">
-                Contract Manager
+                GleeWorld
               </span>
+            </Link>
+            
+            {/* Home Link */}
+            <Link 
+              to="/landing" 
+              className="text-white/80 hover:text-white transition-colors text-sm font-medium flex items-center gap-1"
+            >
+              <Home className="h-4 w-4" />
+              <span className="hidden sm:inline">Home</span>
             </Link>
             
             {/* Desktop Navigation */}
@@ -81,6 +90,17 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
                   ) : (
                     <AppNavigation />
                   )
+                )}
+                
+                {/* Dashboard Icon - Shows appropriate dashboard based on user role */}
+                {profile?.role && (
+                  <Link
+                    to={profile.role === 'admin' || profile.role === 'super-admin' ? '/system' : '/dashboard'}
+                    className="text-white/80 hover:text-white transition-colors flex items-center p-2 rounded-lg hover:bg-white/10"
+                    title={`Go to ${profile.role === 'admin' || profile.role === 'super-admin' ? 'Admin' : 'User'} Dashboard`}
+                  >
+                    <LayoutDashboard className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </Link>
                 )}
                 
                 <DashboardSwitcher />

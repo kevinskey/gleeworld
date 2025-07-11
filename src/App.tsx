@@ -215,11 +215,19 @@ const App = () => {
                     <Index />
                   </ProtectedRoute>
                 } 
-              />
-              <Route 
-                path="/" 
-                element={<RootRoute />} 
-              />
+               />
+               <Route 
+                 path="/landing"
+                 element={
+                   <PublicRoute>
+                     <GleeWorldLanding />
+                   </PublicRoute>
+                 } 
+               />
+               <Route 
+                 path="/" 
+                 element={<RootRoute />} 
+               />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
