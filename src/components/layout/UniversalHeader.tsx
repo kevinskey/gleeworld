@@ -55,15 +55,6 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
               </span>
             </Link>
             
-            {/* Home Link */}
-            <Link 
-              to="/landing" 
-              className="text-white/80 hover:text-white transition-colors text-sm font-medium flex items-center gap-1"
-            >
-              <Home className="h-4 w-4" />
-              <span className="hidden sm:inline">Home</span>
-            </Link>
-            
             {/* Desktop Navigation */}
             {user && !isMobile && (
               isSystemPage && systemActiveTab && onSystemTabChange ? (
