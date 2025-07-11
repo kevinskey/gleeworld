@@ -427,9 +427,9 @@ export const GleeWorldLanding = () => {
       <section id="events" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 w-full">
         <div className="text-center mb-6 sm:mb-8">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500 animate-pulse" />
-            <h2 className="text-2xl sm:text-4xl font-dancing font-bold text-gray-900">Upcoming Events</h2>
-            <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-pink-500 animate-pulse" />
+            <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-blue-400 animate-pulse" />
+            <h2 className="text-4xl sm:text-6xl font-dancing font-bold text-gray-900">Upcoming Events</h2>
+            <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-blue-600 animate-pulse" />
           </div>
         </div>
           
