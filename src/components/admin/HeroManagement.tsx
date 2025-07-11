@@ -19,11 +19,20 @@ interface HeroSlide {
   display_order: number | null;
   is_active: boolean | null;
   hero_settings_id: string | null;
+  slide_duration_seconds: number | null;
   created_at: string | null;
+}
+
+interface HeroSettings {
+  id: string;
+  auto_play: boolean;
+  slide_duration_seconds: number;
+  transition_effect: string;
 }
 
 export const HeroManagement = () => {
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
+  const [heroSettings, setHeroSettings] = useState<HeroSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -36,7 +45,14 @@ export const HeroManagement = () => {
     button_text: "",
     link_url: "",
     display_order: 0,
+    slide_duration_seconds: 5,
     is_active: true
+  });
+
+  const [settingsData, setSettingsData] = useState({
+    auto_play: true,
+    slide_duration_seconds: 5,
+    transition_effect: "fade"
   });
 
   useEffect(() => {
@@ -45,18 +61,44 @@ export const HeroManagement = () => {
 
   const fetchHeroSlides = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: slidesData, error: slidesError } = await supabase
         .from('gw_hero_slides')
         .select('*')
         .order('display_order', { ascending: true });
 
-      if (error) throw error;
-      setHeroSlides(data || []);
+      if (slidesError) throw slidesError;
+      setHeroSlides(slidesData || []);
+
+      // Try to fetch settings, but don't fail if table doesn't exist yet
+      try {
+        const { data: settingsData } = await supabase
+          .from('gw_hero_settings')
+          .select('*')
+          .limit(1)
+          .single();
+
+        if (settingsData) {
+          const settings = settingsData as any;
+          setHeroSettings({
+            id: settings.id,
+            auto_play: settings.auto_play || true,
+            slide_duration_seconds: settings.slide_duration_seconds || 5,
+            transition_effect: settings.transition_effect || 'fade'
+          });
+          setSettingsData({
+            auto_play: settings.auto_play || true,
+            slide_duration_seconds: settings.slide_duration_seconds || 5,
+            transition_effect: settings.transition_effect || 'fade'
+          });
+        }
+      } catch (settingsError) {
+        console.log('Settings not found, using defaults');
+      }
     } catch (error) {
-      console.error('Error fetching hero slides:', error);
+      console.error('Error fetching hero data:', error);
       toast({
         title: "Error",
-        description: "Failed to load hero slides",
+        description: "Failed to load hero data",
         variant: "destructive"
       });
     } finally {
@@ -122,6 +164,7 @@ export const HeroManagement = () => {
             button_text: formData.button_text || null,
             link_url: formData.link_url || null,
             display_order: formData.display_order,
+            slide_duration_seconds: formData.slide_duration_seconds,
             is_active: formData.is_active
           })
           .eq('id', editingId);
@@ -138,6 +181,7 @@ export const HeroManagement = () => {
             button_text: formData.button_text || null,
             link_url: formData.link_url || null,
             display_order: formData.display_order,
+            slide_duration_seconds: formData.slide_duration_seconds,
             is_active: formData.is_active
           });
 
@@ -172,6 +216,7 @@ export const HeroManagement = () => {
       button_text: slide.button_text || "",
       link_url: slide.link_url || "",
       display_order: slide.display_order || 0,
+      slide_duration_seconds: slide.slide_duration_seconds || 5,
       is_active: slide.is_active ?? true
     });
     setEditingId(slide.id);
@@ -237,6 +282,7 @@ export const HeroManagement = () => {
       button_text: "",
       link_url: "",
       display_order: 0,
+      slide_duration_seconds: 5,
       is_active: true
     });
     setEditingId(null);
@@ -344,6 +390,19 @@ export const HeroManagement = () => {
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="slide_duration_seconds">Slide Duration (seconds)</Label>
+            <Input
+              id="slide_duration_seconds"
+              type="number"
+              min="1"
+              max="30"
+              value={formData.slide_duration_seconds}
+              onChange={(e) => setFormData(prev => ({ ...prev, slide_duration_seconds: parseInt(e.target.value) || 5 }))}
+              placeholder="Duration in seconds"
+            />
+          </div>
+
           <div className="flex items-center space-x-2">
             <Switch
               id="is_active"
@@ -352,6 +411,7 @@ export const HeroManagement = () => {
             />
             <Label htmlFor="is_active">Active</Label>
           </div>
+
 
           <div className="flex gap-2">
             <Button onClick={handleSave} disabled={saving}>
@@ -401,7 +461,7 @@ export const HeroManagement = () => {
                       <p className="text-sm text-muted-foreground">{slide.description}</p>
                     )}
                     <div className="text-xs text-muted-foreground mt-1">
-                      Order: {slide.display_order || 0}
+                      Order: {slide.display_order || 0} | Duration: {slide.slide_duration_seconds || 5}s
                       {slide.button_text && ` | Button: ${slide.button_text}`}
                     </div>
                   </div>

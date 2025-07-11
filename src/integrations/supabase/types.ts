@@ -1598,6 +1598,7 @@ export type Database = {
           image_url: string | null
           is_active: boolean | null
           link_url: string | null
+          slide_duration_seconds: number | null
           title: string | null
         }
         Insert: {
@@ -1610,6 +1611,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           link_url?: string | null
+          slide_duration_seconds?: number | null
           title?: string | null
         }
         Update: {
@@ -1622,6 +1624,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           link_url?: string | null
+          slide_duration_seconds?: number | null
           title?: string | null
         }
         Relationships: [
