@@ -14,7 +14,8 @@ import {
   Menu,
   Library,
   PenTool,
-  Calendar
+  Calendar,
+  CalendarDays
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission, isAdmin } from "@/constants/permissions";
@@ -44,9 +45,15 @@ export const AppNavigation = () => {
       permission: "view_own_payments"
     },
     {
+      label: "Calendar",
+      href: "/calendar",
+      icon: Calendar,
+      permission: null
+    },
+    {
       label: "Event Planner",
       href: "/event-planner",
-      icon: Calendar,
+      icon: CalendarDays,
       permission: null
     },
     {
