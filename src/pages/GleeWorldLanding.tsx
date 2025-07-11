@@ -33,6 +33,8 @@ interface HeroSlide {
   title: string | null;
   description: string | null;
   image_url: string | null;
+  mobile_image_url: string | null;
+  ipad_image_url: string | null;
   button_text: string | null;
   link_url: string | null;
   display_order: number | null;
@@ -334,10 +336,31 @@ export const GleeWorldLanding = () => {
         <div className="h-[60vh] overflow-hidden relative">
           {heroSlides.length > 0 ? (
             <>
+              {/* Desktop Image */}
               <img 
                 src={currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
                 alt="Hero Background"
-                className="w-full h-full object-cover transition-opacity duration-500"
+                className="hidden md:block w-full h-full object-cover transition-opacity duration-500"
+                onError={(e) => {
+                  e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                }}
+              />
+              
+              {/* iPad Image */}
+              <img 
+                src={currentHeroSlide?.ipad_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
+                alt="Hero Background"
+                className="hidden sm:block md:hidden w-full h-full object-cover transition-opacity duration-500"
+                onError={(e) => {
+                  e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                }}
+              />
+              
+              {/* Mobile Image */}
+              <img 
+                src={currentHeroSlide?.mobile_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
+                alt="Hero Background"
+                className="block sm:hidden w-full h-full object-cover transition-opacity duration-500"
                 onError={(e) => {
                   e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
                 }}

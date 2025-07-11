@@ -15,6 +15,8 @@ interface HeroSlide {
   title: string | null;
   description: string | null;
   image_url: string | null;
+  mobile_image_url: string | null;
+  ipad_image_url: string | null;
   button_text: string | null;
   link_url: string | null;
   display_order: number | null;
@@ -52,6 +54,8 @@ export const HeroManagement = () => {
     title: "",
     description: "",
     image_url: "",
+    mobile_image_url: "",
+    ipad_image_url: "",
     button_text: "",
     link_url: "",
     display_order: 0,
@@ -125,13 +129,13 @@ export const HeroManagement = () => {
     }
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, imageType: 'desktop' | 'mobile' | 'ipad') => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `hero-${Date.now()}.${fileExt}`;
+      const fileName = `hero-${imageType}-${Date.now()}.${fileExt}`;
       const filePath = `hero-images/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -144,17 +148,19 @@ export const HeroManagement = () => {
         .from('user-files')
         .getPublicUrl(filePath);
 
-      setFormData(prev => ({ ...prev, image_url: publicUrl }));
+      const fieldName = imageType === 'desktop' ? 'image_url' : 
+                       imageType === 'mobile' ? 'mobile_image_url' : 'ipad_image_url';
+      setFormData(prev => ({ ...prev, [fieldName]: publicUrl }));
       
       toast({
         title: "Success",
-        description: "Image uploaded successfully"
+        description: `${imageType} image uploaded successfully`
       });
     } catch (error) {
       console.error('Error uploading image:', error);
       toast({
         title: "Error",
-        description: "Failed to upload image",
+        description: `Failed to upload ${imageType} image`,
         variant: "destructive"
       });
     }
@@ -180,6 +186,8 @@ export const HeroManagement = () => {
             title: formData.title.trim() || null,
             description: formData.description || null,
             image_url: formData.image_url || null,
+            mobile_image_url: formData.mobile_image_url || null,
+            ipad_image_url: formData.ipad_image_url || null,
             button_text: formData.button_text || null,
             link_url: formData.link_url || null,
             display_order: formData.display_order,
@@ -206,6 +214,8 @@ export const HeroManagement = () => {
             title: formData.title.trim() || null,
             description: formData.description || null,
             image_url: formData.image_url || null,
+            mobile_image_url: formData.mobile_image_url || null,
+            ipad_image_url: formData.ipad_image_url || null,
             button_text: formData.button_text || null,
             link_url: formData.link_url || null,
             display_order: formData.display_order,
@@ -250,6 +260,8 @@ export const HeroManagement = () => {
       title: slide.title || "",
       description: slide.description || "",
       image_url: slide.image_url || "",
+      mobile_image_url: slide.mobile_image_url || "",
+      ipad_image_url: slide.ipad_image_url || "",
       button_text: slide.button_text || "",
       link_url: slide.link_url || "",
       display_order: slide.display_order || 0,
@@ -325,6 +337,8 @@ export const HeroManagement = () => {
       title: "",
       description: "",
       image_url: "",
+      mobile_image_url: "",
+      ipad_image_url: "",
       button_text: "",
       link_url: "",
       display_order: 0,
@@ -400,20 +414,69 @@ export const HeroManagement = () => {
             />
           </div>
 
+          {/* Desktop Image */}
           <div className="space-y-2">
-            <Label htmlFor="image_url">Background Image *</Label>
+            <Label htmlFor="image_url">Desktop Image *</Label>
             <div className="flex gap-2">
               <Input
                 id="image_url"
                 value={formData.image_url}
                 onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-                placeholder="Image URL or upload below"
+                placeholder="Desktop image URL or upload below"
               />
               <div className="relative">
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={handleImageUpload}
+                  onChange={(e) => handleImageUpload(e, 'desktop')}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                <Button variant="outline" size="icon">
+                  <Upload className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Image */}
+          <div className="space-y-2">
+            <Label htmlFor="mobile_image_url">Mobile Image (Optional)</Label>
+            <div className="flex gap-2">
+              <Input
+                id="mobile_image_url"
+                value={formData.mobile_image_url}
+                onChange={(e) => setFormData(prev => ({ ...prev, mobile_image_url: e.target.value }))}
+                placeholder="Mobile image URL or upload below"
+              />
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e, 'mobile')}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                <Button variant="outline" size="icon">
+                  <Upload className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* iPad Image */}
+          <div className="space-y-2">
+            <Label htmlFor="ipad_image_url">iPad Image (Optional)</Label>
+            <div className="flex gap-2">
+              <Input
+                id="ipad_image_url"
+                value={formData.ipad_image_url}
+                onChange={(e) => setFormData(prev => ({ ...prev, ipad_image_url: e.target.value }))}
+                placeholder="iPad image URL or upload below"
+              />
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e, 'ipad')}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
                 <Button variant="outline" size="icon">

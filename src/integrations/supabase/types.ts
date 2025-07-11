@@ -1632,8 +1632,10 @@ export type Database = {
           hero_settings_id: string | null
           id: string
           image_url: string | null
+          ipad_image_url: string | null
           is_active: boolean | null
           link_url: string | null
+          mobile_image_url: string | null
           slide_duration_seconds: number | null
           title: string | null
           title_position_horizontal: string | null
@@ -1654,8 +1656,10 @@ export type Database = {
           hero_settings_id?: string | null
           id?: string
           image_url?: string | null
+          ipad_image_url?: string | null
           is_active?: boolean | null
           link_url?: string | null
+          mobile_image_url?: string | null
           slide_duration_seconds?: number | null
           title?: string | null
           title_position_horizontal?: string | null
@@ -1676,8 +1680,10 @@ export type Database = {
           hero_settings_id?: string | null
           id?: string
           image_url?: string | null
+          ipad_image_url?: string | null
           is_active?: boolean | null
           link_url?: string | null
+          mobile_image_url?: string | null
           slide_duration_seconds?: number | null
           title?: string | null
           title_position_horizontal?: string | null
