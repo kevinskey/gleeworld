@@ -37,6 +37,7 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
   const eventTypes = [
     { value: 'performance', label: 'Performance' },
     { value: 'rehearsal', label: 'Rehearsal' },
+    { value: 'sectionals', label: 'Sectionals' },
     { value: 'social', label: 'Social Event' },
     { value: 'meeting', label: 'Meeting' },
     { value: 'workshop', label: 'Workshop' },
