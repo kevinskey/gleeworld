@@ -75,20 +75,14 @@ async function fetchSoundCloudTracks(query: string, limit: number): Promise<{tra
   }
 
   try {
-    // First, get an access token using OAuth 2.0 client credentials flow
-    const accessToken = await getAccessToken(clientId, clientSecret);
+    // Try SoundCloud's public API with just client ID first
+    console.log('🎯 Attempting SoundCloud API call with client ID only...');
     
-    if (!accessToken) {
-      console.warn('⚠️ Failed to get access token');
-      return { tracks: getFallbackTracks(), source: 'fallback_auth_failed' };
-    }
-
-    // Use SoundCloud API v2 search endpoint with proper authentication
-    const searchUrl = 'https://api-v2.soundcloud.com/search/tracks';
+    const searchUrl = 'https://api.soundcloud.com/tracks';
     const params = new URLSearchParams({
       q: query,
+      client_id: clientId,
       limit: limit.toString(),
-      linked_partitioning: '1',
       format: 'json'
     });
 
@@ -98,7 +92,6 @@ async function fetchSoundCloudTracks(query: string, limit: number): Promise<{tra
       method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
         'User-Agent': 'SpelmanGleeWorld/1.0'
       }
     });
