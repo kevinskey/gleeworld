@@ -98,6 +98,19 @@ export const UserDashboard = () => {
   // Get user's actual name from profile, fallback to email username
   const displayName = profile?.full_name || user.email?.split('@')[0] || 'Member';
   
+  // Get user's role for title display
+  const getUserTitle = () => {
+    const role = profile?.role;
+    switch (role) {
+      case 'super-admin':
+        return 'Super Admin';
+      case 'admin':
+        return 'Admin';
+      default:
+        return 'Member';
+    }
+  };
+  
   // Mock data for demonstration
   const memberProfile = {
     name: displayName,
@@ -162,7 +175,7 @@ export const UserDashboard = () => {
                     Welcome back, {memberProfile.name}!
                   </h1>
                   <p className={`${welcomeCardSetting?.image_url ? 'text-white/90 drop-shadow' : 'text-gray-600'}`}>
-                    Spelman College Glee Club Member
+                    Spelman College Glee Club {getUserTitle()}
                   </p>
                   <div className="flex flex-wrap gap-2 mt-2">
                     <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
