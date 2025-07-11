@@ -343,7 +343,11 @@ export const GleeWorldLanding = () => {
                 alt="Hero Background"
                 className="hidden md:block w-full h-full object-cover transition-opacity duration-500"
                 onError={(e) => {
-                  e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                  console.log('Hero image failed to load, using fallback');
+                  // Only fallback if the current src is not already the fallback
+                  if (!e.currentTarget.src.includes('unsplash.com')) {
+                    e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                  }
                 }}
               />
               
@@ -353,7 +357,10 @@ export const GleeWorldLanding = () => {
                 alt="Hero Background"
                 className="hidden sm:block md:hidden w-full h-full object-cover transition-opacity duration-500"
                 onError={(e) => {
-                  e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                  console.log('iPad hero image failed to load, using fallback');
+                  if (!e.currentTarget.src.includes('unsplash.com')) {
+                    e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                  }
                 }}
               />
               
@@ -363,7 +370,10 @@ export const GleeWorldLanding = () => {
                 alt="Hero Background"
                 className="block sm:hidden w-full h-full object-contain transition-opacity duration-500"
                 onError={(e) => {
-                  e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                  console.log('Mobile hero image failed to load, using fallback');
+                  if (!e.currentTarget.src.includes('unsplash.com')) {
+                    e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                  }
                 }}
               />
               <div className="absolute inset-0 bg-black bg-opacity-40"></div>
