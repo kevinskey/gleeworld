@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { MapPin, CheckCircle, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AddressSuggestion {
   description: string;
@@ -53,17 +54,13 @@ export const AddressInput = ({
 
       try {
         // Fetch API key from Supabase edge function
-        const response = await fetch('/functions/v1/get-google-maps-config', {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        const { data, error } = await supabase.functions.invoke('get-google-maps-config');
         
-        if (!response.ok) {
-          throw new Error('Failed to get Google Maps API configuration');
+        if (error) {
+          throw new Error(`Failed to get Google Maps API configuration: ${error.message}`);
         }
         
-        const { apiKey } = await response.json();
+        const { apiKey } = data;
         
         return new Promise<void>((resolve, reject) => {
           const script = document.createElement('script');
