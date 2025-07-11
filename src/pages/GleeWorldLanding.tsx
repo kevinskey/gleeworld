@@ -290,11 +290,11 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Upcoming Events Section */}
-      <section id="events" className="py-16 px-4">
-        <div className="container mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">Upcoming Events</h2>
-            <Button variant="link" className="text-blue-600 hover:text-blue-700">
+      <section id="events" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto max-w-7xl">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Upcoming Events</h2>
+            <Button variant="link" className="text-blue-600 hover:text-blue-700 self-start sm:self-auto">
               View All <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </div>
@@ -315,10 +315,10 @@ export const GleeWorldLanding = () => {
             </div>
           ) : events.length > 0 ? (
             <Carousel className="w-full">
-              <CarouselContent className="-ml-2 md:-ml-4">
+              <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
                 {events.map((event) => (
-                  <CarouselItem key={event.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
-                    <Card className="hover:shadow-lg transition-shadow">
+                  <CarouselItem key={event.id} className="pl-1 sm:pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
+                    <Card className="hover:shadow-lg transition-shadow h-full">
                       <div className="h-48 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-lg flex items-center justify-center">
                         <img 
                           src="https://dzzptovqfqausipsgabw.supabase.co/storage/v1/object/public/event-images/event-images/1750597449197-ilkitkdn1ld.png"
@@ -330,17 +330,17 @@ export const GleeWorldLanding = () => {
                           }}
                         />
                       </div>
-                      <CardContent className="p-6">
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">{event.title}</h3>
+                      <CardContent className="p-4 sm:p-6">
+                        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 line-clamp-2">{event.title}</h3>
                         <div className="space-y-1 text-gray-600">
                           <div className="flex items-center">
-                            <Calendar className="h-4 w-4 mr-2" />
-                            {formatDate(event.start_date)}
+                            <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
+                            <span className="text-sm sm:text-base">{formatDate(event.start_date)}</span>
                           </div>
                           {event.location && (
                             <div className="flex items-center">
-                              <MapPin className="h-4 w-4 mr-2" />
-                              {event.location}
+                              <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                              <span className="text-sm sm:text-base line-clamp-1">{event.location}</span>
                             </div>
                           )}
                         </div>
@@ -349,28 +349,28 @@ export const GleeWorldLanding = () => {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious />
-              <CarouselNext />
+              <CarouselPrevious className="hidden sm:flex" />
+              <CarouselNext className="hidden sm:flex" />
             </Carousel>
           ) : (
             <Carousel className="w-full">
-              <CarouselContent className="-ml-2 md:-ml-4">
+              <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
                 {[...Array(6)].map((_, i) => (
-                  <CarouselItem key={i} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
-                    <Card className="hover:shadow-lg transition-shadow">
+                  <CarouselItem key={i} className="pl-1 sm:pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
+                    <Card className="hover:shadow-lg transition-shadow h-full">
                       <div className="h-48 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-lg flex items-center justify-center">
                         <Music className="h-12 w-12 text-blue-600" />
                       </div>
-                      <CardContent className="p-6">
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">Glee Club Rehearsal</h3>
+                      <CardContent className="p-4 sm:p-6">
+                        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Glee Club Rehearsal</h3>
                         <div className="space-y-1 text-gray-600">
                           <div className="flex items-center">
-                            <Calendar className="h-4 w-4 mr-2" />
-                            Aug {19 + i * 2}, 2025
+                            <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
+                            <span className="text-sm sm:text-base">Aug {19 + i * 2}, 2025</span>
                           </div>
                           <div className="flex items-center">
-                            <MapPin className="h-4 w-4 mr-2" />
-                            350 Spelman Lane SW Atlanta GA 30314
+                            <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                            <span className="text-sm sm:text-base line-clamp-1">350 Spelman Lane SW Atlanta GA 30314</span>
                           </div>
                         </div>
                       </CardContent>
@@ -378,31 +378,31 @@ export const GleeWorldLanding = () => {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious />
-              <CarouselNext />
+              <CarouselPrevious className="hidden sm:flex" />
+              <CarouselNext className="hidden sm:flex" />
             </Carousel>
           )}
         </div>
       </section>
 
       {/* Music Player Section */}
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="container mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Listen to the Glee</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+      <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="container mx-auto max-w-7xl">
+          <div className="text-center mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Listen to the Glee</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
               Experience our music collection with our enhanced audio player
             </p>
           </div>
 
           <div className="max-w-4xl mx-auto">
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-6">
+            <Card className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900">Centennial Tour 2025</h3>
-                  <p className="text-gray-600">14 tracks</p>
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Centennial Tour 2025</h3>
+                  <p className="text-gray-600 text-sm sm:text-base">14 tracks</p>
                 </div>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 self-start sm:self-auto">
                   <Button variant="outline" size="sm">
                     <SkipBack className="h-4 w-4" />
                   </Button>
@@ -418,11 +418,11 @@ export const GleeWorldLanding = () => {
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {sampleTracks.map((track, index) => (
                   <div 
                     key={track.id} 
-                    className={`flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
+                    className={`flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
                       currentTrack?.id === track.id ? 'bg-blue-50' : ''
                     }`}
                     onClick={() => setCurrentTrack(track)}
@@ -430,16 +430,16 @@ export const GleeWorldLanding = () => {
                     <img 
                       src={track.image} 
                       alt={track.title}
-                      className="w-12 h-12 rounded object-cover"
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
                       onError={(e) => {
                         e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80";
                       }}
                     />
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">{track.title}</h4>
-                      <p className="text-sm text-gray-600">{track.duration}</p>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">{track.title}</h4>
+                      <p className="text-xs sm:text-sm text-gray-600">{track.duration}</p>
                     </div>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" className="flex-shrink-0">
                       <Play className="h-4 w-4" />
                     </Button>
                   </div>
