@@ -45,9 +45,11 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
           {/* Logo and Navigation */}
           <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
             <Link to="/landing" className="flex items-center gap-1 sm:gap-2">
-              <div className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xs sm:text-sm">GW</span>
-              </div>
+              <img 
+                src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
+                alt="Spelman College Glee Club" 
+                className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 object-contain"
+              />
               <span className="text-white font-semibold text-sm sm:text-base md:text-lg hidden xs:block">
                 GleeWorld
               </span>
