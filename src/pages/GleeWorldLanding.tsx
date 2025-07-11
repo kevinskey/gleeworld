@@ -292,7 +292,7 @@ export const GleeWorldLanding = () => {
                   className="h-12 w-auto"
                 />
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900">GleeWorld</h1>
+                  <h1 className="text-2xl font-bold text-gray-900">GleeWorld</h1>
                   <p className="text-xs text-gray-600">Spelman College</p>
                 </div>
               </div>
@@ -589,7 +589,7 @@ export const GleeWorldLanding = () => {
                       <img 
                         src={track.image} 
                         alt={track.title}
-                        className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded object-contain flex-shrink-0 bg-gray-100"
                         onError={(e) => {
                           e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80";
                         }}
