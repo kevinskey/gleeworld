@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface GleeWorldEvent {
   id: string;
@@ -25,16 +26,25 @@ export const useGleeWorldEvents = () => {
   const [events, setEvents] = useState<GleeWorldEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      let query = supabase
         .from('gw_events')
         .select('*')
-        .eq('is_public', true)
         .gte('start_date', new Date().toISOString())
         .order('start_date', { ascending: true });
+
+      // If user is not authenticated, only show public events
+      if (!user) {
+        query = query.eq('is_public', true);
+      }
+      // If user is authenticated, show all events (no additional filter needed)
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setEvents(data || []);
@@ -70,7 +80,7 @@ export const useGleeWorldEvents = () => {
 
   useEffect(() => {
     fetchEvents();
-  }, []);
+  }, [user]); // Re-fetch events when user authentication status changes
 
   return {
     events,

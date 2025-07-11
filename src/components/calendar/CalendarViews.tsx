@@ -8,10 +8,12 @@ import { EventsList } from "./EventsList";
 import { WeeklyCalendar } from "./WeeklyCalendar";
 import { CreateEventDialog } from "./CreateEventDialog";
 import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const CalendarViews = () => {
   const [activeView, setActiveView] = useState("month");
   const { events, loading, fetchEvents } = useGleeWorldEvents();
+  const { user } = useAuth();
 
   if (loading) {
     return (
@@ -37,7 +39,7 @@ export const CalendarViews = () => {
             <span className="hidden sm:inline">Glee World Calendar</span>
             <span className="sm:hidden">Calendar</span>
           </CardTitle>
-          <CreateEventDialog onEventCreated={fetchEvents} />
+          {user && <CreateEventDialog onEventCreated={fetchEvents} />}
         </div>
       </CardHeader>
       <CardContent className="p-3 md:p-6">
