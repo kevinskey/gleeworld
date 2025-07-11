@@ -38,6 +38,7 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userReadyToPayStatus, setUserReadyToPayStatus] = useState<Record<string, boolean>>({});
   const [userStipendAmounts, setUserStipendAmounts] = useState<Record<string, number>>({});
+  const [userPaidStatus, setUserPaidStatus] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   const getRoleBadgeVariant = (role: string) => {
@@ -168,6 +169,36 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
     }
   };
 
+  // Check if users have already been paid
+  const checkUserPaidStatus = async () => {
+    try {
+      const statusMap: Record<string, boolean> = {};
+      
+      for (const user of users) {
+        // Check if user has any payments in user_payments table
+        const { data: paymentsData, error: paymentsError } = await supabase
+          .from('user_payments')
+          .select('id, amount')
+          .eq('user_id', user.id);
+
+        if (paymentsError) {
+          console.error('Error fetching payments for user:', user.email, paymentsError);
+          continue;
+        }
+
+        const hasBeenPaid = paymentsData && paymentsData.length > 0;
+        statusMap[user.id] = hasBeenPaid;
+        
+        console.log('User', user.email, 'has been paid:', hasBeenPaid);
+      }
+      
+      console.log('Paid status map:', statusMap);
+      setUserPaidStatus(statusMap);
+    } catch (error) {
+      console.error('Error checking user paid status:', error);
+    }
+  };
+
   // Check if user has completed contracts/W9s and is ready to pay
   const checkUserReadyToPayStatus = async () => {
     try {
@@ -250,6 +281,7 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
     if (users.length > 0 && !loading) {
       checkUserReadyToPayStatus();
       fetchUserStipendAmounts();
+      checkUserPaidStatus();
     }
   }, [users, loading]);
 
@@ -466,30 +498,35 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
                        </div>
                       
                        {/* Action Buttons */}
-                       <div className="flex gap-2 flex-shrink-0">
-                         {userStipendAmounts[user.id] && (
-                           <Button
-                             size="sm"
-                             variant="default"
-                             onClick={() => handlePayoutUser(user)}
-                             className="bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none"
-                           >
-                             <DollarSign className="h-4 w-4 sm:mr-0 mr-2" />
-                             <span className="sm:hidden">Payout {formatCurrency(userStipendAmounts[user.id])}</span>
-                             <span className="hidden sm:inline">{formatCurrency(userStipendAmounts[user.id])}</span>
-                           </Button>
-                         )}
-                         {userReadyToPayStatus[user.id] && (
-                           <Button
-                             size="sm"
-                             variant="default"
-                             onClick={() => handleReadyToPay(user)}
-                             className="bg-green-600 hover:bg-green-700 text-white flex-1 sm:flex-none"
-                           >
-                             <DollarSign className="h-4 w-4 sm:mr-0 mr-2" />
-                             <span className="sm:hidden">Ready to Pay</span>
-                           </Button>
-                         )}
+                        <div className="flex gap-2 flex-shrink-0">
+                          {/* Payment Status Display */}
+                          {userPaidStatus[user.id] ? (
+                            <Badge variant="default" className="bg-green-600 text-white">
+                              <DollarSign className="h-3 w-3 mr-1" />
+                              PAID
+                            </Badge>
+                          ) : userStipendAmounts[user.id] ? (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={() => handlePayoutUser(user)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none"
+                            >
+                              <DollarSign className="h-4 w-4 sm:mr-0 mr-2" />
+                              <span className="sm:hidden">Payout {formatCurrency(userStipendAmounts[user.id])}</span>
+                              <span className="hidden sm:inline">{formatCurrency(userStipendAmounts[user.id])}</span>
+                            </Button>
+                          ) : userReadyToPayStatus[user.id] ? (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={() => handleReadyToPay(user)}
+                              className="bg-green-600 hover:bg-green-700 text-white flex-1 sm:flex-none"
+                            >
+                              <DollarSign className="h-4 w-4 sm:mr-0 mr-2" />
+                              <span className="sm:hidden">Ready to Pay</span>
+                            </Button>
+                          ) : null}
                         <Button
                           size="sm"
                           variant="secondary"
