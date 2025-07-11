@@ -27,7 +27,6 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
     event_type: 'performance',
     start_date: '',
     end_date: '',
-    location: '',
     venue_name: '',
     address: '',
     max_attendees: '',
@@ -58,7 +57,7 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
         event_type: formData.event_type,
         start_date: new Date(formData.start_date).toISOString(),
         end_date: formData.end_date ? new Date(formData.end_date).toISOString() : null,
-        location: formData.location || null,
+        location: null,
         venue_name: formData.venue_name || null,
         address: formData.address || null,
         max_attendees: formData.max_attendees ? parseInt(formData.max_attendees) : null,
@@ -86,7 +85,6 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
         event_type: 'performance',
         start_date: '',
         end_date: '',
-        location: '',
         venue_name: '',
         address: '',
         max_attendees: '',
@@ -211,16 +209,6 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="location">Location/City</Label>
-              <Input
-                id="location"
-                value={formData.location}
-                onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                placeholder="e.g., New York, NY"
-              />
-            </div>
-
             <AddressInput
               id="address"
               label="Full Address"
@@ -230,15 +218,6 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
               onPlaceSelect={(place) => {
                 if (place.formatted_address) {
                   setFormData(prev => ({ ...prev, address: place.formatted_address || '' }));
-                }
-                // Auto-fill location if not already filled
-                if (!formData.location && place.address_components) {
-                  const city = place.address_components.find(comp => 
-                    comp.types.includes('locality') || comp.types.includes('administrative_area_level_1')
-                  );
-                  if (city) {
-                    setFormData(prev => ({ ...prev, location: city.long_name }));
-                  }
                 }
               }}
             />

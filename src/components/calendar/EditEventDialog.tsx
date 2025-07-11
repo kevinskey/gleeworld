@@ -56,7 +56,6 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
     event_type: 'performance',
     start_date: '',
     end_date: '',
-    location: '',
     venue_name: '',
     address: '',
     max_attendees: '',
@@ -97,7 +96,6 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
         event_type: event.event_type || 'performance',
         start_date: formatDateForInput(event.start_date),
         end_date: event.end_date ? formatDateForInput(event.end_date) : '',
-        location: event.location || '',
         venue_name: event.venue_name || '',
         address: event.address || '',
         max_attendees: event.max_attendees?.toString() || '',
@@ -120,7 +118,7 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
         event_type: formData.event_type,
         start_date: new Date(formData.start_date).toISOString(),
         end_date: formData.end_date ? new Date(formData.end_date).toISOString() : null,
-        location: formData.location || null,
+        location: null,
         venue_name: formData.venue_name || null,
         address: formData.address || null,
         max_attendees: formData.max_attendees ? parseInt(formData.max_attendees) : null,
@@ -338,28 +336,15 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="venue_name" className="text-sm font-medium">Venue Name</Label>
-                  <Input
-                    id="venue_name"
-                    value={formData.venue_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, venue_name: e.target.value }))}
-                    placeholder="e.g., Memorial Auditorium"
-                    className="animate-fade-in"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="location" className="text-sm font-medium">Location/City</Label>
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                    placeholder="e.g., New York, NY"
-                    className="animate-fade-in"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="venue_name" className="text-sm font-medium">Venue Name</Label>
+                <Input
+                  id="venue_name"
+                  value={formData.venue_name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, venue_name: e.target.value }))}
+                  placeholder="e.g., Memorial Auditorium"
+                  className="animate-fade-in"
+                />
               </div>
 
               <AddressInput
@@ -372,15 +357,6 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
                 onPlaceSelect={(place) => {
                   if (place.formatted_address) {
                     setFormData(prev => ({ ...prev, address: place.formatted_address || '' }));
-                  }
-                  // Auto-fill location if not already filled
-                  if (!formData.location && place.address_components) {
-                    const city = place.address_components.find(comp => 
-                      comp.types.includes('locality') || comp.types.includes('administrative_area_level_1')
-                    );
-                    if (city) {
-                      setFormData(prev => ({ ...prev, location: city.long_name }));
-                    }
                   }
                 }}
               />
