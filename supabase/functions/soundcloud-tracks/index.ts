@@ -63,6 +63,8 @@ serve(async (req) => {
 async function fetchSoundCloudTracks(query: string, limit: number): Promise<Track[]> {
   const clientId = Deno.env.get('SOUNDCLOUD_CLIENT_ID');
   
+  console.log('🔑 Checking SOUNDCLOUD_CLIENT_ID:', clientId ? 'Present' : 'Missing');
+  
   if (!clientId) {
     console.warn('⚠️ SOUNDCLOUD_CLIENT_ID not configured');
     return getFallbackTracks();
