@@ -75,9 +75,36 @@ async function fetchSoundCloudTracks(query: string, limit: number): Promise<{tra
   }
 
   try {
-    // Try SoundCloud's public API with just client ID first
-    console.log('🎯 Attempting SoundCloud API call with client ID only...');
+    // Test different SoundCloud endpoints to find one that works
+    console.log('🎯 Testing SoundCloud API endpoints...');
     
+    // Try the resolve endpoint first (more reliable)
+    const resolveUrl = 'https://api.soundcloud.com/resolve';
+    const testParams = new URLSearchParams({
+      url: 'https://soundcloud.com/spelman-college',
+      client_id: clientId,
+      format: 'json'
+    });
+    
+    console.log(`📡 Testing resolve endpoint: ${resolveUrl}?${testParams.toString()}`);
+    
+    const testResponse = await fetch(`${resolveUrl}?${testParams.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'SpelmanGleeWorld/1.0'
+      }
+    });
+    
+    console.log(`🔍 Resolve test response: ${testResponse.status} ${testResponse.statusText}`);
+    
+    if (testResponse.ok) {
+      console.log('✅ SoundCloud API is accessible, proceeding with track search...');
+    } else {
+      console.log('❌ SoundCloud API test failed, using alternative approach...');
+    }
+
+    // Now try to search for tracks
     const searchUrl = 'https://api.soundcloud.com/tracks';
     const params = new URLSearchParams({
       q: query,
