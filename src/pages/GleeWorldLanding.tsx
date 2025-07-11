@@ -71,11 +71,11 @@ export const GleeWorldLanding = () => {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [tracksLoading, setTracksLoading] = useState(true);
 
-  // Define sample tracks first so they can be used as fallback
+  // Define sample tracks with actual music (using public domain/royalty-free samples)
   const sampleTracks = [
-    { id: '1', title: 'Anchored in the Lord', duration: '3:45', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' },
-    { id: '2', title: 'A Choice to Change the World', duration: '4:12', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' },
-    { id: '3', title: 'Children Go Where I Send Thee', duration: '3:28', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' }
+    { id: '1', title: 'Anchored in the Lord', duration: '3:45', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/gong-1.wav' },
+    { id: '2', title: 'A Choice to Change the World', duration: '4:12', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/wind-chimes-1.wav' },
+    { id: '3', title: 'Children Go Where I Send Thee', duration: '3:28', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/piano-chord-1.wav' }
   ];
 
   useEffect(() => {
@@ -111,29 +111,23 @@ export const GleeWorldLanding = () => {
         console.log('Starting to fetch SoundCloud tracks...');
         setTracksLoading(true);
         
-        // For now, let's just use sample tracks and add console logging
-        console.log('Using sample tracks for now');
-        setTracks(sampleTracks);
-        
-        // Commenting out SoundCloud call temporarily to test the UI
-        /*
-        const { data, error } = await supabase.functions.invoke('soundcloud-tracks', {
-          method: 'GET'
-        });
+        // Try to fetch from SoundCloud first
+        const { data, error } = await supabase.functions.invoke('soundcloud-tracks');
         
         if (error) {
           console.error('Error fetching SoundCloud tracks:', error);
+          console.log('Falling back to sample tracks');
           setTracks(sampleTracks);
-        } else if (data?.tracks) {
+        } else if (data?.tracks && data.tracks.length > 0) {
           console.log('Got SoundCloud tracks:', data.tracks);
           setTracks(data.tracks);
         } else {
           console.log('No tracks in response, using sample tracks');
           setTracks(sampleTracks);
         }
-        */
       } catch (error) {
         console.error('Error calling SoundCloud function:', error);
+        console.log('Falling back to sample tracks');
         setTracks(sampleTracks);
       } finally {
         setTracksLoading(false);
