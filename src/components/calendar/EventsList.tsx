@@ -9,9 +9,10 @@ import { EventDetailDialog } from "./EventDetailDialog";
 
 interface EventsListProps {
   events: GleeWorldEvent[];
+  onEventUpdated?: () => void;
 }
 
-export const EventsList = ({ events }: EventsListProps) => {
+export const EventsList = ({ events, onEventUpdated }: EventsListProps) => {
   const [selectedEvent, setSelectedEvent] = useState<GleeWorldEvent | null>(null);
 
   const getEventTypeColor = (type: string | null) => {
@@ -112,6 +113,7 @@ export const EventsList = ({ events }: EventsListProps) => {
         event={selectedEvent}
         open={!!selectedEvent}
         onOpenChange={(open) => !open && setSelectedEvent(null)}
+        onEventUpdated={onEventUpdated}
       />
     </div>
   );

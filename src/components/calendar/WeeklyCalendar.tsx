@@ -8,9 +8,10 @@ import { EventDetailDialog } from "./EventDetailDialog";
 
 interface WeeklyCalendarProps {
   events: GleeWorldEvent[];
+  onEventUpdated?: () => void;
 }
 
-export const WeeklyCalendar = ({ events }: WeeklyCalendarProps) => {
+export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<GleeWorldEvent | null>(null);
 
@@ -117,6 +118,7 @@ export const WeeklyCalendar = ({ events }: WeeklyCalendarProps) => {
         event={selectedEvent}
         open={!!selectedEvent}
         onOpenChange={(open) => !open && setSelectedEvent(null)}
+        onEventUpdated={onEventUpdated}
       />
     </div>
   );

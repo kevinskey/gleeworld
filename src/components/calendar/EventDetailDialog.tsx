@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,18 +7,33 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, MapPinIcon, ClockIcon, UsersIcon, ExternalLinkIcon, FileText, DollarSign } from "lucide-react";
+import { CalendarIcon, MapPinIcon, ClockIcon, UsersIcon, ExternalLinkIcon, FileText, DollarSign, EditIcon, MoreHorizontalIcon } from "lucide-react";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
+import { EditEventDialog } from "./EditEventDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface EventDetailDialogProps {
   event: GleeWorldEvent | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onEventUpdated?: () => void;
 }
 
-export const EventDetailDialog = ({ event, open, onOpenChange }: EventDetailDialogProps) => {
+export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }: EventDetailDialogProps) => {
+  const { user } = useAuth();
+  const [editOpen, setEditOpen] = useState(false);
+  
   if (!event) return null;
+
+  const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
 
   const getEventTypeColor = (type: string | null) => {
     switch (type) {
@@ -49,11 +65,57 @@ export const EventDetailDialog = ({ event, open, onOpenChange }: EventDetailDial
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <div className="flex items-center gap-2 mb-2">
-            <DialogTitle className="text-xl">{event.title}</DialogTitle>
-            <Badge className={getEventTypeColor(event.event_type)}>
-              {event.event_type || 'Event'}
-            </Badge>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <DialogTitle className="text-xl">{event.title}</DialogTitle>
+              <Badge className={getEventTypeColor(event.event_type)}>
+                {event.event_type || 'Event'}
+              </Badge>
+              {event.status && event.status !== 'scheduled' && (
+                <Badge 
+                  className={
+                    event.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                    event.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                    event.status === 'postponed' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-800'
+                  }
+                >
+                  {event.status}
+                </Badge>
+              )}
+            </div>
+            
+            {canEdit && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover-scale">
+                    <MoreHorizontalIcon className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                    <EditIcon className="h-4 w-4 mr-2" />
+                    Edit Event
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleAddToCalendar}>
+                    <CalendarIcon className="h-4 w-4 mr-2" />
+                    Add to Calendar
+                  </DropdownMenuItem>
+                  {event.location && (
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        const mapsUrl = `https://maps.google.com/maps?q=${encodeURIComponent(event.location + (event.address ? `, ${event.address}` : ''))}`;
+                        window.open(mapsUrl, '_blank');
+                      }}
+                    >
+                      <MapPinIcon className="h-4 w-4 mr-2" />
+                      Get Directions
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </DialogHeader>
         
@@ -186,6 +248,17 @@ export const EventDetailDialog = ({ event, open, onOpenChange }: EventDetailDial
           </div>
         </div>
       </DialogContent>
+      
+      <EditEventDialog
+        event={event}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onEventUpdated={() => {
+          setEditOpen(false);
+          onOpenChange(false);
+          onEventUpdated?.();
+        }}
+      />
     </Dialog>
   );
 };

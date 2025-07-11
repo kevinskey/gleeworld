@@ -119,6 +119,10 @@ export const UpcomingEvents = ({ limit = 6, showHeader = true }: UpcomingEventsP
           event={selectedEvent}
           open={!!selectedEvent}
           onOpenChange={(open) => !open && setSelectedEvent(null)}
+          onEventUpdated={() => {
+            // Refresh events when updated
+            setSelectedEvent(null);
+          }}
         />
       </CardContent>
     </Card>

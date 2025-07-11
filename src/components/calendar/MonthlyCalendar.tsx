@@ -8,9 +8,10 @@ import { EventDetailDialog } from "./EventDetailDialog";
 
 interface MonthlyCalendarProps {
   events: GleeWorldEvent[];
+  onEventUpdated?: () => void;
 }
 
-export const MonthlyCalendar = ({ events }: MonthlyCalendarProps) => {
+export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<GleeWorldEvent | null>(null);
 
@@ -119,6 +120,7 @@ export const MonthlyCalendar = ({ events }: MonthlyCalendarProps) => {
         event={selectedEvent}
         open={!!selectedEvent}
         onOpenChange={(open) => !open && setSelectedEvent(null)}
+        onEventUpdated={onEventUpdated}
       />
     </div>
   );

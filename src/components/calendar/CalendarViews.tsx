@@ -63,15 +63,15 @@ export const CalendarViews = () => {
           </TabsList>
           
           <TabsContent value="month" className="mt-3 md:mt-6">
-            <MonthlyCalendar events={events} />
+            <MonthlyCalendar events={events} onEventUpdated={fetchEvents} />
           </TabsContent>
           
           <TabsContent value="week" className="mt-3 md:mt-6">
-            <WeeklyCalendar events={events} />
+            <WeeklyCalendar events={events} onEventUpdated={fetchEvents} />
           </TabsContent>
           
           <TabsContent value="list" className="mt-3 md:mt-6">
-            <EventsList events={events} />
+            <EventsList events={events} onEventUpdated={fetchEvents} />
           </TabsContent>
         </Tabs>
       </CardContent>
