@@ -425,11 +425,8 @@ export const GleeWorldLanding = () => {
       {/* Upcoming Events Section */}
       <section id="events" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 w-full">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Upcoming Events</h2>
-            <Button variant="link" className="text-blue-600 hover:text-blue-700 self-start sm:self-auto">
-              View All <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
-          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Upcoming Events</h2>
+        </div>
           
           
           {loading ? (
@@ -450,7 +447,14 @@ export const GleeWorldLanding = () => {
               <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
                 {events.map((event) => (
                   <CarouselItem key={event.id} className="pl-1 sm:pl-2 md:pl-4 basis-full">
-                    <Card className="hover:shadow-lg transition-shadow h-full w-full">
+                    <Card className="hover:shadow-lg transition-shadow h-full w-full relative group">
+                      {/* Hover overlay button */}
+                      <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <Button size="sm" className="bg-white/90 text-gray-900 hover:bg-white shadow-lg backdrop-blur-sm">
+                          View All <ArrowRight className="ml-1 h-4 w-4" />
+                        </Button>
+                      </div>
+                      
                       <div className="h-48 sm:h-64 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-lg flex items-center justify-center">
                         <img 
                           src="https://dzzptovqfqausipsgabw.supabase.co/storage/v1/object/public/event-images/event-images/1750597449197-ilkitkdn1ld.png"
@@ -492,7 +496,14 @@ export const GleeWorldLanding = () => {
               <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
                 {[...Array(6)].map((_, i) => (
                   <CarouselItem key={i} className="pl-1 sm:pl-2 md:pl-4 basis-full">
-                    <Card className="hover:shadow-lg transition-shadow h-full w-full">
+                    <Card className="hover:shadow-lg transition-shadow h-full w-full relative group">
+                      {/* Hover overlay button */}
+                      <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <Button size="sm" className="bg-white/90 text-gray-900 hover:bg-white shadow-lg backdrop-blur-sm">
+                          View All <ArrowRight className="ml-1 h-4 w-4" />
+                        </Button>
+                      </div>
+                      
                       <div className="h-48 sm:h-64 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-lg flex items-center justify-center">
                         <Music className="h-12 w-12 text-blue-600" />
                       </div>
