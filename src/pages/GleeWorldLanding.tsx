@@ -71,6 +71,13 @@ export const GleeWorldLanding = () => {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [tracksLoading, setTracksLoading] = useState(true);
 
+  // Define sample tracks first so they can be used as fallback
+  const sampleTracks = [
+    { id: '1', title: 'Anchored in the Lord', duration: '3:45', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' },
+    { id: '2', title: 'A Choice to Change the World', duration: '4:12', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' },
+    { id: '3', title: 'Children Go Where I Send Thee', duration: '3:28', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' }
+  ];
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -101,27 +108,32 @@ export const GleeWorldLanding = () => {
 
     const fetchSoundCloudTracks = async () => {
       try {
+        console.log('Starting to fetch SoundCloud tracks...');
         setTracksLoading(true);
+        
+        // For now, let's just use sample tracks and add console logging
+        console.log('Using sample tracks for now');
+        setTracks(sampleTracks);
+        
+        // Commenting out SoundCloud call temporarily to test the UI
+        /*
         const { data, error } = await supabase.functions.invoke('soundcloud-tracks', {
-          body: { 
-            q: 'Spelman Glee Club', 
-            limit: 10 
-          }
+          method: 'GET'
         });
         
         if (error) {
           console.error('Error fetching SoundCloud tracks:', error);
-          // Fall back to sample tracks if SoundCloud fails
           setTracks(sampleTracks);
         } else if (data?.tracks) {
+          console.log('Got SoundCloud tracks:', data.tracks);
           setTracks(data.tracks);
         } else {
-          // Fall back to sample tracks if no data
+          console.log('No tracks in response, using sample tracks');
           setTracks(sampleTracks);
         }
+        */
       } catch (error) {
         console.error('Error calling SoundCloud function:', error);
-        // Fall back to sample tracks on error
         setTracks(sampleTracks);
       } finally {
         setTracksLoading(false);
@@ -196,11 +208,6 @@ export const GleeWorldLanding = () => {
     }
   };
 
-  const sampleTracks = [
-    { id: '1', title: 'Anchored in the Lord', duration: '3:45', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' },
-    { id: '2', title: 'A Choice to Change the World', duration: '4:12', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' },
-    { id: '3', title: 'Children Go Where I Send Thee', duration: '3:28', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' }
-  ];
 
   // Audio player functionality
   const playTrack = (track: Track) => {
