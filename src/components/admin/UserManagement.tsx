@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "@/hooks/useUsers";
 import { AddUserDialog } from "./AddUserDialog";
 import { DeleteUserDialog } from "./DeleteUserDialog";
+import { EditUserDialog } from "./EditUserDialog";
 import { UserImportDialog } from "./UserImportDialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,6 +33,7 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [addUserOpen, setAddUserOpen] = useState(false);
   const [deleteUserOpen, setDeleteUserOpen] = useState(false);
+  const [editUserOpen, setEditUserOpen] = useState(false);
   const [importUsersOpen, setImportUsersOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userReadyToPayStatus, setUserReadyToPayStatus] = useState<Record<string, boolean>>({});
@@ -93,7 +95,8 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
     });
 
   const handleEditUser = (user: User) => {
-    navigate(`/profile?userId=${user.id}`);
+    setSelectedUser(user);
+    setEditUserOpen(true);
   };
 
   const handleDeleteUser = (user: User) => {
@@ -520,6 +523,13 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
         open={addUserOpen}
         onOpenChange={setAddUserOpen}
         onUserAdded={onRefetch}
+      />
+
+      <EditUserDialog 
+        user={selectedUser}
+        open={editUserOpen}
+        onOpenChange={setEditUserOpen}
+        onUserUpdated={onRefetch}
       />
 
       <DeleteUserDialog
