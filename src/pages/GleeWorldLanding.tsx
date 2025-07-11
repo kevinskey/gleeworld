@@ -108,29 +108,33 @@ export const GleeWorldLanding = () => {
 
     const fetchSoundCloudTracks = async () => {
       try {
-        console.log('Starting to fetch SoundCloud tracks...');
+        console.log('🎵 Starting SoundCloud fetch...');
         setTracksLoading(true);
         
         // Try to fetch from SoundCloud first
         const { data, error } = await supabase.functions.invoke('soundcloud-tracks');
         
+        console.log('📡 SoundCloud API response:', { data, error });
+        
         if (error) {
-          console.error('Error fetching SoundCloud tracks:', error);
-          console.log('Falling back to sample tracks');
+          console.error('❌ Error fetching SoundCloud tracks:', error);
+          console.log('🔄 Falling back to sample tracks');
           setTracks(sampleTracks);
         } else if (data?.tracks && data.tracks.length > 0) {
-          console.log('Got SoundCloud tracks:', data.tracks);
+          console.log('✅ Got SoundCloud tracks:', data.tracks.length, 'tracks');
+          console.log('🎧 First track:', data.tracks[0]);
           setTracks(data.tracks);
         } else {
-          console.log('No tracks in response, using sample tracks');
+          console.log('⚠️ No tracks in response, using sample tracks');
           setTracks(sampleTracks);
         }
       } catch (error) {
-        console.error('Error calling SoundCloud function:', error);
-        console.log('Falling back to sample tracks');
+        console.error('💥 Error calling SoundCloud function:', error);
+        console.log('🔄 Falling back to sample tracks');
         setTracks(sampleTracks);
       } finally {
         setTracksLoading(false);
+        console.log('🏁 SoundCloud fetch complete');
       }
     };
 
