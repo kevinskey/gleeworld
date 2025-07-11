@@ -55,6 +55,8 @@ interface Track {
   duration: string;
   image: string;
   audioUrl: string;
+  user?: string;
+  permalink_url?: string;
 }
 
 export const GleeWorldLanding = () => {
@@ -66,6 +68,8 @@ export const GleeWorldLanding = () => {
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [tracksLoading, setTracksLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -95,7 +99,37 @@ export const GleeWorldLanding = () => {
       }
     };
 
+    const fetchSoundCloudTracks = async () => {
+      try {
+        setTracksLoading(true);
+        const { data, error } = await supabase.functions.invoke('soundcloud-tracks', {
+          body: { 
+            q: 'Spelman Glee Club', 
+            limit: 10 
+          }
+        });
+        
+        if (error) {
+          console.error('Error fetching SoundCloud tracks:', error);
+          // Fall back to sample tracks if SoundCloud fails
+          setTracks(sampleTracks);
+        } else if (data?.tracks) {
+          setTracks(data.tracks);
+        } else {
+          // Fall back to sample tracks if no data
+          setTracks(sampleTracks);
+        }
+      } catch (error) {
+        console.error('Error calling SoundCloud function:', error);
+        // Fall back to sample tracks on error
+        setTracks(sampleTracks);
+      } finally {
+        setTracksLoading(false);
+      }
+    };
+
     fetchData();
+    fetchSoundCloudTracks();
   }, []);
 
   // Auto-advance slides based on individual slide duration
@@ -450,33 +484,56 @@ export const GleeWorldLanding = () => {
                 </div>
               </div>
 
-              <div className="space-y-2 sm:space-y-3">
-                {sampleTracks.map((track, index) => (
-                  <div 
-                    key={track.id} 
-                    className={`flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
-                      currentTrack?.id === track.id ? 'bg-blue-50' : ''
-                    }`}
-                    onClick={() => playTrack(track)}
-                  >
-                    <img 
-                      src={track.image} 
-                      alt={track.title}
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
-                      onError={(e) => {
-                        e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80";
-                      }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">{track.title}</h4>
-                      <p className="text-xs sm:text-sm text-gray-600">{track.duration}</p>
+              {tracksLoading ? (
+                <div className="space-y-2 sm:space-y-3">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 rounded-lg animate-pulse">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded flex-shrink-0"></div>
+                      <div className="flex-1 min-w-0">
+                        <div className="h-4 bg-gray-200 rounded mb-1"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      </div>
+                      <div className="w-8 h-8 bg-gray-200 rounded flex-shrink-0"></div>
                     </div>
-                    <Button variant="ghost" size="sm" className="flex-shrink-0">
-                      <Play className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-2 sm:space-y-3">
+                  {tracks.map((track, index) => (
+                    <div 
+                      key={track.id} 
+                      className={`flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
+                        currentTrack?.id === track.id ? 'bg-blue-50' : ''
+                      }`}
+                      onClick={() => playTrack(track)}
+                    >
+                      <img 
+                        src={track.image} 
+                        alt={track.title}
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
+                        onError={(e) => {
+                          e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80";
+                        }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">{track.title}</h4>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs sm:text-sm text-gray-600">{track.duration}</p>
+                          {track.user && (
+                            <>
+                              <span className="text-gray-400">•</span>
+                              <p className="text-xs sm:text-sm text-gray-500">{track.user}</p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" className="flex-shrink-0">
+                        <Play className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </Card>
           </div>
         </div>
