@@ -76,12 +76,21 @@ export const UpcomingEvents = ({ limit = 6, showHeader = true }: UpcomingEventsP
           </div>
         ) : (
           <div className="space-y-2 md:space-y-4">
-            {upcomingEvents.map(event => (
-              <EventHoverCard key={event.id} event={event} canEdit={false}>
-                <div
-                  className="flex items-start gap-2 md:gap-4 p-2 md:p-4 border border-border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => setSelectedEvent(event)}
-                >
+            {upcomingEvents.map(event => {
+              const isSelected = selectedEvent?.id === event.id;
+              return (
+                <EventHoverCard key={event.id} event={event} canEdit={false}>
+                  <div
+                    className={`
+                      flex items-start gap-2 md:gap-4 p-3 md:p-4 border border-border rounded-lg 
+                      cursor-pointer transition-all duration-200 touch-manipulation
+                      ${isSelected 
+                        ? 'ring-2 ring-primary ring-offset-2 scale-[1.01] shadow-lg border-primary'
+                        : 'hover:shadow-lg hover:border-primary/50 active:scale-[0.99]'
+                      }
+                    `}
+                    onClick={() => setSelectedEvent(event)}
+                  >
                 <div className="text-center min-w-[40px] md:min-w-[60px]">
                   <div className="text-lg md:text-2xl font-bold text-primary">
                     {format(new Date(event.start_date), 'd')}
@@ -115,7 +124,8 @@ export const UpcomingEvents = ({ limit = 6, showHeader = true }: UpcomingEventsP
                 </div>
               </div>
               </EventHoverCard>
-            ))}
+            );
+            })}
           </div>
         )}
         

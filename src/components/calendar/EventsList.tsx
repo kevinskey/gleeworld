@@ -79,7 +79,13 @@ export const EventsList = ({ events, onEventUpdated }: EventsListProps) => {
         return (
           <EventHoverCard key={event.id} event={event} canEdit={canEdit}>
             <Card 
-              className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-l-4 border-l-primary/30 hover:border-l-primary active:scale-[0.98] touch-manipulation"
+              className={`
+                transition-all duration-200 cursor-pointer group border-l-4 touch-manipulation
+                ${(selectedEvent?.id === event.id || editingEvent?.id === event.id)
+                  ? 'ring-2 ring-primary ring-offset-2 scale-[1.01] shadow-lg border-l-primary'
+                  : 'hover:shadow-lg border-l-primary/30 hover:border-l-primary active:scale-[0.99]'
+                }
+              `}
               onClick={() => handleEventClick(event)}
             >
             <CardContent className="p-4">

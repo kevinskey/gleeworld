@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -19,6 +19,18 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<GleeWorldEvent | null>(null);
   const [editingEvent, setEditingEvent] = useState<GleeWorldEvent | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Handle responsive behavior
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -127,16 +139,20 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
                 {format(day, 'd')}
               </div>
               <div className="space-y-0.5 md:space-y-1 mt-1">
-                {dayEvents.slice(0, window.innerWidth < 768 ? 1 : 2).map(event => {
+                {dayEvents.slice(0, isMobile ? 1 : 2).map(event => {
                   const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
+                  const isSelected = (editingEvent?.id === event.id) || (selectedEvent?.id === event.id);
                   return (
                     <EventHoverCard key={event.id} event={event} canEdit={canEdit}>
                       <div
                         className={`
-                          text-[10px] sm:text-xs p-0.5 sm:p-1 rounded cursor-pointer 
-                          transition-all duration-200 hover:shadow-sm
-                          ${canEdit ? 'hover:scale-105 active:scale-95' : 'hover:opacity-80'}
-                          touch-manipulation
+                          text-[10px] sm:text-xs p-1 sm:p-2 rounded-md cursor-pointer 
+                          transition-all duration-200 min-h-[28px] sm:min-h-[32px]
+                          touch-manipulation border border-transparent
+                          ${isSelected 
+                            ? 'ring-2 ring-primary ring-offset-1 scale-105 shadow-md' 
+                            : 'hover:shadow-md hover:scale-[1.02] active:scale-[0.98]'
+                          }
                           ${getEventTypeColor(event.event_type)}
                         `}
                         onClick={(e) => {
@@ -146,21 +162,24 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
                         title={`${event.title}${canEdit ? ' (Tap to edit)' : ' (Tap for details)'}`}
                       >
                         <div className="flex items-center gap-1 w-full">
-                          <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-current rounded-full flex-shrink-0" />
-                          <div className="truncate font-medium flex-1">
+                          <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-current rounded-full flex-shrink-0 opacity-70" />
+                          <div className="truncate font-medium flex-1 leading-tight">
                             {event.title}
                           </div>
+                          {canEdit && (
+                            <div className="w-1 h-1 bg-primary/60 rounded-full flex-shrink-0" />
+                          )}
                         </div>
-                        <div className="text-[8px] sm:text-[10px] opacity-80 truncate">
+                        <div className="text-[8px] sm:text-[10px] opacity-70 truncate mt-0.5">
                           {format(new Date(event.start_date), 'h:mm a')}
                         </div>
                       </div>
                     </EventHoverCard>
                   );
                 })}
-                {dayEvents.length > (window.innerWidth < 768 ? 1 : 2) && (
-                  <div className="text-[8px] md:text-xs text-muted-foreground text-center">
-                    +{dayEvents.length - (window.innerWidth < 768 ? 1 : 2)}
+                {dayEvents.length > (isMobile ? 1 : 2) && (
+                  <div className="text-[8px] md:text-xs text-muted-foreground text-center py-1 hover:text-primary cursor-pointer">
+                    +{dayEvents.length - (isMobile ? 1 : 2)} more
                   </div>
                 )}
               </div>

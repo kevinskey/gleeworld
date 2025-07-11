@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -19,6 +19,18 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<GleeWorldEvent | null>(null);
   const [editingEvent, setEditingEvent] = useState<GleeWorldEvent | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Handle responsive behavior
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const weekStart = startOfWeek(currentDate);
   const weekEnd = endOfWeek(currentDate);
@@ -145,15 +157,20 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
               <div className="space-y-1 sm:space-y-2">
                 {dayEvents.length > 0 ? (
                   <>
-                    {dayEvents.slice(0, window.innerWidth < 640 ? 2 : 4).map(event => {
+                    {dayEvents.slice(0, isMobile ? 2 : 4).map(event => {
                       const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
+                      const isSelected = (editingEvent?.id === event.id) || (selectedEvent?.id === event.id);
+                      
                       return (
                         <EventHoverCard key={event.id} event={event} canEdit={canEdit}>
                           <div
                             className={`
-                              p-2 rounded cursor-pointer transition-all duration-200
-                              ${canEdit ? 'hover:scale-[1.02] active:scale-[0.98]' : 'hover:opacity-80'}
-                              touch-manipulation shadow-sm hover:shadow-md
+                              p-2 rounded-md cursor-pointer transition-all duration-200 border border-transparent
+                              ${isSelected 
+                                ? 'ring-2 ring-primary ring-offset-1 scale-[1.02] shadow-md' 
+                                : 'hover:scale-[1.02] active:scale-[0.98] hover:shadow-md'
+                              }
+                              touch-manipulation
                               ${getEventTypeColor(event.event_type)}
                             `}
                             onClick={() => handleEventClick(event)}
@@ -166,12 +183,10 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
                                   {event.title}
                                 </div>
                                 {canEdit && (
-                                  <Badge variant="outline" className="text-[10px] ml-1 bg-white/50">
-                                    Edit
-                                  </Badge>
+                                  <div className="w-1.5 h-1.5 bg-primary rounded-full ml-1" />
                                 )}
                               </div>
-                              <div className="text-[10px] opacity-80">
+                              <div className="text-[10px] opacity-70">
                                 {format(new Date(event.start_date), 'h:mm a')}
                                 {event.end_date && (
                                   <> - {format(new Date(event.end_date), 'h:mm a')}</>
@@ -182,16 +197,14 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
                             {/* Desktop layout - side by side */}
                             <div className="hidden sm:block">
                               <div className="flex items-center gap-2 mb-1">
-                                <Badge variant="secondary" className="text-[10px] px-1 shrink-0">
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5 shrink-0">
                                   {format(new Date(event.start_date), 'h:mm a')}
                                 </Badge>
                                 {canEdit && (
-                                  <Badge variant="outline" className="text-[10px] bg-white/50">
-                                    Edit
-                                  </Badge>
+                                  <div className="w-1.5 h-1.5 bg-primary rounded-full" />
                                 )}
                               </div>
-                              <div className="text-xs font-medium line-clamp-2">
+                              <div className="text-xs font-medium line-clamp-2 leading-tight">
                                 {event.title}
                               </div>
                             </div>
@@ -201,19 +214,19 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
                     })}
                     
                     {/* More events indicator */}
-                    {dayEvents.length > (window.innerWidth < 640 ? 2 : 4) && (
+                    {dayEvents.length > (isMobile ? 2 : 4) && (
                       <div 
-                        className="text-xs text-muted-foreground text-center p-1 cursor-pointer hover:text-primary"
+                        className="text-xs text-muted-foreground text-center p-2 cursor-pointer hover:text-primary transition-colors rounded border border-dashed border-muted-foreground/30"
                         onClick={() => {
                           if (dayEvents.length > 0) handleEventClick(dayEvents[0]);
                         }}
                       >
-                        +{dayEvents.length - (window.innerWidth < 640 ? 2 : 4)} more
+                        +{dayEvents.length - (isMobile ? 2 : 4)} more events
                       </div>
                     )}
                   </>
                 ) : (
-                  <div className="text-xs text-muted-foreground text-center py-2 sm:py-4">
+                  <div className="text-xs text-muted-foreground text-center py-4 sm:py-6 italic">
                     No events
                   </div>
                 )}
