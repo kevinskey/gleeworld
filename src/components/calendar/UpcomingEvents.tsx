@@ -48,61 +48,63 @@ export const UpcomingEvents = ({ limit = 6, showHeader = true }: UpcomingEventsP
   return (
     <Card>
       {showHeader && (
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <CalendarIcon className="h-5 w-5" />
-              Upcoming Events
+        <CardHeader className="pb-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+              <CalendarIcon className="h-4 w-4 md:h-5 md:w-5" />
+              <span className="hidden sm:inline">Upcoming Events</span>
+              <span className="sm:hidden">Events</span>
             </CardTitle>
-            <Button variant="ghost" size="sm">
-              View All
-              <ArrowRightIcon className="h-4 w-4 ml-1" />
+            <Button variant="ghost" size="sm" className="text-xs md:text-sm h-7 md:h-8 px-2 md:px-3">
+              <span className="hidden sm:inline">View All</span>
+              <span className="sm:hidden">All</span>
+              <ArrowRightIcon className="h-3 w-3 md:h-4 md:w-4 ml-1" />
             </Button>
           </div>
         </CardHeader>
       )}
       
-      <CardContent className={showHeader ? "" : "pt-6"}>
+      <CardContent className={showHeader ? "p-3 md:p-6" : "pt-3 md:pt-6 p-3 md:p-6"}>
         {upcomingEvents.length === 0 ? (
-          <div className="text-center py-8">
-            <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No upcoming events</h3>
-            <p className="text-muted-foreground">Check back later for new events!</p>
+          <div className="text-center py-4 md:py-8">
+            <CalendarIcon className="h-8 w-8 md:h-12 md:w-12 mx-auto text-muted-foreground mb-2 md:mb-4" />
+            <h3 className="text-base md:text-lg font-semibold mb-1 md:mb-2">No upcoming events</h3>
+            <p className="text-muted-foreground text-sm md:text-base">Check back later for new events!</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2 md:space-y-4">
             {upcomingEvents.map(event => (
               <div
                 key={event.id}
-                className="flex items-start gap-4 p-4 border border-border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                className="flex items-start gap-2 md:gap-4 p-2 md:p-4 border border-border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => setSelectedEvent(event)}
               >
-                <div className="text-center min-w-[60px]">
-                  <div className="text-2xl font-bold text-primary">
+                <div className="text-center min-w-[40px] md:min-w-[60px]">
+                  <div className="text-lg md:text-2xl font-bold text-primary">
                     {format(new Date(event.start_date), 'd')}
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-xs md:text-sm text-muted-foreground">
                     {format(new Date(event.start_date), 'MMM')}
                   </div>
                 </div>
                 
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-semibold">{event.title}</h4>
-                    <Badge className={getEventTypeColor(event.event_type)}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                    <h4 className="font-semibold text-sm md:text-base truncate">{event.title}</h4>
+                    <Badge className={`${getEventTypeColor(event.event_type)} text-xs flex-shrink-0`}>
                       {event.event_type || 'Event'}
                     </Badge>
                   </div>
                   
-                  <div className="space-y-1 text-sm text-muted-foreground">
+                  <div className="space-y-0.5 md:space-y-1 text-xs md:text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      <ClockIcon className="h-3 w-3" />
+                      <ClockIcon className="h-3 w-3 flex-shrink-0" />
                       <span>{format(new Date(event.start_date), 'h:mm a')}</span>
                     </div>
                     
                     {event.location && (
                       <div className="flex items-center gap-1">
-                        <MapPinIcon className="h-3 w-3" />
+                        <MapPinIcon className="h-3 w-3 flex-shrink-0" />
                         <span className="truncate">{event.location}</span>
                       </div>
                     )}

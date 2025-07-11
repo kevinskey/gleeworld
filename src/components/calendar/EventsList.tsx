@@ -38,35 +38,38 @@ export const EventsList = ({ events }: EventsListProps) => {
   }
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold mb-4">Upcoming Events</h3>
+    <div className="space-y-3 md:space-y-4">
+      <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-4">Upcoming Events</h3>
       
       {events.map(event => (
         <Card key={event.id} className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardContent className="p-4" onClick={() => setSelectedEvent(event)}>
-            <div className="flex items-start justify-between">
+          <CardContent className="p-3 md:p-4" onClick={() => setSelectedEvent(event)}>
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <h4 className="font-semibold text-lg">{event.title}</h4>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                  <h4 className="font-semibold text-base md:text-lg">{event.title}</h4>
                   <Badge className={getEventTypeColor(event.event_type)}>
                     {event.event_type || 'Event'}
                   </Badge>
                 </div>
                 
                 {event.description && (
-                  <p className="text-muted-foreground mb-3 line-clamp-2">
+                  <p className="text-muted-foreground mb-3 line-clamp-2 text-sm md:text-base">
                     {event.description}
                   </p>
                 )}
                 
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                    <span>{format(new Date(event.start_date), 'EEEE, MMMM d, yyyy')}</span>
+                <div className="space-y-1 md:space-y-2">
+                  <div className="flex items-center gap-2 text-xs md:text-sm">
+                    <CalendarIcon className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
+                    <span>
+                      <span className="hidden sm:inline">{format(new Date(event.start_date), 'EEEE, MMMM d, yyyy')}</span>
+                      <span className="sm:hidden">{format(new Date(event.start_date), 'MMM d, yyyy')}</span>
+                    </span>
                   </div>
                   
-                  <div className="flex items-center gap-2 text-sm">
-                    <ClockIcon className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex items-center gap-2 text-xs md:text-sm">
+                    <ClockIcon className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
                     <span>
                       {format(new Date(event.start_date), 'h:mm a')}
                       {event.end_date && (
@@ -76,9 +79,9 @@ export const EventsList = ({ events }: EventsListProps) => {
                   </div>
                   
                   {event.location && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <MapPinIcon className="h-4 w-4 text-muted-foreground" />
-                      <span>
+                    <div className="flex items-center gap-2 text-xs md:text-sm">
+                      <MapPinIcon className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="truncate">
                         {event.venue_name && `${event.venue_name}, `}
                         {event.location}
                       </span>
@@ -86,17 +89,18 @@ export const EventsList = ({ events }: EventsListProps) => {
                   )}
                   
                   {event.max_attendees && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <UsersIcon className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex items-center gap-2 text-xs md:text-sm">
+                      <UsersIcon className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
                       <span>Max {event.max_attendees} attendees</span>
                     </div>
                   )}
                 </div>
               </div>
               
-              <div className="ml-4">
-                <Button variant="outline" size="sm">
-                  View Details
+              <div className="flex-shrink-0">
+                <Button variant="outline" size="sm" className="text-xs md:text-sm h-7 md:h-8">
+                  <span className="hidden sm:inline">View Details</span>
+                  <span className="sm:hidden">View</span>
                 </Button>
               </div>
             </div>

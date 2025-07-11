@@ -29,40 +29,46 @@ export const MonthlyCalendar = ({ events }: MonthlyCalendarProps) => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2 md:space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">
-          {format(currentDate, 'MMMM yyyy')}
+        <h3 className="text-base md:text-lg font-semibold">
+          <span className="hidden sm:inline">{format(currentDate, 'MMMM yyyy')}</span>
+          <span className="sm:hidden">{format(currentDate, 'MMM yy')}</span>
         </h3>
-        <div className="flex gap-2">
+        <div className="flex gap-1 md:gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => navigateMonth('prev')}
+            className="h-7 w-7 md:h-8 md:w-8 p-0"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3 w-3 md:h-4 md:w-4" />
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setCurrentDate(new Date())}
+            className="h-7 px-2 md:h-8 md:px-3 text-xs md:text-sm"
           >
-            Today
+            <span className="hidden sm:inline">Today</span>
+            <span className="sm:hidden">Now</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => navigateMonth('next')}
+            className="h-7 w-7 md:h-8 md:w-8 p-0"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-1">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground">
-            {day}
+      <div className="grid grid-cols-7 gap-0.5 md:gap-1">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
+          <div key={day} className="p-1 md:p-2 text-center text-xs md:text-sm font-medium text-muted-foreground">
+            <span className="hidden sm:inline">{day}</span>
+            <span className="sm:hidden">{['S', 'M', 'T', 'W', 'T', 'F', 'S'][index]}</span>
           </div>
         ))}
         
@@ -75,32 +81,32 @@ export const MonthlyCalendar = ({ events }: MonthlyCalendarProps) => {
             <div
               key={day.toString()}
               className={`
-                min-h-[100px] p-2 border border-border
+                min-h-[60px] md:min-h-[100px] p-1 md:p-2 border border-border
                 ${isCurrentMonth ? 'bg-background' : 'bg-muted/30'}
                 ${isToday ? 'bg-primary/10 border-primary' : ''}
               `}
             >
-              <div className={`text-sm ${isCurrentMonth ? 'text-foreground' : 'text-muted-foreground'}`}>
+              <div className={`text-xs md:text-sm ${isCurrentMonth ? 'text-foreground' : 'text-muted-foreground'}`}>
                 {format(day, 'd')}
               </div>
-              <div className="space-y-1 mt-1">
-                {dayEvents.slice(0, 2).map(event => (
+              <div className="space-y-0.5 md:space-y-1 mt-1">
+                {dayEvents.slice(0, window.innerWidth < 768 ? 1 : 2).map(event => (
                   <Button
                     key={event.id}
                     variant="ghost"
                     size="sm"
-                    className="w-full h-auto p-1 text-xs justify-start hover:bg-primary/20"
+                    className="w-full h-auto p-0.5 md:p-1 text-[10px] md:text-xs justify-start hover:bg-primary/20"
                     onClick={() => setSelectedEvent(event)}
                   >
-                    <Badge variant="secondary" className="text-xs px-1">
+                    <Badge variant="secondary" className="text-[8px] md:text-xs px-0.5 md:px-1 mr-0.5 md:mr-1">
                       {format(new Date(event.start_date), 'HH:mm')}
                     </Badge>
-                    <span className="ml-1 truncate">{event.title}</span>
+                    <span className="truncate text-[10px] md:text-xs">{event.title}</span>
                   </Button>
                 ))}
-                {dayEvents.length > 2 && (
-                  <div className="text-xs text-muted-foreground text-center">
-                    +{dayEvents.length - 2} more
+                {dayEvents.length > (window.innerWidth < 768 ? 1 : 2) && (
+                  <div className="text-[8px] md:text-xs text-muted-foreground text-center">
+                    +{dayEvents.length - (window.innerWidth < 768 ? 1 : 2)}
                   </div>
                 )}
               </div>

@@ -30,41 +30,45 @@ export const CalendarViews = () => {
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <CalendarIcon className="h-5 w-5" />
-            Glee World Calendar
+      <CardHeader className="pb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+            <CalendarIcon className="h-4 w-4 md:h-5 md:w-5" />
+            <span className="hidden sm:inline">Glee World Calendar</span>
+            <span className="sm:hidden">Calendar</span>
           </CardTitle>
           <CreateEventDialog onEventCreated={fetchEvents} />
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3 md:p-6">
         <Tabs value={activeView} onValueChange={setActiveView}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="month" className="flex items-center gap-2">
-              <Grid3X3Icon className="h-4 w-4" />
-              Month
+          <TabsList className="grid w-full grid-cols-3 h-8 md:h-10">
+            <TabsTrigger value="month" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2">
+              <Grid3X3Icon className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Month</span>
+              <span className="sm:hidden">Mo</span>
             </TabsTrigger>
-            <TabsTrigger value="week" className="flex items-center gap-2">
-              <CalendarIcon className="h-4 w-4" />
-              Week
+            <TabsTrigger value="week" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2">
+              <CalendarIcon className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Week</span>
+              <span className="sm:hidden">Wk</span>
             </TabsTrigger>
-            <TabsTrigger value="list" className="flex items-center gap-2">
-              <ListIcon className="h-4 w-4" />
-              List
+            <TabsTrigger value="list" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2">
+              <ListIcon className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">List</span>
+              <span className="sm:hidden">Li</span>
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="month" className="mt-6">
+          <TabsContent value="month" className="mt-3 md:mt-6">
             <MonthlyCalendar events={events} />
           </TabsContent>
           
-          <TabsContent value="week" className="mt-6">
+          <TabsContent value="week" className="mt-3 md:mt-6">
             <WeeklyCalendar events={events} />
           </TabsContent>
           
-          <TabsContent value="list" className="mt-6">
+          <TabsContent value="list" className="mt-3 md:mt-6">
             <EventsList events={events} />
           </TabsContent>
         </Tabs>
