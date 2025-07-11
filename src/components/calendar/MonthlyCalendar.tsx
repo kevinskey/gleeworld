@@ -43,6 +43,25 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
     setCurrentDate(direction === 'prev' ? subMonths(currentDate, 1) : addMonths(currentDate, 1));
   };
 
+  const getEventTypeColor = (type: string | null) => {
+    switch (type) {
+      case 'performance':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+      case 'rehearsal':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+      case 'meeting':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'social':
+        return 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300';
+      case 'workshop':
+        return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
+      case 'audition':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+    }
+  };
+
   return (
     <div className="space-y-2 md:space-y-4">
       <div className="flex items-center justify-between">
@@ -108,19 +127,31 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
                 {dayEvents.slice(0, window.innerWidth < 768 ? 1 : 2).map(event => {
                   const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
                   return (
-                    <Button
+                    <div
                       key={event.id}
-                      variant="ghost"
-                      size="sm"
-                      className={`w-full h-auto p-0.5 md:p-1 text-[10px] md:text-xs justify-start hover:bg-primary/20 ${canEdit ? 'hover:scale-105' : ''} transition-all`}
-                      onClick={() => handleEventClick(event)}
-                      title={`${event.title}${canEdit ? ' (Click to edit)' : ' (Click for details)'}`}
+                      className={`
+                        text-[10px] sm:text-xs p-0.5 sm:p-1 rounded cursor-pointer 
+                        transition-all duration-200 hover:shadow-sm
+                        ${canEdit ? 'hover:scale-105 active:scale-95' : 'hover:opacity-80'}
+                        touch-manipulation
+                        ${getEventTypeColor(event.event_type)}
+                      `}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEventClick(event);
+                      }}
+                      title={`${event.title}${canEdit ? ' (Tap to edit)' : ' (Tap for details)'}`}
                     >
-                      <Badge variant="secondary" className="text-[8px] md:text-xs px-0.5 md:px-1 mr-0.5 md:mr-1">
-                        {format(new Date(event.start_date), 'HH:mm')}
-                      </Badge>
-                      <span className="truncate text-[10px] md:text-xs">{event.title}</span>
-                    </Button>
+                      <div className="flex items-center gap-1 w-full">
+                        <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-current rounded-full flex-shrink-0" />
+                        <div className="truncate font-medium flex-1">
+                          {event.title}
+                        </div>
+                      </div>
+                      <div className="text-[8px] sm:text-[10px] opacity-80 truncate">
+                        {format(new Date(event.start_date), 'h:mm a')}
+                      </div>
+                    </div>
                   );
                 })}
                 {dayEvents.length > (window.innerWidth < 768 ? 1 : 2) && (
