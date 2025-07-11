@@ -180,7 +180,7 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
                           <div className="hidden sm:block">
                             <div className="flex items-center gap-2 mb-1">
                               <Badge variant="secondary" className="text-[10px] px-1 shrink-0">
-                                {format(new Date(event.start_date), 'h:mm')}
+                                {format(new Date(event.start_date), 'h:mm a')}
                               </Badge>
                               {canEdit && (
                                 <Badge variant="outline" className="text-[10px] bg-white/50">
