@@ -323,7 +323,7 @@ export const W9Management = () => {
     <div className="space-y-4 p-2 sm:p-4">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white">W9 Forms Management</h2>
+          <h2 className="text-2xl sm:text-2xl font-bold text-white">W9 Forms Management</h2>
           <p className="text-gray-300 text-sm">Manage and review W9 tax forms</p>
         </div>
         <div className="flex gap-2">
@@ -410,7 +410,7 @@ export const W9Management = () => {
           {sortedForms.length === 0 ? (
             <div className="text-center py-8">
               <FileText className="h-8 w-8 sm:h-12 sm:w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-base sm:text-lg font-semibold mb-2">No W9 Forms Found</h3>
+              <h3 className="text-2xl sm:text-lg font-semibold mb-2">No W9 Forms Found</h3>
               <p className="text-gray-600 text-sm">No forms match your current filters.</p>
             </div>
           ) : (

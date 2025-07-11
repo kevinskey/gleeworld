@@ -92,7 +92,7 @@ export const PaymentTracking = () => {
         <CardHeader className="px-4 sm:px-6 py-4 sm:py-6">
           <div className="flex flex-col gap-4 sm:gap-3 md:flex-row md:justify-between md:items-center">
             <div className="flex-1">
-              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <CardTitle className="flex items-center gap-2 text-2xl sm:text-xl">
                 <CreditCard className="h-5 w-5" />
                 Payment Tracking
               </CardTitle>
@@ -156,7 +156,7 @@ export const PaymentTracking = () => {
                       <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-base sm:text-lg md:text-base leading-tight">
+                      <p className="font-medium text-2xl sm:text-lg md:text-base leading-tight">
                         {formatCurrency(payment.amount || 0)} to {payment.user_full_name || payment.user_email}
                       </p>
                       <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 text-sm sm:text-base md:text-sm text-gray-600 mt-2 sm:mt-1">

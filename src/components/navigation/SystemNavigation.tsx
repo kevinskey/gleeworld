@@ -50,7 +50,7 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
         <SheetContent side="left" className="w-56 sm:w-64 p-0 bg-background">
           <div className="flex flex-col h-full">
             <div className="flex items-center h-12 sm:h-16 px-4 border-b">
-              <h1 className="text-base sm:text-lg font-bold">System Admin</h1>
+              <h1 className="text-2xl sm:text-lg font-bold">System Admin</h1>
             </div>
             <div className="flex-1 px-4 py-4 space-y-2">
               <Button

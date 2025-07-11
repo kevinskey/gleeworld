@@ -95,7 +95,7 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
         <div className="flex items-center justify-between h-12 sm:h-14 md:h-16">
           {/* Logo */}
           <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
-            <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white truncate">
+            <h1 className="text-2xl sm:text-2xl md:text-xl lg:text-2xl font-bold text-white truncate">
               Contract Manager
             </h1>
           </div>

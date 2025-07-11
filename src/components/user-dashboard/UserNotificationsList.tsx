@@ -66,7 +66,7 @@ export const UserNotificationsList = () => {
           <CardHeader className="pb-3">
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <CardTitle className="text-gray-900 flex items-start gap-2 text-base sm:text-lg">
+                <CardTitle className="text-gray-900 flex items-start gap-2 text-2xl sm:text-lg">
                   <Bell className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0" />
                   <span className="break-words">{notification.title}</span>
                   {!notification.is_read && (

@@ -53,7 +53,7 @@ export const UserPaymentsList = () => {
           <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-2">
               <div className="flex-1">
-                <CardTitle className="text-gray-900 flex items-center gap-2 text-lg sm:text-xl">
+                <CardTitle className="text-gray-900 flex items-center gap-2 text-2xl sm:text-xl">
                   <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
                   ${payment.amount || 0}
                 </CardTitle>

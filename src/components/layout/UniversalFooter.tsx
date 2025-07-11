@@ -10,7 +10,7 @@ export const UniversalFooter = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
           {/* Company Info */}
           <div className="text-center md:text-left">
-            <h3 className="text-base sm:text-lg font-semibold text-white mb-2">Contract Manager</h3>
+            <h3 className="text-2xl sm:text-lg font-semibold text-white mb-2">Contract Manager</h3>
             <p className="text-white/70 text-xs sm:text-sm">
               Streamlining contract management and digital workflows
             </p>

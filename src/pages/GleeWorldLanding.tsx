@@ -187,10 +187,10 @@ export const GleeWorldLanding = () => {
   const getTitleSize = (size: string | null) => {
     switch (size) {
       case 'small': return 'text-2xl md:text-3xl';
-      case 'medium': return 'text-3xl md:text-4xl';
-      case 'large': return 'text-4xl md:text-6xl';
-      case 'xl': return 'text-5xl md:text-7xl';
-      default: return 'text-4xl md:text-6xl';
+      case 'medium': return 'text-2xl md:text-4xl';
+      case 'large': return 'text-2xl md:text-6xl';
+      case 'xl': return 'text-2xl md:text-7xl';
+      default: return 'text-2xl md:text-6xl';
     }
   };
 
@@ -425,7 +425,7 @@ export const GleeWorldLanding = () => {
       {/* Upcoming Events Section */}
       <section id="events" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 w-full">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Upcoming Events</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Upcoming Events</h2>
         </div>
           
           
@@ -467,7 +467,7 @@ export const GleeWorldLanding = () => {
                         />
                       </div>
                       <CardContent className="p-6 sm:p-8">
-                        <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-4 line-clamp-2">{event.title}</h3>
+                        <h3 className="text-2xl sm:text-2xl font-semibold text-gray-900 mb-4 line-clamp-2">{event.title}</h3>
                         <div className="space-y-2 text-gray-600">
                           <div className="flex items-center">
                             <Calendar className="h-5 w-5 mr-3 flex-shrink-0" />
@@ -508,7 +508,7 @@ export const GleeWorldLanding = () => {
                         <Music className="h-12 w-12 text-blue-600" />
                       </div>
                       <CardContent className="p-6 sm:p-8">
-                        <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-4">Glee Club Rehearsal</h3>
+                        <h3 className="text-2xl sm:text-2xl font-semibold text-gray-900 mb-4">Glee Club Rehearsal</h3>
                         <div className="space-y-2 text-gray-600">
                           <div className="flex items-center">
                             <Calendar className="h-5 w-5 mr-3 flex-shrink-0" />
@@ -544,7 +544,7 @@ export const GleeWorldLanding = () => {
             <Card className="p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
                 <div>
-                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Centennial Tour 2025</h3>
+                  <h3 className="text-2xl sm:text-xl font-semibold text-gray-900">Centennial Tour 2025</h3>
                   <p className="text-gray-600 text-sm sm:text-base">14 tracks</p>
                 </div>
                 <div className="flex items-center space-x-3 self-start sm:self-auto">
