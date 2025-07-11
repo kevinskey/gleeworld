@@ -360,7 +360,7 @@ export const GleeWorldLanding = () => {
               <img 
                 src={currentHeroSlide?.mobile_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
                 alt="Hero Background"
-                className="block sm:hidden w-full h-full object-cover transition-opacity duration-500"
+                className="block sm:hidden w-full h-full object-contain transition-opacity duration-500"
                 onError={(e) => {
                   e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
                 }}
