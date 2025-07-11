@@ -54,6 +54,7 @@ interface Track {
   title: string;
   duration: string;
   image: string;
+  audioUrl: string;
 }
 
 export const GleeWorldLanding = () => {
@@ -64,6 +65,7 @@ export const GleeWorldLanding = () => {
   const [loading, setLoading] = useState(true);
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -161,10 +163,40 @@ export const GleeWorldLanding = () => {
   };
 
   const sampleTracks = [
-    { id: '1', title: 'Anchored in the Lord', duration: '3:45', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png' },
-    { id: '2', title: 'A Choice to Change the World', duration: '4:12', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png' },
-    { id: '3', title: 'Children Go Where I Send Thee', duration: '3:28', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png' }
+    { id: '1', title: 'Anchored in the Lord', duration: '3:45', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' },
+    { id: '2', title: 'A Choice to Change the World', duration: '4:12', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' },
+    { id: '3', title: 'Children Go Where I Send Thee', duration: '3:28', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' }
   ];
+
+  // Audio player functionality
+  const playTrack = (track: Track) => {
+    if (audio) {
+      audio.pause();
+    }
+    
+    const newAudio = new Audio(track.audioUrl);
+    setAudio(newAudio);
+    setCurrentTrack(track);
+    setIsPlaying(true);
+    
+    newAudio.play();
+    
+    newAudio.onended = () => {
+      setIsPlaying(false);
+    };
+  };
+
+  const togglePlayPause = () => {
+    if (!audio) return;
+    
+    if (isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+    } else {
+      audio.play();
+      setIsPlaying(true);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -406,7 +438,7 @@ export const GleeWorldLanding = () => {
                   <Button variant="outline" size="sm">
                     <SkipBack className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" onClick={() => setIsPlaying(!isPlaying)}>
+                  <Button size="sm" onClick={togglePlayPause}>
                     {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                   </Button>
                   <Button variant="outline" size="sm">
@@ -425,7 +457,7 @@ export const GleeWorldLanding = () => {
                     className={`flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
                       currentTrack?.id === track.id ? 'bg-blue-50' : ''
                     }`}
-                    onClick={() => setCurrentTrack(track)}
+                    onClick={() => playTrack(track)}
                   >
                     <img 
                       src={track.image} 
