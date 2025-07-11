@@ -855,6 +855,36 @@ export type Database = {
           },
         ]
       }
+      dashboard_settings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          image_url: string | null
+          setting_name: string
+          setting_value: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url?: string | null
+          setting_name: string
+          setting_value?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url?: string | null
+          setting_name?: string
+          setting_value?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       event_contracts: {
         Row: {
           contract_id: string

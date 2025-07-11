@@ -23,19 +23,24 @@ import {
   TrendingUp,
   Award,
   Users,
-  Volume2
+  Volume2,
+  Settings
 } from "lucide-react";
 import { HeroManagement } from "@/components/admin/HeroManagement";
+import { DashboardSettings } from "@/components/admin/DashboardSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
+import { useDashboardSettings } from "@/hooks/useDashboardSettings";
 import { useState } from "react";
 
 export const UserDashboard = () => {
   const { user } = useAuth();
   const { profile } = useProfile();
+  const { getSettingByName } = useDashboardSettings();
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
+  const welcomeCardSetting = getSettingByName('welcome_card_background');
 
   if (!user) {
     return (
@@ -74,9 +79,28 @@ export const UserDashboard = () => {
     );
   }
 
+  // Show dashboard settings if admin has selected it
+  if (selectedModule === 'dashboard-settings' && isAdmin) {
+    return (
+      <UniversalLayout>
+        <div className="container mx-auto px-4 py-6">
+          <div className="mb-4">
+            <Button variant="outline" onClick={() => setSelectedModule(null)}>
+              ← Back to Dashboard
+            </Button>
+          </div>
+          <DashboardSettings />
+        </div>
+      </UniversalLayout>
+    );
+  }
+
+  // Get user's actual name from profile, fallback to email username
+  const displayName = profile?.full_name || user.email?.split('@')[0] || 'Member';
+  
   // Mock data for demonstration
   const memberProfile = {
-    name: user.email?.split('@')[0] || 'Member',
+    name: displayName,
     email: user.email || '',
     voicePart: 'Soprano I',
     classYear: '2025',
@@ -110,28 +134,53 @@ export const UserDashboard = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
         <div className="container mx-auto px-4 py-6 space-y-6">
           
-          {/* Dashboard Header */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          {/* Dashboard Header with Background */}
+          <div 
+            className="relative bg-white rounded-lg shadow-sm border p-6 overflow-hidden"
+            style={{
+              backgroundImage: welcomeCardSetting?.image_url ? `url(${welcomeCardSetting.image_url})` : 'none',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat'
+            }}
+          >
+            {/* Overlay for text readability when background image is present */}
+            {welcomeCardSetting?.image_url && (
+              <div className="absolute inset-0 bg-black bg-opacity-40 rounded-lg" />
+            )}
+            
+            <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div className="flex items-center space-x-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage src="/placeholder-avatar.jpg" />
+                <Avatar className="h-16 w-16 ring-2 ring-white/50">
+                  <AvatarImage src={profile?.avatar_url || "/placeholder-avatar.jpg"} />
                   <AvatarFallback className="bg-blue-100 text-blue-600 text-lg font-semibold">
                     {memberProfile.name.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Welcome back, {memberProfile.name}!</h1>
-                  <p className="text-gray-600">Spelman College Glee Club Member</p>
+                  <h1 className={`text-2xl font-bold ${welcomeCardSetting?.image_url ? 'text-white drop-shadow-lg' : 'text-gray-900'}`}>
+                    Welcome back, {memberProfile.name}!
+                  </h1>
+                  <p className={`${welcomeCardSetting?.image_url ? 'text-white/90 drop-shadow' : 'text-gray-600'}`}>
+                    Spelman College Glee Club Member
+                  </p>
                   <div className="flex flex-wrap gap-2 mt-2">
-                    <Badge variant="secondary">{memberProfile.voicePart}</Badge>
-                    <Badge variant="outline">{memberProfile.classYear}</Badge>
-                    <Badge className="bg-green-100 text-green-800">{memberProfile.status}</Badge>
+                    <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                      {memberProfile.voicePart}
+                    </Badge>
+                    <Badge variant="outline" className="bg-white/20 text-white border-white/30">
+                      {memberProfile.classYear}
+                    </Badge>
+                    <Badge className="bg-green-500/80 text-white border-green-300/30">
+                      {memberProfile.status}
+                    </Badge>
                   </div>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-600">Member since</p>
+              <div className={`text-right ${welcomeCardSetting?.image_url ? 'text-white' : 'text-gray-900'}`}>
+                <p className={`text-sm ${welcomeCardSetting?.image_url ? 'text-white/80' : 'text-gray-600'}`}>
+                  Member since
+                </p>
                 <p className="font-medium">{memberProfile.joinDate}</p>
               </div>
             </div>
@@ -368,6 +417,17 @@ export const UserDashboard = () => {
                         <div className="text-left">
                           <div>Hero Management</div>
                           <div className="text-xs text-gray-500">Control landing page hero</div>
+                        </div>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start h-auto p-3"
+                        onClick={() => setSelectedModule('dashboard-settings')}
+                      >
+                        <Settings className="h-4 w-4 mr-2" />
+                        <div className="text-left">
+                          <div>Dashboard Settings</div>
+                          <div className="text-xs text-gray-500">Customize dashboard appearance</div>
                         </div>
                       </Button>
                     </div>
