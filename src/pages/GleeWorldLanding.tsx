@@ -71,11 +71,11 @@ export const GleeWorldLanding = () => {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [tracksLoading, setTracksLoading] = useState(true);
 
-  // Define sample tracks with actual music (using public domain/royalty-free samples)
+  // Define sample tracks with working audio URLs
   const sampleTracks = [
-    { id: '1', title: 'Anchored in the Lord', duration: '3:45', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/gong-1.wav' },
-    { id: '2', title: 'A Choice to Change the World', duration: '4:12', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/wind-chimes-1.wav' },
-    { id: '3', title: 'Children Go Where I Send Thee', duration: '3:28', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/piano-chord-1.wav' }
+    { id: '1', title: 'Anchored in the Lord', duration: '3:45', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' },
+    { id: '2', title: 'A Choice to Change the World', duration: '4:12', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' },
+    { id: '3', title: 'Children Go Where I Send Thee', duration: '3:28', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' }
   ];
 
   useEffect(() => {
@@ -204,32 +204,75 @@ export const GleeWorldLanding = () => {
 
 
   // Audio player functionality
-  const playTrack = (track: Track) => {
-    if (audio) {
-      audio.pause();
-    }
-    
-    const newAudio = new Audio(track.audioUrl);
-    setAudio(newAudio);
-    setCurrentTrack(track);
-    setIsPlaying(true);
-    
-    newAudio.play();
-    
-    newAudio.onended = () => {
+  const playTrack = async (track: Track) => {
+    try {
+      // Stop current audio if playing
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+      
+      console.log('Playing track:', track.title, 'URL:', track.audioUrl);
+      
+      const newAudio = new Audio(track.audioUrl);
+      setAudio(newAudio);
+      setCurrentTrack(track);
+      
+      // Add error handling for audio loading
+      newAudio.onerror = (e) => {
+        console.error('Audio failed to load:', e);
+        setIsPlaying(false);
+        alert('Sorry, this audio track could not be loaded.');
+      };
+      
+      newAudio.onloadstart = () => {
+        console.log('Audio started loading');
+      };
+      
+      newAudio.oncanplay = () => {
+        console.log('Audio can start playing');
+      };
+      
+      newAudio.onended = () => {
+        console.log('Audio ended');
+        setIsPlaying(false);
+      };
+      
+      // Try to play the audio
+      try {
+        await newAudio.play();
+        setIsPlaying(true);
+        console.log('Audio is now playing');
+      } catch (playError) {
+        console.error('Play failed:', playError);
+        setIsPlaying(false);
+        alert('Audio playback failed. This might be due to browser autoplay policies.');
+      }
+    } catch (error) {
+      console.error('Error in playTrack:', error);
       setIsPlaying(false);
-    };
+    }
   };
 
-  const togglePlayPause = () => {
-    if (!audio) return;
+  const togglePlayPause = async () => {
+    if (!audio || !currentTrack) {
+      console.log('No audio or track selected');
+      return;
+    }
     
-    if (isPlaying) {
-      audio.pause();
+    try {
+      if (isPlaying) {
+        audio.pause();
+        setIsPlaying(false);
+        console.log('Audio paused');
+      } else {
+        await audio.play();
+        setIsPlaying(true);
+        console.log('Audio resumed');
+      }
+    } catch (error) {
+      console.error('Error toggling play/pause:', error);
       setIsPlaying(false);
-    } else {
-      audio.play();
-      setIsPlaying(true);
     }
   };
 
