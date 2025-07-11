@@ -16,7 +16,8 @@ import {
   BarChart3,
   DollarSign,
   Menu,
-  Music
+  Music,
+  Calendar
 } from "lucide-react";
 
 interface SystemNavigationProps {
@@ -79,6 +80,14 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
               </Button>
               <Button
                 variant="ghost"
+                onClick={() => { onTabChange('calendar'); setMobileOpen(false); }}
+                className={`w-full justify-start ${activeTab === 'calendar' ? 'bg-primary text-primary-foreground' : ''}`}
+              >
+                <Calendar className="h-4 w-4 mr-3" />
+                Calendar
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={() => { onTabChange('soundcloud'); setMobileOpen(false); }}
                 className={`w-full justify-start ${activeTab === 'soundcloud' ? 'bg-primary text-primary-foreground' : ''}`}
               >
@@ -119,6 +128,15 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
       >
         <FileText className="h-4 w-4" />
         <span className="hidden lg:inline">Contracts</span>
+      </Button>
+
+      <Button
+        variant="ghost"
+        onClick={() => onTabChange('calendar')}
+        className={getTabClasses('calendar')}
+      >
+        <Calendar className="h-4 w-4" />
+        <span className="hidden lg:inline">Calendar</span>
       </Button>
 
       <Button
