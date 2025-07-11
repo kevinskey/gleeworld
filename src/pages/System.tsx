@@ -7,6 +7,7 @@ import { W9Management } from "@/components/admin/W9Management";
 import { FinancialSystem } from "@/components/admin/FinancialSystem";
 import { BudgetTracking } from "@/components/admin/financial/BudgetTracking";
 import { ContractManagement } from "@/components/admin/ContractManagement";
+import { SoundCloudManagement } from "@/components/admin/SoundCloudManagement";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useUsers } from "@/hooks/useUsers";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
@@ -105,6 +106,10 @@ const System = () => {
 
           {activeTab === "budget" && (
             <BudgetTracking />
+          )}
+
+          {activeTab === "soundcloud" && (
+            <SoundCloudManagement />
           )}
         </div>
       </div>

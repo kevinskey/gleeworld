@@ -15,7 +15,8 @@ import {
   PieChart,
   BarChart3,
   DollarSign,
-  Menu
+  Menu,
+  Music
 } from "lucide-react";
 
 interface SystemNavigationProps {
@@ -76,6 +77,14 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
                 <FileText className="h-4 w-4 mr-3" />
                 Contracts
               </Button>
+              <Button
+                variant="ghost"
+                onClick={() => { onTabChange('soundcloud'); setMobileOpen(false); }}
+                className={`w-full justify-start ${activeTab === 'soundcloud' ? 'bg-primary text-primary-foreground' : ''}`}
+              >
+                <Music className="h-4 w-4 mr-3" />
+                SoundCloud
+              </Button>
             </div>
           </div>
         </SheetContent>
@@ -110,6 +119,15 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
       >
         <FileText className="h-4 w-4" />
         <span className="hidden lg:inline">Contracts</span>
+      </Button>
+
+      <Button
+        variant="ghost"
+        onClick={() => onTabChange('soundcloud')}
+        className={getTabClasses('soundcloud')}
+      >
+        <Music className="h-4 w-4" />
+        <span className="hidden lg:inline">SoundCloud</span>
       </Button>
 
       {/* Financial Dropdown */}
