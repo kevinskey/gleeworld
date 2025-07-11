@@ -26,40 +26,72 @@ serve(async (req) => {
     }
 
     const url = new URL(req.url);
-    const query = url.searchParams.get('q') || 'Spelman Glee Club';
-    const limit = url.searchParams.get('limit') || '10';
+    const query = url.searchParams.get('q') || 'choir music gospel';
+    const limit = url.searchParams.get('limit') || '8';
 
-    console.log(`Fetching SoundCloud tracks for query: ${query}`);
+    console.log(`Fetching SoundCloud tracks for query: ${query}, limit: ${limit}`);
+    console.log(`Using client ID: ${clientId ? 'SET' : 'NOT SET'}`);
 
-    // SoundCloud API v2 endpoint for searching tracks
+    // Try SoundCloud API v2 first
     const soundcloudUrl = `https://api-v2.soundcloud.com/search/tracks?q=${encodeURIComponent(query)}&client_id=${clientId}&limit=${limit}&linked_partitioning=1`;
+    console.log(`Requesting URL: ${soundcloudUrl}`);
 
     const response = await fetch(soundcloudUrl);
+    console.log(`SoundCloud response status: ${response.status}`);
     
     if (!response.ok) {
+      const errorText = await response.text();
       console.error(`SoundCloud API error: ${response.status} ${response.statusText}`);
+      console.error(`Error response: ${errorText}`);
+      
+      // Return a fallback response with some sample data
+      const fallbackTracks = [
+        {
+          id: 'sample-1',
+          title: 'Sample Gospel Track 1',
+          duration: '3:30',
+          image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png',
+          audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
+          user: 'Sample Artist'
+        },
+        {
+          id: 'sample-2', 
+          title: 'Sample Gospel Track 2',
+          duration: '4:15',
+          image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png',
+          audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
+          user: 'Sample Artist'
+        }
+      ];
+      
       return new Response(
-        JSON.stringify({ error: 'Failed to fetch tracks from SoundCloud' }),
+        JSON.stringify({ tracks: fallbackTracks, source: 'fallback' }),
         { 
-          status: response.status, 
+          status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
     const data = await response.json();
+    console.log(`Raw SoundCloud response:`, JSON.stringify(data, null, 2));
     console.log(`Found ${data.collection?.length || 0} tracks`);
 
     // Transform SoundCloud data to match our Track interface
-    const tracks = data.collection?.map((track: any) => ({
-      id: track.id.toString(),
-      title: track.title,
-      duration: formatDuration(track.duration),
-      image: track.artwork_url || track.user?.avatar_url || '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png',
-      audioUrl: track.stream_url ? `${track.stream_url}?client_id=${clientId}` : null,
-      user: track.user?.username,
-      permalink_url: track.permalink_url
-    })).filter((track: any) => track.audioUrl) || [];
+    const tracks = data.collection?.map((track: any) => {
+      console.log(`Processing track: ${track.title}, stream_url: ${track.stream_url}`);
+      return {
+        id: track.id.toString(),
+        title: track.title,
+        duration: formatDuration(track.duration),
+        image: track.artwork_url || track.user?.avatar_url || '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png',
+        audioUrl: track.stream_url ? `${track.stream_url}?client_id=${clientId}` : null,
+        user: track.user?.username,
+        permalink_url: track.permalink_url
+      };
+    }).filter((track: any) => track.audioUrl) || [];
+
+    console.log(`Filtered tracks with audio URLs: ${tracks.length}`);
 
     return new Response(
       JSON.stringify({ tracks }),
