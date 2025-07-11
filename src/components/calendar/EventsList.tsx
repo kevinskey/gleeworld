@@ -8,6 +8,7 @@ import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EventDetailDialog } from "./EventDetailDialog";
 import { EditEventDialog } from "./EditEventDialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { EventHoverCard } from "./EventHoverCard";
 
 interface EventsListProps {
   events: GleeWorldEvent[];
@@ -74,11 +75,11 @@ export const EventsList = ({ events, onEventUpdated }: EventsListProps) => {
         const eventDate = new Date(event.start_date);
         
         return (
-          <Card 
-            key={event.id} 
-            className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-l-4 border-l-primary/30 hover:border-l-primary active:scale-[0.98] touch-manipulation"
-            onClick={() => handleEventClick(event)}
-          >
+          <EventHoverCard key={event.id} event={event} canEdit={canEdit}>
+            <Card 
+              className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-l-4 border-l-primary/30 hover:border-l-primary active:scale-[0.98] touch-manipulation"
+              onClick={() => handleEventClick(event)}
+            >
             <CardContent className="p-4">
               {/* Mobile-optimized layout */}
               <div className="space-y-3">
@@ -194,6 +195,7 @@ export const EventsList = ({ events, onEventUpdated }: EventsListProps) => {
               </div>
             </CardContent>
           </Card>
+          </EventHoverCard>
         );
       })}
 

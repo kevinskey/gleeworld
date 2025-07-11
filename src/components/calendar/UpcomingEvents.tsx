@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
 import { useState } from "react";
 import { EventDetailDialog } from "./EventDetailDialog";
+import { EventHoverCard } from "./EventHoverCard";
 
 interface UpcomingEventsProps {
   limit?: number;
@@ -74,11 +75,11 @@ export const UpcomingEvents = ({ limit = 6, showHeader = true }: UpcomingEventsP
         ) : (
           <div className="space-y-2 md:space-y-4">
             {upcomingEvents.map(event => (
-              <div
-                key={event.id}
-                className="flex items-start gap-2 md:gap-4 p-2 md:p-4 border border-border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => setSelectedEvent(event)}
-              >
+              <EventHoverCard key={event.id} event={event} canEdit={false}>
+                <div
+                  className="flex items-start gap-2 md:gap-4 p-2 md:p-4 border border-border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => setSelectedEvent(event)}
+                >
                 <div className="text-center min-w-[40px] md:min-w-[60px]">
                   <div className="text-lg md:text-2xl font-bold text-primary">
                     {format(new Date(event.start_date), 'd')}
@@ -111,6 +112,7 @@ export const UpcomingEvents = ({ limit = 6, showHeader = true }: UpcomingEventsP
                   </div>
                 </div>
               </div>
+              </EventHoverCard>
             ))}
           </div>
         )}

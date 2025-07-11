@@ -6,6 +6,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSam
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EventDetailDialog } from "./EventDetailDialog";
 import { EditEventDialog } from "./EditEventDialog";
+import { EventHoverCard } from "./EventHoverCard";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface MonthlyCalendarProps {
@@ -127,31 +128,32 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
                 {dayEvents.slice(0, window.innerWidth < 768 ? 1 : 2).map(event => {
                   const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
                   return (
-                    <div
-                      key={event.id}
-                      className={`
-                        text-[10px] sm:text-xs p-0.5 sm:p-1 rounded cursor-pointer 
-                        transition-all duration-200 hover:shadow-sm
-                        ${canEdit ? 'hover:scale-105 active:scale-95' : 'hover:opacity-80'}
-                        touch-manipulation
-                        ${getEventTypeColor(event.event_type)}
-                      `}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEventClick(event);
-                      }}
-                      title={`${event.title}${canEdit ? ' (Tap to edit)' : ' (Tap for details)'}`}
-                    >
-                      <div className="flex items-center gap-1 w-full">
-                        <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-current rounded-full flex-shrink-0" />
-                        <div className="truncate font-medium flex-1">
-                          {event.title}
+                    <EventHoverCard key={event.id} event={event} canEdit={canEdit}>
+                      <div
+                        className={`
+                          text-[10px] sm:text-xs p-0.5 sm:p-1 rounded cursor-pointer 
+                          transition-all duration-200 hover:shadow-sm
+                          ${canEdit ? 'hover:scale-105 active:scale-95' : 'hover:opacity-80'}
+                          touch-manipulation
+                          ${getEventTypeColor(event.event_type)}
+                        `}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEventClick(event);
+                        }}
+                        title={`${event.title}${canEdit ? ' (Tap to edit)' : ' (Tap for details)'}`}
+                      >
+                        <div className="flex items-center gap-1 w-full">
+                          <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-current rounded-full flex-shrink-0" />
+                          <div className="truncate font-medium flex-1">
+                            {event.title}
+                          </div>
+                        </div>
+                        <div className="text-[8px] sm:text-[10px] opacity-80 truncate">
+                          {format(new Date(event.start_date), 'h:mm a')}
                         </div>
                       </div>
-                      <div className="text-[8px] sm:text-[10px] opacity-80 truncate">
-                        {format(new Date(event.start_date), 'h:mm a')}
-                      </div>
-                    </div>
+                    </EventHoverCard>
                   );
                 })}
                 {dayEvents.length > (window.innerWidth < 768 ? 1 : 2) && (

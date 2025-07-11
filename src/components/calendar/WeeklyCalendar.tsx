@@ -7,6 +7,7 @@ import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EventDetailDialog } from "./EventDetailDialog";
 import { EditEventDialog } from "./EditEventDialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { EventHoverCard } from "./EventHoverCard";
 
 interface WeeklyCalendarProps {
   events: GleeWorldEvent[];
@@ -145,54 +146,55 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
                     {dayEvents.slice(0, window.innerWidth < 640 ? 2 : 4).map(event => {
                       const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
                       return (
-                        <div
-                          key={event.id}
-                          className={`
-                            p-2 rounded cursor-pointer transition-all duration-200
-                            ${canEdit ? 'hover:scale-[1.02] active:scale-[0.98]' : 'hover:opacity-80'}
-                            touch-manipulation shadow-sm hover:shadow-md
-                            ${getEventTypeColor(event.event_type)}
-                          `}
-                          onClick={() => handleEventClick(event)}
-                          title={`${event.title}${canEdit ? ' (Tap to edit)' : ' (Tap for details)'}`}
-                        >
-                          {/* Mobile layout - stacked */}
-                          <div className="space-y-1 sm:hidden">
-                            <div className="flex items-center justify-between">
-                              <div className="text-xs font-medium truncate flex-1">
+                        <EventHoverCard key={event.id} event={event} canEdit={canEdit}>
+                          <div
+                            className={`
+                              p-2 rounded cursor-pointer transition-all duration-200
+                              ${canEdit ? 'hover:scale-[1.02] active:scale-[0.98]' : 'hover:opacity-80'}
+                              touch-manipulation shadow-sm hover:shadow-md
+                              ${getEventTypeColor(event.event_type)}
+                            `}
+                            onClick={() => handleEventClick(event)}
+                            title={`${event.title}${canEdit ? ' (Tap to edit)' : ' (Tap for details)'}`}
+                          >
+                            {/* Mobile layout - stacked */}
+                            <div className="space-y-1 sm:hidden">
+                              <div className="flex items-center justify-between">
+                                <div className="text-xs font-medium truncate flex-1">
+                                  {event.title}
+                                </div>
+                                {canEdit && (
+                                  <Badge variant="outline" className="text-[10px] ml-1 bg-white/50">
+                                    Edit
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-[10px] opacity-80">
+                                {format(new Date(event.start_date), 'h:mm a')}
+                                {event.end_date && (
+                                  <> - {format(new Date(event.end_date), 'h:mm a')}</>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Desktop layout - side by side */}
+                            <div className="hidden sm:block">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge variant="secondary" className="text-[10px] px-1 shrink-0">
+                                  {format(new Date(event.start_date), 'h:mm a')}
+                                </Badge>
+                                {canEdit && (
+                                  <Badge variant="outline" className="text-[10px] bg-white/50">
+                                    Edit
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-xs font-medium line-clamp-2">
                                 {event.title}
                               </div>
-                              {canEdit && (
-                                <Badge variant="outline" className="text-[10px] ml-1 bg-white/50">
-                                  Edit
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="text-[10px] opacity-80">
-                              {format(new Date(event.start_date), 'h:mm a')}
-                              {event.end_date && (
-                                <> - {format(new Date(event.end_date), 'h:mm a')}</>
-                              )}
                             </div>
                           </div>
-
-                          {/* Desktop layout - side by side */}
-                          <div className="hidden sm:block">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge variant="secondary" className="text-[10px] px-1 shrink-0">
-                                {format(new Date(event.start_date), 'h:mm a')}
-                              </Badge>
-                              {canEdit && (
-                                <Badge variant="outline" className="text-[10px] bg-white/50">
-                                  Edit
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="text-xs font-medium line-clamp-2">
-                              {event.title}
-                            </div>
-                          </div>
-                        </div>
+                        </EventHoverCard>
                       );
                     })}
                     
