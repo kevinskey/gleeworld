@@ -62,20 +62,31 @@ serve(async (req) => {
 
 async function fetchSoundCloudTracks(query: string, limit: number): Promise<{tracks: Track[], source: string}> {
   const clientId = Deno.env.get('SOUNDCLOUD_CLIENT_ID');
+  const clientSecret = Deno.env.get('SOUNDCLOUD_CLIENT_SECRET');
   
-  console.log('🔑 Checking SOUNDCLOUD_CLIENT_ID:', clientId ? 'Present' : 'Missing');
+  console.log('🔑 Checking credentials:', {
+    clientId: clientId ? 'Present' : 'Missing',
+    clientSecret: clientSecret ? 'Present' : 'Missing'
+  });
   
-  if (!clientId) {
-    console.warn('⚠️ SOUNDCLOUD_CLIENT_ID not configured');
-    return { tracks: getFallbackTracks(), source: 'fallback_no_client_id' };
+  if (!clientId || !clientSecret) {
+    console.warn('⚠️ Missing SoundCloud credentials');
+    return { tracks: getFallbackTracks(), source: 'fallback_missing_credentials' };
   }
 
   try {
-    // Use SoundCloud API v2 search endpoint
+    // First, get an access token using OAuth 2.0 client credentials flow
+    const accessToken = await getAccessToken(clientId, clientSecret);
+    
+    if (!accessToken) {
+      console.warn('⚠️ Failed to get access token');
+      return { tracks: getFallbackTracks(), source: 'fallback_auth_failed' };
+    }
+
+    // Use SoundCloud API v2 search endpoint with proper authentication
     const searchUrl = 'https://api-v2.soundcloud.com/search/tracks';
     const params = new URLSearchParams({
       q: query,
-      client_id: clientId,
       limit: limit.toString(),
       linked_partitioning: '1',
       format: 'json'
@@ -87,6 +98,7 @@ async function fetchSoundCloudTracks(query: string, limit: number): Promise<{tra
       method: 'GET',
       headers: {
         'Accept': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
         'User-Agent': 'SpelmanGleeWorld/1.0'
       }
     });
@@ -149,6 +161,46 @@ async function fetchSoundCloudTracks(query: string, limit: number): Promise<{tra
   } catch (error) {
     console.error('💥 Error fetching from SoundCloud:', error);
     return { tracks: getFallbackTracks(), source: 'fallback_error' };
+  }
+}
+
+async function getAccessToken(clientId: string, clientSecret: string): Promise<string | null> {
+  try {
+    console.log('🔐 Getting OAuth access token...');
+    
+    const tokenUrl = 'https://api.soundcloud.com/oauth2/token';
+    const params = new URLSearchParams({
+      grant_type: 'client_credentials',
+      client_id: clientId,
+      client_secret: clientSecret,
+      scope: 'non-expiring'
+    });
+
+    const response = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json'
+      },
+      body: params
+    });
+
+    console.log(`🔑 Token response: ${response.status} ${response.statusText}`);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Token request failed:', errorText);
+      return null;
+    }
+
+    const tokenData = await response.json();
+    console.log('✅ Successfully obtained access token');
+    
+    return tokenData.access_token || null;
+    
+  } catch (error) {
+    console.error('💥 Error getting access token:', error);
+    return null;
   }
 }
 
