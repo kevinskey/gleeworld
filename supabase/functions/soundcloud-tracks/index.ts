@@ -220,72 +220,16 @@ function generateStreamUrl(track: any, clientId: string): string {
 }
 
 function getFallbackTracks(): Track[] {
-  console.log('🔄 Using curated gospel fallback tracks');
+  console.log('🚫 SoundCloud API authentication failed - check credentials');
   
   return [
     {
-      id: 'gospel-1',
-      title: 'Amazing Grace (Traditional)',
-      duration: '4:32',
+      id: 'error-1',
+      title: 'SoundCloud API Authentication Failed',
+      duration: '0:00',
       image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png',
-      audioUrl: 'https://www.soundjay.com/misc/sounds/church-bell-1.wav',
-      user: 'Spelman Glee Club'
-    },
-    {
-      id: 'gospel-2',
-      title: 'Wade in the Water (Spiritual)',
-      duration: '3:45',
-      image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png',
-      audioUrl: 'https://www.soundjay.com/misc/sounds/church-bell-2.wav',
-      user: 'Spelman Glee Club'
-    },
-    {
-      id: 'gospel-3',
-      title: 'Lift Every Voice and Sing',
-      duration: '5:12',
-      image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png',
-      audioUrl: 'https://www.soundjay.com/misc/sounds/church-bell-3.wav',
-      user: 'Spelman Glee Club'
-    },
-    {
-      id: 'gospel-4',
-      title: 'Precious Lord, Take My Hand',
-      duration: '4:18',
-      image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png',
-      audioUrl: 'https://www.soundjay.com/misc/sounds/church-bell-4.wav',
-      user: 'Spelman Glee Club'
-    },
-    {
-      id: 'gospel-5',
-      title: 'Go Tell It on the Mountain',
-      duration: '3:28',
-      image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png',
-      audioUrl: 'https://www.soundjay.com/misc/sounds/church-bell-5.wav',
-      user: 'Spelman Glee Club'
-    },
-    {
-      id: 'gospel-6',
-      title: 'Swing Low, Sweet Chariot',
-      duration: '4:05',
-      image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png',
-      audioUrl: 'https://www.soundjay.com/misc/sounds/church-bell-6.wav',
-      user: 'Spelman Glee Club'
-    },
-    {
-      id: 'gospel-7',
-      title: 'Mary Had a Baby',
-      duration: '3:52',
-      image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png',
-      audioUrl: 'https://www.soundjay.com/misc/sounds/church-bell-7.wav',
-      user: 'Spelman Glee Club'
-    },
-    {
-      id: 'gospel-8',
-      title: 'This Little Light of Mine',
-      duration: '3:15',
-      image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png',
-      audioUrl: 'https://www.soundjay.com/misc/sounds/church-bell-8.wav',
-      user: 'Spelman Glee Club'
+      audioUrl: '', // No audio URL since this is an error state
+      user: 'Please check your API credentials'
     }
   ];
 }
