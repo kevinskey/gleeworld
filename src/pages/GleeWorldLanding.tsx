@@ -15,7 +15,8 @@ import {
   SkipForward,
   Volume2,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Sparkles
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -424,8 +425,12 @@ export const GleeWorldLanding = () => {
 
       {/* Upcoming Events Section */}
       <section id="events" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Upcoming Events</h2>
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500 animate-pulse" />
+            <h2 className="text-2xl sm:text-4xl font-dancing font-bold text-gray-900">Upcoming Events</h2>
+            <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-pink-500 animate-pulse" />
+          </div>
         </div>
           
           
