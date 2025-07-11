@@ -26,12 +26,6 @@ export const AppNavigation = () => {
 
   const navigationItems = [
     {
-      label: "Dashboard",
-      href: "/dashboard",
-      icon: Home,
-      permission: null
-    },
-    {
       label: "Library",
       href: "/?tab=library",
       icon: Library,
