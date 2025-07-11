@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { AddressInput } from "@/components/shared/AddressInput";
 import { 
   CalendarIcon, 
   MapPinIcon, 
@@ -361,16 +362,28 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="address" className="text-sm font-medium">Full Address</Label>
-                <Input
-                  id="address"
-                  value={formData.address}
-                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                  placeholder="Complete street address"
-                  className="animate-fade-in"
-                />
-              </div>
+              <AddressInput
+                id="address"
+                label="Full Address"
+                value={formData.address}
+                onChange={(value) => setFormData(prev => ({ ...prev, address: value }))}
+                placeholder="Complete street address"
+                className="animate-fade-in"
+                onPlaceSelect={(place) => {
+                  if (place.formatted_address) {
+                    setFormData(prev => ({ ...prev, address: place.formatted_address || '' }));
+                  }
+                  // Auto-fill location if not already filled
+                  if (!formData.location && place.address_components) {
+                    const city = place.address_components.find(comp => 
+                      comp.types.includes('locality') || comp.types.includes('administrative_area_level_1')
+                    );
+                    if (city) {
+                      setFormData(prev => ({ ...prev, location: city.long_name }));
+                    }
+                  }
+                }}
+              />
             </CardContent>
           </Card>
 

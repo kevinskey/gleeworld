@@ -10,6 +10,7 @@ import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { AddressInput } from "@/components/shared/AddressInput";
 
 interface CreateEventDialogProps {
   onEventCreated: () => void;
@@ -220,15 +221,27 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="address">Full Address</Label>
-              <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                placeholder="Complete street address"
-              />
-            </div>
+            <AddressInput
+              id="address"
+              label="Full Address"
+              value={formData.address}
+              onChange={(value) => setFormData(prev => ({ ...prev, address: value }))}
+              placeholder="Complete street address"
+              onPlaceSelect={(place) => {
+                if (place.formatted_address) {
+                  setFormData(prev => ({ ...prev, address: place.formatted_address || '' }));
+                }
+                // Auto-fill location if not already filled
+                if (!formData.location && place.address_components) {
+                  const city = place.address_components.find(comp => 
+                    comp.types.includes('locality') || comp.types.includes('administrative_area_level_1')
+                  );
+                  if (city) {
+                    setFormData(prev => ({ ...prev, location: city.long_name }));
+                  }
+                }
+              }}
+            />
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
