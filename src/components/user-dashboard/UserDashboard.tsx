@@ -37,10 +37,12 @@ import { useUserContracts } from "@/hooks/useUserContracts";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useState } from "react";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 export const UserDashboard = () => {
   const { user } = useAuth();
   const { profile } = useProfile();
+  const navigate = useNavigate();
   const { getSettingByName } = useDashboardSettings();
   const { dashboardData, payments, notifications, loading: dashboardLoading } = useUserDashboard();
   const { events, loading: eventsLoading, getUpcomingEvents } = useGleeWorldEvents();
@@ -406,7 +408,11 @@ export const UserDashboard = () => {
                     Events
                   </h3>
                   <div className="space-y-2">
-                    <Button variant="ghost" className="w-full justify-start h-auto p-3">
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start h-auto p-3"
+                      onClick={() => navigate('/calendar')}
+                    >
                       <Calendar className="h-4 w-4 mr-2" />
                       <div className="text-left">
                         <div>Calendar</div>
