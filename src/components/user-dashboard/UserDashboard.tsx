@@ -31,12 +31,20 @@ import { DashboardSettings } from "@/components/admin/DashboardSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
+import { useUserDashboard } from "@/hooks/useUserDashboard";
+import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
+import { useUserContracts } from "@/hooks/useUserContracts";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useState } from "react";
+import { format } from "date-fns";
 
 export const UserDashboard = () => {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { getSettingByName } = useDashboardSettings();
+  const { dashboardData, payments, notifications, loading: dashboardLoading } = useUserDashboard();
+  const { events, loading: eventsLoading, getUpcomingEvents } = useGleeWorldEvents();
+  const { contracts, loading: contractsLoading } = useUserContracts();
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
@@ -110,37 +118,48 @@ export const UserDashboard = () => {
         return 'Member';
     }
   };
+
+  // Get real data
+  const upcomingEventsList = getUpcomingEvents(6);
   
-  // Mock data for demonstration
-  const memberProfile = {
-    name: displayName,
-    email: user.email || '',
-    voicePart: 'Soprano I',
-    classYear: '2025',
-    role: 'Active Member',
-    status: 'Good Standing',
-    joinDate: 'Fall 2021'
+  // Create real recent activity from various sources
+  const getRecentActivity = () => {
+    const activities: Array<{id: string, action: string, time: string, type: string}> = [];
+    
+    // Add recent payments
+    payments?.slice(0, 2).forEach((payment, index) => {
+      activities.push({
+        id: `payment-${payment.id}`,
+        action: `Payment received: $${payment.amount}`,
+        time: new Date(payment.created_at).toLocaleDateString(),
+        type: 'payment'
+      });
+    });
+    
+    // Add recent notifications
+    notifications?.slice(0, 2).forEach((notification, index) => {
+      activities.push({
+        id: `notification-${notification.id}`,
+        action: notification.message,
+        time: new Date(notification.created_at).toLocaleDateString(),
+        type: 'notification'
+      });
+    });
+    
+    // Add recent contracts
+    contracts?.slice(0, 2).forEach((contract) => {
+      activities.push({
+        id: `contract-${contract.id}`,
+        action: `Contract ${contract.signature_status}: ${contract.title}`,
+        time: new Date(contract.created_at).toLocaleDateString(),
+        type: 'contract'
+      });
+    });
+    
+    return activities.slice(0, 4);
   };
 
-  const quickStats = {
-    upcomingEvents: 3,
-    sheetMusicCount: 24,
-    attendancePercentage: 87,
-    duesStatus: 'Paid'
-  };
-
-  const upcomingEvents = [
-    { id: 1, title: 'Weekly Rehearsal', date: '2024-01-15', time: '7:00 PM', location: 'Music Hall' },
-    { id: 2, title: 'Holiday Concert', date: '2024-01-20', time: '3:00 PM', location: 'Main Auditorium' },
-    { id: 3, title: 'Alumni Social', date: '2024-01-25', time: '6:00 PM', location: 'Student Center' }
-  ];
-
-  const recentActivity = [
-    { id: 1, action: 'Downloaded "Ave Maria" sheet music', time: '2 hours ago', type: 'music' },
-    { id: 2, action: 'Marked attendance for rehearsal', time: '1 day ago', type: 'attendance' },
-    { id: 3, action: 'Logged 45 minutes of practice', time: '2 days ago', type: 'practice' },
-    { id: 4, action: 'Paid semester dues', time: '1 week ago', type: 'payment' }
-  ];
+  const recentActivity = getRecentActivity();
 
   return (
     <UniversalLayout containerized={false}>
@@ -167,25 +186,27 @@ export const UserDashboard = () => {
                 <Avatar className="h-16 w-16 ring-2 ring-white/50">
                   <AvatarImage src={profile?.avatar_url || "/placeholder-avatar.jpg"} />
                   <AvatarFallback className="bg-blue-100 text-blue-600 text-lg font-semibold">
-                    {memberProfile.name.charAt(0).toUpperCase()}
+                    {displayName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <h1 className={`text-2xl font-bold ${welcomeCardSetting?.image_url ? 'text-white drop-shadow-lg' : 'text-gray-900'}`}>
-                    Welcome back, {memberProfile.name}!
+                    Welcome back, {displayName}!
                   </h1>
                   <p className={`${welcomeCardSetting?.image_url ? 'text-white/90 drop-shadow' : 'text-gray-600'}`}>
                     Spelman College Glee Club {getUserTitle()}
                   </p>
                   <div className="flex flex-wrap gap-2 mt-2">
-                    <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-                      {memberProfile.voicePart}
-                    </Badge>
+                    {profile?.voice_part && (
+                      <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                        {profile.voice_part}
+                      </Badge>
+                    )}
                     <Badge variant="outline" className="bg-white/20 text-white border-white/30">
-                      {memberProfile.classYear}
+                      {getUserTitle()}
                     </Badge>
                     <Badge className="bg-green-500/80 text-white border-green-300/30">
-                      {memberProfile.status}
+                      Active Member
                     </Badge>
                   </div>
                 </div>
@@ -194,7 +215,7 @@ export const UserDashboard = () => {
                 <p className={`text-sm ${welcomeCardSetting?.image_url ? 'text-white/80' : 'text-gray-600'}`}>
                   Member since
                 </p>
-                <p className="font-medium">{memberProfile.joinDate}</p>
+                <p className="font-medium">{profile?.created_at ? format(new Date(profile.created_at), 'MMMM yyyy') : 'Recently'}</p>
               </div>
             </div>
           </div>
@@ -207,41 +228,43 @@ export const UserDashboard = () => {
                 <Calendar className="h-4 w-4 text-blue-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{quickStats.upcomingEvents}</div>
-                <p className="text-xs text-gray-600">Next: Tomorrow 7PM</p>
+                <div className="text-2xl font-bold">{upcomingEventsList.length}</div>
+                <p className="text-xs text-gray-600">
+                  {upcomingEventsList.length > 0 ? `Next: ${format(new Date(upcomingEventsList[0].start_date), 'MMM dd')}` : 'No events scheduled'}
+                </p>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-md transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Sheet Music</CardTitle>
+                <CardTitle className="text-sm font-medium">Contracts</CardTitle>
                 <Music className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{quickStats.sheetMusicCount}</div>
-                <p className="text-xs text-green-600">2 new this week</p>
+                <div className="text-2xl font-bold">{dashboardData?.total_contracts || 0}</div>
+                <p className="text-xs text-green-600">{dashboardData?.signed_contracts || 0} signed</p>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-md transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Attendance</CardTitle>
+                <CardTitle className="text-sm font-medium">Payments</CardTitle>
                 <CheckCircle className="h-4 w-4 text-purple-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{quickStats.attendancePercentage}%</div>
-                <Progress value={quickStats.attendancePercentage} className="mt-2 h-2" />
+                <div className="text-2xl font-bold">{dashboardData?.payments_received || 0}</div>
+                <p className="text-xs text-purple-600">${dashboardData?.total_amount_received || 0}</p>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-md transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Dues Status</CardTitle>
+                <CardTitle className="text-sm font-medium">Notifications</CardTitle>
                 <DollarSign className="h-4 w-4 text-emerald-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-600">{quickStats.duesStatus}</div>
-                <p className="text-xs text-gray-600">Spring 2024</p>
+                <div className="text-2xl font-bold text-emerald-600">{dashboardData?.unread_notifications || 0}</div>
+                <p className="text-xs text-gray-600">Unread</p>
               </CardContent>
             </Card>
           </div>
@@ -275,23 +298,37 @@ export const UserDashboard = () => {
           </Card>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Upcoming Events */}
+            {/* Upcoming Events - Horizontal Carousel */}
             <Card>
               <CardHeader>
                 <CardTitle>Upcoming Events</CardTitle>
                 <CardDescription>Your next rehearsals and performances</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {upcomingEvents.map((event) => (
-                  <div key={event.id} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
-                    <Calendar className="h-5 w-5 text-blue-600" />
-                    <div className="flex-1">
-                      <h4 className="font-medium">{event.title}</h4>
-                      <p className="text-sm text-gray-600">{event.date} at {event.time}</p>
-                      <p className="text-sm text-gray-500">{event.location}</p>
-                    </div>
-                  </div>
-                ))}
+              <CardContent>
+                {upcomingEventsList.length > 0 ? (
+                  <Carousel className="w-full">
+                    <CarouselContent className="-ml-2 md:-ml-4">
+                      {upcomingEventsList.map((event) => (
+                        <CarouselItem key={event.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+                          <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg min-w-[280px]">
+                            <Calendar className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium truncate">{event.title}</h4>
+                              <p className="text-sm text-gray-600">{format(new Date(event.start_date), 'PPP')}</p>
+                              {event.location && (
+                                <p className="text-sm text-gray-500 truncate">{event.location}</p>
+                              )}
+                            </div>
+                          </div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselPrevious />
+                    <CarouselNext />
+                  </Carousel>
+                ) : (
+                  <p className="text-gray-500 text-center py-4">No upcoming events scheduled</p>
+                )}
               </CardContent>
             </Card>
 
