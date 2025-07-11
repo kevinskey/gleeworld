@@ -85,16 +85,14 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
                   )
                 )}
                 
-                {/* Dashboard Icon - Shows appropriate dashboard based on user role */}
-                {profile?.role && (
-                  <Link
-                    to={profile.role === 'admin' || profile.role === 'super-admin' ? '/system' : '/dashboard'}
-                    className="text-white/80 hover:text-white transition-colors flex items-center p-2 rounded-lg hover:bg-white/10"
-                    title={`Go to ${profile.role === 'admin' || profile.role === 'super-admin' ? 'Admin' : 'User'} Dashboard`}
-                  >
-                    <LayoutDashboard className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </Link>
-                )}
+                {/* Home Icon - Takes users to public landing page */}
+                <Link
+                  to="/landing"
+                  className="text-white/80 hover:text-white transition-colors flex items-center p-2 rounded-lg hover:bg-white/10"
+                  title="Go to Home Page"
+                >
+                  <Home className="h-4 w-4 sm:h-5 sm:w-5" />
+                </Link>
                 
                 <DashboardSwitcher />
                 
