@@ -48,7 +48,7 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
               <img 
                 src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
                 alt="Spelman College Glee Club" 
-                className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 object-contain"
+                className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 object-contain filter brightness-0 invert"
               />
               <span className="text-white font-semibold text-sm sm:text-base md:text-lg hidden xs:block">
                 GleeWorld
