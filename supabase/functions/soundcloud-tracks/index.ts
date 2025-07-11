@@ -28,14 +28,14 @@ serve(async (req) => {
 
     console.log(`🎵 Fetching SoundCloud tracks for: "${query}" (limit: ${limit})`);
 
-    const tracks = await fetchSoundCloudTracks(query, limit);
+    const result = await fetchSoundCloudTracks(query, limit);
     
     return new Response(
       JSON.stringify({ 
-        tracks,
-        source: tracks.length > 0 ? 'soundcloud' : 'fallback',
+        tracks: result.tracks,
+        source: result.source,
         query: query,
-        count: tracks.length
+        count: result.tracks.length
       }),
       { 
         status: 200, 
@@ -60,14 +60,14 @@ serve(async (req) => {
   }
 });
 
-async function fetchSoundCloudTracks(query: string, limit: number): Promise<Track[]> {
+async function fetchSoundCloudTracks(query: string, limit: number): Promise<{tracks: Track[], source: string}> {
   const clientId = Deno.env.get('SOUNDCLOUD_CLIENT_ID');
   
   console.log('🔑 Checking SOUNDCLOUD_CLIENT_ID:', clientId ? 'Present' : 'Missing');
   
   if (!clientId) {
     console.warn('⚠️ SOUNDCLOUD_CLIENT_ID not configured');
-    return getFallbackTracks();
+    return { tracks: getFallbackTracks(), source: 'fallback_no_client_id' };
   }
 
   try {
@@ -97,7 +97,7 @@ async function fetchSoundCloudTracks(query: string, limit: number): Promise<Trac
       console.error(`❌ SoundCloud API error: ${response.status}`);
       const errorText = await response.text();
       console.error('Error details:', errorText);
-      return getFallbackTracks();
+      return { tracks: getFallbackTracks(), source: 'fallback_api_error' };
     }
 
     const data = await response.json();
@@ -106,7 +106,7 @@ async function fetchSoundCloudTracks(query: string, limit: number): Promise<Trac
 
     if (!data.collection || !Array.isArray(data.collection) || data.collection.length === 0) {
       console.warn('⚠️ No tracks found in SoundCloud response');
-      return getFallbackTracks();
+      return { tracks: getFallbackTracks(), source: 'fallback_no_results' };
     }
 
     // Process tracks from SoundCloud
@@ -140,15 +140,15 @@ async function fetchSoundCloudTracks(query: string, limit: number): Promise<Trac
 
     if (processedTracks.length === 0) {
       console.warn('⚠️ No streamable tracks found');
-      return getFallbackTracks();
+      return { tracks: getFallbackTracks(), source: 'fallback_no_streamable' };
     }
 
     console.log(`🎧 Successfully processed ${processedTracks.length} tracks from SoundCloud`);
-    return processedTracks;
+    return { tracks: processedTracks, source: 'soundcloud' };
 
   } catch (error) {
     console.error('💥 Error fetching from SoundCloud:', error);
-    return getFallbackTracks();
+    return { tracks: getFallbackTracks(), source: 'fallback_error' };
   }
 }
 
