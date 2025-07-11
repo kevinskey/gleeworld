@@ -423,9 +423,8 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Upcoming Events Section */}
-      <section id="events" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
-        <div className="container mx-auto max-w-7xl">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4">
+      <section id="events" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 w-full">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Upcoming Events</h2>
             <Button variant="link" className="text-blue-600 hover:text-blue-700 self-start sm:self-auto">
               View All <ArrowRight className="ml-1 h-4 w-4" />
@@ -514,8 +513,7 @@ export const GleeWorldLanding = () => {
               <CarouselPrevious className="hidden sm:flex left-4" />
               <CarouselNext className="hidden sm:flex right-4" />
             </Carousel>
-          )}
-        </div>
+           )}
       </section>
 
       {/* Music Player Section */}
