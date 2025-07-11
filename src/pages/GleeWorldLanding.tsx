@@ -71,12 +71,7 @@ export const GleeWorldLanding = () => {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [tracksLoading, setTracksLoading] = useState(true);
 
-  // Define sample tracks with working audio URLs
-  const sampleTracks = [
-    { id: '1', title: 'Anchored in the Lord', duration: '3:45', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' },
-    { id: '2', title: 'A Choice to Change the World', duration: '4:12', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' },
-    { id: '3', title: 'Children Go Where I Send Thee', duration: '3:28', image: '/lovable-uploads/bf415f6e-790e-4f30-9259-940f17e208d0.png', audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' }
-  ];
+  // Remove hardcoded sample tracks - they're now handled by the edge function
 
   useEffect(() => {
     const fetchData = async () => {
@@ -111,27 +106,28 @@ export const GleeWorldLanding = () => {
         console.log('🎵 Starting SoundCloud fetch...');
         setTracksLoading(true);
         
-        // Try to fetch from SoundCloud first
-        const { data, error } = await supabase.functions.invoke('soundcloud-tracks');
+        // Fetch tracks from the improved edge function
+        const { data, error } = await supabase.functions.invoke('soundcloud-tracks', {
+          body: { q: 'gospel choir spelman', limit: 8 }
+        });
         
         console.log('📡 SoundCloud API response:', { data, error });
         
         if (error) {
-          console.error('❌ Error fetching SoundCloud tracks:', error);
-          console.log('🔄 Falling back to sample tracks');
-          setTracks(sampleTracks);
-        } else if (data?.tracks && data.tracks.length > 0) {
-          console.log('✅ Got SoundCloud tracks:', data.tracks.length, 'tracks');
+          console.error('❌ Error fetching tracks:', error);
+          // Edge function handles its own fallbacks, so we should still get tracks
+          setTracks([]);
+        } else if (data?.tracks && Array.isArray(data.tracks)) {
+          console.log('✅ Got tracks:', data.tracks.length, 'tracks from', data.source);
           console.log('🎧 First track:', data.tracks[0]);
           setTracks(data.tracks);
         } else {
-          console.log('⚠️ No tracks in response, using sample tracks');
-          setTracks(sampleTracks);
+          console.log('⚠️ No tracks in response');
+          setTracks([]);
         }
       } catch (error) {
         console.error('💥 Error calling SoundCloud function:', error);
-        console.log('🔄 Falling back to sample tracks');
-        setTracks(sampleTracks);
+        setTracks([]);
       } finally {
         setTracksLoading(false);
         console.log('🏁 SoundCloud fetch complete');
