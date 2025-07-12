@@ -612,7 +612,7 @@ export const GleeWorldLanding = () => {
               <div className="text-center mb-6 sm:mb-8">
                 <div className="flex items-center justify-center gap-3 mb-2">
                   <AlbumIcon className="h-8 w-8 sm:h-10 sm:w-10 text-purple-400 animate-pulse" />
-                  <h2 className="text-2xl sm:text-4xl md:text-6xl font-dancing font-bold text-gray-900">Our Albums</h2>
+                  <h2 className="text-2xl sm:text-4xl md:text-6xl font-dancing font-bold text-gray-900">Our Music</h2>
                   <AlbumIcon className="h-8 w-8 sm:h-10 sm:w-10 text-purple-600 animate-pulse" />
                 </div>
                 <p className="text-gray-600 text-lg">Discover our musical journey through our album collection</p>
