@@ -327,8 +327,7 @@ export const GleeWorldLanding = () => {
             <nav className="hidden lg:flex items-center space-x-8">
               <a href="#home" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Home</a>
               <a href="#about" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">About</a>
-              <a href="#events" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Events</a>
-              <Link to="/public-calendar" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Public Calendar</Link>
+              <Link to="/public-calendar" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Calendar</Link>
               <a href="#contact" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Contact</a>
             </nav>
 
