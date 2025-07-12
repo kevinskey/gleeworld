@@ -2760,6 +2760,98 @@ export type Database = {
           },
         ]
       }
+      music_albums: {
+        Row: {
+          artist: string
+          cover_image_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          release_date: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          artist: string
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          release_date?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          artist?: string
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          release_date?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      music_tracks: {
+        Row: {
+          album_id: string | null
+          artist: string
+          audio_url: string
+          created_at: string
+          created_by: string | null
+          duration: number | null
+          genre: string | null
+          id: string
+          lyrics: string | null
+          play_count: number | null
+          title: string
+          track_number: number | null
+          updated_at: string
+        }
+        Insert: {
+          album_id?: string | null
+          artist: string
+          audio_url: string
+          created_at?: string
+          created_by?: string | null
+          duration?: number | null
+          genre?: string | null
+          id?: string
+          lyrics?: string | null
+          play_count?: number | null
+          title: string
+          track_number?: number | null
+          updated_at?: string
+        }
+        Update: {
+          album_id?: string | null
+          artist?: string
+          audio_url?: string
+          created_at?: string
+          created_by?: string | null
+          duration?: number | null
+          genre?: string | null
+          id?: string
+          lyrics?: string | null
+          play_count?: number | null
+          title?: string
+          track_number?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "music_tracks_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "music_albums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       performers: {
         Row: {
           address: string | null
@@ -2817,6 +2909,78 @@ export type Database = {
           submitted_at?: string | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      playlist_tracks: {
+        Row: {
+          added_at: string
+          id: string
+          playlist_id: string
+          position: number
+          track_id: string
+        }
+        Insert: {
+          added_at?: string
+          id?: string
+          playlist_id: string
+          position: number
+          track_id: string
+        }
+        Update: {
+          added_at?: string
+          id?: string
+          playlist_id?: string
+          position?: number
+          track_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_tracks_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlist_tracks_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "music_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playlists: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -3151,6 +3315,35 @@ export type Database = {
         }
         Relationships: []
       }
+      track_likes: {
+        Row: {
+          created_at: string
+          id: string
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          track_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "track_likes_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "music_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transport_budget: {
         Row: {
           cost: number | null
@@ -3420,12 +3613,20 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_track_like_count: {
+        Args: { track_uuid: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
+      }
+      increment_play_count: {
+        Args: { track_uuid: string }
+        Returns: undefined
       }
       is_admin: {
         Args: { _user_id: string }

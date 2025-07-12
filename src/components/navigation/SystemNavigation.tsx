@@ -88,11 +88,11 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
               </Button>
               <Button
                 variant="ghost"
-                onClick={() => { onTabChange('soundcloud'); setMobileOpen(false); }}
-                className={`w-full justify-start ${activeTab === 'soundcloud' ? 'bg-primary text-primary-foreground' : ''}`}
+                onClick={() => { onTabChange('music'); setMobileOpen(false); }}
+                className={`w-full justify-start ${activeTab === 'music' ? 'bg-primary text-primary-foreground' : ''}`}
               >
                 <Music className="h-4 w-4 mr-3" />
-                SoundCloud
+                Music
               </Button>
             </div>
           </div>
@@ -141,11 +141,11 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
 
       <Button
         variant="ghost"
-        onClick={() => onTabChange('soundcloud')}
-        className={getTabClasses('soundcloud')}
+        onClick={() => onTabChange('music')}
+        className={getTabClasses('music')}
       >
         <Music className="h-4 w-4" />
-        <span className="hidden lg:inline">SoundCloud</span>
+        <span className="hidden lg:inline">Music</span>
       </Button>
 
       {/* Financial Dropdown */}

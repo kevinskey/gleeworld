@@ -19,6 +19,7 @@ import { AccountingFilters } from "./accounting/AccountingFilters";
 import { useAccountingFiltering } from "@/hooks/useAccountingFiltering";
 import { Shield, Users, Settings, FileText, Activity, Receipt, Calculator, Mail, Music } from "lucide-react";
 import { SoundCloudManagement } from "./admin/SoundCloudManagement";
+import { MusicManagement } from "./admin/MusicManagement";
 
 interface AdminPanelProps {
   activeTab?: string;
@@ -70,6 +71,7 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
      currentPath.includes('receipts') ? 'receipts' : 
      currentPath.includes('accounting') ? 'accounting' : 
      currentPath.includes('soundcloud') ? 'soundcloud' :
+     currentPath.includes('music') ? 'music' :
      currentPath.includes('settings') ? 'settings' : 'overview');
 
   const handleSort = (column: string) => {
@@ -173,6 +175,8 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
         );
       case 'soundcloud':
         return <SoundCloudManagement />;
+      case 'music':
+        return <MusicManagement />;
       case 'settings':
         return <SystemSettings />;
       default:
