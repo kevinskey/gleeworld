@@ -5,15 +5,9 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { 
-  Music, 
   Calendar, 
   MapPin,
   ArrowRight,
-  Play,
-  Pause,
-  SkipBack,
-  SkipForward,
-  Volume2,
   ChevronLeft,
   ChevronRight,
   Sparkles
@@ -52,15 +46,6 @@ interface HeroSlide {
   is_active: boolean | null;
 }
 
-interface Track {
-  id: string;
-  title: string;
-  duration: string;
-  image: string;
-  audioUrl: string;
-  user?: string;
-  permalink_url?: string;
-}
 
 export const GleeWorldLanding = () => {
   const { user } = useAuth();
@@ -68,11 +53,6 @@ export const GleeWorldLanding = () => {
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [tracksLoading, setTracksLoading] = useState(true);
 
   // Remove hardcoded sample tracks - they're now handled by the edge function
 
@@ -104,41 +84,7 @@ export const GleeWorldLanding = () => {
       }
     };
 
-    const fetchSoundCloudTracks = async () => {
-      try {
-        console.log('🎵 Starting SoundCloud fetch...');
-        setTracksLoading(true);
-        
-        // Fetch tracks from the improved edge function
-        const { data, error } = await supabase.functions.invoke('soundcloud-tracks', {
-          body: { q: 'gospel choir spelman', limit: 8 }
-        });
-        
-        console.log('📡 SoundCloud API response:', { data, error });
-        
-        if (error) {
-          console.error('❌ Error fetching tracks:', error);
-          // Edge function handles its own fallbacks, so we should still get tracks
-          setTracks([]);
-        } else if (data?.tracks && Array.isArray(data.tracks)) {
-          console.log('✅ Got tracks:', data.tracks.length, 'tracks from', data.source);
-          console.log('🎧 First track:', data.tracks[0]);
-          setTracks(data.tracks);
-        } else {
-          console.log('⚠️ No tracks in response');
-          setTracks([]);
-        }
-      } catch (error) {
-        console.error('💥 Error calling SoundCloud function:', error);
-        setTracks([]);
-      } finally {
-        setTracksLoading(false);
-        console.log('🏁 SoundCloud fetch complete');
-      }
-    };
-
     fetchData();
-    fetchSoundCloudTracks();
   }, []);
 
   // Auto-advance slides based on individual slide duration
@@ -224,78 +170,6 @@ export const GleeWorldLanding = () => {
   };
 
 
-  // Audio player functionality
-  const playTrack = async (track: Track) => {
-    try {
-      // Stop current audio if playing
-      if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-      }
-      
-      console.log('Playing track:', track.title, 'URL:', track.audioUrl);
-      
-      const newAudio = new Audio(track.audioUrl);
-      setAudio(newAudio);
-      setCurrentTrack(track);
-      
-      // Add error handling for audio loading
-      newAudio.onerror = (e) => {
-        console.error('Audio failed to load:', e);
-        setIsPlaying(false);
-        alert('Sorry, this audio track could not be loaded.');
-      };
-      
-      newAudio.onloadstart = () => {
-        console.log('Audio started loading');
-      };
-      
-      newAudio.oncanplay = () => {
-        console.log('Audio can start playing');
-      };
-      
-      newAudio.onended = () => {
-        console.log('Audio ended');
-        setIsPlaying(false);
-      };
-      
-      // Try to play the audio
-      try {
-        await newAudio.play();
-        setIsPlaying(true);
-        console.log('Audio is now playing');
-      } catch (playError) {
-        console.error('Play failed:', playError);
-        setIsPlaying(false);
-        alert('Audio playback failed. This might be due to browser autoplay policies.');
-      }
-    } catch (error) {
-      console.error('Error in playTrack:', error);
-      setIsPlaying(false);
-    }
-  };
-
-  const togglePlayPause = async () => {
-    if (!audio || !currentTrack) {
-      console.log('No audio or track selected');
-      return;
-    }
-    
-    try {
-      if (isPlaying) {
-        audio.pause();
-        setIsPlaying(false);
-        console.log('Audio paused');
-      } else {
-        await audio.play();
-        setIsPlaying(true);
-        console.log('Audio resumed');
-      }
-    } catch (error) {
-      console.error('Error toggling play/pause:', error);
-      setIsPlaying(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -448,7 +322,7 @@ export const GleeWorldLanding = () => {
               ) : (
                 <div className="w-full h-full bg-gradient-to-r from-pink-100/50 to-rose-200/50 flex items-center justify-center backdrop-blur-sm">
                   <div className="text-center">
-                    <Music className="h-24 w-24 text-gray-400 mx-auto mb-4" />
+                    <Calendar className="h-24 w-24 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-600">No hero slides configured</p>
                   </div>
                 </div>
@@ -505,10 +379,10 @@ export const GleeWorldLanding = () => {
                               src="https://dzzptovqfqausipsgabw.supabase.co/storage/v1/object/public/event-images/event-images/1750597449197-ilkitkdn1ld.png"
                               alt={event.title}
                               className="w-full h-full object-cover rounded-t-lg"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center"><Music class="h-12 w-12 text-blue-600" /></div>';
-                              }}
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center"><div class="h-12 w-12 text-blue-600"></div></div>';
+                                  }}
                             />
                           </div>
                           <CardContent className="p-6">
@@ -555,10 +429,10 @@ export const GleeWorldLanding = () => {
                                   src="https://dzzptovqfqausipsgabw.supabase.co/storage/v1/object/public/event-images/event-images/1750597449197-ilkitkdn1ld.png"
                                   alt={event.title}
                                   className="w-full h-full object-cover rounded-t-lg"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                    e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center"><Music class="h-12 w-12 text-blue-600" /></div>';
-                                  }}
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                      e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center"><div class="h-12 w-12 text-blue-600"></div></div>';
+                                    }}
                                 />
                               </div>
                               <CardContent className="p-6 sm:p-8">
@@ -602,7 +476,7 @@ export const GleeWorldLanding = () => {
                           </div>
                           
                           <div className="h-48 sm:h-64 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm">
-                            <Music className="h-12 w-12 text-blue-600" />
+                            <Calendar className="h-12 w-12 text-blue-600" />
                           </div>
                           <CardContent className="p-6 sm:p-8">
                             <h3 className="text-2xl sm:text-2xl font-semibold text-gray-900 mb-4">Glee Club Rehearsal</h3>
@@ -627,93 +501,6 @@ export const GleeWorldLanding = () => {
         </div>
       </section>
 
-      {/* Music Player Section */}
-      <section className="pt-10 pb-12 sm:pt-14 sm:pb-16 px-0.5 sm:px-1 md:px-1.5 lg:px-3.5">
-        <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto">
-          <div className="text-center mb-6 sm:mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Listen to the Glee</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
-              Experience our music collection with our enhanced audio player
-            </p>
-          </div>
-
-          <div className="max-w-4xl mx-auto">
-            <Card className="p-4 sm:p-6 bg-white/30 backdrop-blur-md border border-white/20 shadow-2xl">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-                <div>
-                  <h3 className="text-2xl sm:text-xl font-semibold text-gray-900">Centennial Tour 2025</h3>
-                  <p className="text-gray-600 text-sm sm:text-base">14 tracks</p>
-                </div>
-                <div className="flex items-center space-x-3 self-start sm:self-auto">
-                  <Button variant="outline" size="sm" className="bg-white/20 backdrop-blur-md border-white/30 hover:bg-white/30">
-                    <SkipBack className="h-4 w-4" />
-                  </Button>
-                  <Button size="sm" onClick={togglePlayPause} className="bg-blue-500/80 backdrop-blur-md hover:bg-blue-600/80">
-                    {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                  </Button>
-                  <Button variant="outline" size="sm" className="bg-white/20 backdrop-blur-md border-white/30 hover:bg-white/30">
-                    <SkipForward className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="sm" className="bg-white/20 backdrop-blur-md border-white/30 hover:bg-white/30">
-                    <Volume2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {tracksLoading ? (
-                <div className="space-y-2 sm:space-y-3">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 rounded-lg animate-pulse bg-white/10 backdrop-blur-sm">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200/50 rounded flex-shrink-0"></div>
-                      <div className="flex-1 min-w-0">
-                        <div className="h-4 bg-gray-200/50 rounded mb-1"></div>
-                        <div className="h-3 bg-gray-200/50 rounded w-1/2"></div>
-                      </div>
-                      <div className="w-8 h-8 bg-gray-200/50 rounded flex-shrink-0"></div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-2 sm:space-y-3">
-                  {tracks.map((track, index) => (
-                    <div 
-                      key={track.id} 
-                      className={`flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 rounded-lg hover:bg-white/20 backdrop-blur-sm cursor-pointer transition-all duration-200 border border-transparent hover:border-white/20 ${
-                        currentTrack?.id === track.id ? 'bg-blue-500/20 border-blue-300/30' : ''
-                      }`}
-                      onClick={() => playTrack(track)}
-                    >
-                      <img 
-                        src={track.image} 
-                        alt={track.title}
-                        className="w-10 h-10 sm:w-12 sm:h-12 rounded object-contain flex-shrink-0 bg-gray-100/50"
-                        onError={(e) => {
-                          e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80";
-                        }}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">{track.title}</h4>
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs sm:text-sm text-gray-600">{track.duration}</p>
-                          {track.user && (
-                            <>
-                              <span className="text-gray-400">•</span>
-                              <p className="text-xs sm:text-sm text-gray-500">{track.user}</p>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="sm" className="flex-shrink-0 hover:bg-white/20">
-                        <Play className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-          </div>
-        </div>
-      </section>
 
       {/* Footer */}
       <section className="pt-4 pb-6 px-0.5 sm:px-1 md:px-1.5 lg:px-3.5">
