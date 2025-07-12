@@ -352,7 +352,7 @@ export const GleeWorldLanding = () => {
 
       {/* Hero Section */}
       <section className="relative">
-        <div className="h-[25vh] sm:h-[60vh] md:h-[70vh] lg:h-[80vh] sm:min-h-[400px] overflow-hidden relative">
+        <div className="h-[25vh] sm:h-[50vh] md:h-[60vh] lg:h-[70vh] xl:h-[75vh] sm:min-h-[400px] overflow-hidden relative">
           {heroSlides.length > 0 ? (
             <>
               {/* Desktop Image */}
