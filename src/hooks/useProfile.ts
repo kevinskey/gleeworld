@@ -146,6 +146,40 @@ export const useProfile = () => {
     }
   };
 
+  const updateAvatarUrl = async (avatarUrl: string) => {
+    if (!user) return false;
+
+    try {
+      setUpdating(true);
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          avatar_url: avatarUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      // Update local state immediately without full refetch
+      if (profile) {
+        setProfile({ ...profile, avatar_url: avatarUrl });
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error updating avatar:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update avatar",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   useEffect(() => {
     fetchProfile();
   }, [user]);
@@ -156,6 +190,7 @@ export const useProfile = () => {
     updating,
     updateProfile,
     uploadAvatar,
+    updateAvatarUrl,
     refetchProfile: fetchProfile,
   };
 };

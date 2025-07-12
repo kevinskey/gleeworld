@@ -16,6 +16,7 @@ import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useProfile } from "@/hooks/useProfile";
 import { 
   User, 
   Mail, 
@@ -86,10 +87,10 @@ const voiceParts = [
 const Profile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { profile, loading: profileLoading, updateAvatarUrl } = useProfile();
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedInstruments, setSelectedInstruments] = useState<string[]>([]);
-  const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
   const [selectedImageForCrop, setSelectedImageForCrop] = useState<string>("");
   const [isAvatarUploading, setIsAvatarUploading] = useState(false);
@@ -107,57 +108,31 @@ const Profile = () => {
   const canDance = watch("can_dance");
 
   useEffect(() => {
-    if (user) {
-      fetchProfile();
+    if (profile) {
+      // Set form values from profile data
+      setValue("full_name", profile.full_name || "");
+      setValue("bio", profile.bio || "");
+      setValue("website_url", profile.website_url || "");
+      setValue("phone_number", profile.phone_number || "");
+      setValue("student_number", profile.student_number || "");
+      setValue("workplace", profile.workplace || "");
+      setValue("school_address", profile.school_address || "");
+      setValue("home_address", profile.home_address || "");
+      setValue("voice_part", profile.voice_part || "");
+      setValue("can_dance", profile.can_dance || false);
+      setValue("preferred_payment_method", profile.preferred_payment_method || "");
+      
+      // Set social media links
+      const socialLinks = profile.social_media_links || {};
+      setValue("instagram", socialLinks.instagram || "");
+      setValue("twitter", socialLinks.twitter || "");
+      setValue("facebook", socialLinks.facebook || "");
+      setValue("youtube", socialLinks.youtube || "");
+
+      // Set instruments
+      setSelectedInstruments(profile.instruments_played || []);
     }
-  }, [user]);
-
-  const fetchProfile = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        // Set form values
-        setValue("full_name", data.full_name || "");
-        setValue("bio", data.bio || "");
-        setValue("website_url", data.website_url || "");
-        setValue("phone_number", data.phone_number || "");
-        setValue("student_number", data.student_number || "");
-        setValue("workplace", data.workplace || "");
-        setValue("school_address", data.school_address || "");
-        setValue("home_address", data.home_address || "");
-        setValue("voice_part", data.voice_part || "");
-        setValue("can_dance", data.can_dance || false);
-        setValue("preferred_payment_method", data.preferred_payment_method || "");
-        
-        // Set social media links
-        const socialLinks = (data.social_media_links as any) || {};
-        setValue("instagram", socialLinks.instagram || "");
-        setValue("twitter", socialLinks.twitter || "");
-        setValue("facebook", socialLinks.facebook || "");
-        setValue("youtube", socialLinks.youtube || "");
-
-        // Set instruments and avatar
-        setSelectedInstruments(data.instruments_played || []);
-        setAvatarUrl(data.avatar_url || "");
-      }
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load profile",
-        variant: "destructive",
-      });
-    }
-  };
+  }, [profile, setValue]);
 
   const onSubmit = async (data: ProfileFormData) => {
     console.log("🚀 Form submitted with data:", data);
@@ -285,26 +260,23 @@ const Profile = () => {
         .from('user-files')
         .getPublicUrl(filePath);
 
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: data.publicUrl })
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
-
-      setAvatarUrl(data.publicUrl);
-      setIsCropDialogOpen(false);
+      // Use the updateAvatarUrl method from useProfile hook for immediate update
+      const success = await updateAvatarUrl(data.publicUrl);
       
-      // Clean up the object URL
-      if (selectedImageForCrop) {
-        URL.revokeObjectURL(selectedImageForCrop);
-        setSelectedImageForCrop("");
-      }
+      if (success) {
+        setIsCropDialogOpen(false);
+        
+        // Clean up the object URL
+        if (selectedImageForCrop) {
+          URL.revokeObjectURL(selectedImageForCrop);
+          setSelectedImageForCrop("");
+        }
 
-      toast({
-        title: "Success",
-        description: "Avatar updated successfully",
-      });
+        toast({
+          title: "Success",
+          description: "Avatar updated successfully",
+        });
+      }
     } catch (error) {
       console.error('Error uploading avatar:', error);
       toast({
@@ -385,7 +357,7 @@ const Profile = () => {
               <div className="flex items-center gap-6">
                 <div className="relative">
                   <Avatar className="h-24 w-24 border-4 border-white/20 shadow-lg">
-                    <AvatarImage src={avatarUrl} className="object-cover" />
+                    <AvatarImage src={profile?.avatar_url || ""} className="object-cover" />
                     <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20">
                       <User className="h-12 w-12 text-primary" />
                     </AvatarFallback>
