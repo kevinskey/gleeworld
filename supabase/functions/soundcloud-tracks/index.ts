@@ -65,8 +65,8 @@ async function fetchSoundCloudTracks(query: string, limit: number): Promise<{tra
   const clientSecret = Deno.env.get('SOUNDCLOUD_CLIENT_SECRET');
   
   console.log('🔑 Checking credentials:', {
-    clientId: clientId ? 'Present' : 'Missing',
-    clientSecret: clientSecret ? 'Present' : 'Missing'
+    clientId: clientId ? `Present (${clientId.substring(0, 8)}...)` : 'Missing',
+    clientSecret: clientSecret ? `Present (${clientSecret.substring(0, 8)}...)` : 'Missing'
   });
   
   if (!clientId || !clientSecret) {
