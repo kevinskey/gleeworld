@@ -452,111 +452,115 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Upcoming Events Section */}
-      <section id="events" className="py-9 sm:py-12 px-3 sm:px-5 lg:px-6 w-full">
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-blue-400 animate-pulse" />
-            <h2 className="text-4xl sm:text-6xl font-dancing font-bold text-gray-900">Upcoming Events</h2>
-            <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-blue-600 animate-pulse" />
-          </div>
-        </div>
-          
-          
-          {loading ? (
-            <div className="flex space-x-4 overflow-hidden">
-              {[...Array(6)].map((_, i) => (
-                <Card key={i} className="animate-pulse flex-shrink-0 w-80">
-                  <div className="h-48 bg-gray-200 rounded-t-lg"></div>
-                  <CardContent className="p-6">
-                    <div className="h-4 bg-gray-200 rounded mb-4"></div>
-                    <div className="h-3 bg-gray-200 rounded mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-                  </CardContent>
-                </Card>
-              ))}
+      <section className="py-9 sm:py-12 px-3 sm:px-5 lg:px-6 w-full bg-gray-50">
+        <div className="container mx-auto max-w-7xl">
+          <Card className="p-6 sm:p-8">
+            <div className="text-center mb-6 sm:mb-8">
+              <div className="flex items-center justify-center gap-3 mb-2">
+                <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-blue-400 animate-pulse" />
+                <h2 className="text-4xl sm:text-6xl font-dancing font-bold text-gray-900">Upcoming Events</h2>
+                <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-blue-600 animate-pulse" />
+              </div>
             </div>
-          ) : events.length > 0 ? (
-            <Carousel className="w-full">
-              <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
-                {events.map((event) => (
-                  <CarouselItem key={event.id} className="pl-1 sm:pl-2 md:pl-4 basis-full">
-                    <Card className="hover:shadow-lg transition-shadow h-full w-full relative group">
-                      {/* Hover overlay button */}
-                      <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <Button size="sm" className="bg-white/90 text-gray-900 hover:bg-white shadow-lg backdrop-blur-sm">
-                          View All <ArrowRight className="ml-1 h-4 w-4" />
-                        </Button>
-                      </div>
-                      
-                      <div className="h-48 sm:h-64 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-lg flex items-center justify-center">
-                        <img 
-                          src="https://dzzptovqfqausipsgabw.supabase.co/storage/v1/object/public/event-images/event-images/1750597449197-ilkitkdn1ld.png"
-                          alt={event.title}
-                          className="w-full h-full object-cover rounded-t-lg"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center"><Music class="h-12 w-12 text-blue-600" /></div>';
-                          }}
-                        />
-                      </div>
-                      <CardContent className="p-6 sm:p-8">
-                        <h3 className="text-2xl sm:text-2xl font-semibold text-gray-900 mb-4 line-clamp-2">{event.title}</h3>
-                        <div className="space-y-2 text-gray-600">
-                          <div className="flex items-center">
-                            <Calendar className="h-5 w-5 mr-3 flex-shrink-0" />
-                            <span className="text-base sm:text-lg">{formatDate(event.start_date)}</span>
+              
+              
+              {loading ? (
+                <div className="flex space-x-4 overflow-hidden">
+                  {[...Array(6)].map((_, i) => (
+                    <Card key={i} className="animate-pulse flex-shrink-0 w-80">
+                      <div className="h-48 bg-gray-200 rounded-t-lg"></div>
+                      <CardContent className="p-6">
+                        <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                        <div className="h-3 bg-gray-200 rounded mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : events.length > 0 ? (
+                <Carousel className="w-full">
+                  <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
+                    {events.map((event) => (
+                      <CarouselItem key={event.id} className="pl-1 sm:pl-2 md:pl-4 basis-full">
+                        <Card className="hover:shadow-lg transition-shadow h-full w-full relative group">
+                          {/* Hover overlay button */}
+                          <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <Button size="sm" className="bg-white/90 text-gray-900 hover:bg-white shadow-lg backdrop-blur-sm">
+                              View All <ArrowRight className="ml-1 h-4 w-4" />
+                            </Button>
                           </div>
-                          {event.location && (
-                            <div className="flex items-center">
-                              <MapPin className="h-5 w-5 mr-3 flex-shrink-0" />
-                              <span className="text-base sm:text-lg line-clamp-1">{event.location}</span>
+                          
+                          <div className="h-48 sm:h-64 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-lg flex items-center justify-center">
+                            <img 
+                              src="https://dzzptovqfqausipsgabw.supabase.co/storage/v1/object/public/event-images/event-images/1750597449197-ilkitkdn1ld.png"
+                              alt={event.title}
+                              className="w-full h-full object-cover rounded-t-lg"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center"><Music class="h-12 w-12 text-blue-600" /></div>';
+                              }}
+                            />
+                          </div>
+                          <CardContent className="p-6 sm:p-8">
+                            <h3 className="text-2xl sm:text-2xl font-semibold text-gray-900 mb-4 line-clamp-2">{event.title}</h3>
+                            <div className="space-y-2 text-gray-600">
+                              <div className="flex items-center">
+                                <Calendar className="h-5 w-5 mr-3 flex-shrink-0" />
+                                <span className="text-base sm:text-lg">{formatDate(event.start_date)}</span>
+                              </div>
+                              {event.location && (
+                                <div className="flex items-center">
+                                  <MapPin className="h-5 w-5 mr-3 flex-shrink-0" />
+                                  <span className="text-base sm:text-lg line-clamp-1">{event.location}</span>
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                        {event.description && (
-                          <p className="text-gray-600 mt-4 line-clamp-3 text-base sm:text-lg">{event.description}</p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-            </Carousel>
-          ) : (
-            <Carousel className="w-full">
-              <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
-                {[...Array(6)].map((_, i) => (
-                  <CarouselItem key={i} className="pl-1 sm:pl-2 md:pl-4 basis-full">
-                    <Card className="hover:shadow-lg transition-shadow h-full w-full relative group">
-                      {/* Hover overlay button */}
-                      <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <Button size="sm" className="bg-white/90 text-gray-900 hover:bg-white shadow-lg backdrop-blur-sm">
-                          View All <ArrowRight className="ml-1 h-4 w-4" />
-                        </Button>
-                      </div>
-                      
-                      <div className="h-48 sm:h-64 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-lg flex items-center justify-center">
-                        <Music className="h-12 w-12 text-blue-600" />
-                      </div>
-                      <CardContent className="p-6 sm:p-8">
-                        <h3 className="text-2xl sm:text-2xl font-semibold text-gray-900 mb-4">Glee Club Rehearsal</h3>
-                        <div className="space-y-2 text-gray-600">
-                          <div className="flex items-center">
-                            <Calendar className="h-5 w-5 mr-3 flex-shrink-0" />
-                            <span className="text-base sm:text-lg">Aug {19 + i * 2}, 2025</span>
+                            {event.description && (
+                              <p className="text-gray-600 mt-4 line-clamp-3 text-base sm:text-lg">{event.description}</p>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                </Carousel>
+              ) : (
+                <Carousel className="w-full">
+                  <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
+                    {[...Array(6)].map((_, i) => (
+                      <CarouselItem key={i} className="pl-1 sm:pl-2 md:pl-4 basis-full">
+                        <Card className="hover:shadow-lg transition-shadow h-full w-full relative group">
+                          {/* Hover overlay button */}
+                          <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <Button size="sm" className="bg-white/90 text-gray-900 hover:bg-white shadow-lg backdrop-blur-sm">
+                              View All <ArrowRight className="ml-1 h-4 w-4" />
+                            </Button>
                           </div>
-                          <div className="flex items-center">
-                            <MapPin className="h-5 w-5 mr-3 flex-shrink-0" />
-                            <span className="text-base sm:text-lg line-clamp-1">350 Spelman Lane SW Atlanta GA 30314</span>
+                          
+                          <div className="h-48 sm:h-64 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-lg flex items-center justify-center">
+                            <Music className="h-12 w-12 text-blue-600" />
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-            </Carousel>
-           )}
+                          <CardContent className="p-6 sm:p-8">
+                            <h3 className="text-2xl sm:text-2xl font-semibold text-gray-900 mb-4">Glee Club Rehearsal</h3>
+                            <div className="space-y-2 text-gray-600">
+                              <div className="flex items-center">
+                                <Calendar className="h-5 w-5 mr-3 flex-shrink-0" />
+                                <span className="text-base sm:text-lg">Aug {19 + i * 2}, 2025</span>
+                              </div>
+                              <div className="flex items-center">
+                                <MapPin className="h-5 w-5 mr-3 flex-shrink-0" />
+                                <span className="text-base sm:text-lg line-clamp-1">350 Spelman Lane SW Atlanta GA 30314</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                </Carousel>
+               )}
+          </Card>
+        </div>
       </section>
 
       {/* Music Player Section */}
@@ -648,47 +652,49 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Spelman College Glee Club</h3>
-              <p className="text-gray-400 text-sm">
-                Building a legacy of musical excellence and sisterhood since 1881.
-              </p>
-            </div>
-            <div className="space-y-4">
-              <h4 className="font-semibold">Quick Links</h4>
-              <div className="space-y-2 text-sm">
-                <div><a href="#" className="text-gray-400 hover:text-white transition-colors">About</a></div>
-                <div><a href="#events" className="text-gray-400 hover:text-white transition-colors">Events</a></div>
-                <div><a href="#" className="text-gray-400 hover:text-white transition-colors">Music</a></div>
-                <div><a href="#" className="text-gray-400 hover:text-white transition-colors">Contact</a></div>
+      <section className="py-6 px-3 sm:px-5 lg:px-6 bg-white">
+        <div className="container mx-auto max-w-7xl">
+          <Card className="bg-gray-900 text-white p-8 sm:p-12">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Spelman College Glee Club</h3>
+                <p className="text-gray-400 text-sm">
+                  Building a legacy of musical excellence and sisterhood since 1881.
+                </p>
+              </div>
+              <div className="space-y-4">
+                <h4 className="font-semibold">Quick Links</h4>
+                <div className="space-y-2 text-sm">
+                  <div><a href="#" className="text-gray-400 hover:text-white transition-colors">About</a></div>
+                  <div><a href="#events" className="text-gray-400 hover:text-white transition-colors">Events</a></div>
+                  <div><a href="#" className="text-gray-400 hover:text-white transition-colors">Music</a></div>
+                  <div><a href="#" className="text-gray-400 hover:text-white transition-colors">Contact</a></div>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <h4 className="font-semibold">Connect</h4>
+                <div className="space-y-2 text-sm">
+                  <div><a href="#" className="text-gray-400 hover:text-white transition-colors">Facebook</a></div>
+                  <div><a href="#" className="text-gray-400 hover:text-white transition-colors">Instagram</a></div>
+                  <div><a href="#" className="text-gray-400 hover:text-white transition-colors">YouTube</a></div>
+                  <div><a href="#" className="text-gray-400 hover:text-white transition-colors">Spotify</a></div>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <h4 className="font-semibold">Contact</h4>
+                <div className="space-y-2 text-sm text-gray-400">
+                  <div>Spelman College</div>
+                  <div>350 Spelman Lane SW</div>
+                  <div>Atlanta, GA 30314</div>
+                </div>
               </div>
             </div>
-            <div className="space-y-4">
-              <h4 className="font-semibold">Connect</h4>
-              <div className="space-y-2 text-sm">
-                <div><a href="#" className="text-gray-400 hover:text-white transition-colors">Facebook</a></div>
-                <div><a href="#" className="text-gray-400 hover:text-white transition-colors">Instagram</a></div>
-                <div><a href="#" className="text-gray-400 hover:text-white transition-colors">YouTube</a></div>
-                <div><a href="#" className="text-gray-400 hover:text-white transition-colors">Spotify</a></div>
-              </div>
+            <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
+              <p>&copy; 2024 Spelman College Glee Club. All rights reserved.</p>
             </div>
-            <div className="space-y-4">
-              <h4 className="font-semibold">Contact</h4>
-              <div className="space-y-2 text-sm text-gray-400">
-                <div>Spelman College</div>
-                <div>350 Spelman Lane SW</div>
-                <div>Atlanta, GA 30314</div>
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; 2024 Spelman College Glee Club. All rights reserved.</p>
-          </div>
+          </Card>
         </div>
-      </footer>
+      </section>
     </div>
   );
 };
