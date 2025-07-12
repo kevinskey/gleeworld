@@ -12,7 +12,9 @@ import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  X,
+  Menu
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -57,6 +59,7 @@ export const GleeWorldLanding = () => {
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Remove hardcoded sample tracks - they're now handled by the edge function
 
@@ -195,11 +198,17 @@ export const GleeWorldLanding = () => {
               </Link>
             </div>
             
-            {/* Mobile Navigation Button - Only show on small screens */}
-            <button className="md:hidden flex items-center justify-center w-10 h-10 rounded-md bg-white/20 backdrop-blur-md border border-white/30 text-gray-700 hover:text-gray-900 transition-colors">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+            {/* Mobile Navigation Button */}
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden flex items-center justify-center w-10 h-10 rounded-md bg-white/20 backdrop-blur-md border border-white/30 text-gray-700 hover:text-gray-900 transition-colors"
+              aria-label="Toggle mobile menu"
+            >
+              {mobileMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </button>
             
             <nav className="hidden lg:flex items-center space-x-8">
@@ -229,6 +238,35 @@ export const GleeWorldLanding = () => {
               )}
             </div>
           </div>
+          
+          {/* Mobile Navigation Menu */}
+          {mobileMenuOpen && (
+            <div className="lg:hidden mt-4 py-4 border-t border-white/20">
+              <nav className="flex flex-col space-y-4">
+                <a href="#home" className="text-gray-700 hover:text-gray-900 transition-colors font-medium px-4 py-2 rounded-md hover:bg-white/20">Home</a>
+                <a href="#about" className="text-gray-700 hover:text-gray-900 transition-colors font-medium px-4 py-2 rounded-md hover:bg-white/20">About</a>
+                <Link to="/public-calendar" className="text-gray-700 hover:text-gray-900 transition-colors font-medium px-4 py-2 rounded-md hover:bg-white/20">Calendar</Link>
+                <Link to="/press-kit" className="text-gray-700 hover:text-gray-900 transition-colors font-medium px-4 py-2 rounded-md hover:bg-white/20">Press Kit</Link>
+                <a href="#contact" className="text-gray-700 hover:text-gray-900 transition-colors font-medium px-4 py-2 rounded-md hover:bg-white/20">Contact</a>
+                
+                {/* Mobile Auth Actions */}
+                {user ? (
+                  <Link to="/dashboard" className="mt-4">
+                    <Button className="w-full bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground">Dashboard</Button>
+                  </Link>
+                ) : (
+                  <div className="flex flex-col space-y-2 mt-4">
+                    <Link to="/auth">
+                      <Button variant="outline" className="w-full border-primary/20 text-primary hover:bg-primary/10">Sign In</Button>
+                    </Link>
+                    <Link to="/auth">
+                      <Button className="w-full bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground">Join Us</Button>
+                    </Link>
+                  </div>
+                )}
+              </nav>
+            </div>
+          )}
         </div>
       </header>
 
