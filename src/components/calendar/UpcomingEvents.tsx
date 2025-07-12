@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { CalendarIcon, MapPinIcon, ClockIcon } from "lucide-react";
 import { format } from "date-fns";
 import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
@@ -67,7 +68,8 @@ export const UpcomingEvents = ({ limit = 6, showHeader = true }: UpcomingEventsP
             <p className="text-muted-foreground text-sm md:text-base">Check back later for new events!</p>
           </div>
         ) : (
-          <div className="space-y-2 md:space-y-4 max-h-96 overflow-y-auto">
+          <ScrollArea className="h-96">
+            <div className="space-y-2 md:space-y-4 pr-4">
             {upcomingEvents.map(event => {
               const isSelected = selectedEvent?.id === event.id;
               return (
@@ -118,7 +120,8 @@ export const UpcomingEvents = ({ limit = 6, showHeader = true }: UpcomingEventsP
               </EventHoverCard>
             );
             })}
-          </div>
+            </div>
+          </ScrollArea>
         )}
         
         <EventDetailDialog
