@@ -36,6 +36,7 @@ import {
   Music2,
   DollarSign
 } from "lucide-react";
+import { AvatarCropDialog } from "@/components/shared/AvatarCropDialog";
 
 const profileSchema = z.object({
   full_name: z.string().min(1, "Full name is required"),
@@ -89,6 +90,9 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedInstruments, setSelectedInstruments] = useState<string[]>([]);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
+  const [selectedImageForCrop, setSelectedImageForCrop] = useState<string>("");
+  const [isAvatarUploading, setIsAvatarUploading] = useState(false);
 
   const {
     register,
@@ -242,18 +246,38 @@ const Profile = () => {
     }
   };
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Error",
+        description: "Please select a valid image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create a URL for the selected image to show in crop dialog
+    const imageUrl = URL.createObjectURL(file);
+    setSelectedImageForCrop(imageUrl);
+    setIsCropDialogOpen(true);
+  };
+
+  const handleCroppedImageUpload = async (croppedImageFile: File) => {
+    if (!user) return;
+
+    setIsAvatarUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
+      const fileExt = croppedImageFile.name.split('.').pop() || 'jpg';
       const fileName = `${user.id}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('user-files')
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, croppedImageFile, { upsert: true });
 
       if (uploadError) throw uploadError;
 
@@ -269,6 +293,14 @@ const Profile = () => {
       if (updateError) throw updateError;
 
       setAvatarUrl(data.publicUrl);
+      setIsCropDialogOpen(false);
+      
+      // Clean up the object URL
+      if (selectedImageForCrop) {
+        URL.revokeObjectURL(selectedImageForCrop);
+        setSelectedImageForCrop("");
+      }
+
       toast({
         title: "Success",
         description: "Avatar updated successfully",
@@ -280,6 +312,17 @@ const Profile = () => {
         description: "Failed to upload avatar",
         variant: "destructive",
       });
+    } finally {
+      setIsAvatarUploading(false);
+    }
+  };
+
+  const handleCropDialogClose = () => {
+    setIsCropDialogOpen(false);
+    // Clean up the object URL
+    if (selectedImageForCrop) {
+      URL.revokeObjectURL(selectedImageForCrop);
+      setSelectedImageForCrop("");
     }
   };
 
@@ -679,6 +722,15 @@ const Profile = () => {
             </div>
           )}
         </form>
+        
+        {/* Avatar Crop Dialog */}
+        <AvatarCropDialog
+          isOpen={isCropDialogOpen}
+          onClose={handleCropDialogClose}
+          imageSrc={selectedImageForCrop}
+          onCropComplete={handleCroppedImageUpload}
+          isUploading={isAvatarUploading}
+        />
       </div>
     </UniversalLayout>
   );
