@@ -317,8 +317,8 @@ export const GleeWorldLanding = () => {
               </Link>
             </div>
             
-            {/* Mobile Navigation Button */}
-            <button className="lg:hidden flex items-center justify-center w-10 h-10 rounded-md bg-white/20 backdrop-blur-md border border-white/30 text-gray-700 hover:text-gray-900 transition-colors">
+            {/* Mobile Navigation Button - Only show on small screens */}
+            <button className="md:hidden flex items-center justify-center w-10 h-10 rounded-md bg-white/20 backdrop-blur-md border border-white/30 text-gray-700 hover:text-gray-900 transition-colors">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
