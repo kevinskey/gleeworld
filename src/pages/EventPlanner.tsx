@@ -14,8 +14,8 @@ export default function EventPlanner() {
     <UniversalLayout>
       <div className="container mx-auto p-6 max-w-7xl">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Event Budget Planner</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold mb-2 text-white">Event Budget Planner</h1>
+          <p className="text-white/70">
             Plan events, manage budgets, and track expenses for student functions
           </p>
         </div>
