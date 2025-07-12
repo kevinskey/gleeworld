@@ -352,7 +352,7 @@ export const GleeWorldLanding = () => {
 
       {/* Hero Section */}
       <section className="relative">
-        <div className="h-[25vh] sm:h-[50vh] md:h-[60vh] lg:h-[70vh] xl:h-[75vh] sm:min-h-[400px] overflow-hidden relative">
+        <div className="h-[40vh] sm:h-[50vh] md:h-[60vh] lg:h-[70vh] xl:h-[75vh] min-h-[300px] sm:min-h-[400px] overflow-hidden relative">
           {heroSlides.length > 0 ? (
             <>
               {/* Desktop Image */}
@@ -386,7 +386,7 @@ export const GleeWorldLanding = () => {
               <img 
                 src={currentHeroSlide?.mobile_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
                 alt="Hero Background"
-                className="block sm:hidden w-full h-full object-contain transition-opacity duration-500"
+                className="block sm:hidden w-full h-full object-cover object-center transition-opacity duration-500"
                 onError={(e) => {
                   console.log('Mobile hero image failed to load, using fallback');
                   if (!e.currentTarget.src.includes('unsplash.com')) {
