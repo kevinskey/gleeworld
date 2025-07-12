@@ -332,16 +332,16 @@ export const GleeWorldLanding = () => {
               {user ? (
                 <div className="flex items-center space-x-3">
                   <Link to="/dashboard">
-                    <Button size="sm" className="bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30">Dashboard</Button>
+                    <Button size="sm" className="bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground">Dashboard</Button>
                   </Link>
                 </div>
               ) : (
                 <div className="flex items-center space-x-3">
                   <Link to="/auth">
-                    <Button variant="outline" size="sm" className="border-white/30 hover:bg-white/20 backdrop-blur-md">Sign Up</Button>
+                    <Button variant="outline" size="sm" className="border-primary/50 bg-background/90 backdrop-blur-md hover:bg-primary hover:text-primary-foreground text-primary">Sign Up</Button>
                   </Link>
                   <Link to="/auth">
-                    <Button size="sm" className="bg-blue-500/80 backdrop-blur-md hover:bg-blue-600/80">Login</Button>
+                    <Button size="sm" className="bg-primary backdrop-blur-md hover:bg-primary/90 text-primary-foreground">Login</Button>
                   </Link>
                 </div>
               )}
@@ -421,7 +421,7 @@ export const GleeWorldLanding = () => {
                     {/* Action Button Section */}
                     {currentHeroSlide?.action_button_enabled && currentHeroSlide?.action_button_text && currentHeroSlide?.action_button_url && (
                       <div className="absolute inset-0 flex justify-center items-end pb-16 px-6 pointer-events-none">
-                        <Button size="lg" asChild className="pointer-events-auto bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 text-white shadow-2xl">
+                        <Button size="lg" asChild className="pointer-events-auto bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground shadow-2xl">
                           <a href={currentHeroSlide.action_button_url} target="_blank" rel="noopener noreferrer">
                             {currentHeroSlide.action_button_text}
                           </a>
@@ -432,7 +432,7 @@ export const GleeWorldLanding = () => {
                     {/* Legacy button support */}
                     {!currentHeroSlide?.action_button_enabled && currentHeroSlide?.button_text && currentHeroSlide?.link_url && (
                       <div className="absolute inset-0 flex justify-center items-end pb-16 px-6 pointer-events-none">
-                        <Button size="lg" asChild className="pointer-events-auto bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 text-white shadow-2xl">
+                        <Button size="lg" asChild className="pointer-events-auto bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground shadow-2xl">
                           <a href={currentHeroSlide.link_url} target="_blank" rel="noopener noreferrer">
                             {currentHeroSlide.button_text}
                           </a>
@@ -489,7 +489,7 @@ export const GleeWorldLanding = () => {
                         <Card className="hover:shadow-2xl transition-all duration-300 h-full w-full relative group bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30">
                           {/* Hover overlay button */}
                           <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <Button size="sm" className="bg-white/80 backdrop-blur-md text-gray-900 hover:bg-white shadow-lg border border-white/30">
+                            <Button size="sm" className="bg-primary/90 backdrop-blur-md text-primary-foreground hover:bg-primary shadow-lg border border-white/30">
                               View All <ArrowRight className="ml-1 h-4 w-4" />
                             </Button>
                           </div>
@@ -536,7 +536,7 @@ export const GleeWorldLanding = () => {
                         <Card className="hover:shadow-2xl transition-all duration-300 h-full w-full relative group bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30">
                           {/* Hover overlay button */}
                           <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <Button size="sm" className="bg-white/80 backdrop-blur-md text-gray-900 hover:bg-white shadow-lg border border-white/30">
+                            <Button size="sm" className="bg-primary/90 backdrop-blur-md text-primary-foreground hover:bg-primary shadow-lg border border-white/30">
                               View All <ArrowRight className="ml-1 h-4 w-4" />
                             </Button>
                           </div>
