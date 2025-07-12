@@ -24,8 +24,10 @@ export const useRoleBasedRedirect = () => {
     
     if (isAdmin) {
       navigate('/system', { replace: true });
+      window.scrollTo(0, 0);
     } else {
       navigate('/dashboard', { replace: true });
+      window.scrollTo(0, 0);
     }
   }, [user, userProfile, loading, navigate, location.pathname]);
 
