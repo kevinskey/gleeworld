@@ -487,7 +487,7 @@ export const GleeWorldLanding = () => {
               ) : events.length > 0 ? (
                 <>
                   {/* Desktop view - 3 events in a list */}
-                  <div className="hidden lg:block">
+                  <div className="hidden md:block">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {events.slice(0, 3).map((event) => (
                         <Card key={event.id} className="hover:shadow-2xl transition-all duration-300 h-full relative group bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30">
@@ -535,7 +535,7 @@ export const GleeWorldLanding = () => {
                   </div>
                   
                   {/* Mobile/Tablet view - Carousel */}
-                  <div className="lg:hidden">
+                  <div className="md:hidden">
                     <Carousel className="w-full">
                       <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
                         {events.map((event) => (
