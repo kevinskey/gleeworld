@@ -525,25 +525,7 @@ export const GleeWorldLanding = () => {
             <p className="text-gray-600 text-lg">Experience the harmonious sounds of Spelman College Glee Club</p>
           </div>
           
-          {tracks.length > 0 ? (
-            <MusicPlayer tracks={tracks} />
-          ) : (
-            <Card className="bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl">
-              <CardContent className="p-8 text-center">
-                <div className="h-32 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/40 rounded-lg flex items-center justify-center mx-auto mb-4">
-                      <svg className="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Music Coming Soon</h3>
-                    <p className="text-gray-600">Our beautiful harmonies will be available here soon!</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <MusicPlayer tracks={tracks} />
         </div>
       </section>
 
