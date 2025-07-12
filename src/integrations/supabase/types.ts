@@ -1490,6 +1490,7 @@ export type Database = {
           end_date: string | null
           event_type: string | null
           id: string
+          image_url: string | null
           is_public: boolean | null
           location: string | null
           max_attendees: number | null
@@ -1508,6 +1509,7 @@ export type Database = {
           end_date?: string | null
           event_type?: string | null
           id?: string
+          image_url?: string | null
           is_public?: boolean | null
           location?: string | null
           max_attendees?: number | null
@@ -1526,6 +1528,7 @@ export type Database = {
           end_date?: string | null
           event_type?: string | null
           id?: string
+          image_url?: string | null
           is_public?: boolean | null
           location?: string | null
           max_attendees?: number | null
