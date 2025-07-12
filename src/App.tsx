@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
+import { GlobalMusicPlayer } from "@/components/music/GlobalMusicPlayer";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useRoleBasedRedirect } from "@/hooks/useRoleBasedRedirect";
 import Index from "./pages/Index";
@@ -111,6 +113,7 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
+            <MusicPlayerProvider>
             <Routes>
               <Route 
                 path="/auth" 
@@ -248,11 +251,13 @@ const App = () => {
                />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
+            <GlobalMusicPlayer />
+          </MusicPlayerProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 };
 
 export default App;

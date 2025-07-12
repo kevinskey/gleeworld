@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { supabase } from "@/integrations/supabase/client";
-import { MusicPlayer } from "@/components/music/MusicPlayer";
-import { useMusic } from "@/hooks/useMusic";
+import { useMusic, Album } from "@/hooks/useMusic";
+import { AlbumModal } from "@/components/music/AlbumModal";
 import { 
   Calendar, 
   MapPin,
@@ -56,12 +57,14 @@ interface HeroSlide {
 
 export const GleeWorldLanding = () => {
   const { user } = useAuth();
-  const { tracks, albums } = useMusic();
+  const { albums } = useMusic();
   const [events, setEvents] = useState<Event[]>([]);
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
+  const [isAlbumModalOpen, setIsAlbumModalOpen] = useState(false);
 
   // Remove hardcoded sample tracks - they're now handled by the edge function
 
@@ -178,6 +181,15 @@ export const GleeWorldLanding = () => {
     }
   };
 
+  const handleAlbumClick = (album: Album) => {
+    setSelectedAlbum(album);
+    setIsAlbumModalOpen(true);
+  };
+
+  const handleCloseAlbumModal = () => {
+    setIsAlbumModalOpen(false);
+    setSelectedAlbum(null);
+  };
 
 
   return (
@@ -621,7 +633,11 @@ export const GleeWorldLanding = () => {
               {/* Desktop view - Grid */}
               <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {albums.map((album) => (
-                  <Card key={album.id} className="hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 group">
+                  <Card 
+                    key={album.id} 
+                    className="hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 group cursor-pointer"
+                    onClick={() => handleAlbumClick(album)}
+                  >
                     <div className="aspect-square bg-gradient-to-br from-purple-100/50 to-pink-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
                       {album.cover_image_url ? (
                         <img 
@@ -638,12 +654,19 @@ export const GleeWorldLanding = () => {
                           <Music className="h-16 w-16 text-purple-400" />
                         </div>
                       )}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="bg-white/90 rounded-full p-3">
+                            <Music className="h-6 w-6 text-primary" />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     <CardContent className="p-4">
                       <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1">{album.title}</h3>
                       <p className="text-sm text-gray-600 line-clamp-1">{album.artist}</p>
-                      {album.description && (
-                        <p className="text-xs text-gray-500 mt-2 line-clamp-2">{album.description}</p>
+                      {album.tracks && album.tracks.length > 0 && (
+                        <p className="text-xs text-gray-500 mt-1">{album.tracks.length} track{album.tracks.length !== 1 ? 's' : ''}</p>
                       )}
                       {album.release_date && (
                         <p className="text-xs text-gray-400 mt-1">{new Date(album.release_date).getFullYear()}</p>
@@ -659,7 +682,10 @@ export const GleeWorldLanding = () => {
                   <CarouselContent className="-ml-1">
                     {albums.map((album) => (
                       <CarouselItem key={album.id} className="pl-1 basis-1/2 sm:basis-1/3">
-                        <Card className="hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 group">
+                        <Card 
+                          className="hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 group cursor-pointer"
+                          onClick={() => handleAlbumClick(album)}
+                        >
                           <div className="aspect-square bg-gradient-to-br from-purple-100/50 to-pink-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
                             {album.cover_image_url ? (
                               <img 
@@ -675,10 +701,20 @@ export const GleeWorldLanding = () => {
                                 <Music className="h-12 w-12 text-purple-400" />
                               </div>
                             )}
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <div className="bg-white/90 rounded-full p-2">
+                                  <Music className="h-4 w-4 text-primary" />
+                                </div>
+                              </div>
+                            </div>
                           </div>
                           <CardContent className="p-3">
                             <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1 text-sm">{album.title}</h3>
                             <p className="text-xs text-gray-600 line-clamp-1">{album.artist}</p>
+                            {album.tracks && album.tracks.length > 0 && (
+                              <p className="text-xs text-gray-500 mt-1">{album.tracks.length} track{album.tracks.length !== 1 ? 's' : ''}</p>
+                            )}
                             {album.release_date && (
                               <p className="text-xs text-gray-400 mt-1">{new Date(album.release_date).getFullYear()}</p>
                             )}
@@ -696,12 +732,12 @@ export const GleeWorldLanding = () => {
         </section>
       )}
 
-      {/* Music Player Section */}
-      <section className="pt-7 pb-9 sm:pt-10 sm:pb-12 px-0.5 sm:px-1 md:px-1.5 lg:px-3.5 w-full">
-        <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto">
-          <MusicPlayer tracks={tracks} />
-        </div>
-      </section>
+      {/* Album Modal */}
+      <AlbumModal 
+        album={selectedAlbum}
+        isOpen={isAlbumModalOpen}
+        onClose={handleCloseAlbumModal}
+      />
 
       {/* Footer */}
       <section className="pt-4 pb-6 px-0.5 sm:px-1 md:px-1.5 lg:px-3.5">
