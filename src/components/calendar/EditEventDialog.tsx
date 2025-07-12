@@ -197,13 +197,13 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <EditIcon className="h-5 w-5 text-primary" />
               <div>
-                <DialogTitle className="text-xl">Edit Event</DialogTitle>
+                <DialogTitle className="text-lg sm:text-xl">Edit Event</DialogTitle>
                 <DialogDescription>
                   Update event details and settings
                 </DialogDescription>

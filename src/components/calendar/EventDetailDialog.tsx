@@ -65,11 +65,11 @@ export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-[95vw] sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <DialogTitle className="text-xl">{event.title}</DialogTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <DialogTitle className="text-lg sm:text-xl break-words">{event.title}</DialogTitle>
               <Badge className={getEventTypeColor(event.event_type)}>
                 {event.event_type || 'Event'}
               </Badge>
@@ -90,7 +90,7 @@ export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }:
             {canEdit && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover-scale">
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover-scale flex-shrink-0">
                     <MoreHorizontalIcon className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -129,7 +129,7 @@ export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }:
             </div>
           )}
           
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <CalendarIcon className="h-4 w-4 text-muted-foreground" />
@@ -196,9 +196,9 @@ export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }:
           
           {/* Contract Management Section */}
           <div className="border-t pt-4">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               <h4 className="font-semibold">Event Management</h4>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button 
                   variant="outline" 
                   size="sm"
@@ -229,7 +229,7 @@ export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }:
             </p>
           </div>
           
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <Button onClick={handleAddToCalendar} variant="outline">
               <CalendarIcon className="h-4 w-4 mr-2" />
               Add to Calendar
