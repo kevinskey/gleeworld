@@ -239,76 +239,85 @@ export const GleeWorldLanding = () => {
               )}
             </button>
           </div>
-          
-          {/* Mobile Navigation Menu */}
-          <div className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-            mobileMenuOpen 
-              ? 'max-h-96 opacity-100 mt-4 py-4 border-t border-white/20' 
-              : 'max-h-0 opacity-0'
-          }`}>
-            <nav className="flex flex-col space-y-3 animate-fade-in">
-              <a 
-                href="#home" 
-                className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/30 hover:scale-105"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Home
-              </a>
-              <a 
-                href="#about" 
-                className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/30 hover:scale-105"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                About
-              </a>
-              <Link 
-                to="/public-calendar" 
-                className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/30 hover:scale-105"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Calendar
-              </Link>
-              <Link 
-                to="/press-kit" 
-                className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/30 hover:scale-105"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Press Kit
-              </Link>
-              <a 
-                href="#contact" 
-                className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/30 hover:scale-105"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Contact
-              </a>
-              
-              {/* Mobile Auth Actions */}
-              <div className="border-t border-white/20 pt-4 mt-2">
-                {user ? (
-                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                    <Button className="w-full bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground transition-all duration-200 hover:scale-105">
-                      Dashboard
-                    </Button>
-                  </Link>
-                ) : (
-                  <div className="flex flex-col space-y-3">
-                    <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                      <Button variant="outline" className="w-full border-primary/30 text-primary hover:bg-primary/10 transition-all duration-200 hover:scale-105">
-                        Sign In
-                      </Button>
-                    </Link>
-                    <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                      <Button className="w-full bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground transition-all duration-200 hover:scale-105">
-                        Join Us
-                      </Button>
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </nav>
-          </div>
         </div>
+        
+        {/* Mobile Navigation Overlay */}
+        {mobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            
+            {/* Mobile Menu */}
+            <div className="absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md border-b border-white/20 shadow-xl z-50 lg:hidden animate-slide-in-right">
+              <div className="max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+                <nav className="flex flex-col space-y-1 py-4">
+                  <a 
+                    href="#home" 
+                    className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/50 hover:scale-105"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Home
+                  </a>
+                  <a 
+                    href="#about" 
+                    className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/50 hover:scale-105"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    About
+                  </a>
+                  <Link 
+                    to="/public-calendar" 
+                    className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/50 hover:scale-105"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Calendar
+                  </Link>
+                  <Link 
+                    to="/press-kit" 
+                    className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/50 hover:scale-105"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Press Kit
+                  </Link>
+                  <a 
+                    href="#contact" 
+                    className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/50 hover:scale-105"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Contact
+                  </a>
+                  
+                  {/* Mobile Auth Actions */}
+                  <div className="border-t border-white/30 pt-4 mt-2">
+                    {user ? (
+                      <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                        <Button className="w-full bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground transition-all duration-200 hover:scale-105">
+                          Dashboard
+                        </Button>
+                      </Link>
+                    ) : (
+                      <div className="flex flex-col space-y-3">
+                        <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                          <Button variant="outline" className="w-full border-primary/30 text-primary hover:bg-primary/10 transition-all duration-200 hover:scale-105">
+                            Sign In
+                          </Button>
+                        </Link>
+                        <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                          <Button className="w-full bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground transition-all duration-200 hover:scale-105">
+                            Join Us
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </nav>
+              </div>
+            </div>
+          </>
+        )}
       </header>
 
       {/* Hero Section */}
