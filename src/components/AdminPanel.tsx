@@ -18,7 +18,6 @@ import { AccountingTable } from "./accounting/AccountingTable";
 import { AccountingFilters } from "./accounting/AccountingFilters";
 import { useAccountingFiltering } from "@/hooks/useAccountingFiltering";
 import { Shield, Users, Settings, FileText, Activity, Receipt, Calculator, Mail, Music } from "lucide-react";
-import { SoundCloudManagement } from "./admin/SoundCloudManagement";
 import { MusicManagement } from "./admin/MusicManagement";
 
 interface AdminPanelProps {
@@ -172,8 +171,6 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
             </div>
           </div>
         );
-      case 'soundcloud':
-        return <SoundCloudManagement />;
       case 'music':
         return <MusicManagement />;
       case 'settings':
