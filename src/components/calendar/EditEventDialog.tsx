@@ -19,7 +19,9 @@ import {
   SaveIcon, 
   XIcon,
   TrashIcon,
-  AlertTriangleIcon
+  AlertTriangleIcon,
+  ImageIcon,
+  UploadIcon
 } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,6 +52,8 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -103,8 +107,60 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
         is_public: event.is_public !== false,
         status: event.status || 'scheduled'
       });
+
+      // Set existing image if available
+      setImagePreview(event.image_url || null);
+      setImageFile(null);
     }
   }, [event]);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "File too large",
+          description: "Please select an image smaller than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setImageFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+  };
+
+  const uploadImage = async (file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+    const filePath = `events/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('event-images')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage
+      .from('event-images')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,6 +168,23 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
 
     setLoading(true);
     try {
+      let imageUrl = event.image_url; // Keep existing image by default
+
+      // Upload new image if one was selected
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile);
+      } else if (imagePreview === null && event.image_url) {
+        // Image was removed, delete from storage if it exists
+        if (event.image_url) {
+          const urlParts = event.image_url.split('/');
+          const fileName = urlParts[urlParts.length - 1];
+          await supabase.storage
+            .from('event-images')
+            .remove([`events/${fileName}`]);
+        }
+        imageUrl = null;
+      }
+
       const eventData = {
         title: formData.title,
         description: formData.description || null,
@@ -125,6 +198,7 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
         registration_required: formData.registration_required,
         is_public: formData.is_public,
         status: formData.status,
+        image_url: imageUrl,
         updated_at: new Date().toISOString()
       };
 
@@ -276,6 +350,78 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
                   rows={3}
                   className="animate-fade-in resize-none"
                 />
+              </div>
+
+              {/* Image Upload Section */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4" />
+                  Event Image
+                </Label>
+                
+                {imagePreview ? (
+                  <div className="relative group">
+                    <img
+                      src={imagePreview}
+                      alt="Event preview"
+                      className="w-full h-48 object-cover rounded-lg border"
+                    />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={removeImage}
+                        className="gap-2"
+                      >
+                        <XIcon className="h-4 w-4" />
+                        Remove Image
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
+                    <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        Add an event image to make it more appealing
+                      </p>
+                      <Label
+                        htmlFor="image-upload"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 cursor-pointer transition-colors"
+                      >
+                        <UploadIcon className="h-4 w-4" />
+                        Choose Image
+                      </Label>
+                      <Input
+                        id="image-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {imagePreview && (
+                  <div className="flex justify-center">
+                    <Label
+                      htmlFor="image-upload-replace"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 cursor-pointer transition-colors"
+                    >
+                      <UploadIcon className="h-3 w-3" />
+                      Change Image
+                    </Label>
+                    <Input
+                      id="image-upload-replace"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
