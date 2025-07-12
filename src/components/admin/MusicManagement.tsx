@@ -368,6 +368,8 @@ export const MusicManagement = () => {
                 release_date: '',
                 cover_image_url: ''
               });
+            } else if (open && !editingAlbum) {
+              setIsCreatingAlbum(true);
             }
           }}>
             <DialogTrigger asChild>
