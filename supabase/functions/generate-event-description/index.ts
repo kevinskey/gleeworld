@@ -15,9 +15,19 @@ serve(async (req) => {
   }
 
   try {
+    // Check if OpenAI API key is available
+    if (!openAIApiKey) {
+      console.error('OpenAI API key not found in environment variables');
+      return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { title, eventType, venue, maxAttendees } = await req.json();
 
     console.log('Generating description for event:', { title, eventType, venue, maxAttendees });
+    console.log('OpenAI API key available:', !!openAIApiKey);
 
     const prompt = `Generate a compelling and informative event description for a ${eventType} event titled "${title}"${venue ? ` at ${venue}` : ''}${maxAttendees ? ` for up to ${maxAttendees} attendees` : ''}. 
 
