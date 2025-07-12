@@ -452,7 +452,7 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Upcoming Events Section */}
-      <section id="events" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 w-full">
+      <section id="events" className="py-9 sm:py-12 px-3 sm:px-5 lg:px-6 w-full">
         <div className="text-center mb-6 sm:mb-8">
           <div className="flex items-center justify-center gap-3 mb-2">
             <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-blue-400 animate-pulse" />
