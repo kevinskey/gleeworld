@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, MapPinIcon, ClockIcon, ArrowRightIcon } from "lucide-react";
+import { CalendarIcon, MapPinIcon, ClockIcon } from "lucide-react";
 import { format } from "date-fns";
 import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
 import { useState } from "react";
@@ -52,18 +51,11 @@ export const UpcomingEvents = ({ limit = 6, showHeader = true }: UpcomingEventsP
     <Card>
       {showHeader && (
         <CardHeader className="pb-2">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-              <CalendarIcon className="h-4 w-4 md:h-5 md:w-5" />
-              <span className="hidden sm:inline">Upcoming Events</span>
-              <span className="sm:hidden">Events</span>
-            </CardTitle>
-            <Button variant="ghost" size="sm" className="text-xs md:text-sm h-7 md:h-8 px-2 md:px-3">
-              <span className="hidden sm:inline">View All</span>
-              <span className="sm:hidden">All</span>
-              <ArrowRightIcon className="h-3 w-3 md:h-4 md:w-4 ml-1" />
-            </Button>
-          </div>
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <CalendarIcon className="h-4 w-4 md:h-5 md:w-5" />
+            <span className="hidden sm:inline">Upcoming Events</span>
+            <span className="sm:hidden">Events</span>
+          </CardTitle>
         </CardHeader>
       )}
       
@@ -75,7 +67,7 @@ export const UpcomingEvents = ({ limit = 6, showHeader = true }: UpcomingEventsP
             <p className="text-muted-foreground text-sm md:text-base">Check back later for new events!</p>
           </div>
         ) : (
-          <div className="space-y-2 md:space-y-4">
+          <div className="space-y-2 md:space-y-4 max-h-96 overflow-y-auto">
             {upcomingEvents.map(event => {
               const isSelected = selectedEvent?.id === event.id;
               return (
