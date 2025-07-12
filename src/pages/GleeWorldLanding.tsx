@@ -301,7 +301,7 @@ export const GleeWorldLanding = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-white/20 shadow-lg sticky top-0 z-50">
-        <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto px-2 sm:px-3 md:px-4 lg:px-6 py-3">
+        <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto px-0.5 sm:px-1 md:px-1.5 lg:px-3.5 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
@@ -351,7 +351,7 @@ export const GleeWorldLanding = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="py-6 px-2 sm:px-3 md:px-4 lg:px-6">
+      <section className="py-6 px-0.5 sm:px-1 md:px-1.5 lg:px-3.5">
         <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto">
           <Card className="overflow-hidden bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl">
             <div className="h-[30vh] sm:h-[40vh] md:h-[45vh] lg:h-[70vh] xl:h-[75vh] min-h-[250px] sm:min-h-[350px] overflow-hidden relative">
@@ -456,7 +456,7 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Upcoming Events Section */}
-      <section className="py-9 sm:py-12 px-2 sm:px-3 md:px-4 lg:px-6 w-full">
+      <section className="py-9 sm:py-12 px-0.5 sm:px-1 md:px-1.5 lg:px-3.5 w-full">
         <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto">
           <Card className="p-6 sm:p-8 bg-white/30 backdrop-blur-md border border-white/20 shadow-2xl">
             <div className="text-center mb-6 sm:mb-8">
@@ -568,7 +568,7 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Music Player Section */}
-      <section className="py-12 sm:py-16 px-2 sm:px-3 md:px-4 lg:px-8">
+      <section className="py-12 sm:py-16 px-0.5 sm:px-1 md:px-1.5 lg:px-3.5">
         <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto">
           <div className="text-center mb-6 sm:mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Listen to the Glee</h2>
@@ -656,7 +656,7 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Footer */}
-      <section className="py-6 px-2 sm:px-3 md:px-4 lg:px-6">
+      <section className="py-6 px-0.5 sm:px-1 md:px-1.5 lg:px-3.5">
         <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto">
           <Card className="bg-gray-900/90 backdrop-blur-md text-white p-8 sm:p-12 border border-gray-700/30 shadow-2xl">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
