@@ -699,15 +699,6 @@ export const GleeWorldLanding = () => {
       {/* Music Player Section */}
       <section className="pt-7 pb-9 sm:pt-10 sm:pb-12 px-0.5 sm:px-1 md:px-1.5 lg:px-3.5 w-full">
         <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto">
-          <div className="text-center mb-6 sm:mb-8">
-            <div className="flex items-center justify-center gap-3 mb-2">
-              <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-purple-400 animate-pulse" />
-              <h2 className="text-2xl sm:text-4xl md:text-6xl font-dancing font-bold text-gray-900">Glee World Music</h2>
-              <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-purple-600 animate-pulse" />
-            </div>
-            <p className="text-gray-600 text-lg">Experience the harmonious sounds of Spelman College Glee Club</p>
-          </div>
-          
           <MusicPlayer tracks={tracks} />
         </div>
       </section>
