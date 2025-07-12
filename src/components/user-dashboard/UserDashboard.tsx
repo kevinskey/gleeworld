@@ -390,12 +390,12 @@ export const UserDashboard = () => {
                     <Button 
                       variant="ghost" 
                       className="w-full justify-start h-auto p-3"
-                      onClick={() => window.location.href = '/system?tab=soundcloud'}
+                      onClick={() => window.location.href = '/system?tab=music'}
                     >
                       <Mic className="h-4 w-4 mr-2" />
                       <div className="text-left">
-                        <div>SoundCloud Library</div>
-                        <div className="text-xs text-gray-500">Recordings</div>
+                        <div>Music Library</div>
+                        <div className="text-xs text-gray-500">Tracks & Albums</div>
                       </div>
                     </Button>
                   </div>
