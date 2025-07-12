@@ -205,6 +205,24 @@ export const GleeWorldLanding = () => {
     }
   };
 
+  const getTitleFont = (font: string | null) => {
+    switch (font) {
+      case 'serif': return 'font-serif';
+      case 'mono': return 'font-mono';
+      case 'sans':
+      default: return 'font-sans';
+    }
+  };
+
+  const getDescriptionFont = (font: string | null) => {
+    switch (font) {
+      case 'serif': return 'font-serif';
+      case 'mono': return 'font-mono';
+      case 'sans':
+      default: return 'font-sans';
+    }
+  };
+
 
   // Audio player functionality
   const playTrack = async (track: Track) => {
