@@ -503,8 +503,6 @@ export const GleeWorldLanding = () => {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="left-4" />
-              <CarouselNext className="right-4" />
             </Carousel>
           ) : (
             <Carousel className="w-full">
@@ -539,8 +537,6 @@ export const GleeWorldLanding = () => {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="left-4" />
-              <CarouselNext className="right-4" />
             </Carousel>
            )}
       </section>
