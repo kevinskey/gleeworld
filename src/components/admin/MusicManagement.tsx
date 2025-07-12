@@ -41,6 +41,8 @@ export const MusicManagement = () => {
   
   const [isCreatingAlbum, setIsCreatingAlbum] = useState(false);
   const [isCreatingTrack, setIsCreatingTrack] = useState(false);
+  const [editingAlbum, setEditingAlbum] = useState<any>(null);
+  const [editingTrack, setEditingTrack] = useState<any>(null);
   const [albumForm, setAlbumForm] = useState({
     title: '',
     artist: '',
@@ -98,6 +100,58 @@ export const MusicManagement = () => {
     }
   };
 
+  const handleUpdateAlbum = async () => {
+    if (!editingAlbum || !albumForm.title || !albumForm.artist) return;
+
+    try {
+      const { error } = await supabase
+        .from('music_albums')
+        .update({
+          title: albumForm.title,
+          artist: albumForm.artist,
+          description: albumForm.description,
+          release_date: albumForm.release_date || null,
+          cover_image_url: albumForm.cover_image_url
+        })
+        .eq('id', editingAlbum.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Album updated",
+        description: `"${albumForm.title}" has been updated`
+      });
+
+      setEditingAlbum(null);
+      setAlbumForm({
+        title: '',
+        artist: '',
+        description: '',
+        release_date: '',
+        cover_image_url: ''
+      });
+      refetch();
+    } catch (error) {
+      console.error('Error updating album:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update album",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const startEditingAlbum = (album: any) => {
+    setEditingAlbum(album);
+    setAlbumForm({
+      title: album.title,
+      artist: album.artist,
+      description: album.description || '',
+      release_date: album.release_date || '',
+      cover_image_url: album.cover_image_url || ''
+    });
+  };
+
   const handleCreateTrack = async () => {
     if (!user || !trackForm.title || !trackForm.artist || !trackForm.audio_url) return;
 
@@ -137,6 +191,67 @@ export const MusicManagement = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleUpdateTrack = async () => {
+    if (!editingTrack || !trackForm.title || !trackForm.artist || !trackForm.audio_url) return;
+
+    try {
+      const { error } = await supabase
+        .from('music_tracks')
+        .update({
+          title: trackForm.title,
+          artist: trackForm.artist,
+          album_id: trackForm.album_id || null,
+          audio_url: trackForm.audio_url,
+          duration: trackForm.duration,
+          track_number: trackForm.track_number,
+          genre: trackForm.genre,
+          lyrics: trackForm.lyrics
+        })
+        .eq('id', editingTrack.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Track updated",
+        description: `"${trackForm.title}" has been updated`
+      });
+
+      setEditingTrack(null);
+      setTrackForm({
+        title: '',
+        artist: '',
+        album_id: '',
+        audio_url: '',
+        duration: 0,
+        track_number: 1,
+        genre: '',
+        lyrics: ''
+      });
+      refetch();
+    } catch (error) {
+      console.error('Error updating track:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update track",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const startEditingTrack = (track: any) => {
+    setEditingTrack(track);
+    setTrackForm({
+      title: track.title,
+      artist: track.artist,
+      album_id: track.album?.id || '',
+      audio_url: track.audio_url,
+      duration: track.duration,
+      track_number: track.track_number || 1,
+      genre: track.genre || '',
+      lyrics: track.lyrics || ''
+    });
   };
 
   const handleImageUpload = async (file: File) => {
@@ -242,7 +357,19 @@ export const MusicManagement = () => {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">Music Management</h2>
         <div className="flex space-x-2">
-          <Dialog open={isCreatingAlbum} onOpenChange={setIsCreatingAlbum}>
+          <Dialog open={isCreatingAlbum || !!editingAlbum} onOpenChange={(open) => {
+            if (!open) {
+              setIsCreatingAlbum(false);
+              setEditingAlbum(null);
+              setAlbumForm({
+                title: '',
+                artist: '',
+                description: '',
+                release_date: '',
+                cover_image_url: ''
+              });
+            }
+          }}>
             <DialogTrigger asChild>
               <Button className="bg-primary hover:bg-primary/90">
                 <Album className="h-4 w-4 mr-2" />
@@ -251,7 +378,7 @@ export const MusicManagement = () => {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create New Album</DialogTitle>
+                <DialogTitle>{editingAlbum ? 'Edit Album' : 'Create New Album'}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
@@ -343,18 +470,43 @@ export const MusicManagement = () => {
                   />
                 </div>
                 <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setIsCreatingAlbum(false)}>
+                  <Button variant="outline" onClick={() => {
+                    setIsCreatingAlbum(false);
+                    setEditingAlbum(null);
+                    setAlbumForm({
+                      title: '',
+                      artist: '',
+                      description: '',
+                      release_date: '',
+                      cover_image_url: ''
+                    });
+                  }}>
                     Cancel
                   </Button>
-                  <Button onClick={handleCreateAlbum}>
-                    Create Album
+                  <Button onClick={editingAlbum ? handleUpdateAlbum : handleCreateAlbum}>
+                    {editingAlbum ? 'Update Album' : 'Create Album'}
                   </Button>
                 </div>
               </div>
             </DialogContent>
           </Dialog>
 
-          <Dialog open={isCreatingTrack} onOpenChange={setIsCreatingTrack}>
+          <Dialog open={isCreatingTrack || !!editingTrack} onOpenChange={(open) => {
+            if (!open) {
+              setIsCreatingTrack(false);
+              setEditingTrack(null);
+              setTrackForm({
+                title: '',
+                artist: '',
+                album_id: '',
+                audio_url: '',
+                duration: 0,
+                track_number: 1,
+                genre: '',
+                lyrics: ''
+              });
+            }
+          }}>
             <DialogTrigger asChild>
               <Button className="bg-primary hover:bg-primary/90">
                 <Plus className="h-4 w-4 mr-2" />
@@ -363,7 +515,7 @@ export const MusicManagement = () => {
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Add New Track</DialogTitle>
+                <DialogTitle>{editingTrack ? 'Edit Track' : 'Add New Track'}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -458,11 +610,24 @@ export const MusicManagement = () => {
                 </div>
 
                 <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setIsCreatingTrack(false)}>
+                  <Button variant="outline" onClick={() => {
+                    setIsCreatingTrack(false);
+                    setEditingTrack(null);
+                    setTrackForm({
+                      title: '',
+                      artist: '',
+                      album_id: '',
+                      audio_url: '',
+                      duration: 0,
+                      track_number: 1,
+                      genre: '',
+                      lyrics: ''
+                    });
+                  }}>
                     Cancel
                   </Button>
-                  <Button onClick={handleCreateTrack}>
-                    Add Track
+                  <Button onClick={editingTrack ? handleUpdateTrack : handleCreateTrack}>
+                    {editingTrack ? 'Update Track' : 'Add Track'}
                   </Button>
                 </div>
               </div>
@@ -504,14 +669,24 @@ export const MusicManagement = () => {
                         <p className="text-sm text-gray-600 truncate">{album.artist}</p>
                         <p className="text-xs text-gray-500">{album.tracks?.length || 0} tracks</p>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteAlbum(album.id, album.title)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex space-x-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => startEditingAlbum(album)}
+                          className="text-blue-500 hover:text-blue-700"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteAlbum(album.id, album.title)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -571,14 +746,24 @@ export const MusicManagement = () => {
                     <span>{Math.floor(track.duration / 60)}:{(track.duration % 60).toString().padStart(2, '0')}</span>
                   </div>
                   
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteTrack(track.id, track.title)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => startEditingTrack(track)}
+                      className="text-blue-500 hover:text-blue-700"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteTrack(track.id, track.title)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
