@@ -489,8 +489,10 @@ export const GleeWorldLanding = () => {
                         <Card className="hover:shadow-2xl transition-all duration-300 h-full w-full relative group bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30">
                           {/* Hover overlay button */}
                           <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <Button size="sm" className="bg-primary/90 backdrop-blur-md text-primary-foreground hover:bg-primary shadow-lg border border-white/30">
-                              View All <ArrowRight className="ml-1 h-4 w-4" />
+                            <Button size="sm" className="bg-primary/90 backdrop-blur-md text-primary-foreground hover:bg-primary shadow-lg border border-white/30" asChild>
+                              <Link to="/public-calendar">
+                                View All <ArrowRight className="ml-1 h-4 w-4" />
+                              </Link>
                             </Button>
                           </div>
                           
@@ -536,8 +538,10 @@ export const GleeWorldLanding = () => {
                         <Card className="hover:shadow-2xl transition-all duration-300 h-full w-full relative group bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30">
                           {/* Hover overlay button */}
                           <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <Button size="sm" className="bg-primary/90 backdrop-blur-md text-primary-foreground hover:bg-primary shadow-lg border border-white/30">
-                              View All <ArrowRight className="ml-1 h-4 w-4" />
+                            <Button size="sm" className="bg-primary/90 backdrop-blur-md text-primary-foreground hover:bg-primary shadow-lg border border-white/30" asChild>
+                              <Link to="/public-calendar">
+                                View All <ArrowRight className="ml-1 h-4 w-4" />
+                              </Link>
                             </Button>
                           </div>
                           

@@ -23,6 +23,7 @@ import EventPlanner from "./pages/EventPlanner";
 import { Shop } from "./pages/Shop";
 import Profile from "./pages/Profile";
 import Calendar from "./pages/Calendar";
+import PublicCalendar from "./pages/PublicCalendar";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -200,14 +201,22 @@ const App = () => {
                   </PublicRoute>
                 } 
               />
-              <Route 
-                path="/calendar" 
-                element={
-                  <PublicRoute>
-                    <Calendar />
-                  </PublicRoute>
-                } 
-              />
+               <Route 
+                 path="/calendar" 
+                 element={
+                   <PublicRoute>
+                     <Calendar />
+                   </PublicRoute>
+                 } 
+               />
+               <Route 
+                 path="/public-calendar" 
+                 element={
+                   <PublicRoute>
+                     <PublicCalendar />
+                   </PublicRoute>
+                 } 
+               />
               <Route 
                 path="/contracts"
                 element={

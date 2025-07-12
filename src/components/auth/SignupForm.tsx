@@ -1,19 +1,28 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, Users, Heart } from "lucide-react";
 
 export const SignupForm = () => {
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [isFanSignup, setIsFanSignup] = useState(false);
+
+  useEffect(() => {
+    const role = searchParams.get('role');
+    setIsFanSignup(role === 'fan');
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,9 +34,10 @@ export const SignupForm = () => {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${window.location.origin}${isFanSignup ? '/public-calendar' : '/dashboard'}`,
           data: {
             full_name: fullName,
+            role: isFanSignup ? 'fan' : 'user',
           }
         }
       });
@@ -46,7 +56,10 @@ export const SignupForm = () => {
     return (
       <Alert>
         <AlertDescription>
-          Check your email for a verification link to complete your registration.
+          {isFanSignup 
+            ? "Welcome to the GleeWorld fan community! Check your email for a verification link to complete your registration and unlock exclusive fan content."
+            : "Check your email for a verification link to complete your registration."
+          }
         </AlertDescription>
       </Alert>
     );
@@ -54,6 +67,19 @@ export const SignupForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {isFanSignup && (
+        <div className="text-center p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg border border-primary/20">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Heart className="h-5 w-5 text-secondary" />
+            <Badge variant="secondary" className="text-sm">Fan Registration</Badge>
+            <Users className="h-5 w-5 text-primary" />
+          </div>
+          <p className="text-sm text-gray-600">
+            Join the GleeWorld fan community and get exclusive access to content and events!
+          </p>
+        </div>
+      )}
+      
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
@@ -99,7 +125,14 @@ export const SignupForm = () => {
       
       <Button type="submit" className="w-full" disabled={loading}>
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Create Account
+        {isFanSignup ? (
+          <>
+            <Heart className="mr-2 h-4 w-4" />
+            Join as Fan
+          </>
+        ) : (
+          'Create Account'
+        )}
       </Button>
     </form>
   );
