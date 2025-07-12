@@ -63,18 +63,33 @@ export const MusicManagement = () => {
   });
 
   const handleCreateAlbum = async () => {
-    if (!user || !albumForm.title || !albumForm.artist) return;
+    if (!user || !albumForm.title || !albumForm.artist) {
+      console.log('Validation failed:', { user: !!user, title: albumForm.title, artist: albumForm.artist });
+      return;
+    }
+
+    console.log('Creating album with data:', {
+      ...albumForm,
+      created_by: user.id,
+      release_date: albumForm.release_date || null
+    });
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('music_albums')
         .insert({
           ...albumForm,
           created_by: user.id,
           release_date: albumForm.release_date || null
-        });
+        })
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Album created successfully:', data);
 
       toast({
         title: "Album created",
