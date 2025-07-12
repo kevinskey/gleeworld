@@ -32,10 +32,10 @@ const EVENT_TYPES = [
 ];
 
 const STATUS_COLORS = {
-  draft: "bg-gray-100 text-gray-800",
-  pending_approval: "bg-yellow-100 text-yellow-800",
-  approved: "bg-green-100 text-green-800",
-  rejected: "bg-red-100 text-red-800"
+  draft: "bg-muted text-muted-foreground border-border",
+  pending_approval: "bg-secondary/10 text-secondary border-secondary/20",
+  approved: "bg-primary/10 text-primary border-primary/20",
+  rejected: "bg-destructive/10 text-destructive border-destructive/20"
 };
 
 const STATUS_ICONS = {
@@ -193,10 +193,10 @@ export const EventBudgetWorksheet = ({ eventId }: EventBudgetWorksheetProps) => 
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-32 bg-gray-200 rounded-lg"></div>
+        <div className="h-32 bg-muted rounded-lg"></div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="h-64 bg-gray-200 rounded-lg"></div>
-          <div className="h-64 bg-gray-200 rounded-lg"></div>
+          <div className="h-64 bg-muted rounded-lg"></div>
+          <div className="h-64 bg-muted rounded-lg"></div>
         </div>
       </div>
     );
@@ -207,10 +207,10 @@ export const EventBudgetWorksheet = ({ eventId }: EventBudgetWorksheetProps) => 
       {/* Header with Status */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-foreground">
             {formData.event_name || "Event Budget Worksheet"}
           </h1>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Non-Performance Event Budget Planning
           </p>
         </div>
