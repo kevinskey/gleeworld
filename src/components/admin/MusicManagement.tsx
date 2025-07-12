@@ -30,7 +30,8 @@ import {
   Trash2,
   Edit,
   Play,
-  Heart
+  Heart,
+  Image
 } from "lucide-react";
 
 export const MusicManagement = () => {
@@ -47,6 +48,7 @@ export const MusicManagement = () => {
     release_date: '',
     cover_image_url: ''
   });
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [trackForm, setTrackForm] = useState({
     title: '',
     artist: '',
@@ -134,6 +136,43 @@ export const MusicManagement = () => {
         description: "Failed to add track",
         variant: "destructive"
       });
+    }
+  };
+
+  const handleImageUpload = async (file: File) => {
+    if (!user) return;
+
+    setUploadingImage(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}_${Date.now()}.${fileExt}`;
+      const filePath = `album-covers/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('user-files')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('user-files')
+        .getPublicUrl(filePath);
+
+      setAlbumForm(prev => ({ ...prev, cover_image_url: publicUrl }));
+
+      toast({
+        title: "Image uploaded",
+        description: "Album cover has been uploaded successfully"
+      });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload image",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -234,13 +273,56 @@ export const MusicManagement = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="album-cover">Cover Image URL</Label>
-                  <Input
-                    id="album-cover"
-                    value={albumForm.cover_image_url}
-                    onChange={(e) => setAlbumForm(prev => ({ ...prev, cover_image_url: e.target.value }))}
-                    placeholder="https://example.com/cover.jpg"
-                  />
+                  <Label htmlFor="album-cover">Album Cover</Label>
+                  <div className="space-y-3">
+                    {albumForm.cover_image_url && (
+                      <div className="flex items-center space-x-3">
+                        <img
+                          src={albumForm.cover_image_url}
+                          alt="Album cover preview"
+                          className="w-16 h-16 object-cover rounded-lg"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setAlbumForm(prev => ({ ...prev, cover_image_url: '' }))}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    )}
+                    <div className="flex space-x-2">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleImageUpload(file);
+                        }}
+                        disabled={uploadingImage}
+                        className="flex-1"
+                      />
+                      <Button
+                        variant="outline"
+                        disabled={uploadingImage}
+                        className="px-3"
+                      >
+                        {uploadingImage ? (
+                          <div className="h-4 w-4 animate-spin border-2 border-current border-t-transparent rounded-full" />
+                        ) : (
+                          <Upload className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Or paste image URL:
+                    </div>
+                    <Input
+                      value={albumForm.cover_image_url}
+                      onChange={(e) => setAlbumForm(prev => ({ ...prev, cover_image_url: e.target.value }))}
+                      placeholder="https://example.com/cover.jpg"
+                    />
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="album-release">Release Date</Label>
