@@ -351,103 +351,107 @@ export const GleeWorldLanding = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative">
-        <div className="h-[30vh] sm:h-[40vh] md:h-[45vh] lg:h-[70vh] xl:h-[75vh] min-h-[250px] sm:min-h-[350px] overflow-hidden relative">
-          {heroSlides.length > 0 ? (
-            <>
-              {/* Desktop Image */}
-              <img 
-                src={currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
-                alt="Hero Background"
-                className="hidden md:block w-full h-full object-cover transition-opacity duration-500"
-                onError={(e) => {
-                  console.log('Hero image failed to load, using fallback');
-                  // Only fallback if the current src is not already the fallback
-                  if (!e.currentTarget.src.includes('unsplash.com')) {
-                    e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
-                  }
-                }}
-              />
-              
-              {/* iPad Image */}
-              <img 
-                src={currentHeroSlide?.ipad_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
-                alt="Hero Background"
-                className="hidden sm:block md:hidden w-full h-full object-cover transition-opacity duration-500"
-                onError={(e) => {
-                  console.log('iPad hero image failed to load, using fallback');
-                  if (!e.currentTarget.src.includes('unsplash.com')) {
-                    e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
-                  }
-                }}
-              />
-              
-              {/* Mobile Image */}
-              <img 
-                src={currentHeroSlide?.mobile_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
-                alt="Hero Background"
-                className="block sm:hidden w-full h-full object-cover object-center transition-opacity duration-500"
-                onError={(e) => {
-                  console.log('Mobile hero image failed to load, using fallback');
-                  if (!e.currentTarget.src.includes('unsplash.com')) {
-                    e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
-                  }
-                }}
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-40"></div>
-              
-              {/* Content overlay - positioned elements */}
-              <div className="absolute inset-0">
-                {/* Title Section */}
-                {currentHeroSlide?.title && (
-                  <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.title_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.title_position_horizontal)} px-6 pointer-events-none`}>
-                    <h1 className={`${getTitleSize(currentHeroSlide.title_size)} font-bold text-white max-w-4xl pointer-events-auto`}>
-                      {currentHeroSlide.title}
-                    </h1>
+      <section className="py-6 px-3 sm:px-5 lg:px-6 bg-gray-50">
+        <div className="container mx-auto max-w-7xl">
+          <Card className="overflow-hidden">
+            <div className="h-[30vh] sm:h-[40vh] md:h-[45vh] lg:h-[70vh] xl:h-[75vh] min-h-[250px] sm:min-h-[350px] overflow-hidden relative">
+              {heroSlides.length > 0 ? (
+                <>
+                  {/* Desktop Image */}
+                  <img 
+                    src={currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
+                    alt="Hero Background"
+                    className="hidden md:block w-full h-full object-cover transition-opacity duration-500"
+                    onError={(e) => {
+                      console.log('Hero image failed to load, using fallback');
+                      // Only fallback if the current src is not already the fallback
+                      if (!e.currentTarget.src.includes('unsplash.com')) {
+                        e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                      }
+                    }}
+                  />
+                  
+                  {/* iPad Image */}
+                  <img 
+                    src={currentHeroSlide?.ipad_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
+                    alt="Hero Background"
+                    className="hidden sm:block md:hidden w-full h-full object-cover transition-opacity duration-500"
+                    onError={(e) => {
+                      console.log('iPad hero image failed to load, using fallback');
+                      if (!e.currentTarget.src.includes('unsplash.com')) {
+                        e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                      }
+                    }}
+                  />
+                  
+                  {/* Mobile Image */}
+                  <img 
+                    src={currentHeroSlide?.mobile_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
+                    alt="Hero Background"
+                    className="block sm:hidden w-full h-full object-cover object-center transition-opacity duration-500"
+                    onError={(e) => {
+                      console.log('Mobile hero image failed to load, using fallback');
+                      if (!e.currentTarget.src.includes('unsplash.com')) {
+                        e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                      }
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+                  
+                  {/* Content overlay - positioned elements */}
+                  <div className="absolute inset-0">
+                    {/* Title Section */}
+                    {currentHeroSlide?.title && (
+                      <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.title_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.title_position_horizontal)} px-6 pointer-events-none`}>
+                        <h1 className={`${getTitleSize(currentHeroSlide.title_size)} font-bold text-white max-w-4xl pointer-events-auto`}>
+                          {currentHeroSlide.title}
+                        </h1>
+                      </div>
+                    )}
+                    
+                    {/* Description Section */}
+                    {currentHeroSlide?.description && (
+                      <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.description_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.description_position_horizontal)} px-6 pointer-events-none`}>
+                        <p className={`${getDescriptionSize(currentHeroSlide.description_size)} text-white max-w-4xl pointer-events-auto`}>
+                          {currentHeroSlide.description}
+                        </p>
+                      </div>
+                    )}
+                    
+                    {/* Action Button Section */}
+                    {currentHeroSlide?.action_button_enabled && currentHeroSlide?.action_button_text && currentHeroSlide?.action_button_url && (
+                      <div className="absolute inset-0 flex justify-center items-end pb-16 px-6 pointer-events-none">
+                        <Button size="lg" asChild className="pointer-events-auto">
+                          <a href={currentHeroSlide.action_button_url} target="_blank" rel="noopener noreferrer">
+                            {currentHeroSlide.action_button_text}
+                          </a>
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {/* Legacy button support */}
+                    {!currentHeroSlide?.action_button_enabled && currentHeroSlide?.button_text && currentHeroSlide?.link_url && (
+                      <div className="absolute inset-0 flex justify-center items-end pb-16 px-6 pointer-events-none">
+                        <Button size="lg" asChild className="pointer-events-auto">
+                          <a href={currentHeroSlide.link_url} target="_blank" rel="noopener noreferrer">
+                            {currentHeroSlide.button_text}
+                          </a>
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                )}
-                
-                {/* Description Section */}
-                {currentHeroSlide?.description && (
-                  <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.description_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.description_position_horizontal)} px-6 pointer-events-none`}>
-                    <p className={`${getDescriptionSize(currentHeroSlide.description_size)} text-white max-w-4xl pointer-events-auto`}>
-                      {currentHeroSlide.description}
-                    </p>
+                  
+                </>
+              ) : (
+                <div className="w-full h-full bg-gradient-to-r from-pink-100 to-rose-200 flex items-center justify-center">
+                  <div className="text-center">
+                    <Music className="h-24 w-24 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">No hero slides configured</p>
                   </div>
-                )}
-                
-                {/* Action Button Section */}
-                {currentHeroSlide?.action_button_enabled && currentHeroSlide?.action_button_text && currentHeroSlide?.action_button_url && (
-                  <div className="absolute inset-0 flex justify-center items-end pb-16 px-6 pointer-events-none">
-                    <Button size="lg" asChild className="pointer-events-auto">
-                      <a href={currentHeroSlide.action_button_url} target="_blank" rel="noopener noreferrer">
-                        {currentHeroSlide.action_button_text}
-                      </a>
-                    </Button>
-                  </div>
-                )}
-                
-                {/* Legacy button support */}
-                {!currentHeroSlide?.action_button_enabled && currentHeroSlide?.button_text && currentHeroSlide?.link_url && (
-                  <div className="absolute inset-0 flex justify-center items-end pb-16 px-6 pointer-events-none">
-                    <Button size="lg" asChild className="pointer-events-auto">
-                      <a href={currentHeroSlide.link_url} target="_blank" rel="noopener noreferrer">
-                        {currentHeroSlide.button_text}
-                      </a>
-                    </Button>
-                  </div>
-                )}
-              </div>
-              
-            </>
-          ) : (
-            <div className="w-full h-full bg-gradient-to-r from-pink-100 to-rose-200 flex items-center justify-center">
-              <div className="text-center">
-                <Music className="h-24 w-24 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No hero slides configured</p>
-              </div>
+                </div>
+              )}
             </div>
-          )}
+          </Card>
         </div>
       </section>
 
