@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Sparkles, Send } from "lucide-react";
+import { Plus, Sparkles, Send, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -37,6 +37,8 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [generatingDescription, setGeneratingDescription] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
 
   const eventTypes = [
     { value: 'performance', label: 'Performance' },
@@ -48,6 +50,55 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
     { value: 'audition', label: 'Audition' },
     { value: 'other', label: 'Other' }
   ];
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "File too large",
+          description: "Please select an image smaller than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview('');
+  };
+
+  const uploadImage = async (file: File, eventId: string): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${eventId}-${Date.now()}.${fileExt}`;
+      const filePath = `${user?.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('event-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('event-images')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    }
+  };
 
   const generateDescription = async () => {
     if (!formData.title) {
@@ -119,6 +170,19 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
 
       if (error) throw error;
 
+      // Upload image if selected
+      let imageUrl = null;
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile, newEvent.id);
+        if (imageUrl) {
+          // Update the event with the image URL
+          await supabase
+            .from('events')
+            .update({ image_url: imageUrl })
+            .eq('id', newEvent.id);
+        }
+      }
+
       // Send notifications if users are selected
       if (selectedUserIds.length > 0) {
         try {
@@ -157,6 +221,8 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
       });
       setSelectedUserIds([]);
       setNotificationMessage('');
+      setImageFile(null);
+      setImagePreview('');
       onEventCreated();
     } catch (err) {
       console.error('Error creating event:', err);
@@ -300,6 +366,54 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
                 }
               }}
             />
+
+            <div className="space-y-2">
+              <Label htmlFor="event_image">Event Image</Label>
+              <div className="space-y-2">
+                {imagePreview ? (
+                  <div className="relative">
+                    <img
+                      src={imagePreview}
+                      alt="Event preview"
+                      className="w-full h-32 object-cover rounded-md border"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={removeImage}
+                      className="absolute top-2 right-2"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
+                    <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Upload an event image to display on the landing page
+                    </p>
+                    <Input
+                      id="event_image"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('event_image')?.click()}
+                    >
+                      Choose Image
+                    </Button>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Maximum file size: 5MB. Supported formats: JPG, PNG, WebP
+                </p>
+              </div>
+            </div>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">

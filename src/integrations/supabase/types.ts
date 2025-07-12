@@ -1082,6 +1082,7 @@ export type Database = {
           guest_speakers: string | null
           honoraria: number | null
           id: string
+          image_url: string | null
           is_travel_involved: boolean | null
           location: string | null
           misc_supplies: number | null
@@ -1127,6 +1128,7 @@ export type Database = {
           guest_speakers?: string | null
           honoraria?: number | null
           id?: string
+          image_url?: string | null
           is_travel_involved?: boolean | null
           location?: string | null
           misc_supplies?: number | null
@@ -1172,6 +1174,7 @@ export type Database = {
           guest_speakers?: string | null
           honoraria?: number | null
           id?: string
+          image_url?: string | null
           is_travel_involved?: boolean | null
           location?: string | null
           misc_supplies?: number | null
