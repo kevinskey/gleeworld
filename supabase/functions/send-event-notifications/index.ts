@@ -1,0 +1,124 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { Resend } from "npm:resend@2.0.0";
+
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const resendApiKey = Deno.env.get('RESEND_API_KEY');
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface NotificationRequest {
+  eventId: string;
+  eventTitle: string;
+  eventDate: string;
+  userIds: string[];
+  message?: string;
+}
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { eventId, eventTitle, eventDate, userIds, message }: NotificationRequest = await req.json();
+
+    console.log('Sending notifications for event:', { eventId, eventTitle, userIds });
+
+    // Get user details
+    const { data: users, error: usersError } = await supabase
+      .from('profiles')
+      .select('id, email, full_name')
+      .in('id', userIds);
+
+    if (usersError) {
+      console.error('Error fetching users:', usersError);
+      throw usersError;
+    }
+
+    const notifications = [];
+    const emailPromises = [];
+
+    // Create database notifications for each user
+    for (const user of users) {
+      // Insert notification record
+      const { data: notification, error: notificationError } = await supabase
+        .from('gw_event_rsvps')
+        .insert({
+          event_id: eventId,
+          user_id: user.id,
+          status: 'pending',
+          notes: message || `You've been invited to ${eventTitle}`
+        })
+        .select()
+        .single();
+
+      if (notificationError) {
+        console.error('Error creating notification:', notificationError);
+      } else {
+        notifications.push(notification);
+      }
+
+      // Send email notification if Resend is configured and user has email
+      if (resend && user.email) {
+        const emailPromise = resend.emails.send({
+          from: "Glee World <events@gleeworld.com>",
+          to: [user.email],
+          subject: `Invitation: ${eventTitle}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #333;">You're Invited to ${eventTitle}</h2>
+              <p>Hello ${user.full_name || user.email},</p>
+              <p>You've been invited to attend <strong>${eventTitle}</strong> scheduled for ${new Date(eventDate).toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}.</p>
+              ${message ? `<p><strong>Additional Message:</strong> ${message}</p>` : ''}
+              <p>Please check the Glee World calendar for more details and to confirm your attendance.</p>
+              <p>Best regards,<br>The Glee World Team</p>
+            </div>
+          `,
+        }).catch((emailError) => {
+          console.error('Error sending email to', user.email, ':', emailError);
+          return null;
+        });
+
+        emailPromises.push(emailPromise);
+      }
+    }
+
+    // Wait for all emails to be sent
+    const emailResults = await Promise.allSettled(emailPromises);
+    const successfulEmails = emailResults.filter(result => result.status === 'fulfilled' && result.value !== null).length;
+
+    console.log(`Notifications created: ${notifications.length}, Emails sent: ${successfulEmails}`);
+
+    return new Response(JSON.stringify({
+      success: true,
+      notificationsCreated: notifications.length,
+      emailsSent: successfulEmails,
+      message: `Successfully notified ${notifications.length} users${successfulEmails > 0 ? ` and sent ${successfulEmails} emails` : ''}`
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  } catch (error) {
+    console.error('Error in send-event-notifications function:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});

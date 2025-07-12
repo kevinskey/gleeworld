@@ -6,11 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { AddressInput } from "@/components/shared/AddressInput";
+import { UserPicker } from "./UserPicker";
 
 interface CreateEventDialogProps {
   onEventCreated: () => void;
@@ -33,6 +34,9 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
     registration_required: false,
     is_public: true
   });
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [generatingDescription, setGeneratingDescription] = useState(false);
 
   const eventTypes = [
     { value: 'performance', label: 'Performance' },
@@ -44,6 +48,46 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
     { value: 'audition', label: 'Audition' },
     { value: 'other', label: 'Other' }
   ];
+
+  const generateDescription = async () => {
+    if (!formData.title) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter an event title first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setGeneratingDescription(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-event-description', {
+        body: {
+          title: formData.title,
+          eventType: formData.event_type,
+          venue: formData.venue_name,
+          maxAttendees: formData.max_attendees
+        }
+      });
+
+      if (error) throw error;
+
+      setFormData(prev => ({ ...prev, description: data.description }));
+      toast({
+        title: "Success",
+        description: "AI-generated description added!",
+      });
+    } catch (err) {
+      console.error('Error generating description:', err);
+      toast({
+        title: "Error",
+        description: "Failed to generate description",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingDescription(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,15 +111,35 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
         status: 'scheduled'
       };
 
-      const { error } = await supabase
+      const { data: newEvent, error } = await supabase
         .from('gw_events')
-        .insert([eventData]);
+        .insert([eventData])
+        .select()
+        .single();
 
       if (error) throw error;
 
+      // Send notifications if users are selected
+      if (selectedUserIds.length > 0) {
+        try {
+          await supabase.functions.invoke('send-event-notifications', {
+            body: {
+              eventId: newEvent.id,
+              eventTitle: formData.title,
+              eventDate: formData.start_date,
+              userIds: selectedUserIds,
+              message: notificationMessage
+            }
+          });
+        } catch (notificationError) {
+          console.error('Error sending notifications:', notificationError);
+          // Don't fail the event creation if notifications fail
+        }
+      }
+
       toast({
         title: "Success",
-        description: "Event created successfully!",
+        description: `Event created successfully!${selectedUserIds.length > 0 ? ` Notifications sent to ${selectedUserIds.length} user(s).` : ''}`,
       });
 
       setOpen(false);
@@ -91,6 +155,8 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
         registration_required: false,
         is_public: true
       });
+      setSelectedUserIds([]);
+      setNotificationMessage('');
       onEventCreated();
     } catch (err) {
       console.error('Error creating event:', err);
@@ -134,12 +200,25 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="description">Description</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={generateDescription}
+                  disabled={generatingDescription || !formData.title}
+                  className="h-8"
+                >
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  {generatingDescription ? "Generating..." : "AI Generate"}
+                </Button>
+              </div>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Event description..."
+                placeholder="Event description... (or use AI Generate)"
                 rows={3}
               />
             </div>
@@ -248,6 +327,35 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
                   onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_public: checked }))}
                 />
               </div>
+            </div>
+
+            <div className="space-y-4 border-t pt-4">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Send className="h-4 w-4" />
+                  Notify Users
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Select users to notify about this event
+                </p>
+                <UserPicker
+                  selectedUserIds={selectedUserIds}
+                  onSelectionChange={setSelectedUserIds}
+                />
+              </div>
+
+              {selectedUserIds.length > 0 && (
+                <div className="space-y-2">
+                  <Label htmlFor="notificationMessage">Custom Message (Optional)</Label>
+                  <Textarea
+                    id="notificationMessage"
+                    value={notificationMessage}
+                    onChange={(e) => setNotificationMessage(e.target.value)}
+                    placeholder="Add a personal message to the notification..."
+                    rows={2}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
