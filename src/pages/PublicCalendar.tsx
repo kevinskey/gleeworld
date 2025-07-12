@@ -79,7 +79,7 @@ const PublicCalendar = () => {
         <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto px-2 sm:px-3 md:px-4 lg:px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
+              <Link to="/landing" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
                 <img 
                   src="/lovable-uploads/a07cfbb7-b3ac-4674-acd9-4a037296a3f7.png" 
                   alt="Spelman College Glee Club"
@@ -89,7 +89,7 @@ const PublicCalendar = () => {
                   <h1 className="text-2xl font-bold text-gray-900">GleeWorld Calendar</h1>
                   <p className="text-xs text-gray-600">Spelman College</p>
                 </div>
-              </div>
+              </Link>
             </div>
             
             <nav className="hidden lg:flex items-center space-x-8">
