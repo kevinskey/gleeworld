@@ -485,11 +485,12 @@ export const GleeWorldLanding = () => {
                   ))}
                 </div>
               ) : events.length > 0 ? (
-                <Carousel className="w-full">
-                  <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
-                    {events.map((event) => (
-                      <CarouselItem key={event.id} className="pl-1 sm:pl-2 md:pl-4 basis-full">
-                        <Card className="hover:shadow-2xl transition-all duration-300 h-full w-full relative group bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30">
+                <>
+                  {/* Desktop view - 3 events in a list */}
+                  <div className="hidden lg:block">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {events.slice(0, 3).map((event) => (
+                        <Card key={event.id} className="hover:shadow-2xl transition-all duration-300 h-full relative group bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30">
                           {/* Hover overlay button */}
                           <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <Button size="sm" className="bg-primary/90 backdrop-blur-md text-primary-foreground hover:bg-primary shadow-lg border border-white/30" asChild>
@@ -499,7 +500,7 @@ export const GleeWorldLanding = () => {
                             </Button>
                           </div>
                           
-                          <div className="h-48 sm:h-64 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm">
+                          <div className="h-48 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm">
                             <img 
                               src="https://dzzptovqfqausipsgabw.supabase.co/storage/v1/object/public/event-images/event-images/1750597449197-ilkitkdn1ld.png"
                               alt={event.title}
@@ -510,29 +511,81 @@ export const GleeWorldLanding = () => {
                               }}
                             />
                           </div>
-                          <CardContent className="p-6 sm:p-8">
-                            <h3 className="text-2xl sm:text-2xl font-semibold text-gray-900 mb-4 line-clamp-2">{event.title}</h3>
+                          <CardContent className="p-6">
+                            <h3 className="text-xl font-semibold text-gray-900 mb-4 line-clamp-2">{event.title}</h3>
                             <div className="space-y-2 text-gray-600">
                               <div className="flex items-center">
-                                <Calendar className="h-5 w-5 mr-3 flex-shrink-0" />
-                                <span className="text-base sm:text-lg">{formatDate(event.start_date)}</span>
+                                <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
+                                <span className="text-sm">{formatDate(event.start_date)}</span>
                               </div>
                               {event.location && (
                                 <div className="flex items-center">
-                                  <MapPin className="h-5 w-5 mr-3 flex-shrink-0" />
-                                  <span className="text-base sm:text-lg line-clamp-1">{event.location}</span>
+                                  <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                                  <span className="text-sm line-clamp-1">{event.location}</span>
                                 </div>
                               )}
                             </div>
                             {event.description && (
-                              <p className="text-gray-600 mt-4 line-clamp-3 text-base sm:text-lg">{event.description}</p>
+                              <p className="text-gray-600 mt-3 line-clamp-2 text-sm">{event.description}</p>
                             )}
                           </CardContent>
                         </Card>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                </Carousel>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Mobile/Tablet view - Carousel */}
+                  <div className="lg:hidden">
+                    <Carousel className="w-full">
+                      <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
+                        {events.map((event) => (
+                          <CarouselItem key={event.id} className="pl-1 sm:pl-2 md:pl-4 basis-full">
+                            <Card className="hover:shadow-2xl transition-all duration-300 h-full w-full relative group bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30">
+                              {/* Hover overlay button */}
+                              <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <Button size="sm" className="bg-primary/90 backdrop-blur-md text-primary-foreground hover:bg-primary shadow-lg border border-white/30" asChild>
+                                  <Link to="/public-calendar">
+                                    View All <ArrowRight className="ml-1 h-4 w-4" />
+                                  </Link>
+                                </Button>
+                              </div>
+                              
+                              <div className="h-48 sm:h-64 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm">
+                                <img 
+                                  src="https://dzzptovqfqausipsgabw.supabase.co/storage/v1/object/public/event-images/event-images/1750597449197-ilkitkdn1ld.png"
+                                  alt={event.title}
+                                  className="w-full h-full object-cover rounded-t-lg"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center"><Music class="h-12 w-12 text-blue-600" /></div>';
+                                  }}
+                                />
+                              </div>
+                              <CardContent className="p-6 sm:p-8">
+                                <h3 className="text-2xl sm:text-2xl font-semibold text-gray-900 mb-4 line-clamp-2">{event.title}</h3>
+                                <div className="space-y-2 text-gray-600">
+                                  <div className="flex items-center">
+                                    <Calendar className="h-5 w-5 mr-3 flex-shrink-0" />
+                                    <span className="text-base sm:text-lg">{formatDate(event.start_date)}</span>
+                                  </div>
+                                  {event.location && (
+                                    <div className="flex items-center">
+                                      <MapPin className="h-5 w-5 mr-3 flex-shrink-0" />
+                                      <span className="text-base sm:text-lg line-clamp-1">{event.location}</span>
+                                    </div>
+                                  )}
+                                </div>
+                                {event.description && (
+                                  <p className="text-gray-600 mt-4 line-clamp-3 text-base sm:text-lg">{event.description}</p>
+                                )}
+                              </CardContent>
+                            </Card>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                    </Carousel>
+                  </div>
+                </>
               ) : (
                 <Carousel className="w-full">
                   <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
@@ -569,7 +622,7 @@ export const GleeWorldLanding = () => {
                     ))}
                   </CarouselContent>
                 </Carousel>
-               )}
+              )}
           </Card>
         </div>
       </section>
