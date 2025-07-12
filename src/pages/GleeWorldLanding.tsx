@@ -14,7 +14,9 @@ import {
   ChevronRight,
   Sparkles,
   X,
-  Menu
+  Menu,
+  Music,
+  Album as AlbumIcon
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -54,7 +56,7 @@ interface HeroSlide {
 
 export const GleeWorldLanding = () => {
   const { user } = useAuth();
-  const { tracks } = useMusic();
+  const { tracks, albums } = useMusic();
   const [events, setEvents] = useState<Event[]>([]);
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -601,6 +603,98 @@ export const GleeWorldLanding = () => {
           </Card>
         </div>
       </section>
+
+      {/* Albums Section */}
+      {albums.length > 0 && (
+        <section className="pt-7 pb-4 sm:pt-10 sm:pb-6 px-0.5 sm:px-1 md:px-1.5 lg:px-3.5 w-full">
+          <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto">
+            <Card className="p-6 sm:p-8 bg-white/30 backdrop-blur-md border border-white/20 shadow-2xl">
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <AlbumIcon className="h-8 w-8 sm:h-10 sm:w-10 text-purple-400 animate-pulse" />
+                  <h2 className="text-2xl sm:text-4xl md:text-6xl font-dancing font-bold text-gray-900">Our Albums</h2>
+                  <AlbumIcon className="h-8 w-8 sm:h-10 sm:w-10 text-purple-600 animate-pulse" />
+                </div>
+                <p className="text-gray-600 text-lg">Discover our musical journey through our album collection</p>
+              </div>
+              
+              {/* Desktop view - Grid */}
+              <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {albums.map((album) => (
+                  <Card key={album.id} className="hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 group">
+                    <div className="aspect-square bg-gradient-to-br from-purple-100/50 to-pink-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
+                      {album.cover_image_url ? (
+                        <img 
+                          src={album.cover_image_url}
+                          alt={`${album.title} cover`}
+                          className="w-full h-full object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-110 brightness-110 contrast-105"
+                          onError={(e) => {
+                            // Use a placeholder image if cover fails to load
+                            e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80";
+                          }}
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center w-full h-full">
+                          <Music className="h-16 w-16 text-purple-400" />
+                        </div>
+                      )}
+                    </div>
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1">{album.title}</h3>
+                      <p className="text-sm text-gray-600 line-clamp-1">{album.artist}</p>
+                      {album.description && (
+                        <p className="text-xs text-gray-500 mt-2 line-clamp-2">{album.description}</p>
+                      )}
+                      {album.release_date && (
+                        <p className="text-xs text-gray-400 mt-1">{new Date(album.release_date).getFullYear()}</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              
+              {/* Mobile view - Carousel */}
+              <div className="md:hidden">
+                <Carousel className="w-full">
+                  <CarouselContent className="-ml-1">
+                    {albums.map((album) => (
+                      <CarouselItem key={album.id} className="pl-1 basis-1/2 sm:basis-1/3">
+                        <Card className="hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 group">
+                          <div className="aspect-square bg-gradient-to-br from-purple-100/50 to-pink-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
+                            {album.cover_image_url ? (
+                              <img 
+                                src={album.cover_image_url}
+                                alt={`${album.title} cover`}
+                                className="w-full h-full object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-110 brightness-110 contrast-105"
+                                onError={(e) => {
+                                  e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80";
+                                }}
+                              />
+                            ) : (
+                              <div className="flex items-center justify-center w-full h-full">
+                                <Music className="h-12 w-12 text-purple-400" />
+                              </div>
+                            )}
+                          </div>
+                          <CardContent className="p-3">
+                            <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1 text-sm">{album.title}</h3>
+                            <p className="text-xs text-gray-600 line-clamp-1">{album.artist}</p>
+                            {album.release_date && (
+                              <p className="text-xs text-gray-400 mt-1">{new Date(album.release_date).getFullYear()}</p>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="hidden sm:flex" />
+                  <CarouselNext className="hidden sm:flex" />
+                </Carousel>
+              </div>
+            </Card>
+          </div>
+        </section>
+      )}
 
       {/* Music Player Section */}
       <section className="pt-7 pb-9 sm:pt-10 sm:pb-12 px-0.5 sm:px-1 md:px-1.5 lg:px-3.5 w-full">
