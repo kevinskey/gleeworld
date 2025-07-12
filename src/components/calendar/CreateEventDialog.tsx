@@ -112,9 +112,9 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
           Add Event
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Event</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Create New Event</DialogTitle>
           <DialogDescription>
             Add a new event to the Glee World calendar.
           </DialogDescription>
@@ -144,7 +144,7 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="event_type">Event Type</Label>
                 <Select
@@ -176,7 +176,7 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="start_date">Start Date & Time *</Label>
                 <Input
@@ -251,7 +251,7 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
+          <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
