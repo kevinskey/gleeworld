@@ -10,8 +10,17 @@ interface AuthLayoutProps {
 
 export const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 relative"
+      style={{
+        backgroundImage: `url(/lovable-uploads/a3a8f702-b1da-4e18-9e7f-a1a3d9c99b11.png)`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      <div className="absolute inset-0 bg-black/40" />
+      <Card className="w-full max-w-md relative z-10">
         <CardHeader className="text-center space-y-2">
           <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
           {subtitle && (
