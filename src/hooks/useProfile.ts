@@ -149,8 +149,12 @@ export const useProfile = () => {
   const updateAvatarUrl = async (avatarUrl: string) => {
     if (!user) return false;
 
+    console.log("updateAvatarUrl called with:", avatarUrl);
+    
     try {
       setUpdating(true);
+      console.log("Updating avatar in database for user:", user.id);
+      
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -159,11 +163,19 @@ export const useProfile = () => {
         })
         .eq("id", user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Database update error:", error);
+        throw error;
+      }
 
+      console.log("Database update successful, updating local state");
+      
       // Update local state immediately without full refetch
       if (profile) {
         setProfile({ ...profile, avatar_url: avatarUrl });
+        console.log("Local state updated with new avatar URL");
+      } else {
+        console.warn("Profile is null, cannot update local state");
       }
       
       return true;
