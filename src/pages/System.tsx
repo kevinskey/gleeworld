@@ -8,7 +8,7 @@ import { W9Management } from "@/components/admin/W9Management";
 import { FinancialSystem } from "@/components/admin/FinancialSystem";
 import { BudgetTracking } from "@/components/admin/financial/BudgetTracking";
 import { ContractManagement } from "@/components/admin/ContractManagement";
-import { SoundCloudManagement } from "@/components/admin/SoundCloudManagement";
+import { MusicManagement } from "@/components/admin/MusicManagement";
 import { CalendarManagement } from "@/components/admin/CalendarManagement";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useUsers } from "@/hooks/useUsers";
@@ -124,8 +124,8 @@ const System = () => {
             <CalendarManagement />
           )}
 
-          {activeTab === "soundcloud" && (
-            <SoundCloudManagement />
+          {activeTab === "music" && (
+            <MusicManagement />
           )}
         </div>
       </div>
