@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { CalendarViews } from "@/components/calendar/CalendarViews";
-import { UpcomingEvents } from "@/components/calendar/UpcomingEvents";
+import { PublicCalendarViews } from "@/components/calendar/PublicCalendarViews";
+import { PublicUpcomingEvents } from "@/components/calendar/PublicUpcomingEvents";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -161,11 +161,11 @@ const PublicCalendar = () => {
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
               <div className="lg:col-span-2 order-2 lg:order-1">
-                <CalendarViews />
+                <PublicCalendarViews />
               </div>
               
               <div className="order-1 lg:order-2">
-                <UpcomingEvents limit={8} showHeader={false} />
+                <PublicUpcomingEvents limit={8} showHeader={false} />
               </div>
             </div>
           </Card>
