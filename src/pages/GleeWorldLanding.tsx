@@ -304,7 +304,7 @@ export const GleeWorldLanding = () => {
         <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto px-0.5 sm:px-1 md:px-1.5 lg:px-3.5 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
+              <Link to="/landing" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
                 <img 
                   src="/lovable-uploads/a07cfbb7-b3ac-4674-acd9-4a037296a3f7.png" 
                   alt="Spelman College Glee Club"
@@ -314,18 +314,22 @@ export const GleeWorldLanding = () => {
                   <h1 className="text-2xl font-bold text-gray-900">GleeWorld</h1>
                   <p className="text-xs text-gray-600">Spelman College</p>
                 </div>
-              </div>
+              </Link>
             </div>
             
+            {/* Mobile Navigation Button */}
+            <button className="lg:hidden flex items-center justify-center w-10 h-10 rounded-md bg-white/20 backdrop-blur-md border border-white/30 text-gray-700 hover:text-gray-900 transition-colors">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            
             <nav className="hidden lg:flex items-center space-x-8">
-              <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Home</a>
-              <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">About</a>
+              <a href="#home" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Home</a>
+              <a href="#about" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">About</a>
               <a href="#events" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Events</a>
-              <Link to="/calendar" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Calendar</Link>
-              <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Reader</a>
-              <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Studio</a>
-              <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Store</a>
-              <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Contact</a>
+              <Link to="/public-calendar" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Public Calendar</Link>
+              <a href="#contact" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Contact</a>
             </nav>
 
             <div className="flex items-center space-x-3">
