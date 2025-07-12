@@ -185,7 +185,7 @@ export const GleeWorldLanding = () => {
                 <img 
                   src="/lovable-uploads/a07cfbb7-b3ac-4674-acd9-4a037296a3f7.png" 
                   alt="Spelman College Glee Club"
-                  className="h-12 w-auto"
+                  className="h-12 w-auto brightness-110"
                 />
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">GleeWorld</h1>
@@ -241,7 +241,7 @@ export const GleeWorldLanding = () => {
                   <img 
                     src={currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
                     alt="Hero Background"
-                    className="hidden md:block w-full h-full object-cover transition-opacity duration-500"
+                    className="hidden md:block w-full h-full object-cover transition-opacity duration-500 brightness-110 contrast-105"
                     onError={(e) => {
                       console.log('Hero image failed to load, using fallback');
                       // Only fallback if the current src is not already the fallback
@@ -255,7 +255,7 @@ export const GleeWorldLanding = () => {
                   <img 
                     src={currentHeroSlide?.ipad_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
                     alt="Hero Background"
-                    className="hidden sm:block md:hidden w-full h-full object-cover transition-opacity duration-500"
+                    className="hidden sm:block md:hidden w-full h-full object-cover transition-opacity duration-500 brightness-110 contrast-105"
                     onError={(e) => {
                       console.log('iPad hero image failed to load, using fallback');
                       if (!e.currentTarget.src.includes('unsplash.com')) {
@@ -268,7 +268,7 @@ export const GleeWorldLanding = () => {
                   <img 
                     src={currentHeroSlide?.mobile_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
                     alt="Hero Background"
-                    className="block sm:hidden w-full h-full object-cover object-center transition-opacity duration-500"
+                    className="block sm:hidden w-full h-full object-cover object-center transition-opacity duration-500 brightness-110 contrast-105"
                     onError={(e) => {
                       console.log('Mobile hero image failed to load, using fallback');
                       if (!e.currentTarget.src.includes('unsplash.com')) {
