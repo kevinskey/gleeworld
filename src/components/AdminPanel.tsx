@@ -70,7 +70,6 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
      currentPath.includes('activity') ? 'activity' : 
      currentPath.includes('receipts') ? 'receipts' : 
      currentPath.includes('accounting') ? 'accounting' : 
-     currentPath.includes('soundcloud') ? 'soundcloud' :
      currentPath.includes('music') ? 'music' :
      currentPath.includes('settings') ? 'settings' : 'overview');
 
