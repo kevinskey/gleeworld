@@ -298,9 +298,9 @@ export const GleeWorldLanding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
-      <header className="bg-white border-b shadow-sm sticky top-0 z-50">
+      <header className="bg-white/80 backdrop-blur-md border-b border-white/20 shadow-lg sticky top-0 z-50">
         <div className="container mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -332,16 +332,16 @@ export const GleeWorldLanding = () => {
               {user ? (
                 <div className="flex items-center space-x-3">
                   <Link to="/dashboard">
-                    <Button size="sm">Dashboard</Button>
+                    <Button size="sm" className="bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30">Dashboard</Button>
                   </Link>
                 </div>
               ) : (
                 <div className="flex items-center space-x-3">
                   <Link to="/auth">
-                    <Button variant="outline" size="sm">Sign Up</Button>
+                    <Button variant="outline" size="sm" className="border-white/30 hover:bg-white/20 backdrop-blur-md">Sign Up</Button>
                   </Link>
                   <Link to="/auth">
-                    <Button size="sm">Login</Button>
+                    <Button size="sm" className="bg-blue-500/80 backdrop-blur-md hover:bg-blue-600/80">Login</Button>
                   </Link>
                 </div>
               )}
@@ -351,9 +351,9 @@ export const GleeWorldLanding = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="py-6 px-3 sm:px-5 lg:px-6 bg-gray-50">
+      <section className="py-6 px-3 sm:px-5 lg:px-6">
         <div className="container mx-auto max-w-7xl">
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl">
             <div className="h-[30vh] sm:h-[40vh] md:h-[45vh] lg:h-[70vh] xl:h-[75vh] min-h-[250px] sm:min-h-[350px] overflow-hidden relative">
               {heroSlides.length > 0 ? (
                 <>
@@ -396,14 +396,14 @@ export const GleeWorldLanding = () => {
                       }
                     }}
                   />
-                  <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/60"></div>
                   
                   {/* Content overlay - positioned elements */}
                   <div className="absolute inset-0">
                     {/* Title Section */}
                     {currentHeroSlide?.title && (
                       <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.title_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.title_position_horizontal)} px-6 pointer-events-none`}>
-                        <h1 className={`${getTitleSize(currentHeroSlide.title_size)} font-bold text-white max-w-4xl pointer-events-auto`}>
+                        <h1 className={`${getTitleSize(currentHeroSlide.title_size)} font-bold text-white max-w-4xl pointer-events-auto drop-shadow-2xl`}>
                           {currentHeroSlide.title}
                         </h1>
                       </div>
@@ -412,7 +412,7 @@ export const GleeWorldLanding = () => {
                     {/* Description Section */}
                     {currentHeroSlide?.description && (
                       <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.description_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.description_position_horizontal)} px-6 pointer-events-none`}>
-                        <p className={`${getDescriptionSize(currentHeroSlide.description_size)} text-white max-w-4xl pointer-events-auto`}>
+                        <p className={`${getDescriptionSize(currentHeroSlide.description_size)} text-white max-w-4xl pointer-events-auto drop-shadow-lg`}>
                           {currentHeroSlide.description}
                         </p>
                       </div>
@@ -421,7 +421,7 @@ export const GleeWorldLanding = () => {
                     {/* Action Button Section */}
                     {currentHeroSlide?.action_button_enabled && currentHeroSlide?.action_button_text && currentHeroSlide?.action_button_url && (
                       <div className="absolute inset-0 flex justify-center items-end pb-16 px-6 pointer-events-none">
-                        <Button size="lg" asChild className="pointer-events-auto">
+                        <Button size="lg" asChild className="pointer-events-auto bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 text-white shadow-2xl">
                           <a href={currentHeroSlide.action_button_url} target="_blank" rel="noopener noreferrer">
                             {currentHeroSlide.action_button_text}
                           </a>
@@ -432,7 +432,7 @@ export const GleeWorldLanding = () => {
                     {/* Legacy button support */}
                     {!currentHeroSlide?.action_button_enabled && currentHeroSlide?.button_text && currentHeroSlide?.link_url && (
                       <div className="absolute inset-0 flex justify-center items-end pb-16 px-6 pointer-events-none">
-                        <Button size="lg" asChild className="pointer-events-auto">
+                        <Button size="lg" asChild className="pointer-events-auto bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 text-white shadow-2xl">
                           <a href={currentHeroSlide.link_url} target="_blank" rel="noopener noreferrer">
                             {currentHeroSlide.button_text}
                           </a>
@@ -443,7 +443,7 @@ export const GleeWorldLanding = () => {
                   
                 </>
               ) : (
-                <div className="w-full h-full bg-gradient-to-r from-pink-100 to-rose-200 flex items-center justify-center">
+                <div className="w-full h-full bg-gradient-to-r from-pink-100/50 to-rose-200/50 flex items-center justify-center backdrop-blur-sm">
                   <div className="text-center">
                     <Music className="h-24 w-24 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-600">No hero slides configured</p>
@@ -456,9 +456,9 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Upcoming Events Section */}
-      <section className="py-9 sm:py-12 px-3 sm:px-5 lg:px-6 w-full bg-gray-50">
+      <section className="py-9 sm:py-12 px-3 sm:px-5 lg:px-6 w-full">
         <div className="container mx-auto max-w-7xl">
-          <Card className="p-6 sm:p-8">
+          <Card className="p-6 sm:p-8 bg-white/30 backdrop-blur-md border border-white/20 shadow-2xl">
             <div className="text-center mb-6 sm:mb-8">
               <div className="flex items-center justify-center gap-3 mb-2">
                 <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-blue-400 animate-pulse" />
@@ -471,12 +471,12 @@ export const GleeWorldLanding = () => {
               {loading ? (
                 <div className="flex space-x-4 overflow-hidden">
                   {[...Array(6)].map((_, i) => (
-                    <Card key={i} className="animate-pulse flex-shrink-0 w-80">
-                      <div className="h-48 bg-gray-200 rounded-t-lg"></div>
+                    <Card key={i} className="animate-pulse flex-shrink-0 w-80 bg-white/20 backdrop-blur-md border border-white/30">
+                      <div className="h-48 bg-gray-200/50 rounded-t-lg"></div>
                       <CardContent className="p-6">
-                        <div className="h-4 bg-gray-200 rounded mb-4"></div>
-                        <div className="h-3 bg-gray-200 rounded mb-2"></div>
-                        <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-4 bg-gray-200/50 rounded mb-4"></div>
+                        <div className="h-3 bg-gray-200/50 rounded mb-2"></div>
+                        <div className="h-3 bg-gray-200/50 rounded w-3/4"></div>
                       </CardContent>
                     </Card>
                   ))}
@@ -486,15 +486,15 @@ export const GleeWorldLanding = () => {
                   <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
                     {events.map((event) => (
                       <CarouselItem key={event.id} className="pl-1 sm:pl-2 md:pl-4 basis-full">
-                        <Card className="hover:shadow-lg transition-shadow h-full w-full relative group">
+                        <Card className="hover:shadow-2xl transition-all duration-300 h-full w-full relative group bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30">
                           {/* Hover overlay button */}
                           <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <Button size="sm" className="bg-white/90 text-gray-900 hover:bg-white shadow-lg backdrop-blur-sm">
+                            <Button size="sm" className="bg-white/80 backdrop-blur-md text-gray-900 hover:bg-white shadow-lg border border-white/30">
                               View All <ArrowRight className="ml-1 h-4 w-4" />
                             </Button>
                           </div>
                           
-                          <div className="h-48 sm:h-64 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-lg flex items-center justify-center">
+                          <div className="h-48 sm:h-64 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm">
                             <img 
                               src="https://dzzptovqfqausipsgabw.supabase.co/storage/v1/object/public/event-images/event-images/1750597449197-ilkitkdn1ld.png"
                               alt={event.title}
@@ -533,15 +533,15 @@ export const GleeWorldLanding = () => {
                   <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
                     {[...Array(6)].map((_, i) => (
                       <CarouselItem key={i} className="pl-1 sm:pl-2 md:pl-4 basis-full">
-                        <Card className="hover:shadow-lg transition-shadow h-full w-full relative group">
+                        <Card className="hover:shadow-2xl transition-all duration-300 h-full w-full relative group bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30">
                           {/* Hover overlay button */}
                           <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <Button size="sm" className="bg-white/90 text-gray-900 hover:bg-white shadow-lg backdrop-blur-sm">
+                            <Button size="sm" className="bg-white/80 backdrop-blur-md text-gray-900 hover:bg-white shadow-lg border border-white/30">
                               View All <ArrowRight className="ml-1 h-4 w-4" />
                             </Button>
                           </div>
                           
-                          <div className="h-48 sm:h-64 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-lg flex items-center justify-center">
+                          <div className="h-48 sm:h-64 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm">
                             <Music className="h-12 w-12 text-blue-600" />
                           </div>
                           <CardContent className="p-6 sm:p-8">
@@ -568,7 +568,7 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Music Player Section */}
-      <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-6 sm:mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Listen to the Glee</h2>
@@ -578,23 +578,23 @@ export const GleeWorldLanding = () => {
           </div>
 
           <div className="max-w-4xl mx-auto">
-            <Card className="p-4 sm:p-6">
+            <Card className="p-4 sm:p-6 bg-white/30 backdrop-blur-md border border-white/20 shadow-2xl">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
                 <div>
                   <h3 className="text-2xl sm:text-xl font-semibold text-gray-900">Centennial Tour 2025</h3>
                   <p className="text-gray-600 text-sm sm:text-base">14 tracks</p>
                 </div>
                 <div className="flex items-center space-x-3 self-start sm:self-auto">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="bg-white/20 backdrop-blur-md border-white/30 hover:bg-white/30">
                     <SkipBack className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" onClick={togglePlayPause}>
+                  <Button size="sm" onClick={togglePlayPause} className="bg-blue-500/80 backdrop-blur-md hover:bg-blue-600/80">
                     {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="bg-white/20 backdrop-blur-md border-white/30 hover:bg-white/30">
                     <SkipForward className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="bg-white/20 backdrop-blur-md border-white/30 hover:bg-white/30">
                     <Volume2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -603,13 +603,13 @@ export const GleeWorldLanding = () => {
               {tracksLoading ? (
                 <div className="space-y-2 sm:space-y-3">
                   {[...Array(5)].map((_, i) => (
-                    <div key={i} className="flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 rounded-lg animate-pulse">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded flex-shrink-0"></div>
+                    <div key={i} className="flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 rounded-lg animate-pulse bg-white/10 backdrop-blur-sm">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200/50 rounded flex-shrink-0"></div>
                       <div className="flex-1 min-w-0">
-                        <div className="h-4 bg-gray-200 rounded mb-1"></div>
-                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                        <div className="h-4 bg-gray-200/50 rounded mb-1"></div>
+                        <div className="h-3 bg-gray-200/50 rounded w-1/2"></div>
                       </div>
-                      <div className="w-8 h-8 bg-gray-200 rounded flex-shrink-0"></div>
+                      <div className="w-8 h-8 bg-gray-200/50 rounded flex-shrink-0"></div>
                     </div>
                   ))}
                 </div>
@@ -618,15 +618,15 @@ export const GleeWorldLanding = () => {
                   {tracks.map((track, index) => (
                     <div 
                       key={track.id} 
-                      className={`flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
-                        currentTrack?.id === track.id ? 'bg-blue-50' : ''
+                      className={`flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 rounded-lg hover:bg-white/20 backdrop-blur-sm cursor-pointer transition-all duration-200 border border-transparent hover:border-white/20 ${
+                        currentTrack?.id === track.id ? 'bg-blue-500/20 border-blue-300/30' : ''
                       }`}
                       onClick={() => playTrack(track)}
                     >
                       <img 
                         src={track.image} 
                         alt={track.title}
-                        className="w-10 h-10 sm:w-12 sm:h-12 rounded object-contain flex-shrink-0 bg-gray-100"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded object-contain flex-shrink-0 bg-gray-100/50"
                         onError={(e) => {
                           e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80";
                         }}
@@ -643,7 +643,7 @@ export const GleeWorldLanding = () => {
                           )}
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm" className="flex-shrink-0">
+                      <Button variant="ghost" size="sm" className="flex-shrink-0 hover:bg-white/20">
                         <Play className="h-4 w-4" />
                       </Button>
                     </div>
@@ -656,9 +656,9 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Footer */}
-      <section className="py-6 px-3 sm:px-5 lg:px-6 bg-white">
+      <section className="py-6 px-3 sm:px-5 lg:px-6">
         <div className="container mx-auto max-w-7xl">
-          <Card className="bg-gray-900 text-white p-8 sm:p-12">
+          <Card className="bg-gray-900/90 backdrop-blur-md text-white p-8 sm:p-12 border border-gray-700/30 shadow-2xl">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Spelman College Glee Club</h3>
