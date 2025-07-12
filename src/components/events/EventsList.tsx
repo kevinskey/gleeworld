@@ -67,16 +67,16 @@ export const EventsList = () => {
 
   const getEventTypeColor = (type: string) => {
     const colors: Record<string, string> = {
-      'tour_stop': 'bg-blue-100 text-blue-800',
-      'social': 'bg-green-100 text-green-800',
-      'banquet': 'bg-purple-100 text-purple-800',
-      'fundraiser': 'bg-yellow-100 text-yellow-800',
-      'worship_event': 'bg-indigo-100 text-indigo-800',
-      'travel': 'bg-orange-100 text-orange-800',
-      'volunteer': 'bg-teal-100 text-teal-800',
-      'meeting': 'bg-gray-100 text-gray-800',
-      'performance': 'bg-red-100 text-red-800',
-      'other': 'bg-gray-100 text-gray-800'
+      'tour_stop': 'bg-primary/10 text-primary border-primary/20',
+      'social': 'bg-secondary/10 text-secondary border-secondary/20',
+      'banquet': 'bg-accent/10 text-accent border-accent/20',
+      'fundraiser': 'bg-muted text-muted-foreground border-border',
+      'worship_event': 'bg-primary/15 text-primary border-primary/30',
+      'travel': 'bg-secondary/15 text-secondary border-secondary/30',
+      'volunteer': 'bg-accent/15 text-accent border-accent/30',
+      'meeting': 'bg-muted text-muted-foreground border-border',
+      'performance': 'bg-primary/20 text-primary border-primary/40',
+      'other': 'bg-muted text-muted-foreground border-border'
     };
     return colors[type] || colors.other;
   };
