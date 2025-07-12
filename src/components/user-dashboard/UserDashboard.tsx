@@ -325,8 +325,8 @@ export const UserDashboard = () => {
                         </CarouselItem>
                       ))}
                     </CarouselContent>
-                    <CarouselPrevious />
-                    <CarouselNext />
+                    <CarouselPrevious className="hidden md:flex" />
+                    <CarouselNext className="hidden md:flex" />
                   </Carousel>
                 ) : (
                   <p className="text-gray-500 text-center py-4">No upcoming events scheduled</p>
