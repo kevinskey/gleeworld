@@ -182,35 +182,23 @@ export const GleeWorldLanding = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-white/20 shadow-lg sticky top-0 z-50">
-        <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto px-0.5 sm:px-1 md:px-1.5 lg:px-3.5 py-3">
+        <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link to="/landing" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <Link to="/landing" className="flex items-center space-x-2 sm:space-x-3 hover:opacity-80 transition-opacity">
                 <img 
                   src="/lovable-uploads/a07cfbb7-b3ac-4674-acd9-4a037296a3f7.png" 
                   alt="Spelman College Glee Club"
-                  className="h-12 w-auto brightness-110"
+                  className="h-8 sm:h-10 md:h-12 w-auto brightness-110"
                 />
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">GleeWorld</h1>
+                <div className="hidden sm:block">
+                  <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">GleeWorld</h1>
                   <p className="text-xs text-gray-600">Spelman College</p>
                 </div>
               </Link>
             </div>
             
-            {/* Mobile Navigation Button */}
-            <button 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden flex items-center justify-center w-10 h-10 rounded-md bg-white/20 backdrop-blur-md border border-white/30 text-gray-700 hover:text-gray-900 transition-colors"
-              aria-label="Toggle mobile menu"
-            >
-              {mobileMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
-            </button>
-            
+            {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-8">
               <a href="#home" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Home</a>
               <a href="#about" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">About</a>
@@ -219,15 +207,14 @@ export const GleeWorldLanding = () => {
               <a href="#contact" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Contact</a>
             </nav>
 
-            <div className="flex items-center space-x-3">
+            {/* Desktop Auth Actions */}
+            <div className="hidden lg:flex items-center space-x-3">
               {user ? (
-                <div className="flex items-center space-x-3">
-                  <Link to="/dashboard">
-                    <Button size="sm" className="bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground">Dashboard</Button>
-                  </Link>
-                </div>
+                <Link to="/dashboard">
+                  <Button size="sm" className="bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground">Dashboard</Button>
+                </Link>
               ) : (
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
                   <Link to="/auth">
                     <Button variant="outline" size="sm" className="border-primary/50 bg-background/90 backdrop-blur-md hover:bg-primary hover:text-primary-foreground text-primary">Sign Up</Button>
                   </Link>
@@ -237,36 +224,90 @@ export const GleeWorldLanding = () => {
                 </div>
               )}
             </div>
+            
+            {/* Mobile Navigation Button */}
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden flex items-center justify-center w-10 h-10 rounded-md bg-white/20 backdrop-blur-md border border-white/30 text-gray-700 hover:text-gray-900 transition-all duration-200 hover:scale-105"
+              aria-label="Toggle mobile menu"
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
+            </button>
           </div>
           
           {/* Mobile Navigation Menu */}
-          {mobileMenuOpen && (
-            <div className="lg:hidden mt-4 py-4 border-t border-white/20">
-              <nav className="flex flex-col space-y-4">
-                <a href="#home" className="text-gray-700 hover:text-gray-900 transition-colors font-medium px-4 py-2 rounded-md hover:bg-white/20">Home</a>
-                <a href="#about" className="text-gray-700 hover:text-gray-900 transition-colors font-medium px-4 py-2 rounded-md hover:bg-white/20">About</a>
-                <Link to="/public-calendar" className="text-gray-700 hover:text-gray-900 transition-colors font-medium px-4 py-2 rounded-md hover:bg-white/20">Calendar</Link>
-                <Link to="/press-kit" className="text-gray-700 hover:text-gray-900 transition-colors font-medium px-4 py-2 rounded-md hover:bg-white/20">Press Kit</Link>
-                <a href="#contact" className="text-gray-700 hover:text-gray-900 transition-colors font-medium px-4 py-2 rounded-md hover:bg-white/20">Contact</a>
-                
-                {/* Mobile Auth Actions */}
+          <div className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+            mobileMenuOpen 
+              ? 'max-h-96 opacity-100 mt-4 py-4 border-t border-white/20' 
+              : 'max-h-0 opacity-0'
+          }`}>
+            <nav className="flex flex-col space-y-3 animate-fade-in">
+              <a 
+                href="#home" 
+                className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/30 hover:scale-105"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Home
+              </a>
+              <a 
+                href="#about" 
+                className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/30 hover:scale-105"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                About
+              </a>
+              <Link 
+                to="/public-calendar" 
+                className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/30 hover:scale-105"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Calendar
+              </Link>
+              <Link 
+                to="/press-kit" 
+                className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/30 hover:scale-105"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Press Kit
+              </Link>
+              <a 
+                href="#contact" 
+                className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/30 hover:scale-105"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Contact
+              </a>
+              
+              {/* Mobile Auth Actions */}
+              <div className="border-t border-white/20 pt-4 mt-2">
                 {user ? (
-                  <Link to="/dashboard" className="mt-4">
-                    <Button className="w-full bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground">Dashboard</Button>
+                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                    <Button className="w-full bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground transition-all duration-200 hover:scale-105">
+                      Dashboard
+                    </Button>
                   </Link>
                 ) : (
-                  <div className="flex flex-col space-y-2 mt-4">
-                    <Link to="/auth">
-                      <Button variant="outline" className="w-full border-primary/20 text-primary hover:bg-primary/10">Sign In</Button>
+                  <div className="flex flex-col space-y-3">
+                    <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full border-primary/30 text-primary hover:bg-primary/10 transition-all duration-200 hover:scale-105">
+                        Sign In
+                      </Button>
                     </Link>
-                    <Link to="/auth">
-                      <Button className="w-full bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground">Join Us</Button>
+                    <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                      <Button className="w-full bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground transition-all duration-200 hover:scale-105">
+                        Join Us
+                      </Button>
                     </Link>
                   </div>
                 )}
-              </nav>
-            </div>
-          )}
+              </div>
+            </nav>
+          </div>
         </div>
       </header>
 
