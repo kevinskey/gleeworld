@@ -24,6 +24,7 @@ import { Shop } from "./pages/Shop";
 import Profile from "./pages/Profile";
 import Calendar from "./pages/Calendar";
 import PublicCalendar from "./pages/PublicCalendar";
+import PressKit from "./pages/PressKit";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -214,6 +215,14 @@ const App = () => {
                  element={
                    <PublicRoute>
                      <PublicCalendar />
+                   </PublicRoute>
+                 } 
+               />
+               <Route 
+                 path="/press-kit" 
+                 element={
+                   <PublicRoute>
+                     <PressKit />
                    </PublicRoute>
                  } 
                />
