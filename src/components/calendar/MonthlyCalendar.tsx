@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, parseISO } from "date-fns";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EventDetailDialog } from "./EventDetailDialog";
 import { EditEventDialog } from "./EditEventDialog";
@@ -37,9 +37,11 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
   const getEventsForDate = (date: Date) => {
-    return events.filter(event => 
-      isSameDay(new Date(event.start_date), date)
-    );
+    return events.filter(event => {
+      // Use parseISO to properly handle the date string, then compare just the date part
+      const eventDate = parseISO(event.start_date);
+      return isSameDay(eventDate, date);
+    });
   };
 
   const handleEventClick = (event: GleeWorldEvent) => {
@@ -171,7 +173,7 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
                           )}
                         </div>
                         <div className="text-[8px] sm:text-[10px] opacity-70 truncate mt-0.5">
-                          {format(new Date(event.start_date), 'h:mm a')}
+                          {format(parseISO(event.start_date), 'h:mm a')}
                         </div>
                       </div>
                     </EventHoverCard>

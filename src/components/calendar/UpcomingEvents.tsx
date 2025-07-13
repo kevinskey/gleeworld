@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CalendarIcon, MapPinIcon, ClockIcon } from "lucide-react";
 import { format } from "date-fns";
+import { parseISO } from "date-fns";
 import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
 import { useState } from "react";
 import { EventDetailDialog } from "./EventDetailDialog";
@@ -87,10 +88,10 @@ export const UpcomingEvents = ({ limit = 6, showHeader = true }: UpcomingEventsP
                   >
                 <div className="text-center min-w-[40px] md:min-w-[60px]">
                   <div className="text-lg md:text-2xl font-bold text-primary">
-                    {format(new Date(event.start_date), 'd')}
+                    {format(parseISO(event.start_date), 'd')}
                   </div>
                   <div className="text-xs md:text-sm text-muted-foreground">
-                    {format(new Date(event.start_date), 'MMM')}
+                    {format(parseISO(event.start_date), 'MMM')}
                   </div>
                 </div>
                 
@@ -102,11 +103,11 @@ export const UpcomingEvents = ({ limit = 6, showHeader = true }: UpcomingEventsP
                     </Badge>
                   </div>
                   
-                  <div className="space-y-0.5 md:space-y-1 text-xs md:text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <ClockIcon className="h-3 w-3 flex-shrink-0" />
-                      <span>{format(new Date(event.start_date), 'h:mm a')}</span>
-                    </div>
+                    <div className="space-y-0.5 md:space-y-1 text-xs md:text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <ClockIcon className="h-3 w-3 flex-shrink-0" />
+                        <span>{format(parseISO(event.start_date), 'h:mm a')}</span>
+                      </div>
                     
                     {event.location && (
                       <div className="flex items-center gap-1">
