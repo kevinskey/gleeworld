@@ -1,5 +1,5 @@
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, FileText, X } from "lucide-react";
 
@@ -28,6 +28,51 @@ export const FileUploadArea = ({
       onFileUpload(file);
     }
   };
+
+  // Window-wide drag and drop support
+  useEffect(() => {
+    let dragCounter = 0;
+
+    const handleWindowDragEnter = (e: DragEvent) => {
+      e.preventDefault();
+      dragCounter++;
+      if (dragCounter === 1) {
+        onDragOver(e as any);
+      }
+    };
+
+    const handleWindowDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      dragCounter--;
+      if (dragCounter === 0) {
+        onDragLeave(e as any);
+      }
+    };
+
+    const handleWindowDragOver = (e: DragEvent) => {
+      e.preventDefault();
+    };
+
+    const handleWindowDrop = (e: DragEvent) => {
+      e.preventDefault();
+      dragCounter = 0;
+      onDrop(e as any);
+    };
+
+    if (showArea) {
+      window.addEventListener('dragenter', handleWindowDragEnter);
+      window.addEventListener('dragleave', handleWindowDragLeave);
+      window.addEventListener('dragover', handleWindowDragOver);
+      window.addEventListener('drop', handleWindowDrop);
+    }
+
+    return () => {
+      window.removeEventListener('dragenter', handleWindowDragEnter);
+      window.removeEventListener('dragleave', handleWindowDragLeave);
+      window.removeEventListener('dragover', handleWindowDragOver);
+      window.removeEventListener('drop', handleWindowDrop);
+    };
+  }, [showArea, onDragOver, onDragLeave, onDrop]);
 
   if (!showArea) return null;
 
@@ -66,16 +111,15 @@ export const FileUploadArea = ({
               Drop your document here, or click to browse
             </p>
             <p className="text-sm text-muted-foreground">
-              Supports PDF and Word documents (max 10MB)
+              Supports all file types • Drag anywhere on the window
             </p>
           </div>
-          <input
-            type="file"
-            accept=".pdf,.doc,.docx"
-            onChange={handleFileInput}
-            className="hidden"
-            id="file-upload"
-          />
+            <input
+              type="file"
+              onChange={handleFileInput}
+              className="hidden"
+              id="file-upload"
+            />
           <Button asChild className="mt-4">
             <label htmlFor="file-upload" className="cursor-pointer">
               Choose File
