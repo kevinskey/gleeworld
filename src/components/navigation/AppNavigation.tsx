@@ -18,7 +18,7 @@ import {
   CalendarDays
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { hasPermission, isAdmin } from "@/constants/permissions";
+import { hasPermission } from "@/constants/permissions";
 import { MobileNavigationFlow } from "./flow/MobileNavigationFlow";
 
 export const AppNavigation = () => {
@@ -62,20 +62,11 @@ export const AppNavigation = () => {
       href: "/content-creator",
       icon: PenTool,
       permission: null
-    },
-    {
-      label: "System",
-      href: "/system",
-      icon: Settings,
-      permission: "view_system_settings",
-      adminOnly: true
     }
   ];
 
   const filteredItems = navigationItems.filter(item => {
     if (!user) return false;
-    
-    if (item.adminOnly && !isAdmin(user.role)) return false;
     
     if (item.permission && !hasPermission(user.role || 'user', item.permission)) {
       return false;
@@ -113,11 +104,6 @@ export const AppNavigation = () => {
         >
           <item.icon className="h-4 w-4" />
           <span className="hidden lg:inline">{item.label}</span>
-          {item.adminOnly && (
-            <Badge variant="secondary" className="ml-1 text-xs bg-white/20 text-white border-white/30">
-              Admin
-            </Badge>
-          )}
         </Link>
       ))}
     </nav>
@@ -139,11 +125,6 @@ export const AppNavigation = () => {
         >
           <item.icon className="h-5 w-5" />
           {item.label}
-          {item.adminOnly && (
-            <Badge variant="secondary" className="ml-auto text-xs">
-              Admin
-            </Badge>
-          )}
         </Link>
       ))}
     </nav>
