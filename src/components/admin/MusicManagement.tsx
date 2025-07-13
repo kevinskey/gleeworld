@@ -1453,7 +1453,7 @@ export const MusicManagement = () => {
             <p className="text-gray-500 text-center py-8">No tracks found. Add your first track!</p>
           ) : (
             <div className="space-y-2">
-              {tracks.map((track) => (
+              {sortedTracks.map((track) => (
                 <div
                   key={track.id}
                   className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
