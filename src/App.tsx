@@ -23,6 +23,7 @@ import UserDashboard from "./pages/UserDashboard";
 import ContentCreator from "./pages/ContentCreator";
 import EventPlanner from "./pages/EventPlanner";
 import { Shop } from "./pages/Shop";
+import Payments from "./pages/Payments";
 import Profile from "./pages/Profile";
 import Calendar from "./pages/Calendar";
 import PublicCalendar from "./pages/PublicCalendar";
@@ -194,6 +195,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <EventPlanner />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/payments" 
+                element={
+                  <ProtectedRoute>
+                    <Payments />
                   </ProtectedRoute>
                 } 
               />
