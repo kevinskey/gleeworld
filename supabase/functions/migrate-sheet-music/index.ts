@@ -159,6 +159,176 @@ serve(async (req) => {
       )
     }
 
+    if (action === 'copy_from_bucket') {
+      console.log('Starting PDF copy from source bucket: b1b00382-d655-4957-a998-c7cb913e09fa')
+
+      // Fetch all sheet music records that need PDF migration
+      const { data: sheetMusicRecords, error: fetchError } = await supabaseClient
+        .from('gw_sheet_music')
+        .select('id, title, pdf_url, thumbnail_url')
+        .or('pdf_url.is.null,pdf_url.like.%example.com%') // Migrate null PDFs or example URLs
+        .limit(50) // Process in batches
+
+      if (fetchError) {
+        throw new Error(`Failed to fetch sheet music records: ${fetchError.message}`)
+      }
+
+      console.log(`Found ${sheetMusicRecords?.length || 0} records to process`)
+
+      // List files in the source bucket
+      const { data: bucketFiles, error: listError } = await supabaseClient.storage
+        .from('b1b00382-d655-4957-a998-c7cb913e09fa')
+        .list('', { limit: 100 })
+
+      if (listError) {
+        console.error('Failed to list bucket files:', listError)
+        return new Response(
+          JSON.stringify({ 
+            error: 'Failed to access source bucket', 
+            details: listError.message 
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500,
+          }
+        )
+      }
+
+      console.log(`Found ${bucketFiles?.length || 0} files in source bucket`)
+
+      const results = []
+      
+      for (const record of sheetMusicRecords || []) {
+        try {
+          console.log(`Processing: ${record.title} (${record.id})`)
+
+          // Look for a PDF file that matches this record ID
+          const possibleFilenames = [
+            `${record.id}.pdf`,
+            `${record.title}.pdf`,
+            `${record.title.replace(/\s+/g, '_')}.pdf`,
+            `${record.title.replace(/\s+/g, '-')}.pdf`
+          ]
+
+          let sourceFile = null
+          for (const filename of possibleFilenames) {
+            sourceFile = bucketFiles?.find(file => 
+              file.name.toLowerCase() === filename.toLowerCase() ||
+              file.name.toLowerCase().includes(record.id.toLowerCase()) ||
+              file.name.toLowerCase().includes(record.title.toLowerCase().substring(0, 10))
+            )
+            if (sourceFile) break
+          }
+
+          if (!sourceFile) {
+            console.log(`No matching PDF found for ${record.title}`)
+            results.push({
+              id: record.id,
+              title: record.title,
+              status: 'pdf_not_found',
+              error: 'No matching file in source bucket'
+            })
+            continue
+          }
+
+          console.log(`Found matching file: ${sourceFile.name}`)
+
+          // Download the file from source bucket
+          const { data: fileData, error: downloadError } = await supabaseClient.storage
+            .from('b1b00382-d655-4957-a998-c7cb913e09fa')
+            .download(sourceFile.name)
+
+          if (downloadError) {
+            console.error(`Download failed for ${sourceFile.name}:`, downloadError)
+            results.push({
+              id: record.id,
+              title: record.title,
+              status: 'download_failed',
+              error: downloadError.message
+            })
+            continue
+          }
+
+          // Upload to our sheet-music bucket
+          const { data: uploadData, error: uploadError } = await supabaseClient.storage
+            .from('sheet-music')
+            .upload(`pdfs/${record.id}.pdf`, fileData, {
+              contentType: 'application/pdf',
+              upsert: true
+            })
+
+          if (uploadError) {
+            console.error(`Upload failed for ${record.title}:`, uploadError)
+            results.push({
+              id: record.id,
+              title: record.title,
+              status: 'upload_failed',
+              error: uploadError.message
+            })
+            continue
+          }
+
+          // Get the public URL
+          const { data: publicUrlData } = supabaseClient.storage
+            .from('sheet-music')
+            .getPublicUrl(`pdfs/${record.id}.pdf`)
+
+          // Update the database record with the new PDF URL
+          const { error: updateError } = await supabaseClient
+            .from('gw_sheet_music')
+            .update({ pdf_url: publicUrlData.publicUrl })
+            .eq('id', record.id)
+
+          if (updateError) {
+            console.error(`Database update failed for ${record.title}:`, updateError)
+            results.push({
+              id: record.id,
+              title: record.title,
+              status: 'db_update_failed',
+              error: updateError.message
+            })
+            continue
+          }
+
+          console.log(`Successfully copied: ${record.title} from ${sourceFile.name}`)
+          results.push({
+            id: record.id,
+            title: record.title,
+            status: 'success',
+            pdf_url: publicUrlData.publicUrl,
+            source_file: sourceFile.name
+          })
+
+        } catch (error) {
+          console.error(`Error processing ${record.title}:`, error)
+          results.push({
+            id: record.id,
+            title: record.title,
+            status: 'error',
+            error: error.message
+          })
+        }
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `Processed ${results.length} records from bucket`,
+          results: results,
+          summary: {
+            total: results.length,
+            successful: results.filter(r => r.status === 'success').length,
+            failed: results.filter(r => r.status !== 'success').length
+          },
+          bucket_files: bucketFiles?.map(f => f.name) || []
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      )
+    }
+
     if (action === 'check_status') {
       console.log('migrate-sheet-music: Checking migration status...')
       // Check migration status

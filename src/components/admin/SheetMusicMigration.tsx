@@ -100,6 +100,32 @@ export const SheetMusicMigration: React.FC = () => {
     }
   };
 
+  const copyFromBucket = async () => {
+    setIsMigrating(true);
+    setMigrationResults([]);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('migrate-sheet-music', {
+        body: {
+          action: 'copy_from_bucket'
+        }
+      });
+
+      if (error) throw error;
+
+      setMigrationResults(data.results || []);
+      toast.success(`Copy completed: ${data.summary.successful} successful, ${data.summary.failed} failed`);
+      
+      // Refresh status
+      await checkMigrationStatus();
+    } catch (error) {
+      console.error('Copy from bucket failed:', error);
+      toast.error('Copy from bucket failed');
+    } finally {
+      setIsMigrating(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'success':
@@ -169,7 +195,7 @@ export const SheetMusicMigration: React.FC = () => {
           </div>
 
           {/* Actions */}
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap">
             <Button 
               onClick={startMigration} 
               disabled={isMigrating || !readerApiUrl}
@@ -181,6 +207,19 @@ export const SheetMusicMigration: React.FC = () => {
                 <Download className="h-4 w-4" />
               )}
               {isMigrating ? 'Migrating...' : 'Start Migration'}
+            </Button>
+            <Button 
+              onClick={copyFromBucket} 
+              disabled={isMigrating}
+              variant="secondary"
+              className="flex items-center gap-2"
+            >
+              {isMigrating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              {isMigrating ? 'Copying...' : 'Copy from Bucket'}
             </Button>
             <Button 
               variant="outline" 
