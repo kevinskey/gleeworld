@@ -302,13 +302,17 @@ export const YouTubeManagement = () => {
               />
               <div className="text-xs text-gray-500 mt-1">
                 <p>Supports: @handle, channel URL, or channel ID (UC...)</p>
-                <p className="text-yellow-600 mt-1">
-                  💡 Test with: <button 
-                    onClick={() => setChannelInput("@mkbhd")} 
-                    className="underline hover:text-yellow-800"
+                <p className="text-red-600 mt-1">
+                  ⚠️ <strong>API Quota Exceeded</strong> - Quota is at project level, not API key level
+                </p>
+                <p className="text-blue-600 mt-1">
+                  💡 Solutions: Create new Google Cloud project for fresh quota, or{" "}
+                  <button 
+                    onClick={() => setChannelInput("MOCK_DATA")} 
+                    className="underline hover:text-blue-800"
                   >
-                    @mkbhd
-                  </button> (known working channel)
+                    use mock data
+                  </button> for testing
                 </p>
               </div>
             </div>

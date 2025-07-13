@@ -181,6 +181,142 @@ async function extractChannelId(channelInput: string, apiKey: string): Promise<s
   }
 }
 
+async function handleMockDataSync() {
+  try {
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    const mockChannel = {
+      id: 'UCMockChannelId123',
+      snippet: {
+        title: 'Spelman College Glee Club (Mock)',
+        description: 'Mock channel data for testing - A prestigious collegiate choir known for excellence in choral music.',
+        thumbnails: {
+          default: { url: 'https://via.placeholder.com/88x88' },
+          medium: { url: 'https://via.placeholder.com/240x240' },
+          high: { url: 'https://via.placeholder.com/800x800' }
+        },
+        customUrl: '@spelmancollegegleeclub'
+      },
+      statistics: {
+        subscriberCount: '25000',
+        videoCount: '150'
+      }
+    }
+
+    const mockVideos = [
+      {
+        id: 'mock_video_1',
+        snippet: {
+          title: 'Amazing Grace - Spelman Glee Club Performance',
+          description: 'Mock video - Beautiful rendition of Amazing Grace',
+          publishedAt: '2024-01-15T10:00:00Z',
+          thumbnails: {
+            default: { url: 'https://via.placeholder.com/120x90' },
+            medium: { url: 'https://via.placeholder.com/320x180' },
+            high: { url: 'https://via.placeholder.com/480x360' }
+          },
+          categoryId: '10'
+        },
+        contentDetails: { duration: 'PT4M23S' },
+        statistics: {
+          viewCount: '15000',
+          likeCount: '500',
+          commentCount: '50'
+        }
+      },
+      {
+        id: 'mock_video_2',
+        snippet: {
+          title: 'Lift Every Voice and Sing - Homecoming Performance',
+          description: 'Mock video - Powerful homecoming performance',
+          publishedAt: '2024-02-10T15:30:00Z',
+          thumbnails: {
+            default: { url: 'https://via.placeholder.com/120x90' },
+            medium: { url: 'https://via.placeholder.com/320x180' },
+            high: { url: 'https://via.placeholder.com/480x360' }
+          },
+          categoryId: '10'
+        },
+        contentDetails: { duration: 'PT5M47S' },
+        statistics: {
+          viewCount: '22000',
+          likeCount: '750',
+          commentCount: '85'
+        }
+      }
+    ]
+
+    // Save mock channel
+    const { error: channelError } = await supabaseClient
+      .from('youtube_channels')
+      .upsert({
+        id: mockChannel.id,
+        title: mockChannel.snippet.title,
+        description: mockChannel.snippet.description,
+        thumbnail_url: mockChannel.snippet.thumbnails.high.url,
+        custom_url: mockChannel.snippet.customUrl,
+        subscriber_count: parseInt(mockChannel.statistics.subscriberCount),
+        video_count: parseInt(mockChannel.statistics.videoCount),
+        updated_at: new Date().toISOString()
+      })
+
+    if (channelError) {
+      throw new Error(`Failed to save mock channel: ${channelError.message}`)
+    }
+
+    // Save mock videos
+    for (const video of mockVideos) {
+      const { error: videoError } = await supabaseClient
+        .from('youtube_videos')
+        .upsert({
+          id: video.id,
+          channel_id: mockChannel.id,
+          title: video.snippet.title,
+          description: video.snippet.description,
+          thumbnail_url: video.snippet.thumbnails.high.url,
+          published_at: video.snippet.publishedAt,
+          duration: parseDuration(video.contentDetails.duration),
+          view_count: parseInt(video.statistics.viewCount),
+          like_count: parseInt(video.statistics.likeCount),
+          comment_count: parseInt(video.statistics.commentCount),
+          updated_at: new Date().toISOString()
+        })
+
+      if (videoError) {
+        console.error('Error saving mock video:', videoError)
+      }
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: 'Mock data synchronized successfully',
+        channel: mockChannel.snippet.title,
+        videosProcessed: mockVideos.length
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200 
+      }
+    )
+
+  } catch (error) {
+    console.error('Mock data sync error:', error)
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: `Mock sync failed: ${error.message}`
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400 
+      }
+    )
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -205,6 +341,11 @@ serve(async (req) => {
     const { channelInput, maxResults = 50 } = requestBody
     
     console.log('Request body:', { channelInput, maxResults })
+    
+    // Handle mock data request
+    if (channelInput === 'MOCK_DATA') {
+      return await handleMockDataSync()
+    }
     
     if (!channelInput) {
       throw new Error('Channel ID or URL is required')
