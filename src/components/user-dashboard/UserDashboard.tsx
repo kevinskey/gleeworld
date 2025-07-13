@@ -272,7 +272,7 @@ export const UserDashboard = () => {
   return (
     <UniversalLayout containerized={false}>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-        <div className="container mx-auto px-4 py-6 space-y-6">
+        <div className="container mx-auto px-2 sm:px-4 py-6 space-y-6">
           
           {/* Dashboard Header with Background */}
           <div 
