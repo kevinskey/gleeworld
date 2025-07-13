@@ -51,8 +51,12 @@ import { useSheetMusicAnalytics } from '@/hooks/useSheetMusicAnalytics';
 import { useSetlists } from '@/hooks/useSetlists';
 import { CreateSetlistDialog } from '@/components/setlists/CreateSetlistDialog';
 
-// Set up PDF.js worker with CDN fallback
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+// Set up PDF.js worker with CDN fallback and error handling
+try {
+  pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+} catch (error) {
+  console.warn('Failed to set PDF.js worker, falling back to default', error);
+}
 
 interface AdvancedSheetMusicViewerProps {
   isOpen: boolean;
