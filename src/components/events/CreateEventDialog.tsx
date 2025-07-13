@@ -6,12 +6,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Plus, Repeat } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
-export const CreateEventDialog = () => {
+interface CreateEventDialogProps {
+  onEventCreated?: () => void;
+}
+
+export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -28,7 +33,12 @@ export const CreateEventDialog = () => {
     no_sing_rest_date_start: '',
     no_sing_rest_date_end: '',
     brief_description: '',
-    approval_needed: false
+    approval_needed: false,
+    is_recurring: false,
+    recurring_frequency: 'weekly',
+    recurring_days: ['monday', 'wednesday', 'friday'],
+    recurring_end_date: '',
+    recurring_end_type: 'date'
   });
 
   const eventTypes = [
@@ -50,36 +60,54 @@ export const CreateEventDialog = () => {
 
     setLoading(true);
     try {
-      const eventData = {
-        title: formData.event_name, // Map to existing title field
-        event_name: formData.event_name,
-        event_type: formData.event_type,
-        start_date: formData.event_date_start, // Map to existing start_date field
-        end_date: formData.event_date_end || null,
-        event_date_start: formData.event_date_start,
-        event_date_end: formData.event_date_end || null,
-        location: formData.location || null,
-        is_travel_involved: formData.is_travel_involved,
-        expected_headcount: formData.expected_headcount ? parseInt(formData.expected_headcount) : null,
-        no_sing_rest_required: formData.no_sing_rest_required,
-        no_sing_rest_date_start: formData.no_sing_rest_date_start || null,
-        no_sing_rest_date_end: formData.no_sing_rest_date_end || null,
-        brief_description: formData.brief_description || null,
-        approval_needed: formData.approval_needed,
-        created_by: user.id
-      };
+      if (formData.is_recurring) {
+        // Handle recurring events
+        const { data, error } = await supabase.rpc('create_recurring_rehearsals', {
+          start_date: formData.event_date_start,
+          end_date: formData.recurring_end_type === 'date' ? formData.recurring_end_date : formData.event_date_start,
+          created_by_id: user.id
+        });
 
-      const { error } = await supabase
-        .from('events')
-        .insert([eventData]);
+        if (error) throw error;
 
-      if (error) throw error;
+        toast({
+          title: "Success",
+          description: `Created ${data} recurring events successfully!`,
+        });
+      } else {
+        // Handle single event
+        const eventData = {
+          title: formData.event_name,
+          event_name: formData.event_name,
+          event_type: formData.event_type,
+          start_date: formData.event_date_start,
+          end_date: formData.event_date_end || null,
+          event_date_start: formData.event_date_start,
+          event_date_end: formData.event_date_end || null,
+          location: formData.location || null,
+          is_travel_involved: formData.is_travel_involved,
+          expected_headcount: formData.expected_headcount ? parseInt(formData.expected_headcount) : null,
+          no_sing_rest_required: formData.no_sing_rest_required,
+          no_sing_rest_date_start: formData.no_sing_rest_date_start || null,
+          no_sing_rest_date_end: formData.no_sing_rest_date_end || null,
+          brief_description: formData.brief_description || null,
+          approval_needed: formData.approval_needed,
+          created_by: user.id
+        };
 
-      toast({
-        title: "Success",
-        description: "Event created successfully!",
-      });
+        const { error } = await supabase
+          .from('events')
+          .insert([eventData]);
 
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Event created successfully!",
+        });
+      }
+
+      onEventCreated?.();
       setOpen(false);
       setFormData({
         event_name: '',
@@ -93,7 +121,12 @@ export const CreateEventDialog = () => {
         no_sing_rest_date_start: '',
         no_sing_rest_date_end: '',
         brief_description: '',
-        approval_needed: false
+        approval_needed: false,
+        is_recurring: false,
+        recurring_frequency: 'weekly',
+        recurring_days: ['monday', 'wednesday', 'friday'],
+        recurring_end_date: '',
+        recurring_end_type: 'date'
       });
     } catch (err) {
       console.error('Error creating event:', err);
@@ -278,6 +311,80 @@ export const CreateEventDialog = () => {
                 onCheckedChange={(checked) => setFormData(prev => ({ ...prev, approval_needed: checked }))}
               />
             </div>
+          </div>
+
+          {/* Recurring Events Section */}
+          <Separator />
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="flex items-center gap-2">
+                  <Repeat className="h-4 w-4" />
+                  Repeat Event
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Create recurring events (like rehearsals)
+                </p>
+              </div>
+              <Switch
+                checked={formData.is_recurring}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_recurring: checked }))}
+              />
+            </div>
+
+            {formData.is_recurring && (
+              <div className="space-y-4 ml-6 p-4 bg-muted/50 rounded-lg">
+                <div className="space-y-2">
+                  <Label>Repeat</Label>
+                  <Select
+                    value={formData.recurring_frequency}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, recurring_frequency: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                      <SelectItem value="daily">Daily</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>End</Label>
+                  <Select
+                    value={formData.recurring_end_type}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, recurring_end_type: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="date">On Date</SelectItem>
+                      <SelectItem value="never">Never</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {formData.recurring_end_type === 'date' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="recurring_end_date">End Date</Label>
+                    <Input
+                      id="recurring_end_date"
+                      type="date"
+                      value={formData.recurring_end_date}
+                      onChange={(e) => setFormData(prev => ({ ...prev, recurring_end_date: e.target.value }))}
+                    />
+                  </div>
+                )}
+
+                <div className="text-sm text-muted-foreground p-2 bg-blue-50 dark:bg-blue-950/20 rounded border">
+                  <p className="font-medium mb-1">Note for Rehearsals:</p>
+                  <p>If creating rehearsals, they will automatically be scheduled for Monday, Wednesday, and Friday from 5:00-6:15 PM at the Music Building, regardless of the settings above.</p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">

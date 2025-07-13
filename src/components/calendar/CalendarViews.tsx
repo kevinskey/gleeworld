@@ -6,8 +6,8 @@ import { CalendarIcon, ListIcon, Grid3X3Icon } from "lucide-react";
 import { MonthlyCalendar } from "./MonthlyCalendar";
 import { EventsList } from "./EventsList";
 import { WeeklyCalendar } from "./WeeklyCalendar";
-import { CreateEventDialog } from "./CreateEventDialog";
-import { RecurringRehearsalManager } from "./RecurringRehearsalManager";
+import { CreateEventDialog } from "@/components/events/CreateEventDialog";
+
 import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
@@ -37,10 +37,6 @@ export const CalendarViews = () => {
 
   return (
     <div className="space-y-4">
-      {isAdmin && (
-        <RecurringRehearsalManager onRehearsalsCreated={fetchEvents} />
-      )}
-      
       <Card>
         <CardHeader className="pb-2">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
