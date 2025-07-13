@@ -160,7 +160,7 @@ serve(async (req) => {
     }
 
     if (action === 'copy_from_bucket') {
-      console.log('Starting PDF copy from source bucket: b1b00382-d655-4957-a998-c7cb913e09fa')
+      console.log('Starting PDF copy from source folder: b1b00382-d655-4957-a998-c7cb913e09fa')
 
       // Fetch all sheet music records that need PDF migration
       const { data: sheetMusicRecords, error: fetchError } = await supabaseClient
@@ -175,10 +175,10 @@ serve(async (req) => {
 
       console.log(`Found ${sheetMusicRecords?.length || 0} records to process`)
 
-      // List files in the source bucket
+      // List files in the source folder within user-files bucket
       const { data: bucketFiles, error: listError } = await supabaseClient.storage
-        .from('b1b00382-d655-4957-a998-c7cb913e09fa')
-        .list('', { limit: 100 })
+        .from('user-files')
+        .list('b1b00382-d655-4957-a998-c7cb913e09fa', { limit: 100 })
 
       if (listError) {
         console.error('Failed to list bucket files:', listError)
@@ -233,10 +233,10 @@ serve(async (req) => {
 
           console.log(`Found matching file: ${sourceFile.name}`)
 
-          // Download the file from source bucket
+          // Download the file from source folder in user-files bucket
           const { data: fileData, error: downloadError } = await supabaseClient.storage
-            .from('b1b00382-d655-4957-a998-c7cb913e09fa')
-            .download(sourceFile.name)
+            .from('user-files')
+            .download(`b1b00382-d655-4957-a998-c7cb913e09fa/${sourceFile.name}`)
 
           if (downloadError) {
             console.error(`Download failed for ${sourceFile.name}:`, downloadError)
