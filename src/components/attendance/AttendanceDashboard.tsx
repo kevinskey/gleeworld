@@ -26,6 +26,13 @@ export const AttendanceDashboard = () => {
   const { profile } = useProfile();
   const [activeTab, setActiveTab] = useState('overview');
   const [canTakeAttendance, setCanTakeAttendance] = useState(false);
+  const [stats, setStats] = useState({
+    myAttendance: 0,
+    eventsThisWeek: 0,
+    pendingExcuses: 0,
+    sectionAverage: 0
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
 
@@ -59,7 +66,29 @@ export const AttendanceDashboard = () => {
 
   useEffect(() => {
     checkAttendancePermissions();
-  }, [checkAttendancePermissions]);
+    if (user) {
+      loadDashboardStats();
+    }
+  }, [checkAttendancePermissions, user]);
+
+  const loadDashboardStats = async () => {
+    if (!user) return;
+    
+    setStatsLoading(true);
+    try {
+      // For now, set to 0 until real data queries are implemented
+      setStats({
+        myAttendance: 0,
+        eventsThisWeek: 0,
+        pendingExcuses: 0,
+        sectionAverage: 0
+      });
+    } catch (error) {
+      console.error('Error loading dashboard stats:', error);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
 
   if (!user) {
     return (
@@ -95,7 +124,9 @@ export const AttendanceDashboard = () => {
             <UserCheck className="h-5 w-5 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-600">85%</div>
+            <div className="text-3xl font-bold text-green-600">
+              {statsLoading ? '...' : `${stats.myAttendance}%`}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">This semester</p>
           </CardContent>
         </Card>
@@ -106,7 +137,9 @@ export const AttendanceDashboard = () => {
             <Calendar className="h-5 w-5 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-600">3</div>
+            <div className="text-3xl font-bold text-blue-600">
+              {statsLoading ? '...' : stats.eventsThisWeek}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">Rehearsals & Performances</p>
           </CardContent>
         </Card>
@@ -117,7 +150,9 @@ export const AttendanceDashboard = () => {
             <AlertCircle className="h-5 w-5 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-orange-600">1</div>
+            <div className="text-3xl font-bold text-orange-600">
+              {statsLoading ? '...' : stats.pendingExcuses}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">Awaiting review</p>
           </CardContent>
         </Card>
@@ -128,7 +163,9 @@ export const AttendanceDashboard = () => {
             <BarChart3 className="h-5 w-5 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-purple-600">78%</div>
+            <div className="text-3xl font-bold text-purple-600">
+              {statsLoading ? '...' : `${stats.sectionAverage}%`}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
               {profile?.voice_part || 'All sections'}
             </p>
