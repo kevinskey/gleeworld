@@ -334,7 +334,7 @@ export const UserDashboard = () => {
             </div>
           </div>
 
-          {/* 50/50 Split Layout: Quick Actions & Glee Club Spotlight */}
+          {/* Grid Layout: Quick Actions & Admin Controls/Glee Club Spotlight */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Quick Actions - 50% */}
             <Card className="h-fit">
@@ -384,47 +384,96 @@ export const UserDashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Glee Club Spotlight - 50% */}
-            <Card className="h-fit">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Star className="h-5 w-5 mr-2 text-yellow-500" />
-                  Glee Club Spotlight
-                </CardTitle>
-                <CardDescription>Member recognition and community updates</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
-                    <div className="flex items-center space-x-3">
-                      <Award className="h-8 w-8 text-yellow-600 flex-shrink-0" />
-                      <div>
-                        <h4 className="font-semibold">Member of the Month</h4>
-                        <p className="text-sm text-gray-600">Congratulations to Sarah Johnson for outstanding dedication!</p>
+            {/* Admin Controls (for users with admin permissions) OR Glee Club Spotlight */}
+            {availableModules.length > 0 ? (
+              <Card className="h-fit">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Shield className="h-5 w-5 mr-2 text-blue-600" />
+                    Admin Controls
+                    {profile?.role === 'super-admin' && (
+                      <Badge variant="destructive" className="ml-2 text-xs">Super Admin</Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    {profile?.role === 'super-admin' 
+                      ? 'Full system access' 
+                      : `${availableModules.length} module${availableModules.length !== 1 ? 's' : ''} available`
+                    }
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    {availableModules.slice(0, 8).map((module) => {
+                      const IconComponent = module.icon;
+                      return (
+                        <EnhancedTooltip key={module.key} content={module.module.description}>
+                          <Button
+                            className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full relative"
+                            variant="outline"
+                            onClick={() => setSelectedModule(module.key.replace(/_/g, '-'))}
+                          >
+                            <IconComponent className="h-5 w-5 sm:h-6 sm:w-6" />
+                            <span className="text-center leading-tight">{module.module.name}</span>
+                            {module.source === 'username' && (
+                              <div className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full" />
+                            )}
+                          </Button>
+                        </EnhancedTooltip>
+                      );
+                    })}
+                  </div>
+                  {availableModules.length > 8 && (
+                    <div className="mt-4 text-center">
+                      <Button variant="ghost" size="sm" className="text-xs">
+                        +{availableModules.length - 8} more modules
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="h-fit">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Star className="h-5 w-5 mr-2 text-yellow-500" />
+                    Glee Club Spotlight
+                  </CardTitle>
+                  <CardDescription>Member recognition and community updates</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
+                      <div className="flex items-center space-x-3">
+                        <Award className="h-8 w-8 text-yellow-600 flex-shrink-0" />
+                        <div>
+                          <h4 className="font-semibold">Member of the Month</h4>
+                          <p className="text-sm text-gray-600">Congratulations to Sarah Johnson for outstanding dedication!</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center space-x-3">
+                        <TrendingUp className="h-8 w-8 text-blue-600 flex-shrink-0" />
+                        <div>
+                          <h4 className="font-semibold">Latest Achievement</h4>
+                          <p className="text-sm text-gray-600">First place at the Regional Choir Competition!</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg border border-green-200">
+                      <div className="flex items-center space-x-3">
+                        <Users className="h-8 w-8 text-green-600 flex-shrink-0" />
+                        <div>
+                          <h4 className="font-semibold">Community Impact</h4>
+                          <p className="text-sm text-gray-600">Raised $5,000 for local music education programs!</p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-                    <div className="flex items-center space-x-3">
-                      <TrendingUp className="h-8 w-8 text-blue-600 flex-shrink-0" />
-                      <div>
-                        <h4 className="font-semibold">Latest Achievement</h4>
-                        <p className="text-sm text-gray-600">First place at the Regional Choir Competition!</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-4 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg border border-green-200">
-                    <div className="flex items-center space-x-3">
-                      <Users className="h-8 w-8 text-green-600 flex-shrink-0" />
-                      <div>
-                        <h4 className="font-semibold">Community Impact</h4>
-                        <p className="text-sm text-gray-600">Raised $5,000 for local music education programs!</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
