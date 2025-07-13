@@ -330,7 +330,10 @@ export const UserDashboard = () => {
 
           {/* Quick Stats Overview */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-            <Card className="hover:shadow-md transition-shadow">
+            <Card 
+              className="hover:shadow-md transition-shadow cursor-pointer hover:bg-gray-50"
+              onClick={() => navigate('/events')}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
                 <CardTitle className="text-xs sm:text-sm font-medium">Events</CardTitle>
                 <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
@@ -343,7 +346,10 @@ export const UserDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow">
+            <Card 
+              className="hover:shadow-md transition-shadow cursor-pointer hover:bg-gray-50"
+              onClick={() => navigate('/contracts')}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
                 <CardTitle className="text-xs sm:text-sm font-medium">Contracts</CardTitle>
                 <Music className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
@@ -354,7 +360,10 @@ export const UserDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow">
+            <Card 
+              className="hover:shadow-md transition-shadow cursor-pointer hover:bg-gray-50"
+              onClick={() => navigate('/payments')}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
                 <CardTitle className="text-xs sm:text-sm font-medium">Payments</CardTitle>
                 <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600" />
@@ -365,7 +374,10 @@ export const UserDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow">
+            <Card 
+              className="hover:shadow-md transition-shadow cursor-pointer hover:bg-gray-50"
+              onClick={() => navigate('/notifications')}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
                 <CardTitle className="text-xs sm:text-sm font-medium">Alerts</CardTitle>
                 <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-600" />
