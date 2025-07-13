@@ -166,9 +166,19 @@ serve(async (req) => {
       const readerSupabaseUrl = Deno.env.get('READER_SUPABASE_URL');
       const readerSupabaseKey = Deno.env.get('READER_SUPABASE_ANON_KEY');
       
+      console.log('External credentials check:', {
+        hasUrl: !!readerSupabaseUrl,
+        hasKey: !!readerSupabaseKey,
+        urlPrefix: readerSupabaseUrl?.substring(0, 20)
+      });
+      
       if (!readerSupabaseUrl || !readerSupabaseKey) {
+        console.error('Missing external Supabase credentials');
         return new Response(
-          JSON.stringify({ error: 'External Supabase credentials not configured' }),
+          JSON.stringify({ 
+            error: 'External Supabase credentials not configured',
+            details: `URL: ${!!readerSupabaseUrl}, Key: ${!!readerSupabaseKey}`
+          }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
         );
       }
