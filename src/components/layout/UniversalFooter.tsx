@@ -27,10 +27,10 @@ export const UniversalFooter = () => {
                 Dashboard
               </Link>
               <Link 
-                to="/w9-form" 
+                to="/" 
                 className="block text-white/70 hover:text-white text-xs sm:text-sm transition-colors"
               >
-                W9 Forms
+                HomePage
               </Link>
             </div>
           </div>
@@ -40,7 +40,12 @@ export const UniversalFooter = () => {
             <h4 className="text-sm sm:text-md font-medium text-white mb-2">Support</h4>
             <div className="space-y-1">
               <p className="text-white/70 text-xs sm:text-sm">Need help?</p>
-              <p className="text-white/70 text-xs sm:text-sm">Contact your administrator</p>
+              <a 
+                href="mailto:admin@gleeworld.org" 
+                className="text-white/70 hover:text-white text-xs sm:text-sm transition-colors"
+              >
+                Contact Your Administrator
+              </a>
             </div>
           </div>
         </div>
