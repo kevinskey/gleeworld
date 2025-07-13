@@ -27,13 +27,15 @@ import {
   Settings,
   Youtube,
   Shield,
-  Mail
+  Mail,
+  Download
 } from "lucide-react";
 import { HeroManagement } from "@/components/admin/HeroManagement";
 import { DashboardSettings } from "@/components/admin/DashboardSettings";
 import { YouTubeManagement } from "@/components/admin/YouTubeManagement";
 import { UsernamePermissionsManager } from "@/components/admin/UsernamePermissionsManager";
 import { SheetMusicLibrary } from "@/components/sheet-music/SheetMusicLibrary";
+import { SheetMusicMigration } from "@/components/admin/SheetMusicMigration";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
@@ -99,6 +101,9 @@ export const UserDashboard = () => {
           case 'manage_permissions':
             icon = Shield;
             break;
+          case 'migrate_sheet_music':
+            icon = Download;
+            break;
         }
 
         // Determine permission source
@@ -155,6 +160,8 @@ export const UserDashboard = () => {
             return <YouTubeManagement />;
           case 'sheet-music':
             return <SheetMusicLibrary />;
+          case 'migrate-sheet-music':
+            return <SheetMusicMigration />;
           case 'manage-permissions':
             return <UsernamePermissionsManager />;
           default:

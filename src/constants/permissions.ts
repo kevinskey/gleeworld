@@ -30,6 +30,7 @@ export const PERMISSIONS = [
   'access_budget_creation',
   'access_contracts',
   'access_sheet_music',
+  'migrate_sheet_music',
   'send_notifications',
   'send_emails',
   'manage_username_permissions',
@@ -57,6 +58,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     'access_youtube_management',
     'send_notifications',
     'send_emails',
+    'migrate_sheet_music',
     'manage_username_permissions',
   ],
   [USER_ROLES.SUPER_ADMIN]: [
@@ -113,6 +115,11 @@ export const DASHBOARD_MODULES = {
     name: 'Manage Permissions',
     description: 'Manage username-based module permissions',
     permission: 'manage_username_permissions' as Permission,
+  },
+  migrate_sheet_music: {
+    name: 'Migrate Sheet Music',
+    description: 'Migrate PDFs from reader.gleeworld.org',
+    permission: 'migrate_sheet_music' as Permission,
   },
 } as const;
 
