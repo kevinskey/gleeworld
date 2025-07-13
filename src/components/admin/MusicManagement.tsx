@@ -67,6 +67,9 @@ export const MusicManagement = () => {
     genre: '',
     lyrics: ''
   });
+  const [batchUploading, setBatchUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({});
+  const [dragActive, setDragActive] = useState(false);
 
   // Get user role
   useEffect(() => {
@@ -372,6 +375,211 @@ export const MusicManagement = () => {
     }
   };
 
+  const handleAudioUpload = async (file: File): Promise<string> => {
+    if (!user) throw new Error('User not authenticated');
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}_${Date.now()}.${fileExt}`;
+    const filePath = `audio-tracks/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('user-files')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('user-files')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
+
+  const extractAudioMetadata = async (file: File): Promise<Partial<typeof trackForm>> => {
+    // Extract filename without extension for title
+    const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+    
+    return new Promise((resolve) => {
+      const audio = new Audio();
+      const url = URL.createObjectURL(file);
+      
+      audio.onloadedmetadata = () => {
+        const duration = Math.round(audio.duration);
+        URL.revokeObjectURL(url);
+        resolve({
+          title: nameWithoutExt,
+          duration: duration || 0,
+        });
+      };
+      
+      audio.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve({
+          title: nameWithoutExt,
+          duration: 0,
+        });
+      };
+      
+      audio.src = url;
+    });
+  };
+
+  const handleFileSelect = async (files: FileList | File[]) => {
+    const audioFiles = Array.from(files).filter(file => 
+      file.type.startsWith('audio/') || 
+      file.name.toLowerCase().endsWith('.mp3') || 
+      file.name.toLowerCase().endsWith('.wav')
+    );
+
+    if (audioFiles.length === 0) {
+      toast({
+        title: "No audio files",
+        description: "Please select MP3 or WAV files",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (audioFiles.length === 1) {
+      // Single file - use existing single track dialog
+      const file = audioFiles[0];
+      try {
+        const metadata = await extractAudioMetadata(file);
+        const audioUrl = await handleAudioUpload(file);
+        
+        setTrackForm(prev => ({
+          ...prev,
+          title: metadata.title || '',
+          duration: metadata.duration || 0,
+          audio_url: audioUrl,
+        }));
+
+        toast({
+          title: "File uploaded",
+          description: `"${file.name}" has been uploaded and is ready to save`
+        });
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        toast({
+          title: "Upload failed",
+          description: "Failed to upload audio file",
+          variant: "destructive"
+        });
+      }
+    } else {
+      // Multiple files - batch upload
+      await handleBatchUpload(audioFiles);
+    }
+  };
+
+  const handleBatchUpload = async (files: File[]) => {
+    setBatchUploading(true);
+    setUploadProgress({});
+    
+    const successfulUploads: any[] = [];
+    const failedUploads: string[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const progressKey = file.name;
+      
+      try {
+        // Update progress
+        setUploadProgress(prev => ({ ...prev, [progressKey]: 25 }));
+        
+        // Extract metadata
+        const metadata = await extractAudioMetadata(file);
+        setUploadProgress(prev => ({ ...prev, [progressKey]: 50 }));
+        
+        // Upload file
+        const audioUrl = await handleAudioUpload(file);
+        setUploadProgress(prev => ({ ...prev, [progressKey]: 75 }));
+        
+        // Create track in database
+        const trackData = {
+          title: metadata.title || file.name.replace(/\.[^/.]+$/, ""),
+          artist: trackForm.artist || 'Unknown Artist',
+          album_id: trackForm.album_id === 'no-album' ? null : trackForm.album_id || null,
+          audio_url: audioUrl,
+          duration: metadata.duration || 0,
+          track_number: (trackForm.track_number || 1) + i,
+          genre: trackForm.genre || '',
+          lyrics: '',
+          created_by: user!.id
+        };
+
+        const { error } = await supabase
+          .from('music_tracks')
+          .insert(trackData);
+
+        if (error) throw error;
+
+        setUploadProgress(prev => ({ ...prev, [progressKey]: 100 }));
+        successfulUploads.push(trackData);
+        
+      } catch (error) {
+        console.error(`Error uploading ${file.name}:`, error);
+        failedUploads.push(file.name);
+        setUploadProgress(prev => ({ ...prev, [progressKey]: -1 })); // -1 indicates error
+      }
+    }
+
+    setBatchUploading(false);
+    
+    if (successfulUploads.length > 0) {
+      toast({
+        title: "Batch upload completed",
+        description: `${successfulUploads.length} tracks uploaded successfully${failedUploads.length > 0 ? `, ${failedUploads.length} failed` : ''}`
+      });
+      
+      // Reset form and close dialog
+      setTrackForm({
+        title: '',
+        artist: '',
+        album_id: '',
+        audio_url: '',
+        duration: 0,
+        track_number: 1,
+        genre: '',
+        lyrics: ''
+      });
+      setIsCreatingTrack(false);
+      setSelectedAlbum(null);
+      refetch();
+    }
+
+    if (failedUploads.length > 0 && successfulUploads.length === 0) {
+      toast({
+        title: "Upload failed",
+        description: `Failed to upload ${failedUploads.length} file(s)`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      handleFileSelect(files);
+    }
+  };
+
   const handleDeleteTrack = async (trackId: string, trackTitle: string) => {
     if (!confirm(`Are you sure you want to delete "${trackTitle}"?`)) return;
 
@@ -601,117 +809,186 @@ export const MusicManagement = () => {
                 <DialogTitle>{editingTrack ? 'Edit Track' : 'Add New Track'}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                {/* File Upload Section */}
+                <div className="space-y-4">
                   <div>
-                    <Label htmlFor="track-title">Title *</Label>
-                    <Input
-                      id="track-title"
-                      value={trackForm.title}
-                      onChange={(e) => setTrackForm(prev => ({ ...prev, title: e.target.value }))}
-                      placeholder="Track title"
-                    />
+                    <Label>Audio Files Upload</Label>
+                    <div 
+                      className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                        dragActive ? 'border-primary bg-primary/5' : 'border-gray-300'
+                      }`}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                    >
+                      <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-600 mb-2">
+                        Drag and drop MP3 or WAV files here, or click to select
+                      </p>
+                      <Input
+                        type="file"
+                        accept="audio/*,.mp3,.wav"
+                        multiple
+                        onChange={(e) => {
+                          const files = e.target.files;
+                          if (files) handleFileSelect(files);
+                        }}
+                        className="hidden"
+                        id="audio-upload"
+                      />
+                      <Label htmlFor="audio-upload">
+                        <Button variant="outline" className="cursor-pointer" asChild>
+                          <span>Select Files</span>
+                        </Button>
+                      </Label>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Single file: fills form below • Multiple files: batch upload with current settings
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="track-artist">Artist *</Label>
-                    <Input
-                      id="track-artist"
-                      value={trackForm.artist}
-                      onChange={(e) => setTrackForm(prev => ({ ...prev, artist: e.target.value }))}
-                      placeholder="Artist name"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="track-album">Album</Label>
-                  <Select value={trackForm.album_id} onValueChange={(value) => setTrackForm(prev => ({ ...prev, album_id: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select an album (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="no-album">No Album</SelectItem>
-                      {albums.map((album) => (
-                        <SelectItem key={album.id} value={album.id}>
-                          {album.title} - {album.artist}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+
+                  {/* Batch Upload Progress */}
+                  {batchUploading && (
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Upload Progress</h4>
+                      <div className="space-y-1">
+                        {Object.entries(uploadProgress).map(([filename, progress]) => (
+                          <div key={filename} className="flex items-center space-x-2">
+                            <span className="text-sm truncate flex-1">{filename}</span>
+                            <div className="w-20 bg-gray-200 rounded-full h-2">
+                              <div 
+                                className={`h-2 rounded-full transition-all ${
+                                  progress === -1 ? 'bg-red-500' : progress === 100 ? 'bg-green-500' : 'bg-primary'
+                                }`}
+                                style={{ width: progress === -1 ? '100%' : `${progress}%` }}
+                              />
+                            </div>
+                            <span className="text-xs w-12">
+                              {progress === -1 ? 'Error' : progress === 100 ? 'Done' : `${progress}%`}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div>
-                  <Label htmlFor="track-audio">Audio URL *</Label>
-                  <Input
-                    id="track-audio"
-                    value={trackForm.audio_url}
-                    onChange={(e) => setTrackForm(prev => ({ ...prev, audio_url: e.target.value }))}
-                    placeholder="https://example.com/audio.mp3"
-                  />
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
+                {/* Manual Track Details Form */}
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-3">Track Details (for single upload or batch defaults)</h4>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="track-title">Title *</Label>
+                      <Input
+                        id="track-title"
+                        value={trackForm.title}
+                        onChange={(e) => setTrackForm(prev => ({ ...prev, title: e.target.value }))}
+                        placeholder="Track title"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="track-artist">Artist *</Label>
+                      <Input
+                        id="track-artist"
+                        value={trackForm.artist}
+                        onChange={(e) => setTrackForm(prev => ({ ...prev, artist: e.target.value }))}
+                        placeholder="Artist name"
+                      />
+                    </div>
+                  </div>
+                  
                   <div>
-                    <Label htmlFor="track-duration">Duration (seconds)</Label>
+                    <Label htmlFor="track-album">Album</Label>
+                    <Select value={trackForm.album_id} onValueChange={(value) => setTrackForm(prev => ({ ...prev, album_id: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select an album (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="no-album">No Album</SelectItem>
+                        {albums.map((album) => (
+                          <SelectItem key={album.id} value={album.id}>
+                            {album.title} - {album.artist}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="track-audio">Audio URL * (or upload file above)</Label>
                     <Input
-                      id="track-duration"
-                      type="number"
-                      value={trackForm.duration}
-                      onChange={(e) => setTrackForm(prev => ({ ...prev, duration: Number(e.target.value) }))}
-                      placeholder="180"
+                      id="track-audio"
+                      value={trackForm.audio_url}
+                      onChange={(e) => setTrackForm(prev => ({ ...prev, audio_url: e.target.value }))}
+                      placeholder="https://example.com/audio.mp3"
                     />
                   </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="track-duration">Duration (seconds)</Label>
+                      <Input
+                        id="track-duration"
+                        type="number"
+                        value={trackForm.duration}
+                        onChange={(e) => setTrackForm(prev => ({ ...prev, duration: Number(e.target.value) }))}
+                        placeholder="180"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="track-number">Track Number</Label>
+                      <Input
+                        id="track-number"
+                        type="number"
+                        value={trackForm.track_number}
+                        onChange={(e) => setTrackForm(prev => ({ ...prev, track_number: Number(e.target.value) }))}
+                        placeholder="1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="track-genre">Genre</Label>
+                      <Input
+                        id="track-genre"
+                        value={trackForm.genre}
+                        onChange={(e) => setTrackForm(prev => ({ ...prev, genre: e.target.value }))}
+                        placeholder="Gospel"
+                      />
+                    </div>
+                  </div>
+
                   <div>
-                    <Label htmlFor="track-number">Track Number</Label>
-                    <Input
-                      id="track-number"
-                      type="number"
-                      value={trackForm.track_number}
-                      onChange={(e) => setTrackForm(prev => ({ ...prev, track_number: Number(e.target.value) }))}
-                      placeholder="1"
+                    <Label htmlFor="track-lyrics">Lyrics</Label>
+                    <Textarea
+                      id="track-lyrics"
+                      value={trackForm.lyrics}
+                      onChange={(e) => setTrackForm(prev => ({ ...prev, lyrics: e.target.value }))}
+                      placeholder="Track lyrics..."
+                      rows={3}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="track-genre">Genre</Label>
-                    <Input
-                      id="track-genre"
-                      value={trackForm.genre}
-                      onChange={(e) => setTrackForm(prev => ({ ...prev, genre: e.target.value }))}
-                      placeholder="Gospel"
-                    />
+
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline" onClick={() => {
+                      setIsCreatingTrack(false);
+                      setEditingTrack(null);
+                      setTrackForm({
+                        title: '',
+                        artist: '',
+                        album_id: '',
+                        audio_url: '',
+                        duration: 0,
+                        track_number: 1,
+                        genre: '',
+                        lyrics: ''
+                      });
+                    }}>
+                      Cancel
+                    </Button>
+                    <Button onClick={editingTrack ? handleUpdateTrack : handleCreateTrack}>
+                      {editingTrack ? 'Update Track' : 'Add Track'}
+                    </Button>
                   </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="track-lyrics">Lyrics</Label>
-                  <Textarea
-                    id="track-lyrics"
-                    value={trackForm.lyrics}
-                    onChange={(e) => setTrackForm(prev => ({ ...prev, lyrics: e.target.value }))}
-                    placeholder="Track lyrics..."
-                    rows={3}
-                  />
-                </div>
-
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => {
-                    setIsCreatingTrack(false);
-                    setEditingTrack(null);
-                    setTrackForm({
-                      title: '',
-                      artist: '',
-                      album_id: '',
-                      audio_url: '',
-                      duration: 0,
-                      track_number: 1,
-                      genre: '',
-                      lyrics: ''
-                    });
-                  }}>
-                    Cancel
-                  </Button>
-                  <Button onClick={editingTrack ? handleUpdateTrack : handleCreateTrack}>
-                    {editingTrack ? 'Update Track' : 'Add Track'}
-                  </Button>
                 </div>
               </div>
             </DialogContent>
