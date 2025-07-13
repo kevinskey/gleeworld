@@ -111,7 +111,7 @@ export const useAdminPayments = () => {
 
       if (error) throw error;
 
-      // Create corresponding finance record
+      // Create corresponding finance record (dual-entry accounting)
       await supabase
         .from('finance_records')
         .insert([{
@@ -137,6 +137,22 @@ export const useAdminPayments = () => {
           created_by: user?.id,
         }]);
 
+      // Log payment activity for tracking
+      await supabase
+        .from('activity_logs')
+        .insert([{
+          user_id: paymentData.user_id,
+          action_type: 'payment_created',
+          resource_type: 'payment',
+          resource_id: data.id,
+          details: {
+            amount: paymentData.amount,
+            payment_method: paymentData.payment_method,
+            contract_id: paymentData.contract_id,
+            created_by: user?.id
+          }
+        }]);
+
       // Send email notification
       try {
         await supabase.functions.invoke('send-payment-notification', {
@@ -154,7 +170,7 @@ export const useAdminPayments = () => {
 
       toast({
         title: "Success",
-        description: "Payment recorded and notification sent",
+        description: "Payment recorded and synced across all systems",
       });
 
       fetchPayments();
