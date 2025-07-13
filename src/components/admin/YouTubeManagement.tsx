@@ -125,10 +125,11 @@ export const YouTubeManagement = () => {
       });
 
       if (error) {
+        console.error('Sync error:', error);
         throw error;
       }
 
-      if (data.success) {
+      if (data && data.success) {
         toast({
           title: "Sync Successful",
           description: data.message,
@@ -137,7 +138,11 @@ export const YouTubeManagement = () => {
         // Reload data
         await loadChannelData();
       } else {
-        throw new Error(data.error || "Sync failed");
+        const errorMessage = data?.error || data?.message || "Sync failed";
+        if (errorMessage.includes('YouTube API key')) {
+          throw new Error("YouTube API key not configured. Please contact your system administrator to configure the YOUTUBE_API_KEY environment variable in Supabase.");
+        }
+        throw new Error(errorMessage);
       }
     } catch (error) {
       console.error('Sync error:', error);
