@@ -3746,6 +3746,14 @@ export type Database = {
         Args: { event_id_param: string }
         Returns: undefined
       }
+      cleanup_old_rehearsals: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      create_recurring_rehearsals: {
+        Args: { start_date: string; end_date: string; created_by_id?: string }
+        Returns: number
+      }
       create_task_notification: {
         Args: {
           task_id_param: string
