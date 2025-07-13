@@ -50,6 +50,7 @@ import { useSheetMusicAnnotations } from '@/hooks/useSheetMusicAnnotations';
 import { useSheetMusicAnalytics } from '@/hooks/useSheetMusicAnalytics';
 import { useSetlists } from '@/hooks/useSetlists';
 import { CreateSetlistDialog } from '@/components/setlists/CreateSetlistDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Set up PDF.js worker with CDN fallback and error handling
 try {
@@ -78,6 +79,7 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
   const { sheetMusic: allSheetMusic, loading } = useSheetMusic();
   const { logView, logDownload } = useSheetMusicAnalytics();
   const { setlists, loading: setlistsLoading, createSetlist, addItemToSetlist, removeItemFromSetlist } = useSetlists();
+  const isMobile = useIsMobile();
   
   const [selectedSheetMusicId, setSelectedSheetMusicId] = useState<string>(initialSheetMusicId || '');
   const [selectedPDF, setSelectedPDF] = useState<string | null>(null);
@@ -424,7 +426,7 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`max-w-7xl h-[95vh] flex flex-col ${isDarkMode ? 'bg-gray-900 text-white' : ''}`}>
+      <DialogContent className={`${isMobile ? 'max-w-[95vw] h-[95vh] p-2' : 'max-w-7xl h-[95vh]'} flex flex-col ${isDarkMode ? 'bg-gray-900 text-white' : ''}`}>
         {!performanceMode && (
           <DialogHeader className="flex-shrink-0">
             <DialogTitle>Advanced Sheet Music Viewer</DialogTitle>

@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Database } from "@/integrations/supabase/types";
 import { ScoreTracker } from "./ScoreTracker";
 import { RecordingManager } from "./RecordingManager";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type SheetMusic = Database['public']['Tables']['gw_sheet_music']['Row'];
 
@@ -17,6 +18,7 @@ interface SheetMusicViewerProps {
 
 export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) => {
   const [audioPlaying, setAudioPlaying] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleDownload = async () => {
     if (sheetMusic.pdf_url) {
@@ -145,9 +147,9 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
           <Card>
             <CardContent className="p-6">
               {sheetMusic.pdf_url ? (
-                <div className="w-full h-[800px] border rounded-lg">
+                <div className={`w-full border rounded-lg ${isMobile ? 'h-[60vh]' : 'h-[800px]'}`}>
                   <iframe
-                    src={`${sheetMusic.pdf_url}#toolbar=1&navpanes=0&scrollbar=1`}
+                    src={`${sheetMusic.pdf_url}#toolbar=1&navpanes=0&scrollbar=1&zoom=page-fit`}
                     className="w-full h-full rounded-lg"
                     title={`${sheetMusic.title} - Sheet Music`}
                   />
