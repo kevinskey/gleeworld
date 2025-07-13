@@ -175,8 +175,8 @@ export const MusicManagement = () => {
     fetchUserRole();
   }, [user]);
 
-  // Check if user has super admin permissions
-  const canManageMusic = userRole === 'super-admin';
+  // Check if user has permissions - allow admins and super-admins to manage music
+  const canManageMusic = userRole === 'super-admin' || userRole === 'admin';
 
   if (roleLoading) {
     return (
@@ -189,7 +189,7 @@ export const MusicManagement = () => {
   if (!canManageMusic) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">You don't have permission to manage music. Only super admins can manage music tracks and albums.</p>
+        <p className="text-gray-500">You don't have permission to manage music. Only admins and super admins can manage music tracks and albums.</p>
       </div>
     );
   }
@@ -1184,7 +1184,11 @@ export const MusicManagement = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setAlbumSortOrder(albumSortOrder === 'asc' ? 'desc' : 'asc')}
+                onClick={() => {
+                  const newOrder = albumSortOrder === 'asc' ? 'desc' : 'asc';
+                  console.log('Album sort order changing from', albumSortOrder, 'to', newOrder);
+                  setAlbumSortOrder(newOrder);
+                }}
                 className="px-2"
               >
                 {albumSortOrder === 'asc' ? (
@@ -1411,7 +1415,11 @@ export const MusicManagement = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setTrackSortOrder(trackSortOrder === 'asc' ? 'desc' : 'asc')}
+                    onClick={() => {
+                      const newOrder = trackSortOrder === 'asc' ? 'desc' : 'asc';
+                      console.log('Track sort order changing from', trackSortOrder, 'to', newOrder);
+                      setTrackSortOrder(newOrder);
+                    }}
                     className="px-2"
                   >
                     {trackSortOrder === 'asc' ? (
