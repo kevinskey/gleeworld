@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useNotificationSystem } from "@/hooks/useNotificationSystem";
 
 interface Notification {
   id: string;
@@ -31,6 +32,7 @@ interface Notification {
 export default function Notifications() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { markNotificationAsRead } = useNotificationSystem();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -65,13 +67,8 @@ export default function Notifications() {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      const { error } = await supabase
-        .from('user_notifications')
-        .update({ is_read: true })
-        .eq('id', notificationId);
-
-      if (error) throw error;
-
+      await markNotificationAsRead(notificationId);
+      
       setNotifications(prev => 
         prev.map(notification => 
           notification.id === notificationId 
@@ -81,11 +78,7 @@ export default function Notifications() {
       );
     } catch (error) {
       console.error('Error marking notification as read:', error);
-      toast({
-        title: "Error",
-        description: "Failed to mark notification as read",
-        variant: "destructive",
-      });
+      // Error handling is done in the hook
     }
   };
 

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useNotificationSystem } from "./useNotificationSystem";
 
 export interface AdminPayment {
   id: string;
@@ -21,6 +22,7 @@ export interface AdminPayment {
 export const useAdminPayments = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { createNotificationWithSMS } = useNotificationSystem();
   const [payments, setPayments] = useState<AdminPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -126,16 +128,14 @@ export const useAdminPayments = () => {
           notes: paymentData.notes || 'Payment processed through admin panel'
         }]);
 
-      // Create notification for the user
-      await supabase
-        .from('user_notifications')
-        .insert([{
-          user_id: paymentData.user_id,
-          title: 'Payment Received',
-          message: `Thank you for your service! Your payment of $${paymentData.amount} has been issued via ${paymentData.payment_method}.`,
-          type: 'success',
-          created_by: user?.id,
-        }]);
+      // Create notification with SMS for the user
+      await createNotificationWithSMS({
+        user_id: paymentData.user_id,
+        title: 'Payment Received',
+        message: `Thank you for your service! Your payment of $${paymentData.amount} has been issued via ${paymentData.payment_method}.`,
+        type: 'success',
+        related_contract_id: paymentData.contract_id
+      });
 
       // Log payment activity for tracking
       await supabase
