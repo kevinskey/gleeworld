@@ -3497,6 +3497,45 @@ export type Database = {
         }
         Relationships: []
       }
+      username_permissions: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          is_active: boolean | null
+          module_name: string
+          notes: string | null
+          updated_at: string | null
+          user_email: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          module_name: string
+          notes?: string | null
+          updated_at?: string | null
+          user_email: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          module_name?: string
+          notes?: string | null
+          updated_at?: string | null
+          user_email?: string
+        }
+        Relationships: []
+      }
       w9_forms: {
         Row: {
           created_at: string
@@ -3742,11 +3781,24 @@ export type Database = {
         Args: { track_uuid: string }
         Returns: number
       }
+      get_user_username_permissions: {
+        Args: { user_email_param: string }
+        Returns: {
+          module_name: string
+          granted_at: string
+          expires_at: string
+          notes: string
+        }[]
+      }
       has_role: {
         Args: {
           _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
         }
+        Returns: boolean
+      }
+      has_username_permission: {
+        Args: { user_email_param: string; module_name_param: string }
         Returns: boolean
       }
       increment_play_count: {

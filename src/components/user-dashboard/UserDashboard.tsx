@@ -25,21 +25,26 @@ import {
   Users,
   Volume2,
   Settings,
-  Youtube
+  Youtube,
+  Shield,
+  Mail
 } from "lucide-react";
 import { HeroManagement } from "@/components/admin/HeroManagement";
 import { DashboardSettings } from "@/components/admin/DashboardSettings";
 import { YouTubeManagement } from "@/components/admin/YouTubeManagement";
+import { UsernamePermissionsManager } from "@/components/admin/UsernamePermissionsManager";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
 import { useUserDashboard } from "@/hooks/useUserDashboard";
 import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
 import { useUserContracts } from "@/hooks/useUserContracts";
+import { useUsernamePermissions } from "@/hooks/useUsernamePermissions";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useState } from "react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { DASHBOARD_MODULES, hasModuleAccess, hasExecutiveBoardPermissions, DashboardModule } from "@/constants/permissions";
 
 export const UserDashboard = () => {
   const { user } = useAuth();
@@ -49,10 +54,65 @@ export const UserDashboard = () => {
   const { dashboardData, payments, notifications, loading: dashboardLoading } = useUserDashboard();
   const { events, loading: eventsLoading, getUpcomingEvents } = useGleeWorldEvents();
   const { contracts, loading: contractsLoading } = useUserContracts();
+  const { permissions: usernamePermissions, loading: permissionsLoading } = useUsernamePermissions(user?.email);
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
+  const userRole = profile?.role || 'user';
+  const userEmail = user?.email || '';
   const welcomeCardSetting = getSettingByName('welcome_card_background');
+
+  // Get available modules for this user
+  const getAvailableModules = () => {
+    const modules: Array<{
+      key: DashboardModule;
+      module: typeof DASHBOARD_MODULES[DashboardModule];
+      icon: any;
+      source: 'role' | 'username';
+    }> = [];
+
+    Object.entries(DASHBOARD_MODULES).forEach(([key, module]) => {
+      const moduleKey = key as DashboardModule;
+      if (hasModuleAccess(userRole, userEmail, moduleKey, usernamePermissions)) {
+        // Determine icon for each module
+        let icon = Settings;
+        switch (moduleKey) {
+          case 'hero_management':
+            icon = Star;
+            break;
+          case 'dashboard_settings':
+            icon = Settings;
+            break;
+          case 'youtube_management':
+            icon = Youtube;
+            break;
+          case 'send_notifications':
+            icon = Bell;
+            break;
+          case 'send_emails':
+            icon = Mail;
+            break;
+          case 'manage_permissions':
+            icon = Shield;
+            break;
+        }
+
+        // Determine permission source
+        const hasRolePermission = isAdmin;
+        const hasUsernamePermission = usernamePermissions.includes(module.permission);
+        const source = hasRolePermission ? 'role' : 'username';
+
+        modules.push({ key: moduleKey, module, icon, source });
+      }
+    });
+
+    return modules;
+  };
+
+  // Check if user has executive board permissions
+  const hasExecBoardPerms = hasExecutiveBoardPermissions(userRole, undefined, usernamePermissions);
+
+  const availableModules = getAvailableModules();
 
   if (!user) {
     return (
@@ -75,52 +135,57 @@ export const UserDashboard = () => {
     );
   }
 
-  // Show hero management if admin has selected it
-  if (selectedModule === 'hero-management' && isAdmin) {
-    return (
-      <UniversalLayout>
-        <div className="container mx-auto px-4 py-6">
-          <div className="mb-4">
-            <Button variant="outline" onClick={() => setSelectedModule(null)}>
-              ← Back to Dashboard
-            </Button>
-          </div>
-          <HeroManagement />
-        </div>
-      </UniversalLayout>
-    );
-  }
+  // Dynamic module rendering based on permissions
+  if (selectedModule) {
+    const moduleKey = selectedModule.replace('-', '_') as DashboardModule;
+    const hasAccess = hasModuleAccess(userRole, userEmail, moduleKey, usernamePermissions);
+    
+    if (hasAccess) {
+      const renderModuleComponent = () => {
+        switch (selectedModule) {
+          case 'hero-management':
+            return <HeroManagement />;
+          case 'dashboard-settings':
+            return <DashboardSettings />;
+          case 'youtube-management':
+            return <YouTubeManagement />;
+          case 'manage-permissions':
+            return <UsernamePermissionsManager />;
+          default:
+            return (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Module Not Available</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p>This module is not yet implemented or you don't have access to it.</p>
+                </CardContent>
+              </Card>
+            );
+        }
+      };
 
-  // Show dashboard settings if admin has selected it
-  if (selectedModule === 'dashboard-settings' && isAdmin) {
-    return (
-      <UniversalLayout>
-        <div className="container mx-auto px-4 py-6">
-          <div className="mb-4">
-            <Button variant="outline" onClick={() => setSelectedModule(null)}>
-              ← Back to Dashboard
-            </Button>
+      return (
+        <UniversalLayout>
+          <div className="container mx-auto px-4 py-6">
+            <div className="mb-4 flex items-center justify-between">
+              <Button variant="outline" onClick={() => setSelectedModule(null)}>
+                ← Back to Dashboard
+              </Button>
+              <div className="flex items-center gap-2">
+                {availableModules.find(m => m.key === moduleKey)?.source === 'username' && (
+                  <Badge variant="secondary" className="text-xs">
+                    <Shield className="h-3 w-3 mr-1" />
+                    Special Access
+                  </Badge>
+                )}
+              </div>
+            </div>
+            {renderModuleComponent()}
           </div>
-          <DashboardSettings />
-        </div>
-      </UniversalLayout>
-    );
-  }
-
-  // Show YouTube management if admin has selected it
-  if (selectedModule === 'youtube-management' && isAdmin) {
-    return (
-      <UniversalLayout>
-        <div className="container mx-auto px-4 py-6">
-          <div className="mb-4">
-            <Button variant="outline" onClick={() => setSelectedModule(null)}>
-              ← Back to Dashboard
-            </Button>
-          </div>
-          <YouTubeManagement />
-        </div>
-      </UniversalLayout>
-    );
+        </UniversalLayout>
+      );
+    }
   }
 
   // Get user's actual name from profile, fallback to email username
@@ -478,45 +543,63 @@ export const UserDashboard = () => {
                   </div>
                 </div>
 
-                {/* Admin Category - Only show for admins */}
-                {isAdmin && (
+                {/* Special Modules - Dynamic based on permissions */}
+                {availableModules.length > 0 && (
                   <div className="space-y-3">
                     <h3 className="font-semibold text-gray-900 flex items-center">
-                      <User className="h-5 w-5 mr-2 text-red-600" />
-                      Admin
+                      <Settings className="h-5 w-5 mr-2 text-orange-600" />
+                      Special Access
                     </h3>
                     <div className="space-y-2">
-                      <Button 
-                        variant="ghost" 
-                        className="w-full justify-start h-auto p-3"
-                        onClick={() => setSelectedModule('hero-management')}
-                      >
-                        <Star className="h-4 w-4 mr-2" />
+                      {availableModules.map((moduleInfo) => {
+                        const IconComponent = moduleInfo.icon;
+                        return (
+                          <Button 
+                            key={moduleInfo.key}
+                            variant="ghost" 
+                            className="w-full justify-start h-auto p-3 relative"
+                            onClick={() => setSelectedModule(moduleInfo.key.replace('_', '-'))}
+                          >
+                            <IconComponent className="h-4 w-4 mr-2" />
+                            <div className="text-left flex-1">
+                              <div className="flex items-center justify-between">
+                                <span>{moduleInfo.module.name}</span>
+                                {moduleInfo.source === 'username' && (
+                                  <Badge variant="secondary" className="text-xs ml-2">
+                                    <Shield className="h-3 w-3 mr-1" />
+                                    Special
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-500">{moduleInfo.module.description}</div>
+                            </div>
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Executive Board Actions */}
+                {hasExecBoardPerms && (
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-gray-900 flex items-center">
+                      <Users className="h-5 w-5 mr-2 text-indigo-600" />
+                      Executive Board
+                    </h3>
+                    <div className="space-y-2">
+                      <Button variant="ghost" className="w-full justify-start h-auto p-3">
+                        <Bell className="h-4 w-4 mr-2" />
                         <div className="text-left">
-                          <div>Hero Management</div>
-                          <div className="text-xs text-gray-500">Control landing page hero</div>
+                          <div>Send Notifications</div>
+                          <div className="text-xs text-gray-500">Notify members</div>
                         </div>
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        className="w-full justify-start h-auto p-3"
-                        onClick={() => setSelectedModule('dashboard-settings')}
-                      >
-                        <Settings className="h-4 w-4 mr-2" />
+                      <Button variant="ghost" className="w-full justify-start h-auto p-3">
+                        <Mail className="h-4 w-4 mr-2" />
                         <div className="text-left">
-                          <div>Dashboard Settings</div>
-                          <div className="text-xs text-gray-500">Customize dashboard appearance</div>
-                        </div>
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        className="w-full justify-start h-auto p-3"
-                        onClick={() => setSelectedModule('youtube-management')}
-                      >
-                        <Youtube className="h-4 w-4 mr-2" />
-                        <div className="text-left">
-                          <div>YouTube Management</div>
-                          <div className="text-xs text-gray-500">Manage YouTube channel & videos</div>
+                          <div>Email Campaigns</div>
+                          <div className="text-xs text-gray-500">Send emails to members</div>
                         </div>
                       </Button>
                     </div>
