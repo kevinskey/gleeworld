@@ -102,13 +102,13 @@ export default function AttendanceTest() {
         }
       }
 
-      // Test 5: Query attendance records
+      // Test 5: Query attendance records with proper joins
       const { data: attendanceRecords, error: attendanceQueryError } = await supabase
         .from('gw_event_attendance')
         .select(`
           *,
-          gw_events(title, event_type),
-          gw_profiles(full_name)
+          gw_events!gw_event_attendance_event_id_fkey(title, event_type),
+          gw_profiles!gw_event_attendance_user_id_fkey(full_name)
         `)
         .limit(5);
 

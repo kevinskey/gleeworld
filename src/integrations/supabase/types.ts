@@ -1561,6 +1561,20 @@ export type Database = {
             referencedRelation: "gw_events"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gw_event_attendance_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "gw_event_attendance_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       gw_event_rsvps: {
