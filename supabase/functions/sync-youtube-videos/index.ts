@@ -72,26 +72,45 @@ async function extractChannelId(channelInput: string, apiKey: string): Promise<s
       return channelInput
     }
     
-    // If it's a custom URL or handle, search for it
-    let searchQuery = channelInput
+    // Extract handle from various input formats
+    let handle = channelInput
     if (channelInput.includes('youtube.com/')) {
-      // Extract handle from URL
+      // Extract handle from URL - handle the ?si= parameter
       const urlMatch = channelInput.match(/youtube\.com\/(?:@|c\/|channel\/|user\/)([^\/\?&]+)/)
       if (urlMatch) {
-        searchQuery = urlMatch[1]
-        console.log('Extracted from URL:', searchQuery)
+        handle = urlMatch[1]
+        console.log('Extracted from URL:', handle)
       }
     } else if (channelInput.startsWith('@')) {
-      searchQuery = channelInput.substring(1)
-      console.log('Extracted from @handle:', searchQuery)
+      handle = channelInput.substring(1)
+      console.log('Extracted from @handle:', handle)
     }
     
-    // Try multiple search approaches
+    // Try the new forHandle API first (YouTube Channels API v3)
+    try {
+      const forHandleUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet&forHandle=${handle}&key=${apiKey}`
+      console.log('Trying forHandle API for:', handle)
+      
+      const forHandleResponse = await fetch(forHandleUrl)
+      if (forHandleResponse.ok) {
+        const forHandleData = await forHandleResponse.json()
+        if (forHandleData.items && forHandleData.items.length > 0) {
+          console.log('Found channel via forHandle:', forHandleData.items[0].snippet.title)
+          return forHandleData.items[0].id
+        }
+      } else {
+        console.log('forHandle API failed:', forHandleResponse.status)
+      }
+    } catch (error) {
+      console.log('forHandle API error:', error.message)
+    }
+    
+    // Try multiple search approaches as fallback
     const searchQueries = [
-      `@${searchQuery}`, // Try with @ symbol first
-      searchQuery,       // Try without @ symbol
-      `"@${searchQuery}"`, // Try with quotes and @ symbol
-      `"${searchQuery}"`   // Try with quotes only
+      `@${handle}`,      // Try with @ symbol first
+      handle,            // Try without @ symbol
+      `"@${handle}"`,    // Try with quotes and @ symbol
+      `"${handle}"`      // Try with quotes only
     ]
     
     for (const query of searchQueries) {
