@@ -39,10 +39,11 @@ serve(async (req) => {
       console.log('Starting PDF migration from reader.gleeworld.org...')
 
       // Fetch all sheet music records that need PDF migration
+      // Include records with null pdf_url OR example.com URLs (placeholder data)
       const { data: sheetMusicRecords, error: fetchError } = await supabaseClient
         .from('gw_sheet_music')
         .select('id, title, pdf_url, thumbnail_url')
-        .is('pdf_url', null) // Only migrate records without PDF URLs
+        .or('pdf_url.is.null,pdf_url.like.%example.com%') // Migrate null PDFs or example URLs
         .limit(50) // Process in batches
 
       if (fetchError) {
@@ -169,11 +170,12 @@ serve(async (req) => {
         .from('gw_sheet_music')
         .select('id', { count: 'exact', head: true })
         .not('pdf_url', 'is', null)
+        .not('pdf_url', 'like', '%example.com%') // Exclude example URLs from migrated count
 
       const { count: pendingCount, error: pendingError } = await supabaseClient
         .from('gw_sheet_music')
         .select('id', { count: 'exact', head: true })
-        .is('pdf_url', null)
+        .or('pdf_url.is.null,pdf_url.like.%example.com%') // Count null PDFs and example URLs as pending
 
       console.log('migrate-sheet-music: Counts:', { totalCount, migratedCount, pendingCount })
 
