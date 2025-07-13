@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { useMusic } from "@/hooks/useMusic";
 import {
   Dialog,
@@ -31,6 +32,7 @@ import {
   Trash2,
   Edit,
   Play,
+  Pause,
   Heart,
   Image,
   Eye,
@@ -41,6 +43,7 @@ import {
 export const MusicManagement = () => {
   const { user } = useAuth();
   const { tracks, albums, loading, refetch } = useMusic();
+  const { playTrack, currentTrack, isPlaying, togglePlayPause } = useMusicPlayer();
   const { toast } = useToast();
   
   // ALL useState hooks must be called at the top, before any conditional logic
@@ -1357,6 +1360,26 @@ export const MusicManagement = () => {
                         <Button
                           variant="ghost"
                           size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (currentTrack?.id === track.id && isPlaying) {
+                              togglePlayPause();
+                            } else {
+                              playTrack(track, selectedAlbum.tracks);
+                            }
+                          }}
+                          className="text-primary hover:text-primary/80"
+                          title="Play track"
+                        >
+                          {currentTrack?.id === track.id && isPlaying ? (
+                            <Pause className="h-4 w-4" />
+                          ) : (
+                            <Play className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => startEditingTrack(track)}
                           className="text-blue-500 hover:text-blue-700"
                         >
@@ -1466,7 +1489,7 @@ export const MusicManagement = () => {
                     onChange={() => toggleTrackSelection(track.id)}
                     className="w-4 h-4 text-primary bg-white border-gray-300 rounded focus:ring-primary"
                   />
-                  <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/40 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                  <div className="relative w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/40 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0 group">
                     {track.album?.cover_image_url ? (
                       <img
                         src={track.album.cover_image_url}
@@ -1476,6 +1499,27 @@ export const MusicManagement = () => {
                     ) : (
                       <Music className="h-6 w-6 text-primary" />
                     )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (currentTrack?.id === track.id && isPlaying) {
+                            togglePlayPause();
+                          } else {
+                            playTrack(track, tracks);
+                          }
+                        }}
+                        className="text-white hover:text-white hover:bg-white/20 p-1 h-8 w-8"
+                      >
+                        {currentTrack?.id === track.id && isPlaying ? (
+                          <Pause className="h-4 w-4" />
+                        ) : (
+                          <Play className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                   
                   <div className="flex-1 min-w-0">
