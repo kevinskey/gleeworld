@@ -37,6 +37,7 @@ import { YouTubeManagement } from "@/components/admin/YouTubeManagement";
 import { UsernamePermissionsManager } from "@/components/admin/UsernamePermissionsManager";
 import { SheetMusicLibrary } from "@/components/sheet-music/SheetMusicLibrary";
 import { SheetMusicMigration } from "@/components/admin/SheetMusicMigration";
+import { SheetMusicPDFViewer } from "@/components/music/SheetMusicPDFViewer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
@@ -62,6 +63,7 @@ export const UserDashboard = () => {
   const { permissions: usernamePermissions, loading: permissionsLoading } = useUsernamePermissions(user?.email);
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [isRecentActivityExpanded, setIsRecentActivityExpanded] = useState(false);
+  const [showSheetMusicViewer, setShowSheetMusicViewer] = useState(false);
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
   const userRole = profile?.role || 'user';
@@ -343,7 +345,7 @@ export const UserDashboard = () => {
                   <Button 
                     className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
                     variant="outline"
-                    onClick={() => setSelectedModule('sheet-music')}
+                    onClick={() => setShowSheetMusicViewer(true)}
                   >
                     <Music className="h-4 w-4 sm:h-6 sm:w-6" />
                     <span className="hidden sm:inline">View Sheet Music</span>
@@ -667,6 +669,12 @@ export const UserDashboard = () => {
           </Card>
         </div>
       </div>
+      
+      {/* Sheet Music PDF Viewer */}
+      <SheetMusicPDFViewer 
+        isOpen={showSheetMusicViewer}
+        onClose={() => setShowSheetMusicViewer(false)}
+      />
     </UniversalLayout>
   );
 };
