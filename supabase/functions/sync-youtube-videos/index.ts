@@ -94,10 +94,14 @@ async function extractChannelId(channelInput: string, apiKey: string): Promise<s
     }
     
     // Check known channels first
-    if (knownChannels[handle] || knownChannels[`@${handle}`]) {
-      const channelId = knownChannels[handle] || knownChannels[`@${handle}`]
-      console.log('Found in known channels:', channelId)
-      return channelId
+    console.log('Checking known channels for handle:', handle)
+    if (knownChannels[handle]) {
+      console.log('Found in known channels:', knownChannels[handle])
+      return knownChannels[handle]
+    }
+    if (knownChannels[`@${handle}`]) {
+      console.log('Found in known channels with @:', knownChannels[`@${handle}`])
+      return knownChannels[`@${handle}`]
     }
     
     // Try the forHandle API with different variations
