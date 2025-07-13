@@ -30,6 +30,7 @@ import PublicCalendar from "./pages/PublicCalendar";
 import PressKit from "./pages/PressKit";
 import Notifications from "./pages/Notifications";
 import AttendanceTestPage from "./pages/AttendanceTestPage";
+import AttendancePage from "./pages/AttendancePage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -264,14 +265,22 @@ const App = () => {
                    </ProtectedRoute>
                  } 
                 />
-                <Route 
-                  path="/attendance-test" 
-                  element={
-                    <ProtectedRoute>
-                      <AttendanceTestPage />
-                    </ProtectedRoute>
-                  } 
-                />
+                 <Route 
+                   path="/attendance-test" 
+                   element={
+                     <ProtectedRoute>
+                       <AttendanceTestPage />
+                     </ProtectedRoute>
+                   } 
+                 />
+                 <Route 
+                   path="/attendance" 
+                   element={
+                     <ProtectedRoute>
+                       <AttendancePage />
+                     </ProtectedRoute>
+                   } 
+                 />
                 <Route 
                   path="/landing"
                   element={
