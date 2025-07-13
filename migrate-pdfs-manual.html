@@ -19,9 +19,16 @@
         
         <div>
             <label>Reader API URL:</label>
-            <input type="text" id="apiUrl" value="https://reader.gleeworld.org/api" />
+            <input type="text" id="apiUrl" value="https://reader.gleeworld.org" />
+            <small style="display: block; color: #666; margin-top: 5px;">
+                Try different endpoints like:
+                <br>• https://reader.gleeworld.org
+                <br>• https://reader.gleeworld.org/api/sheet-music
+                <br>• https://api.gleeworld.org
+            </small>
         </div>
         
+        <button onclick="testUrl()">Test URL</button>
         <button onclick="checkStatus()">Check Migration Status</button>
         <button onclick="startMigration()">Start Migration</button>
         
@@ -36,6 +43,29 @@
                 statusDiv.style.display = 'block';
                 statusDiv.className = isError ? 'status error' : 'status success';
                 statusDiv.innerHTML = message;
+            }
+            
+            async function testUrl() {
+                const apiUrl = document.getElementById('apiUrl').value;
+                
+                if (!apiUrl) {
+                    showStatus('Please enter a URL to test', true);
+                    return;
+                }
+                
+                try {
+                    showStatus('Testing URL...');
+                    
+                    // Try a simple GET request to test if the URL is reachable
+                    const response = await fetch(apiUrl, {
+                        method: 'GET',
+                        mode: 'no-cors' // This allows us to test if URL exists without CORS issues
+                    });
+                    
+                    showStatus(`URL appears to be reachable: ${apiUrl}`, false);
+                } catch (error) {
+                    showStatus(`URL test failed: ${error.message}. Try a different endpoint.`, true);
+                }
             }
             
             async function checkStatus() {
