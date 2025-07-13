@@ -1398,6 +1398,83 @@ export type Database = {
           },
         ]
       }
+      gw_attendance_excuses: {
+        Row: {
+          attendance_id: string
+          created_at: string | null
+          documentation_url: string | null
+          id: string
+          reason: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+        }
+        Insert: {
+          attendance_id: string
+          created_at?: string | null
+          documentation_url?: string | null
+          id?: string
+          reason: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+        }
+        Update: {
+          attendance_id?: string
+          created_at?: string | null
+          documentation_url?: string | null
+          id?: string
+          reason?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_attendance_excuses_attendance_id_fkey"
+            columns: ["attendance_id"]
+            isOneToOne: false
+            referencedRelation: "gw_event_attendance"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_attendance_policies: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          event_type: string
+          id: string
+          is_active: boolean | null
+          max_unexcused_absences: number | null
+          policy_description: string | null
+          required_attendance_percentage: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          event_type: string
+          id?: string
+          is_active?: boolean | null
+          max_unexcused_absences?: number | null
+          policy_description?: string | null
+          required_attendance_percentage?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          event_type?: string
+          id?: string
+          is_active?: boolean | null
+          max_unexcused_absences?: number | null
+          policy_description?: string | null
+          required_attendance_percentage?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       gw_audio_files: {
         Row: {
           bitrate: number | null
@@ -1435,6 +1512,53 @@ export type Database = {
             columns: ["music_file_id"]
             isOneToOne: false
             referencedRelation: "gw_music_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_event_attendance: {
+        Row: {
+          attendance_status: string
+          check_in_time: string | null
+          check_out_time: string | null
+          created_at: string | null
+          event_id: string
+          id: string
+          notes: string | null
+          recorded_by: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          attendance_status?: string
+          check_in_time?: string | null
+          check_out_time?: string | null
+          created_at?: string | null
+          event_id: string
+          id?: string
+          notes?: string | null
+          recorded_by?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          attendance_status?: string
+          check_in_time?: string | null
+          check_out_time?: string | null
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          notes?: string | null
+          recorded_by?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_event_attendance_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "gw_events"
             referencedColumns: ["id"]
           },
         ]
@@ -2173,6 +2297,7 @@ export type Database = {
           id: string
           is_admin: boolean | null
           is_exec_board: boolean | null
+          is_section_leader: boolean | null
           is_super_admin: boolean | null
           join_date: string | null
           last_name: string | null
@@ -2210,6 +2335,7 @@ export type Database = {
           id?: string
           is_admin?: boolean | null
           is_exec_board?: boolean | null
+          is_section_leader?: boolean | null
           is_super_admin?: boolean | null
           join_date?: string | null
           last_name?: string | null
@@ -2247,6 +2373,7 @@ export type Database = {
           id?: string
           is_admin?: boolean | null
           is_exec_board?: boolean | null
+          is_section_leader?: boolean | null
           is_super_admin?: boolean | null
           join_date?: string | null
           last_name?: string | null
