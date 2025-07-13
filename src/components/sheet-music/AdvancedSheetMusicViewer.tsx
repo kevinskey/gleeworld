@@ -27,7 +27,11 @@ import {
   VolumeX,
   Maximize,
   Minimize,
-  Settings
+  Settings,
+  Plus,
+  List,
+  Trash2,
+  Users
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
@@ -37,6 +41,8 @@ import { toast } from 'sonner';
 import { useSheetMusic } from '@/hooks/useSheetMusic';
 import { useSheetMusicAnnotations } from '@/hooks/useSheetMusicAnnotations';
 import { useSheetMusicAnalytics } from '@/hooks/useSheetMusicAnalytics';
+import { useSetlists } from '@/hooks/useSetlists';
+import { CreateSetlistDialog } from '@/components/setlists/CreateSetlistDialog';
 
 // Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -63,6 +69,7 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
 }) => {
   const { sheetMusic: allSheetMusic, loading } = useSheetMusic();
   const { logView, logDownload } = useSheetMusicAnalytics();
+  const { setlists, loading: setlistsLoading, createSetlist, addItemToSetlist, removeItemFromSetlist } = useSetlists();
   
   const [selectedSheetMusicId, setSelectedSheetMusicId] = useState<string>(initialSheetMusicId || '');
   const [selectedPDF, setSelectedPDF] = useState<string | null>(null);
@@ -84,6 +91,11 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
   const [annotationColor, setAnnotationColor] = useState<string>('#ff0000');
   const [brushSize, setBrushSize] = useState<number>(2);
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
+  
+  // Setlist states
+  const [showSetlistPanel, setShowSetlistPanel] = useState<boolean>(false);
+  const [showCreateSetlistDialog, setShowCreateSetlistDialog] = useState<boolean>(false);
+  const [selectedSetlistForAdding, setSelectedSetlistForAdding] = useState<string>('');
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
@@ -295,6 +307,27 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
     }
   };
 
+  // Setlist functions
+  const handleAddToSetlist = async () => {
+    if (!selectedSetlistForAdding || !selectedSheetMusicId) return;
+    
+    const setlist = setlists.find(s => s.id === selectedSetlistForAdding);
+    if (!setlist) return;
+    
+    const nextPosition = Math.max(0, ...(setlist.items?.map(item => item.order_position) || [0])) + 1;
+    await addItemToSetlist(selectedSetlistForAdding, selectedSheetMusicId, nextPosition);
+    setSelectedSetlistForAdding('');
+    toast.success('Added to setlist');
+  };
+
+  const handleSelectFromSetlist = (setlistId: string, sheetMusicId: string) => {
+    const sheetMusic = allSheetMusic.find(sm => sm.id === sheetMusicId);
+    if (sheetMusic?.pdf_url) {
+      handleSheetMusicSelect(sheetMusicId);
+      setShowSetlistPanel(false);
+    }
+  };
+
   const handleDownload = () => {
     if (selectedPDF && selectedSheetMusicId) {
       const link = document.createElement('a');
@@ -375,6 +408,14 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
             <DialogTitle className="flex items-center justify-between">
               <span>Advanced Sheet Music Viewer</span>
               <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant={showSetlistPanel ? "default" : "outline"}
+                  onClick={() => setShowSetlistPanel(!showSetlistPanel)}
+                >
+                  <List className="h-4 w-4 mr-1" />
+                  Setlists
+                </Button>
                 <Select onValueChange={handleSheetMusicSelect} value={selectedSheetMusicId}>
                   <SelectTrigger className="w-64">
                     <SelectValue placeholder="Select sheet music..." />
@@ -521,15 +562,51 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
                   <Button size="sm" variant="outline" onClick={handleClearAnnotations}>
                     <Eraser className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => setShowAnnotations(!showAnnotations)}
-                  >
-                    {showAnnotations ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </div>
+                   <Button size="sm" variant="outline" onClick={() => setShowAnnotations(!showAnnotations)}>
+                     {showAnnotations ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                   </Button>
+                 </div>
+                 
+                 {/* Add to Setlist Controls */}
+                 {selectedSheetMusicId && (
+                   <>
+                     <Separator orientation="vertical" />
+                     <div className="flex items-center gap-2">
+                       <Select value={selectedSetlistForAdding} onValueChange={setSelectedSetlistForAdding}>
+                         <SelectTrigger className="w-48">
+                           <SelectValue placeholder="Add to setlist..." />
+                         </SelectTrigger>
+                         <SelectContent>
+                           {setlists.length === 0 ? (
+                             <SelectItem value="none" disabled>No setlists available</SelectItem>
+                           ) : (
+                             setlists.map((setlist) => (
+                               <SelectItem key={setlist.id} value={setlist.id}>
+                                 {setlist.name}
+                               </SelectItem>
+                             ))
+                           )}
+                         </SelectContent>
+                       </Select>
+                       <Button 
+                         size="sm" 
+                         variant="outline" 
+                         onClick={handleAddToSetlist}
+                         disabled={!selectedSetlistForAdding}
+                       >
+                         <Plus className="h-4 w-4" />
+                       </Button>
+                       <Button 
+                         size="sm" 
+                         variant="outline" 
+                         onClick={() => setShowCreateSetlistDialog(true)}
+                       >
+                         New Setlist
+                       </Button>
+                     </div>
+                   </>
+                 )}
+               </div>
             )}
 
             {/* Audio Controls */}
@@ -568,38 +645,130 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
               </div>
             )}
 
-            {/* PDF Viewer */}
-            <div className={`flex-1 overflow-auto p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
-              <div className="flex justify-center">
-                <div 
-                  ref={pageRef}
-                  className="relative shadow-lg"
-                  style={{ transform: `rotate(${rotation}deg)` }}
-                >
-                  <Document
-                    file={selectedPDF}
-                    onLoadSuccess={onDocumentLoadSuccess}
-                    onLoadError={onDocumentLoadError}
-                    loading={<div className="p-8 text-center">Loading PDF...</div>}
+            {/* PDF Viewer and Setlist Panel Layout */}
+            <div className="flex-1 flex overflow-hidden">
+              {/* Setlist Panel */}
+              {showSetlistPanel && (
+                <div className="w-80 border-r bg-gray-50 dark:bg-gray-800 p-4 overflow-auto">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold">My Setlists</h3>
+                      <Button 
+                        size="sm" 
+                        onClick={() => setShowCreateSetlistDialog(true)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    {setlistsLoading ? (
+                      <div className="text-center py-4">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
+                        <p className="text-sm text-gray-600">Loading setlists...</p>
+                      </div>
+                    ) : setlists.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Music className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                        <p className="text-sm text-gray-600 mb-4">No setlists yet</p>
+                        <Button 
+                          size="sm" 
+                          onClick={() => setShowCreateSetlistDialog(true)}
+                        >
+                          Create First Setlist
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {setlists.map((setlist) => (
+                          <div key={setlist.id} className="bg-white dark:bg-gray-700 rounded-lg p-3 border">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="font-medium truncate">{setlist.name}</h4>
+                              <div className="flex items-center gap-1">
+                                {setlist.is_public && (
+                                  <Users className="h-3 w-3 text-gray-500" />
+                                )}
+                                <span className="text-xs text-gray-500">
+                                  {setlist.items?.length || 0} pieces
+                                </span>
+                              </div>
+                            </div>
+                            {setlist.description && (
+                              <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                                {setlist.description}
+                              </p>
+                            )}
+                            
+                            {/* Setlist Items */}
+                            {setlist.items && setlist.items.length > 0 && (
+                              <div className="space-y-1">
+                                {setlist.items
+                                  .sort((a, b) => a.order_position - b.order_position)
+                                  .slice(0, 3)
+                                  .map((item) => (
+                                    <button
+                                      key={item.id}
+                                      onClick={() => handleSelectFromSetlist(setlist.id, item.sheet_music_id)}
+                                      className="w-full text-left p-2 bg-gray-50 dark:bg-gray-600 rounded text-xs hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors"
+                                    >
+                                      <div className="font-medium truncate">
+                                        {item.sheet_music?.title}
+                                      </div>
+                                      {item.sheet_music?.composer && (
+                                        <div className="text-gray-500 truncate">
+                                          {item.sheet_music.composer}
+                                        </div>
+                                      )}
+                                    </button>
+                                  ))
+                                }
+                                {setlist.items.length > 3 && (
+                                  <div className="text-xs text-gray-500 text-center py-1">
+                                    +{setlist.items.length - 3} more pieces
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* PDF Viewer */}
+              <div className={`flex-1 overflow-auto p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                <div className="flex justify-center">
+                  <div 
+                    ref={pageRef}
+                    className="relative shadow-lg"
+                    style={{ transform: `rotate(${rotation}deg)` }}
                   >
-                    <Page
-                      pageNumber={currentPage}
-                      scale={scale}
-                      renderTextLayer={false}
-                      renderAnnotationLayer={false}
-                    />
-                  </Document>
-                  
-                  {/* Annotation Canvas Overlay */}
-                  {!performanceMode && showAnnotations && (
-                    <canvas
-                      ref={canvasRef}
-                      className="absolute top-0 left-0 pointer-events-auto"
-                      style={{
-                        opacity: isAnnotating ? 1 : 0.8,
-                      }}
-                    />
-                  )}
+                    <Document
+                      file={selectedPDF}
+                      onLoadSuccess={onDocumentLoadSuccess}
+                      onLoadError={onDocumentLoadError}
+                      loading={<div className="p-8 text-center">Loading PDF...</div>}
+                    >
+                      <Page
+                        pageNumber={currentPage}
+                        scale={scale}
+                        renderTextLayer={false}
+                        renderAnnotationLayer={false}
+                      />
+                    </Document>
+                    
+                    {/* Annotation Canvas Overlay */}
+                    {!performanceMode && showAnnotations && (
+                      <canvas
+                        ref={canvasRef}
+                        className="absolute top-0 left-0 pointer-events-auto"
+                        style={{
+                          opacity: isAnnotating ? 1 : 0.8,
+                        }}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -611,10 +780,16 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
             <div className="text-center">
               <Music className="h-16 w-16 mx-auto mb-4 opacity-50" />
               <p className="text-lg">Select sheet music to view</p>
-              <p className="text-sm">Choose from the dropdown above to get started</p>
+              <p className="text-sm">Choose from the dropdown above or browse setlists</p>
             </div>
           </div>
         )}
+
+        {/* Create Setlist Dialog */}
+        <CreateSetlistDialog
+          isOpen={showCreateSetlistDialog}
+          onClose={() => setShowCreateSetlistDialog(false)}
+        />
       </DialogContent>
     </Dialog>
   );

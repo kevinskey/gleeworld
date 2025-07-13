@@ -176,8 +176,6 @@ export const UserDashboard = () => {
             return <YouTubeManagement />;
           case 'sheet-music':
             return <SheetMusicLibrary />;
-          case 'setlists':
-            return <SetlistManager />;
           case 'migrate-sheet-music':
             return <SheetMusicMigration />;
           case 'manage-permissions':
@@ -344,17 +342,17 @@ export const UserDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-                <EnhancedTooltip content="Access sheet music library">
-                  <Button 
-                    className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
-                    variant="outline"
-                    onClick={() => setShowAdvancedViewer(true)}
-                  >
-                    <Music className="h-4 w-4 sm:h-6 sm:w-6" />
-                    <span className="hidden sm:inline">View Sheet Music</span>
-                    <span className="sm:hidden">Music</span>
-                  </Button>
-                </EnhancedTooltip>
+              <EnhancedTooltip content="Access sheet music library with integrated setlists">
+                <Button 
+                  className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
+                  variant="outline"
+                  onClick={() => setShowAdvancedViewer(true)}
+                >
+                  <Music className="h-4 w-4 sm:h-6 sm:w-6" />
+                  <span className="hidden sm:inline">Sheet Music & Setlists</span>
+                  <span className="sm:hidden">Music</span>
+                </Button>
+              </EnhancedTooltip>
                 <EnhancedTooltip content="Take attendance test">
                   <Button 
                     className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
@@ -366,15 +364,15 @@ export const UserDashboard = () => {
                     <span className="sm:hidden">Test</span>
                   </Button>
                 </EnhancedTooltip>
-                <EnhancedTooltip content="Organize sheet music into setlists">
+                <EnhancedTooltip content="View calendar and events">
                   <Button 
                     className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
                     variant="outline"
-                    onClick={() => setSelectedModule('setlists')}
+                    onClick={() => navigate('/events')}
                   >
-                    <Music className="h-4 w-4 sm:h-6 sm:w-6" />
-                    <span className="hidden sm:inline">My Setlists</span>
-                    <span className="sm:hidden">Setlists</span>
+                    <Calendar className="h-4 w-4 sm:h-6 sm:w-6" />
+                    <span className="hidden sm:inline">View Calendar</span>
+                    <span className="sm:hidden">Calendar</span>
                   </Button>
                 </EnhancedTooltip>
                 <EnhancedTooltip content="View announcements">
