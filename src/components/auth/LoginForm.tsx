@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, Chrome, Apple } from "lucide-react";
 
 interface LoginFormProps {
   onSwitchToForgot: () => void;
@@ -15,6 +16,7 @@ export const LoginForm = ({ onSwitchToForgot }: LoginFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,55 +41,140 @@ export const LoginForm = ({ onSwitchToForgot }: LoginFormProps) => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setSocialLoading('google');
+    setError("");
+    
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      setError(error.message || "Failed to sign in with Google");
+      setSocialLoading(null);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    setSocialLoading('apple');
+    setError("");
+    
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      setError(error.message || "Failed to sign in with Apple");
+      setSocialLoading(null);
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="space-y-6">
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          autoComplete="email"
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          type="password"
-          placeholder="Enter your password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
-          required
-        />
-      </div>
-      
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Sign In
-      </Button>
-      
-      <div className="text-center">
-        <Button 
-          type="button" 
-          variant="link" 
-          onClick={onSwitchToForgot}
-          className="text-sm"
+
+      {/* Social Login Buttons */}
+      <div className="space-y-3">
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={handleGoogleSignIn}
+          disabled={loading || socialLoading !== null}
         >
-          Forgot your password?
+          {socialLoading === 'google' ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Chrome className="mr-2 h-4 w-4" />
+          )}
+          {socialLoading === 'google' ? 'Connecting...' : 'Continue with Google'}
+        </Button>
+        
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={handleAppleSignIn}
+          disabled={loading || socialLoading !== null}
+        >
+          {socialLoading === 'apple' ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Apple className="mr-2 h-4 w-4" />
+          )}
+          {socialLoading === 'apple' ? 'Connecting...' : 'Continue with Apple'}
         </Button>
       </div>
-    </form>
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <Separator className="w-full" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">
+            Or continue with email
+          </span>
+        </div>
+      </div>
+
+      {/* Email/Password Form */}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            required
+          />
+        </div>
+        
+        <Button type="submit" className="w-full" disabled={loading || socialLoading !== null}>
+          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Sign In
+        </Button>
+        
+        <div className="text-center">
+          <Button 
+            type="button" 
+            variant="link" 
+            onClick={onSwitchToForgot}
+            className="text-sm"
+          >
+            Forgot your password?
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 };
