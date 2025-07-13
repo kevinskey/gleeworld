@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +33,9 @@ import {
   Play,
   Heart,
   Image,
-  Eye
+  Eye,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 
 export const MusicManagement = () => {
@@ -72,6 +74,8 @@ export const MusicManagement = () => {
   const [batchUploading, setBatchUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({});
   const [dragActive, setDragActive] = useState(false);
+  const [albumSortBy, setAlbumSortBy] = useState<'title' | 'artist' | 'release_date' | 'created_at'>('title');
+  const [albumSortOrder, setAlbumSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // Get user role
   useEffect(() => {
@@ -720,6 +724,40 @@ export const MusicManagement = () => {
     }
   };
 
+  const sortedAlbums = useMemo(() => {
+    if (!albums.length) return albums;
+    
+    return [...albums].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+      
+      switch (albumSortBy) {
+        case 'title':
+          aValue = a.title.toLowerCase();
+          bValue = b.title.toLowerCase();
+          break;
+        case 'artist':
+          aValue = a.artist.toLowerCase();
+          bValue = b.artist.toLowerCase();
+          break;
+        case 'release_date':
+          aValue = a.release_date ? new Date(a.release_date) : new Date(0);
+          bValue = b.release_date ? new Date(b.release_date) : new Date(0);
+          break;
+        case 'created_at':
+          aValue = (a as any).created_at ? new Date((a as any).created_at) : new Date(0);
+          bValue = (b as any).created_at ? new Date((b as any).created_at) : new Date(0);
+          break;
+        default:
+          return 0;
+      }
+      
+      if (aValue < bValue) return albumSortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return albumSortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [albums, albumSortBy, albumSortOrder]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -1087,17 +1125,44 @@ export const MusicManagement = () => {
       {/* Albums Section */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Album className="h-5 w-5 mr-2" />
-            Albums ({albums.length})
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center">
+              <Album className="h-5 w-5 mr-2" />
+              Albums ({albums.length})
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Select value={albumSortBy} onValueChange={(value: any) => setAlbumSortBy(value)}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="title">Title</SelectItem>
+                  <SelectItem value="artist">Artist</SelectItem>
+                  <SelectItem value="release_date">Release Date</SelectItem>
+                  <SelectItem value="created_at">Date Added</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAlbumSortOrder(albumSortOrder === 'asc' ? 'desc' : 'asc')}
+                className="px-2"
+              >
+                {albumSortOrder === 'asc' ? (
+                  <ArrowUp className="h-4 w-4" />
+                ) : (
+                  <ArrowDown className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {albums.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No albums found. Create your first album!</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {albums.map((album) => (
+              {sortedAlbums.map((album) => (
                 <Card key={album.id} className="hover:shadow-md transition-shadow cursor-pointer group">
                   <CardContent className="p-4">
                     <div className="flex items-start space-x-3">
