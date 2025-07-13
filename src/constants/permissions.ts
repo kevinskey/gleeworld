@@ -45,6 +45,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     'view_own_w9_forms',
     'sign_contracts',
     'submit_w9_forms',
+    'access_sheet_music',
   ],
   [USER_ROLES.ADMIN]: [
     'view_all_contracts',
