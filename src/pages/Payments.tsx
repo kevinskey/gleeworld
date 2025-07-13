@@ -24,7 +24,7 @@ interface Payment {
   created_at: string;
   updated_at: string;
   user_id: string;
-  contract_id: string;
+  contract_id: string | null;
   payment_date: string;
   payment_method: string;
   paid_by: string;
@@ -162,7 +162,10 @@ export default function Payments() {
                       {getStatusIcon('completed')}
                       <div>
                         <h4 className="font-medium text-gray-900">
-                          Payment - Contract {payment.contract_id.slice(0, 8)}
+                          {payment.contract_id 
+                            ? `Payment - Contract ${payment.contract_id.slice(0, 8)}`
+                            : 'Manual Payment'
+                          }
                         </h4>
                         <p className="text-sm text-gray-600">
                           {format(new Date(payment.payment_date), 'MMM dd, yyyy')}
