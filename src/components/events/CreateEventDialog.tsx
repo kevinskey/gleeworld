@@ -23,7 +23,7 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     event_name: '',
-    event_type: 'other',
+    event_type: 'performance',
     event_date_start: '',
     event_date_end: '',
     location: '',
@@ -42,15 +42,13 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
   });
 
   const eventTypes = [
-    { value: 'tour_stop', label: 'Tour Stop' },
-    { value: 'social', label: 'Social' },
-    { value: 'banquet', label: 'Banquet' },
-    { value: 'fundraiser', label: 'Fundraiser' },
-    { value: 'worship_event', label: 'Worship Event' },
-    { value: 'travel', label: 'Travel' },
-    { value: 'volunteer', label: 'Volunteer' },
-    { value: 'meeting', label: 'Meeting' },
     { value: 'performance', label: 'Performance' },
+    { value: 'rehearsal', label: 'Rehearsal' },
+    { value: 'sectionals', label: 'Sectionals' },
+    { value: 'social', label: 'Social Event' },
+    { value: 'meeting', label: 'Meeting' },
+    { value: 'workshop', label: 'Workshop' },
+    { value: 'audition', label: 'Audition' },
     { value: 'other', label: 'Other' }
   ];
 
@@ -111,7 +109,7 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
       setOpen(false);
       setFormData({
         event_name: '',
-        event_type: 'other',
+        event_type: 'performance',
         event_date_start: '',
         event_date_end: '',
         location: '',
