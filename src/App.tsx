@@ -190,6 +190,14 @@ const App = () => {
                 } 
               />
               <Route 
+                path="/events" 
+                element={
+                  <ProtectedRoute>
+                    <EventPlanner />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route
                 path="/profile" 
                 element={
                   <ProtectedRoute>
