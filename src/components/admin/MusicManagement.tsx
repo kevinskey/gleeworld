@@ -76,6 +76,8 @@ export const MusicManagement = () => {
   const [dragActive, setDragActive] = useState(false);
   const [albumSortBy, setAlbumSortBy] = useState<'title' | 'artist' | 'release_date' | 'created_at'>('title');
   const [albumSortOrder, setAlbumSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [trackSortBy, setTrackSortBy] = useState<'title' | 'album' | 'artist' | 'created_at'>('title');
+  const [trackSortOrder, setTrackSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // Sorted albums memo - must be with other hooks, before any early returns
   const sortedAlbums = useMemo(() => {
@@ -111,6 +113,41 @@ export const MusicManagement = () => {
       return 0;
     });
   }, [albums, albumSortBy, albumSortOrder]);
+
+  // Sorted tracks memo - must be with other hooks, before any early returns
+  const sortedTracks = useMemo(() => {
+    if (!tracks.length) return tracks;
+    
+    return [...tracks].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+      
+      switch (trackSortBy) {
+        case 'title':
+          aValue = a.title.toLowerCase();
+          bValue = b.title.toLowerCase();
+          break;
+        case 'artist':
+          aValue = a.artist.toLowerCase();
+          bValue = b.artist.toLowerCase();
+          break;
+        case 'album':
+          aValue = a.album?.title?.toLowerCase() || 'zzz'; // Put tracks without albums last
+          bValue = b.album?.title?.toLowerCase() || 'zzz';
+          break;
+        case 'created_at':
+          aValue = (a as any).created_at ? new Date((a as any).created_at) : new Date(0);
+          bValue = (b as any).created_at ? new Date((b as any).created_at) : new Date(0);
+          break;
+        default:
+          return 0;
+      }
+      
+      if (aValue < bValue) return trackSortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return trackSortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [tracks, trackSortBy, trackSortOrder]);
 
   // Get user role
   useEffect(() => {
@@ -1137,7 +1174,7 @@ export const MusicManagement = () => {
                 <SelectTrigger className="w-32">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                   <SelectItem value="title">Title</SelectItem>
                   <SelectItem value="artist">Artist</SelectItem>
                   <SelectItem value="release_date">Release Date</SelectItem>
@@ -1360,6 +1397,29 @@ export const MusicManagement = () => {
             <div className="flex items-center gap-2">
               {tracks && tracks.length > 0 && (
                 <>
+                  <Select value={trackSortBy} onValueChange={(value: any) => setTrackSortBy(value)}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                      <SelectItem value="title">Title</SelectItem>
+                      <SelectItem value="album">Album</SelectItem>
+                      <SelectItem value="artist">Artist</SelectItem>
+                      <SelectItem value="created_at">Date Added</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setTrackSortOrder(trackSortOrder === 'asc' ? 'desc' : 'asc')}
+                    className="px-2"
+                  >
+                    {trackSortOrder === 'asc' ? (
+                      <ArrowUp className="h-4 w-4" />
+                    ) : (
+                      <ArrowDown className="h-4 w-4" />
+                    )}
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
