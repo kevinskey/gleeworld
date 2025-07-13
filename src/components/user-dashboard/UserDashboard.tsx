@@ -587,7 +587,7 @@ export const UserDashboard = () => {
                             className="w-full justify-start h-auto p-3 relative"
                             onClick={() => {
                               console.log('Module clicked:', moduleInfo.key);
-                              setSelectedModule(moduleInfo.key.replace('_', '-'));
+                              setSelectedModule(moduleInfo.key.replace(/_/g, '-'));
                             }}
                           >
                             <IconComponent className="h-4 w-4 mr-2" />
