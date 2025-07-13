@@ -38,6 +38,7 @@ import { UsernamePermissionsManager } from "@/components/admin/UsernamePermissio
 import { SheetMusicLibrary } from "@/components/sheet-music/SheetMusicLibrary";
 import { SheetMusicMigration } from "@/components/admin/SheetMusicMigration";
 import { SheetMusicPDFViewer } from "@/components/music/SheetMusicPDFViewer";
+import { SetlistManager } from "@/components/setlists/SetlistManager";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
@@ -175,6 +176,8 @@ export const UserDashboard = () => {
             return <YouTubeManagement />;
           case 'sheet-music':
             return <SheetMusicLibrary />;
+          case 'setlists':
+            return <SetlistManager />;
           case 'migrate-sheet-music':
             return <SheetMusicMigration />;
           case 'manage-permissions':
@@ -363,11 +366,15 @@ export const UserDashboard = () => {
                     <span className="sm:hidden">Test</span>
                   </Button>
                 </EnhancedTooltip>
-                <EnhancedTooltip content="Track practice sessions">
-                  <Button className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" variant="outline">
-                    <Clock className="h-4 w-4 sm:h-6 sm:w-6" />
-                    <span className="hidden sm:inline">Practice Log</span>
-                    <span className="sm:hidden">Practice</span>
+                <EnhancedTooltip content="Organize sheet music into setlists">
+                  <Button 
+                    className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
+                    variant="outline"
+                    onClick={() => setSelectedModule('setlists')}
+                  >
+                    <Music className="h-4 w-4 sm:h-6 sm:w-6" />
+                    <span className="hidden sm:inline">My Setlists</span>
+                    <span className="sm:hidden">Setlists</span>
                   </Button>
                 </EnhancedTooltip>
                 <EnhancedTooltip content="View announcements">
