@@ -26,45 +26,31 @@ interface SystemDashboardProps {
 export const SystemDashboard = ({ users, loading, activityLogs, onQuickAction }: SystemDashboardProps) => {
   const quickActions = [
     {
-      id: 'create-contract',
-      label: 'Create Contract',
-      description: 'Create a new contract',
-      icon: FileText,
-      color: 'bg-primary text-primary-foreground hover:bg-primary/90'
-    },
-    {
       id: 'add-user',
       label: 'Add User',
       description: 'Add a new user to the system',
       icon: UserPlus,
-      color: 'bg-secondary text-secondary-foreground hover:bg-secondary/90'
-    },
-    {
-      id: 'add-budget',
-      label: 'Add Budget',
-      description: 'Create a new budget',
-      icon: PieChart,
       color: 'bg-primary text-primary-foreground hover:bg-primary/90'
     },
     {
-      id: 'pay-user',
-      label: 'Pay User',
-      description: 'Process user payment',
-      icon: DollarSign,
+      id: 'system-settings',
+      label: 'System Settings',
+      description: 'Configure system settings',
+      icon: Settings,
       color: 'bg-secondary text-secondary-foreground hover:bg-secondary/90'
     },
     {
-      id: 'run-report',
-      label: 'Run Report',
-      description: 'Generate system reports',
+      id: 'view-logs',
+      label: 'View Activity Logs',
+      description: 'Monitor system activity',
       icon: BarChart3,
       color: 'bg-primary text-primary-foreground hover:bg-primary/90'
     },
     {
-      id: 'system',
-      label: 'System',
-      description: 'System configuration',
-      icon: Settings,
+      id: 'manage-users',
+      label: 'Manage Users',
+      description: 'User management panel',
+      icon: Users,
       color: 'bg-secondary text-secondary-foreground hover:bg-secondary/90'
     }
   ];
@@ -84,7 +70,7 @@ export const SystemDashboard = ({ users, loading, activityLogs, onQuickAction }:
             Quick Actions
           </CardTitle>
           <CardDescription className="text-gray-600">
-            Common administrative tasks and financial management shortcuts
+            System administration and user management shortcuts
           </CardDescription>
         </CardHeader>
         <CardContent>
