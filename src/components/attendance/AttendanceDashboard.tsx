@@ -46,58 +46,60 @@ export const AttendanceDashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Attendance Management</h1>
-        <p className="text-muted-foreground mt-2">
+      <div className="text-center space-y-3">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+          Attendance Management
+        </h1>
+        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
           Track and manage attendance for Spelman College Glee Club events
         </p>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <Card className="hover-scale transition-all duration-300 hover:shadow-lg">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-medium">My Attendance</CardTitle>
-            <UserCheck className="h-4 w-4 text-green-600" />
+            <UserCheck className="h-5 w-5 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">85%</div>
-            <p className="text-xs text-muted-foreground">This semester</p>
+            <div className="text-3xl font-bold text-green-600">85%</div>
+            <p className="text-xs text-muted-foreground mt-1">This semester</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="hover-scale transition-all duration-300 hover:shadow-lg">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-medium">Events This Week</CardTitle>
-            <Calendar className="h-4 w-4 text-blue-600" />
+            <Calendar className="h-5 w-5 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-muted-foreground">Rehearsals & Performances</p>
+            <div className="text-3xl font-bold text-blue-600">3</div>
+            <p className="text-xs text-muted-foreground mt-1">Rehearsals & Performances</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="hover-scale transition-all duration-300 hover:shadow-lg">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-medium">Pending Excuses</CardTitle>
-            <AlertCircle className="h-4 w-4 text-orange-600" />
+            <AlertCircle className="h-5 w-5 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1</div>
-            <p className="text-xs text-muted-foreground">Awaiting review</p>
+            <div className="text-3xl font-bold text-orange-600">1</div>
+            <p className="text-xs text-muted-foreground mt-1">Awaiting review</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="hover-scale transition-all duration-300 hover:shadow-lg">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-medium">Section Average</CardTitle>
-            <BarChart3 className="h-4 w-4 text-purple-600" />
+            <BarChart3 className="h-5 w-5 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">78%</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold text-purple-600">78%</div>
+            <p className="text-xs text-muted-foreground mt-1">
               {profile?.voice_part || 'All sections'}
             </p>
           </CardContent>
@@ -105,53 +107,73 @@ export const AttendanceDashboard = () => {
       </div>
 
       {/* Main Content Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            My Attendance
-          </TabsTrigger>
-          
-          {canTakeAttendance && (
-            <TabsTrigger value="take-attendance" className="flex items-center gap-2">
-              <ClipboardCheck className="h-4 w-4" />
-              Take Attendance
+      <div className="bg-white/50 backdrop-blur-sm rounded-xl p-1 border">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto p-1 bg-white/80 backdrop-blur-sm">
+            <TabsTrigger 
+              value="overview" 
+              className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
+            >
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">My Attendance</span>
+              <span className="sm:hidden">Attendance</span>
             </TabsTrigger>
-          )}
-          
-          <TabsTrigger value="excuses" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Excuse Requests
-          </TabsTrigger>
-          
-          {(isAdmin || isSectionLeader) && (
-            <TabsTrigger value="reports" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Reports
+            
+            {canTakeAttendance && (
+              <TabsTrigger 
+                value="take-attendance" 
+                className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
+              >
+                <ClipboardCheck className="h-4 w-4" />
+                <span className="hidden sm:inline">Take Attendance</span>
+                <span className="sm:hidden">Take</span>
+              </TabsTrigger>
+            )}
+            
+            <TabsTrigger 
+              value="excuses" 
+              className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
+            >
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">Excuse Requests</span>
+              <span className="sm:hidden">Excuses</span>
             </TabsTrigger>
-          )}
-        </TabsList>
+            
+            {(isAdmin || isSectionLeader) && (
+              <TabsTrigger 
+                value="reports" 
+                className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
+              >
+                <BarChart3 className="h-4 w-4" />
+                <span className="hidden sm:inline">Reports</span>
+                <span className="sm:hidden">Reports</span>
+              </TabsTrigger>
+            )}
+          </TabsList>
 
-        <TabsContent value="overview">
-          <MyAttendance />
-        </TabsContent>
+          <div className="mt-8">
+            <TabsContent value="overview" className="space-y-6 animate-fade-in">
+              <MyAttendance />
+            </TabsContent>
 
-        {canTakeAttendance && (
-          <TabsContent value="take-attendance">
-            <TakeAttendance />
-          </TabsContent>
-        )}
+            {canTakeAttendance && (
+              <TabsContent value="take-attendance" className="space-y-6 animate-fade-in">
+                <TakeAttendance />
+              </TabsContent>
+            )}
 
-        <TabsContent value="excuses">
-          <ExcuseRequests />
-        </TabsContent>
+            <TabsContent value="excuses" className="space-y-6 animate-fade-in">
+              <ExcuseRequests />
+            </TabsContent>
 
-        {(isAdmin || isSectionLeader) && (
-          <TabsContent value="reports">
-            <AttendanceReports />
-          </TabsContent>
-        )}
-      </Tabs>
+            {(isAdmin || isSectionLeader) && (
+              <TabsContent value="reports" className="space-y-6 animate-fade-in">
+                <AttendanceReports />
+              </TabsContent>
+            )}
+          </div>
+        </Tabs>
+      </div>
     </div>
   );
 };
