@@ -3530,6 +3530,131 @@ export type Database = {
         }
         Relationships: []
       }
+      youtube_channels: {
+        Row: {
+          auto_sync: boolean | null
+          channel_description: string | null
+          channel_handle: string | null
+          channel_id: string
+          channel_name: string
+          channel_url: string
+          created_at: string
+          created_by: string | null
+          featured_video_count: number | null
+          id: string
+          last_synced_at: string | null
+          subscriber_count: number | null
+          thumbnail_url: string | null
+          updated_at: string
+          video_count: number | null
+        }
+        Insert: {
+          auto_sync?: boolean | null
+          channel_description?: string | null
+          channel_handle?: string | null
+          channel_id: string
+          channel_name: string
+          channel_url: string
+          created_at?: string
+          created_by?: string | null
+          featured_video_count?: number | null
+          id?: string
+          last_synced_at?: string | null
+          subscriber_count?: number | null
+          thumbnail_url?: string | null
+          updated_at?: string
+          video_count?: number | null
+        }
+        Update: {
+          auto_sync?: boolean | null
+          channel_description?: string | null
+          channel_handle?: string | null
+          channel_id?: string
+          channel_name?: string
+          channel_url?: string
+          created_at?: string
+          created_by?: string | null
+          featured_video_count?: number | null
+          id?: string
+          last_synced_at?: string | null
+          subscriber_count?: number | null
+          thumbnail_url?: string | null
+          updated_at?: string
+          video_count?: number | null
+        }
+        Relationships: []
+      }
+      youtube_videos: {
+        Row: {
+          category: string | null
+          channel_id: string
+          comment_count: number | null
+          created_at: string
+          description: string | null
+          display_order: number | null
+          duration: string | null
+          id: string
+          is_featured: boolean | null
+          like_count: number | null
+          published_at: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          video_id: string
+          video_url: string
+          view_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          channel_id: string
+          comment_count?: number | null
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          duration?: string | null
+          id?: string
+          is_featured?: boolean | null
+          like_count?: number | null
+          published_at?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          video_id: string
+          video_url: string
+          view_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          channel_id?: string
+          comment_count?: number | null
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          duration?: string | null
+          id?: string
+          is_featured?: boolean | null
+          like_count?: number | null
+          published_at?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          video_id?: string
+          video_url?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "youtube_videos_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "youtube_channels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       user_dashboard_data: {

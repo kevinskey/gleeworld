@@ -12,32 +12,48 @@ import {
   Plus, 
   Trash2, 
   Play, 
-  Edit, 
   Save, 
   X,
   ArrowLeft,
   ArrowRight,
   Settings,
-  ExternalLink
+  ExternalLink,
+  RefreshCw,
+  Upload,
+  CheckCircle,
+  Clock,
+  AlertCircle
 } from "lucide-react";
 
 interface YouTubeVideo {
   id: string;
+  video_id: string;
   title: string;
   description: string;
   duration: string;
   thumbnail_url: string;
   video_url: string;
-  views: string;
+  view_count: number;
+  like_count: number;
+  comment_count: number;
   category: string;
+  tags: string[];
   is_featured: boolean;
   display_order: number;
+  published_at: string;
 }
 
-interface YouTubeSettings {
-  channel_url: string;
+interface YouTubeChannel {
+  id: string;
+  channel_id: string;
   channel_name: string;
   channel_description: string;
+  channel_url: string;
+  channel_handle: string;
+  thumbnail_url: string;
+  subscriber_count: number;
+  video_count: number;
+  last_synced_at: string;
   auto_sync: boolean;
   featured_video_count: number;
 }
@@ -45,149 +61,171 @@ interface YouTubeSettings {
 export const YouTubeManagement = () => {
   const { toast } = useToast();
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
-  const [settings, setSettings] = useState<YouTubeSettings>({
-    channel_url: "https://youtube.com/@spelmangleeclub",
-    channel_name: "Spelman College Glee Club",
-    channel_description: "Official YouTube channel of the Spelman College Glee Club",
-    auto_sync: false,
-    featured_video_count: 6
-  });
+  const [channel, setChannel] = useState<YouTubeChannel | null>(null);
+  const [channelInput, setChannelInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [editingVideo, setEditingVideo] = useState<string | null>(null);
-  const [newVideo, setNewVideo] = useState({
-    title: "",
-    description: "",
-    duration: "",
-    video_url: "",
-    views: "",
-    category: "Performance"
-  });
+  const [syncing, setSyncing] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
-  const [showAddForm, setShowAddForm] = useState(false);
 
-  // Mock data for demonstration
+  // Load existing channel and videos
   useEffect(() => {
-    const mockVideos: YouTubeVideo[] = [
-      {
-        id: "1",
-        title: "Spring Concert 2024 Highlights",
-        description: "Best moments from our spring concert featuring classic spirituals and contemporary pieces.",
-        duration: "8:45",
-        thumbnail_url: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f",
-        video_url: "https://youtube.com/watch?v=example1",
-        views: "12K",
-        category: "Concert",
-        is_featured: true,
-        display_order: 1
-      },
-      {
-        id: "2",
-        title: "Behind the Scenes: Rehearsal Process",
-        description: "Take a look at how we prepare for our performances, from warm-ups to final rehearsals.",
-        duration: "5:23",
-        thumbnail_url: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81",
-        video_url: "https://youtube.com/watch?v=example2",
-        views: "8.5K",
-        category: "Behind the Scenes",
-        is_featured: true,
-        display_order: 2
-      },
-      {
-        id: "3",
-        title: "Community Outreach Performance",
-        description: "Spreading joy through music at local community centers and nursing homes.",
-        duration: "12:10",
-        thumbnail_url: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6",
-        video_url: "https://youtube.com/watch?v=example3",
-        views: "15K",
-        category: "Outreach",
-        is_featured: true,
-        display_order: 3
-      },
-      {
-        id: "4",
-        title: "Holiday Special 2023",
-        description: "Celebrating the season with traditional holiday songs and spiritual arrangements.",
-        duration: "15:30",
-        thumbnail_url: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
-        video_url: "https://youtube.com/watch?v=example4",
-        views: "22K",
-        category: "Holiday",
-        is_featured: false,
-        display_order: 4
-      }
-    ];
-    setVideos(mockVideos);
+    loadChannelData();
   }, []);
 
-  const handleSaveSettings = async () => {
+  const loadChannelData = async () => {
     setLoading(true);
     try {
-      // Here you would save to your database
-      // await supabase.from('youtube_settings').upsert(settings);
-      
-      toast({
-        title: "Settings saved",
-        description: "YouTube channel settings have been updated successfully.",
-      });
+      // Load channel
+      const { data: channelData, error: channelError } = await supabase
+        .from('youtube_channels')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (channelData && !channelError) {
+        setChannel(channelData);
+        setChannelInput(channelData.channel_url);
+
+        // Load videos for this channel
+        const { data: videosData, error: videosError } = await supabase
+          .from('youtube_videos')
+          .select('*')
+          .eq('channel_id', channelData.id)
+          .order('published_at', { ascending: false });
+
+        if (videosData && !videosError) {
+          setVideos(videosData);
+        }
+      }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save settings. Please try again.",
-        variant: "destructive",
-      });
+      console.error('Error loading channel data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddVideo = () => {
-    if (!newVideo.title || !newVideo.video_url) {
+  const handleSyncChannel = async () => {
+    if (!channelInput.trim()) {
       toast({
-        title: "Missing information",
-        description: "Please fill in at least the title and video URL.",
+        title: "Channel URL Required",
+        description: "Please enter a YouTube channel URL or handle.",
         variant: "destructive",
       });
       return;
     }
 
-    const video: YouTubeVideo = {
-      id: Date.now().toString(),
-      ...newVideo,
-      thumbnail_url: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f",
-      is_featured: false,
-      display_order: videos.length + 1
-    };
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-youtube-videos', {
+        body: {
+          channelInput: channelInput.trim(),
+          maxResults: 50
+        }
+      });
 
-    setVideos([...videos, video]);
-    setNewVideo({
-      title: "",
-      description: "",
-      duration: "",
-      video_url: "",
-      views: "",
-      category: "Performance"
-    });
-    setShowAddForm(false);
+      if (error) {
+        throw error;
+      }
 
-    toast({
-      title: "Video added",
-      description: "New video has been added to the collection.",
-    });
+      if (data.success) {
+        toast({
+          title: "Sync Successful",
+          description: data.message,
+        });
+        
+        // Reload data
+        await loadChannelData();
+      } else {
+        throw new Error(data.error || "Sync failed");
+      }
+    } catch (error) {
+      console.error('Sync error:', error);
+      toast({
+        title: "Sync Failed",
+        description: error.message || "Failed to sync YouTube channel. Please check your API key and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSyncing(false);
+    }
   };
 
-  const handleDeleteVideo = (id: string) => {
-    setVideos(videos.filter(v => v.id !== id));
-    toast({
-      title: "Video removed",
-      description: "Video has been removed from the collection.",
-    });
+  const handleToggleFeatured = async (videoId: string) => {
+    const video = videos.find(v => v.id === videoId);
+    if (!video) return;
+
+    try {
+      const { error } = await supabase
+        .from('youtube_videos')
+        .update({ is_featured: !video.is_featured })
+        .eq('id', videoId);
+
+      if (error) throw error;
+
+      setVideos(videos.map(v => 
+        v.id === videoId ? { ...v, is_featured: !v.is_featured } : v
+      ));
+
+      toast({
+        title: "Video Updated",
+        description: `Video ${video.is_featured ? 'removed from' : 'added to'} featured list.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update video status.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleToggleFeatured = (id: string) => {
-    setVideos(videos.map(v => 
-      v.id === id ? { ...v, is_featured: !v.is_featured } : v
-    ));
+  const handleDeleteVideo = async (videoId: string) => {
+    try {
+      const { error } = await supabase
+        .from('youtube_videos')
+        .delete()
+        .eq('id', videoId);
+
+      if (error) throw error;
+
+      setVideos(videos.filter(v => v.id !== videoId));
+      toast({
+        title: "Video Removed",
+        description: "Video has been removed from the collection.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete video.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updateChannelSettings = async (updates: Partial<YouTubeChannel>) => {
+    if (!channel) return;
+
+    try {
+      const { error } = await supabase
+        .from('youtube_channels')
+        .update(updates)
+        .eq('id', channel.id);
+
+      if (error) throw error;
+
+      setChannel({ ...channel, ...updates });
+      toast({
+        title: "Settings Updated",
+        description: "Channel settings have been saved.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update settings.",
+        variant: "destructive",
+      });
+    }
   };
 
   const nextSlide = () => {
@@ -203,6 +241,19 @@ export const YouTubeManagement = () => {
     return videos.slice(startIndex, startIndex + 3);
   };
 
+  const formatViewCount = (count: number) => {
+    if (count >= 1000000) {
+      return (count / 1000000).toFixed(1) + 'M';
+    } else if (count >= 1000) {
+      return (count / 1000).toFixed(1) + 'K';
+    }
+    return count.toString();
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -211,283 +262,287 @@ export const YouTubeManagement = () => {
           <Youtube className="h-8 w-8 text-red-500" />
           <div>
             <h1 className="text-2xl font-bold text-gray-900">YouTube Management</h1>
-            <p className="text-gray-600">Manage your YouTube channel settings and video content</p>
+            <p className="text-gray-600">Sync and manage your YouTube channel content</p>
           </div>
         </div>
-        <Button onClick={handleSaveSettings} disabled={loading}>
-          <Save className="h-4 w-4 mr-2" />
-          Save All Changes
-        </Button>
+        {channel && (
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <Clock className="h-4 w-4" />
+            <span>Last synced: {channel.last_synced_at ? formatDate(channel.last_synced_at) : 'Never'}</span>
+          </div>
+        )}
       </div>
 
-      {/* Channel Settings */}
+      {/* Channel Sync */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Settings className="h-5 w-5 mr-2" />
-            Channel Settings
+            <Upload className="h-5 w-5 mr-2" />
+            Channel Sync
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="channel_url">Channel URL</Label>
-              <Input
-                id="channel_url"
-                value={settings.channel_url}
-                onChange={(e) => setSettings({ ...settings, channel_url: e.target.value })}
-                placeholder="https://youtube.com/@yourhandle"
-              />
+          {!channel && (
+            <div className="text-center py-6 bg-blue-50 rounded-lg border border-blue-200">
+              <Youtube className="h-12 w-12 text-blue-500 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Connect Your YouTube Channel</h3>
+              <p className="text-gray-600 mb-4">Enter your YouTube channel URL or handle to automatically import all your videos</p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="channel_name">Channel Name</Label>
-              <Input
-                id="channel_name"
-                value={settings.channel_name}
-                onChange={(e) => setSettings({ ...settings, channel_name: e.target.value })}
-                placeholder="Your Channel Name"
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="channel_description">Channel Description</Label>
-            <Textarea
-              id="channel_description"
-              value={settings.channel_description}
-              onChange={(e) => setSettings({ ...settings, channel_description: e.target.value })}
-              placeholder="Describe your YouTube channel..."
-              className="min-h-[80px]"
-            />
-          </div>
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-            <div>
-              <h4 className="font-medium">Featured Videos Count</h4>
-              <p className="text-sm text-gray-600">Number of videos to display on landing page</p>
-            </div>
-            <Input
-              type="number"
-              value={settings.featured_video_count}
-              onChange={(e) => setSettings({ ...settings, featured_video_count: parseInt(e.target.value) || 6 })}
-              className="w-20"
-              min="1"
-              max="12"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Video Management */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center">
-              <Play className="h-5 w-5 mr-2" />
-              Video Collection
-            </CardTitle>
-            <Button onClick={() => setShowAddForm(true)} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Video
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {/* Add Video Form */}
-          {showAddForm && (
-            <Card className="mb-6">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Add New Video</CardTitle>
-                  <Button variant="ghost" size="sm" onClick={() => setShowAddForm(false)}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="video_title">Video Title</Label>
-                    <Input
-                      id="video_title"
-                      value={newVideo.title}
-                      onChange={(e) => setNewVideo({ ...newVideo, title: e.target.value })}
-                      placeholder="Enter video title"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="video_url">YouTube URL</Label>
-                    <Input
-                      id="video_url"
-                      value={newVideo.video_url}
-                      onChange={(e) => setNewVideo({ ...newVideo, video_url: e.target.value })}
-                      placeholder="https://youtube.com/watch?v=..."
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="video_duration">Duration</Label>
-                    <Input
-                      id="video_duration"
-                      value={newVideo.duration}
-                      onChange={(e) => setNewVideo({ ...newVideo, duration: e.target.value })}
-                      placeholder="e.g., 5:23"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="video_category">Category</Label>
-                    <Input
-                      id="video_category"
-                      value={newVideo.category}
-                      onChange={(e) => setNewVideo({ ...newVideo, category: e.target.value })}
-                      placeholder="e.g., Performance, Behind the Scenes"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="video_description">Description</Label>
-                  <Textarea
-                    id="video_description"
-                    value={newVideo.description}
-                    onChange={(e) => setNewVideo({ ...newVideo, description: e.target.value })}
-                    placeholder="Video description..."
-                    className="min-h-[80px]"
-                  />
-                </div>
-                <div className="flex space-x-2">
-                  <Button onClick={handleAddVideo}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Video
-                  </Button>
-                  <Button variant="outline" onClick={() => setShowAddForm(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
           )}
-
-          {/* Video Slider */}
-          <div className="relative">
-            {videos.length > 3 && (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md"
-                  onClick={prevSlide}
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md"
-                  onClick={nextSlide}
-                >
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </>
-            )}
-
-            <div className="overflow-hidden px-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {getVisibleVideos().map((video) => (
-                  <Card key={video.id} className="group hover:shadow-lg transition-shadow">
-                    <div className="relative">
-                      <div className="aspect-video bg-gray-200 rounded-t-lg overflow-hidden">
-                        <img
-                          src={video.thumbnail_url}
-                          alt={video.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                        />
-                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                          <div className="bg-red-500 rounded-full p-3 group-hover:scale-110 transition-transform">
-                            <Play className="h-6 w-6 text-white" />
-                          </div>
-                        </div>
-                        <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                          {video.duration}
-                        </div>
-                        {video.is_featured && (
-                          <div className="absolute top-2 left-2">
-                            <Badge className="bg-yellow-500 text-black">Featured</Badge>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <CardContent className="p-4">
-                      <div className="space-y-2">
-                        <div className="flex items-start justify-between">
-                          <h3 className="font-semibold line-clamp-2 text-sm">{video.title}</h3>
-                          <div className="flex space-x-1 ml-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              onClick={() => handleToggleFeatured(video.id)}
-                            >
-                              <Youtube className={`h-4 w-4 ${video.is_featured ? 'text-red-500' : 'text-gray-400'}`} />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              onClick={() => handleDeleteVideo(video.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </div>
-                        </div>
-                        <p className="text-xs text-gray-600 line-clamp-2">{video.description}</p>
-                        <div className="flex items-center justify-between text-xs text-gray-500">
-                          <span>{video.views} views</span>
-                          <Badge variant="outline" className="text-xs">{video.category}</Badge>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                          asChild
-                        >
-                          <a href={video.video_url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="h-3 w-3 mr-2" />
-                            View on YouTube
-                          </a>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+          
+          <div className="flex space-x-2">
+            <div className="flex-1">
+              <Label htmlFor="channel_input">YouTube Channel URL or Handle</Label>
+              <Input
+                id="channel_input"
+                value={channelInput}
+                onChange={(e) => setChannelInput(e.target.value)}
+                placeholder="@spelmangleeclub or https://youtube.com/@spelmangleeclub"
+                className="mt-1"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Supports: @handle, channel URL, or channel ID
+              </p>
             </div>
-
-            {/* Slide Indicators */}
-            {videos.length > 3 && (
-              <div className="flex justify-center mt-4 space-x-2">
-                {Array.from({ length: Math.ceil(videos.length / 3) }).map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setActiveSlide(index)}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      activeSlide === index ? 'bg-red-500' : 'bg-gray-300'
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {videos.length === 0 && (
-            <div className="text-center py-12">
-              <Youtube className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No videos yet</h3>
-              <p className="text-gray-600 mb-4">Start by adding your first YouTube video</p>
-              <Button onClick={() => setShowAddForm(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Your First Video
+            <div className="pt-6">
+              <Button 
+                onClick={handleSyncChannel} 
+                disabled={syncing || !channelInput.trim()}
+                className="bg-red-500 hover:bg-red-600"
+              >
+                {syncing ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Syncing...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Sync Channel
+                  </>
+                )}
               </Button>
             </div>
+          </div>
+
+          {channel && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="flex items-center space-x-3">
+                <img 
+                  src={channel.thumbnail_url} 
+                  alt={channel.channel_name}
+                  className="h-12 w-12 rounded-full"
+                />
+                <div>
+                  <h4 className="font-medium">{channel.channel_name}</h4>
+                  <p className="text-sm text-gray-600">{channel.channel_handle}</p>
+                </div>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-green-600">{channel.subscriber_count.toLocaleString()}</p>
+                <p className="text-sm text-gray-600">Subscribers</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-blue-600">{videos.length}</p>
+                <p className="text-sm text-gray-600">Videos Synced</p>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Channel Settings */}
+      {channel && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Settings className="h-5 w-5 mr-2" />
+              Display Settings
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="featured_count">Featured Videos Count</Label>
+                <Input
+                  id="featured_count"
+                  type="number"
+                  value={channel.featured_video_count}
+                  onChange={(e) => updateChannelSettings({ featured_video_count: parseInt(e.target.value) || 6 })}
+                  min="1"
+                  max="12"
+                />
+                <p className="text-xs text-gray-500">Number of videos to display on landing page</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="auto_sync">Auto Sync</Label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    id="auto_sync"
+                    type="checkbox"
+                    checked={channel.auto_sync}
+                    onChange={(e) => updateChannelSettings({ auto_sync: e.target.checked })}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Automatically sync new videos daily</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Video Collection */}
+      {videos.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center">
+                <Play className="h-5 w-5 mr-2" />
+                Video Collection ({videos.length} videos)
+              </CardTitle>
+              <Button onClick={handleSyncChannel} variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {/* Video Slider */}
+            <div className="relative">
+              {videos.length > 3 && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md"
+                    onClick={prevSlide}
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md"
+                    onClick={nextSlide}
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+
+              <div className="overflow-hidden px-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {getVisibleVideos().map((video) => (
+                    <Card key={video.id} className="group hover:shadow-lg transition-shadow">
+                      <div className="relative">
+                        <div className="aspect-video bg-gray-200 rounded-t-lg overflow-hidden">
+                          <img
+                            src={video.thumbnail_url}
+                            alt={video.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                          />
+                          <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                            <div className="bg-red-500 rounded-full p-3 group-hover:scale-110 transition-transform">
+                              <Play className="h-6 w-6 text-white" />
+                            </div>
+                          </div>
+                          <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                            {video.duration}
+                          </div>
+                          {video.is_featured && (
+                            <div className="absolute top-2 left-2">
+                              <Badge className="bg-yellow-500 text-black">Featured</Badge>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <CardContent className="p-4">
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between">
+                            <h3 className="font-semibold line-clamp-2 text-sm">{video.title}</h3>
+                            <div className="flex space-x-1 ml-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => handleToggleFeatured(video.id)}
+                                title="Toggle featured status"
+                              >
+                                <Youtube className={`h-4 w-4 ${video.is_featured ? 'text-red-500' : 'text-gray-400'}`} />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => handleDeleteVideo(video.id)}
+                                title="Remove video"
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-600 line-clamp-2">{video.description}</p>
+                          <div className="flex items-center justify-between text-xs text-gray-500">
+                            <span>{formatViewCount(video.view_count)} views</span>
+                            <span>{formatDate(video.published_at)}</span>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            asChild
+                          >
+                            <a href={video.video_url} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-3 w-3 mr-2" />
+                              View on YouTube
+                            </a>
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              {/* Slide Indicators */}
+              {videos.length > 3 && (
+                <div className="flex justify-center mt-4 space-x-2">
+                  {Array.from({ length: Math.ceil(videos.length / 3) }).map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setActiveSlide(index)}
+                      className={`w-2 h-2 rounded-full transition-colors ${
+                        activeSlide === index ? 'bg-red-500' : 'bg-gray-300'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Empty State */}
+      {videos.length === 0 && !loading && (
+        <Card>
+          <CardContent className="text-center py-12">
+            <Youtube className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No videos found</h3>
+            <p className="text-gray-600 mb-4">
+              {channel ? 
+                "No videos have been synced yet. Try syncing your channel." :
+                "Connect your YouTube channel to automatically import all your videos."
+              }
+            </p>
+            <Button onClick={handleSyncChannel} disabled={!channelInput.trim()}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              {channel ? 'Sync Videos' : 'Connect Channel'}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
