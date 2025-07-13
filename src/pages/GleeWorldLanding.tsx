@@ -459,7 +459,7 @@ export const GleeWorldLanding = () => {
                 <div className="flex space-x-4 overflow-hidden">
                   {[...Array(6)].map((_, i) => (
                     <Card key={i} className="animate-pulse flex-shrink-0 w-80 bg-white/20 backdrop-blur-md border border-white/30">
-                      <div className="h-48 bg-gray-200/50 rounded-t-lg"></div>
+                      <div className="h-64 bg-gray-200/50 rounded-t-lg"></div>
                       <CardContent className="p-6">
                         <div className="h-4 bg-gray-200/50 rounded mb-4"></div>
                         <div className="h-3 bg-gray-200/50 rounded mb-2"></div>
@@ -484,7 +484,7 @@ export const GleeWorldLanding = () => {
                             </Button>
                           </div>
                           
-                          <div className="h-48 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
+                          <div className="h-64 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
                             {event.image_url ? (
                               <img 
                                 src={event.image_url}
@@ -538,7 +538,7 @@ export const GleeWorldLanding = () => {
                                 </Button>
                               </div>
                               
-                              <div className="h-48 sm:h-64 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
+                              <div className="h-64 sm:h-80 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
                                 {event.image_url ? (
                                   <img 
                                     src={event.image_url}
@@ -593,7 +593,7 @@ export const GleeWorldLanding = () => {
                             </Button>
                           </div>
                           
-                          <div className="h-48 sm:h-64 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm">
+                          <div className="h-64 sm:h-80 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm">
                             <Calendar className="h-12 w-12 text-blue-600" />
                           </div>
                           <CardContent className="p-6 sm:p-8">
