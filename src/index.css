@@ -230,6 +230,47 @@
     background-color: #ffffff !important;
     border-color: #d1d5db !important;
   }
+
+  /* Enhanced Tooltip Styling */
+  .tippy-box[data-theme~='custom'] {
+    background-color: hsl(var(--popover));
+    color: hsl(var(--popover-foreground));
+    border: 1px solid hsl(var(--border));
+    border-radius: calc(var(--radius) - 2px);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    padding: 0.5rem 0.75rem;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    font-weight: 500;
+    max-width: 250px;
+    word-wrap: break-word;
+    z-index: 50;
+  }
+
+  .tippy-box[data-theme~='custom'][data-placement^='top'] > .tippy-arrow::before {
+    border-top-color: hsl(var(--popover));
+  }
+
+  .tippy-box[data-theme~='custom'][data-placement^='bottom'] > .tippy-arrow::before {
+    border-bottom-color: hsl(var(--popover));
+  }
+
+  .tippy-box[data-theme~='custom'][data-placement^='left'] > .tippy-arrow::before {
+    border-left-color: hsl(var(--popover));
+  }
+
+  .tippy-box[data-theme~='custom'][data-placement^='right'] > .tippy-arrow::before {
+    border-right-color: hsl(var(--popover));
+  }
+
+  /* Dark mode tooltip styling */
+  @media (prefers-color-scheme: dark) {
+    .tippy-box[data-theme~='custom'] {
+      background-color: hsl(var(--popover));
+      color: hsl(var(--popover-foreground));
+      border-color: hsl(var(--border));
+    }
+  }
 }
 
 @layer utilities {
