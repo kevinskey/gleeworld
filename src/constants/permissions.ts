@@ -170,7 +170,7 @@ export const hasModuleAccess = (
   return hasModulePermission(userRole, userEmail, module.permission, usernamePermissions);
 };
 
-// Check if user is executive board member (has email/notification permissions)
+// Enhanced permission check that includes executive board role permissions
 export const hasExecutiveBoardPermissions = (
   userRole: string,
   execBoardRole?: string,
@@ -188,6 +188,70 @@ export const hasExecutiveBoardPermissions = (
   
   // Check username-based permissions
   return usernamePermissions.includes('send_notifications') || usernamePermissions.includes('send_emails');
+};
+
+// Enhanced permission check with executive board role consideration
+export const hasEnhancedModulePermission = (
+  userRole: string,
+  userEmail: string,
+  permission: string,
+  execBoardRole?: string,
+  usernamePermissions: string[] = []
+): boolean => {
+  // Check role-based permissions first
+  if (hasPermission(userRole, permission)) {
+    return true;
+  }
+  
+  // Check executive board role permissions
+  if (execBoardRole) {
+    // Import here to avoid circular dependency
+    const execBoardPermissions = getExecutiveBoardPermissions(execBoardRole);
+    if (execBoardPermissions.includes(permission)) {
+      return true;
+    }
+  }
+  
+  // Check username-based permissions
+  return usernamePermissions.includes(permission);
+};
+
+// Enhanced module access check with executive board role consideration
+export const hasEnhancedModuleAccess = (
+  userRole: string,
+  userEmail: string,
+  moduleKey: DashboardModule,
+  execBoardRole?: string,
+  usernamePermissions: string[] = []
+): boolean => {
+  const module = DASHBOARD_MODULES[moduleKey];
+  if (!module) return false;
+  
+  return hasEnhancedModulePermission(userRole, userEmail, module.permission, execBoardRole, usernamePermissions);
+};
+
+// Helper function to get executive board permissions (implemented separately to avoid circular imports)
+const getExecutiveBoardPermissions = (execBoardRole: string): string[] => {
+  // This will be populated from executiveBoardRoles.ts
+  const rolePermissionMap: Record<string, string[]> = {
+    'president': ['hero_management', 'dashboard_settings', 'youtube_management', 'send_notifications', 'budget_creation', 'contracts', 'sheet_music', 'send_emails', 'manage_permissions', 'migrate_sheet_music'],
+    'vice-president': ['send_notifications', 'budget_creation', 'contracts', 'sheet_music', 'send_emails', 'youtube_management'],
+    'treasurer': ['budget_creation', 'contracts', 'send_notifications', 'send_emails'],
+    'secretary': ['send_notifications', 'send_emails', 'contracts'],
+    'music-director': ['sheet_music', 'migrate_sheet_music', 'youtube_management', 'send_notifications', 'send_emails'],
+    'assistant-music-director': ['sheet_music', 'youtube_management', 'send_notifications'],
+    'social-chair': ['send_notifications', 'send_emails', 'budget_creation'],
+    'publicity-chair': ['hero_management', 'send_notifications', 'send_emails', 'youtube_management'],
+    'events-coordinator': ['budget_creation', 'contracts', 'send_notifications', 'send_emails'],
+    'historian': ['youtube_management', 'send_notifications'],
+    'librarian': ['sheet_music', 'migrate_sheet_music', 'send_notifications'],
+    'technical-director': ['dashboard_settings', 'youtube_management', 'send_notifications'],
+    'fundraising-chair': ['budget_creation', 'send_notifications', 'send_emails'],
+    'alumni-relations': ['send_notifications', 'send_emails'],
+    'membership-chair': ['send_notifications', 'send_emails'],
+  };
+  
+  return rolePermissionMap[execBoardRole] || [];
 };
 
 export const isAdmin = (userRole?: string): boolean => {

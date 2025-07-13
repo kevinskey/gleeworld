@@ -94,6 +94,14 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
                 <Music className="h-4 w-4 mr-3" />
                 Music
               </Button>
+              <Button
+                variant="ghost"
+                onClick={() => { onTabChange('exec-board'); setMobileOpen(false); }}
+                className={`w-full justify-start ${activeTab === 'exec-board' ? 'bg-primary text-primary-foreground' : ''}`}
+              >
+                <Shield className="h-4 w-4 mr-3" />
+                Executive Board
+              </Button>
             </div>
           </div>
         </SheetContent>
@@ -146,6 +154,15 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
       >
         <Music className="h-4 w-4" />
         <span className="hidden lg:inline">Music</span>
+      </Button>
+
+      <Button
+        variant="ghost"
+        onClick={() => onTabChange('exec-board')}
+        className={getTabClasses('exec-board')}
+      >
+        <Shield className="h-4 w-4" />
+        <span className="hidden lg:inline">Exec Board</span>
       </Button>
 
       {/* Financial Dropdown */}

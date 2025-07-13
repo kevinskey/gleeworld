@@ -10,14 +10,19 @@ import { BudgetTracking } from "@/components/admin/financial/BudgetTracking";
 import { ContractManagement } from "@/components/admin/ContractManagement";
 import { MusicManagement } from "@/components/admin/MusicManagement";
 import { CalendarManagement } from "@/components/admin/CalendarManagement";
+import { ExecutiveBoardManager } from "@/components/admin/ExecutiveBoardManager";
+import { RoleBasedDashboard } from "@/components/admin/RoleBasedDashboard";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useUsers } from "@/hooks/useUsers";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { ExecutiveBoardRole } from "@/constants/executiveBoardRoles";
 import { Shield } from "lucide-react";
 
 const System = () => {
   const { user } = useAuth();
+  const { userProfile } = useUserProfile(user);
   const { users, loading, error, refetch } = useUsers();
   const { logs: activityLogs } = useActivityLogs();
   const [searchParams] = useSearchParams();
@@ -85,12 +90,22 @@ const System = () => {
         {/* Content based on active tab */}
         <div className="space-y-4">
           {activeTab === "dashboard" && (
-            <SystemDashboard 
-              users={users}
-              loading={loading}
-              activityLogs={activityLogs}
-              onQuickAction={handleQuickAction}
-            />
+            <div className="space-y-6">
+              {/* Show role-based dashboard if user has executive board role */}
+              {userProfile?.exec_board_role && userProfile.exec_board_role.trim() !== '' && (
+                <RoleBasedDashboard 
+                  execBoardRole={userProfile.exec_board_role as ExecutiveBoardRole}
+                  onQuickAction={handleQuickAction}
+                />
+              )}
+              
+              <SystemDashboard 
+                users={users}
+                loading={loading}
+                activityLogs={activityLogs}
+                onQuickAction={handleQuickAction}
+              />
+            </div>
           )}
 
           {activeTab === "users" && (
@@ -126,6 +141,14 @@ const System = () => {
 
           {activeTab === "music" && (
             <MusicManagement />
+          )}
+
+          {activeTab === "exec-board" && (
+            <ExecutiveBoardManager 
+              users={users}
+              loading={loading}
+              onRefetch={refetch}
+            />
           )}
         </div>
       </div>
