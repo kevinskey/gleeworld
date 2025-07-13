@@ -1,4 +1,6 @@
 
+import { supabase } from '@/integrations/supabase/client';
+
 export const cleanupAuthState = () => {
   console.log('authCleanup: Cleaning up auth state...');
   
@@ -44,8 +46,7 @@ export const resetAuthState = async () => {
   console.log('authCleanup: Resetting complete auth state...');
   
   try {
-    // Import supabase client
-    const { supabase } = await import('@/integrations/supabase/client');
+    // Use regular import instead of dynamic import
     
     // Sign out globally first
     try {
