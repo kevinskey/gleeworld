@@ -1,24 +1,14 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SystemDashboard } from "@/components/admin/SystemDashboard";
 import { UserManagement } from "@/components/admin/UserManagement";
-import { W9Management } from "@/components/admin/W9Management";
-import { FinancialSystem } from "@/components/admin/FinancialSystem";
-import { BudgetTracking } from "@/components/admin/financial/BudgetTracking";
-import { ContractManagement } from "@/components/admin/ContractManagement";
-import { MusicManagement } from "@/components/admin/MusicManagement";
-import { CalendarManagement } from "@/components/admin/CalendarManagement";
-import { ExecutiveBoardManager } from "@/components/admin/ExecutiveBoardManager";
-import { RoleBasedDashboard } from "@/components/admin/RoleBasedDashboard";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useUsers } from "@/hooks/useUsers";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { ExecutiveBoardRole } from "@/constants/executiveBoardRoles";
-import { Shield } from "lucide-react";
+import { Shield, Settings, Users, Activity } from "lucide-react";
 
 const System = () => {
   const { user } = useAuth();
@@ -39,23 +29,14 @@ const System = () => {
 
   const handleQuickAction = (action: string) => {
     switch (action) {
-      case 'create-contract':
-        setActiveTab('contracts');
-        break;
-      case 'add-user':
+      case 'manage-users':
         setActiveTab('users');
         break;
-      case 'add-budget':
-        setActiveTab('budget');
+      case 'view-logs':
+        setActiveTab('activity');
         break;
-      case 'pay-user':
-        setActiveTab('payments');
-        break;
-      case 'run-report':
-        setActiveTab('reports');
-        break;
-      case 'system':
-        console.log('System configuration');
+      case 'system-settings':
+        setActiveTab('settings');
         break;
       default:
         break;
@@ -90,22 +71,12 @@ const System = () => {
         {/* Content based on active tab */}
         <div className="space-y-4">
           {activeTab === "dashboard" && (
-            <div className="space-y-6">
-              {/* Show role-based dashboard if user has executive board role */}
-              {userProfile?.exec_board_role && userProfile.exec_board_role.trim() !== '' && (
-                <RoleBasedDashboard 
-                  execBoardRole={userProfile.exec_board_role as ExecutiveBoardRole}
-                  onQuickAction={handleQuickAction}
-                />
-              )}
-              
-              <SystemDashboard 
-                users={users}
-                loading={loading}
-                activityLogs={activityLogs}
-                onQuickAction={handleQuickAction}
-              />
-            </div>
+            <SystemDashboard 
+              users={users}
+              loading={loading}
+              activityLogs={activityLogs}
+              onQuickAction={handleQuickAction}
+            />
           )}
 
           {activeTab === "users" && (
@@ -117,35 +88,46 @@ const System = () => {
             />
           )}
 
-          {activeTab === "contracts" && (
-            <ContractManagement />
+          {activeTab === "activity" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  Activity Logs
+                </CardTitle>
+                <CardDescription>
+                  System activity and audit trail
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Activity className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Activity Logs</h3>
+                  <p className="text-gray-600">Activity logging system coming soon.</p>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
-
-          {(activeTab === "payments" || activeTab === "financial" || activeTab === "financial-overview" || 
-            activeTab === "user-records" || activeTab === "payment-tracking" || activeTab === "stipends" || 
-            activeTab === "reports" || activeTab === "w9") && (
-            <FinancialSystem initialTab={activeTab} />
-          )}
-
-          {activeTab === "budget" && (
-            <BudgetTracking />
-          )}
-
-          {activeTab === "calendar" && (
-            <CalendarManagement />
-          )}
-
-          {activeTab === "music" && (
-            <MusicManagement />
-          )}
-
-          {activeTab === "exec-board" && (
-            <ExecutiveBoardManager 
-              users={users}
-              loading={loading}
-              onRefetch={refetch}
-            />
+          {activeTab === "settings" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  System Settings
+                </CardTitle>
+                <CardDescription>
+                  Configure system-wide settings and preferences
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Settings className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">System Settings</h3>
+                  <p className="text-gray-600">System configuration panel coming soon.</p>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>

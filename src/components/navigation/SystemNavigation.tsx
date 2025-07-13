@@ -17,7 +17,8 @@ import {
   DollarSign,
   Menu,
   Music,
-  Calendar
+  Calendar,
+  Activity
 } from "lucide-react";
 
 interface SystemNavigationProps {
@@ -30,8 +31,12 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const getTabClasses = (tabValue: string, isDropdown: boolean = false) => {
+    const financialTabs = ['financial-overview', 'user-records', 'payment-tracking', 'stipends', 'budget', 'reports', 'payments', 'w9', 'financial', 'w9-forms'];
+    const systemTabs = ['dashboard', 'users', 'activity', 'settings'];
+    
     const isActive = activeTab === tabValue || 
-      (isDropdown && ['financial-overview', 'user-records', 'payment-tracking', 'stipends', 'budget', 'reports', 'payments', 'w9', 'financial', 'w9-forms'].includes(activeTab));
+      (isDropdown && tabValue === 'financial' && financialTabs.includes(activeTab)) ||
+      (isDropdown && tabValue === 'system' && systemTabs.includes(activeTab));
     
     return `flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
       isActive
@@ -54,22 +59,6 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
               <h1 className="text-2xl sm:text-lg font-bold">System Admin</h1>
             </div>
             <div className="flex-1 px-4 py-4 space-y-2">
-              <Button
-                variant="ghost"
-                onClick={() => { onTabChange('dashboard'); setMobileOpen(false); }}
-                className={`w-full justify-start ${activeTab === 'dashboard' ? 'bg-primary text-primary-foreground' : ''}`}
-              >
-                <Settings className="h-4 w-4 mr-3" />
-                Dashboard
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => { onTabChange('users'); setMobileOpen(false); }}
-                className={`w-full justify-start ${activeTab === 'users' ? 'bg-primary text-primary-foreground' : ''}`}
-              >
-                <Users className="h-4 w-4 mr-3" />
-                Users
-              </Button>
               <Button
                 variant="ghost"
                 onClick={() => { onTabChange('contracts'); setMobileOpen(false); }}
@@ -102,6 +91,14 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
                 <Shield className="h-4 w-4 mr-3" />
                 Executive Board
               </Button>
+              <Button
+                variant="ghost"
+                onClick={() => { onTabChange('dashboard'); setMobileOpen(false); }}
+                className={`w-full justify-start ${activeTab === 'dashboard' ? 'bg-primary text-primary-foreground' : ''}`}
+              >
+                <Settings className="h-4 w-4 mr-3" />
+                System
+              </Button>
             </div>
           </div>
         </SheetContent>
@@ -111,24 +108,6 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
 
   return (
     <nav className="flex items-center space-x-1">
-      <Button
-        variant="ghost"
-        onClick={() => onTabChange('dashboard')}
-        className={getTabClasses('dashboard')}
-      >
-        <Settings className="h-4 w-4" />
-        <span className="hidden lg:inline">Dashboard</span>
-      </Button>
-
-      <Button
-        variant="ghost"
-        onClick={() => onTabChange('users')}
-        className={getTabClasses('users')}
-      >
-        <Users className="h-4 w-4" />
-        <span className="hidden lg:inline">Users</span>
-      </Button>
-
       <Button
         variant="ghost"
         onClick={() => onTabChange('contracts')}
@@ -177,7 +156,7 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
             <ChevronDown className="h-3 w-3" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-56">
+        <DropdownMenuContent align="start" className="w-56 bg-white border shadow-lg z-50">
           {/* Overview & Analytics */}
           <DropdownMenuItem onClick={() => onTabChange('financial-overview')}>
             <TrendingUp className="h-4 w-4 mr-3" />
@@ -223,6 +202,37 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* System Dropdown - moved to end */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className={getTabClasses('system', true)}
+          >
+            <Settings className="h-4 w-4" />
+            <span className="hidden lg:inline">System</span>
+            <ChevronDown className="h-3 w-3" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-52 bg-white border shadow-lg z-50">
+          <DropdownMenuItem onClick={() => onTabChange('dashboard')}>
+            <Settings className="h-4 w-4 mr-3" />
+            Dashboard
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onTabChange('users')}>
+            <Users className="h-4 w-4 mr-3" />
+            User Management
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onTabChange('activity')}>
+            <Activity className="h-4 w-4 mr-3" />
+            Activity Logs
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onTabChange('settings')}>
+            <Settings className="h-4 w-4 mr-3" />
+            System Settings
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </nav>
   );
 };
