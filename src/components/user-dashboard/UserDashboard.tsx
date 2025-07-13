@@ -353,15 +353,15 @@ export const UserDashboard = () => {
                   <span className="sm:hidden">Music</span>
                 </Button>
               </EnhancedTooltip>
-                <EnhancedTooltip content="Take attendance test">
+                <EnhancedTooltip content="View your attendance records and manage attendance">
                   <Button 
                     className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
                     variant="outline"
-                    onClick={() => navigate('/attendance-test')}
+                    onClick={() => navigate('/attendance')}
                   >
                     <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6" />
-                    <span className="hidden sm:inline">Test Attendance</span>
-                    <span className="sm:hidden">Test</span>
+                    <span className="hidden sm:inline">Attendance</span>
+                    <span className="sm:hidden">Attendance</span>
                   </Button>
                 </EnhancedTooltip>
                 <EnhancedTooltip content="View calendar and events">
