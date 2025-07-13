@@ -506,13 +506,15 @@ export const MusicManagement = () => {
     const audioFiles = Array.from(files).filter(file => 
       file.type.startsWith('audio/') || 
       file.name.toLowerCase().endsWith('.mp3') || 
-      file.name.toLowerCase().endsWith('.wav')
+      file.name.toLowerCase().endsWith('.wav') ||
+      file.name.toLowerCase().endsWith('.aiff') ||
+      file.name.toLowerCase().endsWith('.aif')
     );
 
     if (audioFiles.length === 0) {
       toast({
         title: "No audio files",
-        description: "Please select MP3 or WAV files",
+        description: "Please select MP3, WAV, or AIFF files",
         variant: "destructive"
       });
       return;
@@ -988,11 +990,11 @@ export const MusicManagement = () => {
                     >
                       <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                       <p className="text-gray-600 mb-2">
-                        Drag and drop MP3 or WAV files here, or click to select
+                        Drag and drop MP3, WAV, or AIFF files here, or click to select
                       </p>
                       <Input
                         type="file"
-                        accept="audio/*,.mp3,.wav"
+                        accept="audio/*,.mp3,.wav,.aiff,.aif"
                         multiple
                         onChange={(e) => {
                           const files = e.target.files;
