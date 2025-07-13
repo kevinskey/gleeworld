@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,53 @@ export const MusicManagement = () => {
   const { user } = useAuth();
   const { tracks, albums, loading, refetch } = useMusic();
   const { toast } = useToast();
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [roleLoading, setRoleLoading] = useState(true);
+
+  // Get user role
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (!user) {
+        setRoleLoading(false);
+        return;
+      }
+
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        setUserRole(data?.role || null);
+      } catch (error) {
+        console.error('Error fetching user role:', error);
+      } finally {
+        setRoleLoading(false);
+      }
+    };
+
+    fetchUserRole();
+  }, [user]);
+
+  // Check if user has super admin permissions
+  const canManageMusic = userRole === 'super-admin';
+
+  if (roleLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!canManageMusic) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500">You don't have permission to manage music. Only super admins can manage music tracks and albums.</p>
+      </div>
+    );
+  }
   
   const [isCreatingAlbum, setIsCreatingAlbum] = useState(false);
   const [isCreatingTrack, setIsCreatingTrack] = useState(false);
@@ -779,6 +826,15 @@ export const MusicManagement = () => {
                       className="text-red-500 hover:text-red-700"
                     >
                       <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.open(track.audio_url, '_blank')}
+                      className="text-green-500 hover:text-green-700"
+                      title="Download track"
+                    >
+                      <Upload className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
