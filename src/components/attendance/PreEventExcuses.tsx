@@ -179,9 +179,48 @@ export const PreEventExcuses = () => {
 
       if (error) throw error;
 
+      // Get event details for notification
+      const selectedEventData = upcomingEvents.find(e => e.id === selectedEvent);
+      
+      // Get user profile data for notification
+      const { data: profileData } = await supabase
+        .from('gw_profiles')
+        .select('full_name, email')
+        .eq('user_id', user!.id)
+        .single();
+
+      // Send notifications to secretary
+      try {
+        const { error: notificationError } = await supabase.functions.invoke('notify-pre-event-excuse', {
+          body: {
+            student_id: user!.id,
+            student_name: profileData?.full_name || user!.email || 'Unknown Student',
+            student_email: profileData?.email || user!.email || '',
+            event_id: selectedEvent,
+            event_title: selectedEventData?.title || 'Unknown Event',
+            event_date: selectedEventData?.start_date || '',
+            reason: reason.trim(),
+            documentation_url: documentUrl
+          }
+        });
+
+        if (notificationError) {
+          console.error('Notification error:', notificationError);
+          // Don't fail the entire process if notifications fail
+          toast({
+            title: "Warning",
+            description: "Excuse submitted but secretary notification may have failed",
+            variant: "default",
+          });
+        }
+      } catch (notificationError) {
+        console.error('Notification error:', notificationError);
+        // Don't fail the entire process if notifications fail
+      }
+
       toast({
         title: "Success",
-        description: "Pre-event excuse submitted successfully",
+        description: "Pre-event excuse submitted and secretary has been notified",
       });
 
       // Reset form
