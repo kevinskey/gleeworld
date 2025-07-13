@@ -156,9 +156,13 @@ export const MusicManagement = () => {
 
   // Sorted album tracks memo for album detail view
   const sortedAlbumTracks = useMemo(() => {
-    if (!selectedAlbum?.tracks?.length) return selectedAlbum?.tracks || [];
+    if (!selectedAlbum?.id) return [];
     
-    return [...selectedAlbum.tracks].sort((a: any, b: any) => {
+    // Find the current album from the albums array to get fresh track data
+    const currentAlbum = albums.find(album => album.id === selectedAlbum.id);
+    if (!currentAlbum?.tracks?.length) return [];
+    
+    return [...currentAlbum.tracks].sort((a: any, b: any) => {
       let aValue: any;
       let bValue: any;
       
@@ -187,7 +191,7 @@ export const MusicManagement = () => {
       if (aValue > bValue) return albumTrackSortOrder === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [selectedAlbum?.tracks, albumTrackSortBy, albumTrackSortOrder]);
+  }, [selectedAlbum?.id, albums, albumTrackSortBy, albumTrackSortOrder]);
 
   // Get user role
   useEffect(() => {
@@ -1347,7 +1351,7 @@ export const MusicManagement = () => {
 
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Tracks ({selectedAlbum.tracks?.length || 0})</h3>
+                <h3 className="text-lg font-semibold">Tracks ({sortedAlbumTracks.length})</h3>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-2">
                     <Select value={albumTrackSortBy} onValueChange={(value: any) => setAlbumTrackSortBy(value)}>
