@@ -186,42 +186,10 @@ serve(async (req) => {
       // Create client for external Supabase
       const externalSupabase = createClient(readerSupabaseUrl, readerSupabaseKey);
       
-      console.log('Connected to external Supabase, listing files in pdfs bucket...');
+      console.log('Connected to external Supabase. Due to RLS policy issues, trying alternative approach...');
 
-      // List files in the external pdfs bucket
-      const { data: bucketFiles, error: listError } = await externalSupabase.storage
-        .from('pdfs')
-        .list('', { limit: 100 })
-
-      if (listError) {
-        console.error('Failed to list files from external bucket:', listError)
-        return new Response(
-          JSON.stringify({ 
-            error: 'Failed to access external pdfs bucket', 
-            details: listError.message 
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 500,
-          }
-        )
-      }
-
-      console.log(`Found ${bucketFiles?.length || 0} files in external pdfs bucket`)
-
-      if (!bucketFiles || bucketFiles.length === 0) {
-        return new Response(
-          JSON.stringify({ 
-            error: 'No PDF files found in external bucket' 
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 404,
-          }
-        )
-      }
-
-      // Fetch sheet music records that need PDF migration
+      // Since the external Supabase has RLS policy issues, let's try a different approach
+      // First, get our sheet music records and try to find corresponding PDFs
       const { data: sheetMusicRecords, error: fetchError } = await supabaseClient
         .from('gw_sheet_music')
         .select('id, title, pdf_url, thumbnail_url')
@@ -234,30 +202,72 @@ serve(async (req) => {
 
       console.log(`Found ${sheetMusicRecords?.length || 0} records to process`)
 
+      if (!sheetMusicRecords || sheetMusicRecords.length === 0) {
+        return new Response(
+          JSON.stringify({ 
+            message: 'No sheet music records need PDF migration',
+            results: [],
+            summary: { total: 0, successful: 0, failed: 0, database_updates: 0 }
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        )
+      }
+
       const results = []
       
-      // Process each PDF file found in the external bucket
-      for (const bucketFile of bucketFiles.filter(f => f.name.toLowerCase().endsWith('.pdf'))) {
+      // Try to download PDFs directly using known patterns
+      for (const record of sheetMusicRecords) {
         try {
-          console.log(`Processing file: ${bucketFile.name}`)
+          console.log(`Processing record: ${record.title} (${record.id})`)
 
-          // Download the file from external bucket
-          const { data: fileData, error: downloadError } = await externalSupabase.storage
-            .from('pdfs')
-            .download(bucketFile.name)
+          // Try various filename patterns
+          const possibleFilenames = [
+            `${record.id}.pdf`,
+            `${record.title}.pdf`,
+            `${record.title.replace(/\s+/g, '_')}.pdf`,
+            `${record.title.replace(/\s+/g, '-')}.pdf`,
+            `${record.title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`
+          ]
 
-          if (downloadError) {
-            console.error(`Download failed for ${bucketFile.name}:`, downloadError)
+          let fileData = null
+          let successfulFilename = null
+
+          // Try each possible filename
+          for (const filename of possibleFilenames) {
+            try {
+              console.log(`Trying to download: ${filename}`)
+              const { data, error } = await externalSupabase.storage
+                .from('pdfs')
+                .download(filename)
+
+              if (!error && data) {
+                fileData = data
+                successfulFilename = filename
+                console.log(`Successfully found file: ${filename}`)
+                break
+              }
+            } catch (err) {
+              console.log(`File not found: ${filename}`)
+              continue
+            }
+          }
+
+          if (!fileData) {
+            console.log(`No PDF found for ${record.title}`)
             results.push({
-              filename: bucketFile.name,
-              status: 'download_failed',
-              error: downloadError.message
+              id: record.id,
+              title: record.title,
+              status: 'pdf_not_found',
+              error: 'No matching PDF file found in external bucket'
             })
             continue
           }
 
           // Generate a safe filename for our bucket
-          const safeFilename = bucketFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+          const safeFilename = `${record.id}.pdf`
 
           // Upload to our sheet-music bucket
           const { data: uploadData, error: uploadError } = await supabaseClient.storage
@@ -268,9 +278,10 @@ serve(async (req) => {
             })
 
           if (uploadError) {
-            console.error(`Upload failed for ${bucketFile.name}:`, uploadError)
+            console.error(`Upload failed for ${record.title}:`, uploadError)
             results.push({
-              filename: bucketFile.name,
+              id: record.id,
+              title: record.title,
               status: 'upload_failed',
               error: uploadError.message
             })
@@ -282,51 +293,38 @@ serve(async (req) => {
             .from('sheet-music')
             .getPublicUrl(`pdfs/${safeFilename}`)
 
-          console.log(`Successfully copied: ${bucketFile.name}`)
-          
-          // Try to find matching sheet music record by filename
-          const titleFromFilename = bucketFile.name.replace('.pdf', '').replace(/[-_]/g, ' ')
-          let matchingRecord = null
-          
-          // Look for exact matches first
-          if (sheetMusicRecords) {
-            matchingRecord = sheetMusicRecords.find(record => 
-              record.id === bucketFile.name.replace('.pdf', '') ||
-              record.title.toLowerCase() === titleFromFilename.toLowerCase() ||
-              bucketFile.name.toLowerCase().includes(record.id.toLowerCase()) ||
-              bucketFile.name.toLowerCase().includes(record.title.toLowerCase().substring(0, 10))
-            )
+          // Update the database record with the new PDF URL
+          const { error: updateError } = await supabaseClient
+            .from('gw_sheet_music')
+            .update({ pdf_url: publicUrlData.publicUrl })
+            .eq('id', record.id)
+
+          if (updateError) {
+            console.error(`Database update failed for ${record.title}:`, updateError)
+            results.push({
+              id: record.id,
+              title: record.title,
+              status: 'db_update_failed',
+              error: updateError.message
+            })
+            continue
           }
 
-          let databaseUpdated = false
-          if (matchingRecord) {
-            // Update the database record with the new PDF URL
-            const { error: updateError } = await supabaseClient
-              .from('gw_sheet_music')
-              .update({ pdf_url: publicUrlData.publicUrl })
-              .eq('id', matchingRecord.id)
-
-            if (!updateError) {
-              console.log(`Updated database record for ${matchingRecord.title}`)
-              databaseUpdated = true
-            } else {
-              console.error(`Database update failed for ${matchingRecord.title}:`, updateError)
-            }
-          }
-
+          console.log(`Successfully copied: ${record.title} from ${successfulFilename}`)
           results.push({
-            filename: bucketFile.name,
+            id: record.id,
+            title: record.title,
             status: 'success',
             pdf_url: publicUrlData.publicUrl,
-            safe_filename: safeFilename,
-            database_updated: databaseUpdated,
-            matched_record: matchingRecord?.title || null
+            source_file: successfulFilename,
+            database_updated: true
           })
 
         } catch (error) {
-          console.error(`Error processing ${bucketFile.name}:`, error)
+          console.error(`Error processing ${record.title}:`, error)
           results.push({
-            filename: bucketFile.name,
+            id: record.id,
+            title: record.title,
             status: 'error',
             error: error.message
           })
@@ -343,8 +341,7 @@ serve(async (req) => {
             successful: results.filter(r => r.status === 'success').length,
             failed: results.filter(r => r.status !== 'success').length,
             database_updates: results.filter(r => r.database_updated).length
-          },
-          external_files: bucketFiles.map(f => f.name) || []
+          }
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
