@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -19,16 +19,47 @@ import { AttendanceReports } from './AttendanceReports';
 import { PreEventExcuses } from './PreEventExcuses';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
+import { supabase } from '@/integrations/supabase/client';
 
 export const AttendanceDashboard = () => {
   const { user } = useAuth();
   const { profile } = useProfile();
   const [activeTab, setActiveTab] = useState('overview');
+  const [canTakeAttendance, setCanTakeAttendance] = useState(false);
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
-  
-  // Check if user can take attendance (only secretary or her designate)
-  const canTakeAttendance = isAdmin; // For now, only admins can take attendance until secretary role is properly defined
+
+  // Check if user can take attendance (secretary, designate, or super-admin)
+  const checkAttendancePermissions = useCallback(async () => {
+    if (!user) {
+      setCanTakeAttendance(false);
+      return;
+    }
+
+    try {
+      const { data: gwProfile, error } = await supabase
+        .from('gw_profiles')
+        .select('is_admin, is_super_admin, exec_board_role, special_roles')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      // Check if user is super-admin, secretary, or has secretary designation
+      const isSuperAdmin = gwProfile?.is_super_admin;
+      const isSecretary = gwProfile?.exec_board_role?.toLowerCase() === 'secretary';
+      const hasSecretaryRole = gwProfile?.special_roles?.includes('secretary');
+      
+      setCanTakeAttendance(isSuperAdmin || isSecretary || hasSecretaryRole);
+    } catch (error) {
+      console.error('Error checking attendance permissions:', error);
+      setCanTakeAttendance(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    checkAttendancePermissions();
+  }, [checkAttendancePermissions]);
 
   if (!user) {
     return (
