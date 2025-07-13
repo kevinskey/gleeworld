@@ -81,6 +81,8 @@ export const MusicManagement = () => {
   const [albumSortOrder, setAlbumSortOrder] = useState<'asc' | 'desc'>('asc');
   const [trackSortBy, setTrackSortBy] = useState<'title' | 'album' | 'artist' | 'created_at'>('title');
   const [trackSortOrder, setTrackSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [albumTrackSortBy, setAlbumTrackSortBy] = useState<'track_number' | 'title' | 'artist' | 'duration'>('track_number');
+  const [albumTrackSortOrder, setAlbumTrackSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // Sorted albums memo - must be with other hooks, before any early returns
   const sortedAlbums = useMemo(() => {
@@ -151,6 +153,41 @@ export const MusicManagement = () => {
       return 0;
     });
   }, [tracks, trackSortBy, trackSortOrder]);
+
+  // Sorted album tracks memo for album detail view
+  const sortedAlbumTracks = useMemo(() => {
+    if (!selectedAlbum?.tracks?.length) return selectedAlbum?.tracks || [];
+    
+    return [...selectedAlbum.tracks].sort((a: any, b: any) => {
+      let aValue: any;
+      let bValue: any;
+      
+      switch (albumTrackSortBy) {
+        case 'track_number':
+          aValue = a.track_number || 999;
+          bValue = b.track_number || 999;
+          break;
+        case 'title':
+          aValue = a.title.toLowerCase();
+          bValue = b.title.toLowerCase();
+          break;
+        case 'artist':
+          aValue = a.artist.toLowerCase();
+          bValue = b.artist.toLowerCase();
+          break;
+        case 'duration':
+          aValue = a.duration || 0;
+          bValue = b.duration || 0;
+          break;
+        default:
+          return 0;
+      }
+      
+      if (aValue < bValue) return albumTrackSortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return albumTrackSortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [selectedAlbum?.tracks, albumTrackSortBy, albumTrackSortOrder]);
 
   // Get user role
   useEffect(() => {
@@ -1311,13 +1348,44 @@ export const MusicManagement = () => {
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Tracks ({selectedAlbum.tracks?.length || 0})</h3>
-                <Button 
-                  onClick={() => openAlbumForTrackAdd(selectedAlbum)}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Track to Album
-                </Button>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <Select value={albumTrackSortBy} onValueChange={(value: any) => setAlbumTrackSortBy(value)}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                        <SelectItem value="track_number">Track #</SelectItem>
+                        <SelectItem value="title">Title</SelectItem>
+                        <SelectItem value="artist">Artist</SelectItem>
+                        <SelectItem value="duration">Duration</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const newOrder = albumTrackSortOrder === 'asc' ? 'desc' : 'asc';
+                        console.log('Album track sort order changing from', albumTrackSortOrder, 'to', newOrder);
+                        setAlbumTrackSortOrder(newOrder);
+                      }}
+                      className="px-2"
+                    >
+                      {albumTrackSortOrder === 'asc' ? (
+                        <ArrowUp className="h-4 w-4" />
+                      ) : (
+                        <ArrowDown className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <Button 
+                    onClick={() => openAlbumForTrackAdd(selectedAlbum)}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Track to Album
+                  </Button>
+                </div>
               </div>
 
               {selectedAlbum.tracks?.length === 0 ? (
@@ -1334,7 +1402,7 @@ export const MusicManagement = () => {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {selectedAlbum.tracks?.map((track: any, index: number) => (
+                  {sortedAlbumTracks.map((track: any, index: number) => (
                     <div
                       key={track.id}
                       className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -1365,7 +1433,7 @@ export const MusicManagement = () => {
                             if (currentTrack?.id === track.id && isPlaying) {
                               togglePlayPause();
                             } else {
-                              playTrack(track, selectedAlbum.tracks);
+                              playTrack(track, sortedAlbumTracks);
                             }
                           }}
                           className="text-primary hover:text-primary/80"
