@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -31,7 +32,8 @@ import {
   Edit,
   Play,
   Heart,
-  Image
+  Image,
+  Eye
 } from "lucide-react";
 
 export const MusicManagement = () => {
@@ -40,6 +42,7 @@ export const MusicManagement = () => {
   const { toast } = useToast();
   
   // ALL useState hooks must be called at the top, before any conditional logic
+  const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [roleLoading, setRoleLoading] = useState(true);
   const [isCreatingAlbum, setIsCreatingAlbum] = useState(false);
@@ -244,6 +247,7 @@ export const MusicManagement = () => {
         lyrics: ''
       });
       setIsCreatingTrack(false);
+      setSelectedAlbum(null); // Close album view if open
       refetch();
     } catch (error) {
       console.error('Error creating track:', error);
@@ -314,6 +318,21 @@ export const MusicManagement = () => {
       genre: track.genre || '',
       lyrics: track.lyrics || ''
     });
+  };
+
+  const openAlbumForTrackAdd = (album: any) => {
+    setSelectedAlbum(null); // Close album view first
+    setTrackForm({
+      title: '',
+      artist: album.artist, // Pre-fill with album artist
+      album_id: album.id,
+      audio_url: '',
+      duration: 0,
+      track_number: (album.tracks?.length || 0) + 1, // Auto-increment track number
+      genre: '',
+      lyrics: ''
+    });
+    setIsCreatingTrack(true);
   };
 
   const handleImageUpload = async (file: File) => {
@@ -714,10 +733,13 @@ export const MusicManagement = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {albums.map((album) => (
-                <Card key={album.id} className="hover:shadow-md transition-shadow">
+                <Card key={album.id} className="hover:shadow-md transition-shadow cursor-pointer group">
                   <CardContent className="p-4">
                     <div className="flex items-start space-x-3">
-                      <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/40 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                      <div 
+                        className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/40 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0"
+                        onClick={() => setSelectedAlbum(album)}
+                      >
                         {album.cover_image_url ? (
                           <img
                             src={album.cover_image_url}
@@ -728,8 +750,11 @@ export const MusicManagement = () => {
                           <Album className="h-8 w-8 text-primary" />
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 truncate">{album.title}</h3>
+                      <div 
+                        className="flex-1 min-w-0 cursor-pointer"
+                        onClick={() => setSelectedAlbum(album)}
+                      >
+                        <h3 className="font-semibold text-gray-900 truncate group-hover:text-primary transition-colors">{album.title}</h3>
                         <p className="text-sm text-gray-600 truncate">{album.artist}</p>
                         <p className="text-xs text-gray-500">{album.tracks?.length || 0} tracks</p>
                       </div>
@@ -737,7 +762,22 @@ export const MusicManagement = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => startEditingAlbum(album)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedAlbum(album);
+                          }}
+                          className="text-green-500 hover:text-green-700"
+                          title="View album details"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startEditingAlbum(album);
+                          }}
                           className="text-blue-500 hover:text-blue-700"
                         >
                           <Edit className="h-4 w-4" />
@@ -745,7 +785,10 @@ export const MusicManagement = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDeleteAlbum(album.id, album.title)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteAlbum(album.id, album.title);
+                          }}
                           className="text-red-500 hover:text-red-700"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -759,6 +802,117 @@ export const MusicManagement = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Album Detail Modal */}
+      {selectedAlbum && (
+        <Dialog open={!!selectedAlbum} onOpenChange={() => setSelectedAlbum(null)}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/40 rounded-lg flex items-center justify-center overflow-hidden">
+                  {selectedAlbum.cover_image_url ? (
+                    <img
+                      src={selectedAlbum.cover_image_url}
+                      alt={`${selectedAlbum.title} cover`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Album className="h-6 w-6 text-primary" />
+                  )}
+                </div>
+                <div>
+                  <div className="text-xl font-bold">{selectedAlbum.title}</div>
+                  <div className="text-sm text-gray-600">{selectedAlbum.artist}</div>
+                </div>
+              </DialogTitle>
+              <DialogDescription>
+                {selectedAlbum.description || 'No description available'}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Tracks ({selectedAlbum.tracks?.length || 0})</h3>
+                <Button 
+                  onClick={() => openAlbumForTrackAdd(selectedAlbum)}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Track to Album
+                </Button>
+              </div>
+
+              {selectedAlbum.tracks?.length === 0 ? (
+                <div className="text-center py-8 bg-gray-50 rounded-lg">
+                  <Music className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-500">No tracks in this album yet.</p>
+                  <Button 
+                    onClick={() => openAlbumForTrackAdd(selectedAlbum)}
+                    className="mt-3"
+                    variant="outline"
+                  >
+                    Add First Track
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {selectedAlbum.tracks?.map((track: any, index: number) => (
+                    <div
+                      key={track.id}
+                      className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="w-8 h-8 bg-primary/20 rounded flex items-center justify-center text-sm font-medium text-primary">
+                        {track.track_number || index + 1}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-900 truncate">{track.title}</h4>
+                        <p className="text-sm text-gray-600 truncate">{track.artist}</p>
+                      </div>
+                      
+                      <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        <div className="flex items-center">
+                          <Play className="h-4 w-4 mr-1" />
+                          {track.play_count || 0}
+                        </div>
+                        <span>{Math.floor(track.duration / 60)}:{(track.duration % 60).toString().padStart(2, '0')}</span>
+                      </div>
+                      
+                      <div className="flex space-x-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => startEditingTrack(track)}
+                          className="text-blue-500 hover:text-blue-700"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteTrack(track.id, track.title)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => window.open(track.audio_url, '_blank')}
+                          className="text-green-500 hover:text-green-700"
+                          title="Download track"
+                        >
+                          <Upload className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Tracks Section */}
       <Card>
