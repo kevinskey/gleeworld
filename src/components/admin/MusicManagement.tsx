@@ -226,7 +226,7 @@ export const MusicManagement = () => {
         .insert({
           ...trackForm,
           created_by: user.id,
-          album_id: trackForm.album_id || null
+          album_id: trackForm.album_id === 'no-album' ? null : trackForm.album_id || null
         });
 
       if (error) throw error;
@@ -268,7 +268,7 @@ export const MusicManagement = () => {
         .update({
           title: trackForm.title,
           artist: trackForm.artist,
-          album_id: trackForm.album_id || null,
+          album_id: trackForm.album_id === 'no-album' ? null : trackForm.album_id || null,
           audio_url: trackForm.audio_url,
           duration: trackForm.duration,
           track_number: trackForm.track_number,
@@ -311,7 +311,7 @@ export const MusicManagement = () => {
     setTrackForm({
       title: track.title,
       artist: track.artist,
-      album_id: track.album?.id || '',
+      album_id: track.album?.id || 'no-album',
       audio_url: track.audio_url,
       duration: track.duration,
       track_number: track.track_number || 1,
@@ -629,7 +629,7 @@ export const MusicManagement = () => {
                       <SelectValue placeholder="Select an album (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No Album</SelectItem>
+                      <SelectItem value="no-album">No Album</SelectItem>
                       {albums.map((album) => (
                         <SelectItem key={album.id} value={album.id}>
                           {album.title} - {album.artist}
