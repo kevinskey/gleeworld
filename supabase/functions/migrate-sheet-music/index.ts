@@ -14,17 +14,23 @@ interface SheetMusicRecord {
 }
 
 serve(async (req) => {
+  console.log('migrate-sheet-music: Function invoked with method:', req.method)
+  
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
+    console.log('migrate-sheet-music: Parsing request body...')
+    const body = await req.json()
+    console.log('migrate-sheet-music: Request body:', body)
+    
+    const { action, reader_api_url, reader_api_key } = body
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
-
-    const { action, reader_api_url, reader_api_key } = await req.json()
 
     if (action === 'migrate_pdfs') {
       console.log('Starting PDF migration from reader.gleeworld.org...')
@@ -150,29 +156,40 @@ serve(async (req) => {
     }
 
     if (action === 'check_status') {
+      console.log('migrate-sheet-music: Checking migration status...')
       // Check migration status
-      const { data: totalRecords } = await supabaseClient
+      const { count: totalCount, error: totalError } = await supabaseClient
         .from('gw_sheet_music')
         .select('id', { count: 'exact', head: true })
 
-      const { data: migratedRecords } = await supabaseClient
+      const { count: migratedCount, error: migratedError } = await supabaseClient
         .from('gw_sheet_music')
         .select('id', { count: 'exact', head: true })
         .not('pdf_url', 'is', null)
 
-      const { data: pendingRecords } = await supabaseClient
+      const { count: pendingCount, error: pendingError } = await supabaseClient
         .from('gw_sheet_music')
         .select('id', { count: 'exact', head: true })
         .is('pdf_url', null)
 
+      console.log('migrate-sheet-music: Counts:', { totalCount, migratedCount, pendingCount })
+
+      if (totalError || migratedError || pendingError) {
+        console.error('migrate-sheet-music: Count errors:', { totalError, migratedError, pendingError })
+      }
+
+      const result = {
+        total_records: totalCount || 0,
+        migrated_records: migratedCount || 0,
+        pending_records: pendingCount || 0,
+        migration_progress: totalCount ? 
+          Math.round(((migratedCount || 0) / totalCount) * 100) : 0
+      }
+
+      console.log('migrate-sheet-music: Returning status:', result)
+
       return new Response(
-        JSON.stringify({
-          total_records: totalRecords?.length || 0,
-          migrated_records: migratedRecords?.length || 0,
-          pending_records: pendingRecords?.length || 0,
-          migration_progress: totalRecords?.length ? 
-            Math.round(((migratedRecords?.length || 0) / totalRecords.length) * 100) : 0
-        }),
+        JSON.stringify(result),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,

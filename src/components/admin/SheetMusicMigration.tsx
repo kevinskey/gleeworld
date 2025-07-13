@@ -38,16 +38,20 @@ export const SheetMusicMigration: React.FC = () => {
   }, []);
 
   const checkMigrationStatus = async () => {
+    console.log('SheetMusicMigration: Checking migration status...');
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('migrate-sheet-music', {
         body: { action: 'check_status' }
       });
 
+      console.log('SheetMusicMigration: Edge function response:', { data, error });
+      
       if (error) throw error;
       setMigrationStatus(data);
+      console.log('SheetMusicMigration: Status set:', data);
     } catch (error) {
-      console.error('Failed to check migration status:', error);
+      console.error('SheetMusicMigration: Failed to check migration status:', error);
       toast.error('Failed to check migration status');
     } finally {
       setIsLoading(false);
