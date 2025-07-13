@@ -6,7 +6,7 @@ import { Calendar, MapPin, Users, DollarSign, Edit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { EventDetailsDialog } from "./EventDetailsDialog";
+import { EditEventDialog } from "./EditEventDialog";
 
 interface Event {
   id: string;
@@ -219,11 +219,11 @@ export const EventsList = () => {
       </div>
 
       {selectedEvent && (
-        <EventDetailsDialog
+        <EditEventDialog
           event={selectedEvent}
           open={showDetails}
           onOpenChange={setShowDetails}
-          onUpdate={fetchEvents}
+          onEventUpdated={fetchEvents}
         />
       )}
     </>
