@@ -47,12 +47,21 @@ export const SheetMusicMigration: React.FC = () => {
 
       console.log('SheetMusicMigration: Edge function response:', { data, error });
       
-      if (error) throw error;
+      if (error) {
+        console.error('SheetMusicMigration: Edge function error:', error);
+        throw new Error(`Edge function error: ${error.message || JSON.stringify(error)}`);
+      }
+      
+      if (!data) {
+        throw new Error('No data received from edge function');
+      }
+      
       setMigrationStatus(data);
       console.log('SheetMusicMigration: Status set:', data);
+      toast.success('Migration status checked successfully');
     } catch (error) {
       console.error('SheetMusicMigration: Failed to check migration status:', error);
-      toast.error('Failed to check migration status');
+      toast.error(`Failed to check migration status: ${error.message || 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
