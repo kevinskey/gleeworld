@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Database } from "@/integrations/supabase/types";
 import { useUserScores } from "@/hooks/useUserScores";
-import { usePdfThumbnail } from "@/hooks/usePdfThumbnail";
 
 type SheetMusic = Database['public']['Tables']['gw_sheet_music']['Row'];
 
@@ -16,7 +15,6 @@ interface SheetMusicCardProps {
 
 export const SheetMusicCard = ({ sheetMusic, viewMode, onSelect }: SheetMusicCardProps) => {
   const { getAverageScore, getBestScore } = useUserScores();
-  const { thumbnailUrl: pdfThumbnail, loading: thumbnailLoading } = usePdfThumbnail(sheetMusic.pdf_url);
 
   const handleDownload = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -122,11 +120,9 @@ export const SheetMusicCard = ({ sheetMusic, viewMode, onSelect }: SheetMusicCar
       <CardContent>
         {/* Thumbnail or placeholder */}
         <div className="aspect-[3/4] bg-muted rounded-lg mb-4 flex items-center justify-center">
-          {thumbnailLoading ? (
-            <div className="animate-pulse bg-muted-foreground/20 w-full h-full rounded-lg"></div>
-          ) : (pdfThumbnail || sheetMusic.thumbnail_url) ? (
+          {sheetMusic.thumbnail_url ? (
             <img 
-              src={pdfThumbnail || sheetMusic.thumbnail_url} 
+              src={sheetMusic.thumbnail_url} 
               alt={sheetMusic.title}
               className="w-full h-full object-cover rounded-lg"
             />
