@@ -27,20 +27,18 @@ import {
 
 interface YouTubeVideo {
   id: string;
-  video_id: string;
+  youtube_id: string;
   title: string;
   description: string;
-  duration: string;
+  duration?: number;
   thumbnail_url: string;
-  video_url: string;
-  view_count: number;
-  like_count: number;
-  comment_count: number;
-  category: string;
-  tags: string[];
-  is_featured: boolean;
-  display_order: number;
-  published_at: string;
+  view_count?: number;
+  category?: string;
+  tags?: string[];
+  is_featured?: boolean;
+  published_at?: string;
+  added_by?: string;
+  created_at?: string;
 }
 
 interface YouTubeChannel {
@@ -66,6 +64,14 @@ export const YouTubeManagement = () => {
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [showManualUpload, setShowManualUpload] = useState(false);
+  const [manualVideo, setManualVideo] = useState({
+    youtube_id: '',
+    title: '',
+    description: '',
+    category: '',
+    tags: '',
+  });
 
   // Load existing channel and videos
   useEffect(() => {
@@ -89,9 +95,8 @@ export const YouTubeManagement = () => {
 
         // Load videos for this channel
         const { data: videosData, error: videosError } = await supabase
-          .from('youtube_videos')
+          .from('gw_youtube_videos')
           .select('*')
-          .eq('channel_id', channelData.id)
           .order('published_at', { ascending: false });
 
         if (videosData && !videosError) {
@@ -162,7 +167,7 @@ export const YouTubeManagement = () => {
 
     try {
       const { error } = await supabase
-        .from('youtube_videos')
+        .from('gw_youtube_videos')
         .update({ is_featured: !video.is_featured })
         .eq('id', videoId);
 
@@ -188,7 +193,7 @@ export const YouTubeManagement = () => {
   const handleDeleteVideo = async (videoId: string) => {
     try {
       const { error } = await supabase
-        .from('youtube_videos')
+        .from('gw_youtube_videos')
         .delete()
         .eq('id', videoId);
 
@@ -259,6 +264,70 @@ export const YouTubeManagement = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
+  const handleManualUpload = async () => {
+    if (!manualVideo.youtube_id || !manualVideo.title) {
+      toast({
+        title: "Missing Information",
+        description: "YouTube ID and title are required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Extract video ID from URL if provided
+      let videoId = manualVideo.youtube_id;
+      const youtubeRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/;
+      const match = manualVideo.youtube_id.match(youtubeRegex);
+      if (match) {
+        videoId = match[1];
+      }
+
+      // Create video data
+      const videoData = {
+        youtube_id: videoId,
+        title: manualVideo.title,
+        description: manualVideo.description || '',
+        thumbnail_url: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+        video_url: `https://www.youtube.com/watch?v=${videoId}`,
+        category: manualVideo.category || 'General',
+        tags: manualVideo.tags ? manualVideo.tags.split(',').map(tag => tag.trim()) : [],
+        is_featured: false,
+        view_count: 0,
+        published_at: new Date().toISOString(),
+        added_by: 'manual'
+      };
+
+      const { error } = await supabase
+        .from('gw_youtube_videos')
+        .insert([videoData]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Video Added",
+        description: "Video has been added successfully.",
+      });
+
+      // Reset form and reload data
+      setManualVideo({
+        youtube_id: '',
+        title: '',
+        description: '',
+        category: '',
+        tags: '',
+      });
+      setShowManualUpload(false);
+      await loadChannelData();
+    } catch (error) {
+      toast({
+        title: "Upload Failed",
+        description: error.message || "Failed to add video.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -277,6 +346,94 @@ export const YouTubeManagement = () => {
           </div>
         )}
       </div>
+
+      {/* Manual Video Upload */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Plus className="h-5 w-5 mr-2" />
+              Manual Video Upload
+            </div>
+            <Button
+              onClick={() => setShowManualUpload(!showManualUpload)}
+              variant="outline"
+              size="sm"
+            >
+              {showManualUpload ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        {showManualUpload && (
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="youtube_url">YouTube Video URL or ID</Label>
+                <Input
+                  id="youtube_url"
+                  value={manualVideo.youtube_id}
+                  onChange={(e) => setManualVideo(prev => ({ ...prev, youtube_id: e.target.value }))}
+                  placeholder="https://youtube.com/watch?v=... or video ID"
+                />
+              </div>
+              <div>
+                <Label htmlFor="video_title">Title *</Label>
+                <Input
+                  id="video_title"
+                  value={manualVideo.title}
+                  onChange={(e) => setManualVideo(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Video title"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="video_description">Description</Label>
+              <Textarea
+                id="video_description"
+                value={manualVideo.description}
+                onChange={(e) => setManualVideo(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Video description"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="video_category">Category</Label>
+                <Input
+                  id="video_category"
+                  value={manualVideo.category}
+                  onChange={(e) => setManualVideo(prev => ({ ...prev, category: e.target.value }))}
+                  placeholder="Performance, Behind the Scenes, etc."
+                />
+              </div>
+              <div>
+                <Label htmlFor="video_tags">Tags (comma separated)</Label>
+                <Input
+                  id="video_tags"
+                  value={manualVideo.tags}
+                  onChange={(e) => setManualVideo(prev => ({ ...prev, tags: e.target.value }))}
+                  placeholder="music, performance, glee"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowManualUpload(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleManualUpload}
+                disabled={!manualVideo.youtube_id || !manualVideo.title}
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Add Video
+              </Button>
+            </div>
+          </CardContent>
+        )}
+      </Card>
 
       {/* Channel Sync */}
       <Card>
@@ -464,9 +621,11 @@ export const YouTubeManagement = () => {
                               <Play className="h-6 w-6 text-white" />
                             </div>
                           </div>
-                          <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                            {video.duration}
-                          </div>
+                           {video.duration && (
+                            <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                              {video.duration}
+                            </div>
+                          )}
                           {video.is_featured && (
                             <div className="absolute top-2 left-2">
                               <Badge className="bg-yellow-500 text-black">Featured</Badge>
@@ -501,8 +660,8 @@ export const YouTubeManagement = () => {
                           </div>
                           <p className="text-xs text-gray-600 line-clamp-2">{video.description}</p>
                           <div className="flex items-center justify-between text-xs text-gray-500">
-                            <span>{formatViewCount(video.view_count)} views</span>
-                            <span>{formatDate(video.published_at)}</span>
+                            <span>{video.view_count ? formatViewCount(video.view_count) : '0'} views</span>
+                            <span>{video.published_at ? formatDate(video.published_at) : formatDate(video.created_at || '')}</span>
                           </div>
                           <Button
                             variant="outline"
@@ -510,7 +669,7 @@ export const YouTubeManagement = () => {
                             className="w-full"
                             asChild
                           >
-                            <a href={video.video_url} target="_blank" rel="noopener noreferrer">
+                            <a href={`https://www.youtube.com/watch?v=${video.youtube_id}`} target="_blank" rel="noopener noreferrer">
                               <ExternalLink className="h-3 w-3 mr-2" />
                               View on YouTube
                             </a>
