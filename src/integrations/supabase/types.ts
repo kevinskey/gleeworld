@@ -2174,6 +2174,60 @@ export type Database = {
           },
         ]
       }
+      gw_pre_event_excuses: {
+        Row: {
+          created_at: string
+          documentation_url: string | null
+          event_id: string
+          id: string
+          reason: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          documentation_url?: string | null
+          event_id: string
+          id?: string
+          reason: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          documentation_url?: string | null
+          event_id?: string
+          id?: string
+          reason?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_pre_event_excuses_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "gw_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_pre_event_excuses_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       gw_product_variants: {
         Row: {
           barcode: string | null

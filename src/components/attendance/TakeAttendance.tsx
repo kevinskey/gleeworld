@@ -36,6 +36,7 @@ interface AttendanceMember {
   avatar_url?: string;
   attendance_status?: string;
   notes?: string;
+  has_pre_excuse?: boolean;
 }
 
 export const TakeAttendance = () => {
@@ -103,16 +104,45 @@ export const TakeAttendance = () => {
 
       if (attendanceError) throw attendanceError;
 
-      // Merge attendance data with profiles
+      // Load approved pre-event excuses for this event
+      const { data: preExcuseData, error: preExcuseError } = await supabase
+        .from('gw_pre_event_excuses')
+        .select('user_id, reason, status')
+        .eq('event_id', selectedEvent)
+        .eq('status', 'approved');
+
+      if (preExcuseError) throw preExcuseError;
+
+      // Create maps for existing data
       const attendanceMap = new Map(
         attendanceData?.map(a => [a.user_id, { status: a.attendance_status, notes: a.notes || '' }]) || []
       );
 
-      const membersWithAttendance = profilesData?.map(member => ({
-        ...member,
-        attendance_status: attendanceMap.get(member.user_id)?.status,
-        notes: attendanceMap.get(member.user_id)?.notes || ''
-      })) || [];
+      const preExcuseMap = new Map(
+        preExcuseData?.map(e => [e.user_id, e.reason]) || []
+      );
+
+      // Merge attendance data with profiles
+      const membersWithAttendance = profilesData?.map(member => {
+        const existingAttendance = attendanceMap.get(member.user_id);
+        const preExcuse = preExcuseMap.get(member.user_id);
+        
+        // If there's an approved pre-event excuse and no existing attendance, set as excused
+        let status = existingAttendance?.status;
+        let notes = existingAttendance?.notes || '';
+        
+        if (preExcuse && !existingAttendance) {
+          status = 'excused';
+          notes = `Pre-event excuse: ${preExcuse}`;
+        }
+
+        return {
+          ...member,
+          attendance_status: status,
+          notes,
+          has_pre_excuse: !!preExcuse
+        };
+      }) || [];
 
       setMembers(membersWithAttendance);
 
@@ -379,14 +409,21 @@ export const TakeAttendance = () => {
                         </AvatarFallback>
                       </Avatar>
                       
-                      <div className="flex-1">
-                        <div className="font-medium">{member.full_name}</div>
-                        {member.voice_part && (
-                          <Badge variant="outline" className="text-xs mt-1">
-                            {member.voice_part}
-                          </Badge>
-                        )}
-                      </div>
+                       <div className="flex-1">
+                         <div className="flex items-center gap-2">
+                           <div className="font-medium">{member.full_name}</div>
+                           {member.has_pre_excuse && (
+                             <Badge className="bg-blue-100 text-blue-800 text-xs">
+                               Pre-Excuse
+                             </Badge>
+                           )}
+                         </div>
+                         {member.voice_part && (
+                           <Badge variant="outline" className="text-xs mt-1">
+                             {member.voice_part}
+                           </Badge>
+                         )}
+                       </div>
 
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">

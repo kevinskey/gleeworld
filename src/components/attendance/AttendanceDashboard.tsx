@@ -16,6 +16,7 @@ import { TakeAttendance } from './TakeAttendance';
 import { MyAttendance } from './MyAttendance';
 import { ExcuseRequests } from './ExcuseRequests';
 import { AttendanceReports } from './AttendanceReports';
+import { PreEventExcuses } from './PreEventExcuses';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 
@@ -109,7 +110,7 @@ export const AttendanceDashboard = () => {
       {/* Main Content Tabs */}
       <div className="bg-white/50 backdrop-blur-sm rounded-xl p-1 border">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto p-1 bg-white/80 backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 h-auto p-1 bg-white/80 backdrop-blur-sm">
             <TabsTrigger 
               value="overview" 
               className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
@@ -117,6 +118,15 @@ export const AttendanceDashboard = () => {
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">My Attendance</span>
               <span className="sm:hidden">Attendance</span>
+            </TabsTrigger>
+            
+            <TabsTrigger 
+              value="pre-excuses" 
+              className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
+            >
+              <Calendar className="h-4 w-4" />
+              <span className="hidden sm:inline">Pre-Event Excuses</span>
+              <span className="sm:hidden">Pre-Excuse</span>
             </TabsTrigger>
             
             {canTakeAttendance && (
@@ -135,7 +145,7 @@ export const AttendanceDashboard = () => {
               className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
             >
               <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">Excuse Requests</span>
+              <span className="hidden sm:inline">Post-Event Excuses</span>
               <span className="sm:hidden">Excuses</span>
             </TabsTrigger>
             
@@ -154,6 +164,10 @@ export const AttendanceDashboard = () => {
           <div className="mt-8">
             <TabsContent value="overview" className="space-y-6 animate-fade-in">
               <MyAttendance />
+            </TabsContent>
+
+            <TabsContent value="pre-excuses" className="space-y-6 animate-fade-in">
+              <PreEventExcuses />
             </TabsContent>
 
             {canTakeAttendance && (
