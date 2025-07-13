@@ -272,11 +272,11 @@ export const UserDashboard = () => {
   return (
     <UniversalLayout containerized={false}>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-        <div className="container mx-auto px-2 sm:px-4 py-6 space-y-6">
+        <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6 space-y-4 sm:space-y-6">
           
           {/* Dashboard Header with Background */}
           <div 
-            className="relative bg-white rounded-lg shadow-sm border p-6 overflow-hidden"
+            className="relative bg-white rounded-lg shadow-sm border p-3 sm:p-6 overflow-hidden"
             style={{
               backgroundImage: welcomeCardSetting?.image_url ? `url(${welcomeCardSetting.image_url})` : 'none',
               backgroundSize: 'cover',
@@ -289,121 +289,125 @@ export const UserDashboard = () => {
               <div className="absolute inset-0 bg-black bg-opacity-40 rounded-lg" />
             )}
             
-            <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              <div className="flex items-center space-x-4">
-                <Avatar className="h-16 w-16 ring-2 ring-white/50">
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center space-x-3 sm:space-x-4">
+                <Avatar className="h-12 w-12 sm:h-16 sm:w-16 ring-2 ring-white/50">
                   <AvatarImage src={profile?.avatar_url || "/placeholder-avatar.jpg"} />
-                  <AvatarFallback className="bg-blue-100 text-blue-600 text-lg font-semibold">
+                  <AvatarFallback className="bg-blue-100 text-blue-600 text-base sm:text-lg font-semibold">
                     {displayName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h1 className={`text-2xl font-bold ${welcomeCardSetting?.image_url ? 'text-white drop-shadow-lg' : 'text-gray-900'}`}>
+                  <h1 className={`text-lg sm:text-2xl font-bold ${welcomeCardSetting?.image_url ? 'text-white drop-shadow-lg' : 'text-gray-900'}`}>
                     Welcome back, {displayName}!
                   </h1>
-                  <p className={`${welcomeCardSetting?.image_url ? 'text-white/90 drop-shadow' : 'text-gray-600'}`}>
+                  <p className={`text-sm sm:text-base ${welcomeCardSetting?.image_url ? 'text-white/90 drop-shadow' : 'text-gray-600'}`}>
                     Spelman College Glee Club {getUserTitle()}
                   </p>
-                  <div className="flex flex-wrap gap-2 mt-2">
+                  <div className="flex flex-wrap gap-1 sm:gap-2 mt-1 sm:mt-2">
                     {profile?.voice_part && (
-                      <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                      <Badge variant="secondary" className="bg-white/20 text-white border-white/30 text-xs">
                         {profile.voice_part}
                       </Badge>
                     )}
-                    <Badge variant="outline" className="bg-white/20 text-white border-white/30">
+                    <Badge variant="outline" className="bg-white/20 text-white border-white/30 text-xs">
                       {getUserTitle()}
                     </Badge>
-                    <Badge className="bg-green-500/80 text-white border-green-300/30">
+                    <Badge className="bg-green-500/80 text-white border-green-300/30 text-xs">
                       Active Member
                     </Badge>
                   </div>
                 </div>
               </div>
-              <div className={`text-right ${welcomeCardSetting?.image_url ? 'text-white' : 'text-gray-900'}`}>
-                <p className={`text-sm ${welcomeCardSetting?.image_url ? 'text-white/80' : 'text-gray-600'}`}>
+              <div className={`text-left sm:text-right ${welcomeCardSetting?.image_url ? 'text-white' : 'text-gray-900'}`}>
+                <p className={`text-xs sm:text-sm ${welcomeCardSetting?.image_url ? 'text-white/80' : 'text-gray-600'}`}>
                   Member since
                 </p>
-                <p className="font-medium">{profile?.created_at ? format(new Date(profile.created_at), 'MMMM yyyy') : 'Recently'}</p>
+                <p className="font-medium text-sm sm:text-base">{profile?.created_at ? format(new Date(profile.created_at), 'MMMM yyyy') : 'Recently'}</p>
               </div>
             </div>
           </div>
 
           {/* Quick Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
             <Card className="hover:shadow-md transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
-                <Calendar className="h-4 w-4 text-blue-600" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+                <CardTitle className="text-xs sm:text-sm font-medium">Events</CardTitle>
+                <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{upcomingEventsList.length}</div>
-                <p className="text-xs text-gray-600">
+              <CardContent className="pb-2 sm:pb-6">
+                <div className="text-lg sm:text-2xl font-bold">{upcomingEventsList.length}</div>
+                <p className="text-xs text-gray-600 hidden sm:block">
                   {upcomingEventsList.length > 0 ? `Next: ${format(new Date(upcomingEventsList[0].start_date), 'MMM dd')}` : 'No events scheduled'}
                 </p>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-md transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Contracts</CardTitle>
-                <Music className="h-4 w-4 text-green-600" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+                <CardTitle className="text-xs sm:text-sm font-medium">Contracts</CardTitle>
+                <Music className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{dashboardData?.total_contracts || 0}</div>
-                <p className="text-xs text-green-600">{dashboardData?.signed_contracts || 0} signed</p>
+              <CardContent className="pb-2 sm:pb-6">
+                <div className="text-lg sm:text-2xl font-bold">{dashboardData?.total_contracts || 0}</div>
+                <p className="text-xs text-green-600 hidden sm:block">{dashboardData?.signed_contracts || 0} signed</p>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-md transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Payments</CardTitle>
-                <CheckCircle className="h-4 w-4 text-purple-600" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+                <CardTitle className="text-xs sm:text-sm font-medium">Payments</CardTitle>
+                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{dashboardData?.payments_received || 0}</div>
-                <p className="text-xs text-purple-600">${dashboardData?.total_amount_received || 0}</p>
+              <CardContent className="pb-2 sm:pb-6">
+                <div className="text-lg sm:text-2xl font-bold">{dashboardData?.payments_received || 0}</div>
+                <p className="text-xs text-purple-600 hidden sm:block">${dashboardData?.total_amount_received || 0}</p>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-md transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Notifications</CardTitle>
-                <DollarSign className="h-4 w-4 text-emerald-600" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+                <CardTitle className="text-xs sm:text-sm font-medium">Alerts</CardTitle>
+                <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-600" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-emerald-600">{dashboardData?.unread_notifications || 0}</div>
-                <p className="text-xs text-gray-600">Unread</p>
+              <CardContent className="pb-2 sm:pb-6">
+                <div className="text-lg sm:text-2xl font-bold text-emerald-600">{dashboardData?.unread_notifications || 0}</div>
+                <p className="text-xs text-gray-600 hidden sm:block">Unread</p>
               </CardContent>
             </Card>
           </div>
 
           {/* Quick Actions */}
           <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Access your most-used features</CardDescription>
+            <CardHeader className="pb-3 sm:pb-6">
+              <CardTitle className="text-lg sm:text-xl">Quick Actions</CardTitle>
+              <CardDescription className="hidden sm:block">Access your most-used features</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
                 <Button 
-                  className="h-20 flex-col space-y-2" 
+                  className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm" 
                   variant="outline"
                   onClick={() => setSelectedModule('sheet-music')}
                 >
-                  <Music className="h-6 w-6" />
-                  <span>View Sheet Music</span>
+                  <Music className="h-4 w-4 sm:h-6 sm:w-6" />
+                  <span className="hidden sm:inline">View Sheet Music</span>
+                  <span className="sm:hidden">Music</span>
                 </Button>
-                <Button className="h-20 flex-col space-y-2" variant="outline">
-                  <CheckCircle className="h-6 w-6" />
-                  <span>Mark Attendance</span>
+                <Button className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm" variant="outline">
+                  <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6" />
+                  <span className="hidden sm:inline">Mark Attendance</span>
+                  <span className="sm:hidden">Attendance</span>
                 </Button>
-                <Button className="h-20 flex-col space-y-2" variant="outline">
-                  <Clock className="h-6 w-6" />
-                  <span>Practice Log</span>
+                <Button className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm" variant="outline">
+                  <Clock className="h-4 w-4 sm:h-6 sm:w-6" />
+                  <span className="hidden sm:inline">Practice Log</span>
+                  <span className="sm:hidden">Practice</span>
                 </Button>
-                <Button className="h-20 flex-col space-y-2" variant="outline">
-                  <Bell className="h-6 w-6" />
-                  <span>Announcements</span>
+                <Button className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm" variant="outline">
+                  <Bell className="h-4 w-4 sm:h-6 sm:w-6" />
+                  <span className="hidden sm:inline">Announcements</span>
+                  <span className="sm:hidden">News</span>
                 </Button>
               </div>
             </CardContent>
