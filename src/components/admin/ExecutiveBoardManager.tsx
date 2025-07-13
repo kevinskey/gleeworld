@@ -106,7 +106,7 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
 
       const { error } = await supabase
         .from('profiles')
-        .update(updates)
+        .update(updates as any) // Temporary type assertion until Supabase types are regenerated
         .eq('id', selectedUser.id);
 
       if (error) throw error;
@@ -145,7 +145,7 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
         .update({
           exec_board_role: null,
           is_exec_board: false,
-        })
+        } as any) // Temporary type assertion until Supabase types are regenerated
         .eq('id', userId);
 
       if (error) throw error;
