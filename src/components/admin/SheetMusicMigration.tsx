@@ -110,22 +110,41 @@ export const SheetMusicMigration: React.FC = () => {
     setMigrationResults([]);
 
     try {
+      console.log('Starting copy from bucket...');
       const { data, error } = await supabase.functions.invoke('migrate-sheet-music', {
         body: {
           action: 'copy_from_bucket'
         }
       });
 
-      if (error) throw error;
+      console.log('Copy from bucket response:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
+      if (data.error) {
+        console.error('Function returned error:', data.error);
+        throw new Error(data.error);
+      }
 
       setMigrationResults(data.results || []);
-      toast.success(`Copy completed: ${data.summary.successful} successful, ${data.summary.failed} failed`);
+      
+      if (data.summary) {
+        toast.success(`Copy completed: ${data.summary.successful} successful, ${data.summary.failed} failed, ${data.summary.database_updates || 0} database updates`);
+      } else {
+        toast.success('Copy completed successfully');
+      }
+      
+      console.log('Migration results:', data.results);
+      console.log('Summary:', data.summary);
       
       // Refresh status
       await checkMigrationStatus();
     } catch (error) {
       console.error('Copy from bucket failed:', error);
-      toast.error('Copy from bucket failed');
+      toast.error(`Copy from bucket failed: ${error.message || 'Unknown error'}`);
     } finally {
       setIsMigrating(false);
     }
