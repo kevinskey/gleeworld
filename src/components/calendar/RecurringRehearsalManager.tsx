@@ -23,8 +23,9 @@ export const RecurringRehearsalManager = ({ onRehearsalsCreated }: RecurringRehe
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [cleanupLoading, setCleanupLoading] = useState(false);
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
+  // Default to August 20 - December 3 for the semester
+  const [startDate, setStartDate] = useState<Date>(new Date(2025, 7, 20)); // August 20, 2025
+  const [endDate, setEndDate] = useState<Date>(new Date(2025, 11, 3)); // December 3, 2025
   const [showStartCalendar, setShowStartCalendar] = useState(false);
   const [showEndCalendar, setShowEndCalendar] = useState(false);
 
@@ -63,8 +64,9 @@ export const RecurringRehearsalManager = ({ onRehearsalsCreated }: RecurringRehe
       });
 
       setOpen(false);
-      setStartDate(undefined);
-      setEndDate(undefined);
+      // Reset to default semester dates
+      setStartDate(new Date(2025, 7, 20)); // August 20, 2025
+      setEndDate(new Date(2025, 11, 3)); // December 3, 2025
       onRehearsalsCreated();
     } catch (error) {
       console.error('Error creating rehearsals:', error);
