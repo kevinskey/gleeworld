@@ -10,6 +10,9 @@ export default function AttendanceTest() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  // Debug logging
+  console.log('AttendanceTest component loaded');
+
   const addResult = (message: string, isError = false) => {
     setTestResults(prev => [...prev, `${isError ? '❌' : '✅'} ${message}`]);
   };
