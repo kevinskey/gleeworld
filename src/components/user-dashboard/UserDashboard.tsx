@@ -61,7 +61,7 @@ export const UserDashboard = () => {
   const { contracts, loading: contractsLoading } = useUserContracts();
   const { permissions: usernamePermissions, loading: permissionsLoading } = useUsernamePermissions(user?.email);
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
-  const [isRecentActivityExpanded, setIsRecentActivityExpanded] = useState(true);
+  const [isRecentActivityExpanded, setIsRecentActivityExpanded] = useState(false);
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
   const userRole = profile?.role || 'user';
