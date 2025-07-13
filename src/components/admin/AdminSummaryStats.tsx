@@ -1,6 +1,9 @@
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   Users, 
   FileText, 
@@ -10,7 +13,9 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  Calendar
+  Calendar,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 import { User } from "@/hooks/useUsers";
 import { ActivityLog } from "@/hooks/useActivityLogs";
@@ -22,6 +27,7 @@ interface AdminSummaryStatsProps {
 }
 
 export const AdminSummaryStats = ({ users, loading, activityLogs }: AdminSummaryStatsProps) => {
+  const [isOpen, setIsOpen] = useState(false);
   // Calculate stats
   const totalUsers = users?.length || 0;
   const activeUsers = users?.filter(user => user.email)?.length || 0; // Filter by users with email
@@ -87,26 +93,39 @@ export const AdminSummaryStats = ({ users, loading, activityLogs }: AdminSummary
   }
 
   return (
-    <Card className="bg-white shadow-sm border border-gray-200 overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b border-gray-100 pb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2 text-gray-900 text-xl">
-              <TrendingUp className="h-6 w-6 text-blue-600" />
-              System Overview
-            </CardTitle>
-            <p className="text-gray-600 mt-1 text-sm">
-              Real-time dashboard metrics and system health
-            </p>
-          </div>
-          <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
-            <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-            Live
-          </Badge>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="p-6">
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Card className="bg-white shadow-sm border border-gray-200 overflow-hidden">
+        <CollapsibleTrigger asChild>
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b border-gray-100 pb-4 cursor-pointer hover:bg-gradient-to-r hover:from-slate-100 hover:to-blue-100 transition-all">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="sm" className="p-1 h-8 w-8">
+                  {isOpen ? (
+                    <ChevronDown className="h-4 w-4 text-gray-600" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 text-gray-600" />
+                  )}
+                </Button>
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-gray-900 text-xl">
+                    <TrendingUp className="h-6 w-6 text-blue-600" />
+                    System Overview
+                  </CardTitle>
+                  <p className="text-gray-600 mt-1 text-sm">
+                    Real-time dashboard metrics and system health
+                  </p>
+                </div>
+              </div>
+              <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+                Live
+              </Badge>
+            </div>
+          </CardHeader>
+        </CollapsibleTrigger>
+        
+        <CollapsibleContent>
+          <CardContent className="p-6">
         {/* Main Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {stats.map((stat, index) => {
@@ -176,6 +195,8 @@ export const AdminSummaryStats = ({ users, loading, activityLogs }: AdminSummary
           </div>
         </div>
       </CardContent>
-    </Card>
-  );
+    </CollapsibleContent>
+  </Card>
+</Collapsible>
+);
 };
