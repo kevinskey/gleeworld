@@ -406,10 +406,14 @@ export const UserDashboard = () => {
                   <span className="hidden sm:inline">View Sheet Music</span>
                   <span className="sm:hidden">Music</span>
                 </Button>
-                <Button className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm" variant="outline">
+                <Button 
+                  className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm" 
+                  variant="outline"
+                  onClick={() => navigate('/attendance-test')}
+                >
                   <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6" />
-                  <span className="hidden sm:inline">Mark Attendance</span>
-                  <span className="sm:hidden">Attendance</span>
+                  <span className="hidden sm:inline">Test Attendance</span>
+                  <span className="sm:hidden">Test</span>
                 </Button>
                 <Button className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm" variant="outline">
                   <Clock className="h-4 w-4 sm:h-6 sm:w-6" />

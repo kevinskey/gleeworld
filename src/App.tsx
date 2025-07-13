@@ -29,6 +29,7 @@ import Calendar from "./pages/Calendar";
 import PublicCalendar from "./pages/PublicCalendar";
 import PressKit from "./pages/PressKit";
 import Notifications from "./pages/Notifications";
+import AttendanceTestPage from "./pages/AttendanceTestPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -255,27 +256,35 @@ const App = () => {
                    </PublicRoute>
                  } 
                />
-              <Route 
-                path="/contracts"
-                element={
-                  <ProtectedRoute>
-                    <Index />
-                  </ProtectedRoute>
-                } 
-               />
                <Route 
-                 path="/landing"
+                 path="/contracts"
                  element={
-                   <PublicRoute>
-                     <GleeWorldLanding />
-                   </PublicRoute>
+                   <ProtectedRoute>
+                     <Index />
+                   </ProtectedRoute>
                  } 
-               />
-               <Route 
-                 path="/" 
-                 element={<RootRoute />} 
-               />
-              <Route path="*" element={<NotFound />} />
+                />
+                <Route 
+                  path="/attendance-test" 
+                  element={
+                    <ProtectedRoute>
+                      <AttendanceTestPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/landing"
+                  element={
+                    <PublicRoute>
+                      <GleeWorldLanding />
+                    </PublicRoute>
+                  } 
+                />
+                <Route 
+                  path="/" 
+                  element={<RootRoute />} 
+                />
+               <Route path="*" element={<NotFound />} />
             </Routes>
             <GlobalMusicPlayer />
           </MusicPlayerProvider>
