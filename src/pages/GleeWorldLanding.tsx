@@ -23,6 +23,15 @@ import {
   Play
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
 
 interface Event {
   id: string;
@@ -216,13 +225,94 @@ export const GleeWorldLanding = () => {
             </div>
             
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-8">
-              <a href="#home" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Home</a>
-              <a href="#about" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">About</a>
-              <Link to="/public-calendar" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Calendar</Link>
-              <Link to="/press-kit" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Press Kit</Link>
-              <a href="#contact" className="text-gray-700 hover:text-gray-900 transition-colors font-medium">Contact</a>
-            </nav>
+            <NavigationMenu className="hidden lg:flex">
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()} href="#home">
+                    Home
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()} href="#about">
+                    About
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger>Events</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="grid gap-3 p-4 w-[400px]">
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to="/public-calendar"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        >
+                          <div className="text-sm font-medium leading-none">Calendar</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            View upcoming performances and events
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                      <NavigationMenuLink asChild>
+                        <a
+                          href="#events"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        >
+                          <div className="text-sm font-medium leading-none">Upcoming Events</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            See what's happening this season
+                          </p>
+                        </a>
+                      </NavigationMenuLink>
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger>Media</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="grid gap-3 p-4 w-[400px]">
+                      <NavigationMenuLink asChild>
+                        <a
+                          href="#music"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        >
+                          <div className="text-sm font-medium leading-none">Music</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            Listen to our latest recordings
+                          </p>
+                        </a>
+                      </NavigationMenuLink>
+                      <NavigationMenuLink asChild>
+                        <a
+                          href="#videos"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        >
+                          <div className="text-sm font-medium leading-none">Videos</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            Watch our performances
+                          </p>
+                        </a>
+                      </NavigationMenuLink>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to="/press-kit"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        >
+                          <div className="text-sm font-medium leading-none">Press Kit</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            Media resources and information
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()} href="#contact">
+                    Contact
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
 
             {/* Desktop Auth Actions */}
             <div className="hidden lg:flex items-center space-x-3">
