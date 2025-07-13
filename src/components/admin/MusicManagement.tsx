@@ -77,6 +77,41 @@ export const MusicManagement = () => {
   const [albumSortBy, setAlbumSortBy] = useState<'title' | 'artist' | 'release_date' | 'created_at'>('title');
   const [albumSortOrder, setAlbumSortOrder] = useState<'asc' | 'desc'>('asc');
 
+  // Sorted albums memo - must be with other hooks, before any early returns
+  const sortedAlbums = useMemo(() => {
+    if (!albums.length) return albums;
+    
+    return [...albums].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+      
+      switch (albumSortBy) {
+        case 'title':
+          aValue = a.title.toLowerCase();
+          bValue = b.title.toLowerCase();
+          break;
+        case 'artist':
+          aValue = a.artist.toLowerCase();
+          bValue = b.artist.toLowerCase();
+          break;
+        case 'release_date':
+          aValue = a.release_date ? new Date(a.release_date) : new Date(0);
+          bValue = b.release_date ? new Date(b.release_date) : new Date(0);
+          break;
+        case 'created_at':
+          aValue = (a as any).created_at ? new Date((a as any).created_at) : new Date(0);
+          bValue = (b as any).created_at ? new Date((b as any).created_at) : new Date(0);
+          break;
+        default:
+          return 0;
+      }
+      
+      if (aValue < bValue) return albumSortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return albumSortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [albums, albumSortBy, albumSortOrder]);
+
   // Get user role
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -724,39 +759,6 @@ export const MusicManagement = () => {
     }
   };
 
-  const sortedAlbums = useMemo(() => {
-    if (!albums.length) return albums;
-    
-    return [...albums].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
-      
-      switch (albumSortBy) {
-        case 'title':
-          aValue = a.title.toLowerCase();
-          bValue = b.title.toLowerCase();
-          break;
-        case 'artist':
-          aValue = a.artist.toLowerCase();
-          bValue = b.artist.toLowerCase();
-          break;
-        case 'release_date':
-          aValue = a.release_date ? new Date(a.release_date) : new Date(0);
-          bValue = b.release_date ? new Date(b.release_date) : new Date(0);
-          break;
-        case 'created_at':
-          aValue = (a as any).created_at ? new Date((a as any).created_at) : new Date(0);
-          bValue = (b as any).created_at ? new Date((b as any).created_at) : new Date(0);
-          break;
-        default:
-          return 0;
-      }
-      
-      if (aValue < bValue) return albumSortOrder === 'asc' ? -1 : 1;
-      if (aValue > bValue) return albumSortOrder === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [albums, albumSortBy, albumSortOrder]);
 
   if (loading) {
     return (
