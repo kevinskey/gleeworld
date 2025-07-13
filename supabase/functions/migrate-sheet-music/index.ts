@@ -175,9 +175,9 @@ serve(async (req) => {
 
       console.log(`Found ${sheetMusicRecords?.length || 0} records to process`)
 
-      // List files in the source folder within user-files bucket
+      // List files in the source folder within pdfs bucket
       const { data: bucketFiles, error: listError } = await supabaseClient.storage
-        .from('user-files')
+        .from('pdfs')
         .list('b1b00382-d655-4957-a998-c7cb913e09fa', { limit: 100 })
 
       if (listError) {
@@ -233,9 +233,9 @@ serve(async (req) => {
 
           console.log(`Found matching file: ${sourceFile.name}`)
 
-          // Download the file from source folder in user-files bucket
+          // Download the file from source folder in pdfs bucket
           const { data: fileData, error: downloadError } = await supabaseClient.storage
-            .from('user-files')
+            .from('pdfs')
             .download(`b1b00382-d655-4957-a998-c7cb913e09fa/${sourceFile.name}`)
 
           if (downloadError) {
