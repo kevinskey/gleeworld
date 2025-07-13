@@ -121,13 +121,10 @@ const System = () => {
             <ContractManagement />
           )}
 
-          {activeTab === "w9" && (
-            <W9Management />
-          )}
 
           {(activeTab === "payments" || activeTab === "financial" || activeTab === "financial-overview" || 
             activeTab === "user-records" || activeTab === "payment-tracking" || activeTab === "stipends" || 
-            activeTab === "reports") && (
+            activeTab === "reports" || activeTab === "w9") && (
             <FinancialSystem initialTab={activeTab} />
           )}
 

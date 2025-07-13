@@ -31,7 +31,7 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
 
   const getTabClasses = (tabValue: string, isDropdown: boolean = false) => {
     const isActive = activeTab === tabValue || 
-      (isDropdown && ['financial-overview', 'user-records', 'payment-tracking', 'stipends', 'budget', 'reports', 'payments', 'w9'].includes(activeTab));
+      (isDropdown && ['financial-overview', 'user-records', 'payment-tracking', 'stipends', 'budget', 'reports', 'payments', 'w9', 'financial', 'w9-forms'].includes(activeTab));
     
     return `flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
       isActive
@@ -177,71 +177,52 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
             <ChevronDown className="h-3 w-3" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52">
+        <DropdownMenuContent align="start" className="w-56">
+          {/* Overview & Analytics */}
           <DropdownMenuItem onClick={() => onTabChange('financial-overview')}>
             <TrendingUp className="h-4 w-4 mr-3" />
-            Overview
+            Overview & Analytics
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onTabChange('reports')}>
+            <BarChart3 className="h-4 w-4 mr-3" />
+            Financial Reports
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          
+          {/* User Management */}
           <DropdownMenuItem onClick={() => onTabChange('user-records')}>
             <FileText className="h-4 w-4 mr-3" />
             User Records
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onTabChange('payments')}>
+            <DollarSign className="h-4 w-4 mr-3" />
+            User Payments
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          
+          {/* Transactions */}
           <DropdownMenuItem onClick={() => onTabChange('payment-tracking')}>
             <CreditCard className="h-4 w-4 mr-3" />
             Payment Tracking
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onTabChange('payments')}>
-            <DollarSign className="h-4 w-4 mr-3" />
-            Payments
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onTabChange('w9')}>
-            <FileText className="h-4 w-4 mr-3" />
-            W9 Forms
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => onTabChange('stipends')}>
-            <DollarSign className="h-4 w-4 mr-3" />
-            Stipends
-          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onTabChange('budget')}>
             <PieChart className="h-4 w-4 mr-3" />
-            Budget
+            Budget Planning
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onTabChange('reports')}>
-            <BarChart3 className="h-4 w-4 mr-3" />
-            Reports
+          <DropdownMenuSeparator />
+          
+          {/* Forms & Compliance */}
+          <DropdownMenuItem onClick={() => onTabChange('w9')}>
+            <FileText className="h-4 w-4 mr-3" />
+            W9 Tax Forms
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onTabChange('stipends')}>
+            <DollarSign className="h-4 w-4 mr-3" />
+            Stipend Management
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Tools Dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors text-white/80 hover:text-white hover:bg-white/10"
-          >
-            <Settings className="h-4 w-4" />
-            <span className="hidden lg:inline">Tools</span>
-            <ChevronDown className="h-3 w-3" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52">
-          <DropdownMenuItem onClick={() => console.log('System settings')}>
-            <Settings className="h-4 w-4 mr-3" />
-            System Settings
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => console.log('Activity logs')}>
-            <Shield className="h-4 w-4 mr-3" />
-            Activity Logs
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => console.log('Bulk actions')}>
-            <FileText className="h-4 w-4 mr-3" />
-            Bulk Actions
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
     </nav>
   );
 };

@@ -2,13 +2,14 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calculator, DollarSign, TrendingUp, Users, FileText, CreditCard } from "lucide-react";
+import { Calculator, DollarSign, TrendingUp, Users, FileText, CreditCard, Receipt } from "lucide-react";
 import { FinancialOverview } from "./financial/FinancialOverview";
 import { UserFinancialRecords } from "./financial/UserFinancialRecords";
 import { PaymentTracking } from "./financial/PaymentTracking";
 import { FinancialReports } from "./financial/FinancialReports";
 import { StipendManagement } from "./financial/StipendManagement";
 import { BudgetTracking } from "./financial/BudgetTracking";
+import { W9Management } from "./W9Management";
 
 interface FinancialSystemProps {
   initialTab?: string;
@@ -21,6 +22,8 @@ export const FinancialSystem = ({ initialTab }: FinancialSystemProps) => {
       case 'payment-tracking': return 'payments';
       case 'financial-overview': return 'overview';
       case 'user-records': return 'records';
+      case 'w9': return 'w9-forms';
+      case 'financial': return 'overview';
       default: return tab;
     }
   };
@@ -55,7 +58,7 @@ export const FinancialSystem = ({ initialTab }: FinancialSystemProps) => {
       </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-7 h-auto p-1">
           <TabsTrigger value="overview" className="flex items-center gap-1 md:gap-2 p-2 md:p-3 text-xs md:text-sm">
             <TrendingUp className="h-3 w-3 md:h-4 md:w-4" />
             <span className="hidden sm:inline">Overview</span>
@@ -67,6 +70,10 @@ export const FinancialSystem = ({ initialTab }: FinancialSystemProps) => {
           <TabsTrigger value="payments" className="flex items-center gap-1 md:gap-2 p-2 md:p-3 text-xs md:text-sm">
             <CreditCard className="h-3 w-3 md:h-4 md:w-4" />
             <span className="hidden sm:inline">Payments</span>
+          </TabsTrigger>
+          <TabsTrigger value="w9-forms" className="flex items-center gap-1 md:gap-2 p-2 md:p-3 text-xs md:text-sm">
+            <Receipt className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden sm:inline">W9 Forms</span>
           </TabsTrigger>
           <TabsTrigger value="stipends" className="flex items-center gap-1 md:gap-2 p-2 md:p-3 text-xs md:text-sm">
             <DollarSign className="h-3 w-3 md:h-4 md:w-4" />
@@ -92,6 +99,10 @@ export const FinancialSystem = ({ initialTab }: FinancialSystemProps) => {
 
         <TabsContent value="payments" className="space-y-4 md:space-y-6">
           <PaymentTracking />
+        </TabsContent>
+
+        <TabsContent value="w9-forms" className="space-y-4 md:space-y-6">
+          <W9Management />
         </TabsContent>
 
         <TabsContent value="stipends" className="space-y-4 md:space-y-6">

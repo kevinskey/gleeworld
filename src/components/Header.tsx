@@ -75,9 +75,6 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
 
   const adminItems = [
     { id: 'system', label: 'System', icon: Settings, route: '/system' },
-    { id: 'activity', label: 'Activity', icon: Activity, route: '/activity-logs' },
-    { id: 'accounting', label: 'Accounting', icon: FileText, route: '/accounting' },
-    { id: 'admin-signing', label: 'Admin Signing', icon: Shield, route: '/admin-signing' },
   ];
 
   const handleMobileNavClick = (itemId: string, route?: string) => {
