@@ -42,7 +42,9 @@ export const MusicManagement = () => {
   const { toast } = useToast();
   
   // ALL useState hooks must be called at the top, before any conditional logic
+  const [selectedTracks, setSelectedTracks] = useState<Set<string>>(new Set());
   const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
+  const [batchDownloading, setBatchDownloading] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [roleLoading, setRoleLoading] = useState(true);
   const [isCreatingAlbum, setIsCreatingAlbum] = useState(false);
@@ -632,6 +634,92 @@ export const MusicManagement = () => {
     }
   };
 
+  const toggleTrackSelection = (trackId: string) => {
+    const newSelection = new Set(selectedTracks);
+    if (newSelection.has(trackId)) {
+      newSelection.delete(trackId);
+    } else {
+      newSelection.add(trackId);
+    }
+    setSelectedTracks(newSelection);
+  };
+
+  const handleSelectAll = () => {
+    const allTrackIds = tracks?.map(track => track.id) || [];
+    if (selectedTracks.size === allTrackIds.length) {
+      setSelectedTracks(new Set());
+    } else {
+      setSelectedTracks(new Set(allTrackIds));
+    }
+  };
+
+  const downloadTrackWithTitle = async (track: any) => {
+    try {
+      const response = await fetch(track.audio_url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create filename from track title, removing invalid characters
+      const sanitizedTitle = track.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const fileExtension = track.audio_url.split('.').pop() || 'mp3';
+      const filename = `${sanitizedTitle}.${fileExtension}`;
+      
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading track:', error);
+      toast({
+        title: "Download failed",
+        description: `Failed to download "${track.title}"`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleBatchDownload = async () => {
+    if (selectedTracks.size === 0) {
+      toast({
+        title: "No tracks selected",
+        description: "Please select tracks to download",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setBatchDownloading(true);
+    const selectedTracksList = tracks?.filter(track => selectedTracks.has(track.id)) || [];
+    
+    try {
+      for (const track of selectedTracksList) {
+        await downloadTrackWithTitle(track);
+        // Small delay between downloads to prevent overwhelming the browser
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
+      toast({
+        title: "Batch download complete",
+        description: `Downloaded ${selectedTracksList.length} tracks`
+      });
+      
+      setSelectedTracks(new Set()); // Clear selection after download
+    } catch (error) {
+      console.error('Error in batch download:', error);
+      toast({
+        title: "Batch download failed",
+        description: "Some downloads may have failed",
+        variant: "destructive"
+      });
+    } finally {
+      setBatchDownloading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -1175,7 +1263,7 @@ export const MusicManagement = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => window.open(track.audio_url, '_blank')}
+                          onClick={() => downloadTrackWithTitle(track)}
                           className="text-green-500 hover:text-green-700"
                           title="Download track"
                         >
@@ -1200,6 +1288,32 @@ export const MusicManagement = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Tracks ({tracks?.length || 0})</h3>
+            <div className="flex items-center gap-2">
+              {tracks && tracks.length > 0 && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSelectAll}
+                    className="text-xs"
+                  >
+                    {selectedTracks.size === tracks.length ? 'Deselect All' : 'Select All'}
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleBatchDownload}
+                    disabled={selectedTracks.size === 0 || batchDownloading}
+                    className="text-xs"
+                  >
+                    {batchDownloading ? 'Downloading...' : `Download Selected (${selectedTracks.size})`}
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
           {tracks.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No tracks found. Add your first track!</p>
           ) : (
@@ -1209,6 +1323,12 @@ export const MusicManagement = () => {
                   key={track.id}
                   className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                 >
+                  <input
+                    type="checkbox"
+                    checked={selectedTracks.has(track.id)}
+                    onChange={() => toggleTrackSelection(track.id)}
+                    className="w-4 h-4 text-primary bg-white border-gray-300 rounded focus:ring-primary"
+                  />
                   <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/40 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                     {track.album?.cover_image_url ? (
                       <img
@@ -1261,7 +1381,7 @@ export const MusicManagement = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => window.open(track.audio_url, '_blank')}
+                      onClick={() => downloadTrackWithTitle(track)}
                       className="text-green-500 hover:text-green-700"
                       title="Download track"
                     >
