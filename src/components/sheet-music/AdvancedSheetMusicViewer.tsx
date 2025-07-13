@@ -77,6 +77,16 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
   
   const [selectedSheetMusicId, setSelectedSheetMusicId] = useState<string>(initialSheetMusicId || '');
   const [selectedPDF, setSelectedPDF] = useState<string | null>(null);
+  
+  // Auto-select first PDF if none selected and sheet music is available
+  useEffect(() => {
+    if (!selectedSheetMusicId && allSheetMusic.length > 0 && !loading) {
+      const firstSheetMusic = allSheetMusic[0];
+      setSelectedSheetMusicId(firstSheetMusic.id);
+      setSelectedPDF(firstSheetMusic.pdf_url);
+      setAudioUrl(firstSheetMusic.audio_preview_url || null);
+    }
+  }, [allSheetMusic, loading, selectedSheetMusicId]);
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.2);
@@ -413,516 +423,610 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
       <DialogContent className={`max-w-7xl h-[95vh] flex flex-col ${isDarkMode ? 'bg-gray-900 text-white' : ''}`}>
         {!performanceMode && (
           <DialogHeader className="flex-shrink-0">
-            <DialogTitle className="flex items-center justify-between">
-              <span>Advanced Sheet Music Viewer</span>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant={showSetlistPanel ? "default" : "outline"}
-                  onClick={() => setShowSetlistPanel(!showSetlistPanel)}
-                >
-                  <List className="h-4 w-4 mr-1" />
-                  Setlists
-                </Button>
-                <Select onValueChange={handleSheetMusicSelect} value={selectedSheetMusicId}>
-                  <SelectTrigger className="w-64">
-                    <SelectValue placeholder="Select sheet music..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {loading ? (
-                      <SelectItem value="loading" disabled>Loading...</SelectItem>
-                    ) : allSheetMusic.length === 0 ? (
-                      <SelectItem value="none" disabled>No sheet music available</SelectItem>
-                    ) : (
-                      allSheetMusic.map((sheet) => (
-                        <SelectItem key={sheet.id} value={sheet.id}>
-                          {sheet.title} - {sheet.composer}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-            </DialogTitle>
+            <DialogTitle>Advanced Sheet Music Viewer</DialogTitle>
           </DialogHeader>
         )}
 
-        {selectedPDF && (
-          <>
-            {/* Main Toolbar */}
-            {!performanceMode && (
-              <div className="flex items-center justify-between p-4 border-b flex-shrink-0 flex-wrap gap-2">
-                {/* Navigation */}
-                <div className="flex items-center gap-2">
-                  <Button size="sm" variant="outline" onClick={handlePrevPage} disabled={currentPage <= 1}>
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm font-medium px-2 whitespace-nowrap">
-                    {currentPage} / {numPages}
-                  </span>
-                  <Button size="sm" variant="outline" onClick={handleNextPage} disabled={currentPage >= numPages}>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                {/* View Controls */}
-                <div className="flex items-center gap-2">
-                  <Button size="sm" variant="outline" onClick={handleZoomOut}>
-                    <ZoomOut className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm px-2 whitespace-nowrap">{Math.round(scale * 100)}%</span>
-                  <Button size="sm" variant="outline" onClick={handleZoomIn}>
-                    <ZoomIn className="h-4 w-4" />
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={handleRotate}>
-                    <RotateCw className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                {/* Mode Controls */}
-                <div className="flex items-center gap-2">
-                  <Button 
-                    size="sm" 
-                    variant={isDarkMode ? "default" : "outline"} 
-                    onClick={() => setIsDarkMode(!isDarkMode)}
-                  >
-                    {isDarkMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={toggleFullscreen}>
-                    {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={handleDownload}>
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Annotation Toolbar */}
-            {!performanceMode && (
-              <div className="flex items-center gap-2 p-2 border-b bg-gray-50 dark:bg-gray-800 flex-wrap">
-                <div className="flex items-center gap-1">
-                  <Button 
-                    size="sm" 
-                    variant={selectedTool === 'pen' ? "default" : "outline"}
-                    onClick={() => handleToolSelect('pen')}
-                  >
-                    <Pen className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant={selectedTool === 'highlighter' ? "default" : "outline"}
-                    onClick={() => handleToolSelect('highlighter')}
-                  >
-                    <Highlighter className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant={selectedTool === 'text' ? "default" : "outline"}
-                    onClick={() => { setSelectedTool('text'); handleAddTextAnnotation(); }}
-                  >
-                    <Type className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant={selectedTool === 'circle' ? "default" : "outline"}
-                    onClick={() => { setSelectedTool('circle'); handleAddShape('circle'); }}
-                  >
-                    <CircleIcon className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant={selectedTool === 'rectangle' ? "default" : "outline"}
-                    onClick={() => { setSelectedTool('rectangle'); handleAddShape('rectangle'); }}
-                  >
-                    <Square className="h-4 w-4" />
-                  </Button>
-                </div>
-                
-                <Separator orientation="vertical" />
-                
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={annotationColor}
-                    onChange={(e) => setAnnotationColor(e.target.value)}
-                    className="w-8 h-8 rounded cursor-pointer"
-                  />
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs">Size:</span>
-                    <Slider
-                      value={[brushSize]}
-                      onValueChange={(value) => setBrushSize(value[0])}
-                      min={1}
-                      max={20}
-                      step={1}
-                      className="w-16"
-                    />
-                  </div>
-                </div>
-                
-                <Separator orientation="vertical" />
-                
-                <div className="flex items-center gap-1">
-                  <Button size="sm" variant="outline" onClick={handleSaveAnnotations}>
-                    Save
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={handleClearAnnotations}>
-                    <Eraser className="h-4 w-4" />
-                  </Button>
-                   <Button size="sm" variant="outline" onClick={() => setShowAnnotations(!showAnnotations)}>
-                     {showAnnotations ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                   </Button>
-                 </div>
-                 
-                 {/* Add to Setlist Controls */}
-                 {selectedSheetMusicId && (
-                   <>
-                     <Separator orientation="vertical" />
-                     <div className="flex items-center gap-2">
-                       <Select value={selectedSetlistForAdding} onValueChange={setSelectedSetlistForAdding}>
-                         <SelectTrigger className="w-48">
-                           <SelectValue placeholder="Add to setlist..." />
-                         </SelectTrigger>
-                         <SelectContent>
-                           {setlists.length === 0 ? (
-                             <SelectItem value="none" disabled>No setlists available</SelectItem>
-                           ) : (
-                             setlists.map((setlist) => (
-                               <SelectItem key={setlist.id} value={setlist.id}>
-                                 {setlist.name}
-                               </SelectItem>
-                             ))
-                           )}
-                         </SelectContent>
-                       </Select>
-                       <Button 
-                         size="sm" 
-                         variant="outline" 
-                         onClick={handleAddToSetlist}
-                         disabled={!selectedSetlistForAdding}
-                       >
-                         <Plus className="h-4 w-4" />
-                       </Button>
-                       <Button 
-                         size="sm" 
-                         variant="outline" 
-                         onClick={() => setShowCreateSetlistDialog(true)}
-                       >
-                         New Setlist
-                       </Button>
-                     </div>
-                   </>
-                 )}
-               </div>
-            )}
-
-            {/* Audio Controls */}
-            {audioUrl && (
-              <div className="flex items-center gap-2 p-2 border-b bg-blue-50 dark:bg-blue-900/20">
-                <Button size="sm" variant="outline" onClick={toggleAudio}>
-                  <Play className="h-4 w-4" />
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => setIsMuted(!isMuted)}
-                >
-                  {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                </Button>
-                <Slider
-                  value={[volume]}
-                  onValueChange={(value) => setVolume(value[0])}
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  className="w-24"
-                />
-                <audio
-                  ref={audioRef}
-                  src={audioUrl}
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
-                  onEnded={() => setIsPlaying(false)}
-                  onLoadedData={() => {
-                    if (audioRef.current) {
-                      audioRef.current.volume = isMuted ? 0 : volume;
-                    }
-                  }}
-                />
-              </div>
-            )}
-
-            {/* PDF Viewer and Setlist Panel Layout */}
-            <div className="flex-1 flex overflow-hidden">
-              {/* Setlist Panel */}
-              {showSetlistPanel && (
-                <div className="w-80 border-r bg-gray-50 dark:bg-gray-800 p-4 overflow-auto">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">My Setlists</h3>
-                      <Button 
-                        size="sm" 
-                        onClick={() => setShowCreateSetlistDialog(true)}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    {setlistsLoading ? (
-                      <div className="text-center py-4">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
-                        <p className="text-sm text-gray-600">Loading setlists...</p>
-                      </div>
-                    ) : setlists.length === 0 ? (
-                      <div className="text-center py-8">
-                        <Music className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                        <p className="text-sm text-gray-600 mb-4">No setlists yet</p>
-                        <Button 
-                          size="sm" 
-                          onClick={() => setShowCreateSetlistDialog(true)}
-                        >
-                          Create First Setlist
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {setlists.map((setlist) => (
-                          <div key={setlist.id} className="bg-white dark:bg-gray-700 rounded-lg p-3 border">
-                            <div className="flex items-center justify-between mb-2">
-                              <h4 className="font-medium truncate">{setlist.name}</h4>
-                              <div className="flex items-center gap-1">
-                                {setlist.is_public && (
-                                  <Users className="h-3 w-3 text-gray-500" />
-                                )}
-                                <span className="text-xs text-gray-500">
-                                  {setlist.items?.length || 0} pieces
-                                </span>
-                              </div>
-                            </div>
-                            {setlist.description && (
-                              <p className="text-xs text-gray-600 mb-2 line-clamp-2">
-                                {setlist.description}
-                              </p>
-                            )}
-                            
-                            {/* Setlist Items */}
-                            {setlist.items && setlist.items.length > 0 && (
-                              <div className="space-y-1">
-                                {setlist.items
-                                  .sort((a, b) => a.order_position - b.order_position)
-                                  .slice(0, 3)
-                                  .map((item) => (
-                                    <button
-                                      key={item.id}
-                                      onClick={() => handleSelectFromSetlist(setlist.id, item.sheet_music_id)}
-                                      className="w-full text-left p-2 bg-gray-50 dark:bg-gray-600 rounded text-xs hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors"
-                                    >
-                                      <div className="font-medium truncate">
-                                        {item.sheet_music?.title}
-                                      </div>
-                                      {item.sheet_music?.composer && (
-                                        <div className="text-gray-500 truncate">
-                                          {item.sheet_music.composer}
-                                        </div>
-                                      )}
-                                    </button>
-                                  ))
-                                }
-                                {setlist.items.length > 3 && (
-                                  <div className="text-xs text-gray-500 text-center py-1">
-                                    +{setlist.items.length - 3} more pieces
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* PDF Viewer */}
-              <div className={`flex-1 relative overflow-auto p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
-                <div className="flex justify-center">
-                  <div 
-                    ref={pageRef}
-                    className="relative shadow-lg"
-                    style={{ transform: `rotate(${rotation}deg)` }}
-                  >
-                    <Document
-                      file={selectedPDF}
-                      onLoadSuccess={onDocumentLoadSuccess}
-                      onLoadError={onDocumentLoadError}
-                      loading={<div className="p-8 text-center">Loading PDF...</div>}
-                    >
-                      <Page
-                        pageNumber={currentPage}
-                        scale={scale}
-                        renderTextLayer={false}
-                        renderAnnotationLayer={false}
-                      />
-                    </Document>
-                    
-                    {/* Annotation Canvas Overlay */}
-                    {!performanceMode && showAnnotations && (
-                      <canvas
-                        ref={canvasRef}
-                        className="absolute top-0 left-0 pointer-events-auto"
-                        style={{
-                          opacity: isAnnotating ? 1 : 0.8,
-                        }}
-                      />
-                    )}
-                  </div>
-                </div>
-
-                {/* forScore-style Quick Menu */}
-                {selectedPDF && showQuickMenu && (
-                  <div 
-                    className={`absolute left-4 right-4 z-50 ${
-                      menuPosition === 'top' ? 'top-4' : 'bottom-4'
-                    }`}
-                  >
-                    <div className={`bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-2 ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}>
-                      <div className="flex items-center justify-between gap-2">
-                        {/* Navigation Section */}
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={handlePrevPage}
-                            disabled={currentPage <= 1}
-                            className="h-10 w-10 p-0"
-                          >
-                            <ChevronLeft className="h-5 w-5" />
-                          </Button>
-                          <div className="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-medium min-w-[4rem] text-center">
-                            {currentPage} / {numPages}
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={handleNextPage}
-                            disabled={currentPage >= numPages}
-                            className="h-10 w-10 p-0"
-                          >
-                            <ChevronRight className="h-5 w-5" />
-                          </Button>
-                        </div>
-
-                        {/* Zoom Controls */}
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setScale(Math.max(scale - 0.2, 0.5))}
-                            className="h-10 w-10 p-0"
-                          >
-                            <ZoomOut className="h-4 w-4" />
-                          </Button>
-                          <div className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-medium min-w-[3rem] text-center">
-                            {Math.round(scale * 100)}%
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setScale(Math.min(scale + 0.2, 3.0))}
-                            className="h-10 w-10 p-0"
-                          >
-                            <ZoomIn className="h-4 w-4" />
-                          </Button>
-                        </div>
-
-                        {/* Annotation Tools */}
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="sm"
-                            variant={selectedTool === 'pen' ? 'default' : 'ghost'}
-                            onClick={() => handleToolSelect('pen')}
-                            className="h-10 w-10 p-0"
-                          >
-                            <Pen className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={selectedTool === 'highlighter' ? 'default' : 'ghost'}
-                            onClick={() => handleToolSelect('highlighter')}
-                            className="h-10 w-10 p-0"
-                          >
-                            <Highlighter className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={selectedTool === 'text' ? 'default' : 'ghost'}
-                            onClick={() => handleToolSelect('text')}
-                            className="h-10 w-10 p-0"
-                          >
-                            <Type className="h-4 w-4" />
-                          </Button>
-                        </div>
-
-                        {/* Quick Actions */}
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setShowSetlistPanel(!showSetlistPanel)}
-                            className="h-10 w-10 p-0"
-                          >
-                            <List className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setIsDarkMode(!isDarkMode)}
-                            className="h-10 w-10 p-0"
-                          >
-                            {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setShowQuickMenu(false)}
-                            className="h-10 w-10 p-0 opacity-60 hover:opacity-100"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Menu Toggle Button (when menu is hidden) */}
-                {selectedPDF && !showQuickMenu && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setShowQuickMenu(true)}
-                    className="absolute bottom-4 right-4 z-50 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm"
-                  >
-                    <Menu className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
+        {/* Full Toolbar at Top */}
+        {!performanceMode && (
+          <div className="flex items-center justify-between p-4 border-b flex-shrink-0 flex-wrap gap-2">
+            {/* Navigation Controls */}
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" onClick={handlePrevPage} disabled={currentPage <= 1}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium px-2 whitespace-nowrap">
+                {currentPage} / {numPages}
+              </span>
+              <Button size="sm" variant="outline" onClick={handleNextPage} disabled={currentPage >= numPages}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
-          </>
-        )}
 
-        {!selectedPDF && (
-          <div className="flex-1 flex items-center justify-center text-gray-500">
-            <div className="text-center">
-              <Music className="h-16 w-16 mx-auto mb-4 opacity-50" />
-              <p className="text-lg">Select sheet music to view</p>
-              <p className="text-sm">Choose from the dropdown above or browse setlists</p>
+            {/* View Controls */}
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" onClick={handleZoomOut}>
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <span className="text-sm px-2 whitespace-nowrap">{Math.round(scale * 100)}%</span>
+              <Button size="sm" variant="outline" onClick={handleZoomIn}>
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleRotate}>
+                <RotateCw className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Annotation Tools */}
+            <div className="flex items-center gap-1">
+              <Button
+                size="sm"
+                variant={selectedTool === 'pen' ? 'default' : 'outline'}
+                onClick={() => handleToolSelect('pen')}
+              >
+                <Pen className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant={selectedTool === 'highlighter' ? 'default' : 'outline'}
+                onClick={() => handleToolSelect('highlighter')}
+              >
+                <Highlighter className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant={selectedTool === 'text' ? 'default' : 'outline'}
+                onClick={() => handleToolSelect('text')}
+              >
+                <Type className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant={selectedTool === 'circle' ? 'default' : 'outline'}
+                onClick={() => handleToolSelect('circle')}
+              >
+                <CircleIcon className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant={selectedTool === 'rectangle' ? 'default' : 'outline'}
+                onClick={() => handleToolSelect('rectangle')}
+              >
+                <Square className="h-4 w-4" />
+              </Button>
+              <input
+                type="color"
+                value={annotationColor}
+                onChange={(e) => setAnnotationColor(e.target.value)}
+                className="w-8 h-8 rounded border cursor-pointer"
+                title="Annotation Color"
+              />
+            </div>
+
+            {/* Action Controls */}
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" onClick={handleSaveAnnotations}>
+                <Save className="h-4 w-4" />
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleClearAnnotations}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+              <Button 
+                size="sm" 
+                variant={showSetlistPanel ? "default" : "outline"}
+                onClick={() => setShowSetlistPanel(!showSetlistPanel)}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button 
+                size="sm" 
+                variant={isDarkMode ? "default" : "outline"} 
+                onClick={() => setIsDarkMode(!isDarkMode)}
+              >
+                {isDarkMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+              </Button>
+              <Button size="sm" variant="outline" onClick={toggleFullscreen}>
+                {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleDownload}>
+                <Download className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         )}
+
+        {/* Main Content Area with Sidebar */}
+        <div className="flex flex-1 min-h-0">
+          {/* Left Sidebar - PDF List */}
+          {!performanceMode && (
+            <div className="w-80 border-r flex flex-col bg-gray-50 dark:bg-gray-800">
+              <div className="p-4 border-b">
+                <h3 className="text-sm font-semibold mb-2">Sheet Music Library</h3>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search sheet music..."
+                    className="w-full pl-9 pr-3 py-2 text-sm border rounded-md bg-white dark:bg-gray-700 dark:border-gray-600"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-2">
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-sm text-gray-500">Loading...</div>
+                  </div>
+                ) : allSheetMusic.length === 0 ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-sm text-gray-500">No sheet music available</div>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    {allSheetMusic.map((sheet) => (
+                      <button
+                        key={sheet.id}
+                        onClick={() => handleSheetMusicSelect(sheet.id)}
+                        className={`w-full text-left p-3 rounded-md text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                          selectedSheetMusicId === sheet.id 
+                            ? 'bg-blue-100 dark:bg-blue-900 border border-blue-200 dark:border-blue-700' 
+                            : 'border border-transparent'
+                        }`}
+                      >
+                        <div className="font-medium truncate">{sheet.title}</div>
+                        <div className="text-gray-500 text-xs mt-1 truncate">
+                          {sheet.composer} • {sheet.voice_parts?.join(', ')}
+                        </div>
+                        {sheet.difficulty_level && (
+                          <div className="text-xs mt-1">
+                            <span className={`px-2 py-0.5 rounded text-xs ${
+                              sheet.difficulty_level === 'beginner' ? 'bg-green-100 text-green-800' :
+                              sheet.difficulty_level === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {sheet.difficulty_level}
+                            </span>
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Main PDF Viewer Area */}
+          <div className="flex-1 flex flex-col">
+            {selectedPDF && (
+              <>
+                {/* Annotation Toolbar */}
+                {!performanceMode && (
+                  <div className="flex items-center gap-2 p-2 border-b bg-gray-50 dark:bg-gray-800 flex-wrap">
+                    <div className="flex items-center gap-1">
+                      <Button 
+                        size="sm" 
+                        variant={selectedTool === 'pen' ? "default" : "outline"}
+                        onClick={() => handleToolSelect('pen')}
+                      >
+                        <Pen className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant={selectedTool === 'highlighter' ? "default" : "outline"}
+                        onClick={() => handleToolSelect('highlighter')}
+                      >
+                        <Highlighter className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant={selectedTool === 'text' ? "default" : "outline"}
+                        onClick={() => { setSelectedTool('text'); handleAddTextAnnotation(); }}
+                      >
+                        <Type className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant={selectedTool === 'circle' ? "default" : "outline"}
+                        onClick={() => { setSelectedTool('circle'); handleAddShape('circle'); }}
+                      >
+                        <CircleIcon className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant={selectedTool === 'rectangle' ? "default" : "outline"}
+                        onClick={() => { setSelectedTool('rectangle'); handleAddShape('rectangle'); }}
+                      >
+                        <Square className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    <Separator orientation="vertical" />
+                    
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={annotationColor}
+                        onChange={(e) => setAnnotationColor(e.target.value)}
+                        className="w-8 h-8 rounded cursor-pointer"
+                      />
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs">Size:</span>
+                        <Slider
+                          value={[brushSize]}
+                          onValueChange={(value) => setBrushSize(value[0])}
+                          min={1}
+                          max={20}
+                          step={1}
+                          className="w-16"
+                        />
+                      </div>
+                    </div>
+                    
+                    <Separator orientation="vertical" />
+                    
+                    <div className="flex items-center gap-1">
+                      <Button size="sm" variant="outline" onClick={handleSaveAnnotations}>
+                        Save
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={handleClearAnnotations}>
+                        <Eraser className="h-4 w-4" />
+                      </Button>
+                       <Button size="sm" variant="outline" onClick={() => setShowAnnotations(!showAnnotations)}>
+                         {showAnnotations ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                       </Button>
+                     </div>
+                     
+                     {/* Add to Setlist Controls */}
+                     {selectedSheetMusicId && (
+                       <>
+                         <Separator orientation="vertical" />
+                         <div className="flex items-center gap-2">
+                           <Select value={selectedSetlistForAdding} onValueChange={setSelectedSetlistForAdding}>
+                             <SelectTrigger className="w-48">
+                               <SelectValue placeholder="Add to setlist..." />
+                             </SelectTrigger>
+                             <SelectContent>
+                               {setlists.length === 0 ? (
+                                 <SelectItem value="none" disabled>No setlists available</SelectItem>
+                               ) : (
+                                 setlists.map((setlist) => (
+                                   <SelectItem key={setlist.id} value={setlist.id}>
+                                     {setlist.name}
+                                   </SelectItem>
+                                 ))
+                               )}
+                             </SelectContent>
+                           </Select>
+                           <Button 
+                             size="sm" 
+                             variant="outline" 
+                             onClick={handleAddToSetlist}
+                             disabled={!selectedSetlistForAdding}
+                           >
+                             <Plus className="h-4 w-4" />
+                           </Button>
+                           <Button 
+                             size="sm" 
+                             variant="outline" 
+                             onClick={() => setShowCreateSetlistDialog(true)}
+                           >
+                             New Setlist
+                           </Button>
+                         </div>
+                       </>
+                     )}
+                   </div>
+                )}
+
+                {/* Audio Controls */}
+                {audioUrl && (
+                  <div className="flex items-center gap-2 p-2 border-b bg-blue-50 dark:bg-blue-900/20">
+                    <Button size="sm" variant="outline" onClick={toggleAudio}>
+                      <Play className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => setIsMuted(!isMuted)}
+                    >
+                      {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                    </Button>
+                    <Slider
+                      value={[volume]}
+                      onValueChange={(value) => setVolume(value[0])}
+                      min={0}
+                      max={1}
+                      step={0.1}
+                      className="w-24"
+                    />
+                    <audio
+                      ref={audioRef}
+                      src={audioUrl}
+                      onPlay={() => setIsPlaying(true)}
+                      onPause={() => setIsPlaying(false)}
+                      onEnded={() => setIsPlaying(false)}
+                      onLoadedData={() => {
+                        if (audioRef.current) {
+                          audioRef.current.volume = isMuted ? 0 : volume;
+                        }
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* PDF Viewer and Setlist Panel Layout */}
+                <div className="flex-1 flex overflow-hidden">
+                  {/* Setlist Panel */}
+                  {showSetlistPanel && (
+                    <div className="w-80 border-r bg-gray-50 dark:bg-gray-800 p-4 overflow-auto">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-semibold">My Setlists</h3>
+                          <Button 
+                            size="sm" 
+                            onClick={() => setShowCreateSetlistDialog(true)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        
+                        {setlistsLoading ? (
+                          <div className="text-center py-4">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
+                            <p className="text-sm text-gray-600">Loading setlists...</p>
+                          </div>
+                        ) : setlists.length === 0 ? (
+                          <div className="text-center py-8">
+                            <Music className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                            <p className="text-sm text-gray-600 mb-4">No setlists yet</p>
+                            <Button 
+                              size="sm" 
+                              onClick={() => setShowCreateSetlistDialog(true)}
+                            >
+                              Create First Setlist
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {setlists.map((setlist) => (
+                              <div key={setlist.id} className="bg-white dark:bg-gray-700 rounded-lg p-3 border">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h4 className="font-medium truncate">{setlist.name}</h4>
+                                  <div className="flex items-center gap-1">
+                                    {setlist.is_public && (
+                                      <Users className="h-3 w-3 text-gray-500" />
+                                    )}
+                                    <span className="text-xs text-gray-500">
+                                      {setlist.items?.length || 0} pieces
+                                    </span>
+                                  </div>
+                                </div>
+                                {setlist.description && (
+                                  <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                                    {setlist.description}
+                                  </p>
+                                )}
+                                
+                                {/* Setlist Items */}
+                                {setlist.items && setlist.items.length > 0 && (
+                                  <div className="space-y-1">
+                                    {setlist.items
+                                      .sort((a, b) => a.order_position - b.order_position)
+                                      .slice(0, 3)
+                                      .map((item) => (
+                                        <button
+                                          key={item.id}
+                                          onClick={() => handleSelectFromSetlist(setlist.id, item.sheet_music_id)}
+                                          className="w-full text-left p-2 bg-gray-50 dark:bg-gray-600 rounded text-xs hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors"
+                                        >
+                                          <div className="font-medium truncate">
+                                            {item.sheet_music?.title}
+                                          </div>
+                                          {item.sheet_music?.composer && (
+                                            <div className="text-gray-500 truncate">
+                                              {item.sheet_music.composer}
+                                            </div>
+                                          )}
+                                        </button>
+                                      ))
+                                    }
+                                    {setlist.items.length > 3 && (
+                                      <div className="text-xs text-gray-500 text-center py-1">
+                                        +{setlist.items.length - 3} more pieces
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* PDF Viewer */}
+                  <div className={`flex-1 relative overflow-auto p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                    <div className="flex justify-center">
+                      <div 
+                        ref={pageRef}
+                        className="relative shadow-lg"
+                        style={{ transform: `rotate(${rotation}deg)` }}
+                      >
+                        <Document
+                          file={selectedPDF}
+                          onLoadSuccess={onDocumentLoadSuccess}
+                          onLoadError={onDocumentLoadError}
+                          loading={<div className="p-8 text-center">Loading PDF...</div>}
+                        >
+                          <Page
+                            pageNumber={currentPage}
+                            scale={scale}
+                            renderTextLayer={false}
+                            renderAnnotationLayer={false}
+                          />
+                        </Document>
+                        
+                        {/* Annotation Canvas Overlay */}
+                        {!performanceMode && showAnnotations && (
+                          <canvas
+                            ref={canvasRef}
+                            className="absolute top-0 left-0 pointer-events-auto"
+                            style={{
+                              opacity: isAnnotating ? 1 : 0.8,
+                            }}
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* forScore-style Quick Menu */}
+                    {showQuickMenu && (
+                      <div 
+                        className={`absolute left-4 right-4 z-50 ${
+                          menuPosition === 'top' ? 'top-4' : 'bottom-4'
+                        }`}
+                      >
+                        <div className={`bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-2 ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
+                        }`}>
+                          <div className="flex items-center justify-between gap-2">
+                            {/* Navigation Section */}
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={handlePrevPage}
+                                disabled={currentPage <= 1}
+                                className="h-10 w-10 p-0"
+                              >
+                                <ChevronLeft className="h-5 w-5" />
+                              </Button>
+                              <div className="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-medium min-w-[4rem] text-center">
+                                {currentPage} / {numPages}
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={handleNextPage}
+                                disabled={currentPage >= numPages}
+                                className="h-10 w-10 p-0"
+                              >
+                                <ChevronRight className="h-5 w-5" />
+                              </Button>
+                            </div>
+
+                            {/* Zoom Controls */}
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setScale(Math.max(scale - 0.2, 0.5))}
+                                className="h-10 w-10 p-0"
+                              >
+                                <ZoomOut className="h-4 w-4" />
+                              </Button>
+                              <div className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-medium min-w-[3rem] text-center">
+                                {Math.round(scale * 100)}%
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setScale(Math.min(scale + 0.2, 3.0))}
+                                className="h-10 w-10 p-0"
+                              >
+                                <ZoomIn className="h-4 w-4" />
+                              </Button>
+                            </div>
+
+                            {/* Annotation Tools */}
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="sm"
+                                variant={selectedTool === 'pen' ? 'default' : 'ghost'}
+                                onClick={() => handleToolSelect('pen')}
+                                className="h-10 w-10 p-0"
+                              >
+                                <Pen className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant={selectedTool === 'highlighter' ? 'default' : 'ghost'}
+                                onClick={() => handleToolSelect('highlighter')}
+                                className="h-10 w-10 p-0"
+                              >
+                                <Highlighter className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant={selectedTool === 'text' ? 'default' : 'ghost'}
+                                onClick={() => handleToolSelect('text')}
+                                className="h-10 w-10 p-0"
+                              >
+                                <Type className="h-4 w-4" />
+                              </Button>
+                            </div>
+
+                            {/* Quick Actions */}
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setShowSetlistPanel(!showSetlistPanel)}
+                                className="h-10 w-10 p-0"
+                              >
+                                <List className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setIsDarkMode(!isDarkMode)}
+                                className="h-10 w-10 p-0"
+                              >
+                                {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setShowQuickMenu(false)}
+                                className="h-10 w-10 p-0 opacity-60 hover:opacity-100"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Menu Toggle Button (when menu is hidden) */}
+                    {!showQuickMenu && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowQuickMenu(true)}
+                        className="absolute bottom-4 right-4 z-50 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm"
+                      >
+                        <Menu className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {!selectedPDF && (
+              <div className="flex-1 flex items-center justify-center text-gray-500">
+                <div className="text-center">
+                  <Music className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg">Loading sheet music...</p>
+                  <p className="text-sm">Please wait while we load your music library</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Create Setlist Dialog */}
         <CreateSetlistDialog
