@@ -33,6 +33,7 @@ import { HeroManagement } from "@/components/admin/HeroManagement";
 import { DashboardSettings } from "@/components/admin/DashboardSettings";
 import { YouTubeManagement } from "@/components/admin/YouTubeManagement";
 import { UsernamePermissionsManager } from "@/components/admin/UsernamePermissionsManager";
+import { SheetMusicLibrary } from "@/components/sheet-music/SheetMusicLibrary";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
@@ -92,6 +93,9 @@ export const UserDashboard = () => {
           case 'send_emails':
             icon = Mail;
             break;
+          case 'sheet_music':
+            icon = Music;
+            break;
           case 'manage_permissions':
             icon = Shield;
             break;
@@ -149,6 +153,8 @@ export const UserDashboard = () => {
             return <DashboardSettings />;
           case 'youtube-management':
             return <YouTubeManagement />;
+          case 'sheet-music':
+            return <SheetMusicLibrary />;
           case 'manage-permissions':
             return <UsernamePermissionsManager />;
           default:
@@ -362,7 +368,11 @@ export const UserDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Button className="h-20 flex-col space-y-2" variant="outline">
+                <Button 
+                  className="h-20 flex-col space-y-2" 
+                  variant="outline"
+                  onClick={() => setSelectedModule('sheet-music')}
+                >
                   <Music className="h-6 w-6" />
                   <span>View Sheet Music</span>
                 </Button>
