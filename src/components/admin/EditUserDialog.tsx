@@ -49,18 +49,30 @@ export const EditUserDialog = ({ user, open, onOpenChange, onUserUpdated }: Edit
     try {
       console.log('Updating user profile:', { userId: user.id, fullName, role });
 
-      // Update the user's profile in the profiles table
-      const { error: profileError } = await supabase
-        .from('profiles')
+      // Update gw_profiles which will sync to profiles via trigger
+      const { error: gwProfileError } = await supabase
+        .from('gw_profiles')
         .update({
           full_name: fullName.trim(),
-          role: role
+          first_name: fullName.trim().split(' ')[0],
+          last_name: fullName.trim().split(' ').slice(1).join(' ') || null,
         })
+        .eq('user_id', user.id);
+
+      if (gwProfileError) {
+        console.error('GW Profile update error:', gwProfileError);
+        throw new Error(`Failed to update profile: ${gwProfileError.message}`);
+      }
+
+      // Also update the profiles table role directly for admin functions
+      const { error: roleError } = await supabase
+        .from('profiles')
+        .update({ role: role })
         .eq('id', user.id);
 
-      if (profileError) {
-        console.error('Profile update error:', profileError);
-        throw new Error(`Failed to update profile: ${profileError.message}`);
+      if (roleError) {
+        console.error('Role update error:', roleError);
+        throw new Error(`Failed to update role: ${roleError.message}`);
       }
 
       console.log('User profile updated successfully');
