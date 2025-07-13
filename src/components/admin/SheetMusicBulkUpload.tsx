@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,7 @@ export const SheetMusicBulkUpload = () => {
   const { toast } = useToast();
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const [globalSettings, setGlobalSettings] = useState({
     composer: '',
     arranger: '',
@@ -56,8 +57,7 @@ export const SheetMusicBulkUpload = () => {
   const commonVoiceParts = ['Soprano', 'Alto', 'Tenor', 'Bass', 'Piano'];
   const commonLanguages = ['English', 'Latin', 'Spanish', 'French', 'German', 'Italian'];
 
-  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(event.target.files || []);
+  const processFiles = useCallback((selectedFiles: File[]) => {
     const pdfFiles = selectedFiles.filter(file => file.type === 'application/pdf');
     
     if (pdfFiles.length !== selectedFiles.length) {
@@ -93,6 +93,88 @@ export const SheetMusicBulkUpload = () => {
       });
     }
   }, [globalSettings, toast]);
+
+  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(event.target.files || []);
+    processFiles(selectedFiles);
+  }, [processFiles]);
+
+  // Drag and drop handlers
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    if (droppedFiles.length > 0) {
+      processFiles(droppedFiles);
+    }
+  }, [processFiles]);
+
+  // Window-wide drag and drop support
+  useEffect(() => {
+    let dragCounter = 0;
+
+    const handleWindowDragEnter = (e: DragEvent) => {
+      e.preventDefault();
+      dragCounter++;
+      if (dragCounter === 1) {
+        setDragOver(true);
+      }
+    };
+
+    const handleWindowDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      dragCounter--;
+      if (dragCounter === 0) {
+        setDragOver(false);
+      }
+    };
+
+    const handleWindowDragOver = (e: DragEvent) => {
+      e.preventDefault();
+    };
+
+    const handleWindowDrop = (e: DragEvent) => {
+      e.preventDefault();
+      dragCounter = 0;
+      setDragOver(false);
+      
+      const droppedFiles = Array.from(e.dataTransfer.files);
+      if (droppedFiles.length > 0) {
+        processFiles(droppedFiles);
+      }
+    };
+
+    window.addEventListener('dragenter', handleWindowDragEnter);
+    window.addEventListener('dragleave', handleWindowDragLeave);
+    window.addEventListener('dragover', handleWindowDragOver);
+    window.addEventListener('drop', handleWindowDrop);
+
+    return () => {
+      window.removeEventListener('dragenter', handleWindowDragEnter);
+      window.removeEventListener('dragleave', handleWindowDragLeave);
+      window.removeEventListener('dragover', handleWindowDragOver);
+      window.removeEventListener('drop', handleWindowDrop);
+    };
+  }, [processFiles]);
 
   const updateFile = (id: string, updates: Partial<UploadFile>) => {
     setFiles(prev => prev.map(file => 
@@ -310,11 +392,27 @@ export const SheetMusicBulkUpload = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <div 
+            className={`border-2 border-dashed rounded-lg p-6 text-center transition-all ${
+              dragOver 
+                ? 'border-primary bg-primary/10 scale-105' 
+                : 'border-gray-300 hover:border-primary/50'
+            }`}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+          >
+            <FileText className={`h-12 w-12 mx-auto mb-4 transition-colors ${
+              dragOver ? 'text-primary' : 'text-gray-400'
+            }`} />
             <div className="space-y-2">
-              <p className="text-lg font-medium">Select PDF files to upload</p>
-              <p className="text-gray-600">Choose multiple PDF sheet music files</p>
+              <p className="text-lg font-medium">
+                {dragOver ? 'Drop PDF files here!' : 'Select PDF files to upload'}
+              </p>
+              <p className="text-gray-600">
+                {dragOver ? 'Release to add files' : 'Choose multiple PDF sheet music files or drag them anywhere'}
+              </p>
               <Input
                 type="file"
                 multiple
