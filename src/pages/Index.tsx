@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
-import { StatsCards } from "@/components/StatsCards";
+import { ConsolidatedStatsCards } from "@/components/ConsolidatedStatsCards";
 import { ContractCreationCollapsible } from "@/components/ContractCreationCollapsible";
 import { ContractTemplatesCollapsible } from "@/components/ContractTemplatesCollapsible";
 import { RecentContractsTemplatesCollapsible } from "@/components/RecentContractsTemplatesCollapsible";
@@ -15,8 +15,10 @@ import { DocumentManager } from "@/components/shared/DocumentManager";
 import { AIAssist } from "@/components/shared/AIAssist";
 import { useContracts } from "@/hooks/useContracts";
 import { useContractTemplates } from "@/hooks/useContractTemplates";
+import { useW9Forms } from "@/hooks/useW9Forms";
 import { useTemplateOperations } from "@/hooks/useTemplateOperations";
 import { useSearchParams } from "react-router-dom";
+import { formatDistanceToNow } from "date-fns";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ErrorState } from "@/components/shared/ErrorState";
 import type { Contract } from "@/hooks/useContracts";
@@ -35,6 +37,7 @@ const Index = () => {
   
   const { contracts, loading, error, deleteContract, refetch } = useContracts();
   const { templates } = useContractTemplates();
+  const { w9Forms } = useW9Forms();
   const { handleUpdateTemplate, isUpdating } = useTemplateOperations();
 
   // Handle edit template URL parameter
@@ -78,10 +81,21 @@ const Index = () => {
     error 
   });
 
-  // Calculate stats for StatsCards
+  // Calculate stats for ConsolidatedStatsCards
   const totalContracts = contracts.length;
   const completedCount = contracts.filter(contract => contract.status === 'completed').length;
   const pendingCount = contracts.filter(contract => contract.status === 'pending' || contract.status === 'draft').length;
+  
+  // Prepare recent contracts with time ago formatting
+  const recentContracts = contracts
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 5)
+    .map(contract => ({
+      id: contract.id,
+      title: contract.title,
+      status: contract.status,
+      timeAgo: formatDistanceToNow(new Date(contract.created_at), { addSuffix: true })
+    }));
 
   const handleViewContract = (contract: Contract) => {
     setSelectedContract(contract);
@@ -163,10 +177,15 @@ const Index = () => {
               <h1 className="text-2xl sm:text-2xl lg:text-3xl font-bold text-white">Dashboard</h1>
             </div>
             
-            <StatsCards 
+            <ConsolidatedStatsCards 
               totalContracts={totalContracts}
               completedCount={completedCount}
               pendingCount={pendingCount}
+              recentContracts={recentContracts}
+              w9FormsCount={w9Forms?.length || 0}
+              templatesCount={templates?.length || 0}
+              onNewContract={handleNewContract}
+              onViewContract={handleViewContractById}
             />
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
@@ -176,16 +195,11 @@ const Index = () => {
                   onUseTemplate={handleUseTemplate}
                   onContractCreated={refetch}
                 />
-                <RecentContractsTemplatesCollapsible
-                  onNewContract={handleNewContract}
-                  onNewTemplate={handleNewTemplate}
-                  onViewContract={handleViewContractById}
-                />
-                <W9FormsListCollapsible />
               </div>
               
               <div className="space-y-4 sm:space-y-6">
                 <ContractsSection onViewContract={handleViewContract} />
+                <W9FormsListCollapsible />
               </div>
             </div>
           </div>
