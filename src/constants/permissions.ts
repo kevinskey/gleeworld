@@ -28,6 +28,7 @@ export const PERMISSIONS = [
   'access_dashboard_settings',
   'access_youtube_management',
   'access_budget_creation',
+  'access_contracts',
   'send_notifications',
   'send_emails',
   'manage_username_permissions',
@@ -91,6 +92,11 @@ export const DASHBOARD_MODULES = {
     name: 'Budget Creation',
     description: 'Create and manage project budgets',
     permission: 'access_budget_creation' as Permission,
+  },
+  contracts: {
+    name: 'Contracts',
+    description: 'Create and manage contracts',
+    permission: 'access_contracts' as Permission,
   },
   send_emails: {
     name: 'Email Campaigns',
