@@ -24,10 +24,12 @@ import {
   Award,
   Users,
   Volume2,
-  Settings
+  Settings,
+  Youtube
 } from "lucide-react";
 import { HeroManagement } from "@/components/admin/HeroManagement";
 import { DashboardSettings } from "@/components/admin/DashboardSettings";
+import { YouTubeManagement } from "@/components/admin/YouTubeManagement";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
@@ -100,6 +102,22 @@ export const UserDashboard = () => {
             </Button>
           </div>
           <DashboardSettings />
+        </div>
+      </UniversalLayout>
+    );
+  }
+
+  // Show YouTube management if admin has selected it
+  if (selectedModule === 'youtube-management' && isAdmin) {
+    return (
+      <UniversalLayout>
+        <div className="container mx-auto px-4 py-6">
+          <div className="mb-4">
+            <Button variant="outline" onClick={() => setSelectedModule(null)}>
+              ← Back to Dashboard
+            </Button>
+          </div>
+          <YouTubeManagement />
         </div>
       </UniversalLayout>
     );
@@ -488,6 +506,17 @@ export const UserDashboard = () => {
                         <div className="text-left">
                           <div>Dashboard Settings</div>
                           <div className="text-xs text-gray-500">Customize dashboard appearance</div>
+                        </div>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start h-auto p-3"
+                        onClick={() => setSelectedModule('youtube-management')}
+                      >
+                        <Youtube className="h-4 w-4 mr-2" />
+                        <div className="text-left">
+                          <div>YouTube Management</div>
+                          <div className="text-xs text-gray-500">Manage YouTube channel & videos</div>
                         </div>
                       </Button>
                     </div>
