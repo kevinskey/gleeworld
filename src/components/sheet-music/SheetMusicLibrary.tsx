@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Grid, List, Plus } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +27,6 @@ interface SheetMusicFilters {
 export const SheetMusicLibrary = () => {
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<SheetMusicFilters>({});
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedSheetMusic, setSelectedSheetMusic] = useState<SheetMusic | null>(null);
   const [showUpload, setShowUpload] = useState(false);
   
@@ -88,22 +87,6 @@ export const SheetMusicLibrary = () => {
                 Upload Sheet Music
               </Button>
             )}
-            <div className="flex items-center border rounded-lg">
-              <Button
-                variant={viewMode === "grid" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("grid")}
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("list")}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
           </div>
         </div>
 
@@ -166,18 +149,26 @@ export const SheetMusicLibrary = () => {
 
       {/* Results */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="space-y-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <Card key={i} className="animate-pulse">
-              <CardHeader>
-                <div className="h-4 bg-muted rounded w-3/4"></div>
-                <div className="h-3 bg-muted rounded w-1/2"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-32 bg-muted rounded mb-4"></div>
-                <div className="space-y-2">
-                  <div className="h-3 bg-muted rounded w-full"></div>
-                  <div className="h-3 bg-muted rounded w-2/3"></div>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="h-5 w-5 bg-muted rounded"></div>
+                    <div>
+                      <div className="h-4 bg-muted rounded w-48 mb-2"></div>
+                      <div className="h-3 bg-muted rounded w-32"></div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="h-6 bg-muted rounded w-16"></div>
+                    <div className="h-6 bg-muted rounded w-12"></div>
+                    <div className="flex gap-2">
+                      <div className="h-8 bg-muted rounded w-16"></div>
+                      <div className="h-8 bg-muted rounded w-8"></div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -193,16 +184,12 @@ export const SheetMusicLibrary = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className={
-          viewMode === "grid" 
-            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-            : "space-y-4"
-        }>
+        <div className="space-y-4">
           {sheetMusic.map((piece) => (
             <SheetMusicCard
               key={piece.id}
               sheetMusic={piece}
-              viewMode={viewMode}
+              viewMode="list"
               onSelect={() => setSelectedSheetMusic(piece)}
             />
           ))}
