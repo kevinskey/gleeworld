@@ -49,6 +49,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { DASHBOARD_MODULES, hasModuleAccess, hasExecutiveBoardPermissions, DashboardModule } from "@/constants/permissions";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 export const UserDashboard = () => {
   const { user } = useAuth();
@@ -60,6 +61,7 @@ export const UserDashboard = () => {
   const { contracts, loading: contractsLoading } = useUserContracts();
   const { permissions: usernamePermissions, loading: permissionsLoading } = useUsernamePermissions(user?.email);
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
+  const [isRecentActivityExpanded, setIsRecentActivityExpanded] = useState(true);
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
   const userRole = profile?.role || 'user';
@@ -483,24 +485,48 @@ export const UserDashboard = () => {
 
             {/* Recent Activity */}
             <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>Your latest actions and updates</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
-                    {activity.type === 'music' && <Music className="h-5 w-5 text-blue-600" />}
-                    {activity.type === 'attendance' && <CheckCircle className="h-5 w-5 text-green-600" />}
-                    {activity.type === 'practice' && <Clock className="h-5 w-5 text-purple-600" />}
-                    {activity.type === 'payment' && <DollarSign className="h-5 w-5 text-emerald-600" />}
-                    <div className="flex-1">
-                      <p className="font-medium">{activity.action}</p>
-                      <p className="text-sm text-gray-500">{activity.time}</p>
-                    </div>
+              <CardHeader 
+                className="cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => setIsRecentActivityExpanded(!isRecentActivityExpanded)}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Recent Activity</CardTitle>
+                    <CardDescription>Your latest actions and updates</CardDescription>
                   </div>
-                ))}
-              </CardContent>
+                  <EnhancedTooltip content={isRecentActivityExpanded ? "Collapse" : "Expand"}>
+                    <Button variant="ghost" size="sm" className="p-2">
+                      {isRecentActivityExpanded ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </EnhancedTooltip>
+                </div>
+              </CardHeader>
+              {isRecentActivityExpanded && (
+                <CardContent className="space-y-4 animate-fade-in">
+                  {recentActivity.length > 0 ? (
+                    recentActivity.map((activity) => (
+                      <div key={activity.id} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                        {activity.type === 'music' && <Music className="h-5 w-5 text-blue-600" />}
+                        {activity.type === 'attendance' && <CheckCircle className="h-5 w-5 text-green-600" />}
+                        {activity.type === 'practice' && <Clock className="h-5 w-5 text-purple-600" />}
+                        {activity.type === 'payment' && <DollarSign className="h-5 w-5 text-emerald-600" />}
+                        {activity.type === 'notification' && <Bell className="h-5 w-5 text-orange-600" />}
+                        {activity.type === 'contract' && <CheckCircle className="h-5 w-5 text-purple-600" />}
+                        <div className="flex-1">
+                          <p className="font-medium">{activity.action}</p>
+                          <p className="text-sm text-gray-500">{activity.time}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">No recent activity</p>
+                  )}
+                </CardContent>
+              )}
             </Card>
           </div>
 
