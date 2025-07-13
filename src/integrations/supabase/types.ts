@@ -2602,6 +2602,135 @@ export type Database = {
           },
         ]
       }
+      gw_sheet_music_analytics: {
+        Row: {
+          action_type: string
+          device_type: string | null
+          id: string
+          page_number: number | null
+          session_duration: number | null
+          sheet_music_id: string
+          timestamp_recorded: string
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          device_type?: string | null
+          id?: string
+          page_number?: number | null
+          session_duration?: number | null
+          sheet_music_id: string
+          timestamp_recorded?: string
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          device_type?: string | null
+          id?: string
+          page_number?: number | null
+          session_duration?: number | null
+          sheet_music_id?: string
+          timestamp_recorded?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_sheet_music_analytics_sheet_music_id_fkey"
+            columns: ["sheet_music_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sheet_music"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_sheet_music_annotations: {
+        Row: {
+          annotation_data: Json
+          annotation_type: string
+          created_at: string
+          id: string
+          page_number: number
+          position_data: Json
+          sheet_music_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          annotation_data: Json
+          annotation_type: string
+          created_at?: string
+          id?: string
+          page_number: number
+          position_data: Json
+          sheet_music_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          annotation_data?: Json
+          annotation_type?: string
+          created_at?: string
+          id?: string
+          page_number?: number
+          position_data?: Json
+          sheet_music_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_sheet_music_annotations_sheet_music_id_fkey"
+            columns: ["sheet_music_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sheet_music"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_sheet_music_permissions: {
+        Row: {
+          expires_at: string | null
+          granted_at: string
+          granted_by: string | null
+          id: string
+          is_active: boolean
+          permission_type: string
+          role: string | null
+          sheet_music_id: string
+          user_id: string | null
+        }
+        Insert: {
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean
+          permission_type?: string
+          role?: string | null
+          sheet_music_id: string
+          user_id?: string | null
+        }
+        Update: {
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean
+          permission_type?: string
+          role?: string | null
+          sheet_music_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_sheet_music_permissions_sheet_music_id_fkey"
+            columns: ["sheet_music_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sheet_music"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_site_settings: {
         Row: {
           description: string | null
