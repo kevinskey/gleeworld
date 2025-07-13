@@ -27,6 +27,7 @@ export const PERMISSIONS = [
   'access_hero_management',
   'access_dashboard_settings',
   'access_youtube_management',
+  'access_budget_creation',
   'send_notifications',
   'send_emails',
   'manage_username_permissions',
@@ -85,6 +86,11 @@ export const DASHBOARD_MODULES = {
     name: 'Send Notifications',
     description: 'Send notifications to members',
     permission: 'send_notifications' as Permission,
+  },
+  budget_creation: {
+    name: 'Budget Creation',
+    description: 'Create and manage project budgets',
+    permission: 'access_budget_creation' as Permission,
   },
   send_emails: {
     name: 'Email Campaigns',
