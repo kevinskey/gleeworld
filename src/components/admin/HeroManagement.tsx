@@ -711,24 +711,84 @@ export const HeroManagement = () => {
               {heroSlides.map((slide) => (
                 <div
                   key={slide.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
+                  className="flex gap-4 p-4 border rounded-lg"
                 >
-                  <div className="flex-1">
+                  {/* Image Thumbnails Section */}
+                  <div className="flex-shrink-0">
+                    <div className="grid grid-cols-1 gap-2">
+                      {/* Desktop Image */}
+                      {slide.image_url && (
+                        <div className="relative">
+                          <img
+                            src={slide.image_url}
+                            alt="Desktop preview"
+                            className="w-24 h-16 object-cover rounded border"
+                            onError={(e) => {
+                              e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                            }}
+                          />
+                          <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1 py-0.5 rounded text-[10px]">
+                            Desktop
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Mobile & iPad Preview Row */}
+                      <div className="flex gap-1">
+                        {/* Mobile Image */}
+                        {slide.mobile_image_url && (
+                          <div className="relative">
+                            <img
+                              src={slide.mobile_image_url}
+                              alt="Mobile preview"
+                              className="w-8 h-12 object-cover rounded border"
+                              onError={(e) => {
+                                e.currentTarget.src = slide.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                              }}
+                            />
+                            <div className="absolute -top-1 -right-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded text-[8px]">
+                              M
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* iPad Image */}
+                        {slide.ipad_image_url && (
+                          <div className="relative">
+                            <img
+                              src={slide.ipad_image_url}
+                              alt="iPad preview"
+                              className="w-14 h-10 object-cover rounded border"
+                              onError={(e) => {
+                                e.currentTarget.src = slide.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                              }}
+                            />
+                            <div className="absolute -top-1 -right-1 bg-purple-500 text-white text-xs px-1 py-0.5 rounded text-[8px]">
+                              iPad
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Content Section */}
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">
+                      <h3 className="font-semibold truncate">
                         {slide.title || "Slide without title"}
                       </h3>
                       {slide.is_active ? (
-                        <Eye className="h-4 w-4 text-green-600" />
+                        <Eye className="h-4 w-4 text-green-600 flex-shrink-0" />
                       ) : (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
+                        <EyeOff className="h-4 w-4 text-gray-400 flex-shrink-0" />
                       )}
                       {slide.link_url && (
-                        <ExternalLink className="h-4 w-4 text-blue-600" />
+                        <ExternalLink className="h-4 w-4 text-blue-600 flex-shrink-0" />
                       )}
                     </div>
                     {slide.description && (
-                      <p className="text-sm text-muted-foreground">{slide.description}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{slide.description}</p>
                     )}
                     <div className="text-xs text-muted-foreground mt-1">
                       Order: {slide.display_order || 0} | Duration: {slide.slide_duration_seconds || 5}s
@@ -736,7 +796,8 @@ export const HeroManagement = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  {/* Actions Section */}
+                  <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 flex-shrink-0">
                     <Button
                       variant="outline"
                       size="sm"
