@@ -105,9 +105,9 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
       };
 
       const { error } = await supabase
-        .from('gw_profiles')
+        .from('profiles')
         .update(updates)
-        .eq('user_id', selectedUser.id);
+        .eq('id', selectedUser.id);
 
       if (error) throw error;
 
@@ -141,12 +141,12 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
     setUpdating(true);
     try {
       const { error } = await supabase
-        .from('gw_profiles')
+        .from('profiles')
         .update({
           exec_board_role: null,
           is_exec_board: false,
         })
-        .eq('user_id', userId);
+        .eq('id', userId);
 
       if (error) throw error;
 
