@@ -31,7 +31,14 @@ import {
   Plus,
   List,
   Trash2,
-  Users
+  Users,
+  Search,
+  Bookmark,
+  MoreHorizontal,
+  Home,
+  Save,
+  Share,
+  Menu
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
@@ -96,6 +103,10 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
   const [showSetlistPanel, setShowSetlistPanel] = useState<boolean>(false);
   const [showCreateSetlistDialog, setShowCreateSetlistDialog] = useState<boolean>(false);
   const [selectedSetlistForAdding, setSelectedSetlistForAdding] = useState<string>('');
+  
+  // Menu states
+  const [showQuickMenu, setShowQuickMenu] = useState<boolean>(true);
+  const [menuPosition, setMenuPosition] = useState<'top' | 'bottom'>('bottom');
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
@@ -737,7 +748,7 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
               )}
 
               {/* PDF Viewer */}
-              <div className={`flex-1 overflow-auto p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+              <div className={`flex-1 relative overflow-auto p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
                 <div className="flex justify-center">
                   <div 
                     ref={pageRef}
@@ -770,6 +781,137 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
                     )}
                   </div>
                 </div>
+
+                {/* forScore-style Quick Menu */}
+                {selectedPDF && showQuickMenu && (
+                  <div 
+                    className={`absolute left-4 right-4 z-50 ${
+                      menuPosition === 'top' ? 'top-4' : 'bottom-4'
+                    }`}
+                  >
+                    <div className={`bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-2 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      <div className="flex items-center justify-between gap-2">
+                        {/* Navigation Section */}
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={handlePrevPage}
+                            disabled={currentPage <= 1}
+                            className="h-10 w-10 p-0"
+                          >
+                            <ChevronLeft className="h-5 w-5" />
+                          </Button>
+                          <div className="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-medium min-w-[4rem] text-center">
+                            {currentPage} / {numPages}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={handleNextPage}
+                            disabled={currentPage >= numPages}
+                            className="h-10 w-10 p-0"
+                          >
+                            <ChevronRight className="h-5 w-5" />
+                          </Button>
+                        </div>
+
+                        {/* Zoom Controls */}
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setScale(Math.max(scale - 0.2, 0.5))}
+                            className="h-10 w-10 p-0"
+                          >
+                            <ZoomOut className="h-4 w-4" />
+                          </Button>
+                          <div className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-medium min-w-[3rem] text-center">
+                            {Math.round(scale * 100)}%
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setScale(Math.min(scale + 0.2, 3.0))}
+                            className="h-10 w-10 p-0"
+                          >
+                            <ZoomIn className="h-4 w-4" />
+                          </Button>
+                        </div>
+
+                        {/* Annotation Tools */}
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant={selectedTool === 'pen' ? 'default' : 'ghost'}
+                            onClick={() => handleToolSelect('pen')}
+                            className="h-10 w-10 p-0"
+                          >
+                            <Pen className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={selectedTool === 'highlighter' ? 'default' : 'ghost'}
+                            onClick={() => handleToolSelect('highlighter')}
+                            className="h-10 w-10 p-0"
+                          >
+                            <Highlighter className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={selectedTool === 'text' ? 'default' : 'ghost'}
+                            onClick={() => handleToolSelect('text')}
+                            className="h-10 w-10 p-0"
+                          >
+                            <Type className="h-4 w-4" />
+                          </Button>
+                        </div>
+
+                        {/* Quick Actions */}
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setShowSetlistPanel(!showSetlistPanel)}
+                            className="h-10 w-10 p-0"
+                          >
+                            <List className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setIsDarkMode(!isDarkMode)}
+                            className="h-10 w-10 p-0"
+                          >
+                            {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setShowQuickMenu(false)}
+                            className="h-10 w-10 p-0 opacity-60 hover:opacity-100"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Menu Toggle Button (when menu is hidden) */}
+                {selectedPDF && !showQuickMenu && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowQuickMenu(true)}
+                    className="absolute bottom-4 right-4 z-50 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm"
+                  >
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </div>
           </>
