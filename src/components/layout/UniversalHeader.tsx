@@ -44,15 +44,20 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
         <div className="flex items-center justify-between h-16 sm:h-16 md:h-16">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
-            <Link to="/landing" className="flex items-center gap-1 sm:gap-2">
+            <Link to="/landing" className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               <img 
                 src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
                 alt="Spelman College Glee Club" 
-                className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 object-contain filter brightness-0 invert brightness-125"
+                className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 object-contain filter brightness-0 invert brightness-125 flex-shrink-0"
               />
-              <span className="text-white font-semibold text-sm sm:text-base md:text-lg hidden xs:block">
-                GleeWorld
-              </span>
+              <div className="flex flex-col leading-tight min-w-0">
+                <span className="text-white font-semibold text-xs sm:text-sm md:text-base hidden xs:block truncate">
+                  GleeWorld
+                </span>
+                <span className="text-white/80 font-medium text-[9px] sm:text-[10px] md:text-xs hidden xs:block truncate">
+                  Spelman College Glee Club
+                </span>
+              </div>
             </Link>
             
             {/* Home Icon - Takes users to public GleeWorld.org landing page */}
