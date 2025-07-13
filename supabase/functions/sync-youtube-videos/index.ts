@@ -87,30 +87,45 @@ async function extractChannelId(channelInput: string, apiKey: string): Promise<s
     }
     
     // Try the new forHandle API first (YouTube Channels API v3)
-    try {
-      const forHandleUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet&forHandle=${handle}&key=${apiKey}`
-      console.log('Trying forHandle API for:', handle)
-      
-      const forHandleResponse = await fetch(forHandleUrl)
-      if (forHandleResponse.ok) {
-        const forHandleData = await forHandleResponse.json()
-        if (forHandleData.items && forHandleData.items.length > 0) {
-          console.log('Found channel via forHandle:', forHandleData.items[0].snippet.title)
-          return forHandleData.items[0].id
+    const handleVariations = [
+      handle,                           // spelmancollegegleeclub
+      `spelman-college-glee-club`,     // with hyphens
+      `spelman college glee club`,     // with spaces
+      `SpelmanCollegeGleeClub`,       // pascal case
+      `Spelman College Glee Club`      // title case
+    ]
+    
+    for (const handleVar of handleVariations) {
+      try {
+        const forHandleUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet&forHandle=${handleVar}&key=${apiKey}`
+        console.log('Trying forHandle API for:', handleVar)
+        
+        const forHandleResponse = await fetch(forHandleUrl)
+        if (forHandleResponse.ok) {
+          const forHandleData = await forHandleResponse.json()
+          if (forHandleData.items && forHandleData.items.length > 0) {
+            console.log('Found channel via forHandle:', forHandleData.items[0].snippet.title)
+            return forHandleData.items[0].id
+          }
+        } else {
+          console.log(`forHandle API failed for "${handleVar}":`, forHandleResponse.status)
         }
-      } else {
-        console.log('forHandle API failed:', forHandleResponse.status)
+      } catch (error) {
+        console.log(`forHandle API error for "${handleVar}":`, error.message)
       }
-    } catch (error) {
-      console.log('forHandle API error:', error.message)
     }
     
     // Try multiple search approaches as fallback
     const searchQueries = [
-      `@${handle}`,      // Try with @ symbol first
-      handle,            // Try without @ symbol
-      `"@${handle}"`,    // Try with quotes and @ symbol
-      `"${handle}"`      // Try with quotes only
+      `@${handle}`,                        // @spelmancollegegleeclub
+      handle,                              // spelmancollegegleeclub
+      `"@${handle}"`,                      // "@spelmancollegegleeclub"
+      `"${handle}"`,                       // "spelmancollegegleeclub"
+      `Spelman College Glee Club`,         // Full proper name
+      `"Spelman College Glee Club"`,       // Full proper name in quotes
+      `@SpelmanCollegeGleeClub`,          // Pascal case with @
+      `spelman glee club`,                 // Simplified
+      `"spelman glee club"`                // Simplified in quotes
     ]
     
     for (const query of searchQueries) {
