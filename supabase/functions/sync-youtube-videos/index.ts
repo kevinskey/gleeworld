@@ -314,7 +314,8 @@ async function handleMockDataSync() {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400 
       }
-    )
+     )
+  }
 }
 
 serve(async (req) => {
