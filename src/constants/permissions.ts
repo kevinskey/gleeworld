@@ -29,6 +29,7 @@ export const PERMISSIONS = [
   'access_youtube_management',
   'access_budget_creation',
   'access_contracts',
+  'access_sheet_music',
   'send_notifications',
   'send_emails',
   'manage_username_permissions',
@@ -97,6 +98,11 @@ export const DASHBOARD_MODULES = {
     name: 'Contracts',
     description: 'Create and manage contracts',
     permission: 'access_contracts' as Permission,
+  },
+  sheet_music: {
+    name: 'Sheet Music System',
+    description: 'Access reader.gleeworld.org sheet music system',
+    permission: 'access_sheet_music' as Permission,
   },
   send_emails: {
     name: 'Email Campaigns',
