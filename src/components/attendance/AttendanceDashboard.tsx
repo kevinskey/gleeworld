@@ -26,11 +26,9 @@ export const AttendanceDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
-  const isSecretary = false; // TODO: Add exec_board_role to profile
-  const isSectionLeader = false; // TODO: Add is_section_leader to profile
   
-  // Check if user can take attendance
-  const canTakeAttendance = isAdmin || isSecretary || isSectionLeader;
+  // Check if user can take attendance (only secretary or her designate)
+  const canTakeAttendance = isAdmin; // For now, only admins can take attendance until secretary role is properly defined
 
   if (!user) {
     return (
@@ -149,7 +147,7 @@ export const AttendanceDashboard = () => {
               <span className="sm:hidden">Excuses</span>
             </TabsTrigger>
             
-            {(isAdmin || isSectionLeader) && (
+            {isAdmin && (
               <TabsTrigger 
                 value="reports" 
                 className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
@@ -180,7 +178,7 @@ export const AttendanceDashboard = () => {
               <ExcuseRequests />
             </TabsContent>
 
-            {(isAdmin || isSectionLeader) && (
+            {isAdmin && (
               <TabsContent value="reports" className="space-y-6 animate-fade-in">
                 <AttendanceReports />
               </TabsContent>

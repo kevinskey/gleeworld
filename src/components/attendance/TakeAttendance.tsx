@@ -42,6 +42,7 @@ interface AttendanceMember {
 export const TakeAttendance = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [events, setEvents] = useState<GleeEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<string>('');
   const [members, setMembers] = useState<AttendanceMember[]>([]);
@@ -49,10 +50,40 @@ export const TakeAttendance = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Load upcoming events
+  // Check permissions and load events
   useEffect(() => {
-    loadUpcomingEvents();
-  }, []);
+    checkPermissions();
+    if (hasPermission) {
+      loadUpcomingEvents();
+    }
+  }, [hasPermission]);
+
+  const checkPermissions = async () => {
+    if (!user) {
+      setHasPermission(false);
+      return;
+    }
+
+    try {
+      const { data: profile, error } = await supabase
+        .from('gw_profiles')
+        .select('is_admin, is_super_admin, exec_board_role, special_roles')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      // Check if user is admin, super-admin, or has secretary role
+      const isAdmin = profile?.is_admin || profile?.is_super_admin;
+      const isSecretary = profile?.exec_board_role?.toLowerCase() === 'secretary';
+      const hasSecretaryRole = profile?.special_roles?.includes('secretary');
+      
+      setHasPermission(isAdmin || isSecretary || hasSecretaryRole);
+    } catch (error) {
+      console.error('Error checking permissions:', error);
+      setHasPermission(false);
+    }
+  };
 
   // Load members when event is selected
   useEffect(() => {
@@ -264,6 +295,31 @@ export const TakeAttendance = () => {
   };
 
   const stats = getAttendanceStats();
+
+  // Permission check
+  if (hasPermission === null) {
+    return (
+      <div className="flex justify-center py-8">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (hasPermission === false) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center">
+            <XCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Access Denied</h3>
+            <p className="text-gray-600">
+              Only the secretary or designated administrators can take attendance.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
