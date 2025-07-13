@@ -17,7 +17,9 @@ import {
   X,
   Menu,
   Music,
-  Album as AlbumIcon
+  Album as AlbumIcon,
+  Youtube,
+  Play
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -738,6 +740,84 @@ export const GleeWorldLanding = () => {
         isOpen={isAlbumModalOpen}
         onClose={handleCloseAlbumModal}
       />
+
+      {/* YouTube Section */}
+      <section className="pt-7 pb-4 sm:pt-10 sm:pb-6 px-0.5 sm:px-1 md:px-1.5 lg:px-3.5 w-full">
+        <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto">
+          <Card className="p-6 sm:p-8 bg-white/30 backdrop-blur-md border border-white/20 shadow-2xl">
+            <div className="text-center mb-6 sm:mb-8">
+              <div className="flex items-center justify-center gap-3 mb-2">
+                <Youtube className="h-8 w-8 sm:h-10 sm:w-10 text-red-500 animate-pulse" />
+                <h2 className="text-2xl sm:text-4xl md:text-6xl font-dancing font-bold text-gray-900">YouTube Channel</h2>
+                <Youtube className="h-8 w-8 sm:h-10 sm:w-10 text-red-600 animate-pulse" />
+              </div>
+              <p className="text-gray-600 text-lg">Experience our performances and behind-the-scenes moments</p>
+            </div>
+            
+            {/* Featured Video */}
+            <div className="mb-8">
+              <Card className="overflow-hidden bg-white/20 backdrop-blur-md border border-white/30 shadow-xl">
+                <div className="aspect-video bg-gradient-to-br from-red-100/50 to-pink-100/50 flex items-center justify-center relative group cursor-pointer hover:bg-red-100/70 transition-colors duration-300">
+                  <div className="text-center">
+                    <div className="bg-red-500/90 backdrop-blur-md rounded-full p-6 mb-4 group-hover:bg-red-600 transition-colors duration-300">
+                      <Play className="h-12 w-12 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-semibold text-gray-900 mb-2">Latest Performance</h3>
+                    <p className="text-gray-600">Watch our most recent musical showcase</p>
+                  </div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
+                </div>
+              </Card>
+            </div>
+
+            {/* Video Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {[
+                { title: "Concert Highlights", views: "12K views", duration: "8:45" },
+                { title: "Behind the Scenes", views: "8.5K views", duration: "5:23" },
+                { title: "Community Outreach", views: "15K views", duration: "12:10" },
+              ].map((video, index) => (
+                <Card key={index} className="hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 group cursor-pointer">
+                  <div className="aspect-video bg-gradient-to-br from-red-100/50 to-pink-100/50 flex items-center justify-center relative overflow-hidden">
+                    <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                      {video.duration}
+                    </div>
+                    <div className="text-center">
+                      <div className="bg-red-500/80 backdrop-blur-md rounded-full p-4 group-hover:bg-red-600 transition-colors duration-300">
+                        <Play className="h-8 w-8 text-white" />
+                      </div>
+                    </div>
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
+                  </div>
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">{video.title}</h3>
+                    <p className="text-sm text-gray-600">{video.views}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Call to Action */}
+            <div className="text-center">
+              <Button 
+                size="lg" 
+                className="bg-red-500 hover:bg-red-600 text-white shadow-lg transition-all duration-300 hover:scale-105"
+                asChild
+              >
+                <a 
+                  href="https://youtube.com/@spelmangleeclub" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2"
+                >
+                  <Youtube className="h-5 w-5" />
+                  Visit Our Channel
+                </a>
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </section>
 
       {/* Footer */}
       <section className="pt-4 pb-6 px-0.5 sm:px-1 md:px-1.5 lg:px-3.5">
