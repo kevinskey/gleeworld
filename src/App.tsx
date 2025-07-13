@@ -28,6 +28,7 @@ import Profile from "./pages/Profile";
 import Calendar from "./pages/Calendar";
 import PublicCalendar from "./pages/PublicCalendar";
 import PressKit from "./pages/PressKit";
+import Notifications from "./pages/Notifications";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -213,15 +214,23 @@ const App = () => {
                     <Profile />
                   </ProtectedRoute>
                 } 
-              />
-              <Route 
-                path="/shop" 
-                element={
-                  <PublicRoute>
-                    <Shop />
-                  </PublicRoute>
-                } 
-              />
+                /> 
+               <Route
+                 path="/notifications" 
+                 element={
+                   <ProtectedRoute>
+                     <Notifications />
+                   </ProtectedRoute>
+                 } 
+               />
+               <Route 
+                 path="/shop" 
+                 element={
+                   <PublicRoute>
+                     <Shop />
+                   </PublicRoute>
+                 } 
+               />
                <Route 
                  path="/calendar" 
                  element={
