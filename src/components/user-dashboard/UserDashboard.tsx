@@ -334,57 +334,98 @@ export const UserDashboard = () => {
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader className="pb-3 sm:pb-6">
-              <CardTitle className="text-lg sm:text-xl">Quick Actions</CardTitle>
-              <CardDescription className="hidden sm:block">Access your most-used features</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-              <EnhancedTooltip content="Access sheet music library with integrated setlists">
-                <Button 
-                  className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
-                  variant="outline"
-                  onClick={() => setShowAdvancedViewer(true)}
-                >
-                  <Music className="h-4 w-4 sm:h-6 sm:w-6" />
-                  <span className="hidden sm:inline">Sheet Music & Setlists</span>
-                  <span className="sm:hidden">Music</span>
-                </Button>
-              </EnhancedTooltip>
-                <EnhancedTooltip content="View your attendance records and manage attendance">
-                  <Button 
-                    className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
-                    variant="outline"
-                    onClick={() => navigate('/attendance')}
-                  >
-                    <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6" />
-                    <span className="hidden sm:inline">Attendance</span>
-                    <span className="sm:hidden">Attendance</span>
-                  </Button>
-                </EnhancedTooltip>
-                <EnhancedTooltip content="View calendar and events">
-                  <Button 
-                    className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
-                    variant="outline"
-                    onClick={() => navigate('/events')}
-                  >
-                    <Calendar className="h-4 w-4 sm:h-6 sm:w-6" />
-                    <span className="hidden sm:inline">View Calendar</span>
-                    <span className="sm:hidden">Calendar</span>
-                  </Button>
-                </EnhancedTooltip>
-                <EnhancedTooltip content="View announcements">
-                  <Button className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" variant="outline">
-                    <Bell className="h-4 w-4 sm:h-6 sm:w-6" />
-                    <span className="hidden sm:inline">Announcements</span>
-                    <span className="sm:hidden">News</span>
-                  </Button>
-                </EnhancedTooltip>
-              </div>
-            </CardContent>
-          </Card>
+          {/* 50/50 Split Layout: Quick Actions & Glee Club Spotlight */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Quick Actions - 50% */}
+            <Card className="h-fit">
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-lg sm:text-xl">Quick Actions</CardTitle>
+                <CardDescription className="hidden sm:block">Access your most-used features</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  <EnhancedTooltip content="Access sheet music library with integrated setlists">
+                    <Button 
+                      className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
+                      variant="outline"
+                      onClick={() => setShowAdvancedViewer(true)}
+                    >
+                      <Music className="h-5 w-5 sm:h-6 sm:w-6" />
+                      <span className="text-center leading-tight">Sheet Music</span>
+                    </Button>
+                  </EnhancedTooltip>
+                  <EnhancedTooltip content="View your attendance records and manage attendance">
+                    <Button 
+                      className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
+                      variant="outline"
+                      onClick={() => navigate('/attendance')}
+                    >
+                      <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6" />
+                      <span className="text-center leading-tight">Attendance</span>
+                    </Button>
+                  </EnhancedTooltip>
+                  <EnhancedTooltip content="View calendar and events">
+                    <Button 
+                      className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
+                      variant="outline"
+                      onClick={() => navigate('/events')}
+                    >
+                      <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
+                      <span className="text-center leading-tight">Calendar</span>
+                    </Button>
+                  </EnhancedTooltip>
+                  <EnhancedTooltip content="View announcements">
+                    <Button className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" variant="outline">
+                      <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
+                      <span className="text-center leading-tight">Announcements</span>
+                    </Button>
+                  </EnhancedTooltip>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Glee Club Spotlight - 50% */}
+            <Card className="h-fit">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Star className="h-5 w-5 mr-2 text-yellow-500" />
+                  Glee Club Spotlight
+                </CardTitle>
+                <CardDescription>Member recognition and community updates</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
+                    <div className="flex items-center space-x-3">
+                      <Award className="h-8 w-8 text-yellow-600 flex-shrink-0" />
+                      <div>
+                        <h4 className="font-semibold">Member of the Month</h4>
+                        <p className="text-sm text-gray-600">Congratulations to Sarah Johnson for outstanding dedication!</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center space-x-3">
+                      <TrendingUp className="h-8 w-8 text-blue-600 flex-shrink-0" />
+                      <div>
+                        <h4 className="font-semibold">Latest Achievement</h4>
+                        <p className="text-sm text-gray-600">First place at the Regional Choir Competition!</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg border border-green-200">
+                    <div className="flex items-center space-x-3">
+                      <Users className="h-8 w-8 text-green-600 flex-shrink-0" />
+                      <div>
+                        <h4 className="font-semibold">Community Impact</h4>
+                        <p className="text-sm text-gray-600">Raised $5,000 for local music education programs!</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Upcoming Events - Horizontal Carousel */}
@@ -640,38 +681,6 @@ export const UserDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Glee Club Spotlight */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Star className="h-5 w-5 mr-2 text-yellow-500" />
-                Glee Club Spotlight
-              </CardTitle>
-              <CardDescription>Member recognition and community updates</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
-                  <div className="flex items-center space-x-3">
-                    <Award className="h-8 w-8 text-yellow-600" />
-                    <div>
-                      <h4 className="font-semibold">Member of the Month</h4>
-                      <p className="text-sm text-gray-600">Congratulations to Sarah Johnson for outstanding dedication!</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center space-x-3">
-                    <TrendingUp className="h-8 w-8 text-blue-600" />
-                    <div>
-                      <h4 className="font-semibold">Latest Achievement</h4>
-                      <p className="text-sm text-gray-600">First place at the Regional Choir Competition!</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
       
