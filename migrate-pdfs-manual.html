@@ -22,11 +22,6 @@
             <input type="text" id="apiUrl" value="https://reader.gleeworld.org/api" />
         </div>
         
-        <div>
-            <label>Reader API Key (if required):</label>
-            <input type="text" id="apiKey" placeholder="Enter API key if needed" />
-        </div>
-        
         <button onclick="checkStatus()">Check Migration Status</button>
         <button onclick="startMigration()">Start Migration</button>
         
@@ -77,7 +72,6 @@
             
             async function startMigration() {
                 const apiUrl = document.getElementById('apiUrl').value;
-                const apiKey = document.getElementById('apiKey').value;
                 
                 if (!apiUrl) {
                     showStatus('Please enter the Reader API URL', true);
@@ -95,8 +89,7 @@
                         },
                         body: JSON.stringify({
                             action: 'migrate_pdfs',
-                            reader_api_url: apiUrl,
-                            reader_api_key: apiKey
+                            reader_api_url: apiUrl
                         })
                     });
                     

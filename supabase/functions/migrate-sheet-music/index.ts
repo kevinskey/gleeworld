@@ -25,7 +25,10 @@ serve(async (req) => {
     const body = await req.json()
     console.log('migrate-sheet-music: Request body:', body)
     
-    const { action, reader_api_url, reader_api_key } = body
+    const { action, reader_api_url } = body
+    
+    // Get API key from secrets
+    const reader_api_key = Deno.env.get('READER_GLEEWORLD_API_KEY') ?? ''
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
