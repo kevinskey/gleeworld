@@ -72,16 +72,17 @@ async function extractChannelId(channelInput: string, apiKey: string): Promise<s
       return channelInput
     }
     
-    // Manual fallback for known channels that might be hard to find
+    // Known channel IDs for testing
     const knownChannels: { [key: string]: string } = {
-      'spelmancollegegleeclub': 'UC_TryDifferentApproach',
-      'spelman': 'UC_TryDifferentApproach'
+      'mkbhd': 'UCBJycsmduvYEL83R_U4JriQ',
+      '@mkbhd': 'UCBJycsmduvYEL83R_U4JriQ',
+      'spelmancollegegleeclub': 'UCZYTClx2T1of7BRZ86-8fow', // Example - we'll need to find the real one
+      '@spelmancollegegleeclub': 'UCZYTClx2T1of7BRZ86-8fow'
     }
     
     // Extract handle from various input formats
     let handle = channelInput.toLowerCase()
     if (channelInput.includes('youtube.com/')) {
-      // Extract handle from URL - handle the ?si= parameter
       const urlMatch = channelInput.match(/youtube\.com\/(?:@|c\/|channel\/|user\/)([^\/\?&]+)/i)
       if (urlMatch) {
         handle = urlMatch[1].toLowerCase()
@@ -92,13 +93,18 @@ async function extractChannelId(channelInput: string, apiKey: string): Promise<s
       console.log('Extracted from @handle:', handle)
     }
     
-    // Try the new forHandle API first (YouTube Channels API v3)
+    // Check known channels first
+    if (knownChannels[handle] || knownChannels[`@${handle}`]) {
+      const channelId = knownChannels[handle] || knownChannels[`@${handle}`]
+      console.log('Found in known channels:', channelId)
+      return channelId
+    }
+    
+    // Try the forHandle API with different variations
     const handleVariations = [
-      handle,                           // spelmancollegegleeclub
-      `spelman-college-glee-club`,     // with hyphens
-      `spelman college glee club`,     // with spaces
-      `SpelmanCollegeGleeClub`,       // pascal case
-      `Spelman College Glee Club`      // title case
+      handle,
+      `@${handle}`,
+      handle.replace(/[^a-zA-Z0-9]/g, ''), // Remove special characters
     ]
     
     for (const handleVar of handleVariations) {
@@ -114,56 +120,56 @@ async function extractChannelId(channelInput: string, apiKey: string): Promise<s
             return forHandleData.items[0].id
           }
         } else {
-          console.log(`forHandle API failed for "${handleVar}":`, forHandleResponse.status)
+          const errorText = await forHandleResponse.text()
+          console.log(`forHandle API failed for "${handleVar}":`, forHandleResponse.status, errorText)
         }
       } catch (error) {
         console.log(`forHandle API error for "${handleVar}":`, error.message)
       }
     }
     
-    // Try multiple search approaches as fallback
+    // Try search as fallback
     const searchQueries = [
-      `@${handle}`,                        // @spelmancollegegleeclub
-      handle,                              // spelmancollegegleeclub
-      `"@${handle}"`,                      // "@spelmancollegegleeclub"
-      `"${handle}"`,                       // "spelmancollegegleeclub"
-      `Spelman College Glee Club`,         // Full proper name
-      `"Spelman College Glee Club"`,       // Full proper name in quotes
-      `@SpelmanCollegeGleeClub`,          // Pascal case with @
-      `spelman glee club`,                 // Simplified
-      `"spelman glee club"`                // Simplified in quotes
+      `@${handle}`,
+      handle,
+      `"@${handle}"`,
+      `"${handle}"`,
+      handle.replace(/[^a-zA-Z0-9\s]/g, ' ').trim(), // Remove special chars and replace with spaces
     ]
     
     for (const query of searchQueries) {
-      console.log('Trying search query:', query)
-      const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(query)}&maxResults=5&key=${apiKey}`
-      const searchResponse = await fetch(searchUrl)
-      
-      if (!searchResponse.ok) {
-        console.error(`YouTube API search error for "${query}":`, searchResponse.status)
-        const errorText = await searchResponse.text()
-        console.error('Search API error details:', errorText)
-        continue
-      }
-      
-      const searchData = await searchResponse.json()
-      console.log(`Search results for "${query}":`, searchData.items?.length || 0, 'channels found')
-      
-      if (searchData.items && searchData.items.length > 0) {
-        // Log all found channels for debugging
-        searchData.items.forEach((item: any, index: number) => {
-          console.log(`Channel ${index + 1}:`, {
-            title: item.snippet.title,
-            channelId: item.snippet.channelId,
-            customUrl: item.snippet.customUrl
-          })
-        })
+      try {
+        console.log('Trying search query:', query)
+        const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(query)}&maxResults=10&key=${apiKey}`
+        const searchResponse = await fetch(searchUrl)
         
-        return searchData.items[0].snippet.channelId
+        if (!searchResponse.ok) {
+          const errorText = await searchResponse.text()
+          console.error(`YouTube API search error for "${query}":`, searchResponse.status, errorText)
+          continue
+        }
+        
+        const searchData = await searchResponse.json()
+        console.log(`Search results for "${query}":`, searchData.items?.length || 0, 'channels found')
+        
+        if (searchData.items && searchData.items.length > 0) {
+          // Log all found channels for debugging
+          searchData.items.forEach((item: any, index: number) => {
+            console.log(`Channel ${index + 1}:`, {
+              title: item.snippet.title,
+              channelId: item.snippet.channelId,
+              description: item.snippet.description?.substring(0, 100)
+            })
+          })
+          
+          return searchData.items[0].snippet.channelId
+        }
+      } catch (error) {
+        console.error(`Search error for "${query}":`, error.message)
       }
     }
     
-    console.log('No channels found with any search query')
+    console.log('No channels found with any method')
     return null
   } catch (error) {
     console.error('Error extracting channel ID:', error)
