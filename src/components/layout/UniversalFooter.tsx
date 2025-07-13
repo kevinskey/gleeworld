@@ -10,9 +10,9 @@ export const UniversalFooter = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
           {/* Company Info */}
           <div className="text-center md:text-left">
-            <h3 className="text-2xl sm:text-lg font-semibold text-white mb-2">Contract Manager</h3>
+            <h3 className="text-2xl sm:text-lg font-semibold text-white mb-2">Glee World</h3>
             <p className="text-white/70 text-xs sm:text-sm">
-              Streamlining contract management and digital workflows
+              The home of the Spelman College Glee Club
             </p>
           </div>
 
@@ -47,7 +47,7 @@ export const UniversalFooter = () => {
 
         <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-white/20 text-center">
           <p className="text-white/50 text-xs sm:text-sm">
-            © {currentYear} Contract Manager. All rights reserved.
+            © {currentYear} Glee World. All rights reserved.
           </p>
         </div>
       </div>
