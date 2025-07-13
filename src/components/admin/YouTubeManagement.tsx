@@ -297,12 +297,20 @@ export const YouTubeManagement = () => {
                 id="channel_input"
                 value={channelInput}
                 onChange={(e) => setChannelInput(e.target.value)}
-                placeholder="@spelmangleeclub or https://youtube.com/@spelmangleeclub"
+                placeholder="@spelmangleeclub, https://youtube.com/@spelmangleeclub, or UC1234..."
                 className="mt-1"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Supports: @handle, channel URL, or channel ID
-              </p>
+              <div className="text-xs text-gray-500 mt-1">
+                <p>Supports: @handle, channel URL, or channel ID (UC...)</p>
+                <p className="text-yellow-600 mt-1">
+                  💡 Test with: <button 
+                    onClick={() => setChannelInput("@mkbhd")} 
+                    className="underline hover:text-yellow-800"
+                  >
+                    @mkbhd
+                  </button> (known working channel)
+                </p>
+              </div>
             </div>
             <div className="pt-6">
               <Button 

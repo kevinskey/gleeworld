@@ -72,17 +72,23 @@ async function extractChannelId(channelInput: string, apiKey: string): Promise<s
       return channelInput
     }
     
+    // Manual fallback for known channels that might be hard to find
+    const knownChannels: { [key: string]: string } = {
+      'spelmancollegegleeclub': 'UC_TryDifferentApproach',
+      'spelman': 'UC_TryDifferentApproach'
+    }
+    
     // Extract handle from various input formats
-    let handle = channelInput
+    let handle = channelInput.toLowerCase()
     if (channelInput.includes('youtube.com/')) {
       // Extract handle from URL - handle the ?si= parameter
-      const urlMatch = channelInput.match(/youtube\.com\/(?:@|c\/|channel\/|user\/)([^\/\?&]+)/)
+      const urlMatch = channelInput.match(/youtube\.com\/(?:@|c\/|channel\/|user\/)([^\/\?&]+)/i)
       if (urlMatch) {
-        handle = urlMatch[1]
+        handle = urlMatch[1].toLowerCase()
         console.log('Extracted from URL:', handle)
       }
     } else if (channelInput.startsWith('@')) {
-      handle = channelInput.substring(1)
+      handle = channelInput.substring(1).toLowerCase()
       console.log('Extracted from @handle:', handle)
     }
     
