@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, Upload, FileStack, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { SheetMusicCard } from "./SheetMusicCard";
 import { SheetMusicFilters } from "./SheetMusicFilters";
 import { SheetMusicViewer } from "./SheetMusicViewer";
 import { SheetMusicUpload } from "./SheetMusicUpload";
+import { SheetMusicBulkUpload } from "../admin/SheetMusicBulkUpload";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { Database } from "@/integrations/supabase/types";
@@ -29,6 +30,7 @@ export const SheetMusicLibrary = () => {
   const [filters, setFilters] = useState<SheetMusicFilters>({});
   const [selectedSheetMusic, setSelectedSheetMusic] = useState<SheetMusic | null>(null);
   const [showUpload, setShowUpload] = useState(false);
+  const [uploadMode, setUploadMode] = useState<"single" | "bulk">("single");
   
   const { sheetMusic, loading, fetchSheetMusic } = useSheetMusic();
   const { user } = useAuth();
@@ -61,6 +63,20 @@ export const SheetMusicLibrary = () => {
   }
 
   if (showUpload && isAdmin) {
+    if (uploadMode === "bulk") {
+      return (
+        <div className="container mx-auto px-4 py-6">
+          <div className="mb-6">
+            <Button variant="outline" onClick={() => setShowUpload(false)}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Library
+            </Button>
+          </div>
+          <SheetMusicBulkUpload />
+        </div>
+      );
+    }
+    
     return (
       <SheetMusicUpload 
         onBack={() => setShowUpload(false)}
@@ -82,10 +98,30 @@ export const SheetMusicLibrary = () => {
           </div>
           <div className="flex items-center gap-2">
             {isAdmin && (
-              <Button onClick={() => setShowUpload(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Upload Sheet Music
-              </Button>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center border rounded-lg">
+                  <Button
+                    variant={uploadMode === "single" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setUploadMode("single")}
+                  >
+                    <Upload className="h-4 w-4 mr-1" />
+                    Single
+                  </Button>
+                  <Button
+                    variant={uploadMode === "bulk" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setUploadMode("bulk")}
+                  >
+                    <FileStack className="h-4 w-4 mr-1" />
+                    Bulk
+                  </Button>
+                </div>
+                <Button onClick={() => setShowUpload(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Upload Sheet Music
+                </Button>
+              </div>
             )}
           </div>
         </div>
