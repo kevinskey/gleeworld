@@ -38,8 +38,32 @@ export const MusicManagement = () => {
   const { user } = useAuth();
   const { tracks, albums, loading, refetch } = useMusic();
   const { toast } = useToast();
+  
+  // ALL useState hooks must be called at the top, before any conditional logic
   const [userRole, setUserRole] = useState<string | null>(null);
   const [roleLoading, setRoleLoading] = useState(true);
+  const [isCreatingAlbum, setIsCreatingAlbum] = useState(false);
+  const [isCreatingTrack, setIsCreatingTrack] = useState(false);
+  const [editingAlbum, setEditingAlbum] = useState<any>(null);
+  const [editingTrack, setEditingTrack] = useState<any>(null);
+  const [albumForm, setAlbumForm] = useState({
+    title: '',
+    artist: '',
+    description: '',
+    release_date: '',
+    cover_image_url: ''
+  });
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [trackForm, setTrackForm] = useState({
+    title: '',
+    artist: '',
+    album_id: '',
+    audio_url: '',
+    duration: 0,
+    track_number: 1,
+    genre: '',
+    lyrics: ''
+  });
 
   // Get user role
   useEffect(() => {
@@ -85,30 +109,6 @@ export const MusicManagement = () => {
       </div>
     );
   }
-  
-  const [isCreatingAlbum, setIsCreatingAlbum] = useState(false);
-  const [isCreatingTrack, setIsCreatingTrack] = useState(false);
-  const [editingAlbum, setEditingAlbum] = useState<any>(null);
-  const [editingTrack, setEditingTrack] = useState<any>(null);
-  const [albumForm, setAlbumForm] = useState({
-    title: '',
-    artist: '',
-    description: '',
-    release_date: '',
-    cover_image_url: ''
-  });
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [trackForm, setTrackForm] = useState({
-    title: '',
-    artist: '',
-    album_id: '',
-    audio_url: '',
-    duration: 0,
-    track_number: 1,
-    genre: '',
-    lyrics: ''
-  });
-
   const handleCreateAlbum = async () => {
     if (!user || !albumForm.title || !albumForm.artist) {
       console.log('Validation failed:', { user: !!user, title: albumForm.title, artist: albumForm.artist });
