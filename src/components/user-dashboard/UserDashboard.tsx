@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ErrorState } from "@/components/shared/ErrorState";
@@ -336,7 +337,9 @@ export const UserDashboard = () => {
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
                 <CardTitle className="text-xs sm:text-sm font-medium">Events</CardTitle>
-                <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
+                <EnhancedTooltip content="View upcoming events">
+                  <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
+                </EnhancedTooltip>
               </CardHeader>
               <CardContent className="pb-2 sm:pb-6">
                 <div className="text-lg sm:text-2xl font-bold">{upcomingEventsList.length}</div>
@@ -352,7 +355,9 @@ export const UserDashboard = () => {
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
                 <CardTitle className="text-xs sm:text-sm font-medium">Contracts</CardTitle>
-                <Music className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
+                <EnhancedTooltip content="View your contracts">
+                  <Music className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
+                </EnhancedTooltip>
               </CardHeader>
               <CardContent className="pb-2 sm:pb-6">
                 <div className="text-lg sm:text-2xl font-bold">{dashboardData?.total_contracts || 0}</div>
@@ -366,7 +371,9 @@ export const UserDashboard = () => {
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
                 <CardTitle className="text-xs sm:text-sm font-medium">Payments</CardTitle>
-                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600" />
+                <EnhancedTooltip content="View payment history">
+                  <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600" />
+                </EnhancedTooltip>
               </CardHeader>
               <CardContent className="pb-2 sm:pb-6">
                 <div className="text-lg sm:text-2xl font-bold">{dashboardData?.payments_received || 0}</div>
@@ -380,7 +387,9 @@ export const UserDashboard = () => {
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
                 <CardTitle className="text-xs sm:text-sm font-medium">Alerts</CardTitle>
-                <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-600" />
+                <EnhancedTooltip content="View notifications">
+                  <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-600" />
+                </EnhancedTooltip>
               </CardHeader>
               <CardContent className="pb-2 sm:pb-6">
                 <div className="text-lg sm:text-2xl font-bold text-emerald-600">{dashboardData?.unread_notifications || 0}</div>
@@ -397,34 +406,42 @@ export const UserDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-                <Button 
-                  className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm" 
-                  variant="outline"
-                  onClick={() => setSelectedModule('sheet-music')}
-                >
-                  <Music className="h-4 w-4 sm:h-6 sm:w-6" />
-                  <span className="hidden sm:inline">View Sheet Music</span>
-                  <span className="sm:hidden">Music</span>
-                </Button>
-                <Button 
-                  className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm" 
-                  variant="outline"
-                  onClick={() => navigate('/attendance-test')}
-                >
-                  <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6" />
-                  <span className="hidden sm:inline">Test Attendance</span>
-                  <span className="sm:hidden">Test</span>
-                </Button>
-                <Button className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm" variant="outline">
-                  <Clock className="h-4 w-4 sm:h-6 sm:w-6" />
-                  <span className="hidden sm:inline">Practice Log</span>
-                  <span className="sm:hidden">Practice</span>
-                </Button>
-                <Button className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm" variant="outline">
-                  <Bell className="h-4 w-4 sm:h-6 sm:w-6" />
-                  <span className="hidden sm:inline">Announcements</span>
-                  <span className="sm:hidden">News</span>
-                </Button>
+                <EnhancedTooltip content="Access sheet music library">
+                  <Button 
+                    className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
+                    variant="outline"
+                    onClick={() => setSelectedModule('sheet-music')}
+                  >
+                    <Music className="h-4 w-4 sm:h-6 sm:w-6" />
+                    <span className="hidden sm:inline">View Sheet Music</span>
+                    <span className="sm:hidden">Music</span>
+                  </Button>
+                </EnhancedTooltip>
+                <EnhancedTooltip content="Take attendance test">
+                  <Button 
+                    className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
+                    variant="outline"
+                    onClick={() => navigate('/attendance-test')}
+                  >
+                    <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6" />
+                    <span className="hidden sm:inline">Test Attendance</span>
+                    <span className="sm:hidden">Test</span>
+                  </Button>
+                </EnhancedTooltip>
+                <EnhancedTooltip content="Track practice sessions">
+                  <Button className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" variant="outline">
+                    <Clock className="h-4 w-4 sm:h-6 sm:w-6" />
+                    <span className="hidden sm:inline">Practice Log</span>
+                    <span className="sm:hidden">Practice</span>
+                  </Button>
+                </EnhancedTooltip>
+                <EnhancedTooltip content="View announcements">
+                  <Button className="h-14 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" variant="outline">
+                    <Bell className="h-4 w-4 sm:h-6 sm:w-6" />
+                    <span className="hidden sm:inline">Announcements</span>
+                    <span className="sm:hidden">News</span>
+                  </Button>
+                </EnhancedTooltip>
               </div>
             </CardContent>
           </Card>
