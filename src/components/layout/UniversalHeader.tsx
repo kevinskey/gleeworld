@@ -51,10 +51,10 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
                 className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 object-contain filter brightness-0 invert brightness-125 flex-shrink-0"
               />
               <div className="flex flex-col leading-tight min-w-0">
-                <span className="text-white font-semibold text-xs sm:text-sm md:text-base hidden xs:block truncate">
+                <span className="text-slate-900 font-semibold text-xs sm:text-sm md:text-base hidden xs:block truncate">
                   GleeWorld
                 </span>
-                <span className="text-white/80 font-medium text-[9px] sm:text-[10px] md:text-xs hidden xs:block truncate">
+                <span className="text-slate-700 font-medium text-[9px] sm:text-[10px] md:text-xs hidden xs:block truncate">
                   Spelman College Glee Club
                 </span>
               </div>
