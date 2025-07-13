@@ -585,7 +585,10 @@ export const UserDashboard = () => {
                             key={moduleInfo.key}
                             variant="ghost" 
                             className="w-full justify-start h-auto p-3 relative"
-                            onClick={() => setSelectedModule(moduleInfo.key.replace('_', '-'))}
+                            onClick={() => {
+                              console.log('Module clicked:', moduleInfo.key);
+                              setSelectedModule(moduleInfo.key.replace('_', '-'));
+                            }}
                           >
                             <IconComponent className="h-4 w-4 mr-2" />
                             <div className="text-left flex-1">
