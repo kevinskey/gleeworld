@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission, isAdmin } from "@/constants/permissions";
+import { MobileNavigationFlow } from "./flow/MobileNavigationFlow";
 
 export const AppNavigation = () => {
   const { user } = useAuth();
@@ -148,6 +149,13 @@ export const AppNavigation = () => {
     </nav>
   );
 
+  // Mobile Navigation Flow Component
+  const MobileNavigationFlowContent = () => (
+    <div className="h-[50vh] w-full mb-4">
+      <MobileNavigationFlow />
+    </div>
+  );
+
   return (
     <>
       {/* Desktop Navigation - Horizontal for header */}
@@ -168,13 +176,19 @@ export const AppNavigation = () => {
               <span className="sr-only">Open navigation menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0 bg-background">
+          <SheetContent side="left" className="w-80 p-0 bg-background">
             <div className="flex flex-col h-full">
               <div className="flex items-center h-16 px-4 border-b bg-gradient-to-r from-brand-700 to-brand-800">
-                <h1 className="text-lg font-bold text-white">Contract Manager</h1>
+                <h1 className="text-lg font-bold text-white">Navigation Flow</h1>
               </div>
               <div className="flex-1 px-4 py-6">
-                <MobileNavigationContent />
+                <MobileNavigationFlowContent />
+                
+                {/* Traditional navigation as fallback */}
+                <div className="border-t border-border pt-4">
+                  <h3 className="text-sm font-medium mb-2 text-muted-foreground">Quick Links</h3>
+                  <MobileNavigationContent />
+                </div>
               </div>
             </div>
           </SheetContent>
