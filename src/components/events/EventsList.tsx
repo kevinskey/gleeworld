@@ -22,6 +22,7 @@ interface Event {
   approved: boolean;
   approval_needed: boolean;
   created_at: string;
+  image_url?: string;
 }
 
 export const EventsList = () => {
@@ -124,7 +125,28 @@ export const EventsList = () => {
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {events.map((event) => (
-          <Card key={event.id} className="hover:shadow-md transition-shadow">
+          <Card key={event.id} className="hover:shadow-md transition-shadow overflow-hidden">
+            {/* Event Image */}
+            {event.image_url && (
+              <div className="relative w-full aspect-[4/3] overflow-hidden">
+                <img
+                  src={event.image_url}
+                  alt={event.event_name || event.title}
+                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                <div className="absolute top-2 right-2 flex gap-1">
+                  {event.approval_needed && (
+                    <Badge variant={event.approved ? "default" : "secondary"} className="bg-background/90 backdrop-blur-sm">
+                      {event.approved ? "Approved" : "Pending"}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+            
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
@@ -135,7 +157,7 @@ export const EventsList = () => {
                     {getEventTypeDisplay(event.event_type)}
                   </Badge>
                 </div>
-                {event.approval_needed && (
+                {!event.image_url && event.approval_needed && (
                   <Badge variant={event.approved ? "default" : "secondary"}>
                     {event.approved ? "Approved" : "Pending"}
                   </Badge>
