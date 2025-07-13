@@ -302,13 +302,16 @@ export const YouTubeManagement = () => {
               />
               <div className="text-xs text-gray-500 mt-1">
                 <p>Supports: @handle, channel URL, or channel ID (UC...)</p>
+                <p className="text-red-600 mt-1">
+                  ⚠️ <strong>API Quota Exceeded</strong> - YouTube API quota resets daily at midnight PT
+                </p>
                 <p className="text-yellow-600 mt-1">
                   💡 Test with: <button 
                     onClick={() => setChannelInput("@mkbhd")} 
                     className="underline hover:text-yellow-800"
                   >
                     @mkbhd
-                  </button> (known working channel)
+                  </button> (when quota resets)
                 </p>
               </div>
             </div>
