@@ -76,8 +76,11 @@ async function extractChannelId(channelInput: string, apiKey: string): Promise<s
     const knownChannels: { [key: string]: string } = {
       'mkbhd': 'UCBJycsmduvYEL83R_U4JriQ',
       '@mkbhd': 'UCBJycsmduvYEL83R_U4JriQ',
-      'spelmancollegegleeclub': 'UCZYTClx2T1of7BRZ86-8fow', // Example - we'll need to find the real one
-      '@spelmancollegegleeclub': 'UCZYTClx2T1of7BRZ86-8fow'
+      'spelmancollegegleeclub': 'UCZYTClx2T1of7BRZ86-8fow',
+      '@spelmancollegegleeclub': 'UCZYTClx2T1of7BRZ86-8fow',
+      'spelmangleeclub': 'UCZYTClx2T1of7BRZ86-8fow',
+      '@spelmangleeclub': 'UCZYTClx2T1of7BRZ86-8fow',
+      'spelman glee club': 'UCZYTClx2T1of7BRZ86-8fow'
     }
     
     // Extract handle from various input formats

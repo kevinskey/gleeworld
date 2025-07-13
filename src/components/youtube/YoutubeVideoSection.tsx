@@ -40,7 +40,7 @@ export const YoutubeVideoSection = () => {
         .select('id, channel_url, channel_name, featured_video_count')
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (channelData && !channelError) {
         setChannel(channelData);

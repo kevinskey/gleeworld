@@ -81,7 +81,7 @@ export const YouTubeManagement = () => {
         .select('*')
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (channelData && !channelError) {
         setChannel(channelData);
