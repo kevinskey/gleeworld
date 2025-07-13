@@ -1,8 +1,4 @@
 import { useState, useEffect } from 'react';
-import * as pdfjsLib from 'pdfjs-dist';
-
-// Set up the PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
 
 export const usePdfThumbnail = (pdfUrl: string | null) => {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
@@ -20,8 +16,14 @@ export const usePdfThumbnail = (pdfUrl: string | null) => {
         setLoading(true);
         setError(null);
 
+        // Dynamic import of pdfjs-dist to avoid SSR issues
+        const pdfjs = await import('pdfjs-dist');
+        
+        // Set up worker
+        pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+
         // Load the PDF
-        const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
+        const pdf = await pdfjs.getDocument(pdfUrl).promise;
         
         // Get the first page
         const page = await pdf.getPage(1);
