@@ -3318,6 +3318,294 @@ export type Database = {
           },
         ]
       }
+      sheet_music: {
+        Row: {
+          arranger: string | null
+          audio_reference_url: string | null
+          composer: string | null
+          created_at: string
+          difficulty_level: string | null
+          duration_minutes: number | null
+          ensemble_type: string | null
+          event_context: string | null
+          file_path: string
+          file_size: number | null
+          genre: string | null
+          id: string
+          is_public: boolean | null
+          key_signature: string | null
+          language: string | null
+          page_count: number | null
+          tags: string[] | null
+          tempo_marking: string | null
+          thumbnail_url: string | null
+          time_signature: string | null
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+          voice_parts: string[] | null
+        }
+        Insert: {
+          arranger?: string | null
+          audio_reference_url?: string | null
+          composer?: string | null
+          created_at?: string
+          difficulty_level?: string | null
+          duration_minutes?: number | null
+          ensemble_type?: string | null
+          event_context?: string | null
+          file_path: string
+          file_size?: number | null
+          genre?: string | null
+          id?: string
+          is_public?: boolean | null
+          key_signature?: string | null
+          language?: string | null
+          page_count?: number | null
+          tags?: string[] | null
+          tempo_marking?: string | null
+          thumbnail_url?: string | null
+          time_signature?: string | null
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+          voice_parts?: string[] | null
+        }
+        Update: {
+          arranger?: string | null
+          audio_reference_url?: string | null
+          composer?: string | null
+          created_at?: string
+          difficulty_level?: string | null
+          duration_minutes?: number | null
+          ensemble_type?: string | null
+          event_context?: string | null
+          file_path?: string
+          file_size?: number | null
+          genre?: string | null
+          id?: string
+          is_public?: boolean | null
+          key_signature?: string | null
+          language?: string | null
+          page_count?: number | null
+          tags?: string[] | null
+          tempo_marking?: string | null
+          thumbnail_url?: string | null
+          time_signature?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          voice_parts?: string[] | null
+        }
+        Relationships: []
+      }
+      sheet_music_analytics: {
+        Row: {
+          action_type: string
+          created_at: string
+          device_type: string | null
+          id: string
+          page_number: number | null
+          session_duration: number | null
+          sheet_music_id: string
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          page_number?: number | null
+          session_duration?: number | null
+          sheet_music_id: string
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          page_number?: number | null
+          session_duration?: number | null
+          sheet_music_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sheet_music_analytics_sheet_music_id_fkey"
+            columns: ["sheet_music_id"]
+            isOneToOne: false
+            referencedRelation: "sheet_music"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sheet_music_annotations: {
+        Row: {
+          annotation_data: Json
+          annotation_type: string
+          color: string | null
+          created_at: string
+          id: string
+          page_number: number
+          position_data: Json | null
+          sheet_music_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          annotation_data: Json
+          annotation_type: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          page_number: number
+          position_data?: Json | null
+          sheet_music_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          annotation_data?: Json
+          annotation_type?: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          page_number?: number
+          position_data?: Json | null
+          sheet_music_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sheet_music_annotations_sheet_music_id_fkey"
+            columns: ["sheet_music_id"]
+            isOneToOne: false
+            referencedRelation: "sheet_music"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sheet_music_permissions: {
+        Row: {
+          expires_at: string | null
+          granted_at: string
+          granted_by: string | null
+          id: string
+          is_active: boolean | null
+          permission_type: string
+          role_required: string | null
+          sheet_music_id: string
+          user_id: string | null
+        }
+        Insert: {
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          permission_type: string
+          role_required?: string | null
+          sheet_music_id: string
+          user_id?: string | null
+        }
+        Update: {
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          permission_type?: string
+          role_required?: string | null
+          sheet_music_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sheet_music_permissions_sheet_music_id_fkey"
+            columns: ["sheet_music_id"]
+            isOneToOne: false
+            referencedRelation: "sheet_music"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sheet_music_setlist_items: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          order_position: number
+          setlist_id: string
+          sheet_music_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_position: number
+          setlist_id: string
+          sheet_music_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_position?: number
+          setlist_id?: string
+          sheet_music_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sheet_music_setlist_items_setlist_id_fkey"
+            columns: ["setlist_id"]
+            isOneToOne: false
+            referencedRelation: "sheet_music_setlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sheet_music_setlist_items_sheet_music_id_fkey"
+            columns: ["sheet_music_id"]
+            isOneToOne: false
+            referencedRelation: "sheet_music"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sheet_music_setlists: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          event_context: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          event_context?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          event_context?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       singer_contract_assignments: {
         Row: {
           assigned_at: string
@@ -4001,8 +4289,23 @@ export type Database = {
         }
         Returns: string
       }
+      log_sheet_music_analytics: {
+        Args: {
+          sheet_music_id_param: string
+          user_id_param: string
+          action_type_param: string
+          page_number_param?: number
+          session_duration_param?: number
+          device_type_param?: string
+        }
+        Returns: string
+      }
       update_user_role: {
         Args: { user_id: string; new_role: string }
+        Returns: boolean
+      }
+      user_can_access_sheet_music: {
+        Args: { sheet_music_id_param: string; user_id_param: string }
         Returns: boolean
       }
       user_can_edit_budget: {
