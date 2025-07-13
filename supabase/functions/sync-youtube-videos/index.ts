@@ -65,6 +65,8 @@ function parseDuration(duration: string): string {
 
 async function extractChannelId(channelInput: string, apiKey: string): Promise<string | null> {
   try {
+    console.log('Input channel string:', channelInput)
+    
     // If it's already a channel ID (starts with UC)
     if (channelInput.startsWith('UC')) {
       return channelInput
@@ -74,27 +76,54 @@ async function extractChannelId(channelInput: string, apiKey: string): Promise<s
     let searchQuery = channelInput
     if (channelInput.includes('youtube.com/')) {
       // Extract handle from URL
-      const urlMatch = channelInput.match(/youtube\.com\/(?:@|c\/|channel\/|user\/)([^\/\?]+)/)
+      const urlMatch = channelInput.match(/youtube\.com\/(?:@|c\/|channel\/|user\/)([^\/\?&]+)/)
       if (urlMatch) {
         searchQuery = urlMatch[1]
+        console.log('Extracted from URL:', searchQuery)
       }
     } else if (channelInput.startsWith('@')) {
       searchQuery = channelInput.substring(1)
+      console.log('Extracted from @handle:', searchQuery)
     }
     
-    // Search for channel by custom URL
-    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(searchQuery)}&maxResults=1&key=${apiKey}`
-    const searchResponse = await fetch(searchUrl)
+    // Try multiple search approaches
+    const searchQueries = [
+      `@${searchQuery}`, // Try with @ symbol first
+      searchQuery,       // Try without @ symbol
+      `"@${searchQuery}"`, // Try with quotes and @ symbol
+      `"${searchQuery}"`   // Try with quotes only
+    ]
     
-    if (!searchResponse.ok) {
-      throw new Error(`YouTube API search error: ${searchResponse.status}`)
+    for (const query of searchQueries) {
+      console.log('Trying search query:', query)
+      const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(query)}&maxResults=5&key=${apiKey}`
+      const searchResponse = await fetch(searchUrl)
+      
+      if (!searchResponse.ok) {
+        console.error(`YouTube API search error for "${query}":`, searchResponse.status)
+        const errorText = await searchResponse.text()
+        console.error('Search API error details:', errorText)
+        continue
+      }
+      
+      const searchData = await searchResponse.json()
+      console.log(`Search results for "${query}":`, searchData.items?.length || 0, 'channels found')
+      
+      if (searchData.items && searchData.items.length > 0) {
+        // Log all found channels for debugging
+        searchData.items.forEach((item: any, index: number) => {
+          console.log(`Channel ${index + 1}:`, {
+            title: item.snippet.title,
+            channelId: item.snippet.channelId,
+            customUrl: item.snippet.customUrl
+          })
+        })
+        
+        return searchData.items[0].snippet.channelId
+      }
     }
     
-    const searchData = await searchResponse.json()
-    if (searchData.items && searchData.items.length > 0) {
-      return searchData.items[0].snippet.channelId
-    }
-    
+    console.log('No channels found with any search query')
     return null
   } catch (error) {
     console.error('Error extracting channel ID:', error)
