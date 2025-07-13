@@ -69,8 +69,6 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
 
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
-    { id: 'library', label: 'Library', icon: Library },
-    { id: 'finance', label: 'Finance', icon: Calculator },
   ];
 
   const adminItems = [
