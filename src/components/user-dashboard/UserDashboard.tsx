@@ -123,6 +123,16 @@ export const UserDashboard = () => {
 
   const availableModules = getAvailableModules();
 
+  console.log('UserDashboard Debug:', {
+    userEmail,
+    userRole,
+    isAdmin,
+    usernamePermissions,
+    permissionsLoading,
+    availableModules: availableModules.length,
+    availableModuleKeys: availableModules.map(m => m.key)
+  });
+
   if (!user) {
     return (
       <UniversalLayout>
