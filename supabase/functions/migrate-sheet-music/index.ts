@@ -350,6 +350,205 @@ serve(async (req) => {
       )
     }
 
+    if (action === 'discover_and_create') {
+      console.log('Starting PDF discovery and record creation from external Supabase...')
+
+      // Get external Supabase credentials from secrets
+      const readerSupabaseUrl = Deno.env.get('READER_SUPABASE_URL');
+      const readerSupabaseKey = Deno.env.get('READER_SUPABASE_ANON_KEY');
+      
+      if (!readerSupabaseUrl || !readerSupabaseKey) {
+        return new Response(
+          JSON.stringify({ error: 'External Supabase credentials not configured' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        );
+      }
+
+      // Create client for external Supabase
+      const externalSupabase = createClient(readerSupabaseUrl, readerSupabaseKey);
+      
+      console.log('Connected to external Supabase. Trying to discover PDFs...');
+
+      const results = []
+      
+      // Since we can't list files due to RLS issues, let's try common PDF naming patterns
+      // or try to download from known IDs/patterns
+      const potentialFilenames = [
+        // Try some common patterns - you might need to provide actual filenames
+        'sample.pdf',
+        'test.pdf',
+        'sheet1.pdf',
+        'sheet2.pdf',
+        'music1.pdf',
+        'music2.pdf',
+        // Add more known filenames here
+      ]
+
+      // Try to get all existing records from the external gw_sheet_music table
+      // This might work even if storage listing doesn't
+      try {
+        console.log('Trying to fetch sheet music records from external database...');
+        const { data: externalRecords, error: externalError } = await externalSupabase
+          .from('gw_sheet_music')
+          .select('id, title, pdf_url, thumbnail_url')
+          .limit(100);
+
+        if (!externalError && externalRecords && externalRecords.length > 0) {
+          console.log(`Found ${externalRecords.length} records in external database`);
+          
+          for (const record of externalRecords) {
+            try {
+              console.log(`Processing external record: ${record.title} (${record.id})`);
+
+              // Create record in our database first
+              const { data: newRecord, error: insertError } = await supabaseClient
+                .from('gw_sheet_music')
+                .insert({
+                  id: record.id,
+                  title: record.title,
+                  pdf_url: null, // We'll update this after downloading
+                  thumbnail_url: record.thumbnail_url,
+                  created_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+              if (insertError) {
+                console.error(`Failed to create record for ${record.title}:`, insertError);
+                results.push({
+                  id: record.id,
+                  title: record.title,
+                  status: 'record_creation_failed',
+                  error: insertError.message
+                });
+                continue;
+              }
+
+              // Now try to download the PDF using various filename patterns
+              const possibleFilenames = [
+                `${record.id}.pdf`,
+                `${record.title}.pdf`,
+                `${record.title.replace(/\s+/g, '_')}.pdf`,
+                `${record.title.replace(/\s+/g, '-')}.pdf`,
+                `${record.title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`
+              ];
+
+              let fileData = null;
+              let successfulFilename = null;
+
+              for (const filename of possibleFilenames) {
+                try {
+                  console.log(`Trying to download: ${filename}`);
+                  const { data, error } = await externalSupabase.storage
+                    .from('pdfs')
+                    .download(filename);
+
+                  if (!error && data) {
+                    fileData = data;
+                    successfulFilename = filename;
+                    console.log(`Successfully found file: ${filename}`);
+                    break;
+                  }
+                } catch (err) {
+                  continue;
+                }
+              }
+
+              if (fileData) {
+                // Upload to our sheet-music bucket
+                const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                  .from('sheet-music')
+                  .upload(`pdfs/${record.id}.pdf`, fileData, {
+                    contentType: 'application/pdf',
+                    upsert: true
+                  });
+
+                if (!uploadError) {
+                  // Get the public URL and update the record
+                  const { data: publicUrlData } = supabaseClient.storage
+                    .from('sheet-music')
+                    .getPublicUrl(`pdfs/${record.id}.pdf`);
+
+                  await supabaseClient
+                    .from('gw_sheet_music')
+                    .update({ pdf_url: publicUrlData.publicUrl })
+                    .eq('id', record.id);
+
+                  results.push({
+                    id: record.id,
+                    title: record.title,
+                    status: 'success',
+                    pdf_url: publicUrlData.publicUrl,
+                    source_file: successfulFilename
+                  });
+                } else {
+                  results.push({
+                    id: record.id,
+                    title: record.title,
+                    status: 'upload_failed',
+                    error: uploadError.message
+                  });
+                }
+              } else {
+                results.push({
+                  id: record.id,
+                  title: record.title,
+                  status: 'pdf_not_found',
+                  error: 'No matching PDF file found'
+                });
+              }
+
+            } catch (error) {
+              console.error(`Error processing external record ${record.id}:`, error);
+              results.push({
+                id: record.id,
+                title: record.title,
+                status: 'error',
+                error: error.message
+              });
+            }
+          }
+        } else {
+          console.log('No records found in external database or access denied');
+          return new Response(
+            JSON.stringify({ 
+              error: 'Could not access external sheet music records',
+              details: externalError?.message || 'No records found'
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+          );
+        }
+      } catch (error) {
+        console.error('Error accessing external database:', error);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Failed to access external database',
+            details: error.message
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `Discovered and processed ${results.length} records`,
+          results: results,
+          summary: {
+            total: results.length,
+            successful: results.filter(r => r.status === 'success').length,
+            failed: results.filter(r => r.status !== 'success').length,
+            records_created: results.length,
+            pdfs_migrated: results.filter(r => r.status === 'success').length
+          }
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      )
+    }
+
     if (action === 'check_status') {
       console.log('migrate-sheet-music: Checking migration status...')
       // Check migration status

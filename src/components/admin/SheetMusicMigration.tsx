@@ -150,6 +150,51 @@ export const SheetMusicMigration: React.FC = () => {
     }
   };
 
+  const discoverAndCreate = async () => {
+    setIsMigrating(true);
+    setMigrationResults([]);
+
+    try {
+      console.log('Starting discover and create...');
+      const { data, error } = await supabase.functions.invoke('migrate-sheet-music', {
+        body: {
+          action: 'discover_and_create'
+        }
+      });
+
+      console.log('Discover and create response:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
+      if (data.error) {
+        console.error('Function returned error:', data.error);
+        throw new Error(data.error);
+      }
+
+      setMigrationResults(data.results || []);
+      
+      if (data.summary) {
+        toast.success(`Discovery completed: ${data.summary.successful} successful, ${data.summary.failed} failed, ${data.summary.records_created || 0} records created`);
+      } else {
+        toast.success('Discovery completed successfully');
+      }
+      
+      console.log('Discovery results:', data.results);
+      console.log('Summary:', data.summary);
+      
+      // Refresh status
+      await checkMigrationStatus();
+    } catch (error) {
+      console.error('Discover and create failed:', error);
+      toast.error(`Discover and create failed: ${error.message || 'Unknown error'}`);
+    } finally {
+      setIsMigrating(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'success':
@@ -244,6 +289,19 @@ export const SheetMusicMigration: React.FC = () => {
                 <Download className="h-4 w-4" />
               )}
               {isMigrating ? 'Copying...' : 'Copy from Bucket'}
+            </Button>
+            <Button 
+              onClick={discoverAndCreate} 
+              disabled={isMigrating}
+              variant="default"
+              className="flex items-center gap-2"
+            >
+              {isMigrating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              {isMigrating ? 'Discovering...' : 'Discover & Create Records'}
             </Button>
             <Button 
               variant="outline" 
