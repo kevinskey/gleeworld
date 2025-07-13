@@ -1417,9 +1417,9 @@ export const MusicManagement = () => {
                       </div>
                       
                       <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <div className="flex items-center">
+                        <div className="flex items-center" title="Play count">
                           <Play className="h-4 w-4 mr-1" />
-                          {track.play_count || 0}
+                          <span className="text-xs">{track.play_count || 0} plays</span>
                         </div>
                         <span>{Math.floor(track.duration / 60)}:{(track.duration % 60).toString().padStart(2, '0')}</span>
                       </div>
@@ -1599,9 +1599,9 @@ export const MusicManagement = () => {
                   </div>
                   
                   <div className="flex items-center space-x-4 text-sm text-gray-500">
-                    <div className="flex items-center">
+                    <div className="flex items-center" title="Play count">
                       <Play className="h-4 w-4 mr-1" />
-                      {track.play_count}
+                      <span className="text-xs">{track.play_count} plays</span>
                     </div>
                     <div className="flex items-center">
                       <Heart className="h-4 w-4 mr-1" />
