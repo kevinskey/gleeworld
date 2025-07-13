@@ -107,6 +107,8 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  let requestBody: any = {}
+  
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -114,28 +116,39 @@ serve(async (req) => {
     )
 
     const youtubeApiKey = Deno.env.get('YOUTUBE_API_KEY')
+    console.log('YouTube API Key status:', youtubeApiKey ? 'Present' : 'Missing')
+    
     if (!youtubeApiKey) {
       throw new Error('YouTube API key not configured')
     }
 
-    const { channelInput, maxResults = 50 } = await req.json()
+    requestBody = await req.json()
+    const { channelInput, maxResults = 50 } = requestBody
+    
+    console.log('Request body:', { channelInput, maxResults })
     
     if (!channelInput) {
       throw new Error('Channel ID or URL is required')
     }
 
     // Extract channel ID from various input formats
+    console.log('Extracting channel ID from:', channelInput)
     const channelId = await extractChannelId(channelInput, youtubeApiKey)
+    console.log('Extracted channel ID:', channelId)
+    
     if (!channelId) {
       throw new Error('Could not find channel with the provided input')
     }
 
     // Get channel details
     const channelUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelId}&key=${youtubeApiKey}`
+    console.log('Fetching channel details from:', channelUrl.replace(youtubeApiKey, '[API_KEY]'))
     const channelResponse = await fetch(channelUrl)
     
     if (!channelResponse.ok) {
-      throw new Error(`Failed to fetch channel: ${channelResponse.status}`)
+      const errorText = await channelResponse.text()
+      console.error('Channel fetch error:', channelResponse.status, errorText)
+      throw new Error(`Failed to fetch channel: ${channelResponse.status} - ${errorText}`)
     }
     
     const channelData = await channelResponse.json()
@@ -147,10 +160,13 @@ serve(async (req) => {
 
     // Get channel videos
     const videosUrl = `https://www.googleapis.com/youtube/v3/search?channelId=${channelId}&part=snippet&order=date&type=video&maxResults=${maxResults}&key=${youtubeApiKey}`
+    console.log('Fetching videos from:', videosUrl.replace(youtubeApiKey, '[API_KEY]'))
     const videosResponse = await fetch(videosUrl)
     
     if (!videosResponse.ok) {
-      throw new Error(`Failed to fetch videos: ${videosResponse.status}`)
+      const errorText = await videosResponse.text()
+      console.error('Videos fetch error:', videosResponse.status, errorText)
+      throw new Error(`Failed to fetch videos: ${videosResponse.status} - ${errorText}`)
     }
     
     const videosData = await videosResponse.json()
@@ -162,10 +178,13 @@ serve(async (req) => {
     // Get detailed video information
     const videoIds = videosData.items.map((item: any) => item.id.videoId).join(',')
     const videoDetailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${videoIds}&key=${youtubeApiKey}`
+    console.log('Fetching video details for', videosData.items.length, 'videos')
     const videoDetailsResponse = await fetch(videoDetailsUrl)
     
     if (!videoDetailsResponse.ok) {
-      throw new Error(`Failed to fetch video details: ${videoDetailsResponse.status}`)
+      const errorText = await videoDetailsResponse.text()
+      console.error('Video details fetch error:', videoDetailsResponse.status, errorText)
+      throw new Error(`Failed to fetch video details: ${videoDetailsResponse.status} - ${errorText}`)
     }
     
     const videoDetailsData = await videoDetailsResponse.json()
@@ -244,6 +263,8 @@ serve(async (req) => {
       display_order: index + 1
     }))
 
+    console.log('Saving', videosToUpsert.length, 'videos to database')
+
     // Upsert videos (insert or update if exists)
     const { error: videosError } = await supabaseClient
       .from('youtube_videos')
@@ -253,8 +274,11 @@ serve(async (req) => {
       })
 
     if (videosError) {
+      console.error('Database save error:', videosError)
       throw new Error(`Failed to save videos: ${videosError.message}`)
     }
+
+    console.log('Successfully synced', videosToUpsert.length, 'videos')
 
     return new Response(JSON.stringify({
       success: true,
@@ -271,9 +295,19 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error syncing YouTube videos:', error)
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      youtubeApiKey: Deno.env.get('YOUTUBE_API_KEY') ? 'Present' : 'Missing',
+      requestBody
+    })
     return new Response(JSON.stringify({
       success: false,
-      error: error.message
+      error: error.message,
+      details: {
+        youtubeApiKey: Deno.env.get('YOUTUBE_API_KEY') ? 'Present' : 'Missing',
+        timestamp: new Date().toISOString()
+      }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
