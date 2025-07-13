@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manual PDF Migration</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        input, button { padding: 10px; margin: 5px 0; width: 100%; }
+        button { background: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background: #45a049; }
+        .status { margin: 10px 0; padding: 10px; background: #f5f5f5; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Manual PDF Migration Tool</h1>
+        
+        <div>
+            <label>Reader API URL:</label>
+            <input type="text" id="apiUrl" value="https://reader.gleeworld.org/api" />
+        </div>
+        
+        <div>
+            <label>Reader API Key (if required):</label>
+            <input type="text" id="apiKey" placeholder="Enter API key if needed" />
+        </div>
+        
+        <button onclick="checkStatus()">Check Migration Status</button>
+        <button onclick="startMigration()">Start Migration</button>
+        
+        <div id="status" class="status" style="display: none;"></div>
+        
+        <script>
+            const SUPABASE_URL = 'https://oopmlreysjzuxzylyheb.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNzg5NTUsImV4cCI6MjA2NDY1NDk1NX0.tDq4HaTAy9p80e4upXFHIA90gUxZSHTH5mnqfpxh7eg';
+            
+            function showStatus(message, isError = false) {
+                const statusDiv = document.getElementById('status');
+                statusDiv.style.display = 'block';
+                statusDiv.className = isError ? 'status error' : 'status success';
+                statusDiv.innerHTML = message;
+            }
+            
+            async function checkStatus() {
+                try {
+                    showStatus('Checking migration status...');
+                    
+                    const response = await fetch(`${SUPABASE_URL}/functions/v1/migrate-sheet-music`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        },
+                        body: JSON.stringify({
+                            action: 'check_status'
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    showStatus(`
+                        <strong>Migration Status:</strong><br>
+                        Total Records: ${data.total_records}<br>
+                        Migrated: ${data.migrated_records}<br>
+                        Pending: ${data.pending_records}<br>
+                        Progress: ${data.migration_progress}%
+                    `);
+                } catch (error) {
+                    showStatus(`Error checking status: ${error.message}`, true);
+                }
+            }
+            
+            async function startMigration() {
+                const apiUrl = document.getElementById('apiUrl').value;
+                const apiKey = document.getElementById('apiKey').value;
+                
+                if (!apiUrl) {
+                    showStatus('Please enter the Reader API URL', true);
+                    return;
+                }
+                
+                try {
+                    showStatus('Starting migration...');
+                    
+                    const response = await fetch(`${SUPABASE_URL}/functions/v1/migrate-sheet-music`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        },
+                        body: JSON.stringify({
+                            action: 'migrate_pdfs',
+                            reader_api_url: apiUrl,
+                            reader_api_key: apiKey
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    showStatus(`
+                        <strong>Migration Started!</strong><br>
+                        ${data.message}<br>
+                        Records to migrate: ${data.total_records}
+                    `);
+                } catch (error) {
+                    showStatus(`Error starting migration: ${error.message}`, true);
+                }
+            }
+        </script>
+    </div>
+</body>
+</html>
