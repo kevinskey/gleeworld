@@ -146,7 +146,7 @@ export const UserDashboard = () => {
 
   // Dynamic module rendering based on permissions
   if (selectedModule) {
-    const moduleKey = selectedModule.replace('-', '_') as DashboardModule;
+    const moduleKey = selectedModule.replace(/-/g, '_') as DashboardModule;
     const hasAccess = hasModuleAccess(userRole, userEmail, moduleKey, usernamePermissions);
     
     if (hasAccess) {
