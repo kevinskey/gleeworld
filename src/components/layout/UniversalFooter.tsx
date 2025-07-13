@@ -7,48 +7,45 @@ export const UniversalFooter = () => {
   return (
     <footer className="bg-white/5 backdrop-blur-md border-t border-white/20 mt-auto">
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
-        <div className="space-y-4 md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
           {/* Company Info */}
-          <div className="text-center md:text-left">
+          <div className="text-center md:text-left col-span-1 md:col-span-1">
             <h3 className="text-2xl sm:text-lg font-semibold text-white mb-2">Glee World</h3>
             <p className="text-white/70 text-xs sm:text-sm">
               The home of the Spelman College Glee Club
             </p>
           </div>
 
-          {/* Mobile: Quick Links and Support in columns */}
-          <div className="grid grid-cols-2 gap-4 md:contents">
-            {/* Quick Links */}
-            <div className="text-center">
-              <h4 className="text-sm sm:text-md font-medium text-white mb-2">Quick Links</h4>
-              <div className="space-y-1">
-                <Link 
-                  to="/dashboard" 
-                  className="block text-white/70 hover:text-white text-xs sm:text-sm transition-colors"
-                >
-                  Dashboard
-                </Link>
-                <Link 
-                  to="/" 
-                  className="block text-white/70 hover:text-white text-xs sm:text-sm transition-colors"
-                >
-                  HomePage
-                </Link>
-              </div>
+          {/* Quick Links - Mobile: 50% width */}
+          <div className="text-center col-span-1 md:col-span-1">
+            <h4 className="text-sm sm:text-md font-medium text-white mb-2">Quick Links</h4>
+            <div className="space-y-1">
+              <Link 
+                to="/dashboard" 
+                className="block text-white/70 hover:text-white text-xs sm:text-sm transition-colors"
+              >
+                Dashboard
+              </Link>
+              <Link 
+                to="/" 
+                className="block text-white/70 hover:text-white text-xs sm:text-sm transition-colors"
+              >
+                HomePage
+              </Link>
             </div>
+          </div>
 
-            {/* Support */}
-            <div className="text-center md:text-right">
-              <h4 className="text-sm sm:text-md font-medium text-white mb-2">Support</h4>
-              <div className="space-y-1">
-                <p className="text-white/70 text-xs sm:text-sm">Need help?</p>
-                <a 
-                  href="mailto:admin@gleeworld.org" 
-                  className="text-white/70 hover:text-white text-xs sm:text-sm transition-colors"
-                >
-                  Contact Your Administrator
-                </a>
-              </div>
+          {/* Support - Mobile: 50% width */}
+          <div className="text-center md:text-right col-span-1 md:col-span-1">
+            <h4 className="text-sm sm:text-md font-medium text-white mb-2">Support</h4>
+            <div className="space-y-1">
+              <p className="text-white/70 text-xs sm:text-sm">Need help?</p>
+              <a 
+                href="mailto:admin@gleeworld.org" 
+                className="text-white/70 hover:text-white text-xs sm:text-sm transition-colors"
+              >
+                Contact Your Administrator
+              </a>
             </div>
           </div>
         </div>
