@@ -2010,6 +2010,164 @@ export type Database = {
           },
         ]
       }
+      gw_notification_delivery_log: {
+        Row: {
+          clicked_at: string | null
+          created_at: string
+          delivered_at: string | null
+          delivery_method: string
+          error_message: string | null
+          external_id: string | null
+          id: string
+          notification_id: string | null
+          opened_at: string | null
+          sent_at: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          clicked_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_method: string
+          error_message?: string | null
+          external_id?: string | null
+          id?: string
+          notification_id?: string | null
+          opened_at?: string | null
+          sent_at?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          clicked_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_method?: string
+          error_message?: string | null
+          external_id?: string | null
+          id?: string
+          notification_id?: string | null
+          opened_at?: string | null
+          sent_at?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_notification_delivery_log_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "gw_notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_notification_preferences: {
+        Row: {
+          announcement_email: boolean
+          announcement_sms: boolean
+          attendance_alerts: boolean
+          contract_updates: boolean
+          created_at: string
+          email_enabled: boolean
+          event_reminders: boolean
+          financial_updates: boolean
+          id: string
+          marketing_emails: boolean
+          phone_number: string | null
+          push_enabled: boolean
+          sms_enabled: boolean
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          announcement_email?: boolean
+          announcement_sms?: boolean
+          attendance_alerts?: boolean
+          contract_updates?: boolean
+          created_at?: string
+          email_enabled?: boolean
+          event_reminders?: boolean
+          financial_updates?: boolean
+          id?: string
+          marketing_emails?: boolean
+          phone_number?: string | null
+          push_enabled?: boolean
+          sms_enabled?: boolean
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          announcement_email?: boolean
+          announcement_sms?: boolean
+          attendance_alerts?: boolean
+          contract_updates?: boolean
+          created_at?: string
+          email_enabled?: boolean
+          event_reminders?: boolean
+          financial_updates?: boolean
+          id?: string
+          marketing_emails?: boolean
+          phone_number?: string | null
+          push_enabled?: boolean
+          sms_enabled?: boolean
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      gw_notifications: {
+        Row: {
+          action_label: string | null
+          action_url: string | null
+          category: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_read: boolean
+          message: string
+          metadata: Json | null
+          priority: number
+          title: string
+          type: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          action_label?: string | null
+          action_url?: string | null
+          category?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean
+          message: string
+          metadata?: Json | null
+          priority?: number
+          title: string
+          type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          action_label?: string | null
+          action_url?: string | null
+          category?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean
+          message?: string
+          metadata?: Json | null
+          priority?: number
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       gw_payment_records: {
         Row: {
           amount: number
@@ -2822,6 +2980,65 @@ export type Database = {
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_social_media_posts: {
+        Row: {
+          announcement_id: string | null
+          content: string
+          created_at: string
+          created_by: string | null
+          engagement_metrics: Json | null
+          error_message: string | null
+          external_post_id: string | null
+          id: string
+          media_urls: string[] | null
+          platform: string
+          posted_at: string | null
+          scheduled_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          announcement_id?: string | null
+          content: string
+          created_at?: string
+          created_by?: string | null
+          engagement_metrics?: Json | null
+          error_message?: string | null
+          external_post_id?: string | null
+          id?: string
+          media_urls?: string[] | null
+          platform: string
+          posted_at?: string | null
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          announcement_id?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          engagement_metrics?: Json | null
+          error_message?: string | null
+          external_post_id?: string | null
+          id?: string
+          media_urls?: string[] | null
+          platform?: string
+          posted_at?: string | null
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_social_media_posts_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "gw_announcements"
             referencedColumns: ["id"]
           },
         ]
@@ -4463,9 +4680,30 @@ export type Database = {
         Args: { event_id_param: string }
         Returns: undefined
       }
+      cleanup_expired_notifications: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       cleanup_old_rehearsals: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      create_notification_with_delivery: {
+        Args: {
+          p_user_id: string
+          p_title: string
+          p_message: string
+          p_type?: string
+          p_category?: string
+          p_action_url?: string
+          p_action_label?: string
+          p_metadata?: Json
+          p_priority?: number
+          p_expires_at?: string
+          p_send_email?: boolean
+          p_send_sms?: boolean
+        }
+        Returns: string
       }
       create_recurring_rehearsals: {
         Args: { start_date: string; end_date: string; created_by_id?: string }
@@ -4560,6 +4798,10 @@ export type Database = {
           device_type_param?: string
         }
         Returns: string
+      }
+      mark_notification_read: {
+        Args: { p_notification_id: string }
+        Returns: boolean
       }
       update_user_role: {
         Args: { user_id: string; new_role: string }
