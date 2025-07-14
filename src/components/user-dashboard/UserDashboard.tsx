@@ -375,7 +375,11 @@ export const UserDashboard = () => {
                     </Button>
                   </EnhancedTooltip>
                   <EnhancedTooltip content="View announcements">
-                    <Button className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" variant="outline">
+                    <Button 
+                      className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
+                      variant="outline"
+                      onClick={() => navigate('/announcements')}
+                    >
                       <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
                       <span className="text-center leading-tight">Announcements</span>
                     </Button>
@@ -644,7 +648,11 @@ export const UserDashboard = () => {
                         <div className="text-xs text-gray-500">Manage info</div>
                       </div>
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start h-auto p-3">
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start h-auto p-3"
+                      onClick={() => navigate('/announcements')}
+                    >
                       <MessageSquare className="h-4 w-4 mr-2" />
                       <div className="text-left">
                         <div>Announcements</div>

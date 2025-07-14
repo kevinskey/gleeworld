@@ -31,6 +31,7 @@ import Calendar from "./pages/Calendar";
 import PublicCalendar from "./pages/PublicCalendar";
 import PressKit from "./pages/PressKit";
 import Notifications from "./pages/Notifications";
+import Announcements from "./pages/Announcements";
 import AttendanceTestPage from "./pages/AttendanceTestPage";
 import AttendancePage from "./pages/AttendancePage";
 
@@ -227,7 +228,15 @@ const App = () => {
                      <Notifications />
                    </ProtectedRoute>
                  } 
-               />
+                />
+                <Route
+                  path="/announcements" 
+                  element={
+                    <ProtectedRoute>
+                      <Announcements />
+                    </ProtectedRoute>
+                  } 
+                />
                <Route 
                  path="/shop" 
                  element={
