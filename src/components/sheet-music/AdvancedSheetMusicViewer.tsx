@@ -491,16 +491,7 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
                   <Eraser className="h-3 w-3" />
                 </Button>
               </div>
-              
-              <div className="flex items-center gap-1">
-                <Button size="sm" variant="outline" onClick={handleZoomOut}>
-                  <ZoomOut className="h-3 w-3" />
-                </Button>
-                <span className="text-xs px-1 min-w-[2.5rem] text-center">{Math.round(scale * 100)}%</span>
-                <Button size="sm" variant="outline" onClick={handleZoomIn}>
-                  <ZoomIn className="h-3 w-3" />
-                </Button>
-              </div>
+              {/* Zoom controls removed - already available in desktop toolbar */}
             </div>
           </div>
         )}
@@ -742,18 +733,16 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
                     </div>
                     
                     <Separator orientation="vertical" />
-                    
-                    <div className="flex items-center gap-1">
-                      <Button size="sm" variant="outline" onClick={handleSaveAnnotations}>
-                        Save
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={handleClearAnnotations}>
-                        <Eraser className="h-4 w-4" />
-                      </Button>
-                       <Button size="sm" variant="outline" onClick={() => setShowAnnotations(!showAnnotations)}>
-                         {showAnnotations ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                     
+                     <div className="flex items-center gap-1">
+                       {/* Save button removed - already available in main toolbar */}
+                       <Button size="sm" variant="outline" onClick={handleClearAnnotations}>
+                         <Eraser className="h-4 w-4" />
                        </Button>
-                     </div>
+                        <Button size="sm" variant="outline" onClick={() => setShowAnnotations(!showAnnotations)}>
+                          {showAnnotations ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                        </Button>
+                      </div>
                      
                      {/* Add to Setlist Controls */}
                      {selectedSheetMusicId && (
