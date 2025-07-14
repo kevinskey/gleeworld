@@ -426,15 +426,81 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`${isMobile ? 'max-w-[95vw] h-[95vh] p-2' : 'max-w-7xl h-[95vh]'} flex flex-col ${isDarkMode ? 'bg-gray-900 text-white' : ''}`}>
-        {!performanceMode && (
+      <DialogContent className={`${isMobile ? 'max-w-[100vw] h-[100vh] p-0 m-0 border-0 rounded-none' : 'max-w-7xl h-[95vh]'} flex flex-col ${isDarkMode ? 'bg-gray-900 text-white' : ''}`}>
+        {!performanceMode && !isMobile && (
           <DialogHeader className="flex-shrink-0">
             <DialogTitle>Advanced Sheet Music Viewer</DialogTitle>
           </DialogHeader>
         )}
 
-        {/* Full Toolbar at Top */}
-        {!performanceMode && (
+        {/* Mobile Compact Toolbar */}
+        {!performanceMode && isMobile && (
+          <div className="bg-background border-b p-2 flex-shrink-0">
+            {/* Top Row - Essential Controls */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1">
+                <Button size="sm" variant="outline" onClick={handlePrevPage} disabled={currentPage <= 1}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-xs font-medium px-2 min-w-[3rem] text-center">
+                  {currentPage}/{numPages}
+                </span>
+                <Button size="sm" variant="outline" onClick={handleNextPage} disabled={currentPage >= numPages}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="flex items-center gap-1">
+                <Button size="sm" variant="outline" onClick={() => setIsDarkMode(!isDarkMode)}>
+                  {isDarkMode ? <Sun className="h-3 w-3" /> : <Moon className="h-3 w-3" />}
+                </Button>
+                <Button size="sm" variant="outline" onClick={onClose}>
+                  <Home className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Bottom Row - Tool Carousel */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1 overflow-x-auto max-w-[60%]">
+                <Button
+                  size="sm"
+                  variant={selectedTool === 'pen' ? 'default' : 'outline'}
+                  onClick={() => handleToolSelect('pen')}
+                >
+                  <Pen className="h-3 w-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant={selectedTool === 'highlighter' ? 'default' : 'outline'}
+                  onClick={() => handleToolSelect('highlighter')}
+                >
+                  <Highlighter className="h-3 w-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant={selectedTool === 'eraser' ? 'default' : 'outline'}
+                  onClick={() => handleToolSelect('eraser')}
+                >
+                  <Eraser className="h-3 w-3" />
+                </Button>
+              </div>
+              
+              <div className="flex items-center gap-1">
+                <Button size="sm" variant="outline" onClick={handleZoomOut}>
+                  <ZoomOut className="h-3 w-3" />
+                </Button>
+                <span className="text-xs px-1 min-w-[2.5rem] text-center">{Math.round(scale * 100)}%</span>
+                <Button size="sm" variant="outline" onClick={handleZoomIn}>
+                  <ZoomIn className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Desktop Full Toolbar */}
+        {!performanceMode && !isMobile && (
           <div className="flex items-center justify-between p-4 border-b flex-shrink-0 flex-wrap gap-2">
             {/* Navigation Controls */}
             <div className="flex items-center gap-2">
@@ -543,8 +609,8 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
 
         {/* Main Content Area with Sidebar */}
         <div className="flex flex-1 min-h-0">
-          {/* Left Sidebar - PDF List */}
-          {!performanceMode && (
+          {/* Left Sidebar - PDF List (Hidden on Mobile) */}
+          {!performanceMode && !isMobile && (
             <div className="w-80 border-r flex flex-col bg-gray-50 dark:bg-gray-800">
               <div className="p-4 border-b">
                 <h3 className="text-sm font-semibold mb-2">Sheet Music Library</h3>
@@ -853,11 +919,11 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
                   )}
 
                   {/* PDF Viewer */}
-                  <div className={`flex-1 relative overflow-auto p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
-                    <div className="flex justify-center">
+                  <div className={`flex-1 relative overflow-auto ${isMobile ? 'p-0' : 'p-4'} ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                    <div className={`${isMobile ? 'w-full h-full' : 'flex justify-center'}`}>
                       <div 
                         ref={pageRef}
-                        className="relative shadow-lg"
+                        className={`relative ${isMobile ? 'w-full h-full' : 'shadow-lg'}`}
                         style={{ transform: `rotate(${rotation}deg)` }}
                       >
                         <Document
@@ -868,7 +934,8 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
                         >
                           <Page
                             pageNumber={currentPage}
-                            scale={scale}
+                            scale={isMobile ? scale * 1.5 : scale}
+                            width={isMobile ? window.innerWidth : undefined}
                             renderTextLayer={false}
                             renderAnnotationLayer={false}
                           />
