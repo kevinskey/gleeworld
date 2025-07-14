@@ -465,7 +465,7 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`${isMobile ? 'max-w-[100vw] w-[100vw] h-[100vh]' : 'max-w-[98vw] w-[98vw] h-[98vh]'} p-0 m-0 border-0 rounded-none flex flex-col bg-background`}>{/* Make it full screen on mobile */}
+      <DialogContent className={`${isMobile ? 'max-w-[100vw] w-[100vw] h-[100vh]' : 'max-w-[95vw] w-[95vw] h-[95vh]'} p-0 m-0 border-0 rounded-none flex flex-col bg-background`}>{/* Make it full screen on mobile */}
 
         {/* Mobile Compact Toolbar */}
         {!performanceMode && isMobile && (
