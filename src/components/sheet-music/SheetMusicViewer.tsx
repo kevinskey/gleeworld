@@ -147,11 +147,20 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
           <Card>
             <CardContent className="p-6">
               {sheetMusic.pdf_url ? (
-                <div className={`w-full border rounded-lg ${isMobile ? 'h-[60vh]' : 'h-[800px]'}`}>
+                <div className={`w-full border rounded-lg ${isMobile ? 'h-[80vh]' : 'h-[800px]'}`}>
                   <iframe
-                    src={`${sheetMusic.pdf_url}#toolbar=1&navpanes=0&scrollbar=1&zoom=page-fit`}
+                    src={`${sheetMusic.pdf_url}#toolbar=0&navpanes=0&scrollbar=1&zoom=${isMobile ? 'page-width' : 'page-fit'}&view=FitH`}
                     className="w-full h-full rounded-lg"
                     title={`${sheetMusic.title} - Sheet Music`}
+                    style={{ 
+                      border: 'none',
+                      ...(isMobile && { 
+                        width: '100vw', 
+                        maxWidth: '100%',
+                        transform: 'scale(1)',
+                        transformOrigin: 'top left'
+                      })
+                    }}
                     onLoad={() => console.log('iframe loaded:', sheetMusic.pdf_url)}
                     onError={() => console.error('iframe error:', sheetMusic.pdf_url)}
                   />

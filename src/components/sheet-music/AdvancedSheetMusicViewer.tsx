@@ -465,7 +465,7 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[98vw] w-[98vw] h-[98vh] p-0 m-0 border-0 rounded-none flex flex-col bg-background">{/* Make it almost full screen */}
+      <DialogContent className={`${isMobile ? 'max-w-[100vw] w-[100vw] h-[100vh]' : 'max-w-[98vw] w-[98vw] h-[98vh]'} p-0 m-0 border-0 rounded-none flex flex-col bg-background`}>{/* Make it full screen on mobile */}
 
         {/* Mobile Compact Toolbar */}
         {!performanceMode && isMobile && (
@@ -832,8 +832,17 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
                       >
                         {/* Simple iframe PDF viewer for better compatibility */}
                         <iframe
-                          src={`${selectedPDF}#toolbar=1&navpanes=0&scrollbar=1&zoom=page-width`}
+                          src={`${selectedPDF}#toolbar=0&navpanes=0&scrollbar=1&zoom=${isMobile ? 'page-width' : 'page-width'}&view=FitH`}
                           className="w-full h-full border-0"
+                          style={{ 
+                            border: 'none',
+                            ...(isMobile && { 
+                              width: '100%',
+                              height: '100%',
+                              transform: 'scale(1)',
+                              transformOrigin: 'top left'
+                            })
+                          }}
                           title="Sheet Music PDF"
                           onLoad={() => {
                             console.log('PDF iframe loaded successfully:', selectedPDF);
