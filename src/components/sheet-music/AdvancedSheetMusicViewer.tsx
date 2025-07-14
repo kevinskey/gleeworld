@@ -433,11 +433,6 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[98vw] w-[98vw] h-[98vh] p-0 m-0 border-0 rounded-none flex flex-col bg-background">{/* Make it almost full screen */}
-        {!performanceMode && !isMobile && (
-          <DialogHeader className="flex-shrink-0">
-            <DialogTitle>Advanced Sheet Music Viewer</DialogTitle>
-          </DialogHeader>
-        )}
 
         {/* Mobile Compact Toolbar */}
         {!performanceMode && isMobile && (
