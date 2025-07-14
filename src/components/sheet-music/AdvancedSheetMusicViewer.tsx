@@ -82,17 +82,15 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
   const isMobile = useIsMobile();
   
   const [selectedSheetMusicId, setSelectedSheetMusicId] = useState<string>(initialSheetMusicId || '');
-  const [selectedPDF, setSelectedPDF] = useState<string | null>(null);
+  const selectedSheetMusic = allSheetMusic.find(sm => sm.id === selectedSheetMusicId) || allSheetMusic[0];
+  const selectedPDF = selectedSheetMusic?.pdf_url || null;
   const [useFallbackViewer, setUseFallbackViewer] = useState<boolean>(false);
   
   // Auto-select first PDF if none selected and sheet music is available
   useEffect(() => {
-    console.log('Auto-select effect:', { selectedSheetMusicId, allSheetMusicLength: allSheetMusic.length, loading });
     if (!selectedSheetMusicId && allSheetMusic.length > 0 && !loading) {
       const firstSheetMusic = allSheetMusic[0];
-      console.log('Auto-selecting first sheet music:', firstSheetMusic);
       setSelectedSheetMusicId(firstSheetMusic.id);
-      setSelectedPDF(firstSheetMusic.pdf_url);
       setAudioUrl(firstSheetMusic.audio_preview_url || null);
     }
   }, [allSheetMusic, loading, selectedSheetMusicId]);
@@ -130,7 +128,7 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
   
   const { annotations, fetchAnnotations, saveAnnotation, clearPageAnnotations } = useSheetMusicAnnotations();
   
-  const selectedSheetMusic = allSheetMusic.find(sm => sm.id === selectedSheetMusicId);
+  
 
   // Initialize Fabric.js canvas for annotations
   useEffect(() => {
@@ -239,7 +237,6 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
     console.log('Selecting sheet music:', { sheetMusicId, sheetMusic, pdfUrl: sheetMusic?.pdf_url });
     if (sheetMusic?.pdf_url) {
       setSelectedSheetMusicId(sheetMusicId);
-      setSelectedPDF(sheetMusic.pdf_url);
       setAudioUrl(sheetMusic.audio_preview_url || null);
       setCurrentPage(1);
       setScale(1.2);
