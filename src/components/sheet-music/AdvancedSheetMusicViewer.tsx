@@ -84,7 +84,7 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
   const [selectedSheetMusicId, setSelectedSheetMusicId] = useState<string>(initialSheetMusicId || '');
   const selectedSheetMusic = allSheetMusic.find(sm => sm.id === selectedSheetMusicId) || allSheetMusic[0];
   const selectedPDF = selectedSheetMusic?.pdf_url || null;
-  const [useFallbackViewer, setUseFallbackViewer] = useState<boolean>(false);
+  
   
   // Auto-select first PDF if none selected and sheet music is available
   useEffect(() => {
@@ -208,8 +208,7 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
 
   const onDocumentLoadError = useCallback((error: Error) => {
     console.error('Error loading PDF:', error, 'PDF URL:', selectedPDF);
-    toast.error('Failed to load PDF with react-pdf, falling back to iframe');
-    setUseFallbackViewer(true);
+    toast.error('Failed to load PDF');
   }, [selectedPDF]);
 
   const handleZoomIn = () => setScale(prev => Math.min(prev + 0.2, 3));
@@ -241,7 +240,7 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
       setCurrentPage(1);
       setScale(1.2);
       setRotation(0);
-      setUseFallbackViewer(false); // Reset fallback state for new PDF
+      
       console.log('PDF URL set to:', sheetMusic.pdf_url);
     } else {
       console.warn('No PDF URL found for sheet music:', sheetMusic);
@@ -933,54 +932,22 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
                         className={`relative ${isMobile ? 'w-full h-full' : 'shadow-lg'}`}
                         style={{ transform: `rotate(${rotation}deg)` }}
                       >
-                        {useFallbackViewer ? (
-                          // Fallback iframe viewer when react-pdf fails
-                          <div className={`w-full ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[800px]'} border rounded-lg overflow-hidden`}>
-                            <iframe
-                              src={`${selectedPDF}#toolbar=1&navpanes=0&scrollbar=1&zoom=page-fit`}
-                              className="w-full h-full"
-                              title="Sheet Music PDF"
-                              onLoad={() => {
-                                console.log('Fallback iframe loaded successfully:', selectedPDF);
-                                toast.success('PDF loaded using fallback viewer');
-                                setNumPages(1); // Set a default since we can't get real page count
-                              }}
-                              onError={() => {
-                                console.error('Fallback iframe also failed:', selectedPDF);
-                                toast.error('Failed to load PDF even with fallback viewer');
-                              }}
-                            />
-                          </div>
-                        ) : (
-                          // React-PDF viewer (default)
-                          <>
-                            <Document
-                              file={selectedPDF}
-                              onLoadSuccess={onDocumentLoadSuccess}
-                              onLoadError={onDocumentLoadError}
-                              loading={<div className="p-8 text-center">Loading PDF...</div>}
-                            >
-                              <Page
-                                pageNumber={currentPage}
-                                scale={isMobile ? scale * 1.5 : scale}
-                                width={isMobile ? window.innerWidth : undefined}
-                                renderTextLayer={false}
-                                renderAnnotationLayer={false}
-                              />
-                            </Document>
-                            
-                            {/* Annotation Canvas Overlay */}
-                            {!performanceMode && showAnnotations && (
-                              <canvas
-                                ref={canvasRef}
-                                className="absolute top-0 left-0 pointer-events-auto"
-                                style={{
-                                  opacity: isAnnotating ? 1 : 0.8,
-                                }}
-                              />
-                            )}
-                          </>
-                        )}
+                        {/* Simple iframe PDF viewer for better compatibility */}
+                        <div className={`w-full ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[800px]'} border rounded-lg overflow-hidden`}>
+                          <iframe
+                            src={`${selectedPDF}#toolbar=1&navpanes=0&scrollbar=1&zoom=page-fit`}
+                            className="w-full h-full"
+                            title="Sheet Music PDF"
+                            onLoad={() => {
+                              console.log('PDF iframe loaded successfully:', selectedPDF);
+                              toast.success('PDF loaded successfully');
+                            }}
+                            onError={() => {
+                              console.error('Failed to load PDF:', selectedPDF);
+                              toast.error('Failed to load PDF');
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
 
