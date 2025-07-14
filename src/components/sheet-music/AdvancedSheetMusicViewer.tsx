@@ -925,31 +925,29 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
                   )}
 
                   {/* PDF Viewer */}
-                  <div className={`flex-1 relative overflow-auto ${isMobile ? 'p-0' : 'p-4'} ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
-                    <div className={`${isMobile ? 'w-full h-full' : 'flex justify-center'}`}>
+                  <div className="flex-1 relative overflow-hidden bg-background">
+                    <div className="w-full h-full">
                       <div 
                         ref={pageRef}
-                        className={`relative ${isMobile ? 'w-full h-full' : 'shadow-lg'}`}
+                        className="relative w-full h-full"
                         style={{ transform: `rotate(${rotation}deg)` }}
                       >
                         {/* Simple iframe PDF viewer for better compatibility */}
-                        <div className={`w-full ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[800px]'} border rounded-lg overflow-hidden`}>
-                          <iframe
-                            src={`${selectedPDF}#toolbar=1&navpanes=0&scrollbar=1&zoom=page-fit`}
-                            className="w-full h-full"
-                            title="Sheet Music PDF"
-                            onLoad={() => {
-                              console.log('PDF iframe loaded successfully:', selectedPDF);
-                              toast.success('PDF loaded successfully');
-                            }}
-                            onError={() => {
-                              console.error('Failed to load PDF:', selectedPDF);
-                              toast.error('Failed to load PDF');
-                            }}
-                          />
-                        </div>
-                      </div>
+                        <iframe
+                          src={`${selectedPDF}#toolbar=1&navpanes=0&scrollbar=1&zoom=page-width`}
+                          className="w-full h-full border-0"
+                          title="Sheet Music PDF"
+                          onLoad={() => {
+                            console.log('PDF iframe loaded successfully:', selectedPDF);
+                            toast.success('PDF loaded successfully');
+                          }}
+                          onError={() => {
+                            console.error('Failed to load PDF:', selectedPDF);
+                            toast.error('Failed to load PDF');
+                          }}
+                        />
                     </div>
+                  </div>
 
                     {/* forScore-style Quick Menu */}
                     {showQuickMenu && (
