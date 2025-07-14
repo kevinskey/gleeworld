@@ -111,19 +111,19 @@ export const GleeWorldLanding = () => {
     fetchData();
   }, []);
 
-  // Auto-advance slides disabled to prevent automatic cycling
-  // useEffect(() => {
-  //   if (heroSlides.length <= 1) return;
+  // Auto-advance slides based on individual slide duration
+  useEffect(() => {
+    if (heroSlides.length <= 1) return;
 
-  //   const currentHeroSlide = heroSlides[currentSlide];
-  //   const duration = (currentHeroSlide?.slide_duration_seconds || 5) * 1000;
+    const currentHeroSlide = heroSlides[currentSlide];
+    const duration = (currentHeroSlide?.slide_duration_seconds || 5) * 1000;
 
-  //   const timer = setTimeout(() => {
-  //     setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-  //   }, duration);
+    const timer = setTimeout(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, duration);
 
-  //   return () => clearTimeout(timer);
-  // }, [currentSlide, heroSlides]);
+    return () => clearTimeout(timer);
+  }, [currentSlide, heroSlides]);
 
 
   const currentHeroSlide = heroSlides[currentSlide];
