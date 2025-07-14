@@ -1,116 +1,183 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { Resend } from "npm:resend@2.0.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabase = createClient(
-  Deno.env.get("SUPABASE_URL") ?? "",
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
+interface SMSPayload {
+  to: string;
+  message: string;
+  provider?: 'twilio' | 'messagebird';
+}
+
+interface SocialMediaPayload {
+  platform: 'twitter' | 'facebook' | 'instagram' | 'linkedin';
+  content: string;
+  imageUrl?: string;
+  scheduledAt?: string;
+}
+
+interface NotificationPayload {
+  userId: string;
+  title: string;
+  message: string;
+  type?: string;
+  category?: string;
+  actionUrl?: string;
+  actionLabel?: string;
+  metadata?: any;
+  priority?: number;
+  sendEmail?: boolean;
+  sendSms?: boolean;
+  smsData?: SMSPayload;
+  socialMedia?: SocialMediaPayload;
+}
+
+const handler = async (req: Request): Promise<Response> => {
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { notification_id, delivery_method } = await req.json();
+    const payload: NotificationPayload = await req.json();
+    console.log('Processing notification:', payload);
 
-    // Get notification and user details
-    const { data: notification, error: notifError } = await supabase
-      .from('gw_notifications')
-      .select(`
-        *,
-        user:auth.users(email)
-      `)
-      .eq('id', notification_id)
-      .single();
+    const results = {
+      notification: null as any,
+      email: null as any,
+      sms: null as any,
+      socialMedia: null as any
+    };
 
-    if (notifError || !notification) {
-      throw new Error('Notification not found');
+    // Create the notification in the database
+    const { data: notification, error: notificationError } = await supabase
+      .rpc('create_notification_with_delivery', {
+        p_user_id: payload.userId,
+        p_title: payload.title,
+        p_message: payload.message,
+        p_type: payload.type || 'info',
+        p_category: payload.category || 'general',
+        p_action_url: payload.actionUrl || null,
+        p_action_label: payload.actionLabel || null,
+        p_metadata: payload.metadata || {},
+        p_priority: payload.priority || 0,
+        p_expires_at: null,
+        p_send_email: payload.sendEmail || false,
+        p_send_sms: payload.sendSms || false
+      });
+
+    if (notificationError) {
+      console.error('Error creating notification:', notificationError);
+      throw notificationError;
     }
 
-    // Get user preferences
-    const { data: preferences } = await supabase
-      .from('gw_notification_preferences')
-      .select('*')
-      .eq('user_id', notification.user_id)
-      .single();
+    results.notification = notification;
 
-    let success = false;
-    let external_id = null;
-    let error_message = null;
+    // Send email if requested
+    if (payload.sendEmail) {
+      const { data: userProfile } = await supabase
+        .from('gw_profiles')
+        .select('email, full_name')
+        .eq('user_id', payload.userId)
+        .single();
 
-    if (delivery_method === 'email' && preferences?.email_enabled) {
-      try {
-        const emailResult = await resend.emails.send({
-          from: "Glee World <notifications@gleeworld.org>",
-          to: [notification.user.email],
-          subject: notification.title,
+      if (userProfile?.email) {
+        const emailResponse = await resend.emails.send({
+          from: 'Spelman Glee Club <notifications@gleeworld.com>',
+          to: [userProfile.email],
+          subject: payload.title,
           html: `
-            <h2>${notification.title}</h2>
-            <p>${notification.message}</p>
-            ${notification.action_url ? `
-              <p>
-                <a href="${notification.action_url}" 
-                   style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-                  ${notification.action_label || 'View Details'}
-                </a>
-              </p>
-            ` : ''}
-            <hr>
-            <p style="color: #666; font-size: 12px;">
-              You received this notification from Glee World. 
-              <a href="${Deno.env.get('SUPABASE_URL')}/notifications/preferences">Manage your preferences</a>
-            </p>
-          `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <div style="background: linear-gradient(135deg, #8B2635, #6B1E29); padding: 20px; text-align: center;">
+                <h1 style="color: white; margin: 0;">Spelman College Glee Club</h1>
+              </div>
+              
+              <div style="padding: 30px; background: white;">
+                <h2 style="color: #8B2635; margin-top: 0;">${payload.title}</h2>
+                <p style="color: #333; line-height: 1.6; font-size: 16px;">${payload.message}</p>
+                
+                ${payload.actionUrl ? `
+                  <div style="text-align: center; margin: 30px 0;">
+                    <a href="${payload.actionUrl}" 
+                       style="background: #8B2635; color: white; padding: 12px 30px; 
+                              text-decoration: none; border-radius: 5px; display: inline-block;">
+                      ${payload.actionLabel || 'View Details'}
+                    </a>
+                  </div>
+                ` : ''}
+                
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                  <p style="color: #666; font-size: 14px;">
+                    This notification was sent automatically. Please do not reply to this email.
+                  </p>
+                </div>
+              </div>
+            </div>
+          `,
         });
 
-        if (emailResult.data) {
-          success = true;
-          external_id = emailResult.data.id;
-        }
-      } catch (error) {
-        error_message = error.message;
+        results.email = emailResponse;
+        console.log('Email sent successfully:', emailResponse);
       }
-    } else if (delivery_method === 'sms' && preferences?.sms_enabled && preferences?.phone_number) {
-      // SMS implementation would go here with Twilio or similar service
-      // For now, we'll mark as successful but not implemented
-      success = true;
-      error_message = "SMS not implemented yet";
     }
 
-    // Update delivery log
-    await supabase
-      .from('gw_notification_delivery_log')
-      .update({
-        status: success ? 'sent' : 'failed',
-        external_id,
-        error_message,
-        sent_at: new Date().toISOString()
-      })
-      .eq('notification_id', notification_id)
-      .eq('delivery_method', delivery_method);
+    // Send SMS if requested (placeholder - would need SMS provider integration)
+    if (payload.sendSms && payload.smsData) {
+      console.log('SMS sending requested but not implemented yet:', payload.smsData);
+      // TODO: Implement SMS sending via Twilio or similar service
+      results.sms = { message: 'SMS functionality not implemented yet' };
+    }
 
-    return new Response(
-      JSON.stringify({ success, external_id, error_message }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    // Post to social media if requested
+    if (payload.socialMedia) {
+      console.log('Social media posting requested:', payload.socialMedia);
+      
+      // Store the social media post for later processing
+      const { data: socialPost, error: socialError } = await supabase
+        .from('gw_social_media_posts')
+        .insert({
+          platform: payload.socialMedia.platform,
+          content: payload.socialMedia.content,
+          image_url: payload.socialMedia.imageUrl || null,
+          scheduled_at: payload.socialMedia.scheduledAt || null,
+          status: 'pending'
+        })
+        .select()
+        .single();
 
-  } catch (error) {
-    console.error("Error sending notification:", error);
+      if (socialError) {
+        console.error('Error creating social media post:', socialError);
+      } else {
+        results.socialMedia = socialPost;
+      }
+    }
+
+    return new Response(JSON.stringify(results), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        ...corsHeaders,
+      },
+    });
+  } catch (error: any) {
+    console.error('Error in notification handler:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
       }
     );
   }
-});
+};
+
+serve(handler);
