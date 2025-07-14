@@ -254,9 +254,17 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
     if (tool === 'highlighter') {
       setAnnotationColor('#ffff0080'); // Semi-transparent yellow
       setBrushSize(20);
+      toast.info('Highlighter tool selected');
     } else if (tool === 'pen') {
       setAnnotationColor('#ff0000');
       setBrushSize(2);
+      toast.info('Pen tool selected');
+    } else if (tool === 'eraser') {
+      toast.info('Eraser tool selected');
+    } else if (tool === 'text') {
+      toast.info('Text tool selected - Click to add text');
+    } else if (tool === 'circle' || tool === 'rectangle') {
+      toast.info(`${tool} tool selected - Click to add shape`);
     }
   };
 
@@ -383,11 +391,36 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
+        setIsPlaying(false);
+        toast.info('Audio paused');
       } else {
-        audioRef.current.play();
+        audioRef.current.play()
+          .then(() => {
+            setIsPlaying(true);
+            toast.success('Audio playing');
+          })
+          .catch((error) => {
+            console.error('Error playing audio:', error);
+            toast.error('Failed to play audio');
+          });
       }
-      setIsPlaying(!isPlaying);
     }
+  };
+
+  const handleVolumeChange = (newVolume: number[]) => {
+    const volumeValue = newVolume[0];
+    setVolume(volumeValue);
+    if (audioRef.current) {
+      audioRef.current.volume = isMuted ? 0 : volumeValue;
+    }
+  };
+
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+    if (audioRef.current) {
+      audioRef.current.volume = !isMuted ? 0 : volume;
+    }
+    toast.info(!isMuted ? 'Audio muted' : 'Audio unmuted');
   };
 
   // Update audio volume when controls change
@@ -528,13 +561,22 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
             <Button size="sm" variant={selectedTool === 'highlighter' ? 'default' : 'outline'} onClick={() => handleToolSelect('highlighter')}>
               <Highlighter className="h-3 w-3" />
             </Button>
-            <Button size="sm" variant={selectedTool === 'text' ? 'default' : 'outline'} onClick={() => handleToolSelect('text')}>
+            <Button size="sm" variant={selectedTool === 'text' ? 'default' : 'outline'} onClick={() => {
+              handleToolSelect('text');
+              handleAddTextAnnotation();
+            }}>
               <Type className="h-3 w-3" />
             </Button>
-            <Button size="sm" variant={selectedTool === 'circle' ? 'default' : 'outline'} onClick={() => handleToolSelect('circle')}>
+            <Button size="sm" variant={selectedTool === 'circle' ? 'default' : 'outline'} onClick={() => {
+              handleToolSelect('circle');
+              handleAddShape('circle');
+            }}>
               <CircleIcon className="h-3 w-3" />
             </Button>
-            <Button size="sm" variant={selectedTool === 'rectangle' ? 'default' : 'outline'} onClick={() => handleToolSelect('rectangle')}>
+            <Button size="sm" variant={selectedTool === 'rectangle' ? 'default' : 'outline'} onClick={() => {
+              handleToolSelect('rectangle');
+              handleAddShape('rectangle');
+            }}>
               <Square className="h-3 w-3" />
             </Button>
             <input
@@ -639,24 +681,37 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
                 {/* Audio Controls */}
                 {audioUrl && (
                   <div className="flex items-center gap-2 p-2 border-b bg-blue-50 dark:bg-blue-900/20">
-                    <Button size="sm" variant="outline" onClick={toggleAudio}>
-                      <Play className="h-4 w-4" />
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={toggleAudio}
+                      title={isPlaying ? 'Pause audio' : 'Play audio'}
+                    >
+                      {isPlaying ? <VolumeX className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                     </Button>
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      onClick={() => setIsMuted(!isMuted)}
+                      onClick={toggleMute}
+                      title={isMuted ? 'Unmute' : 'Mute'}
                     >
                       {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                     </Button>
-                    <Slider
-                      value={[volume]}
-                      onValueChange={(value) => setVolume(value[0])}
-                      min={0}
-                      max={1}
-                      step={0.1}
-                      className="w-24"
-                    />
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs">Volume</span>
+                      <Slider
+                        value={[volume]}
+                        onValueChange={handleVolumeChange}
+                        min={0}
+                        max={1}
+                        step={0.1}
+                        className="w-24"
+                      />
+                      <span className="text-xs min-w-[2rem] text-center">{Math.round(volume * 100)}%</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Audio Preview Available
+                    </div>
                     <audio
                       ref={audioRef}
                       src={audioUrl}
@@ -667,6 +722,10 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
                         if (audioRef.current) {
                           audioRef.current.volume = isMuted ? 0 : volume;
                         }
+                      }}
+                      onError={() => {
+                        console.error('Error loading audio:', audioUrl);
+                        toast.error('Failed to load audio');
                       }}
                     />
                   </div>
