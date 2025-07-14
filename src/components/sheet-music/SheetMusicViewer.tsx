@@ -152,6 +152,8 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
                     src={`${sheetMusic.pdf_url}#toolbar=1&navpanes=0&scrollbar=1&zoom=page-fit`}
                     className="w-full h-full rounded-lg"
                     title={`${sheetMusic.title} - Sheet Music`}
+                    onLoad={() => console.log('iframe loaded:', sheetMusic.pdf_url)}
+                    onError={() => console.error('iframe error:', sheetMusic.pdf_url)}
                   />
                 </div>
               ) : (

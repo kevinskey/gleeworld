@@ -86,8 +86,10 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
   
   // Auto-select first PDF if none selected and sheet music is available
   useEffect(() => {
+    console.log('Auto-select effect:', { selectedSheetMusicId, allSheetMusicLength: allSheetMusic.length, loading });
     if (!selectedSheetMusicId && allSheetMusic.length > 0 && !loading) {
       const firstSheetMusic = allSheetMusic[0];
+      console.log('Auto-selecting first sheet music:', firstSheetMusic);
       setSelectedSheetMusicId(firstSheetMusic.id);
       setSelectedPDF(firstSheetMusic.pdf_url);
       setAudioUrl(firstSheetMusic.audio_preview_url || null);
@@ -195,6 +197,7 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
   }, [fabricCanvas, annotations, currentPage]);
 
   const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
+    console.log('PDF loaded successfully:', { numPages, selectedPDF });
     setNumPages(numPages);
     setCurrentPage(1);
     
@@ -202,12 +205,12 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
       logView(selectedSheetMusicId, 1);
       toast.success(`PDF loaded successfully (${numPages} pages)`);
     }
-  }, [selectedSheetMusicId, logView]);
+  }, [selectedSheetMusicId, logView, selectedPDF]);
 
   const onDocumentLoadError = useCallback((error: Error) => {
-    console.error('Error loading PDF:', error);
-    toast.error('Failed to load PDF');
-  }, []);
+    console.error('Error loading PDF:', error, 'PDF URL:', selectedPDF);
+    toast.error('Failed to load PDF: ' + error.message);
+  }, [selectedPDF]);
 
   const handleZoomIn = () => setScale(prev => Math.min(prev + 0.2, 3));
   const handleZoomOut = () => setScale(prev => Math.max(prev - 0.2, 0.5));
@@ -231,6 +234,7 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
 
   const handleSheetMusicSelect = (sheetMusicId: string) => {
     const sheetMusic = allSheetMusic.find(sm => sm.id === sheetMusicId);
+    console.log('Selecting sheet music:', { sheetMusicId, sheetMusic, pdfUrl: sheetMusic?.pdf_url });
     if (sheetMusic?.pdf_url) {
       setSelectedSheetMusicId(sheetMusicId);
       setSelectedPDF(sheetMusic.pdf_url);
@@ -238,6 +242,9 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
       setCurrentPage(1);
       setScale(1.2);
       setRotation(0);
+      console.log('PDF URL set to:', sheetMusic.pdf_url);
+    } else {
+      console.warn('No PDF URL found for sheet music:', sheetMusic);
     }
   };
 
