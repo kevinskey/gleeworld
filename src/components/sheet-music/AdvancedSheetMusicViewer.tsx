@@ -493,109 +493,79 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
 
         {/* Desktop Full Toolbar */}
         {!performanceMode && !isMobile && (
-          <div className="flex items-center justify-between p-4 border-b flex-shrink-0 flex-wrap gap-2">
-            {/* Navigation Controls */}
-            <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" onClick={handlePrevPage} disabled={currentPage <= 1}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-sm font-medium px-2 whitespace-nowrap">
-                {currentPage} / {numPages}
-              </span>
-              <Button size="sm" variant="outline" onClick={handleNextPage} disabled={currentPage >= numPages}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-
+          <div className="flex items-center gap-1 p-2 border-b flex-shrink-0 overflow-x-auto">
+            {/* Navigation */}
+            <Button size="sm" variant="outline" onClick={handlePrevPage} disabled={currentPage <= 1}>
+              <ChevronLeft className="h-3 w-3" />
+            </Button>
+            <span className="text-xs font-medium px-1 whitespace-nowrap min-w-[2.5rem] text-center">
+              {currentPage}/{numPages}
+            </span>
+            <Button size="sm" variant="outline" onClick={handleNextPage} disabled={currentPage >= numPages}>
+              <ChevronRight className="h-3 w-3" />
+            </Button>
+            
+            <div className="w-px h-4 bg-border mx-1" />
+            
             {/* View Controls */}
-            <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" onClick={handleZoomOut}>
-                <ZoomOut className="h-4 w-4" />
-              </Button>
-              <span className="text-sm px-2 whitespace-nowrap">{Math.round(scale * 100)}%</span>
-              <Button size="sm" variant="outline" onClick={handleZoomIn}>
-                <ZoomIn className="h-4 w-4" />
-              </Button>
-              <Button size="sm" variant="outline" onClick={handleRotate}>
-                <RotateCw className="h-4 w-4" />
-              </Button>
-            </div>
-
+            <Button size="sm" variant="outline" onClick={handleZoomOut}>
+              <ZoomOut className="h-3 w-3" />
+            </Button>
+            <span className="text-xs px-1 whitespace-nowrap min-w-[2rem] text-center">{Math.round(scale * 100)}%</span>
+            <Button size="sm" variant="outline" onClick={handleZoomIn}>
+              <ZoomIn className="h-3 w-3" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleRotate}>
+              <RotateCw className="h-3 w-3" />
+            </Button>
+            
+            <div className="w-px h-4 bg-border mx-1" />
+            
             {/* Annotation Tools */}
-            <div className="flex items-center gap-1">
-              <Button
-                size="sm"
-                variant={selectedTool === 'pen' ? 'default' : 'outline'}
-                onClick={() => handleToolSelect('pen')}
-              >
-                <Pen className="h-4 w-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant={selectedTool === 'highlighter' ? 'default' : 'outline'}
-                onClick={() => handleToolSelect('highlighter')}
-              >
-                <Highlighter className="h-4 w-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant={selectedTool === 'text' ? 'default' : 'outline'}
-                onClick={() => handleToolSelect('text')}
-              >
-                <Type className="h-4 w-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant={selectedTool === 'circle' ? 'default' : 'outline'}
-                onClick={() => handleToolSelect('circle')}
-              >
-                <CircleIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant={selectedTool === 'rectangle' ? 'default' : 'outline'}
-                onClick={() => handleToolSelect('rectangle')}
-              >
-                <Square className="h-4 w-4" />
-              </Button>
-              <input
-                type="color"
-                value={annotationColor}
-                onChange={(e) => setAnnotationColor(e.target.value)}
-                className="w-8 h-8 rounded border cursor-pointer"
-                title="Annotation Color"
-              />
-            </div>
-
-            {/* Action Controls */}
-            <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" onClick={handleSaveAnnotations}>
-                <Save className="h-4 w-4" />
-              </Button>
-              <Button size="sm" variant="outline" onClick={handleClearAnnotations}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-              <Button 
-                size="sm" 
-                variant={showSetlistPanel ? "default" : "outline"}
-                onClick={() => setShowSetlistPanel(!showSetlistPanel)}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-              <Button 
-                size="sm" 
-                variant={isDarkMode ? "default" : "outline"} 
-                onClick={() => setIsDarkMode(!isDarkMode)}
-              >
-                {isDarkMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-              </Button>
-              <Button size="sm" variant="outline" onClick={toggleFullscreen}>
-                {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
-              </Button>
-              <Button size="sm" variant="outline" onClick={handleDownload}>
-                <Download className="h-4 w-4" />
-              </Button>
-            </div>
+            <Button size="sm" variant={selectedTool === 'pen' ? 'default' : 'outline'} onClick={() => handleToolSelect('pen')}>
+              <Pen className="h-3 w-3" />
+            </Button>
+            <Button size="sm" variant={selectedTool === 'highlighter' ? 'default' : 'outline'} onClick={() => handleToolSelect('highlighter')}>
+              <Highlighter className="h-3 w-3" />
+            </Button>
+            <Button size="sm" variant={selectedTool === 'text' ? 'default' : 'outline'} onClick={() => handleToolSelect('text')}>
+              <Type className="h-3 w-3" />
+            </Button>
+            <Button size="sm" variant={selectedTool === 'circle' ? 'default' : 'outline'} onClick={() => handleToolSelect('circle')}>
+              <CircleIcon className="h-3 w-3" />
+            </Button>
+            <Button size="sm" variant={selectedTool === 'rectangle' ? 'default' : 'outline'} onClick={() => handleToolSelect('rectangle')}>
+              <Square className="h-3 w-3" />
+            </Button>
+            <input
+              type="color"
+              value={annotationColor}
+              onChange={(e) => setAnnotationColor(e.target.value)}
+              className="w-6 h-6 rounded border cursor-pointer"
+              title="Color"
+            />
+            
+            <div className="w-px h-4 bg-border mx-1" />
+            
+            {/* Actions */}
+            <Button size="sm" variant="outline" onClick={handleSaveAnnotations}>
+              <Save className="h-3 w-3" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleClearAnnotations}>
+              <Trash2 className="h-3 w-3" />
+            </Button>
+            <Button size="sm" variant={showSetlistPanel ? "default" : "outline"} onClick={() => setShowSetlistPanel(!showSetlistPanel)}>
+              <List className="h-3 w-3" />
+            </Button>
+            <Button size="sm" variant={isDarkMode ? "default" : "outline"} onClick={() => setIsDarkMode(!isDarkMode)}>
+              {isDarkMode ? <Moon className="h-3 w-3" /> : <Sun className="h-3 w-3" />}
+            </Button>
+            <Button size="sm" variant="outline" onClick={toggleFullscreen}>
+              {isFullscreen ? <Minimize className="h-3 w-3" /> : <Maximize className="h-3 w-3" />}
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleDownload}>
+              <Download className="h-3 w-3" />
+            </Button>
           </div>
         )}
 
