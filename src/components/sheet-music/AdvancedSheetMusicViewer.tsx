@@ -432,7 +432,7 @@ export const AdvancedSheetMusicViewer: React.FC<AdvancedSheetMusicViewerProps> =
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`${isMobile ? 'max-w-[100vw] h-[100vh] p-0 m-0 border-0 rounded-none' : 'max-w-7xl h-[95vh]'} flex flex-col ${isDarkMode ? 'bg-gray-900 text-white' : ''}`}>
+      <DialogContent className="max-w-[98vw] w-[98vw] h-[98vh] p-0 m-0 border-0 rounded-none flex flex-col bg-background">{/* Make it almost full screen */}
         {!performanceMode && !isMobile && (
           <DialogHeader className="flex-shrink-0">
             <DialogTitle>Advanced Sheet Music Viewer</DialogTitle>
