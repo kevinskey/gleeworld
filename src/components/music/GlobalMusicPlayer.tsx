@@ -55,11 +55,11 @@ export const GlobalMusicPlayer = () => {
   if (isMinimized) {
     return (
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t shadow-lg">
-        <div className="container mx-auto px-4 py-2">
-          <div className="flex items-center gap-4">
+        <div className="container mx-auto px-2 py-1.5">
+          <div className="flex items-center gap-2 sm:gap-4">
             {/* Track Info */}
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/40 rounded-md overflow-hidden flex-shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary/20 to-primary/40 rounded-md overflow-hidden flex-shrink-0">
                 {currentTrack.album?.cover_image_url ? (
                   <img
                     src={currentTrack.album.cover_image_url}
@@ -68,39 +68,39 @@ export const GlobalMusicPlayer = () => {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Music className="h-6 w-6 text-primary" />
+                    <Music className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
                   </div>
                 )}
               </div>
               
               <div className="min-w-0 flex-1">
-                <h4 className="font-medium text-sm truncate">{currentTrack.title}</h4>
-                <p className="text-xs text-muted-foreground truncate">{currentTrack.artist}</p>
+                <h4 className="font-medium text-xs sm:text-sm truncate">{currentTrack.title}</h4>
+                <p className="text-xs text-muted-foreground truncate hidden sm:block">{currentTrack.artist}</p>
               </div>
             </div>
 
             {/* Controls */}
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={playPrevious}>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Button variant="ghost" size="sm" onClick={playPrevious} className="hidden sm:flex">
                 <SkipBack className="h-4 w-4" />
               </Button>
               
               <Button
                 onClick={togglePlayPause}
                 disabled={isLoading}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-10 h-10"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-8 h-8 sm:w-10 sm:h-10"
                 size="sm"
               >
                 {isLoading ? (
                   <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full" />
                 ) : isPlaying ? (
-                  <Pause className="h-4 w-4" />
+                  <Pause className="h-3 w-3 sm:h-4 sm:w-4" />
                 ) : (
-                  <Play className="h-4 w-4" />
+                  <Play className="h-3 w-3 sm:h-4 sm:w-4" />
                 )}
               </Button>
               
-              <Button variant="ghost" size="sm" onClick={playNext}>
+              <Button variant="ghost" size="sm" onClick={playNext} className="hidden sm:flex">
                 <SkipForward className="h-4 w-4" />
               </Button>
             </div>
@@ -138,11 +138,11 @@ export const GlobalMusicPlayer = () => {
 
             {/* Player Controls */}
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="sm" onClick={toggleMinimized}>
+              <Button variant="ghost" size="sm" onClick={toggleMinimized} className="hidden sm:flex">
                 <Maximize2 className="h-4 w-4" />
               </Button>
               <Button variant="ghost" size="sm" onClick={hidePlayer}>
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </div>
           </div>
