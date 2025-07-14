@@ -1250,13 +1250,13 @@ export const MusicManagement = () => {
           {albums.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No albums found. Create your first album!</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-3">
               {sortedAlbums.map((album) => (
                 <Card key={album.id} className="hover:shadow-md transition-shadow cursor-pointer group">
-                  <CardContent className="p-4">
-                    <div className="flex items-start space-x-3">
+                  <CardContent className="p-3">
+                    <div className="flex items-center space-x-3">
                       <div 
-                        className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/40 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0"
+                        className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-primary/20 to-primary/40 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0"
                         onClick={() => setSelectedAlbum(album)}
                       >
                         {album.cover_image_url ? (
@@ -1266,15 +1266,15 @@ export const MusicManagement = () => {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <Album className="h-8 w-8 text-primary" />
+                          <Album className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                         )}
                       </div>
                       <div 
                         className="flex-1 min-w-0 cursor-pointer"
                         onClick={() => setSelectedAlbum(album)}
                       >
-                        <h3 className="font-semibold text-gray-900 truncate group-hover:text-primary transition-colors">{album.title}</h3>
-                        <p className="text-sm text-gray-600 truncate">{album.artist}</p>
+                        <h3 className="font-semibold text-gray-900 truncate group-hover:text-primary transition-colors text-sm sm:text-base">{album.title}</h3>
+                        <p className="text-xs sm:text-sm text-gray-600 truncate">{album.artist}</p>
                         <p className="text-xs text-gray-500">{album.tracks?.length || 0} tracks</p>
                       </div>
                       <div className="flex space-x-1">
@@ -1285,10 +1285,10 @@ export const MusicManagement = () => {
                             e.stopPropagation();
                             setSelectedAlbum(album);
                           }}
-                          className="text-green-500 hover:text-green-700"
+                          className="text-green-500 hover:text-green-700 p-1 sm:p-2"
                           title="View album details"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -1297,9 +1297,9 @@ export const MusicManagement = () => {
                             e.stopPropagation();
                             startEditingAlbum(album);
                           }}
-                          className="text-blue-500 hover:text-blue-700"
+                          className="text-blue-500 hover:text-blue-700 p-1 sm:p-2 hidden sm:flex"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -1308,9 +1308,9 @@ export const MusicManagement = () => {
                             e.stopPropagation();
                             handleDeleteAlbum(album.id, album.title);
                           }}
-                          className="text-red-500 hover:text-red-700"
+                          className="text-red-500 hover:text-red-700 p-1 sm:p-2 hidden sm:flex"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                       </div>
                     </div>
