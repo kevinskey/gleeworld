@@ -35,10 +35,10 @@ export const PublicHeader = () => {
             "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
             mobile 
               ? "text-foreground hover:bg-accent w-full justify-start" 
-              : "text-white/80 hover:text-white hover:bg-white/10",
+              : "text-gray-700 hover:text-gray-900 hover:bg-gray-100",
             isActivePath(item.href) && (mobile 
               ? "bg-accent text-accent-foreground" 
-              : "text-white bg-white/10")
+              : "text-gray-900 bg-gray-100")
           )}
         >
           <item.icon className="h-4 w-4" />
@@ -59,7 +59,7 @@ export const PublicHeader = () => {
               alt="Spelman College Glee Club" 
               className="w-8 h-8 object-contain filter brightness-0 invert brightness-125"
             />
-            <span className="text-white font-bold text-xl whitespace-nowrap">
+            <span className="text-gray-900 font-bold text-xl whitespace-nowrap">
               Spelman Glee Club
             </span>
           </Link>
@@ -78,7 +78,7 @@ export const PublicHeader = () => {
             {/* Mobile Menu */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild className="md:hidden">
-                <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+                <Button variant="ghost" size="sm" className="text-gray-700 hover:bg-gray-100">
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">Toggle menu</span>
                 </Button>

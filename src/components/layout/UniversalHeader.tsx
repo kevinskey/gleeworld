@@ -62,7 +62,7 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
             <EnhancedTooltip content="Go to GleeWorld public landing page">
               <Link
                 to="/landing"
-                className="text-white/80 hover:text-white transition-colors flex items-center p-2 rounded-lg hover:bg-white/10"
+                className="text-gray-700 hover:text-gray-900 transition-colors flex items-center p-2 rounded-lg hover:bg-gray-100"
               >
                 <Home className="h-4 w-4 sm:h-5 sm:w-5" />
               </Link>
@@ -73,7 +73,7 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
               <EnhancedTooltip content={`Go to ${profile.role === 'admin' || profile.role === 'super-admin' ? 'Admin' : 'User'} Dashboard`}>
                 <Link
                   to={profile.role === 'admin' || profile.role === 'super-admin' ? '/system' : '/dashboard'}
-                  className="text-white/80 hover:text-white transition-colors flex items-center p-2 rounded-lg hover:bg-white/10"
+                  className="text-gray-700 hover:text-gray-900 transition-colors flex items-center p-2 rounded-lg hover:bg-gray-100"
                 >
                   <LayoutDashboard className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Link>
@@ -128,7 +128,7 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
                              alt={profile?.full_name || user.email || "Profile"} 
                              className="object-cover"
                            />
-                           <AvatarFallback className="bg-white/20 text-white">
+                           <AvatarFallback className="bg-gray-200 text-gray-700">
                              {profile?.full_name ? 
                                profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() :
                                <User className="h-3 w-3 sm:h-4 sm:w-4" />
