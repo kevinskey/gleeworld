@@ -41,17 +41,17 @@ export const SheetMusicViewerWrapper = ({ isOpen, onClose }: SheetMusicViewerWra
     music.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
   ) || [];
 
-  if (selectedSheetMusic) {
+  if (selectedSheetMusic && isOpen) {
     return (
-      <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-w-7xl max-h-[95vh] p-0">
-          <SheetMusicViewer 
-            sheetMusic={selectedSheetMusic}
-            onBack={handleBackFromViewer}
-          />
-        </DialogContent>
-      </Dialog>
+      <SheetMusicViewer 
+        sheetMusic={selectedSheetMusic}
+        onBack={handleBackFromViewer}
+      />
     );
+  }
+
+  if (!isOpen) {
+    return null;
   }
 
   return (
