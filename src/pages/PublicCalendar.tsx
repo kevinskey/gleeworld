@@ -81,10 +81,10 @@ const PublicCalendar = () => {
           <CardContent className="p-6 sm:p-8 text-center">
             <div className="flex items-center justify-center gap-3 mb-4">
               <Sparkles className="h-8 w-8 text-primary animate-pulse" />
-              <h2 className="text-3xl sm:text-5xl font-bold text-white">Join the GleeWorld Community</h2>
+              <h2 className="text-3xl sm:text-5xl font-bold text-gray-900">Join the GleeWorld Community</h2>
               <Sparkles className="h-8 w-8 text-secondary animate-pulse" />
             </div>
-            <p className="text-lg text-gray-300 mb-6 max-w-3xl mx-auto">
+            <p className="text-lg text-gray-700 mb-6 max-w-3xl mx-auto">
               Experience the magic of Spelman College Glee Club! Stay connected with all our performances, 
               exclusive content, and be part of our growing community of music lovers.
             </p>
@@ -96,7 +96,7 @@ const PublicCalendar = () => {
                 </Button>
               </Link>
               <Link to="/shop">
-                <Button size="lg" variant="outline" className="border-white/50 text-white hover:bg-white hover:text-black">
+                <Button size="lg" variant="outline" className="border-gray-400 text-gray-900 hover:bg-gray-100">
                   <ShoppingBag className="mr-2 h-5 w-5" />
                   Shop Merchandise
                 </Button>
@@ -111,10 +111,10 @@ const PublicCalendar = () => {
             <div className="text-center mb-6 sm:mb-8">
               <div className="flex items-center justify-center gap-3 mb-2">
                 <Calendar className="h-8 w-8 sm:h-10 sm:w-10 text-primary animate-pulse" />
-                <h2 className="text-2xl sm:text-4xl md:text-6xl font-bold text-white">Upcoming Events</h2>
+                <h2 className="text-2xl sm:text-4xl md:text-6xl font-bold text-gray-900">Upcoming Events</h2>
                 <Music className="h-8 w-8 sm:h-10 sm:w-10 text-secondary animate-pulse" />
               </div>
-              <p className="text-lg text-gray-300">
+              <p className="text-lg text-gray-700">
                 Don't miss any of our amazing performances and events
               </p>
             </div>
@@ -137,10 +137,10 @@ const PublicCalendar = () => {
             <div className="text-center mb-8">
               <div className="flex items-center justify-center gap-3 mb-4">
                 <ShoppingBag className="h-8 w-8 text-primary animate-pulse" />
-                <h2 className="text-3xl sm:text-5xl font-bold text-white">Official Merchandise</h2>
+                <h2 className="text-3xl sm:text-5xl font-bold text-gray-900">Official Merchandise</h2>
                 <Gift className="h-8 w-8 text-secondary animate-pulse" />
               </div>
-              <p className="text-lg text-gray-300">
+              <p className="text-lg text-gray-700">
                 Show your Glee Club pride with our exclusive merchandise
               </p>
             </div>
@@ -156,8 +156,8 @@ const PublicCalendar = () => {
                     />
                   </div>
                   <CardContent className="p-4">
-                    <h3 className="font-semibold text-white mb-2">{item.name}</h3>
-                    <p className="text-sm text-gray-300 mb-3">{item.description}</p>
+                    <h3 className="font-semibold text-gray-900 mb-2">{item.name}</h3>
+                    <p className="text-sm text-gray-700 mb-3">{item.description}</p>
                     <div className="flex items-center justify-between">
                       <Badge variant="secondary" className="text-lg font-bold">{item.price}</Badge>
                       <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
@@ -188,11 +188,11 @@ const PublicCalendar = () => {
               <CardHeader className="text-center pb-6">
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <Mail className="h-8 w-8 text-primary animate-pulse" />
-                  <CardTitle className="text-2xl sm:text-3xl font-bold text-white">
+                  <CardTitle className="text-2xl sm:text-3xl font-bold text-gray-900">
                     Stay in the Loop
                   </CardTitle>
                 </div>
-                <p className="text-gray-300">
+                <p className="text-gray-700">
                   Get exclusive updates, behind-the-scenes content, and early access to tickets
                 </p>
               </CardHeader>
@@ -203,7 +203,7 @@ const PublicCalendar = () => {
                     placeholder="Enter your email address"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="bg-white/20 backdrop-blur-md border-white/30 text-white placeholder:text-gray-300"
+                    className="bg-white/80 backdrop-blur-md border-gray-300 text-gray-900 placeholder:text-gray-600"
                   />
                   <Button 
                     onClick={handleNewsletterSignup}
@@ -221,11 +221,11 @@ const PublicCalendar = () => {
               <CardHeader className="text-center pb-6">
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <Heart className="h-8 w-8 text-secondary animate-pulse" />
-                  <CardTitle className="text-2xl sm:text-3xl font-bold text-white">
+                  <CardTitle className="text-2xl sm:text-3xl font-bold text-gray-900">
                     Join as a Fan
                   </CardTitle>
                 </div>
-                <p className="text-gray-300">
+                <p className="text-gray-700">
                   Become an official fan and unlock exclusive perks and content
                 </p>
               </CardHeader>
@@ -234,15 +234,15 @@ const PublicCalendar = () => {
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div className="flex flex-col items-center p-3 bg-white/20 rounded-lg">
                       <Star className="h-6 w-6 text-primary mb-1" />
-                      <span className="text-xs font-medium text-white">Exclusive Content</span>
+                      <span className="text-xs font-medium text-gray-900">Exclusive Content</span>
                     </div>
                     <div className="flex flex-col items-center p-3 bg-white/20 rounded-lg">
                       <Calendar className="h-6 w-6 text-primary mb-1" />
-                      <span className="text-xs font-medium text-white">Early Access</span>
+                      <span className="text-xs font-medium text-gray-900">Early Access</span>
                     </div>
                     <div className="flex flex-col items-center p-3 bg-white/20 rounded-lg">
                       <Gift className="h-6 w-6 text-primary mb-1" />
-                      <span className="text-xs font-medium text-white">Fan Perks</span>
+                      <span className="text-xs font-medium text-gray-900">Fan Perks</span>
                     </div>
                   </div>
                   <Link to="/auth?role=fan">
