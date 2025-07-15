@@ -380,11 +380,17 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
           <div className="w-full h-full min-h-[calc(100vh-180px)]">
             <iframe
               src={`${sheetMusic.pdf_url}#toolbar=0&navpanes=0&scrollbar=1&zoom=page-width&view=FitH`}
-              className="w-full h-full"
+              className="w-full h-full min-h-[600px]"
               title={`${sheetMusic.title} - Sheet Music`}
               style={{ border: 'none' }}
-              onLoad={() => console.log('iframe loaded:', sheetMusic.pdf_url)}
-              onError={() => console.error('iframe error:', sheetMusic.pdf_url)}
+              onLoad={() => {
+                console.log('PDF iframe loaded successfully:', sheetMusic.pdf_url);
+                console.log('Sheet music data:', sheetMusic);
+              }}
+              onError={(e) => {
+                console.error('PDF iframe error:', sheetMusic.pdf_url, e);
+                console.error('Error details:', e.currentTarget);
+              }}
             />
           </div>
         ) : (
