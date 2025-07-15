@@ -89,10 +89,12 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
   // Populate form data when event changes
   useEffect(() => {
     if (event) {
-      const formatDateForInput = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toISOString().slice(0, 16);
-      };
+  const formatDateForInput = (dateString: string) => {
+    const date = new Date(dateString);
+    // Convert from UTC to local time for the datetime-local input
+    const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+    return localDate.toISOString().slice(0, 16);
+  };
 
       setFormData({
         title: event.title || '',
@@ -189,8 +191,8 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
         title: formData.title,
         description: formData.description || null,
         event_type: formData.event_type,
-        start_date: new Date(formData.start_date).toISOString(),
-        end_date: formData.end_date ? new Date(formData.end_date).toISOString() : null,
+        start_date: formData.start_date ? new Date(formData.start_date + ':00').toISOString() : null,
+        end_date: formData.end_date ? new Date(formData.end_date + ':00').toISOString() : null,
         location: null,
         venue_name: formData.venue_name || null,
         address: formData.address || null,

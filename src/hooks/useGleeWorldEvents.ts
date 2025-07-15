@@ -83,10 +83,15 @@ export const useGleeWorldEvents = () => {
     fetchEvents();
   }, [user]); // Re-fetch events when user authentication status changes
 
+  // Make fetchEvents available for manual refresh after updates
+  const refreshEvents = () => {
+    fetchEvents();
+  };
+
   return {
     events,
     loading,
-    fetchEvents,
+    fetchEvents: refreshEvents,
     getEventsByDateRange,
     getUpcomingEvents,
     getEventsByMonth
