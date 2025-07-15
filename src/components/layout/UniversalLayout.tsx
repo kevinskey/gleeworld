@@ -26,7 +26,7 @@ export const UniversalLayout = ({
   onSystemTabChange
 }: UniversalLayoutProps) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col">
       {showHeader && (
         <UniversalHeader 
           systemActiveTab={systemActiveTab}

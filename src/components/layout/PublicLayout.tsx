@@ -16,7 +16,7 @@ export const PublicLayout = ({
   className = ""
 }: PublicLayoutProps) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col">
       {showHeader && <PublicHeader />}
       <main className={`flex-1 ${className}`}>
         {children}
