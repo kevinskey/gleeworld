@@ -9,6 +9,7 @@ import { ScoreTracker } from "./ScoreTracker";
 import { RecordingManager } from "./RecordingManager";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileSheetMusicViewer } from "./MobileSheetMusicViewer";
+import { PDFViewerMenu } from "./PDFViewerMenu";
 
 type SheetMusic = Database['public']['Tables']['gw_sheet_music']['Row'];
 
@@ -45,6 +46,35 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
       case 'hard': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  // PDF Menu handlers
+  const handleScoresClick = () => {
+    console.log('Scores clicked');
+  };
+
+  const handleBookmarksClick = () => {
+    console.log('Bookmarks clicked');
+  };
+
+  const handleSetlistsClick = () => {
+    console.log('Setlists clicked');
+  };
+
+  const handleTitleDisplayClick = () => {
+    console.log('Title display clicked');
+  };
+
+  const handleSearchClick = () => {
+    console.log('Search clicked');
+  };
+
+  const handleAudioUtilitiesClick = () => {
+    console.log('Audio utilities clicked');
+  };
+
+  const handleToolsClick = () => {
+    console.log('Tools clicked');
   };
 
   // Use mobile viewer when on mobile devices
@@ -257,6 +287,20 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
           )}
         </div>
       </div>
+
+      {/* PDF Viewer Menu */}
+      <PDFViewerMenu
+        onScoresClick={handleScoresClick}
+        onBookmarksClick={handleBookmarksClick}
+        onSetlistsClick={handleSetlistsClick}
+        onTitleDisplayClick={handleTitleDisplayClick}
+        onSearchClick={handleSearchClick}
+        onAudioUtilitiesClick={handleAudioUtilitiesClick}
+        onToolsClick={handleToolsClick}
+        currentTitle={sheetMusic.composer || 'Unknown Composer'}
+        currentPage={1}
+        totalPages={1}
+      />
 
       {/* Main Content */}
       <Tabs defaultValue="viewer" className="space-y-6">
