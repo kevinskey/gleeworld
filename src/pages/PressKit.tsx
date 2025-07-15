@@ -47,10 +47,10 @@ const PressKit = () => {
         {/* Header */}
         <div className="text-center space-y-6">
           <div className="space-y-4">
-            <h1 className="text-4xl md:text-6xl font-bold text-white">
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900">
               Press Kit
             </h1>
-            <p className="text-xl md:text-2xl text-white/80 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto">
               Media resources for the Spelman College Glee Club
             </p>
           </div>
@@ -59,23 +59,23 @@ const PressKit = () => {
         {/* Quick Facts */}
         <Card className="bg-white/10 backdrop-blur-md border border-white/20">
           <CardContent className="p-8">
-            <h2 className="text-2xl font-bold text-white mb-6">Quick Facts</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Facts</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="text-center">
                 <div className="text-3xl font-bold text-primary-light">1924</div>
-                <div className="text-white/80">Founded</div>
+                <div className="text-gray-600">Founded</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-primary-light">100+</div>
-                <div className="text-white/80">Years of Excellence</div>
+                <div className="text-gray-600">Years of Excellence</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-primary-light">50+</div>
-                <div className="text-white/80">Talented Voices</div>
+                <div className="text-gray-600">Talented Voices</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-primary-light">Global</div>
-                <div className="text-white/80">Recognition</div>
+                <div className="text-gray-600">Recognition</div>
               </div>
             </div>
           </CardContent>
@@ -85,8 +85,8 @@ const PressKit = () => {
         <div className="grid lg:grid-cols-2 gap-8">
           <Card className="bg-white/10 backdrop-blur-md border border-white/20">
             <CardContent className="p-8">
-              <h2 className="text-2xl font-bold text-white mb-6">About the Glee Club</h2>
-              <div className="space-y-4 text-white/90">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">About the Glee Club</h2>
+              <div className="space-y-4 text-gray-700">
                 <p>
                   The Spelman College Glee Club, established in 1924, stands as one of the most prestigious collegiate choral ensembles in the world. For nearly a century, we have been dedicated to the preservation and presentation of the rich musical heritage of African Americans while embracing diverse musical traditions.
                 </p>
@@ -102,8 +102,8 @@ const PressKit = () => {
 
           <Card className="bg-white/10 backdrop-blur-md border border-white/20">
             <CardContent className="p-8">
-              <h2 className="text-2xl font-bold text-white mb-6">About Spelman College</h2>
-              <div className="space-y-4 text-white/90">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">About Spelman College</h2>
+              <div className="space-y-4 text-gray-700">
                 <p>
                   Spelman College, a historically Black college established in 1881, is a global leader in the education of women of African descent. Located in Atlanta, Georgia, Spelman is consistently ranked among the top liberal arts colleges in the nation.
                 </p>
@@ -121,17 +121,17 @@ const PressKit = () => {
         {/* Director Bio */}
         <Card className="bg-white/10 backdrop-blur-md border border-white/20">
           <CardContent className="p-8">
-            <h2 className="text-2xl font-bold text-white mb-6">Director Biography</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Director Biography</h2>
             <div className="grid lg:grid-cols-3 gap-8">
               <div className="lg:col-span-1">
                 <div className="aspect-square bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg flex items-center justify-center">
-                  <div className="text-center text-white/80">
+                  <div className="text-center text-gray-600">
                     <div className="text-sm">Director Photo</div>
                     <div className="text-xs mt-1">Available in Press Kit</div>
                   </div>
                 </div>
               </div>
-              <div className="lg:col-span-2 space-y-4 text-white/90">
+              <div className="lg:col-span-2 space-y-4 text-gray-700">
                 <p>
                   Our distinguished director brings decades of experience in choral excellence and musical leadership to the Spelman College Glee Club. With advanced degrees in choral conducting and music education, they have dedicated their career to nurturing young voices and preserving musical traditions.
                 </p>
@@ -149,23 +149,23 @@ const PressKit = () => {
         {/* Downloadable Assets */}
         <Card className="bg-white/10 backdrop-blur-md border border-white/20">
           <CardContent className="p-8">
-            <h2 className="text-2xl font-bold text-white mb-6">Media Resources</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Media Resources</h2>
             <div className="grid md:grid-cols-2 gap-6">
               {downloadAssets.map((asset, index) => (
                 <div key={index} className="border border-white/20 rounded-lg p-6 bg-white/5">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="font-semibold text-white">{asset.name}</h3>
+                      <h3 className="font-semibold text-gray-900">{asset.name}</h3>
                       <Badge variant="secondary" className="mt-2">
                         {asset.format}
                       </Badge>
                     </div>
-                    <Button size="sm" variant="outline" className="border-white/20 text-white hover:bg-white/10">
+                    <Button size="sm" variant="outline" className="border-gray-300 text-gray-900 hover:bg-gray-100">
                       <Download className="h-4 w-4 mr-2" />
                       Download
                     </Button>
                   </div>
-                  <p className="text-white/80 text-sm">{asset.description}</p>
+                  <p className="text-gray-600 text-sm">{asset.description}</p>
                 </div>
               ))}
             </div>
@@ -176,21 +176,21 @@ const PressKit = () => {
         <div className="grid lg:grid-cols-2 gap-8">
           <Card className="bg-white/10 backdrop-blur-md border border-white/20">
             <CardContent className="p-8">
-              <h2 className="text-2xl font-bold text-white mb-6">Media Contacts</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Media Contacts</h2>
               <div className="space-y-6">
                 {mediaContacts.map((contact, index) => (
-                  <div key={index} className="border-b border-white/20 pb-4 last:border-b-0 last:pb-0">
-                    <h3 className="font-semibold text-white mb-2">{contact.name}</h3>
+                  <div key={index} className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0">
+                    <h3 className="font-semibold text-gray-900 mb-2">{contact.name}</h3>
                     <div className="space-y-2">
-                      <div className="flex items-center text-white/80">
+                      <div className="flex items-center text-gray-600">
                         <Mail className="h-4 w-4 mr-3" />
-                        <a href={`mailto:${contact.email}`} className="hover:text-white transition-colors">
+                        <a href={`mailto:${contact.email}`} className="hover:text-gray-900 transition-colors">
                           {contact.email}
                         </a>
                       </div>
-                      <div className="flex items-center text-white/80">
+                      <div className="flex items-center text-gray-600">
                         <Phone className="h-4 w-4 mr-3" />
-                        <a href={`tel:${contact.phone}`} className="hover:text-white transition-colors">
+                        <a href={`tel:${contact.phone}`} className="hover:text-gray-900 transition-colors">
                           {contact.phone}
                         </a>
                       </div>
@@ -203,28 +203,28 @@ const PressKit = () => {
 
           <Card className="bg-white/10 backdrop-blur-md border border-white/20">
             <CardContent className="p-8">
-              <h2 className="text-2xl font-bold text-white mb-6">Follow Us</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Follow Us</h2>
               <div className="space-y-4">
-                <p className="text-white/80 mb-6">
+                <p className="text-gray-600 mb-6">
                   Stay connected with the Spelman College Glee Club through our social media channels for the latest news, performances, and behind-the-scenes content.
                 </p>
                 <div className="grid grid-cols-2 gap-4">
-                  <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
+                  <Button variant="outline" className="border-gray-300 text-gray-900 hover:bg-gray-100">
                     <Instagram className="h-4 w-4 mr-2" />
                     Instagram
                     <ExternalLink className="h-4 w-4 ml-2" />
                   </Button>
-                  <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
+                  <Button variant="outline" className="border-gray-300 text-gray-900 hover:bg-gray-100">
                     <Facebook className="h-4 w-4 mr-2" />
                     Facebook
                     <ExternalLink className="h-4 w-4 ml-2" />
                   </Button>
-                  <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
+                  <Button variant="outline" className="border-gray-300 text-gray-900 hover:bg-gray-100">
                     <Twitter className="h-4 w-4 mr-2" />
                     Twitter
                     <ExternalLink className="h-4 w-4 ml-2" />
                   </Button>
-                  <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
+                  <Button variant="outline" className="border-gray-300 text-gray-900 hover:bg-gray-100">
                     <Youtube className="h-4 w-4 mr-2" />
                     YouTube
                     <ExternalLink className="h-4 w-4 ml-2" />
@@ -238,31 +238,31 @@ const PressKit = () => {
         {/* Performance History Highlights */}
         <Card className="bg-white/10 backdrop-blur-md border border-white/20">
           <CardContent className="p-8">
-            <h2 className="text-2xl font-bold text-white mb-6">Notable Performances</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Notable Performances</h2>
             <div className="grid md:grid-cols-3 gap-6">
               <div className="text-center space-y-2">
                 <div className="text-primary-light font-semibold">The White House</div>
-                <div className="text-white/80 text-sm">Presidential performances and special events</div>
+                <div className="text-gray-600 text-sm">Presidential performances and special events</div>
               </div>
               <div className="text-center space-y-2">
                 <div className="text-primary-light font-semibold">International Tours</div>
-                <div className="text-white/80 text-sm">Cultural ambassadors across continents</div>
+                <div className="text-gray-600 text-sm">Cultural ambassadors across continents</div>
               </div>
               <div className="text-center space-y-2">
                 <div className="text-primary-light font-semibold">Carnegie Hall</div>
-                <div className="text-white/80 text-sm">Prestigious venue performances</div>
+                <div className="text-gray-600 text-sm">Prestigious venue performances</div>
               </div>
               <div className="text-center space-y-2">
                 <div className="text-primary-light font-semibold">Grammy Events</div>
-                <div className="text-white/80 text-sm">Music industry recognition</div>
+                <div className="text-gray-600 text-sm">Music industry recognition</div>
               </div>
               <div className="text-center space-y-2">
                 <div className="text-primary-light font-semibold">Olympic Games</div>
-                <div className="text-white/80 text-sm">Opening and closing ceremonies</div>
+                <div className="text-gray-600 text-sm">Opening and closing ceremonies</div>
               </div>
               <div className="text-center space-y-2">
                 <div className="text-primary-light font-semibold">Major Networks</div>
-                <div className="text-white/80 text-sm">Television and media appearances</div>
+                <div className="text-gray-600 text-sm">Television and media appearances</div>
               </div>
             </div>
           </CardContent>
@@ -271,10 +271,10 @@ const PressKit = () => {
         {/* Call to Action */}
         <Card className="bg-gradient-to-r from-primary/20 to-secondary/20 border border-white/20">
           <CardContent className="p-8 text-center">
-            <h2 className="text-2xl font-bold text-white mb-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
               Ready to Feature Our Story?
             </h2>
-            <p className="text-white/80 mb-6 max-w-2xl mx-auto">
+            <p className="text-gray-700 mb-6 max-w-2xl mx-auto">
               The Spelman College Glee Club is available for interviews, performances, and special features. Contact our media relations team to discuss opportunities.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -282,7 +282,7 @@ const PressKit = () => {
                 <Mail className="h-5 w-5 mr-2" />
                 Contact Media Relations
               </Button>
-              <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10">
+              <Button size="lg" variant="outline" className="border-gray-300 text-gray-900 hover:bg-gray-100">
                 <Download className="h-5 w-5 mr-2" />
                 Download Complete Press Kit
               </Button>
