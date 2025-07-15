@@ -90,7 +90,7 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
           {/* Header */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
-              <Button variant="outline" onClick={onBack}>
+              <Button variant="outline" onClick={(e) => { e.preventDefault(); onBack(); }}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Library
               </Button>
@@ -209,7 +209,7 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
-          <Button variant="outline" onClick={onBack}>
+          <Button variant="outline" onClick={(e) => { e.preventDefault(); onBack(); }}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Library
           </Button>
