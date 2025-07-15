@@ -34,6 +34,7 @@ import Notifications from "./pages/Notifications";
 import Announcements from "./pages/Announcements";
 import CreateAnnouncement from "./pages/admin/CreateAnnouncement";
 import EditAnnouncement from "./pages/admin/EditAnnouncement";
+import About from "./pages/About";
 import AttendanceTestPage from "./pages/AttendanceTestPage";
 import AttendancePage from "./pages/AttendancePage";
 
@@ -286,7 +287,15 @@ const App = () => {
                      <PressKit />
                    </PublicRoute>
                  } 
-               />
+                />
+                <Route 
+                  path="/about" 
+                  element={
+                    <PublicRoute>
+                      <About />
+                    </PublicRoute>
+                  } 
+                />
                <Route 
                  path="/contracts"
                  element={
