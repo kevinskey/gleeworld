@@ -8,6 +8,7 @@ import { Database } from "@/integrations/supabase/types";
 import { ScoreTracker } from "./ScoreTracker";
 import { RecordingManager } from "./RecordingManager";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileSheetMusicViewer } from "./MobileSheetMusicViewer";
 
 type SheetMusic = Database['public']['Tables']['gw_sheet_music']['Row'];
 
@@ -18,6 +19,7 @@ interface SheetMusicViewerProps {
 
 export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) => {
   const [audioPlaying, setAudioPlaying] = useState(false);
+  const [showMobileViewer, setShowMobileViewer] = useState(false);
   const isMobile = useIsMobile();
 
   const handleDownload = async () => {
@@ -44,6 +46,133 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // Use mobile viewer when on mobile devices
+  if (isMobile) {
+    return (
+      <>
+        <MobileSheetMusicViewer
+          isOpen={showMobileViewer}
+          onClose={() => setShowMobileViewer(false)}
+          sheetMusicId={sheetMusic.id}
+        />
+        <div className="container mx-auto px-4 py-6">
+          {/* Header */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <Button variant="outline" onClick={onBack}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Library
+              </Button>
+              
+              <Button onClick={() => setShowMobileViewer(true)} size="lg" className="bg-primary text-primary-foreground">
+                Open Mobile Reader
+              </Button>
+            </div>
+
+            {/* Title and Details */}
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold mb-2">{sheetMusic.title}</h1>
+              <div className="flex flex-wrap items-center gap-2 text-muted-foreground mb-4">
+                {sheetMusic.composer && (
+                  <span className="text-sm">by {sheetMusic.composer}</span>
+                )}
+                {sheetMusic.arranger && (
+                  <span className="text-sm">• arr. {sheetMusic.arranger}</span>
+                )}
+                {sheetMusic.language && (
+                  <span className="text-sm">• {sheetMusic.language}</span>
+                )}
+              </div>
+
+              {/* Badges */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {sheetMusic.difficulty_level && (
+                  <Badge className={getDifficultyColor(sheetMusic.difficulty_level)}>
+                    {sheetMusic.difficulty_level}
+                  </Badge>
+                )}
+                
+                {sheetMusic.voice_parts && sheetMusic.voice_parts.map((part) => (
+                  <Badge key={part} variant="outline">
+                    {part}
+                  </Badge>
+                ))}
+                
+                {sheetMusic.tags && sheetMusic.tags.map((tag) => (
+                  <Badge key={tag} variant="secondary">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+
+              {/* Musical Details */}
+              {(sheetMusic.key_signature || sheetMusic.time_signature || sheetMusic.tempo_marking) && (
+                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                  {sheetMusic.key_signature && (
+                    <span>Key: {sheetMusic.key_signature}</span>
+                  )}
+                  {sheetMusic.time_signature && (
+                    <span>Time: {sheetMusic.time_signature}</span>
+                  )}
+                  {sheetMusic.tempo_marking && (
+                    <span>Tempo: {sheetMusic.tempo_marking}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 gap-4 mb-6">
+            <Card className="p-4">
+              <div className="flex items-center gap-4">
+                {sheetMusic.audio_preview_url && (
+                  <Button variant="outline" onClick={handleAudioToggle} className="flex-1">
+                    {audioPlaying ? (
+                      <Pause className="h-4 w-4 mr-2" />
+                    ) : (
+                      <Play className="h-4 w-4 mr-2" />
+                    )}
+                    {audioPlaying ? 'Pause' : 'Play'} Preview
+                  </Button>
+                )}
+                
+                {sheetMusic.pdf_url && (
+                  <Button onClick={handleDownload} className="flex-1">
+                    <Download className="h-4 w-4 mr-2" />
+                    Download PDF
+                  </Button>
+                )}
+              </div>
+            </Card>
+          </div>
+
+          {/* Tabs for mobile */}
+          <Tabs defaultValue="practice" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="practice">
+                <Star className="h-4 w-4 mr-2" />
+                Practice
+              </TabsTrigger>
+              <TabsTrigger value="recordings">
+                <Mic className="h-4 w-4 mr-2" />
+                Recordings
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="practice">
+              <ScoreTracker sheetMusicId={sheetMusic.id} />
+            </TabsContent>
+
+            <TabsContent value="recordings">
+              <RecordingManager sheetMusicId={sheetMusic.id} />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-6">
