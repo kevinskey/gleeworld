@@ -37,7 +37,7 @@ import { YouTubeManagement } from "@/components/admin/YouTubeManagement";
 import { UsernamePermissionsManager } from "@/components/admin/UsernamePermissionsManager";
 import { SheetMusicLibrary } from "@/components/sheet-music/SheetMusicLibrary";
 import { SheetMusicMigration } from "@/components/admin/SheetMusicMigration";
-import { AdvancedSheetMusicViewer } from "@/components/sheet-music/AdvancedSheetMusicViewer";
+import { SheetMusicViewerWrapper } from "@/components/sheet-music/SheetMusicViewerWrapper";
 import { SetlistManager } from "@/components/setlists/SetlistManager";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
@@ -64,7 +64,7 @@ export const UserDashboard = () => {
   const { permissions: usernamePermissions, loading: permissionsLoading } = useUsernamePermissions(user?.email);
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [isRecentActivityExpanded, setIsRecentActivityExpanded] = useState(false);
-  const [showAdvancedViewer, setShowAdvancedViewer] = useState(false);
+  const [showSheetMusicViewer, setShowSheetMusicViewer] = useState(false);
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
   const userRole = profile?.role || 'user';
@@ -348,7 +348,7 @@ export const UserDashboard = () => {
                     <Button 
                       className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
                       variant="outline"
-                      onClick={() => setShowAdvancedViewer(true)}
+                      onClick={() => setShowSheetMusicViewer(true)}
                     >
                       <Music className="h-5 w-5 sm:h-6 sm:w-6" />
                       <span className="text-center leading-tight">Sheet Music</span>
@@ -741,10 +741,10 @@ export const UserDashboard = () => {
         </div>
       </div>
       
-      {/* Advanced Sheet Music Viewer */}
-      <AdvancedSheetMusicViewer 
-        isOpen={showAdvancedViewer}
-        onClose={() => setShowAdvancedViewer(false)}
+      {/* Sheet Music Viewer */}
+      <SheetMusicViewerWrapper 
+        isOpen={showSheetMusicViewer}
+        onClose={() => setShowSheetMusicViewer(false)}
       />
     </UniversalLayout>
   );
