@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Download, Star, TrendingUp, Mic, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +29,13 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
   const [totalPages] = useState(5); // Mock total pages - would come from PDF
   const [activeAudioUtility, setActiveAudioUtility] = useState<string | null>(null);
   const isMobile = useIsMobile();
+
+  // Auto-open mobile viewer on mobile devices
+  useEffect(() => {
+    if (isMobile) {
+      setShowMobileViewer(true);
+    }
+  }, [isMobile]);
 
   const handleDownload = async () => {
     if (sheetMusic.pdf_url) {
