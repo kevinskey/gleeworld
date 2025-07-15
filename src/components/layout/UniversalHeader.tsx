@@ -52,7 +52,7 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
                   alt="Spelman College Glee Club" 
                   className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 object-contain filter brightness-0 invert brightness-125 flex-shrink-0"
                 />
-                <span className="text-primary font-bold text-base sm:text-lg md:text-xl whitespace-nowrap">
+                <span className="text-gray-900 font-bold text-base sm:text-lg md:text-xl whitespace-nowrap">
                   GleeWorld
                 </span>
               </Link>
