@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { Document, Page, pdfjs } from 'react-pdf';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,11 +13,16 @@ import {
   Minimize2,
   Share2,
   Star,
-  Clock
+  Clock,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+
+// Configure PDF.js worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 type SheetMusic = Database['public']['Tables']['gw_sheet_music']['Row'];
 
@@ -31,18 +37,20 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
   onBack,
   className
 }) => {
-  const [zoom, setZoom] = useState(100);
+  const [zoom, setZoom] = useState(1.0);
   const [rotation, setRotation] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [numPages, setNumPages] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
   const handleZoomIn = useCallback(() => {
-    setZoom(prev => Math.min(prev + 25, 300));
+    setZoom(prev => Math.min(prev + 0.25, 3.0));
   }, []);
 
   const handleZoomOut = useCallback(() => {
-    setZoom(prev => Math.max(prev - 25, 50));
+    setZoom(prev => Math.max(prev - 0.25, 0.5));
   }, []);
 
   const handleRotate = useCallback(() => {
@@ -52,6 +60,28 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
   const toggleFullscreen = useCallback(() => {
     setIsFullscreen(prev => !prev);
   }, []);
+
+  const handlePrevPage = useCallback(() => {
+    setCurrentPage(prev => Math.max(prev - 1, 1));
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    setCurrentPage(prev => Math.min(prev + 1, numPages));
+  }, [numPages]);
+
+  const onDocumentLoadSuccess = useCallback(({ numPages: pageCount }: { numPages: number }) => {
+    setNumPages(pageCount);
+    setIsLoading(false);
+  }, []);
+
+  const onDocumentLoadError = useCallback(() => {
+    setIsLoading(false);
+    toast({
+      title: "Loading error",
+      description: "Failed to load sheet music PDF",
+      variant: "destructive"
+    });
+  }, [toast]);
 
   const handleDownload = useCallback(async () => {
     try {
@@ -117,18 +147,6 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
     }
   }, [sheetMusic, toast]);
 
-  const handleIframeLoad = useCallback(() => {
-    setIsLoading(false);
-  }, []);
-
-  const handleIframeError = useCallback(() => {
-    setIsLoading(false);
-    toast({
-      title: "Loading error",
-      description: "Failed to load sheet music PDF",
-      variant: "destructive"
-    });
-  }, [toast]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -214,7 +232,7 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
                 <ZoomOut className="h-4 w-4" />
               </Button>
               <span className="px-2 text-sm font-medium min-w-[60px] text-center">
-                {zoom}%
+                {Math.round(zoom * 100)}%
               </span>
               <Button onClick={handleZoomIn} variant="ghost" size="sm">
                 <ZoomIn className="h-4 w-4" />
@@ -276,35 +294,78 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
       </div>
 
       {/* PDF Viewer */}
-      <div className="relative flex-1">
+      <div className="relative flex-1 flex flex-col">
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         )}
+
+        {/* Page Navigation */}
+        {numPages > 0 && (
+          <div className="flex items-center justify-center gap-4 p-4 border-b">
+            <Button 
+              onClick={handlePrevPage} 
+              variant="ghost" 
+              size="sm"
+              disabled={currentPage <= 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            
+            <span className="text-sm font-medium">
+              Page {currentPage} of {numPages}
+            </span>
+            
+            <Button 
+              onClick={handleNextPage} 
+              variant="ghost" 
+              size="sm"
+              disabled={currentPage >= numPages}
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
         
         <div 
-          className="w-full h-full"
+          className="flex-1 flex items-center justify-center overflow-auto p-4"
           style={{
-            height: isFullscreen ? 'calc(100vh - 140px)' : 'calc(100vh - 200px)',
             minHeight: '600px'
           }}
         >
-          <iframe
-            src={`${sheetMusic.pdf_url}#toolbar=0&navpanes=0&scrollbar=1&zoom=${zoom}&view=FitH`}
-            className="w-full h-full border-0 block"
-            title={`${sheetMusic.title} - Sheet Music`}
-            onLoad={handleIframeLoad}
-            onError={handleIframeError}
+          <div
             style={{
               transform: `rotate(${rotation}deg)`,
               transformOrigin: 'center center',
-              width: '100%',
-              height: '100%',
-              display: 'block'
             }}
-            allowFullScreen
-          />
+          >
+            <Document
+              file={sheetMusic.pdf_url}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={onDocumentLoadError}
+              loading={
+                <div className="flex items-center justify-center p-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              }
+              error={
+                <div className="text-center p-8 text-muted-foreground">
+                  <p>Failed to load PDF</p>
+                </div>
+              }
+            >
+              <Page
+                pageNumber={currentPage}
+                scale={zoom}
+                renderTextLayer={false}
+                renderAnnotationLayer={false}
+                className="shadow-lg"
+              />
+            </Document>
+          </div>
         </div>
       </div>
     </div>
