@@ -184,7 +184,7 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
 
   return (
     <div className={cn(
-      "min-h-screen bg-background transition-all duration-300",
+      "flex flex-col min-h-screen bg-background transition-all duration-300",
       isFullscreen ? "fixed inset-0 z-50" : "relative",
       className
     )}>
@@ -276,7 +276,7 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
       </div>
 
       {/* PDF Viewer */}
-      <div className="relative">
+      <div className="relative flex-1">
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -284,22 +284,26 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
         )}
         
         <div 
-          className="w-full"
+          className="w-full h-full"
           style={{
             height: isFullscreen ? 'calc(100vh - 140px)' : 'calc(100vh - 200px)',
             minHeight: '600px'
           }}
         >
           <iframe
-            src={`${sheetMusic.pdf_url}#toolbar=0&navpanes=0&scrollbar=1&zoom=${zoom}&view=FitH`}
-            className="w-full h-full border-0"
+            src={`${sheetMusic.pdf_url}#toolbar=0&navpanes=0&scrollbar=1&zoom=page-fit&view=Fit`}
+            className="w-full h-full border-0 block"
             title={`${sheetMusic.title} - Sheet Music`}
             onLoad={handleIframeLoad}
             onError={handleIframeError}
             style={{
               transform: `rotate(${rotation}deg)`,
-              transformOrigin: 'center center'
+              transformOrigin: 'center center',
+              width: '100%',
+              height: '100%',
+              display: 'block'
             }}
+            allowFullScreen
           />
         </div>
       </div>
