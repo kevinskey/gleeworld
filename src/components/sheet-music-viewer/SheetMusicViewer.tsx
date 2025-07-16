@@ -22,7 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 // Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 type SheetMusic = Database['public']['Tables']['gw_sheet_music']['Row'];
 
@@ -44,6 +44,13 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
+
+  // Debug PDF loading
+  useEffect(() => {
+    console.log('PDF.js version:', pdfjs.version);
+    console.log('PDF.js worker:', pdfjs.GlobalWorkerOptions.workerSrc);
+    console.log('PDF URL:', sheetMusic.pdf_url);
+  }, [sheetMusic.pdf_url]);
 
   const handleZoomIn = useCallback(() => {
     setZoom(prev => Math.min(prev + 0.25, 3.0));
@@ -70,6 +77,7 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
   }, [numPages]);
 
   const onDocumentLoadSuccess = useCallback(({ numPages: pageCount }: { numPages: number }) => {
+    console.log('PDF loaded successfully with', pageCount, 'pages');
     setNumPages(pageCount);
     setIsLoading(false);
   }, []);
