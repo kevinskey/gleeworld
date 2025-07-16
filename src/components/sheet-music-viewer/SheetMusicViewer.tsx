@@ -291,7 +291,7 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
           }}
         >
           <iframe
-            src={`${sheetMusic.pdf_url}#toolbar=0&navpanes=0&scrollbar=1&zoom=page-fit&view=Fit`}
+            src={`${sheetMusic.pdf_url}#toolbar=0&navpanes=0&scrollbar=1&zoom=${zoom}&view=FitH`}
             className="w-full h-full border-0 block"
             title={`${sheetMusic.title} - Sheet Music`}
             onLoad={handleIframeLoad}
