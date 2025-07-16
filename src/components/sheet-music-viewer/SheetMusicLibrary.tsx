@@ -86,12 +86,12 @@ export const SheetMusicLibrary: React.FC<SheetMusicLibraryProps> = ({
       }
 
       // Difficulty filter
-      if (filters.difficulty && music.difficulty_level !== filters.difficulty) {
+      if (filters.difficulty && filters.difficulty !== 'all' && music.difficulty_level !== filters.difficulty) {
         return false;
       }
 
       // Composer filter
-      if (filters.composer && music.composer !== filters.composer) {
+      if (filters.composer && filters.composer !== 'all' && music.composer !== filters.composer) {
         return false;
       }
 
@@ -184,12 +184,12 @@ export const SheetMusicLibrary: React.FC<SheetMusicLibraryProps> = ({
                   {/* Difficulty Filter */}
                   <div>
                     <label className="text-sm font-medium mb-2 block">Difficulty</label>
-                    <Select value={filters.difficulty} onValueChange={(value) => updateFilter('difficulty', value)}>
+                    <Select value={filters.difficulty || 'all'} onValueChange={(value) => updateFilter('difficulty', value === 'all' ? '' : value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Any difficulty" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any difficulty</SelectItem>
+                        <SelectItem value="all">Any difficulty</SelectItem>
                         {DIFFICULTY_LEVELS.map(level => (
                           <SelectItem key={level} value={level}>
                             {level}
@@ -202,12 +202,12 @@ export const SheetMusicLibrary: React.FC<SheetMusicLibraryProps> = ({
                   {/* Composer Filter */}
                   <div>
                     <label className="text-sm font-medium mb-2 block">Composer</label>
-                    <Select value={filters.composer} onValueChange={(value) => updateFilter('composer', value)}>
+                    <Select value={filters.composer || 'all'} onValueChange={(value) => updateFilter('composer', value === 'all' ? '' : value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Any composer" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any composer</SelectItem>
+                        <SelectItem value="all">Any composer</SelectItem>
                         {composers.map(composer => (
                           <SelectItem key={composer} value={composer}>
                             {composer}
