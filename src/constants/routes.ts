@@ -10,6 +10,7 @@ export const ROUTES = {
   CONTRACT_SIGNING: '/contract-signing',
   W9_FORM: '/w9-form',
   CONTENT_CREATOR: '/content-creator',
+  SHEET_MUSIC: '/sheet-music',
 } as const;
 
 export const PROTECTED_ROUTES = [
@@ -20,6 +21,7 @@ export const PROTECTED_ROUTES = [
   ROUTES.ACCOUNTING,
   ROUTES.ADMIN_SIGNING,
   ROUTES.CONTENT_CREATOR,
+  ROUTES.SHEET_MUSIC,
 ] as const;
 
 export const PUBLIC_ROUTES = [

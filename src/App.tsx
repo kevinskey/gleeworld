@@ -28,6 +28,7 @@ import { Shop } from "./pages/Shop";
 import Payments from "./pages/Payments";
 import Profile from "./pages/Profile";
 import Calendar from "./pages/Calendar";
+import SheetMusicPage from "./pages/SheetMusicPage";
 import PublicCalendar from "./pages/PublicCalendar";
 import PressKit from "./pages/PressKit";
 import Notifications from "./pages/Notifications";
@@ -185,12 +186,20 @@ const App = () => {
                 } 
               />
               <Route 
+                path="/sheet-music" 
+                element={
+                  <ProtectedRoute>
+                    <SheetMusicPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
                 path="/content-creator" 
                 element={
                   <ProtectedRoute>
                     <ContentCreator />
                   </ProtectedRoute>
-                } 
+                }
               />
               <Route 
                 path="/event-planner" 
