@@ -74,7 +74,8 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
     setIsLoading(false);
   }, []);
 
-  const onDocumentLoadError = useCallback(() => {
+  const onDocumentLoadError = useCallback((error: any) => {
+    console.error('PDF Load Error:', error);
     setIsLoading(false);
     toast({
       title: "Loading error",
@@ -203,7 +204,7 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
   return (
     <div className={cn(
       "flex flex-col min-h-screen bg-background transition-all duration-300",
-      isFullscreen ? "fixed inset-0 z-50" : "relative",
+      isFullscreen ? "fixed inset-0 z-[9999] bg-background" : "relative",
       className
     )}>
       {/* Header */}
@@ -346,6 +347,11 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
               file={sheetMusic.pdf_url}
               onLoadSuccess={onDocumentLoadSuccess}
               onLoadError={onDocumentLoadError}
+              options={{
+                cMapUrl: `//unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+                cMapPacked: true,
+                standardFontDataUrl: `//unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
+              }}
               loading={
                 <div className="flex items-center justify-center p-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
