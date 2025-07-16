@@ -37,7 +37,7 @@ import { YouTubeManagement } from "@/components/admin/YouTubeManagement";
 import { UsernamePermissionsManager } from "@/components/admin/UsernamePermissionsManager";
 import { SheetMusicLibrary } from "@/components/sheet-music/SheetMusicLibrary";
 import { SheetMusicMigration } from "@/components/admin/SheetMusicMigration";
-import { SheetMusicViewerWrapper } from "@/components/sheet-music/SheetMusicViewerWrapper";
+import { SheetMusicViewerWrapper } from "@/components/sheet-music-viewer";
 import { SetlistManager } from "@/components/setlists/SetlistManager";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
