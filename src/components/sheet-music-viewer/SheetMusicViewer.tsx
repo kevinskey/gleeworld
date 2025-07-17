@@ -443,48 +443,41 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
             minHeight: '600px'
           }}
         >
-          {/* Simple embedded PDF that always works */}
-          <div className="w-full h-full relative">
-            <embed
-              src={sheetMusic.pdf_url}
-              type="application/pdf"
-              className="w-full h-full rounded-lg shadow-lg border border-border"
-              style={{ 
-                minHeight: '800px',
-                transform: `scale(${zoom}) rotate(${rotation}deg)`,
-                transformOrigin: 'center center'
-              }}
-              onLoad={() => {
-                console.log('📄 PDF loaded successfully');
-                setIsLoading(false);
-                setLoadError(null);
-              }}
-              onError={() => {
-                console.error('💥 PDF failed to load');
-                setIsLoading(false);
-                setLoadError('Failed to load PDF');
-              }}
-            />
-            
-            {/* Fallback for browsers that don't support embed */}
-            <div className="absolute inset-0 flex items-center justify-center bg-background border border-border rounded-lg hidden [&:only-child]:flex">
-              <div className="text-center p-8">
-                <p className="text-lg font-medium mb-4">View PDF</p>
-                <Button 
-                  onClick={() => window.open(sheetMusic.pdf_url, '_blank')}
-                  className="mb-2"
-                >
-                  Open in New Tab
-                </Button>
-                <br />
-                <Button 
-                  onClick={handleDownload}
-                  variant="outline"
-                >
-                  Download PDF
-                </Button>
-              </div>
-            </div>
+          <div
+            style={{
+              transform: `rotate(${rotation}deg)`,
+              transformOrigin: 'center center',
+            }}
+          >
+            <Document
+              file={pdfFile}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={onDocumentLoadError}
+              onLoadProgress={onDocumentLoadProgress}
+              options={pdfOptions}
+              loading={
+                <div className="flex items-center justify-center p-8">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <p className="text-xs text-muted-foreground">Loading sheet music...</p>
+                  </div>
+                </div>
+              }
+              error={
+                <div className="text-center p-8 text-muted-foreground">
+                  <p className="text-lg font-medium mb-2 text-destructive">Could not load PDF</p>
+                  <p className="text-sm">Please try refreshing the page</p>
+                </div>
+              }
+            >
+              <Page
+                pageNumber={currentPage}
+                scale={zoom}
+                renderTextLayer={false}
+                renderAnnotationLayer={false}
+                className="shadow-lg border border-border"
+              />
+            </Document>
           </div>
         </div>
       </div>
