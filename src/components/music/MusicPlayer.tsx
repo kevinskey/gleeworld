@@ -94,18 +94,44 @@ export const MusicPlayer = ({ tracks, className = "" }: MusicPlayerProps) => {
       setIsPlaying(false);
     } else {
       try {
-        await audioRef.current.play();
-        setIsPlaying(true);
+        // For mobile compatibility, ensure audio is loaded
+        if (audioRef.current.readyState < 2) {
+          await new Promise((resolve) => {
+            const onLoadedData = () => {
+              audioRef.current?.removeEventListener('loadeddata', onLoadedData);
+              resolve(void 0);
+            };
+            audioRef.current?.addEventListener('loadeddata', onLoadedData);
+            audioRef.current?.load();
+          });
+        }
         
-        // Increment play count
-        await supabase.rpc('increment_play_count', { track_uuid: currentTrack.id });
+        const playPromise = audioRef.current.play();
+        
+        // Handle mobile autoplay restrictions
+        if (playPromise !== undefined) {
+          await playPromise;
+          setIsPlaying(true);
+          
+          // Increment play count
+          await supabase.rpc('increment_play_count', { track_uuid: currentTrack.id });
+        }
       } catch (error) {
         console.error('Error playing audio:', error);
-        toast({
-          title: "Playback Error",
-          description: "Could not play the audio file",
-          variant: "destructive"
-        });
+        
+        // Handle mobile-specific errors
+        if (error.name === 'NotAllowedError') {
+          toast({
+            title: "Tap to Play",
+            description: "Please tap the play button to start audio",
+          });
+        } else {
+          toast({
+            title: "Playback Error",
+            description: "Could not play the audio file",
+            variant: "destructive"
+          });
+        }
       }
     }
   };
@@ -241,6 +267,8 @@ export const MusicPlayer = ({ tracks, className = "" }: MusicPlayerProps) => {
           ref={audioRef}
           src={currentTrack.audio_url}
           preload="metadata"
+          playsInline
+          crossOrigin="anonymous"
         />
         
         {/* Track Info */}
