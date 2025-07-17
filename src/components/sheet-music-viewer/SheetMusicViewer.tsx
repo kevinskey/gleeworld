@@ -78,19 +78,22 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
 
   const onDocumentLoadSuccess = useCallback(({ numPages: pageCount }: { numPages: number }) => {
     console.log('PDF loaded successfully with', pageCount, 'pages');
+    console.log('PDF URL:', sheetMusic.pdf_url);
     setNumPages(pageCount);
     setIsLoading(false);
-  }, []);
+  }, [sheetMusic.pdf_url]);
 
   const onDocumentLoadError = useCallback((error: any) => {
     console.error('PDF Load Error:', error);
+    console.error('PDF URL that failed:', sheetMusic.pdf_url);
+    console.error('Error details:', error.message, error.stack);
     setIsLoading(false);
     toast({
       title: "Loading error",
-      description: "Failed to load sheet music PDF",
+      description: `Failed to load sheet music PDF: ${error.message || 'Unknown error'}`,
       variant: "destructive"
     });
-  }, [toast]);
+  }, [toast, sheetMusic.pdf_url]);
 
   // Memoize PDF options to prevent unnecessary reloads
   const pdfOptions = useMemo(() => ({
