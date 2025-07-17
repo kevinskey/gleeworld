@@ -5,6 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ErrorState } from "@/components/shared/ErrorState";
@@ -32,7 +38,8 @@ import {
   Download,
   Crown,
   Plus,
-  FileText
+  FileText,
+  ChevronDown
 } from "lucide-react";
 import { HeroManagement } from "@/components/admin/HeroManagement";
 import { DashboardSettings } from "@/components/admin/DashboardSettings";
@@ -52,7 +59,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { DASHBOARD_MODULES, hasModuleAccess, hasExecutiveBoardPermissions, DashboardModule } from "@/constants/permissions";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronUp } from "lucide-react";
 
 export const UserDashboard = () => {
   const { user } = useAuth();
@@ -477,7 +484,7 @@ export const UserDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <EnhancedTooltip content="Create a new event for the glee club">
                     <Button 
                       className="h-20 flex-col space-y-2 text-sm w-full" 
@@ -507,6 +514,63 @@ export const UserDashboard = () => {
                       <FileText className="h-6 w-6" />
                       <span className="text-center leading-tight">Event + Budget</span>
                     </Button>
+                  </EnhancedTooltip>
+                  <EnhancedTooltip content="View executive board members and access position pages">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          className="h-20 flex-col space-y-2 text-sm w-full" 
+                          variant="outline"
+                        >
+                          <Users className="h-6 w-6" />
+                          <div className="flex items-center gap-1">
+                            <span className="text-center leading-tight">Members</span>
+                            <ChevronDown className="h-3 w-3" />
+                          </div>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent 
+                        align="end" 
+                        className="w-48 bg-white border shadow-lg z-50"
+                      >
+                        <DropdownMenuItem onClick={() => navigate('/exec-board/president')}>
+                          <Crown className="h-4 w-4 mr-2" />
+                          President
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/exec-board/vice-president')}>
+                          <Shield className="h-4 w-4 mr-2" />
+                          Vice President
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/exec-board/secretary')}>
+                          <FileText className="h-4 w-4 mr-2" />
+                          Secretary
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/exec-board/treasurer')}>
+                          <DollarSign className="h-4 w-4 mr-2" />
+                          Treasurer
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/exec-board/business-manager')}>
+                          <ShoppingBag className="h-4 w-4 mr-2" />
+                          Business Manager
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/exec-board/librarian')}>
+                          <BookOpen className="h-4 w-4 mr-2" />
+                          Librarian
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/exec-board/chaplain')}>
+                          <Star className="h-4 w-4 mr-2" />
+                          Chaplain
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/exec-board/historian')}>
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Historian
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/exec-board/social-chair')}>
+                          <Users className="h-4 w-4 mr-2" />
+                          Social Chair
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </EnhancedTooltip>
                 </div>
               </CardContent>
