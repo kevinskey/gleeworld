@@ -22,8 +22,8 @@ import { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Configure PDF.js worker with jsDelivr CDN (more reliable)
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+// Use local worker file to avoid external CDN issues
+pdfjs.GlobalWorkerOptions.workerSrc = `/node_modules/pdfjs-dist/build/pdf.worker.min.js`;
 
 console.log('🔧 PDF.js version:', pdfjs.version);
 console.log('🔧 PDF.js worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
