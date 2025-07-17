@@ -63,7 +63,6 @@ export const EXEC_BOARD_MODULE_PERMISSIONS: Record<ExecutiveBoardRole, string[]>
     'send_notifications',
     'budget_creation',
     'contracts',
-    'sheet_music',
     'send_emails',
     'manage_permissions',
   ],
@@ -71,7 +70,6 @@ export const EXEC_BOARD_MODULE_PERMISSIONS: Record<ExecutiveBoardRole, string[]>
     'send_notifications',
     'budget_creation',
     'contracts',
-    'sheet_music',
     'send_emails',
     'youtube_management',
   ],
@@ -87,13 +85,11 @@ export const EXEC_BOARD_MODULE_PERMISSIONS: Record<ExecutiveBoardRole, string[]>
     'contracts',
   ],
   [EXECUTIVE_BOARD_ROLES.MUSIC_DIRECTOR]: [
-    'sheet_music',
     'youtube_management',
     'send_notifications',
     'send_emails',
   ],
   [EXECUTIVE_BOARD_ROLES.ASSISTANT_MUSIC_DIRECTOR]: [
-    'sheet_music',
     'youtube_management',
     'send_notifications',
   ],
@@ -119,7 +115,6 @@ export const EXEC_BOARD_MODULE_PERMISSIONS: Record<ExecutiveBoardRole, string[]>
     'send_notifications',
   ],
   [EXECUTIVE_BOARD_ROLES.LIBRARIAN]: [
-    'sheet_music',
     'send_notifications',
   ],
   [EXECUTIVE_BOARD_ROLES.TECHNICAL_DIRECTOR]: [
@@ -197,13 +192,10 @@ export const ROLE_QUICK_ACTIONS: Record<ExecutiveBoardRole, Array<{
     { action: 'member_records', label: 'Member Records', description: 'Maintain member information' },
   ],
   [EXECUTIVE_BOARD_ROLES.MUSIC_DIRECTOR]: [
-    { action: 'upload_sheet_music', label: 'Upload Sheet Music', description: 'Add new musical content' },
-    { action: 'manage_repertoire', label: 'Manage Repertoire', description: 'Organize music library' },
-    { action: 'youtube_sync', label: 'YouTube Sync', description: 'Sync performance videos' },
+    { action: 'schedule_rehearsal', label: 'Schedule Rehearsal', description: 'Plan practice sessions' },
   ],
   [EXECUTIVE_BOARD_ROLES.ASSISTANT_MUSIC_DIRECTOR]: [
-    { action: 'browse_sheet_music', label: 'Browse Sheet Music', description: 'Access music library' },
-    { action: 'youtube_content', label: 'YouTube Content', description: 'Manage video content' },
+    { action: 'manage_sections', label: 'Manage Sections', description: 'Coordinate voice parts' },
   ],
   [EXECUTIVE_BOARD_ROLES.SOCIAL_CHAIR]: [
     { action: 'plan_social_event', label: 'Plan Social Event', description: 'Organize member gatherings' },
@@ -224,7 +216,7 @@ export const ROLE_QUICK_ACTIONS: Record<ExecutiveBoardRole, Array<{
     { action: 'youtube_archive', label: 'YouTube Archive', description: 'Organize video history' },
   ],
   [EXECUTIVE_BOARD_ROLES.LIBRARIAN]: [
-    { action: 'organize_music', label: 'Organize Music', description: 'Catalog sheet music' },
+    { action: 'manage_resources', label: 'Manage Resources', description: 'Organize materials' },
   ],
   [EXECUTIVE_BOARD_ROLES.TECHNICAL_DIRECTOR]: [
     { action: 'system_settings', label: 'System Settings', description: 'Configure technical settings' },
