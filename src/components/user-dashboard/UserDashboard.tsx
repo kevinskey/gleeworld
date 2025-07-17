@@ -35,8 +35,6 @@ import { HeroManagement } from "@/components/admin/HeroManagement";
 import { DashboardSettings } from "@/components/admin/DashboardSettings";
 import { YouTubeManagement } from "@/components/admin/YouTubeManagement";
 import { UsernamePermissionsManager } from "@/components/admin/UsernamePermissionsManager";
-import { SheetMusicLibrary } from "@/components/sheet-music/SheetMusicLibrary";
-import { SheetMusicMigration } from "@/components/admin/SheetMusicMigration";
 
 import { SetlistManager } from "@/components/setlists/SetlistManager";
 import { useAuth } from "@/contexts/AuthContext";
@@ -101,14 +99,8 @@ export const UserDashboard = () => {
           case 'send_emails':
             icon = Mail;
             break;
-          case 'sheet_music':
-            icon = Music;
-            break;
           case 'manage_permissions':
             icon = Shield;
-            break;
-          case 'migrate_sheet_music':
-            icon = Download;
             break;
         }
 
@@ -174,10 +166,6 @@ export const UserDashboard = () => {
             return <DashboardSettings />;
           case 'youtube-management':
             return <YouTubeManagement />;
-          case 'sheet-music':
-            return <SheetMusicLibrary />;
-          case 'migrate-sheet-music':
-            return <SheetMusicMigration />;
           case 'manage-permissions':
             return <UsernamePermissionsManager />;
           default:
@@ -344,16 +332,6 @@ export const UserDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                  <EnhancedTooltip content="Access sheet music library with integrated setlists">
-                    <Button 
-                      className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
-                      variant="outline"
-                      onClick={() => navigate('/sheet-music')}
-                    >
-                      <Music className="h-5 w-5 sm:h-6 sm:w-6" />
-                      <span className="text-center leading-tight">Sheet Music</span>
-                    </Button>
-                  </EnhancedTooltip>
                   <EnhancedTooltip content="View your attendance records and manage attendance">
                     <Button 
                       className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
@@ -578,13 +556,6 @@ export const UserDashboard = () => {
                     Music
                   </h3>
                   <div className="space-y-2">
-                    <Button variant="ghost" className="w-full justify-start h-auto p-3">
-                      <BookOpen className="h-4 w-4 mr-2" />
-                      <div className="text-left">
-                        <div>Sheet Music</div>
-                        <div className="text-xs text-gray-500">Access vocal parts</div>
-                      </div>
-                    </Button>
                     <Button variant="ghost" className="w-full justify-start h-auto p-3">
                       <Volume2 className="h-4 w-4 mr-2" />
                       <div className="text-left">

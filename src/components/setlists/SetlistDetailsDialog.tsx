@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Music, Trash2, Search } from 'lucide-react';
 import { useSetlists } from '@/hooks/useSetlists';
-import { useSheetMusic } from '@/hooks/useSheetMusic';
+
 
 interface SetlistDetailsDialogProps {
   isOpen: boolean;
@@ -21,7 +21,7 @@ export const SetlistDetailsDialog: React.FC<SetlistDetailsDialogProps> = ({
   setlistId,
 }) => {
   const { setlists, removeItemFromSetlist, addItemToSetlist } = useSetlists();
-  const { sheetMusic } = useSheetMusic();
+  const sheetMusic: any[] = []; // Sheet music functionality removed
   const [selectedSheetMusic, setSelectedSheetMusic] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
 
