@@ -15,7 +15,8 @@ import {
   Star,
   Clock,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  RefreshCw
 } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
@@ -87,6 +88,19 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
 
   const toggleFullscreen = useCallback(() => {
     setIsFullscreen(prev => !prev);
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    console.log('🔄 Refreshing PDF viewer...');
+    setIsLoading(true);
+    setLoadError(null);
+    // Force reload by updating a key or reloading the page
+    window.location.reload();
+  }, []);
+
+  const resetZoom = useCallback(() => {
+    setZoom(1.0);
+    console.log('🔍 Zoom reset to 100%');
   }, []);
 
   const handlePrevPage = useCallback(() => {
@@ -311,31 +325,41 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
           <div className="flex items-center gap-2">
             {/* Zoom Controls */}
             <div className="flex items-center gap-1 border rounded-md">
-              <Button onClick={handleZoomOut} variant="ghost" size="sm">
+              <Button onClick={handleZoomOut} variant="ghost" size="sm" title="Zoom Out">
                 <ZoomOut className="h-4 w-4" />
               </Button>
-              <span className="px-2 text-sm font-medium min-w-[60px] text-center">
+              <Button 
+                onClick={resetZoom} 
+                variant="ghost" 
+                size="sm" 
+                className="px-2 text-sm font-medium min-w-[60px] hover:bg-muted"
+                title="Reset Zoom to 100%"
+              >
                 {Math.round(zoom * 100)}%
-              </span>
-              <Button onClick={handleZoomIn} variant="ghost" size="sm">
+              </Button>
+              <Button onClick={handleZoomIn} variant="ghost" size="sm" title="Zoom In">
                 <ZoomIn className="h-4 w-4" />
               </Button>
             </div>
 
             {/* Action Buttons */}
-            <Button onClick={handleRotate} variant="ghost" size="sm">
+            <Button onClick={handleRefresh} variant="ghost" size="sm" title="Refresh PDF">
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+            
+            <Button onClick={handleRotate} variant="ghost" size="sm" title="Rotate PDF">
               <RotateCw className="h-4 w-4" />
             </Button>
             
-            <Button onClick={handleShare} variant="ghost" size="sm">
+            <Button onClick={handleShare} variant="ghost" size="sm" title="Share PDF">
               <Share2 className="h-4 w-4" />
             </Button>
             
-            <Button onClick={handleDownload} variant="ghost" size="sm">
+            <Button onClick={handleDownload} variant="ghost" size="sm" title="Download PDF">
               <Download className="h-4 w-4" />
             </Button>
             
-            <Button onClick={toggleFullscreen} variant="ghost" size="sm">
+            <Button onClick={toggleFullscreen} variant="ghost" size="sm" title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}>
               {isFullscreen ? (
                 <Minimize2 className="h-4 w-4" />
               ) : (
