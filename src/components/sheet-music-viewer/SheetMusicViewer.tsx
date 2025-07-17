@@ -21,8 +21,8 @@ import { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Configure PDF.js worker - use CDN version
-pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+// Configure PDF.js worker - use version that matches the installed library
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 console.log('🔧 PDF.js version:', pdfjs.version);
 console.log('🔧 PDF.js worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
@@ -108,13 +108,13 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
 
   // Simplified PDF options to fix compatibility issues
   const pdfOptions = useMemo(() => ({
-    cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
+    cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
     cMapPacked: true,
-    standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/standard_fonts/',
+    standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
     verbosity: 1, // Reduce verbosity
-    disableWorker: true, // Disable worker to avoid worker issues
-    disableAutoFetch: true,
-    disableStream: true,
+    disableWorker: false, // Re-enable worker now that versions match
+    disableAutoFetch: false,
+    disableStream: false,
   }), []);
 
   // Memoize file prop to prevent unnecessary reloads
