@@ -44,6 +44,7 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
   const [rotation, setRotation] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
@@ -95,6 +96,7 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
       stack: error.stack
     });
     setIsLoading(false);
+    setLoadError(error.message || 'Unknown error');
     toast({
       title: "PDF Loading Failed",
       description: `Could not load PDF: ${error.message || 'Unknown error'}`,
@@ -361,7 +363,22 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
       <div className="relative flex-1 flex flex-col">
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="flex flex-col items-center gap-2">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <p className="text-sm text-muted-foreground">Loading PDF...</p>
+            </div>
+          </div>
+        )}
+
+        {loadError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
+            <div className="text-center p-8">
+              <p className="text-lg font-medium mb-2 text-destructive">Failed to load PDF</p>
+              <p className="text-sm text-muted-foreground mb-4">{loadError}</p>
+              <Button onClick={() => window.location.reload()} variant="outline" size="sm">
+                Try Again
+              </Button>
+            </div>
           </div>
         )}
 
