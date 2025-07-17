@@ -66,7 +66,6 @@ export const EXEC_BOARD_MODULE_PERMISSIONS: Record<ExecutiveBoardRole, string[]>
     'sheet_music',
     'send_emails',
     'manage_permissions',
-    'migrate_sheet_music',
   ],
   [EXECUTIVE_BOARD_ROLES.VICE_PRESIDENT]: [
     'send_notifications',
@@ -89,7 +88,6 @@ export const EXEC_BOARD_MODULE_PERMISSIONS: Record<ExecutiveBoardRole, string[]>
   ],
   [EXECUTIVE_BOARD_ROLES.MUSIC_DIRECTOR]: [
     'sheet_music',
-    'migrate_sheet_music',
     'youtube_management',
     'send_notifications',
     'send_emails',
@@ -122,7 +120,6 @@ export const EXEC_BOARD_MODULE_PERMISSIONS: Record<ExecutiveBoardRole, string[]>
   ],
   [EXECUTIVE_BOARD_ROLES.LIBRARIAN]: [
     'sheet_music',
-    'migrate_sheet_music',
     'send_notifications',
   ],
   [EXECUTIVE_BOARD_ROLES.TECHNICAL_DIRECTOR]: [
@@ -228,7 +225,6 @@ export const ROLE_QUICK_ACTIONS: Record<ExecutiveBoardRole, Array<{
   ],
   [EXECUTIVE_BOARD_ROLES.LIBRARIAN]: [
     { action: 'organize_music', label: 'Organize Music', description: 'Catalog sheet music' },
-    { action: 'migrate_pdfs', label: 'Migrate PDFs', description: 'Import legacy music files' },
   ],
   [EXECUTIVE_BOARD_ROLES.TECHNICAL_DIRECTOR]: [
     { action: 'system_settings', label: 'System Settings', description: 'Configure technical settings' },

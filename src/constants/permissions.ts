@@ -30,7 +30,6 @@ export const PERMISSIONS = [
   'access_budget_creation',
   'access_contracts',
   'access_sheet_music',
-  'migrate_sheet_music',
   'send_notifications',
   'send_emails',
   'manage_username_permissions',
@@ -59,7 +58,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     'access_youtube_management',
     'send_notifications',
     'send_emails',
-    'migrate_sheet_music',
     'manage_username_permissions',
   ],
   [USER_ROLES.SUPER_ADMIN]: [
@@ -116,11 +114,6 @@ export const DASHBOARD_MODULES = {
     name: 'Manage Permissions',
     description: 'Manage username-based module permissions',
     permission: 'manage_username_permissions' as Permission,
-  },
-  migrate_sheet_music: {
-    name: 'Migrate Sheet Music',
-    description: 'Migrate PDFs from reader.gleeworld.org',
-    permission: 'migrate_sheet_music' as Permission,
   },
 } as const;
 
@@ -234,17 +227,17 @@ export const hasEnhancedModuleAccess = (
 const getExecutiveBoardPermissions = (execBoardRole: string): string[] => {
   // This will be populated from executiveBoardRoles.ts
   const rolePermissionMap: Record<string, string[]> = {
-    'president': ['hero_management', 'dashboard_settings', 'youtube_management', 'send_notifications', 'budget_creation', 'contracts', 'sheet_music', 'send_emails', 'manage_permissions', 'migrate_sheet_music'],
+    'president': ['hero_management', 'dashboard_settings', 'youtube_management', 'send_notifications', 'budget_creation', 'contracts', 'sheet_music', 'send_emails', 'manage_permissions'],
     'vice-president': ['send_notifications', 'budget_creation', 'contracts', 'sheet_music', 'send_emails', 'youtube_management'],
     'treasurer': ['budget_creation', 'contracts', 'send_notifications', 'send_emails'],
     'secretary': ['send_notifications', 'send_emails', 'contracts'],
-    'music-director': ['sheet_music', 'migrate_sheet_music', 'youtube_management', 'send_notifications', 'send_emails'],
+    'music-director': ['sheet_music', 'youtube_management', 'send_notifications', 'send_emails'],
     'assistant-music-director': ['sheet_music', 'youtube_management', 'send_notifications'],
     'social-chair': ['send_notifications', 'send_emails', 'budget_creation'],
     'publicity-chair': ['hero_management', 'send_notifications', 'send_emails', 'youtube_management'],
     'events-coordinator': ['budget_creation', 'contracts', 'send_notifications', 'send_emails'],
     'historian': ['youtube_management', 'send_notifications'],
-    'librarian': ['sheet_music', 'migrate_sheet_music', 'send_notifications'],
+    'librarian': ['sheet_music', 'send_notifications'],
     'technical-director': ['dashboard_settings', 'youtube_management', 'send_notifications'],
     'fundraising-chair': ['budget_creation', 'send_notifications', 'send_emails'],
     'alumni-relations': ['send_notifications', 'send_emails'],
