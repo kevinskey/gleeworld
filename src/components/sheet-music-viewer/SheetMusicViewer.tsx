@@ -21,8 +21,9 @@ import { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Configure PDF.js worker
+// Configure PDF.js worker - use latest stable version
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+
 console.log('PDF.js version:', pdfjs.version);
 console.log('PDF.js worker:', pdfjs.GlobalWorkerOptions.workerSrc);
 
@@ -79,51 +80,68 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
   }, [numPages]);
 
   const onDocumentLoadSuccess = useCallback(({ numPages: pageCount }: { numPages: number }) => {
-    console.log('PDF loaded successfully with', pageCount, 'pages');
-    console.log('PDF URL:', sheetMusic.pdf_url);
+    console.log('🎉 PDF loaded successfully with', pageCount, 'pages');
+    console.log('📄 PDF URL:', sheetMusic.pdf_url);
     setNumPages(pageCount);
     setIsLoading(false);
   }, [sheetMusic.pdf_url]);
 
   const onDocumentLoadError = useCallback((error: any) => {
-    console.error('PDF Load Error:', error);
-    console.error('PDF URL that failed:', sheetMusic.pdf_url);
-    console.error('Error details:', error.message, error.stack);
+    console.error('💥 PDF Load Error:', error);
+    console.error('🔗 PDF URL that failed:', sheetMusic.pdf_url);
+    console.error('📊 Error details:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack
+    });
     setIsLoading(false);
     toast({
-      title: "Loading error",
-      description: `Failed to load sheet music PDF: ${error.message || 'Unknown error'}`,
+      title: "PDF Loading Failed",
+      description: `Could not load PDF: ${error.message || 'Unknown error'}`,
       variant: "destructive"
     });
   }, [toast, sheetMusic.pdf_url]);
 
   // Memoize PDF options to prevent unnecessary reloads
   const pdfOptions = useMemo(() => ({
-    cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+    cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
     cMapPacked: true,
-    standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
-    verbosity: 1,
+    standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/standard_fonts/',
+    verbosity: 2, // Increase verbosity for debugging
     disableWorker: false,
     disableAutoFetch: false,
     disableStream: false,
+    isEvalSupported: false,
+    maxImageSize: 1024 * 1024,
   }), []);
 
   // Memoize file prop to prevent unnecessary reloads
   const pdfFile = useMemo(() => {
     const url = sheetMusic.pdf_url;
-    console.log('Creating PDF file object for URL:', url);
+    console.log('🔍 Creating PDF file object for URL:', url);
     
-    // Test URL accessibility
-    fetch(url, { method: 'HEAD' })
+    // Test URL accessibility with more detailed logging
+    fetch(url, { 
+      method: 'HEAD',
+      mode: 'cors',
+      credentials: 'omit'
+    })
       .then(response => {
-        console.log('PDF URL HEAD response:', response.status, response.statusText);
-        console.log('PDF URL headers:', Object.fromEntries(response.headers.entries()));
+        console.log('✅ PDF URL accessible:', response.status, response.statusText);
+        console.log('📋 Response headers:', Object.fromEntries(response.headers.entries()));
+        if (!response.ok) {
+          console.error('❌ Bad response status:', response.status);
+        }
       })
       .catch(error => {
-        console.error('PDF URL accessibility test failed:', error);
+        console.error('❌ PDF URL test failed:', error);
       });
     
-    return { url };
+    return { 
+      url,
+      httpHeaders: {},
+      withCredentials: false
+    };
   }, [sheetMusic.pdf_url]);
 
 
