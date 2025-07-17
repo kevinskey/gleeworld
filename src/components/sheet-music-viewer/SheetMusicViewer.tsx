@@ -22,8 +22,14 @@ import { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Don't configure any worker - let PDF.js handle it internally
-// This should make it fall back to main thread processing
+// Create a minimal worker to prevent PDF.js from trying to load from CDN
+const workerCode = `
+  self.onmessage = function(e) {
+    // Minimal worker that just echoes back
+    self.postMessage({ messageId: e.data.messageId, data: null });
+  };
+`;
+pdfjs.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([workerCode], { type: 'application/javascript' }));
 
 console.log('🔧 PDF.js version:', pdfjs.version);
 console.log('🔧 PDF.js worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
