@@ -261,8 +261,8 @@ export const MusicPlayer = ({ tracks, className = "" }: MusicPlayerProps) => {
   }
 
   return (
-    <Card className={`bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl ${className}`}>
-      <CardContent className="p-6">
+    <Card className={`bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl w-full max-w-full ${className}`}>
+      <CardContent className="p-3 sm:p-6">
         <audio
           ref={audioRef}
           src={currentTrack.audio_url}
@@ -272,8 +272,8 @@ export const MusicPlayer = ({ tracks, className = "" }: MusicPlayerProps) => {
         />
         
         {/* Track Info */}
-        <div className="flex items-center space-x-4 mb-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/40 rounded-lg flex items-center justify-center overflow-hidden">
+        <div className="flex items-center space-x-2 sm:space-x-4 mb-3 sm:mb-4">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-primary/20 to-primary/40 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
             {currentTrack.album?.cover_image_url ? (
               <img
                 src={currentTrack.album.cover_image_url}
@@ -281,26 +281,26 @@ export const MusicPlayer = ({ tracks, className = "" }: MusicPlayerProps) => {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <Music className="h-8 w-8 text-primary" />
+              <Music className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
             )}
           </div>
           
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-900 truncate">{currentTrack.title}</h3>
-            <p className="text-sm text-gray-600 truncate">{currentTrack.artist}</p>
+          <div className="flex-1 min-w-0 px-1">
+            <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base">{currentTrack.title}</h3>
+            <p className="text-xs sm:text-sm text-gray-600 truncate">{currentTrack.artist}</p>
             {currentTrack.album && (
-              <p className="text-xs text-gray-500 truncate">{currentTrack.album.title}</p>
+              <p className="text-xs text-gray-500 truncate hidden sm:block">{currentTrack.album.title}</p>
             )}
           </div>
           
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 flex-shrink-0">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleLike}
               className={`${currentTrack.isLiked ? 'text-red-500' : 'text-gray-500'} hover:text-red-600`}
             >
-              <Heart className={`h-4 w-4 ${currentTrack.isLiked ? 'fill-current' : ''}`} />
+              <Heart className={`h-3 w-3 sm:h-4 sm:w-4 ${currentTrack.isLiked ? 'fill-current' : ''}`} />
             </Button>
             <Button
               variant="ghost"
@@ -308,13 +308,13 @@ export const MusicPlayer = ({ tracks, className = "" }: MusicPlayerProps) => {
               onClick={handleShare}
               className="text-gray-500 hover:text-gray-700"
             >
-              <Share2 className="h-4 w-4" />
+              <Share2 className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-4">
+        <div className="mb-3 sm:mb-4">
           <Slider
             value={[currentTrack.duration > 0 ? (currentTime / currentTrack.duration) * 100 : 0]}
             onValueChange={handleSeek}
@@ -329,15 +329,15 @@ export const MusicPlayer = ({ tracks, className = "" }: MusicPlayerProps) => {
         </div>
 
         {/* Controls */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsShuffled(!isShuffled)}
               className={`${isShuffled ? 'text-primary' : 'text-gray-500'} hover:text-primary`}
             >
-              <Shuffle className="h-4 w-4" />
+              <Shuffle className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
             <Button
               variant="ghost"
@@ -349,32 +349,32 @@ export const MusicPlayer = ({ tracks, className = "" }: MusicPlayerProps) => {
               }}
               className={`${repeatMode !== 'none' ? 'text-primary' : 'text-gray-500'} hover:text-primary`}
             >
-              <Repeat className="h-4 w-4" />
-              {repeatMode === 'one' && <span className="text-xs ml-1">1</span>}
+              <Repeat className="h-3 w-3 sm:h-4 sm:w-4" />
+              {repeatMode === 'one' && <span className="text-xs ml-1 hidden sm:inline">1</span>}
             </Button>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1 sm:space-x-4">
             <Button
               variant="ghost"
               size="sm"
               onClick={handlePrevious}
               disabled={tracks.length <= 1}
             >
-              <SkipBack className="h-4 w-4" />
+              <SkipBack className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
             
             <Button
               onClick={handlePlayPause}
               disabled={isLoading}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-12 h-12"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-10 h-10 sm:w-12 sm:h-12"
             >
               {isLoading ? (
-                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                <div className="animate-spin h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent rounded-full" />
               ) : isPlaying ? (
-                <Pause className="h-5 w-5" />
+                <Pause className="h-4 w-4 sm:h-5 sm:w-5" />
               ) : (
-                <Play className="h-5 w-5" />
+                <Play className="h-4 w-4 sm:h-5 sm:w-5" />
               )}
             </Button>
             
@@ -384,32 +384,32 @@ export const MusicPlayer = ({ tracks, className = "" }: MusicPlayerProps) => {
               onClick={handleNext}
               disabled={tracks.length <= 1}
             >
-              <SkipForward className="h-4 w-4" />
+              <SkipForward className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleMute}
             >
-              {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              {isMuted ? <VolumeX className="h-3 w-3 sm:h-4 sm:w-4" /> : <Volume2 className="h-3 w-3 sm:h-4 sm:w-4" />}
             </Button>
             <Slider
               value={[isMuted ? 0 : volume * 100]}
               onValueChange={handleVolumeChange}
               max={100}
               step={1}
-              className="w-16"
+              className="w-12 sm:w-16"
             />
           </div>
         </div>
 
         {/* Track List */}
         {tracks.length > 1 && (
-          <div className="mt-4 max-h-32 overflow-y-auto">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Playlist ({tracks.length} tracks)</h4>
+          <div className="mt-3 sm:mt-4 max-h-24 sm:max-h-32 overflow-y-auto">
+            <h4 className="text-xs sm:text-sm font-medium text-gray-700 mb-2">Playlist ({tracks.length} tracks)</h4>
             <div className="space-y-1">
               {tracks.map((track, index) => (
                 <button
@@ -418,14 +418,14 @@ export const MusicPlayer = ({ tracks, className = "" }: MusicPlayerProps) => {
                     setCurrentTrackIndex(index);
                     setIsPlaying(false);
                   }}
-                  className={`w-full text-left p-2 text-xs rounded transition-colors ${
+                  className={`w-full text-left p-1.5 sm:p-2 text-xs rounded transition-colors ${
                     index === currentTrackIndex
                       ? 'bg-primary/20 text-primary'
                       : 'hover:bg-white/20 text-gray-600'
                   }`}
                 >
-                  <div className="truncate">{track.title}</div>
-                  <div className="truncate text-gray-500">{track.artist}</div>
+                  <div className="truncate text-xs sm:text-sm">{track.title}</div>
+                  <div className="truncate text-gray-500 text-xs">{track.artist}</div>
                 </button>
               ))}
             </div>
