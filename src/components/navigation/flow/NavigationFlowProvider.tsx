@@ -78,14 +78,6 @@ export const NavigationFlowProvider: React.FC<{ children: React.ReactNode }> = (
         position: { x: 200, y: 250 }
       },
       {
-        id: 'music',
-        label: 'Music',
-        icon: 'Music',
-        href: '/?tab=music',
-        permission: 'access_sheet_music',
-        position: { x: 350, y: 250 }
-      },
-      {
         id: 'admin',
         label: 'Admin',
         icon: 'Settings',

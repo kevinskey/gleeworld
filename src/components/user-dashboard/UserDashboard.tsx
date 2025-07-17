@@ -549,34 +549,6 @@ export const UserDashboard = () => {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 
-                {/* Music Category */}
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-gray-900 flex items-center">
-                    <Music className="h-5 w-5 mr-2 text-blue-600" />
-                    Music
-                  </h3>
-                  <div className="space-y-2">
-                    <Button variant="ghost" className="w-full justify-start h-auto p-3">
-                      <Volume2 className="h-4 w-4 mr-2" />
-                      <div className="text-left">
-                        <div>Practice Resources</div>
-                        <div className="text-xs text-gray-500">Audio guides</div>
-                      </div>
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      className="w-full justify-start h-auto p-3"
-                      onClick={() => window.location.href = '/system?tab=music'}
-                    >
-                      <Mic className="h-4 w-4 mr-2" />
-                      <div className="text-left">
-                        <div>Music Library</div>
-                        <div className="text-xs text-gray-500">Tracks & Albums</div>
-                      </div>
-                    </Button>
-                  </div>
-                </div>
-
                 {/* Events Category */}
                 <div className="space-y-3">
                   <h3 className="font-semibold text-gray-900 flex items-center">
