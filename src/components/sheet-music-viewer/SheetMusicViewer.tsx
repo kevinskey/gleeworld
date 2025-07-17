@@ -50,29 +50,14 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
-  // Debug PDF loading with timeout
+  // Debug PDF loading - simplified
   useEffect(() => {
     console.log('🔧 PDF.js version:', pdfjs.version);
     console.log('🔧 PDF.js worker:', pdfjs.GlobalWorkerOptions.workerSrc);
     console.log('📄 PDF URL:', sheetMusic.pdf_url);
-    console.log('🚀 Starting PDF load process...');
     setIsLoading(true);
     setLoadError(null);
-
-    // Set a timeout to detect if loading gets stuck
-    const timeout = setTimeout(() => {
-      console.error('⏰ PDF loading timeout - forcing error');
-      setIsLoading(false);
-      setLoadError('PDF loading timed out after 30 seconds');
-      toast({
-        title: "Loading Timeout",
-        description: "PDF took too long to load. Try refreshing the page.",
-        variant: "destructive"
-      });
-    }, 30000); // 30 second timeout
-
-    return () => clearTimeout(timeout);
-  }, [sheetMusic.pdf_url, toast]);
+  }, [sheetMusic.pdf_url]);
 
   const handleZoomIn = useCallback(() => {
     setZoom(prev => Math.min(prev + 0.25, 3.0));
@@ -458,69 +443,41 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
             minHeight: '600px'
           }}
         >
-          {/* Try iframe fallback first, then react-pdf if iframe fails */}
-          <div className="w-full h-full">
-            <iframe
-              src={`${sheetMusic.pdf_url}#toolbar=1&navpanes=1&scrollbar=1`}
-              className="w-full h-full border-0 rounded-lg shadow-lg"
-              style={{ 
-                minHeight: '800px',
-                backgroundColor: 'white'
-              }}
-              title={sheetMusic.title}
-              onLoad={() => {
-                console.log('📄 PDF loaded successfully via iframe');
-                setIsLoading(false);
-                setLoadError(null);
-              }}
-              onError={() => {
-                console.error('💥 Iframe failed, trying react-pdf fallback');
-                setLoadError('Iframe failed - trying alternative method...');
-                // Don't set loading to false yet, let react-pdf try
-              }}
-            />
-          </div>
-          
-          {/* Hidden react-pdf as fallback - only show if iframe fails */}
-          <div className="hidden">
-            <div
-              style={{
-                transform: `rotate(${rotation}deg)`,
-                transformOrigin: 'center center',
-              }}
+          <div
+            style={{
+              transform: `rotate(${rotation}deg)`,
+              transformOrigin: 'center center',
+            }}
+          >
+            <Document
+              file={pdfFile}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={onDocumentLoadError}
+              onLoadProgress={onDocumentLoadProgress}
+              options={pdfOptions}
+              loading={
+                <div className="flex items-center justify-center p-8">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <p className="text-xs text-muted-foreground">Loading sheet music...</p>
+                  </div>
+                </div>
+              }
+              error={
+                <div className="text-center p-8 text-muted-foreground">
+                  <p className="text-lg font-medium mb-2 text-destructive">Could not load PDF</p>
+                  <p className="text-sm">Please try refreshing the page</p>
+                </div>
+              }
             >
-              <Document
-                file={pdfFile}
-                onLoadSuccess={onDocumentLoadSuccess}
-                onLoadError={onDocumentLoadError}
-                onLoadProgress={onDocumentLoadProgress}
-                options={pdfOptions}
-                loading={
-                  <div className="flex items-center justify-center p-8">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                      <p className="text-xs text-muted-foreground">Document loading...</p>
-                    </div>
-                  </div>
-                }
-                error={
-                  <div className="text-center p-8 text-muted-foreground">
-                    <p className="text-lg font-medium mb-2 text-destructive">Document Error</p>
-                    <p className="text-sm">Failed to initialize PDF document</p>
-                  </div>
-                }
-                onSourceSuccess={() => console.log('📄 PDF source loaded successfully')}
-                onSourceError={(error) => console.error('💥 PDF source error:', error)}
-              >
-                <Page
-                  pageNumber={currentPage}
-                  scale={zoom}
-                  renderTextLayer={false}
-                  renderAnnotationLayer={false}
-                  className="shadow-lg"
-                />
-              </Document>
-            </div>
+              <Page
+                pageNumber={currentPage}
+                scale={zoom}
+                renderTextLayer={false}
+                renderAnnotationLayer={false}
+                className="shadow-lg border border-border"
+              />
+            </Document>
           </div>
         </div>
       </div>
