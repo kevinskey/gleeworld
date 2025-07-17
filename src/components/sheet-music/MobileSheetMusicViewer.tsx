@@ -42,11 +42,7 @@ import { Badge } from '@/components/ui/badge';
 import { Database } from '@/integrations/supabase/types';
 
 // Set up PDF.js worker
-try {
-  pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
-} catch (error) {
-  console.warn('Failed to set PDF.js worker', error);
-}
+// Worker configuration will be set inside the component when needed
 
 type SheetMusic = Database['public']['Tables']['gw_sheet_music']['Row'];
 type AnnotationTool = 'pen' | 'highlighter' | 'text' | 'circle' | 'rectangle' | 'eraser';
