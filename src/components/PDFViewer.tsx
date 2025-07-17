@@ -14,14 +14,21 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Create a minimal worker to prevent PDF.js from trying to load from CDN
+// Create a proper PDF worker that handles PDF.js messages
 const workerCode = `
-  self.onmessage = function(e) {
-    // Minimal worker that just echoes back
-    self.postMessage({ messageId: e.data.messageId, data: null });
-  };
+  try {
+    // Import the actual PDF.js worker functionality
+    importScripts('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.3.31/pdf.worker.min.js');
+  } catch (error) {
+    console.warn('PDF Worker: Failed to load worker script');
+  }
 `;
-pdfjs.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([workerCode], { type: 'application/javascript' }));
+
+try {
+  pdfjs.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([workerCode], { type: 'application/javascript' }));
+} catch (error) {
+  console.warn('Failed to create PDF worker, processing will be slower');
+}
 
 // Import CSS for react-pdf
 import 'react-pdf/dist/Page/AnnotationLayer.css';

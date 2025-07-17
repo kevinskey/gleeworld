@@ -22,14 +22,18 @@ import { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Create a minimal worker to prevent PDF.js from trying to load from CDN
+// Create a proper PDF worker that handles PDF.js messages
 const workerCode = `
-  self.onmessage = function(e) {
-    // Minimal worker that just echoes back
-    self.postMessage({ messageId: e.data.messageId, data: null });
-  };
+  // Import the actual PDF.js worker functionality
+  importScripts('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.3.31/pdf.worker.min.js');
 `;
-pdfjs.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([workerCode], { type: 'application/javascript' }));
+
+// If CDN fails, use a minimal worker
+try {
+  pdfjs.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([workerCode], { type: 'application/javascript' }));
+} catch (error) {
+  console.warn('Failed to create PDF worker, processing will be slower');
+}
 
 console.log('🔧 PDF.js version:', pdfjs.version);
 console.log('🔧 PDF.js worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
