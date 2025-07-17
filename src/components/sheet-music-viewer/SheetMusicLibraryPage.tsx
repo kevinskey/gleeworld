@@ -40,6 +40,7 @@ export const SheetMusicLibraryPage: React.FC<SheetMusicLibraryPageProps> = ({
   onSelectSheetMusic
 }) => {
   const { sheetMusic, loading, error } = useSheetMusic();
+  console.log('SheetMusicLibraryPage - loaded sheet music count:', sheetMusic.length, 'loading:', loading, 'error:', error);
   const [filters, setFilters] = useState<Filters>({
     search: '',
     difficulty: '',

@@ -14,6 +14,7 @@ const SheetMusicPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleSelectSheetMusic = (sheetMusic: SheetMusic) => {
+    console.log('Sheet music selected:', sheetMusic.title, 'PDF URL:', sheetMusic.pdf_url);
     setSelectedSheetMusic(sheetMusic);
   };
 
@@ -26,6 +27,7 @@ const SheetMusicPage: React.FC = () => {
   };
 
   if (selectedSheetMusic) {
+    console.log('Rendering SheetMusicViewer for:', selectedSheetMusic.title);
     return (
       <SheetMusicViewer
         sheetMusic={selectedSheetMusic}
