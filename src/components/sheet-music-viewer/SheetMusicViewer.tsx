@@ -21,13 +21,11 @@ import { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Configure PDF.js worker - use stable version that matches pdfjs-dist
-const PDFJS_VERSION = '3.11.174';
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${PDFJS_VERSION}/build/pdf.worker.min.js`;
+// Configure PDF.js worker - use CDN version
+pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
 
-console.log('PDF.js version:', pdfjs.version);
-console.log('Fixed PDF.js version:', PDFJS_VERSION);
-console.log('PDF.js worker:', pdfjs.GlobalWorkerOptions.workerSrc);
+console.log('🔧 PDF.js version:', pdfjs.version);
+console.log('🔧 PDF.js worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
 
 type SheetMusic = Database['public']['Tables']['gw_sheet_music']['Row'];
 
@@ -104,17 +102,19 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
     });
   }, [toast, sheetMusic.pdf_url]);
 
-  // Memoize PDF options to prevent unnecessary reloads
+  const onDocumentLoadProgress = useCallback((progress: { loaded: number; total: number }) => {
+    console.log('📥 PDF loading progress:', Math.round((progress.loaded / progress.total) * 100) + '%');
+  }, []);
+
+  // Simplified PDF options to fix compatibility issues
   const pdfOptions = useMemo(() => ({
-    cMapUrl: `https://unpkg.com/pdfjs-dist@${PDFJS_VERSION}/cmaps/`,
+    cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
     cMapPacked: true,
-    standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${PDFJS_VERSION}/standard_fonts/`,
-    verbosity: 2, // Increase verbosity for debugging
-    disableWorker: false,
-    disableAutoFetch: false,
-    disableStream: false,
-    isEvalSupported: false,
-    maxImageSize: 1024 * 1024,
+    standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/standard_fonts/',
+    verbosity: 1, // Reduce verbosity
+    disableWorker: true, // Disable worker to avoid worker issues
+    disableAutoFetch: true,
+    disableStream: true,
   }), []);
 
   // Memoize file prop to prevent unnecessary reloads
@@ -410,6 +410,7 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
               file={pdfFile}
               onLoadSuccess={onDocumentLoadSuccess}
               onLoadError={onDocumentLoadError}
+              onLoadProgress={onDocumentLoadProgress}
               options={pdfOptions}
               loading={
                 <div className="flex items-center justify-center p-8">
