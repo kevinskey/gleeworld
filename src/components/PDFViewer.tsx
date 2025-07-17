@@ -14,8 +14,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Explicitly disable worker with data URL to prevent external loading
-pdfjs.GlobalWorkerOptions.workerSrc = 'data:application/javascript;base64,'; // Empty worker
+// Don't configure any worker - let PDF.js handle it internally
+// This should make it fall back to main thread processing
 
 // Import CSS for react-pdf
 import 'react-pdf/dist/Page/AnnotationLayer.css';

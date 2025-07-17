@@ -22,8 +22,8 @@ import { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Explicitly disable worker with data URL to prevent external loading
-pdfjs.GlobalWorkerOptions.workerSrc = 'data:application/javascript;base64,'; // Empty worker
+// Don't configure any worker - let PDF.js handle it internally
+// This should make it fall back to main thread processing
 
 console.log('🔧 PDF.js version:', pdfjs.version);
 console.log('🔧 PDF.js worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
@@ -130,7 +130,7 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
     cMapPacked: true,
     standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
     verbosity: 1, // Reduce verbosity
-    disableWorker: false, // Worker disabled globally
+    disableWorker: true, // Force main thread processing
     disableAutoFetch: false,
     disableStream: false,
   }), []);
