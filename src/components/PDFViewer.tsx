@@ -14,8 +14,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Use local worker file to avoid external CDN issues
-pdfjs.GlobalWorkerOptions.workerSrc = `/node_modules/pdfjs-dist/build/pdf.worker.min.js`;
+// Use static CDN path that should be more reliable
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.js`;
 
 // Import CSS for react-pdf
 import 'react-pdf/dist/Page/AnnotationLayer.css';

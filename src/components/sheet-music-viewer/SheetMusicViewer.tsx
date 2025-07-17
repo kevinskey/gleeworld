@@ -22,8 +22,8 @@ import { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Use local worker file to avoid external CDN issues
-pdfjs.GlobalWorkerOptions.workerSrc = `/node_modules/pdfjs-dist/build/pdf.worker.min.js`;
+// Use static CDN path that should be more reliable
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.js`;
 
 console.log('🔧 PDF.js version:', pdfjs.version);
 console.log('🔧 PDF.js worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
