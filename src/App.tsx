@@ -22,6 +22,7 @@ import W9FormPage from "./pages/W9FormPage";
 import NotFound from "./pages/NotFound";
 import Accounting from "./pages/Accounting";
 import UserDashboard from "./pages/UserDashboard";
+import { MemberViewDashboard } from "./components/member-view/MemberViewDashboard";
 import ContentCreator from "./pages/ContentCreator";
 import EventPlanner from "./pages/EventPlanner";
 import { Shop } from "./pages/Shop";
@@ -182,6 +183,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <UserDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard/member-view/:userId" 
+                element={
+                  <ProtectedRoute>
+                    <MemberViewDashboard />
                   </ProtectedRoute>
                 } 
               />
