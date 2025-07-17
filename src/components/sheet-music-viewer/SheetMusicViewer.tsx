@@ -23,6 +23,8 @@ import { cn } from '@/lib/utils';
 
 // Configure PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+console.log('PDF.js version:', pdfjs.version);
+console.log('PDF.js worker:', pdfjs.GlobalWorkerOptions.workerSrc);
 
 type SheetMusic = Database['public']['Tables']['gw_sheet_music']['Row'];
 
@@ -101,10 +103,28 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
     cMapPacked: true,
     standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
     verbosity: 1,
+    disableWorker: false,
+    disableAutoFetch: false,
+    disableStream: false,
   }), []);
 
   // Memoize file prop to prevent unnecessary reloads
-  const pdfFile = useMemo(() => ({ url: sheetMusic.pdf_url }), [sheetMusic.pdf_url]);
+  const pdfFile = useMemo(() => {
+    const url = sheetMusic.pdf_url;
+    console.log('Creating PDF file object for URL:', url);
+    
+    // Test URL accessibility
+    fetch(url, { method: 'HEAD' })
+      .then(response => {
+        console.log('PDF URL HEAD response:', response.status, response.statusText);
+        console.log('PDF URL headers:', Object.fromEntries(response.headers.entries()));
+      })
+      .catch(error => {
+        console.error('PDF URL accessibility test failed:', error);
+      });
+    
+    return { url };
+  }, [sheetMusic.pdf_url]);
 
 
   const handleDownload = useCallback(async () => {
