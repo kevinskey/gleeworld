@@ -14,8 +14,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Disable PDF.js worker entirely to avoid loading issues
-pdfjs.GlobalWorkerOptions.workerSrc = '';
+// Configure PDF.js worker with reliable CDN source
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 // Import CSS for react-pdf
 import 'react-pdf/dist/Page/AnnotationLayer.css';
