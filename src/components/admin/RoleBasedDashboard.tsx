@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +13,8 @@ import {
   Mail,
   FileText,
   Settings,
-  Zap
+  Zap,
+  Plus
 } from "lucide-react";
 import { 
   ROLE_DISPLAY_NAMES, 
@@ -21,6 +23,9 @@ import {
   ExecutiveBoardRole,
   EXEC_BOARD_MODULE_PERMISSIONS
 } from "@/constants/executiveBoardRoles";
+import { CreateEventDialog } from "@/components/calendar/CreateEventDialog";
+import { CreateBudgetDialog } from "@/components/admin/budget/CreateBudgetDialog";
+import { CreateEventWithBudgetDialog } from "@/components/admin/CreateEventWithBudgetDialog";
 
 interface RoleBasedDashboardProps {
   execBoardRole: ExecutiveBoardRole;
@@ -28,6 +33,21 @@ interface RoleBasedDashboardProps {
 }
 
 export const RoleBasedDashboard = ({ execBoardRole, onQuickAction }: RoleBasedDashboardProps) => {
+  const [showCreateEvent, setShowCreateEvent] = useState(false);
+  const [showCreateBudget, setShowCreateBudget] = useState(false);
+  const [showCreateEventWithBudget, setShowCreateEventWithBudget] = useState(false);
+
+  const handleQuickAction = (action: string) => {
+    if (action === 'create_event') {
+      setShowCreateEvent(true);
+    } else if (action === 'create_budget') {
+      setShowCreateBudget(true);
+    } else if (action === 'create_event_with_budget') {
+      setShowCreateEventWithBudget(true);
+    } else {
+      onQuickAction(action);
+    }
+  };
   const getRoleIcon = (role: string) => {
     const iconMap: Record<string, React.ReactNode> = {
       'president': <Crown className="h-6 w-6 text-purple-600" />,
@@ -104,7 +124,7 @@ export const RoleBasedDashboard = ({ execBoardRole, onQuickAction }: RoleBasedDa
                 key={index}
                 variant="outline"
                 className="h-auto p-4 flex flex-col items-start gap-2 text-left"
-                onClick={() => onQuickAction(action.action)}
+                onClick={() => handleQuickAction(action.action)}
               >
                 <div className="font-medium">{action.label}</div>
                 <div className="text-sm text-gray-500">{action.description}</div>
@@ -164,6 +184,28 @@ export const RoleBasedDashboard = ({ execBoardRole, onQuickAction }: RoleBasedDa
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialog Components */}
+      <CreateEventDialog 
+        onEventCreated={() => {
+          setShowCreateEvent(false);
+          onQuickAction('refresh');
+        }}
+      />
+      
+      <CreateBudgetDialog 
+        onSuccess={() => {
+          setShowCreateBudget(false);
+          onQuickAction('refresh');
+        }}
+      />
+      
+      <CreateEventWithBudgetDialog 
+        onSuccess={() => {
+          setShowCreateEventWithBudget(false);
+          onQuickAction('refresh');
+        }}
+      />
     </div>
   );
 };

@@ -172,41 +172,57 @@ export const ROLE_QUICK_ACTIONS: Record<ExecutiveBoardRole, Array<{
   description: string;
 }>> = {
   [EXECUTIVE_BOARD_ROLES.PRESIDENT]: [
+    { action: 'create_event', label: 'Create Event', description: 'Create new events' },
+    { action: 'create_budget', label: 'Create Budget', description: 'Create new budgets' },
+    { action: 'create_event_with_budget', label: 'Create Event with Budget', description: 'Create event and budget together' },
     { action: 'manage_permissions', label: 'Manage Permissions', description: 'Assign module access to members' },
     { action: 'system_overview', label: 'System Overview', description: 'View system health and metrics' },
     { action: 'send_announcements', label: 'Send Announcements', description: 'Communicate with all members' },
   ],
   [EXECUTIVE_BOARD_ROLES.VICE_PRESIDENT]: [
+    { action: 'create_event', label: 'Create Event', description: 'Create new events' },
     { action: 'create_budget', label: 'Create Budget', description: 'Set up new project budget' },
+    { action: 'create_event_with_budget', label: 'Create Event with Budget', description: 'Create event and budget together' },
     { action: 'schedule_event', label: 'Schedule Event', description: 'Plan upcoming events' },
     { action: 'send_notifications', label: 'Send Notifications', description: 'Notify members about updates' },
   ],
   [EXECUTIVE_BOARD_ROLES.TREASURER]: [
     { action: 'create_budget', label: 'Create Budget', description: 'Set up financial budgets' },
+    { action: 'create_event_with_budget', label: 'Create Event with Budget', description: 'Create event and budget together' },
     { action: 'track_payments', label: 'Track Payments', description: 'Monitor financial transactions' },
     { action: 'financial_reports', label: 'Financial Reports', description: 'Generate financial summaries' },
   ],
   [EXECUTIVE_BOARD_ROLES.SECRETARY]: [
+    { action: 'create_event', label: 'Create Event', description: 'Create new events' },
     { action: 'send_emails', label: 'Send Emails', description: 'Email club communications' },
     { action: 'create_contracts', label: 'Create Contracts', description: 'Draft member agreements' },
     { action: 'member_records', label: 'Member Records', description: 'Maintain member information' },
   ],
   [EXECUTIVE_BOARD_ROLES.MUSIC_DIRECTOR]: [
+    { action: 'create_event', label: 'Create Event', description: 'Create new events' },
     { action: 'schedule_rehearsal', label: 'Schedule Rehearsal', description: 'Plan practice sessions' },
   ],
   [EXECUTIVE_BOARD_ROLES.ASSISTANT_MUSIC_DIRECTOR]: [
+    { action: 'create_event', label: 'Create Event', description: 'Create new events' },
     { action: 'manage_sections', label: 'Manage Sections', description: 'Coordinate voice parts' },
   ],
   [EXECUTIVE_BOARD_ROLES.SOCIAL_CHAIR]: [
+    { action: 'create_event', label: 'Create Event', description: 'Create new events' },
+    { action: 'create_budget', label: 'Create Budget', description: 'Create new budgets' },
+    { action: 'create_event_with_budget', label: 'Create Event with Budget', description: 'Create event and budget together' },
     { action: 'plan_social_event', label: 'Plan Social Event', description: 'Organize member gatherings' },
     { action: 'send_invitations', label: 'Send Invitations', description: 'Invite members to events' },
   ],
   [EXECUTIVE_BOARD_ROLES.PUBLICITY_CHAIR]: [
+    { action: 'create_event', label: 'Create Event', description: 'Create new events' },
     { action: 'update_homepage', label: 'Update Homepage', description: 'Manage hero content' },
     { action: 'social_media', label: 'Social Media', description: 'Post announcements' },
     { action: 'promotional_content', label: 'Promotional Content', description: 'Create marketing materials' },
   ],
   [EXECUTIVE_BOARD_ROLES.EVENTS_COORDINATOR]: [
+    { action: 'create_event', label: 'Create Event', description: 'Create new events' },
+    { action: 'create_budget', label: 'Create Budget', description: 'Create new budgets' },
+    { action: 'create_event_with_budget', label: 'Create Event with Budget', description: 'Create event and budget together' },
     { action: 'schedule_event', label: 'Schedule Event', description: 'Plan and organize events' },
     { action: 'event_budget', label: 'Event Budget', description: 'Create event budgets' },
     { action: 'event_contracts', label: 'Event Contracts', description: 'Manage event agreements' },
@@ -223,14 +239,17 @@ export const ROLE_QUICK_ACTIONS: Record<ExecutiveBoardRole, Array<{
     { action: 'dashboard_config', label: 'Dashboard Config', description: 'Customize dashboard appearance' },
   ],
   [EXECUTIVE_BOARD_ROLES.FUNDRAISING_CHAIR]: [
+    { action: 'create_budget', label: 'Create Budget', description: 'Create new budgets' },
     { action: 'fundraising_budget', label: 'Fundraising Budget', description: 'Plan fundraising campaigns' },
     { action: 'donor_outreach', label: 'Donor Outreach', description: 'Contact potential donors' },
   ],
   [EXECUTIVE_BOARD_ROLES.ALUMNI_RELATIONS]: [
+    { action: 'create_event', label: 'Create Event', description: 'Create new events' },
     { action: 'alumni_outreach', label: 'Alumni Outreach', description: 'Connect with alumni' },
     { action: 'alumni_events', label: 'Alumni Events', description: 'Plan alumni gatherings' },
   ],
   [EXECUTIVE_BOARD_ROLES.MEMBERSHIP_CHAIR]: [
+    { action: 'create_event', label: 'Create Event', description: 'Create new events' },
     { action: 'member_recruitment', label: 'Member Recruitment', description: 'Recruit new members' },
     { action: 'member_onboarding', label: 'Member Onboarding', description: 'Welcome new members' },
   ],
