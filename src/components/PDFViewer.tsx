@@ -14,8 +14,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Explicitly disable worker to force main thread processing
-(pdfjs.GlobalWorkerOptions as any).workerSrc = false;
+// Remove worker configuration to avoid CORS issues with external CDNs
 
 // Import CSS for react-pdf
 import 'react-pdf/dist/Page/AnnotationLayer.css';

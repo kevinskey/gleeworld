@@ -17,8 +17,7 @@ import { Metronome } from "./audio-utilities/Metronome";
 import { PitchPipe } from "./audio-utilities/PitchPipe";
 import { Tuner } from "./audio-utilities/Tuner";
 
-// Explicitly disable worker to force main thread processing
-(pdfjs.GlobalWorkerOptions as any).workerSrc = false;
+// Remove worker configuration to avoid CORS issues with external CDNs
 
 // Import CSS for react-pdf
 import 'react-pdf/dist/Page/AnnotationLayer.css';

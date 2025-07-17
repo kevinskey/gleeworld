@@ -22,8 +22,7 @@ import { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Explicitly disable worker to force main thread processing
-(pdfjs.GlobalWorkerOptions as any).workerSrc = false;
+// Remove worker configuration to avoid CORS issues with external CDNs
 
 console.log('🔧 PDF.js version:', pdfjs.version);
 console.log('🔧 PDF.js worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
