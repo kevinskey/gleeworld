@@ -17,21 +17,8 @@ import { Metronome } from "./audio-utilities/Metronome";
 import { PitchPipe } from "./audio-utilities/PitchPipe";
 import { Tuner } from "./audio-utilities/Tuner";
 
-// Create a proper PDF worker that handles PDF.js messages
-const workerCode = `
-  try {
-    // Import the actual PDF.js worker functionality
-    importScripts('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.3.31/pdf.worker.min.js');
-  } catch (error) {
-    console.warn('PDF Worker: Failed to load worker script');
-  }
-`;
-
-try {
-  pdfjs.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([workerCode], { type: 'application/javascript' }));
-} catch (error) {
-  console.warn('Failed to create PDF worker, processing will be slower');
-}
+// Don't configure any worker - force main thread processing
+// This avoids all worker loading issues
 
 // Import CSS for react-pdf
 import 'react-pdf/dist/Page/AnnotationLayer.css';
