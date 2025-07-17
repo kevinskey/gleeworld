@@ -116,7 +116,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
             </div>
           )}
           
-          <Worker workerUrl="https://unpkg.com/pdfjs-dist@5.3.93/build/pdf.worker.js">
+          <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.js">
             <Viewer
               fileUrl={pdfUrl}
               plugins={[defaultLayoutPluginInstance]}
