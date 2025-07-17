@@ -94,30 +94,15 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
 
   // Memoize PDF options to prevent unnecessary reloads
   const pdfOptions = useMemo(() => ({
-    cMapUrl: 'https://unpkg.com/pdfjs-dist@5.3.31/cmaps/',
+    cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
     cMapPacked: true,
-    standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@5.3.31/standard_fonts/',
+    standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
     verbosity: 1,
   }), []);
 
-  // Add timeout handling
-  useEffect(() => {
-    if (isLoading) {
-      const timer = setTimeout(() => {
-        if (isLoading) {
-          console.log('PDF loading timeout - forcing error state');
-          setIsLoading(false);
-          toast({
-            title: "Loading timeout",
-            description: "PDF is taking too long to load. Try refreshing the page.",
-            variant: "destructive"
-          });
-        }
-      }, 15000); // 15 second timeout
+  // Memoize file prop to prevent unnecessary reloads
+  const pdfFile = useMemo(() => ({ url: sheetMusic.pdf_url }), [sheetMusic.pdf_url]);
 
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading, toast]);
 
   const handleDownload = useCallback(async () => {
     try {
@@ -379,7 +364,7 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
             }}
           >
             <Document
-              file={{ url: sheetMusic.pdf_url }}
+              file={pdfFile}
               onLoadSuccess={onDocumentLoadSuccess}
               onLoadError={onDocumentLoadError}
               options={pdfOptions}

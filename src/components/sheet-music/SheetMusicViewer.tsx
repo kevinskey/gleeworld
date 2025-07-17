@@ -116,11 +116,14 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
 
   // Memoize PDF options to prevent unnecessary reloads
   const pdfOptions = useMemo(() => ({
-    cMapUrl: 'https://unpkg.com/pdfjs-dist@5.3.31/cmaps/',
+    cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
     cMapPacked: true,
-    standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@5.3.31/standard_fonts/',
+    standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
     verbosity: 1,
   }), []);
+
+  // Memoize file prop to prevent unnecessary reloads
+  const pdfFile = useMemo(() => ({ url: sheetMusic.pdf_url }), [sheetMusic.pdf_url]);
 
   // PDF event handlers
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
@@ -501,7 +504,7 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
               </div>
             ) : (
               <Document
-                file={{ url: sheetMusic.pdf_url }}
+                file={pdfFile}
                 onLoadSuccess={onDocumentLoadSuccess}
                 onLoadError={onDocumentLoadError}
                 options={pdfOptions}
@@ -525,7 +528,7 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
                   className="shadow-lg"
                   renderTextLayer={false}
                   renderAnnotationLayer={false}
-                  width={Math.min(window.innerWidth - 100, 800)}
+                  width={window.innerWidth > 768 ? Math.min(window.innerWidth - 200, 1000) : window.innerWidth - 40}
                 />
               </Document>
             )}
