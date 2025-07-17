@@ -22,7 +22,8 @@ import { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Let PDF.js handle worker fallback automatically without explicit configuration
+// Explicitly disable worker to force main thread processing
+(pdfjs.GlobalWorkerOptions as any).workerSrc = false;
 
 console.log('🔧 PDF.js version:', pdfjs.version);
 console.log('🔧 PDF.js worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
@@ -125,11 +126,7 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
 
   // Simplified PDF options to fix compatibility issues
   const pdfOptions = useMemo(() => ({
-    cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
-    cMapPacked: true,
-    standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
-    verbosity: 1, // Reduce verbosity
-    disableWorker: true, // Force main thread processing
+    verbosity: 1,
     disableAutoFetch: false,
     disableStream: false,
   }), []);
