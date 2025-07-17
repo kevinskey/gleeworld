@@ -186,7 +186,7 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
                 </div>
               )}
               
-              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.js">
                 <Viewer
                   fileUrl={sheetMusic.pdf_url}
                   plugins={[defaultLayoutPluginInstance]}
