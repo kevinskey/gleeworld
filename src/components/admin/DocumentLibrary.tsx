@@ -76,7 +76,8 @@ export const DocumentLibrary = () => {
     { id: 'w9-forms', name: 'W9 Forms', icon: FileText, public: false, description: 'Tax forms' },
     { id: 'performer-documents', name: 'Performer Documents', icon: FileText, public: true, description: 'Performer related files' },
     { id: 'licenses', name: 'Licenses', icon: File, public: true, description: 'License documents' },
-    { id: 'template-headers', name: 'Template Headers', icon: Image, public: true, description: 'Template header images' }
+    { id: 'template-headers', name: 'Template Headers', icon: Image, public: true, description: 'Template header images' },
+    { id: 'brandimages', name: 'Brand Images', icon: Image, public: true, description: 'Brand and logo images' }
   ];
 
   const categories = [
