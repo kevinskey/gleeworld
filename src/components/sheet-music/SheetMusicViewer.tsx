@@ -54,6 +54,19 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
     setError(null);
   }, [sheetMusic.title]);
 
+  // Add timeout to prevent infinite loading
+  React.useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (isLoading) {
+        console.warn('⚠️ PDF loading timeout');
+        setIsLoading(false);
+        setError('PDF loading timeout. Please try again.');
+      }
+    }, 10000); // 10 second timeout
+
+    return () => clearTimeout(timeout);
+  }, [isLoading]);
+
   // Download handler
   const downloadPDF = useCallback(async () => {
     try {
