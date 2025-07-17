@@ -14,8 +14,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Configure PDF.js worker - use reliable unpkg CDN
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.js`;
+// Configure PDF.js to run without external worker
+pdfjs.GlobalWorkerOptions.workerSrc = `data:application/javascript;base64,${btoa('self.onmessage = function() { postMessage({}); };')}`;
 
 // Import CSS for react-pdf
 import 'react-pdf/dist/Page/AnnotationLayer.css';
