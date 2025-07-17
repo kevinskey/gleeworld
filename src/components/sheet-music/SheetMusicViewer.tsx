@@ -17,8 +17,8 @@ import { Metronome } from "./audio-utilities/Metronome";
 import { PitchPipe } from "./audio-utilities/PitchPipe";
 import { Tuner } from "./audio-utilities/Tuner";
 
-// Don't set a worker source to avoid loading issues
-// pdfjs.GlobalWorkerOptions.workerSrc = null;
+// Explicitly disable worker with data URL to prevent external loading
+pdfjs.GlobalWorkerOptions.workerSrc = 'data:application/javascript;base64,'; // Empty worker
 
 // Import CSS for react-pdf
 import 'react-pdf/dist/Page/AnnotationLayer.css';

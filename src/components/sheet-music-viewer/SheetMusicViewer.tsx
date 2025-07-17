@@ -22,8 +22,8 @@ import { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Don't set a worker source to avoid loading issues
-// pdfjs.GlobalWorkerOptions.workerSrc = null;
+// Explicitly disable worker with data URL to prevent external loading
+pdfjs.GlobalWorkerOptions.workerSrc = 'data:application/javascript;base64,'; // Empty worker
 
 console.log('🔧 PDF.js version:', pdfjs.version);
 console.log('🔧 PDF.js worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
