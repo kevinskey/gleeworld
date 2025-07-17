@@ -22,11 +22,8 @@ import { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Configure PDF.js worker - use version that matches the installed library
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.js',
-  import.meta.url
-).toString();
+// Configure PDF.js worker
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 console.log('🔧 PDF.js version:', pdfjs.version);
 console.log('🔧 PDF.js worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
