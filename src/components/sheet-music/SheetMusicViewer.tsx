@@ -17,17 +17,8 @@ import { Metronome } from "./audio-utilities/Metronome";
 import { PitchPipe } from "./audio-utilities/PitchPipe";
 import { Tuner } from "./audio-utilities/Tuner";
 
-// Configure PDF.js worker - use local worker or disable for compatibility
-try {
-  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-    'pdfjs-dist/build/pdf.worker.min.js',
-    import.meta.url
-  ).toString();
-} catch (error) {
-  // Fallback: set empty worker to disable worker processing
-  pdfjs.GlobalWorkerOptions.workerSrc = '';
-  console.log('PDF.js worker disabled due to import issues');
-}
+// Disable PDF.js worker entirely to avoid loading issues
+pdfjs.GlobalWorkerOptions.workerSrc = '';
 
 // Import CSS for react-pdf
 import 'react-pdf/dist/Page/AnnotationLayer.css';
