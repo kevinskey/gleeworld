@@ -23,7 +23,10 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 // Configure PDF.js worker - use version that matches the installed library
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.js',
+  import.meta.url
+).toString();
 
 console.log('🔧 PDF.js version:', pdfjs.version);
 console.log('🔧 PDF.js worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
