@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { Document, Page, pdfjs } from 'react-pdf';
 import { ArrowLeft, Download, Star, TrendingUp, Mic, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 import { Database } from "@/integrations/supabase/types";
 import { ScoreTracker } from "./ScoreTracker";
 import { RecordingManager } from "./RecordingManager";
@@ -15,6 +17,9 @@ import { Metronome } from "./audio-utilities/Metronome";
 import { PitchPipe } from "./audio-utilities/PitchPipe";
 import { Tuner } from "./audio-utilities/Tuner";
 
+// Set up PDF.js worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+
 type SheetMusic = Database['public']['Tables']['gw_sheet_music']['Row'];
 
 interface SheetMusicViewerProps {
@@ -23,12 +28,15 @@ interface SheetMusicViewerProps {
 }
 
 export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) => {
+  const { toast } = useToast();
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [showMobileViewer, setShowMobileViewer] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages] = useState(5); // Mock total pages - would come from PDF
+  const [totalPages, setTotalPages] = useState(0);
   const [activeAudioUtility, setActiveAudioUtility] = useState<string | null>(null);
   const [audioLoading, setAudioLoading] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(true);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const isMobile = useIsMobile();
 
@@ -104,6 +112,33 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
         setAudioLoading(false);
       }
     }
+  };
+
+  // Memoize PDF options to prevent unnecessary reloads
+  const pdfOptions = useMemo(() => ({
+    cMapUrl: 'https://unpkg.com/pdfjs-dist@5.3.31/cmaps/',
+    cMapPacked: true,
+    standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@5.3.31/standard_fonts/',
+    verbosity: 1,
+  }), []);
+
+  // PDF event handlers
+  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+    setTotalPages(numPages);
+    setPdfLoading(false);
+    setPdfError(null);
+    console.log('PDF loaded successfully with', numPages, 'pages');
+  };
+
+  const onDocumentLoadError = (error: Error) => {
+    console.error('Error loading PDF:', error);
+    setPdfLoading(false);
+    setPdfError('Failed to load PDF');
+    toast({
+      title: "PDF Loading Error",
+      description: "Could not load the PDF file",
+      variant: "destructive"
+    });
   };
 
   // Navigation handlers
@@ -454,23 +489,46 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
       </header>
 
       {/* Main PDF Viewer - Full Width */}
-      <main className="flex-1 bg-slate-50 dark:bg-slate-900">
+      <main className="flex-1 bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
         {sheetMusic.pdf_url ? (
-          <div className="w-full h-full min-h-[calc(100vh-180px)]">
-            <iframe
-              src={`${sheetMusic.pdf_url}#toolbar=0&navpanes=0&scrollbar=1&zoom=page-width&view=FitH`}
-              className="w-full h-full min-h-[600px]"
-              title={`${sheetMusic.title} - Sheet Music`}
-              style={{ border: 'none' }}
-              onLoad={() => {
-                console.log('PDF iframe loaded successfully:', sheetMusic.pdf_url);
-                console.log('Sheet music data:', sheetMusic);
-              }}
-              onError={(e) => {
-                console.error('PDF iframe error:', sheetMusic.pdf_url, e);
-                console.error('Error details:', e.currentTarget);
-              }}
-            />
+          <div className="w-full h-full min-h-[calc(100vh-180px)] flex items-center justify-center p-4">
+            {pdfError ? (
+              <div className="text-center">
+                <p className="text-red-600 mb-4">{pdfError}</p>
+                <Button onClick={() => window.location.reload()}>
+                  Retry Loading PDF
+                </Button>
+              </div>
+            ) : (
+              <Document
+                file={{ url: sheetMusic.pdf_url }}
+                onLoadSuccess={onDocumentLoadSuccess}
+                onLoadError={onDocumentLoadError}
+                options={pdfOptions}
+                loading={
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mb-4" />
+                    <p className="text-muted-foreground">Loading PDF...</p>
+                  </div>
+                }
+                error={
+                  <div className="text-center py-8">
+                    <p className="text-red-600 mb-4">Failed to load PDF</p>
+                    <Button onClick={() => window.location.reload()}>
+                      Retry
+                    </Button>
+                  </div>
+                }
+              >
+                <Page
+                  pageNumber={currentPage}
+                  className="shadow-lg"
+                  renderTextLayer={false}
+                  renderAnnotationLayer={false}
+                  width={Math.min(window.innerWidth - 100, 800)}
+                />
+              </Document>
+            )}
           </div>
         ) : (
           <div className="flex items-center justify-center h-full min-h-[calc(100vh-180px)]">
