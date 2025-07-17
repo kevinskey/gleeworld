@@ -17,8 +17,8 @@ import { Metronome } from "./audio-utilities/Metronome";
 import { PitchPipe } from "./audio-utilities/PitchPipe";
 import { Tuner } from "./audio-utilities/Tuner";
 
-// Configure PDF.js worker with reliable CDN source
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+// Configure PDF.js worker with jsDelivr CDN (more reliable)
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 // Import CSS for react-pdf
 import 'react-pdf/dist/Page/AnnotationLayer.css';
