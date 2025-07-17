@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, Download, Star, TrendingUp, Mic, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +28,8 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages] = useState(5); // Mock total pages - would come from PDF
   const [activeAudioUtility, setActiveAudioUtility] = useState<string | null>(null);
+  const [audioLoading, setAudioLoading] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const isMobile = useIsMobile();
 
   // Auto-open mobile viewer on mobile devices
@@ -36,6 +38,33 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
       setShowMobileViewer(true);
     }
   }, [isMobile]);
+
+  // Audio event handlers
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleLoadStart = () => setAudioLoading(true);
+    const handleCanPlay = () => setAudioLoading(false);
+    const handleEnded = () => setAudioPlaying(false);
+    const handleError = () => {
+      setAudioLoading(false);
+      setAudioPlaying(false);
+      console.error('Audio failed to load');
+    };
+
+    audio.addEventListener('loadstart', handleLoadStart);
+    audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
+
+    return () => {
+      audio.removeEventListener('loadstart', handleLoadStart);
+      audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
+    };
+  }, []);
 
   const handleDownload = async () => {
     if (sheetMusic.pdf_url) {
@@ -48,9 +77,33 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
     }
   };
 
-  const handleAudioToggle = () => {
-    setAudioPlaying(!audioPlaying);
-    // Audio playback logic would go here
+  const handleAudioToggle = async () => {
+    if (!audioRef.current || !sheetMusic.audio_preview_url) return;
+
+    if (audioPlaying) {
+      audioRef.current.pause();
+      setAudioPlaying(false);
+    } else {
+      try {
+        // For mobile compatibility, ensure audio is loaded
+        if (audioRef.current.readyState < 2) {
+          await new Promise((resolve) => {
+            const onLoadedData = () => {
+              audioRef.current?.removeEventListener('loadeddata', onLoadedData);
+              resolve(void 0);
+            };
+            audioRef.current?.addEventListener('loadeddata', onLoadedData);
+            audioRef.current?.load();
+          });
+        }
+        
+        await audioRef.current.play();
+        setAudioPlaying(true);
+      } catch (error) {
+        console.error('Error playing audio:', error);
+        setAudioLoading(false);
+      }
+    }
   };
 
   // Navigation handlers
@@ -137,6 +190,17 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
   if (isMobile) {
     return (
       <>
+        {/* Hidden audio element for mobile playback */}
+        {sheetMusic.audio_preview_url && (
+          <audio
+            ref={audioRef}
+            src={sheetMusic.audio_preview_url}
+            preload="metadata"
+            playsInline
+            crossOrigin="anonymous"
+          />
+        )}
+        
         <MobileSheetMusicViewer
           isOpen={showMobileViewer}
           onClose={() => setShowMobileViewer(false)}
@@ -213,16 +277,18 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
           <div className="grid grid-cols-1 gap-4 mb-6">
             <Card className="p-4">
               <div className="flex items-center gap-4">
-                {sheetMusic.audio_preview_url && (
-                  <Button variant="outline" onClick={handleAudioToggle} className="flex-1">
-                    {audioPlaying ? (
-                      <Pause className="h-4 w-4 mr-2" />
-                    ) : (
-                      <Play className="h-4 w-4 mr-2" />
-                    )}
-                    {audioPlaying ? 'Pause' : 'Play'} Preview
-                  </Button>
-                )}
+                 {sheetMusic.audio_preview_url && (
+                   <Button variant="outline" onClick={handleAudioToggle} className="flex-1" disabled={audioLoading}>
+                     {audioLoading ? (
+                       <div className="animate-spin h-4 w-4 mr-2 border-2 border-current border-t-transparent rounded-full" />
+                     ) : audioPlaying ? (
+                       <Pause className="h-4 w-4 mr-2" />
+                     ) : (
+                       <Play className="h-4 w-4 mr-2" />
+                     )}
+                     {audioLoading ? 'Loading...' : audioPlaying ? 'Pause' : 'Play'} Preview
+                   </Button>
+                 )}
                 
                 {sheetMusic.pdf_url && (
                   <Button onClick={handleDownload} className="flex-1">
@@ -262,6 +328,17 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {/* Hidden audio element for playback */}
+      {sheetMusic.audio_preview_url && (
+        <audio
+          ref={audioRef}
+          src={sheetMusic.audio_preview_url}
+          preload="metadata"
+          playsInline
+          crossOrigin="anonymous"
+        />
+      )}
+      
       {/* Persistent Header */}
       <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur border-b">
         <div className="flex items-center justify-between px-4 py-3">
@@ -301,14 +378,16 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
           {/* Right side - Actions */}
           <div className="flex items-center space-x-2">
             {sheetMusic.audio_preview_url && (
-              <Button variant="outline" size="sm" onClick={handleAudioToggle}>
-                {audioPlaying ? (
+              <Button variant="outline" size="sm" onClick={handleAudioToggle} disabled={audioLoading}>
+                {audioLoading ? (
+                  <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                ) : audioPlaying ? (
                   <Pause className="h-4 w-4" />
                 ) : (
                   <Play className="h-4 w-4" />
                 )}
                 <span className="hidden sm:inline ml-2">
-                  {audioPlaying ? 'Pause' : 'Play'}
+                  {audioLoading ? 'Loading...' : audioPlaying ? 'Pause' : 'Play'}
                 </span>
               </Button>
             )}
