@@ -29,7 +29,10 @@ import {
   Youtube,
   Shield,
   Mail,
-  Download
+  Download,
+  Crown,
+  Plus,
+  FileText
 } from "lucide-react";
 import { HeroManagement } from "@/components/admin/HeroManagement";
 import { DashboardSettings } from "@/components/admin/DashboardSettings";
@@ -457,6 +460,58 @@ export const UserDashboard = () => {
               </Card>
             )}
           </div>
+
+          {/* Executive Board Card */}
+          {hasExecBoardPerms && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Crown className="h-5 w-5 mr-2 text-amber-600" />
+                  Executive Board
+                  <Badge variant="outline" className="ml-2 text-xs border-amber-200 text-amber-700">
+                    Leadership
+                  </Badge>
+                </CardTitle>
+                <CardDescription>
+                  Executive board functions and event management
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <EnhancedTooltip content="Create a new event for the glee club">
+                    <Button 
+                      className="h-20 flex-col space-y-2 text-sm w-full" 
+                      variant="outline"
+                      onClick={() => navigate('/events/create')}
+                    >
+                      <Plus className="h-6 w-6" />
+                      <span className="text-center leading-tight">Create Event</span>
+                    </Button>
+                  </EnhancedTooltip>
+                  <EnhancedTooltip content="Create a budget for events and activities">
+                    <Button 
+                      className="h-20 flex-col space-y-2 text-sm w-full" 
+                      variant="outline"
+                      onClick={() => navigate('/budget/create')}
+                    >
+                      <DollarSign className="h-6 w-6" />
+                      <span className="text-center leading-tight">Create Budget</span>
+                    </Button>
+                  </EnhancedTooltip>
+                  <EnhancedTooltip content="Create an event with associated budget">
+                    <Button 
+                      className="h-20 flex-col space-y-2 text-sm w-full" 
+                      variant="outline"
+                      onClick={() => navigate('/events/create?withBudget=true')}
+                    >
+                      <FileText className="h-6 w-6" />
+                      <span className="text-center leading-tight">Event + Budget</span>
+                    </Button>
+                  </EnhancedTooltip>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Upcoming Events - Horizontal Carousel */}
