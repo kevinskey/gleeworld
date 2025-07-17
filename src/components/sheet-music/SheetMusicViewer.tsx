@@ -17,8 +17,8 @@ import { Metronome } from "./audio-utilities/Metronome";
 import { PitchPipe } from "./audio-utilities/PitchPipe";
 import { Tuner } from "./audio-utilities/Tuner";
 
-// Configure PDF.js to run without external worker
-pdfjs.GlobalWorkerOptions.workerSrc = `data:application/javascript;base64,${btoa('self.onmessage = function() { postMessage({}); };')}`;
+// Configure PDF.js worker with proper CDN
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 // Import CSS for react-pdf
 import 'react-pdf/dist/Page/AnnotationLayer.css';
