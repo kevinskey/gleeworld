@@ -14,8 +14,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Explicitly disable worker to force main thread processing
-pdfjs.GlobalWorkerOptions.workerSrc = undefined;
+// Let PDF.js handle worker fallback automatically without explicit configuration
 
 // Import CSS for react-pdf
 import 'react-pdf/dist/Page/AnnotationLayer.css';
