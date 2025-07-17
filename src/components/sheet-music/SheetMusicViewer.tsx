@@ -148,6 +148,13 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
     });
   };
 
+  // Debug PDF URL
+  useEffect(() => {
+    console.log('PDF URL:', sheetMusic.pdf_url);
+    console.log('PDF Loading state:', pdfLoading);
+    console.log('PDF Error state:', pdfError);
+  }, [sheetMusic.pdf_url, pdfLoading, pdfError]);
+
   // Navigation handlers
   const handleSongSelect = (songId: string) => {
     console.log('Song selected:', songId);
