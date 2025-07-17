@@ -15,7 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 
 // Explicitly disable worker to force main thread processing
-pdfjs.GlobalWorkerOptions.workerSrc = '';
+pdfjs.GlobalWorkerOptions.workerSrc = undefined;
 
 // Import CSS for react-pdf
 import 'react-pdf/dist/Page/AnnotationLayer.css';

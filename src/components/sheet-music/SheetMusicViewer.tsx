@@ -18,7 +18,7 @@ import { PitchPipe } from "./audio-utilities/PitchPipe";
 import { Tuner } from "./audio-utilities/Tuner";
 
 // Explicitly disable worker to force main thread processing
-pdfjs.GlobalWorkerOptions.workerSrc = '';
+pdfjs.GlobalWorkerOptions.workerSrc = undefined;
 
 // Import CSS for react-pdf
 import 'react-pdf/dist/Page/AnnotationLayer.css';
