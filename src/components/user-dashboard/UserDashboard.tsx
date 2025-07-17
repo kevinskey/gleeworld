@@ -54,6 +54,7 @@ import { useUserDashboard } from "@/hooks/useUserDashboard";
 import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
 import { useUserContracts } from "@/hooks/useUserContracts";
 import { useUsernamePermissions } from "@/hooks/useUsernamePermissions";
+import { useUsers } from "@/hooks/useUsers";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useState } from "react";
 import { format } from "date-fns";
@@ -70,6 +71,7 @@ export const UserDashboard = () => {
   const { events, loading: eventsLoading, getUpcomingEvents } = useGleeWorldEvents();
   const { contracts, loading: contractsLoading } = useUserContracts();
   const { permissions: usernamePermissions, loading: permissionsLoading } = useUsernamePermissions(user?.email);
+  const { users, loading: usersLoading } = useUsers();
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [isRecentActivityExpanded, setIsRecentActivityExpanded] = useState(false);
   
@@ -327,6 +329,58 @@ export const UserDashboard = () => {
                 </div>
               </div>
               <div className={`text-left sm:text-right ${welcomeCardSetting?.image_url ? 'text-white' : 'text-gray-900'}`}>
+                {profile?.role === 'super-admin' && (
+                  <div className="mb-3">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className={`${welcomeCardSetting?.image_url ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+                          disabled={usersLoading}
+                        >
+                          <Users className="h-4 w-4 mr-2" />
+                          {usersLoading ? 'Loading...' : 'Member Views'}
+                          <ChevronDown className="h-4 w-4 ml-2" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent 
+                        align="end" 
+                        className="w-64 bg-white border shadow-lg z-50 max-h-64 overflow-y-auto"
+                      >
+                        {users.length > 0 ? (
+                          users.map((user) => (
+                            <DropdownMenuItem 
+                              key={user.id} 
+                              onClick={() => navigate(`/dashboard/member-view/${user.id}`)}
+                              className="cursor-pointer"
+                            >
+                              <div className="flex items-center space-x-3 w-full">
+                                <Avatar className="h-6 w-6">
+                                  <AvatarFallback className="text-xs">
+                                    {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium text-sm truncate">
+                                    {user.full_name || user.email}
+                                  </div>
+                                  <div className="text-xs text-gray-500 truncate">
+                                    {user.role} {user.exec_board_role && `• ${user.exec_board_role}`}
+                                  </div>
+                                </div>
+                              </div>
+                            </DropdownMenuItem>
+                          ))
+                        ) : (
+                          <DropdownMenuItem disabled>
+                            No members found
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                )}
                 <p className={`text-xs sm:text-sm ${welcomeCardSetting?.image_url ? 'text-white/80' : 'text-gray-600'}`}>
                   Member since
                 </p>
