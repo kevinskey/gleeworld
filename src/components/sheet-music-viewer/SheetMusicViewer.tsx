@@ -21,10 +21,12 @@ import { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Configure PDF.js worker - use latest stable version
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+// Configure PDF.js worker - use stable version that matches pdfjs-dist
+const PDFJS_VERSION = '3.11.174';
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${PDFJS_VERSION}/build/pdf.worker.min.js`;
 
 console.log('PDF.js version:', pdfjs.version);
+console.log('Fixed PDF.js version:', PDFJS_VERSION);
 console.log('PDF.js worker:', pdfjs.GlobalWorkerOptions.workerSrc);
 
 type SheetMusic = Database['public']['Tables']['gw_sheet_music']['Row'];
@@ -104,9 +106,9 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
 
   // Memoize PDF options to prevent unnecessary reloads
   const pdfOptions = useMemo(() => ({
-    cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
+    cMapUrl: `https://unpkg.com/pdfjs-dist@${PDFJS_VERSION}/cmaps/`,
     cMapPacked: true,
-    standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/standard_fonts/',
+    standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${PDFJS_VERSION}/standard_fonts/`,
     verbosity: 2, // Increase verbosity for debugging
     disableWorker: false,
     disableAutoFetch: false,
