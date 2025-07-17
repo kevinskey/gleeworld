@@ -18,7 +18,8 @@ import {
   Menu,
   Music,
   Calendar,
-  Activity
+  Activity,
+  Crown
 } from "lucide-react";
 
 interface SystemNavigationProps {
@@ -32,7 +33,7 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
 
   const getTabClasses = (tabValue: string, isDropdown: boolean = false) => {
     const financialTabs = ['financial-overview', 'user-records', 'payment-tracking', 'stipends', 'budget', 'reports', 'payments', 'w9', 'financial', 'w9-forms'];
-    const systemTabs = ['dashboard', 'users', 'activity', 'settings'];
+    const systemTabs = ['dashboard', 'users', 'activity', 'settings', 'executive-board'];
     
     const isActive = activeTab === tabValue || 
       (isDropdown && tabValue === 'financial' && financialTabs.includes(activeTab)) ||
@@ -85,10 +86,10 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
               </Button>
               <Button
                 variant="ghost"
-                onClick={() => { onTabChange('exec-board'); setMobileOpen(false); }}
-                className={`w-full justify-start ${activeTab === 'exec-board' ? 'bg-primary text-primary-foreground' : ''}`}
+                onClick={() => { onTabChange('executive-board'); setMobileOpen(false); }}
+                className={`w-full justify-start ${activeTab === 'executive-board' ? 'bg-primary text-primary-foreground' : ''}`}
               >
-                <Shield className="h-4 w-4 mr-3" />
+                <Crown className="h-4 w-4 mr-3" />
                 Executive Board
               </Button>
               <Button
@@ -137,10 +138,10 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
 
       <Button
         variant="ghost"
-        onClick={() => onTabChange('exec-board')}
-        className={getTabClasses('exec-board')}
+        onClick={() => onTabChange('executive-board')}
+        className={getTabClasses('executive-board')}
       >
-        <Shield className="h-4 w-4" />
+        <Crown className="h-4 w-4" />
         <span className="hidden lg:inline">Exec Board</span>
       </Button>
 
@@ -222,6 +223,10 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
           <DropdownMenuItem onClick={() => onTabChange('users')}>
             <Users className="h-4 w-4 mr-3" />
             User Management
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onTabChange('executive-board')}>
+            <Crown className="h-4 w-4 mr-3" />
+            Executive Board
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onTabChange('activity')}>
             <Activity className="h-4 w-4 mr-3" />

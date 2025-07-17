@@ -3,13 +3,14 @@ import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SystemDashboard } from "@/components/admin/SystemDashboard";
 import { UserManagement } from "@/components/admin/UserManagement";
+import { ExecutiveBoardManager } from "@/components/admin/ExecutiveBoardManager";
 import { AccessibilitySettings } from "@/components/settings/AccessibilitySettings";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useUsers } from "@/hooks/useUsers";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { Shield, Settings, Users, Activity } from "lucide-react";
+import { Shield, Settings, Users, Activity, Crown } from "lucide-react";
 
 const System = () => {
   const { user } = useAuth();
@@ -35,6 +36,9 @@ const System = () => {
         break;
       case 'view-logs':
         setActiveTab('activity');
+        break;
+      case 'executive-board':
+        setActiveTab('executive-board');
         break;
       case 'system-settings':
       case 'add-user':
@@ -88,6 +92,27 @@ const System = () => {
               error={error} 
               onRefetch={refetch}
             />
+          )}
+
+          {activeTab === "executive-board" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Crown className="h-5 w-5" />
+                  Executive Board Management
+                </CardTitle>
+                <CardDescription>
+                  Assign executive board positions and manage permissions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ExecutiveBoardManager 
+                  users={users}
+                  loading={loading}
+                  onRefetch={refetch}
+                />
+              </CardContent>
+            </Card>
           )}
 
           {activeTab === "activity" && (
