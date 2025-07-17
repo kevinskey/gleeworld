@@ -48,7 +48,7 @@ import { UsernamePermissionsManager } from "@/components/admin/UsernamePermissio
 
 import { SetlistManager } from "@/components/setlists/SetlistManager";
 import { useAuth } from "@/contexts/AuthContext";
-import { useProfile } from "@/hooks/useProfile";
+import { useMergedProfile } from "@/hooks/useMergedProfile";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
 import { useUserDashboard } from "@/hooks/useUserDashboard";
 import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
@@ -63,7 +63,7 @@ import { ChevronUp } from "lucide-react";
 
 export const UserDashboard = () => {
   const { user } = useAuth();
-  const { profile } = useProfile();
+  const { profile } = useMergedProfile(user);
   const navigate = useNavigate();
   const { getSettingByName } = useDashboardSettings();
   const { dashboardData, payments, notifications, loading: dashboardLoading } = useUserDashboard();
@@ -128,6 +128,9 @@ export const UserDashboard = () => {
 
   // Check if user has executive board permissions
   const hasExecBoardPerms = hasExecutiveBoardPermissions(userRole, undefined, usernamePermissions);
+  
+  // Check if user is an exec board member (assigned by super admin)
+  const isExecBoardMember = profile?.exec_board_role && profile.exec_board_role.trim() !== '';
 
   const availableModules = getAvailableModules();
 
@@ -469,7 +472,7 @@ export const UserDashboard = () => {
           </div>
 
           {/* Executive Board Card */}
-          {hasExecBoardPerms && (
+          {isExecBoardMember && (
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -485,34 +488,34 @@ export const UserDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <EnhancedTooltip content="Create a new event for the glee club">
+                  <EnhancedTooltip content="Create events, budgets, and other executive board items">
                     <Button 
                       className="h-20 flex-col space-y-2 text-sm w-full" 
                       variant="outline"
-                      onClick={() => navigate('/events/create')}
+                      onClick={() => navigate('/exec-board/create')}
                     >
                       <Plus className="h-6 w-6" />
-                      <span className="text-center leading-tight">Create Event</span>
+                      <span className="text-center leading-tight">Create</span>
                     </Button>
                   </EnhancedTooltip>
-                  <EnhancedTooltip content="Create a budget for events and activities">
+                  <EnhancedTooltip content="Manage ongoing events, budgets, and executive board activities">
                     <Button 
                       className="h-20 flex-col space-y-2 text-sm w-full" 
                       variant="outline"
-                      onClick={() => navigate('/budget/create')}
+                      onClick={() => navigate('/exec-board/manage')}
                     >
-                      <DollarSign className="h-6 w-6" />
-                      <span className="text-center leading-tight">Create Budget</span>
+                      <Settings className="h-6 w-6" />
+                      <span className="text-center leading-tight">Manage</span>
                     </Button>
                   </EnhancedTooltip>
-                  <EnhancedTooltip content="Create an event with associated budget">
+                  <EnhancedTooltip content="Assess performance, review reports, and analyze executive board metrics">
                     <Button 
                       className="h-20 flex-col space-y-2 text-sm w-full" 
                       variant="outline"
-                      onClick={() => navigate('/events/create?withBudget=true')}
+                      onClick={() => navigate('/exec-board/assess')}
                     >
                       <FileText className="h-6 w-6" />
-                      <span className="text-center leading-tight">Event + Budget</span>
+                      <span className="text-center leading-tight">Assess</span>
                     </Button>
                   </EnhancedTooltip>
                   <EnhancedTooltip content="View executive board members and access position pages">
