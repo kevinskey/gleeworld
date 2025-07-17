@@ -55,6 +55,7 @@ import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
 import { useUserContracts } from "@/hooks/useUserContracts";
 import { useUsernamePermissions } from "@/hooks/useUsernamePermissions";
 import { useUsers } from "@/hooks/useUsers";
+import { mockUsers } from "@/utils/mockUsers";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useState } from "react";
 import { format } from "date-fns";
@@ -337,10 +338,9 @@ export const UserDashboard = () => {
                           variant="outline" 
                           size="sm" 
                           className={`${welcomeCardSetting?.image_url ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
-                          disabled={usersLoading}
                         >
                           <Users className="h-4 w-4 mr-2" />
-                          {usersLoading ? 'Loading...' : 'Member Views'}
+                          Member Views
                           <ChevronDown className="h-4 w-4 ml-2" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -348,8 +348,8 @@ export const UserDashboard = () => {
                         align="end" 
                         className="w-64 bg-white border shadow-lg z-50 max-h-64 overflow-y-auto"
                       >
-                        {users.length > 0 ? (
-                          users.map((user) => (
+                        {mockUsers.length > 0 ? (
+                          mockUsers.map((user) => (
                             <DropdownMenuItem 
                               key={user.id} 
                               onClick={() => navigate(`/dashboard/member-view/${user.id}`)}
@@ -374,7 +374,7 @@ export const UserDashboard = () => {
                           ))
                         ) : (
                           <DropdownMenuItem disabled>
-                            No members found
+                            No test members available
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
