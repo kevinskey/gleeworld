@@ -49,12 +49,29 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
-  // Debug PDF loading
+  // Debug PDF loading with timeout
   useEffect(() => {
-    console.log('PDF.js version:', pdfjs.version);
-    console.log('PDF.js worker:', pdfjs.GlobalWorkerOptions.workerSrc);
-    console.log('PDF URL:', sheetMusic.pdf_url);
-  }, [sheetMusic.pdf_url]);
+    console.log('🔧 PDF.js version:', pdfjs.version);
+    console.log('🔧 PDF.js worker:', pdfjs.GlobalWorkerOptions.workerSrc);
+    console.log('📄 PDF URL:', sheetMusic.pdf_url);
+    console.log('🚀 Starting PDF load process...');
+    setIsLoading(true);
+    setLoadError(null);
+
+    // Set a timeout to detect if loading gets stuck
+    const timeout = setTimeout(() => {
+      console.error('⏰ PDF loading timeout - forcing error');
+      setIsLoading(false);
+      setLoadError('PDF loading timed out after 30 seconds');
+      toast({
+        title: "Loading Timeout",
+        description: "PDF took too long to load. Try refreshing the page.",
+        variant: "destructive"
+      });
+    }, 30000); // 30 second timeout
+
+    return () => clearTimeout(timeout);
+  }, [sheetMusic.pdf_url, toast]);
 
   const handleZoomIn = useCallback(() => {
     setZoom(prev => Math.min(prev + 0.25, 3.0));
@@ -431,14 +448,20 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
               options={pdfOptions}
               loading={
                 <div className="flex items-center justify-center p-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <p className="text-xs text-muted-foreground">Document loading...</p>
+                  </div>
                 </div>
               }
               error={
                 <div className="text-center p-8 text-muted-foreground">
-                  <p>Failed to load PDF</p>
+                  <p className="text-lg font-medium mb-2 text-destructive">Document Error</p>
+                  <p className="text-sm">Failed to initialize PDF document</p>
                 </div>
               }
+              onSourceSuccess={() => console.log('📄 PDF source loaded successfully')}
+              onSourceError={(error) => console.error('💥 PDF source error:', error)}
             >
               <Page
                 pageNumber={currentPage}
