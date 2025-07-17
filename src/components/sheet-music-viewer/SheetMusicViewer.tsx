@@ -22,8 +22,8 @@ import { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Don't configure any worker - force main thread processing
-// This avoids all worker loading issues
+// Explicitly disable worker to force main thread processing
+pdfjs.GlobalWorkerOptions.workerSrc = '';
 
 console.log('🔧 PDF.js version:', pdfjs.version);
 console.log('🔧 PDF.js worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
