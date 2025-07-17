@@ -434,43 +434,69 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
             minHeight: '600px'
           }}
         >
-          <div
-            style={{
-              transform: `rotate(${rotation}deg)`,
-              transformOrigin: 'center center',
-            }}
-          >
-            <Document
-              file={pdfFile}
-              onLoadSuccess={onDocumentLoadSuccess}
-              onLoadError={onDocumentLoadError}
-              onLoadProgress={onDocumentLoadProgress}
-              options={pdfOptions}
-              loading={
-                <div className="flex items-center justify-center p-8">
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    <p className="text-xs text-muted-foreground">Document loading...</p>
-                  </div>
-                </div>
-              }
-              error={
-                <div className="text-center p-8 text-muted-foreground">
-                  <p className="text-lg font-medium mb-2 text-destructive">Document Error</p>
-                  <p className="text-sm">Failed to initialize PDF document</p>
-                </div>
-              }
-              onSourceSuccess={() => console.log('📄 PDF source loaded successfully')}
-              onSourceError={(error) => console.error('💥 PDF source error:', error)}
+          {/* Try iframe fallback first, then react-pdf if iframe fails */}
+          <div className="w-full h-full">
+            <iframe
+              src={`${sheetMusic.pdf_url}#toolbar=1&navpanes=1&scrollbar=1`}
+              className="w-full h-full border-0 rounded-lg shadow-lg"
+              style={{ 
+                minHeight: '800px',
+                backgroundColor: 'white'
+              }}
+              title={sheetMusic.title}
+              onLoad={() => {
+                console.log('📄 PDF loaded successfully via iframe');
+                setIsLoading(false);
+                setLoadError(null);
+              }}
+              onError={() => {
+                console.error('💥 Iframe failed, trying react-pdf fallback');
+                setLoadError('Iframe failed - trying alternative method...');
+                // Don't set loading to false yet, let react-pdf try
+              }}
+            />
+          </div>
+          
+          {/* Hidden react-pdf as fallback - only show if iframe fails */}
+          <div className="hidden">
+            <div
+              style={{
+                transform: `rotate(${rotation}deg)`,
+                transformOrigin: 'center center',
+              }}
             >
-              <Page
-                pageNumber={currentPage}
-                scale={zoom}
-                renderTextLayer={false}
-                renderAnnotationLayer={false}
-                className="shadow-lg"
-              />
-            </Document>
+              <Document
+                file={pdfFile}
+                onLoadSuccess={onDocumentLoadSuccess}
+                onLoadError={onDocumentLoadError}
+                onLoadProgress={onDocumentLoadProgress}
+                options={pdfOptions}
+                loading={
+                  <div className="flex items-center justify-center p-8">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                      <p className="text-xs text-muted-foreground">Document loading...</p>
+                    </div>
+                  </div>
+                }
+                error={
+                  <div className="text-center p-8 text-muted-foreground">
+                    <p className="text-lg font-medium mb-2 text-destructive">Document Error</p>
+                    <p className="text-sm">Failed to initialize PDF document</p>
+                  </div>
+                }
+                onSourceSuccess={() => console.log('📄 PDF source loaded successfully')}
+                onSourceError={(error) => console.error('💥 PDF source error:', error)}
+              >
+                <Page
+                  pageNumber={currentPage}
+                  scale={zoom}
+                  renderTextLayer={false}
+                  renderAnnotationLayer={false}
+                  className="shadow-lg"
+                />
+              </Document>
+            </div>
           </div>
         </div>
       </div>
