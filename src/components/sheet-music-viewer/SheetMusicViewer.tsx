@@ -22,8 +22,8 @@ import { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Use static CDN path that should be more reliable
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.js`;
+// Don't set a worker source to avoid loading issues
+// pdfjs.GlobalWorkerOptions.workerSrc = null;
 
 console.log('🔧 PDF.js version:', pdfjs.version);
 console.log('🔧 PDF.js worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
@@ -130,7 +130,7 @@ export const SheetMusicViewer: React.FC<SheetMusicViewerProps> = ({
     cMapPacked: true,
     standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
     verbosity: 1, // Reduce verbosity
-    disableWorker: false, // Re-enable worker now that versions match
+    disableWorker: false, // Worker disabled globally
     disableAutoFetch: false,
     disableStream: false,
   }), []);

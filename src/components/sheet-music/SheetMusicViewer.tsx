@@ -17,8 +17,8 @@ import { Metronome } from "./audio-utilities/Metronome";
 import { PitchPipe } from "./audio-utilities/PitchPipe";
 import { Tuner } from "./audio-utilities/Tuner";
 
-// Use static CDN path that should be more reliable
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.js`;
+// Don't set a worker source to avoid loading issues
+// pdfjs.GlobalWorkerOptions.workerSrc = null;
 
 // Import CSS for react-pdf
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -518,7 +518,12 @@ export const SheetMusicViewer = ({ sheetMusic, onBack }: SheetMusicViewerProps) 
                 file={pdfFile}
                 onLoadSuccess={onDocumentLoadSuccess}
                 onLoadError={onDocumentLoadError}
-                options={pdfOptions}
+                options={{
+                  cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+                  cMapPacked: true,
+                  standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
+                  verbosity: 1
+                }}
                 loading={
                   <div className="flex flex-col items-center justify-center py-8">
                     <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mb-4" />

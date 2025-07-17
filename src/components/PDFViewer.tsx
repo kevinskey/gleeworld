@@ -14,8 +14,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Use static CDN path that should be more reliable
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.js`;
+// Don't set a worker source to avoid loading issues
+// pdfjs.GlobalWorkerOptions.workerSrc = null;
 
 // Import CSS for react-pdf
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -254,6 +254,12 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
               file={pdfUrl}
               onLoadSuccess={onDocumentLoadSuccess}
               onLoadError={onDocumentLoadError}
+              options={{
+                cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+                cMapPacked: true,
+                standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
+                verbosity: 1
+              }}
               className="flex justify-center"
               loading={
                 <div className="flex items-center justify-center p-8">
