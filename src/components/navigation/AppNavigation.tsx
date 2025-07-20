@@ -98,8 +98,8 @@ export const AppNavigation = () => {
           to={item.href}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
             isActive(item.href)
-              ? "bg-white/20 text-white"
-              : "text-white/80 hover:text-white hover:bg-white/10"
+              ? "bg-primary/20 text-primary border border-primary/30 shadow-sm"
+              : "text-primary/90 hover:text-primary hover:bg-primary/10 border border-transparent"
           }`}
         >
           <item.icon className="h-4 w-4" />
@@ -151,7 +151,7 @@ export const AppNavigation = () => {
             <Button 
               variant="ghost" 
               size="sm" 
-              className="text-white hover:bg-white/10 p-2 min-h-[40px] min-w-[40px] touch-manipulation"
+              className="text-primary hover:bg-primary/10 border border-primary/30 p-2 min-h-[40px] min-w-[40px] touch-manipulation"
             >
               <Menu className="h-5 w-5" />
               <span className="sr-only">Open navigation menu</span>

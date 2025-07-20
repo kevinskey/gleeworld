@@ -85,12 +85,12 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
   };
 
   return (
-    <header className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
+    <header className="glass-nav sticky top-0 z-50">
       <div className="container mx-auto px-1 sm:px-4">
         <div className="flex items-center justify-between h-12 sm:h-14 md:h-16">
           {/* Logo */}
           <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
-            <h1 className="text-2xl sm:text-2xl md:text-xl lg:text-2xl font-bold text-white truncate">
+            <h1 className="text-2xl sm:text-2xl md:text-xl lg:text-2xl font-bold text-primary truncate">
               Contract Manager
             </h1>
           </div>
@@ -99,17 +99,17 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
           <nav className="hidden lg:flex items-center space-x-1">
             {/* Regular navigation items when on user dashboard */}
             {isOnUserDashboard && navigationItems.map((item) => (
-              <Button
-                key={item.id}
-                variant="ghost"
-                onClick={() => onTabChange(item.id)}
-                className={`text-white hover:bg-white/20 ${
-                  activeTab === item.id ? 'bg-white/20' : ''
-                }`}
-              >
-                <item.icon className="h-4 w-4 mr-2" />
-                {item.label}
-              </Button>
+                <Button
+                  key={item.id}
+                  variant="ghost"
+                  onClick={() => onTabChange(item.id)}
+                  className={`text-primary hover:bg-primary/10 border transition-colors ${
+                    activeTab === item.id ? 'bg-primary/20 border-primary/30' : 'border-transparent'
+                  }`}
+                >
+                  <item.icon className="h-4 w-4 mr-2" />
+                  {item.label}
+                </Button>
             ))}
 
             {/* Dashboard Toggle for Admins */}
@@ -120,7 +120,7 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
                   <Button
                     variant="ghost"
                     onClick={() => navigate('/system')}
-                    className="text-white hover:bg-white/20 bg-blue-500/30"
+                    className="text-primary hover:bg-secondary/20 bg-secondary/10 border border-secondary/30"
                   >
                     <UserCog className="h-4 w-4 mr-2" />
                     Admin Panel
@@ -129,7 +129,7 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
                   <Button
                     variant="ghost"
                     onClick={() => navigate('/dashboard')}
-                    className="text-white hover:bg-white/20 bg-green-500/30"
+                    className="text-primary hover:bg-accent/20 bg-accent/10 border border-accent/30"
                   >
                     <User className="h-4 w-4 mr-2" />
                     My Dashboard
@@ -142,17 +142,17 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
             {isAdmin && !isOnUserDashboard && (
               <>
                 {adminItems.map((item) => (
-                  <Button
-                    key={item.id}
-                    variant="ghost"
-                    onClick={() => navigate(item.route)}
-                    className={`text-white hover:bg-white/20 ${
-                      location.pathname === item.route ? 'bg-white/20' : ''
-                    }`}
-                  >
-                    <item.icon className="h-4 w-4 mr-2" />
-                    {item.label}
-                  </Button>
+                    <Button
+                      key={item.id}
+                      variant="ghost"
+                      onClick={() => navigate(item.route)}
+                      className={`text-primary hover:bg-primary/10 border transition-colors ${
+                        location.pathname === item.route ? 'bg-primary/20 border-primary/30' : 'border-transparent'
+                      }`}
+                    >
+                      <item.icon className="h-4 w-4 mr-2" />
+                      {item.label}
+                    </Button>
                 ))}
               </>
             )}
@@ -167,7 +167,7 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-white hover:bg-white/20 h-8 w-8 sm:h-10 sm:w-10"
+                    className="text-primary hover:bg-primary/10 border border-primary/30 h-8 w-8 sm:h-10 sm:w-10"
                   >
                     <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
                   </Button>
