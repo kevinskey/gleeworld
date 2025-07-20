@@ -270,7 +270,8 @@ export const SheetMusicLibrary = ({
                 <PDFThumbnail
                   pdfUrl={item.pdf_url}
                   alt={`${item.title} thumbnail`}
-                  className="w-full h-full object-cover"
+                  title={item.title}
+                  className="w-full h-full"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
@@ -354,7 +355,8 @@ export const SheetMusicLibrary = ({
                   <PDFThumbnail
                     pdfUrl={item.pdf_url}
                     alt={`${item.title} thumbnail`}
-                    className="w-full h-full object-cover"
+                    title={item.title}
+                    className="w-full h-full"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
