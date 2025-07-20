@@ -59,17 +59,6 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
             </EnhancedTooltip>
             
 
-            {/* Dashboard Icon - Shows appropriate dashboard based on user role */}
-            {user && profile?.role && (
-              <EnhancedTooltip content={`Go to ${profile.role === 'admin' || profile.role === 'super-admin' ? 'Admin' : 'User'} Dashboard`}>
-                <Link
-                  to={profile.role === 'admin' || profile.role === 'super-admin' ? '/system' : '/dashboard'}
-                  className="text-gray-700 hover:text-gray-900 transition-colors flex items-center p-2 rounded-lg hover:bg-gray-100"
-                >
-                  <LayoutDashboard className="h-4 w-4 sm:h-5 sm:w-5" />
-                </Link>
-              </EnhancedTooltip>
-            )}
             
             {/* Desktop Navigation */}
             {user && !isMobile && (
