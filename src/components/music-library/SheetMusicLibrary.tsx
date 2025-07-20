@@ -21,6 +21,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { SheetMusicEditDialog } from "./SheetMusicEditDialog";
 import { SheetMusicViewDialog } from "./SheetMusicViewDialog";
 import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
+import { PDFThumbnail } from "./PDFThumbnail";
 
 interface SheetMusic {
   id: string;
@@ -265,9 +266,9 @@ export const SheetMusicLibrary = ({
           <CardContent className="space-y-3">
             {/* Thumbnail */}
             <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
-              {item.thumbnail_url ? (
-                <img
-                  src={item.thumbnail_url}
+              {item.pdf_url ? (
+                <PDFThumbnail
+                  pdfUrl={item.pdf_url}
                   alt={`${item.title} thumbnail`}
                   className="w-full h-full object-cover"
                 />
@@ -349,9 +350,9 @@ export const SheetMusicLibrary = ({
             <div className="flex items-center gap-4">
               {/* Thumbnail */}
               <div className="w-16 h-20 bg-muted rounded overflow-hidden flex-shrink-0">
-                {item.thumbnail_url ? (
-                  <img
-                    src={item.thumbnail_url}
+                {item.pdf_url ? (
+                  <PDFThumbnail
+                    pdfUrl={item.pdf_url}
                     alt={`${item.title} thumbnail`}
                     className="w-full h-full object-cover"
                   />
