@@ -7,6 +7,8 @@ import { MonthlyCalendar } from "./MonthlyCalendar";
 import { EventsList } from "./EventsList";
 import { WeeklyCalendar } from "./WeeklyCalendar";
 import { CreateEventDialog } from "@/components/events/CreateEventDialog";
+import { AppointmentScheduler } from "@/components/appointments/AppointmentScheduler";
+import { AppointmentsList } from "@/components/appointments/AppointmentsList";
 
 import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
 import { useAuth } from "@/contexts/AuthContext";
@@ -45,7 +47,10 @@ export const CalendarViews = () => {
               <span className="hidden sm:inline">Glee World Calendar</span>
               <span className="sm:hidden">Calendar</span>
             </CardTitle>
-            {user && <CreateEventDialog onEventCreated={fetchEvents} />}
+            <div className="flex gap-2">
+              <AppointmentScheduler />
+              {user && <CreateEventDialog onEventCreated={fetchEvents} />}
+            </div>
           </div>
         </CardHeader>
       <CardContent className="p-3 md:p-6">
@@ -82,6 +87,9 @@ export const CalendarViews = () => {
         </Tabs>
       </CardContent>
     </Card>
+    
+    {/* Appointments Section - Only visible to admins, super-admins, and secretaries */}
+    {isAdmin && <AppointmentsList />}
     </div>
   );
 };
