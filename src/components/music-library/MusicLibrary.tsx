@@ -27,6 +27,7 @@ import {
 import { SheetMusicLibrary } from "./SheetMusicLibrary";
 import { AudioLibrary } from "./AudioLibrary";
 import { UploadDialog } from "./UploadDialog";
+import { PDFViewerDialog } from "./PDFViewerDialog";
 
 export const MusicLibrary = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,6 +37,7 @@ export const MusicLibrary = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [activeTab, setActiveTab] = useState("sheet-music");
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
 
   const categories = [
     { value: "all", label: "All Categories" },
@@ -89,14 +91,24 @@ export const MusicLibrary = () => {
                 </span>
               </div>
             </div>
-            <Button 
-              onClick={() => setUploadDialogOpen(true)} 
-              className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 text-base font-medium shadow-lg hover:shadow-xl transition-all duration-200"
-              size="lg"
-            >
-              <Plus className="h-5 w-5" />
-              Add Music
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button 
+                onClick={() => setPdfViewerOpen(true)} 
+                variant="outline"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium border-2 hover:bg-muted transition-all duration-200"
+              >
+                <FileText className="h-4 w-4" />
+                PDF Viewer
+              </Button>
+              <Button 
+                onClick={() => setUploadDialogOpen(true)} 
+                className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 text-base font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+                size="lg"
+              >
+                <Plus className="h-5 w-5" />
+                Add Music
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -230,6 +242,12 @@ export const MusicLibrary = () => {
         open={uploadDialogOpen}
         onOpenChange={setUploadDialogOpen}
         activeTab={activeTab}
+      />
+
+      {/* PDF Viewer Dialog */}
+      <PDFViewerDialog
+        open={pdfViewerOpen}
+        onOpenChange={setPdfViewerOpen}
       />
       </div>
     </div>
