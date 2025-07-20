@@ -23,9 +23,14 @@ interface Event {
   approval_needed: boolean;
   created_at: string;
   image_url?: string;
+  created_by: string;
 }
 
-export const EventsList = () => {
+interface EventsListProps {
+  filter?: 'all-events' | 'my-events' | 'my-budgets' | 'my-teams';
+}
+
+export const EventsList = ({ filter = 'all-events' }: EventsListProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [events, setEvents] = useState<Event[]>([]);
@@ -38,14 +43,51 @@ export const EventsList = () => {
 
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .order('created_at', { ascending: false });
+      let query = supabase.from('events').select('*');
+
+      // Apply filters based on the active tab
+      switch (filter) {
+        case 'my-events':
+          query = query.eq('created_by', user.id);
+          break;
+        case 'my-budgets':
+          // Events that have budgets and user has access to
+          query = query.or(`created_by.eq.${user.id},event_lead_id.eq.${user.id}`);
+          break;
+        case 'my-teams':
+          // Events where user is a team member
+          query = query.or(`created_by.eq.${user.id},event_lead_id.eq.${user.id}`);
+          break;
+        case 'all-events':
+        default:
+          // No additional filtering for all events
+          break;
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      setEvents(data || []);
+      // Additional filtering for team events (check event_team_members table)
+      if (filter === 'my-teams') {
+        const { data: teamData, error: teamError } = await supabase
+          .from('event_team_members')
+          .select('event_id')
+          .eq('user_id', user.id);
+
+        if (teamError) throw teamError;
+
+        const teamEventIds = teamData.map(tm => tm.event_id);
+        const filteredEvents = data?.filter(event => 
+          event.created_by === user.id || 
+          event.event_lead_id === user.id || 
+          teamEventIds.includes(event.id)
+        ) || [];
+        
+        setEvents(filteredEvents);
+      } else {
+        setEvents(data || []);
+      }
     } catch (err) {
       console.error('Error fetching events:', err);
       toast({
@@ -60,7 +102,7 @@ export const EventsList = () => {
 
   useEffect(() => {
     fetchEvents();
-  }, [user]);
+  }, [user, filter]);
 
   const getEventTypeDisplay = (type: string) => {
     return type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -108,13 +150,23 @@ export const EventsList = () => {
   }
 
   if (events.length === 0) {
+    const emptyMessages = {
+      'all-events': 'No events yet',
+      'my-events': 'You haven\'t created any events yet',
+      'my-budgets': 'You don\'t have any budget worksheets yet',
+      'my-teams': 'You\'re not part of any event teams yet'
+    };
+
     return (
       <Card>
         <CardContent className="py-12 text-center">
           <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-medium mb-2">No events yet</h3>
+          <h3 className="text-lg font-medium mb-2">{emptyMessages[filter]}</h3>
           <p className="text-muted-foreground mb-4">
-            Create your first event to start planning and budgeting.
+            {filter === 'all-events' && "Create your first event to start planning and budgeting."}
+            {filter === 'my-events' && "Create an event to get started with planning and budgeting."}
+            {filter === 'my-budgets' && "Events with budgets you manage will appear here."}
+            {filter === 'my-teams' && "Events where you're a team member will appear here."}
           </p>
         </CardContent>
       </Card>
@@ -204,14 +256,16 @@ export const EventsList = () => {
                   <Edit className="h-4 w-4 mr-1" />
                   Manage
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex-1"
-                >
-                  <DollarSign className="h-4 w-4 mr-1" />
-                  Budget
-                </Button>
+                {(filter === 'my-budgets' || filter === 'my-events') && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="flex-1"
+                  >
+                    <DollarSign className="h-4 w-4 mr-1" />
+                    Budget
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

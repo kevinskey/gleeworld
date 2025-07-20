@@ -1,10 +1,13 @@
+
 import { useState } from "react";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Users, DollarSign, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EventsList } from "@/components/events/EventsList";
+import { BudgetsList } from "@/components/events/BudgetsList";
+import { TeamsList } from "@/components/events/TeamsList";
 import { CreateEventDialog } from "@/components/events/CreateEventDialog";
 
 export default function EventPlanner() {
@@ -85,7 +88,7 @@ export default function EventPlanner() {
               <h2 className="text-xl font-semibold text-white">All Events</h2>
               <p className="text-white/60">View all events across the organization</p>
             </div>
-            <EventsList />
+            <EventsList filter="all-events" />
           </TabsContent>
 
           <TabsContent value="my-events" className="space-y-6">
@@ -93,7 +96,7 @@ export default function EventPlanner() {
               <h2 className="text-xl font-semibold text-white">My Events</h2>
               <p className="text-white/60">Events you've created or are managing</p>
             </div>
-            <EventsList />
+            <EventsList filter="my-events" />
           </TabsContent>
 
           <TabsContent value="my-budgets" className="space-y-6">
@@ -101,15 +104,7 @@ export default function EventPlanner() {
               <h2 className="text-xl font-semibold text-white">My Budgets</h2>
               <p className="text-white/60">Budget worksheets you're responsible for</p>
             </div>
-            <Card>
-              <CardContent className="py-12 text-center">
-                <DollarSign className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium mb-2">Budget Management</h3>
-                <p className="text-muted-foreground mb-4">
-                  View and manage budgets for events you're responsible for.
-                </p>
-              </CardContent>
-            </Card>
+            <BudgetsList />
           </TabsContent>
 
           <TabsContent value="my-teams" className="space-y-6">
@@ -117,15 +112,7 @@ export default function EventPlanner() {
               <h2 className="text-xl font-semibold text-white">My Teams</h2>
               <p className="text-white/60">Teams you're leading or collaborating with</p>
             </div>
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium mb-2">Team Collaboration</h3>
-                <p className="text-muted-foreground mb-4">
-                  Manage team members and assign roles for your events.
-                </p>
-              </CardContent>
-            </Card>
+            <TeamsList />
           </TabsContent>
         </Tabs>
       </div>
