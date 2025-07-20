@@ -90,6 +90,28 @@ export default {
 					800: 'hsl(219, 78%, 20%)',
 					900: 'hsl(219, 78%, 15%)',
 					950: 'hsl(219, 78%, 10%)'
+				},
+				// Event type colors
+				event: {
+					performance: 'hsl(var(--event-performance))',
+					'performance-fg': 'hsl(var(--event-performance-fg))',
+					rehearsal: 'hsl(var(--event-rehearsal))',
+					'rehearsal-fg': 'hsl(var(--event-rehearsal-fg))',
+					meeting: 'hsl(var(--event-meeting))',
+					'meeting-fg': 'hsl(var(--event-meeting-fg))',
+					general: 'hsl(var(--event-general))',
+					'general-fg': 'hsl(var(--event-general-fg))',
+				},
+				// Status colors
+				status: {
+					scheduled: 'hsl(var(--status-scheduled))',
+					'scheduled-fg': 'hsl(var(--status-scheduled-fg))',
+					confirmed: 'hsl(var(--status-confirmed))',
+					'confirmed-fg': 'hsl(var(--status-confirmed-fg))',
+					cancelled: 'hsl(var(--status-cancelled))',
+					'cancelled-fg': 'hsl(var(--status-cancelled-fg))',
+					completed: 'hsl(var(--status-completed))',
+					'completed-fg': 'hsl(var(--status-completed-fg))',
 				}
 			},
 			borderRadius: {

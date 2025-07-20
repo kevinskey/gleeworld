@@ -47,6 +47,26 @@
     /* Custom color tokens */
     --text-secondary: 0 0% 33%; /* #555555 */
     --hover-tint: 203 85% 94%; /* #D6F0FB */
+    
+    /* Event type colors - using design system */
+    --event-performance: 267 57% 83%; /* Light purple */
+    --event-performance-fg: 267 57% 30%; /* Dark purple */
+    --event-rehearsal: 203 85% 83%; /* Light blue */
+    --event-rehearsal-fg: 203 85% 30%; /* Dark blue */
+    --event-meeting: 34 100% 83%; /* Light orange */
+    --event-meeting-fg: 34 100% 30%; /* Dark orange */
+    --event-general: 210 20% 83%; /* Light gray */
+    --event-general-fg: 210 20% 30%; /* Dark gray */
+    
+    /* Status colors */
+    --status-scheduled: 203 85% 83%; /* Light blue */
+    --status-scheduled-fg: 203 85% 30%; /* Dark blue */
+    --status-confirmed: 142 76% 83%; /* Light green */
+    --status-confirmed-fg: 142 76% 30%; /* Dark green */
+    --status-cancelled: 0 84% 83%; /* Light red */
+    --status-cancelled-fg: 0 84% 30%; /* Dark red */
+    --status-completed: 210 20% 83%; /* Light gray */
+    --status-completed-fg: 210 20% 30%; /* Dark gray */
   }
 
   .light {

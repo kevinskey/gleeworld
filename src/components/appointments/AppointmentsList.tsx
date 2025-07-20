@@ -120,20 +120,20 @@ export const AppointmentsList = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'scheduled': return 'bg-blue-100 text-blue-800';
-      case 'confirmed': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'completed': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'scheduled': return 'bg-status-scheduled text-status-scheduled-fg';
+      case 'confirmed': return 'bg-status-confirmed text-status-confirmed-fg';
+      case 'cancelled': return 'bg-status-cancelled text-status-cancelled-fg';
+      case 'completed': return 'bg-status-completed text-status-completed-fg';
+      default: return 'bg-status-scheduled text-status-scheduled-fg';
     }
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'meeting': return 'bg-purple-100 text-purple-800';
-      case 'consultation': return 'bg-orange-100 text-orange-800';
-      case 'rehearsal': return 'bg-pink-100 text-pink-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'meeting': return 'bg-event-meeting text-event-meeting-fg';
+      case 'consultation': return 'bg-event-meeting text-event-meeting-fg';
+      case 'rehearsal': return 'bg-event-rehearsal text-event-rehearsal-fg';
+      default: return 'bg-event-general text-event-general-fg';
     }
   };
 

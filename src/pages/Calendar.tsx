@@ -10,14 +10,14 @@ const Calendar = () => {
     <UniversalLayout showHeader={true} showFooter={false}>
       <div className="container mx-auto py-4 md:py-8 space-y-4 md:space-y-8 px-4">
         <div className="text-center">
-          <h1 className="text-2xl md:text-4xl font-bold mb-4 md:mb-6 text-white">Glee World Calendar</h1>
+          <h1 className="text-2xl md:text-4xl font-bold mb-4 md:mb-6 text-foreground">Glee World Calendar</h1>
           {!user && (
-            <p className="text-sm md:text-base text-gray-300 mb-4">
+            <p className="text-sm md:text-base text-muted-foreground mb-4">
               Public events are shown below. Sign in to see all events and create your own.
             </p>
           )}
           {user && (
-            <p className="text-sm md:text-base text-gray-300 mb-4">
+            <p className="text-sm md:text-base text-muted-foreground mb-4">
               Welcome back! You're seeing all events including private ones.
             </p>
           )}

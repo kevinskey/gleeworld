@@ -9,6 +9,7 @@ import { EventDetailDialog } from "./EventDetailDialog";
 import { EditEventDialog } from "./EditEventDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { EventHoverCard } from "./EventHoverCard";
+import { getEventTypeColor, getStatusColor } from "@/utils/colorUtils";
 
 interface EventsListProps {
   events: GleeWorldEvent[];
@@ -20,26 +21,7 @@ export const EventsList = ({ events, onEventUpdated }: EventsListProps) => {
   const [selectedEvent, setSelectedEvent] = useState<GleeWorldEvent | null>(null);
   const [editingEvent, setEditingEvent] = useState<GleeWorldEvent | null>(null);
 
-  const getEventTypeColor = (type: string | null) => {
-    switch (type) {
-      case 'performance':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
-      case 'rehearsal':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      case 'sectionals':
-        return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300';
-      case 'meeting':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'social':
-        return 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300';
-      case 'workshop':
-        return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
-      case 'audition':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
-    }
-  };
+  // Using centralized color utilities now
 
   const handleEventClick = (event: GleeWorldEvent) => {
     const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
@@ -106,13 +88,7 @@ export const EventsList = ({ events, onEventUpdated }: EventsListProps) => {
                       
                       {event.status && event.status !== 'scheduled' && (
                         <Badge 
-                          variant="secondary"
-                          className={`text-xs ${
-                            event.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                            event.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                            event.status === 'postponed' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}
+                          className={`${getStatusColor(event.status)} text-xs`}
                         >
                           {event.status}
                         </Badge>
@@ -180,11 +156,11 @@ export const EventsList = ({ events, onEventUpdated }: EventsListProps) => {
                           <span>Max {event.max_attendees}</span>
                         </div>
                       )}
-                      {event.registration_required && (
-                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                          Registration Required
-                        </Badge>
-                      )}
+                       {event.registration_required && (
+                         <Badge variant="outline" className="text-xs bg-event-rehearsal text-event-rehearsal-fg border-current">
+                           Registration Required
+                         </Badge>
+                       )}
                     </div>
                   )}
                 </div>
