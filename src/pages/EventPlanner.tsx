@@ -13,11 +13,51 @@ export default function EventPlanner() {
   return (
     <UniversalLayout>
       <div className="container mx-auto p-6 max-w-7xl">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2 text-white">Event Budget Planner</h1>
-          <p className="text-white/70">
-            Plan events, manage budgets, and track expenses for student functions
-          </p>
+        {/* Hero Header Section */}
+        <div className="relative mb-8 rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-accent/20 p-8 backdrop-blur-sm border border-white/10">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/20 backdrop-blur-sm">
+                  <Calendar className="h-6 w-6 text-primary" />
+                </div>
+                <h1 className="text-3xl lg:text-4xl font-bold text-white">
+                  Event Budget Planner
+                </h1>
+              </div>
+              <p className="text-lg text-white/80 max-w-2xl">
+                Streamline your event planning with comprehensive budget management, 
+                team coordination, and expense tracking for all student functions.
+              </p>
+              <div className="flex flex-wrap gap-4 text-sm text-white/60">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  <span>Budget Tracking</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  <span>Team Management</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>Event Scheduling</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Quick Actions */}
+            <div className="flex flex-col sm:flex-row gap-3 lg:flex-col lg:gap-3">
+              <CreateEventDialog />
+              <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                <Plus className="h-4 w-4 mr-2" />
+                Quick Budget
+              </Button>
+            </div>
+          </div>
+          
+          {/* Decorative elements */}
+          <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-accent/30 to-primary/30 rounded-full blur-xl opacity-60" />
+          <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-gradient-to-tr from-primary/20 to-accent/20 rounded-full blur-xl opacity-40" />
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
