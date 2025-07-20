@@ -39,21 +39,21 @@ export const CalendarViews = () => {
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader className="pb-1">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-              <CalendarIcon className="h-4 w-4 md:h-5 md:w-5" />
-              <span className="hidden sm:inline">Glee World Calendar</span>
-              <span className="sm:hidden">Calendar</span>
-            </CardTitle>
-            <div className="flex gap-2">
-              <AppointmentScheduler />
-              {user && <CreateEventDialog onEventCreated={fetchEvents} />}
-            </div>
+    <Card>
+      <CardHeader className="pb-0 pt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <CalendarIcon className="h-4 w-4 md:h-5 md:w-5" />
+            <span className="hidden sm:inline">Glee World Calendar</span>
+            <span className="sm:hidden">Calendar</span>
+          </CardTitle>
+          <div className="flex gap-2 mt-1 sm:mt-0">
+            <AppointmentScheduler />
+            {user && <CreateEventDialog onEventCreated={fetchEvents} />}
           </div>
-        </CardHeader>
-      <CardContent className="p-2 md:p-4">
+        </div>
+      </CardHeader>
+    <CardContent className="p-2 md:p-4 pt-2">
         <Tabs value={activeView} onValueChange={setActiveView}>
           <TabsList className="grid w-full grid-cols-3 h-8 md:h-10">
             <TabsTrigger value="month" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2">
