@@ -21,6 +21,8 @@ export interface GleeWorldEvent {
   created_by: string | null;
   created_at: string | null;
   updated_at: string | null;
+  // Add source to differentiate between events and appointments
+  source?: 'event' | 'appointment';
 }
 
 export const useGleeWorldEvents = () => {
@@ -33,7 +35,8 @@ export const useGleeWorldEvents = () => {
     try {
       setLoading(true);
       
-      let query = supabase
+      // Fetch events from gw_events table
+      let eventsQuery = supabase
         .from('gw_events')
         .select('*')
         .gte('start_date', new Date().toISOString())
@@ -41,19 +44,63 @@ export const useGleeWorldEvents = () => {
 
       // If user is not authenticated, only show public events
       if (!user) {
-        query = query.eq('is_public', true);
+        eventsQuery = eventsQuery.eq('is_public', true);
       }
-      // If user is authenticated, show all events (no additional filter needed)
 
-      const { data, error } = await query;
+      // Fetch appointments from gw_appointments table
+      const appointmentsQuery = supabase
+        .from('gw_appointments')
+        .select('*')
+        .gte('appointment_date', new Date().toISOString())
+        .neq('status', 'cancelled')
+        .order('appointment_date', { ascending: true });
 
-      if (error) throw error;
-      setEvents(data || []);
+      const [eventsResult, appointmentsResult] = await Promise.all([
+        eventsQuery,
+        appointmentsQuery
+      ]);
+
+      if (eventsResult.error) throw eventsResult.error;
+      if (appointmentsResult.error) throw appointmentsResult.error;
+
+      // Transform events to match the interface
+      const transformedEvents: GleeWorldEvent[] = (eventsResult.data || []).map(event => ({
+        ...event,
+        source: 'event' as const
+      }));
+
+      // Transform appointments to match the interface
+      const transformedAppointments: GleeWorldEvent[] = (appointmentsResult.data || []).map(appointment => ({
+        id: appointment.id,
+        title: appointment.title,
+        description: appointment.description,
+        event_type: appointment.appointment_type,
+        start_date: appointment.appointment_date,
+        end_date: new Date(new Date(appointment.appointment_date).getTime() + appointment.duration_minutes * 60000).toISOString(),
+        location: null,
+        venue_name: null,
+        address: null,
+        max_attendees: null,
+        registration_required: null,
+        is_public: false,
+        status: appointment.status,
+        image_url: null,
+        created_by: appointment.created_by,
+        created_at: appointment.created_at,
+        updated_at: appointment.updated_at,
+        source: 'appointment' as const
+      }));
+
+      // Combine and sort by start_date
+      const allEvents = [...transformedEvents, ...transformedAppointments]
+        .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+
+      setEvents(allEvents);
     } catch (error) {
       console.error('Error fetching events:', error);
       toast({
         title: "Error",
-        description: "Failed to load events",
+        description: "Failed to load events and appointments",
         variant: "destructive"
       });
     } finally {
