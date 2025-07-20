@@ -39,6 +39,7 @@ import EditAnnouncement from "./pages/admin/EditAnnouncement";
 import About from "./pages/About";
 import AttendanceTestPage from "./pages/AttendanceTestPage";
 import AttendancePage from "./pages/AttendancePage";
+import MusicLibraryPage from "./pages/MusicLibrary";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -314,16 +315,24 @@ const App = () => {
                      </ProtectedRoute>
                    } 
                  />
+                  <Route 
+                    path="/attendance" 
+                    element={
+                      <ProtectedRoute>
+                        <AttendancePage />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/music-library" 
+                    element={
+                      <ProtectedRoute>
+                        <MusicLibraryPage />
+                      </ProtectedRoute>
+                    } 
+                  />
                  <Route 
-                   path="/attendance" 
-                   element={
-                     <ProtectedRoute>
-                       <AttendancePage />
-                     </ProtectedRoute>
-                   } 
-                 />
-                <Route 
-                  path="/landing"
+                   path="/landing"
                   element={
                     <PublicRoute>
                       <GleeWorldLanding />
