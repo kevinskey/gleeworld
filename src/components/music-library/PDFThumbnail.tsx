@@ -2,11 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FileText } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Set the worker path for PDF.js - use the local version
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.js',
-  import.meta.url
-).toString();
+// Configure PDF.js worker - disable worker for now to avoid loading issues
+pdfjsLib.GlobalWorkerOptions.workerSrc = '';
 
 interface PDFThumbnailProps {
   pdfUrl: string;
@@ -31,14 +28,25 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({ pdfUrl, alt, classNa
         setLoading(true);
         setError(false);
 
-        // Load the PDF document
-        const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
+        console.log('Generating PDF thumbnail for:', pdfUrl);
+
+        // Add timeout to prevent infinite loading
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('PDF loading timeout')), 10000);
+        });
+
+        // Load the PDF document with timeout - just use the URL directly
+        const pdfPromise = pdfjsLib.getDocument(pdfUrl).promise;
+
+        const pdf = await Promise.race([pdfPromise, timeoutPromise]) as any;
+        
+        console.log('PDF loaded successfully');
         
         // Get the first page
         const page = await pdf.getPage(1);
         
         // Set up the canvas
-        const scale = 2; // Higher scale for better quality
+        const scale = 1.5; // Reduced scale for better performance
         const viewport = page.getViewport({ scale });
         
         const canvas = document.createElement('canvas');
@@ -59,16 +67,20 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({ pdfUrl, alt, classNa
         
         await page.render(renderContext).promise;
         
+        console.log('PDF page rendered successfully');
+        
         // Convert canvas to blob and create URL
         canvas.toBlob((blob) => {
           if (blob) {
             const url = URL.createObjectURL(blob);
             setThumbnailUrl(url);
+            console.log('PDF thumbnail generated successfully');
           } else {
             setError(true);
+            console.error('Failed to create blob from canvas');
           }
           setLoading(false);
-        }, 'image/jpeg', 0.8);
+        }, 'image/jpeg', 0.7);
         
       } catch (err) {
         console.error('Error generating PDF thumbnail:', err);
@@ -108,7 +120,10 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({ pdfUrl, alt, classNa
       src={thumbnailUrl}
       alt={alt}
       className={className}
-      onError={() => setError(true)}
+      onError={() => {
+        console.error('Image failed to load');
+        setError(true);
+      }}
     />
   );
 };
