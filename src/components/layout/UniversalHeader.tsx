@@ -58,15 +58,6 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
               </Link>
             </EnhancedTooltip>
             
-            {/* Home Icon - Takes users to public GleeWorld.org landing page */}
-            <EnhancedTooltip content="Go to GleeWorld public landing page">
-              <Link
-                to="/landing"
-                className="text-gray-700 hover:text-gray-900 transition-colors flex items-center p-2 rounded-lg hover:bg-gray-100"
-              >
-                <Home className="h-4 w-4 sm:h-5 sm:w-5" />
-              </Link>
-            </EnhancedTooltip>
 
             {/* Dashboard Icon - Shows appropriate dashboard based on user role */}
             {user && profile?.role && (
