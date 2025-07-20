@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileText, Download, Eye, Loader2 } from 'lucide-react';
+import { FileText, Download, Eye, Loader2, Lock } from 'lucide-react';
+import { useUserRole } from '@/hooks/useUserRole';
+import { useToast } from '@/hooks/use-toast';
 
 interface PDFThumbnailProps {
   pdfUrl: string;
@@ -19,6 +21,8 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
   const [previewError, setPreviewError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const elementRef = useRef<HTMLDivElement>(null);
+  const { canDownloadPDF, loading: roleLoading } = useUserRole();
+  const { toast } = useToast();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -38,7 +42,18 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
     return () => observer.disconnect();
   }, [isInView]);
 
-  const openPDF = () => {
+  const handleClick = () => {
+    if (roleLoading) return;
+    
+    if (!canDownloadPDF()) {
+      toast({
+        title: "Access Denied",
+        description: "Only admins and librarians can download PDFs.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     window.open(pdfUrl, '_blank');
   };
 
@@ -56,12 +71,30 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
   return (
     <div 
       ref={elementRef}
-      className="w-full h-full flex flex-col bg-white border-2 border-gray-200 rounded-lg cursor-pointer hover:border-primary hover:shadow-md transition-all duration-200 overflow-hidden"
-      onClick={openPDF}
+      className={`w-full h-full flex flex-col bg-white border-2 rounded-lg transition-all duration-200 overflow-hidden ${
+        canDownloadPDF() 
+          ? 'border-gray-200 cursor-pointer hover:border-primary hover:shadow-md' 
+          : 'border-red-200 bg-red-50/50'
+      }`}
+      onClick={handleClick}
     >
       {/* Preview Area */}
       <div className="flex-1 relative">
-        {isInView && !previewError ? (
+        {!canDownloadPDF() ? (
+          <div className="w-full h-full flex flex-col items-center justify-center bg-red-50 p-4">
+            <div className="flex flex-col items-center space-y-2">
+              <div className="p-3 bg-red-100 rounded-full">
+                <Lock className="h-8 w-8 text-red-600" />
+              </div>
+              <span className="text-xs font-medium text-red-600 bg-red-100 px-2 py-1 rounded">
+                Restricted
+              </span>
+              <span className="text-xs text-center text-red-600">
+                Admin/Librarian access required
+              </span>
+            </div>
+          </div>
+        ) : isInView && !previewError ? (
           <>
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
@@ -104,8 +137,17 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
       
       {/* Action Hint */}
       <div className="flex items-center justify-center space-x-2 p-2 bg-gray-50 border-t border-gray-100">
-        <Eye className="h-3 w-3 text-gray-400" />
-        <span className="text-xs text-gray-500">Click to open</span>
+        {canDownloadPDF() ? (
+          <>
+            <Eye className="h-3 w-3 text-gray-400" />
+            <span className="text-xs text-gray-500">Click to open</span>
+          </>
+        ) : (
+          <>
+            <Lock className="h-3 w-3 text-red-400" />
+            <span className="text-xs text-red-500">Access restricted</span>
+          </>
+        )}
       </div>
     </div>
   );

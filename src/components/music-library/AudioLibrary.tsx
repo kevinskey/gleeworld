@@ -13,12 +13,14 @@ import {
   Heart,
   Clock,
   User,
-  Disc
+  Disc,
+  Lock
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { AudioEditDialog } from "./AudioEditDialog";
 import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
 
@@ -59,6 +61,7 @@ export const AudioLibrary = ({
 }: AudioLibraryProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { canDownloadMP3 } = useUserRole();
   const { playTrack, currentTrack, isPlaying, togglePlayPause } = useMusicPlayer();
   const [tracks, setTracks] = useState<AudioTrack[]>([]);
   const [loading, setLoading] = useState(true);
@@ -325,10 +328,28 @@ export const AudioLibrary = ({
                 <Edit className="h-3 w-3" />
               </Button>
               {track.audio_url && (
-                <Button size="sm" variant="outline" asChild>
-                  <a href={track.audio_url} download target="_blank" rel="noopener noreferrer">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => {
+                    if (!canDownloadMP3()) {
+                      toast({
+                        title: "Access Denied",
+                        description: "Only super-admins can download MP3 files.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    window.open(track.audio_url!, '_blank');
+                  }}
+                  disabled={!canDownloadMP3()}
+                  className={!canDownloadMP3() ? "opacity-50" : ""}
+                >
+                  {canDownloadMP3() ? (
                     <Download className="h-3 w-3" />
-                  </a>
+                  ) : (
+                    <Lock className="h-3 w-3" />
+                  )}
                 </Button>
               )}
               <Button 
@@ -407,10 +428,28 @@ export const AudioLibrary = ({
                       <Edit className="h-3 w-3" />
                     </Button>
                     {track.audio_url && (
-                      <Button size="sm" variant="outline" asChild>
-                        <a href={track.audio_url} download target="_blank" rel="noopener noreferrer">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => {
+                          if (!canDownloadMP3()) {
+                            toast({
+                              title: "Access Denied",
+                              description: "Only super-admins can download MP3 files.",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          window.open(track.audio_url!, '_blank');
+                        }}
+                        disabled={!canDownloadMP3()}
+                        className={!canDownloadMP3() ? "opacity-50" : ""}
+                      >
+                        {canDownloadMP3() ? (
                           <Download className="h-3 w-3" />
-                        </a>
+                        ) : (
+                          <Lock className="h-3 w-3" />
+                        )}
                       </Button>
                     )}
                     <Button 
