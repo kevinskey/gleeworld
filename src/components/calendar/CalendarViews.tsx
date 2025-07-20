@@ -40,9 +40,9 @@ export const CalendarViews = () => {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-1">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
               <CalendarIcon className="h-4 w-4 md:h-5 md:w-5" />
               <span className="hidden sm:inline">Glee World Calendar</span>
               <span className="sm:hidden">Calendar</span>
@@ -53,7 +53,7 @@ export const CalendarViews = () => {
             </div>
           </div>
         </CardHeader>
-      <CardContent className="p-3 md:p-6">
+      <CardContent className="p-2 md:p-4">
         <Tabs value={activeView} onValueChange={setActiveView}>
           <TabsList className="grid w-full grid-cols-3 h-8 md:h-10">
             <TabsTrigger value="month" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2">
@@ -73,15 +73,15 @@ export const CalendarViews = () => {
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="month" className="mt-3 md:mt-6">
+          <TabsContent value="month" className="mt-2 md:mt-3">
             <MonthlyCalendar events={events} onEventUpdated={fetchEvents} />
           </TabsContent>
           
-          <TabsContent value="week" className="mt-3 md:mt-6">
+          <TabsContent value="week" className="mt-2 md:mt-3">
             <WeeklyCalendar events={events} onEventUpdated={fetchEvents} />
           </TabsContent>
           
-          <TabsContent value="list" className="mt-3 md:mt-6">
+          <TabsContent value="list" className="mt-2 md:mt-3">
             <EventsList events={events} onEventUpdated={fetchEvents} />
           </TabsContent>
         </Tabs>

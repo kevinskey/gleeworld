@@ -150,9 +150,9 @@ const Index = () => {
       case "library":
         console.log('Index: Rendering Library component');
         return (
-          <div className="space-y-4 sm:space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-              <h1 className="text-2xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Document Library</h1>
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+              <h1 className="text-xl sm:text-xl lg:text-2xl font-bold text-gray-900">Document Library</h1>
             </div>
             <Library />
             <DocumentManager />
@@ -161,9 +161,9 @@ const Index = () => {
       case "finance":
         console.log('Index: Rendering FinanceManagement component');
         return (
-          <div className="space-y-4 sm:space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-              <h1 className="text-2xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Finance Management</h1>
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+              <h1 className="text-xl sm:text-xl lg:text-2xl font-bold text-gray-900">Finance Management</h1>
             </div>
             <FinanceManagement />
           </div>
@@ -172,9 +172,9 @@ const Index = () => {
       default:
         console.log('Index: Rendering Dashboard content');
         return (
-          <div className="space-y-4 sm:space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-              <h1 className="text-2xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Dashboard</h1>
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+              <h1 className="text-xl sm:text-xl lg:text-2xl font-bold text-gray-900">Dashboard</h1>
             </div>
             
             <ConsolidatedStatsCards 
@@ -188,8 +188,8 @@ const Index = () => {
               onViewContract={handleViewContractById}
             />
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              <div className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-3 sm:space-y-4">
                 <ContractCreationCollapsible onContractCreated={refetch} />
                 <ContractTemplatesCollapsible 
                   onUseTemplate={handleUseTemplate}
@@ -197,7 +197,7 @@ const Index = () => {
                 />
               </div>
               
-              <div className="space-y-4 sm:space-y-6">
+              <div className="space-y-3 sm:space-y-4">
                 <ContractsSection onViewContract={handleViewContract} />
                 <W9FormsListCollapsible />
               </div>
@@ -211,7 +211,7 @@ const Index = () => {
 
   return (
     <UniversalLayout containerized={false}>
-      <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6">
+      <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3">
         {renderContent()}
       </div>
       

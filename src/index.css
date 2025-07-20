@@ -304,3 +304,6 @@
     border-image: linear-gradient(90deg, rgba(85, 187, 238, 0.3) 0%, rgba(17, 68, 142, 0.3) 100%) 1;
   }
 }
+
+/* Import spacing reduction utilities */
+@import './styles/spacing-reduction.css';

@@ -30,7 +30,7 @@ export const ConsolidatedStatsCards = ({
     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
       {/* Quick Stats Card - Consolidated */}
       <Card className="border-brand-300/40 shadow-md hover:shadow-lg transition-shadow">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-1">
           <CardTitle className="text-lg flex items-center gap-2">
             <Activity className="h-5 w-5 text-brand-500" />
             Quick Stats
@@ -72,7 +72,7 @@ export const ConsolidatedStatsCards = ({
 
       {/* Recent Activity - Consolidated */}
       <Card className="border-brand-300/40 shadow-md hover:shadow-lg transition-shadow">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-1">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">
               <FileText className="h-5 w-5 text-brand-500" />
@@ -133,7 +133,7 @@ export const ConsolidatedStatsCards = ({
 
       {/* System Overview - Consolidated */}
       <Card className="border-brand-300/40 shadow-md hover:shadow-lg transition-shadow">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-1">
           <CardTitle className="text-lg flex items-center gap-2">
             <Activity className="h-5 w-5 text-brand-500" />
             System Overview
