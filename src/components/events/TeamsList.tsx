@@ -87,16 +87,10 @@ export const TeamsList = () => {
       // Get team members for each event
       const eventsWithTeams = await Promise.all(
         Array.from(allEvents.values()).map(async (event) => {
+          // Get team members
           const { data: teamMembers, error: membersError } = await supabase
             .from('event_team_members')
-            .select(`
-              user_id,
-              role,
-              profiles:user_id (
-                full_name,
-                email
-              )
-            `)
+            .select('user_id, role')
             .eq('event_id', event.id);
 
           if (membersError) {
@@ -108,17 +102,28 @@ export const TeamsList = () => {
             };
           }
 
-          const formattedMembers = teamMembers?.map(member => ({
-            user_id: member.user_id,
-            role: member.role,
-            full_name: member.profiles?.full_name,
-            email: member.profiles?.email
-          })) || [];
+          // Get profile data for team members
+          const memberProfiles = teamMembers ? await Promise.all(
+            teamMembers.map(async (member) => {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('full_name, email')
+                .eq('id', member.user_id)
+                .single();
+
+              return {
+                user_id: member.user_id,
+                role: member.role,
+                full_name: profile?.full_name,
+                email: profile?.email
+              };
+            })
+          ) : [];
 
           return {
             ...event,
-            team_members_count: formattedMembers.length,
-            team_members: formattedMembers
+            team_members_count: memberProfiles.length,
+            team_members: memberProfiles
           };
         })
       );
