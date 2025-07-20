@@ -440,6 +440,26 @@ export const UserDashboard = () => {
                       </Button>
                     </EnhancedTooltip>
                   )}
+                  <EnhancedTooltip content="Manage budgets and financial planning">
+                    <Button 
+                      className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
+                      variant="outline"
+                      onClick={() => navigate('/budgets')}
+                    >
+                      <DollarSign className="h-5 w-5 sm:h-6 sm:w-6" />
+                      <span className="text-center leading-tight">Manage Budgets</span>
+                    </Button>
+                  </EnhancedTooltip>
+                  <EnhancedTooltip content="Access music library and sheet music">
+                    <Button 
+                      className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
+                      variant="outline"
+                      onClick={() => navigate('/music-library')}
+                    >
+                      <Music className="h-5 w-5 sm:h-6 sm:w-6" />
+                      <span className="text-center leading-tight">Music Library</span>
+                    </Button>
+                  </EnhancedTooltip>
                 </div>
               </CardContent>
             </Card>

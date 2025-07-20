@@ -60,35 +60,12 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
             
 
             
-            {/* Desktop Navigation */}
-            {user && !isMobile && (
-              isSystemPage && systemActiveTab && onSystemTabChange ? (
-                <SystemNavigation 
-                  activeTab={systemActiveTab} 
-                  onTabChange={onSystemTabChange} 
-                />
-              ) : (
-                <AppNavigation />
-              )
-            )}
           </div>
 
           {/* Right side actions */}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
             {user && (
               <>
-                {/* Mobile Navigation - Handled by AppNavigation component */}
-                {isMobile && (
-                  isSystemPage && systemActiveTab && onSystemTabChange ? (
-                    <SystemNavigation 
-                      activeTab={systemActiveTab} 
-                      onTabChange={onSystemTabChange}
-                      isMobile={true}
-                    />
-                  ) : (
-                    <AppNavigation />
-                  )
-                )}
                 
                 
                 <EnhancedTooltip content="View notifications and tasks">
