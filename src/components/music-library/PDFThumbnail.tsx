@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FileText } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Configure PDF.js worker - disable worker for now to avoid loading issues
-pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+// Configure PDF.js worker to use the bundled version
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 interface PDFThumbnailProps {
   pdfUrl: string;
