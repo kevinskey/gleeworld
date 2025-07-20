@@ -43,24 +43,77 @@ export const EventsList = ({ filter = 'all-events' }: EventsListProps) => {
 
     try {
       setLoading(true);
+
+      if (filter === 'all-events') {
+        // For all events: show events user has access to (created, team member, admin)
+        // Get events user created, leads, or coordinates
+        const { data: userEvents } = await supabase
+          .from('events')
+          .select('*')
+          .or(`created_by.eq.${user.id},event_lead_id.eq.${user.id},coordinator_id.eq.${user.id}`);
+        
+        // Get events where user is team member
+        const { data: teamMemberships } = await supabase
+          .from('event_team_members')
+          .select('event_id, events!inner(*)')
+          .eq('user_id', user.id);
+        
+        // Check if user is admin
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
+        
+        if (isAdmin) {
+          // Admins can see all events
+          const { data: allEvents, error } = await supabase
+            .from('events')
+            .select('*')
+            .order('created_at', { ascending: false });
+          
+          if (error) throw error;
+          setEvents(allEvents || []);
+          return;
+        }
+        
+        // Combine accessible events
+        const accessibleEvents = new Map();
+        
+        // Add user's direct events
+        userEvents?.forEach(event => {
+          accessibleEvents.set(event.id, event);
+        });
+        
+        // Add events where user is team member
+        teamMemberships?.forEach(item => {
+          if (item.events) {
+            accessibleEvents.set(item.events.id, item.events);
+          }
+        });
+        
+        const finalEvents = Array.from(accessibleEvents.values()).sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        
+        setEvents(finalEvents);
+        return;
+      }
+
+      // Handle other filters
       let query = supabase.from('events').select('*');
 
-      // Apply filters based on the active tab
       switch (filter) {
         case 'my-events':
           query = query.eq('created_by', user.id);
           break;
         case 'my-budgets':
-          // Events that have budgets and user has access to
           query = query.or(`created_by.eq.${user.id},event_lead_id.eq.${user.id}`);
           break;
         case 'my-teams':
-          // Events where user is a team member
           query = query.or(`created_by.eq.${user.id},event_lead_id.eq.${user.id}`);
-          break;
-        case 'all-events':
-        default:
-          // No additional filtering for all events
           break;
       }
 
@@ -68,7 +121,7 @@ export const EventsList = ({ filter = 'all-events' }: EventsListProps) => {
 
       if (error) throw error;
 
-      // Additional filtering for team events (check event_team_members table)
+      // Additional filtering for team events
       if (filter === 'my-teams') {
         const { data: teamData, error: teamError } = await supabase
           .from('event_team_members')
