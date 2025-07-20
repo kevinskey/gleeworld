@@ -90,9 +90,6 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
                   )
                 )}
                 
-                <EnhancedTooltip content="Switch between dashboards">
-                  <DashboardSwitcher />
-                </EnhancedTooltip>
                 
                 <EnhancedTooltip content="View notifications and tasks">
                   <TaskNotifications />
