@@ -355,7 +355,21 @@ export const AppointmentScheduler = () => {
                     <FormItem>
                       <FormLabel>Phone Number</FormLabel>
                       <FormControl>
-                        <Input type="tel" placeholder="+1 (555) 123-4567" {...field} />
+                        <Input 
+                          type="tel" 
+                          placeholder="(555) 123-4567" 
+                          {...field}
+                          onChange={(e) => {
+                            // Format phone number as user types
+                            let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                            if (value.length >= 6) {
+                              value = `(${value.slice(0, 3)}) ${value.slice(3, 6)}-${value.slice(6, 10)}`;
+                            } else if (value.length >= 3) {
+                              value = `(${value.slice(0, 3)}) ${value.slice(3)}`;
+                            }
+                            field.onChange(value);
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
