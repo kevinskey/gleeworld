@@ -7,10 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Repeat } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Repeat, DollarSign, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useMergedProfile } from "@/hooks/useMergedProfile";
 
 interface CreateEventDialogProps {
   onEventCreated?: () => void;
@@ -19,6 +21,7 @@ interface CreateEventDialogProps {
 export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { profile } = useMergedProfile(user);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -41,20 +44,94 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
     recurring_end_type: 'date'
   });
 
+  // Check if user is executive board member
+  const isExecBoardMember = profile?.exec_board_role && profile.exec_board_role.trim() !== '';
+  const isTourManagerOrAdmin = profile?.role === 'super-admin' || 
+                               profile?.role === 'admin' || 
+                               profile?.exec_board_role?.toLowerCase().includes('tour');
+
+  // Event types that require budget creation (for exec board)
+  const budgetRequiredEvents = ['social', 'meeting', 'workshop', 'audition', 'other'];
+  
+  // Event types that require contracts (handled by tour manager/admin)
+  const contractRequiredEvents = ['performance', 'rehearsal'];
+
   const eventTypes = [
-    { value: 'performance', label: 'Performance' },
-    { value: 'rehearsal', label: 'Rehearsal' },
-    { value: 'sectionals', label: 'Sectionals' },
-    { value: 'social', label: 'Social Event' },
-    { value: 'meeting', label: 'Meeting' },
-    { value: 'workshop', label: 'Workshop' },
-    { value: 'audition', label: 'Audition' },
-    { value: 'other', label: 'Other' }
+    { 
+      value: 'performance', 
+      label: 'Performance',
+      requiresBudget: false,
+      requiresContract: true,
+      description: 'Managed by tour manager/admin with contracts'
+    },
+    { 
+      value: 'rehearsal', 
+      label: 'Rehearsal',
+      requiresBudget: false,
+      requiresContract: true,
+      description: 'Managed by tour manager/admin with contracts'
+    },
+    { 
+      value: 'sectionals', 
+      label: 'Sectionals',
+      requiresBudget: true,
+      requiresContract: false,
+      description: 'Executive board creates budget'
+    },
+    { 
+      value: 'social', 
+      label: 'Social Event',
+      requiresBudget: true,
+      requiresContract: false,
+      description: 'Executive board creates budget'
+    },
+    { 
+      value: 'meeting', 
+      label: 'Meeting',
+      requiresBudget: true,
+      requiresContract: false,
+      description: 'Executive board creates budget'
+    },
+    { 
+      value: 'workshop', 
+      label: 'Workshop',
+      requiresBudget: true,
+      requiresContract: false,
+      description: 'Executive board creates budget'
+    },
+    { 
+      value: 'audition', 
+      label: 'Audition',
+      requiresBudget: true,
+      requiresContract: false,
+      description: 'Executive board creates budget'
+    },
+    { 
+      value: 'other', 
+      label: 'Other',
+      requiresBudget: true,
+      requiresContract: false,
+      description: 'Executive board creates budget'
+    }
   ];
+
+  const selectedEventType = eventTypes.find(type => type.value === formData.event_type);
+  const requiresBudget = selectedEventType?.requiresBudget || false;
+  const requiresContract = selectedEventType?.requiresContract || false;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
+    // Permission checks
+    if (requiresBudget && !isExecBoardMember) {
+      toast({
+        title: "Permission Denied",
+        description: "Only executive board members can create events that require budgets.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setLoading(true);
     try {
@@ -150,7 +227,7 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
         <DialogHeader>
           <DialogTitle>Create New Event</DialogTitle>
           <DialogDescription>
-            Plan a new event and set up its budget worksheet.
+            Plan a new event. Budget creation and contract management will depend on the event type and your role.
           </DialogDescription>
         </DialogHeader>
 
@@ -186,6 +263,42 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
                     ))}
                   </SelectContent>
                 </Select>
+                
+                {/* Workflow Information */}
+                {selectedEventType && (
+                  <div className="mt-3 p-3 rounded-lg bg-muted/30 border">
+                    <div className="flex items-center gap-2 mb-2">
+                      {requiresBudget && (
+                        <Badge variant="secondary" className="text-xs">
+                          <DollarSign className="h-3 w-3 mr-1" />
+                          Budget Required
+                        </Badge>
+                      )}
+                      {requiresContract && (
+                        <Badge variant="outline" className="text-xs">
+                          <Users className="h-3 w-3 mr-1" />
+                          Contract Managed
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedEventType.description}
+                    </p>
+                    
+                    {/* Permission Check */}
+                    {requiresBudget && !isExecBoardMember && (
+                      <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-950/20 rounded text-xs text-yellow-800 dark:text-yellow-200">
+                        <strong>Note:</strong> Only executive board members can create events that require budgets.
+                      </div>
+                    )}
+                    
+                    {requiresContract && !isTourManagerOrAdmin && (
+                      <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-950/20 rounded text-xs text-blue-800 dark:text-blue-200">
+                        <strong>Note:</strong> Contracts for this event type will be managed by the tour manager or administrators.
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
