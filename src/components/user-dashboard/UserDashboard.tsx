@@ -428,6 +428,18 @@ export const UserDashboard = () => {
                       <span className="text-center leading-tight">Announcements</span>
                     </Button>
                   </EnhancedTooltip>
+                  {isAdmin && (
+                    <EnhancedTooltip content="Manage user accounts and permissions">
+                      <Button 
+                        className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
+                        variant="outline"
+                        onClick={() => navigate('/system')}
+                      >
+                        <Users className="h-5 w-5 sm:h-6 sm:w-6" />
+                        <span className="text-center leading-tight">Manage Users</span>
+                      </Button>
+                    </EnhancedTooltip>
+                  )}
                 </div>
               </CardContent>
             </Card>
