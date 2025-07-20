@@ -140,19 +140,21 @@ export const AppointmentScheduler = () => {
       appointmentDateTime.setHours(hour, minute, 0, 0);
 
       // Create appointment
+      const appointmentData = {
+        title: data.title,
+        description: data.description,
+        appointment_date: appointmentDateTime.toISOString(),
+        duration_minutes: data.duration_minutes,
+        appointment_type: data.appointment_type,
+        client_name: data.client_name,
+        client_email: data.client_email || null,
+        client_phone: data.client_phone,
+        ...(user?.id && { created_by: user.id }),
+      };
+
       const { data: appointment, error } = await supabase
         .from('gw_appointments')
-        .insert({
-          title: data.title,
-          description: data.description,
-          appointment_date: appointmentDateTime.toISOString(),
-          duration_minutes: data.duration_minutes,
-          appointment_type: data.appointment_type,
-          client_name: data.client_name,
-          client_email: data.client_email || null,
-          client_phone: data.client_phone,
-          created_by: user?.id,
-        })
+        .insert(appointmentData)
         .select()
         .single();
 
