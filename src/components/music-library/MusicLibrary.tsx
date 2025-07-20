@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import {
   Music,
+  Music2,
   FileText,
   Upload,
   Search,
@@ -57,20 +58,50 @@ export const MusicLibrary = () => {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Music Library</h1>
-          <p className="text-muted-foreground">
-            Manage your collection of sheet music and audio recordings
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
+      {/* Enhanced Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-border/50 sticky top-0 z-40">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Music2 className="h-8 w-8 text-primary" />
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                    Music Library
+                  </h1>
+                  <p className="text-lg text-muted-foreground">
+                    Discover, organize, and manage your musical collection
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <FileText className="h-4 w-4" />
+                  Sheet Music & Audio Files
+                </span>
+                <span>•</span>
+                <span className="flex items-center gap-1">
+                  <Filter className="h-4 w-4" />
+                  Advanced Filtering
+                </span>
+              </div>
+            </div>
+            <Button 
+              onClick={() => setUploadDialogOpen(true)} 
+              className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 text-base font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+              size="lg"
+            >
+              <Plus className="h-5 w-5" />
+              Add Music
+            </Button>
+          </div>
         </div>
-        <Button onClick={() => setUploadDialogOpen(true)} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Add Music
-        </Button>
       </div>
+
+      <div className="container mx-auto px-4 py-6 space-y-6">
 
       {/* Filters and Search */}
       <Card>
@@ -200,6 +231,7 @@ export const MusicLibrary = () => {
         onOpenChange={setUploadDialogOpen}
         activeTab={activeTab}
       />
+      </div>
     </div>
   );
 };
