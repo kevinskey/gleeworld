@@ -14,7 +14,7 @@ export default function EventPlanner() {
     <UniversalLayout>
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Hero Header Section */}
-        <div className="relative mb-8 rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-accent/20 p-8 backdrop-blur-sm border border-white/10">
+        <div className="relative mb-8 rounded-2xl bg-gradient-to-r from-primary/40 via-primary/30 to-accent/40 p-8 backdrop-blur-sm border border-white/20 shadow-2xl">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
