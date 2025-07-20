@@ -57,12 +57,6 @@ export const AppNavigation = () => {
       icon: CalendarDays,
       permission: null
     },
-    {
-      label: "Content Creator",
-      href: "/content-creator",
-      icon: PenTool,
-      permission: null
-    }
   ];
 
   const filteredItems = navigationItems.filter(item => {

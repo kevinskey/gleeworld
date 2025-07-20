@@ -22,7 +22,7 @@ import NotFound from "./pages/NotFound";
 import Accounting from "./pages/Accounting";
 import UserDashboard from "./pages/UserDashboard";
 import { MemberViewDashboard } from "./components/member-view/MemberViewDashboard";
-import ContentCreator from "./pages/ContentCreator";
+
 import EventPlanner from "./pages/EventPlanner";
 import BudgetApprovals from "./pages/BudgetApprovals";
 import { Shop } from "./pages/Shop";
@@ -193,14 +193,6 @@ const App = () => {
                     <MemberViewDashboard />
                   </ProtectedRoute>
                 } 
-              />
-              <Route 
-                path="/content-creator" 
-                element={
-                  <ProtectedRoute>
-                    <ContentCreator />
-                  </ProtectedRoute>
-                }
               />
               <Route 
                 path="/event-planner" 

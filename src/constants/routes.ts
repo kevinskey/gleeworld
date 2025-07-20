@@ -9,7 +9,7 @@ export const ROUTES = {
   ADMIN_SIGNING: '/admin-signing',
   CONTRACT_SIGNING: '/contract-signing',
   W9_FORM: '/w9-form',
-  CONTENT_CREATOR: '/content-creator',
+  
   EVENT_PLANNER: '/event-planner',
   CALENDAR: '/calendar'
 } as const;
@@ -21,7 +21,7 @@ export const PROTECTED_ROUTES = [
   ROUTES.ACTIVITY_LOGS,
   ROUTES.ACCOUNTING,
   ROUTES.ADMIN_SIGNING,
-  ROUTES.CONTENT_CREATOR,
+  
   ROUTES.EVENT_PLANNER
 ] as const;
 
