@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -413,7 +412,7 @@ export const UserDashboard = () => {
                     <Button 
                       className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
                       variant="outline"
-                      onClick={() => navigate('/events')}
+                      onClick={() => navigate('/calendar')}
                     >
                       <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
                       <span className="text-center leading-tight">Calendar</span>
@@ -743,7 +742,22 @@ export const UserDashboard = () => {
                         <div className="text-xs text-gray-500">View all events</div>
                       </div>
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start h-auto p-3">
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start h-auto p-3"
+                      onClick={() => navigate('/event-planner')}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      <div className="text-left">
+                        <div>Event Planner</div>
+                        <div className="text-xs text-gray-500">Plan and budget events</div>
+                      </div>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start h-auto p-3"
+                      onClick={() => navigate('/attendance')}
+                    >
                       <CheckCircle className="h-4 w-4 mr-2" />
                       <div className="text-left">
                         <div>Attendance</div>
