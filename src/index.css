@@ -14,19 +14,19 @@
     /* Secondary Accent - #55BBEE */
     --secondary: 203 85% 63%; /* #55BBEE converted to HSL */
     --secondary-foreground: 0 0% 100%; /* White text */
+    
+    /* Neutrals - Softer backgrounds for better contrast */
+    --background: 210 20% 98%; /* Soft off-white instead of pure white */
+    --foreground: 0 0% 9%; /* Slightly softer black text */
 
-    /* Neutrals */
-    --background: 0 0% 100%; /* White background */
-    --foreground: 0 0% 0%; /* Black text for content */
+    --card: 0 0% 97%; /* Softer white for cards */
+    --card-foreground: 0 0% 9%; /* Softer black text */
 
-    --card: 0 0% 100%; /* White */
-    --card-foreground: 0 0% 0%; /* Black text */
+    --popover: 0 0% 98%; /* Slightly off-white */
+    --popover-foreground: 0 0% 9%; /* Softer black text */
 
-    --popover: 0 0% 100%; /* White */
-    --popover-foreground: 0 0% 0%; /* Black text */
-
-    --muted: 210 20% 97%; /* #F7F9FC light gray background */
-    --muted-foreground: 0 0% 33%; /* #555555 secondary text */
+    --muted: 210 20% 94%; /* Light gray background - more contrast */
+    --muted-foreground: 0 0% 25%; /* Darker secondary text for better readability */
 
     --accent: 203 85% 63%; /* #55BBEE accent */
     --accent-foreground: 0 0% 100%; /* White text */
@@ -34,8 +34,8 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 87%; /* #DDDDDD borders */
-    --input: 0 0% 100%; /* White input background */
+    --border: 0 0% 85%; /* Slightly darker borders for better definition */
+    --input: 0 0% 97%; /* Soft off-white input background */
     --ring: 203 85% 63%; /* #55BBEE focus ring */
 
     --radius: 0.75rem;
@@ -70,15 +70,15 @@
   }
 
   .light {
-    /* Same as root - no separate light theme needed with new color system */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
+    /* Softer light theme colors */
+    --background: 210 20% 98%;
+    --foreground: 0 0% 9%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
+    --card: 0 0% 97%;
+    --card-foreground: 0 0% 9%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
+    --popover: 0 0% 98%;
+    --popover-foreground: 0 0% 9%;
 
     --primary: 219 78% 31%;
     --primary-foreground: 0 0% 100%;
@@ -86,8 +86,8 @@
     --secondary: 203 85% 63%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 20% 97%;
-    --muted-foreground: 0 0% 33%;
+    --muted: 210 20% 94%;
+    --muted-foreground: 0 0% 25%;
 
     --accent: 203 85% 63%;
     --accent-foreground: 0 0% 100%;
@@ -95,8 +95,8 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 87%;
-    --input: 0 0% 100%;
+    --border: 0 0% 85%;
+    --input: 0 0% 97%;
     --ring: 203 85% 63%;
   }
 }
