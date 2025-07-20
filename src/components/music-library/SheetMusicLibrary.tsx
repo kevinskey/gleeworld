@@ -282,12 +282,6 @@ export const SheetMusicLibrary = ({
 
             {/* Details */}
             <div className="space-y-2">
-              {item.difficulty_level && (
-                <Badge variant="secondary" className={getDifficultyColor(item.difficulty_level)}>
-                  {item.difficulty_level}
-                </Badge>
-              )}
-              
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 {item.key_signature && (
                   <span>Key: {item.key_signature}</span>
@@ -380,11 +374,6 @@ export const SheetMusicLibrary = ({
                     <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                       {item.key_signature && <span>Key: {item.key_signature}</span>}
                       {item.time_signature && <span>Time: {item.time_signature}</span>}
-                      {item.difficulty_level && (
-                        <Badge variant="secondary" className={getDifficultyColor(item.difficulty_level)}>
-                          {item.difficulty_level}
-                        </Badge>
-                      )}
                     </div>
                   </div>
 

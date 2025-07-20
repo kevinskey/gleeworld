@@ -104,8 +104,8 @@ export const MusicLibrary = () => {
       <div className="container mx-auto px-4 py-6 space-y-6">
 
       {/* Filters and Search */}
-      <Card>
-        <CardHeader>
+      <Card className="bg-white border-2 border-gray-300 shadow-lg">
+        <CardHeader className="bg-gray-50 border-b border-gray-200">{" "}
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
             Filters & Search
