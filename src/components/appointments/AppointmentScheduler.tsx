@@ -20,7 +20,7 @@ const appointmentSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   client_name: z.string().min(1, "Name is required"),
-  client_email: z.string().email("Valid email is required").optional().or(z.literal("")),
+  client_email: z.string().email("Valid email is required"),
   client_phone: z.string().min(10, "Valid phone number is required"),
   appointment_type: z.string(),
   duration_minutes: z.number().min(10).max(120),
@@ -55,8 +55,8 @@ export const AppointmentScheduler = () => {
     },
   });
 
-  // Generate time slots for selected date
-  const generateTimeSlots = async (date: Date) => {
+  // Generate time slots for selected date with duration consideration
+  const generateTimeSlots = async (date: Date, durationMinutes: number = 10) => {
     if (!date) return;
 
     const dayOfWeek = date.getDay();
@@ -95,11 +95,24 @@ export const AppointmentScheduler = () => {
         const slotDateTime = new Date(date);
         slotDateTime.setHours(hour, minute, 0, 0);
 
-        // Check if slot is available (not in existing appointments)
+        // Check if the entire duration fits within availability
+        const slotEndTime = new Date(slotDateTime.getTime() + durationMinutes * 60000);
+        const availabilityEnd = new Date(date);
+        availabilityEnd.setHours(endHour, endMinute, 0, 0);
+        
+        if (slotEndTime > availabilityEnd) continue;
+
+        // Check if slot conflicts with existing appointments
         const isAvailable = !existingAppointments?.some(apt => {
           const aptStart = new Date(apt.appointment_date);
           const aptEnd = new Date(aptStart.getTime() + apt.duration_minutes * 60000);
-          return slotDateTime >= aptStart && slotDateTime < aptEnd;
+          const newSlotEnd = new Date(slotDateTime.getTime() + durationMinutes * 60000);
+          
+          // Check for any overlap
+          return (
+            (slotDateTime < aptEnd && newSlotEnd > aptStart) ||
+            (aptStart < newSlotEnd && aptEnd > slotDateTime)
+          );
         });
 
         // Only show future slots
@@ -118,9 +131,10 @@ export const AppointmentScheduler = () => {
 
   useEffect(() => {
     if (selectedDate) {
-      generateTimeSlots(selectedDate);
+      const duration = form.watch('duration_minutes') || 10;
+      generateTimeSlots(selectedDate, duration);
     }
-  }, [selectedDate]);
+  }, [selectedDate, form.watch('duration_minutes')]);
 
   const onSubmit = async (data: AppointmentForm) => {
     if (!selectedDate || !selectedTime) {
@@ -147,7 +161,7 @@ export const AppointmentScheduler = () => {
         duration_minutes: data.duration_minutes,
         appointment_type: data.appointment_type,
         client_name: data.client_name,
-        client_email: data.client_email || null,
+          client_email: data.client_email,
         client_phone: data.client_phone,
         ...(user?.id && { created_by: user.id }),
       };
@@ -182,7 +196,8 @@ export const AppointmentScheduler = () => {
       setOpen(false);
       form.reset();
       setSelectedTime("");
-      generateTimeSlots(selectedDate);
+      const duration = form.getValues('duration_minutes') || 10;
+      generateTimeSlots(selectedDate, duration);
       
     } catch (error) {
       console.error('Error creating appointment:', error);
@@ -223,30 +238,30 @@ export const AppointmentScheduler = () => {
               />
             </div>
 
-            {/* Time Slots */}
+            {/* Time Slots Dropdown */}
             {selectedDate && availableSlots.length > 0 && (
               <div>
                 <label className="text-sm font-medium">Available Times</label>
-                <div className="grid grid-cols-3 gap-2 mt-2 max-h-48 overflow-y-auto">
-                  {availableSlots.map((slot) => (
-                    <Button
-                      key={slot.time}
-                      variant={selectedTime === slot.time ? "default" : "outline"}
-                      size="sm"
-                      disabled={!slot.available}
-                      onClick={() => setSelectedTime(slot.time)}
-                      className="text-xs"
-                    >
-                      {slot.time}
-                    </Button>
-                  ))}
-                </div>
+                <Select value={selectedTime} onValueChange={setSelectedTime}>
+                  <SelectTrigger className="mt-2">
+                    <SelectValue placeholder="Select time" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border shadow-lg z-50">
+                    {availableSlots
+                      .filter(slot => slot.available)
+                      .map((slot) => (
+                        <SelectItem key={slot.time} value={slot.time}>
+                          {slot.time}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
 
-            {selectedDate && availableSlots.length === 0 && (
+            {selectedDate && availableSlots.filter(slot => slot.available).length === 0 && (
               <div className="text-center py-4 text-muted-foreground">
-                No available slots for this date
+                No available slots for selected duration
               </div>
             )}
           </div>
@@ -281,11 +296,12 @@ export const AppointmentScheduler = () => {
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="bg-background border shadow-lg z-50">
                           <SelectItem value="general">General</SelectItem>
                           <SelectItem value="meeting">Meeting</SelectItem>
                           <SelectItem value="consultation">Consultation</SelectItem>
                           <SelectItem value="rehearsal">Rehearsal</SelectItem>
+                          <SelectItem value="audition">Audition</SelectItem>
                           <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
@@ -306,7 +322,7 @@ export const AppointmentScheduler = () => {
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="bg-background border shadow-lg z-50">
                           <SelectItem value="10">10 minutes</SelectItem>
                           <SelectItem value="20">20 minutes</SelectItem>
                           <SelectItem value="30">30 minutes</SelectItem>
@@ -339,7 +355,7 @@ export const AppointmentScheduler = () => {
                     <FormItem>
                       <FormLabel>Phone Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="+1 (555) 123-4567" {...field} />
+                        <Input type="tel" placeholder="+1 (555) 123-4567" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -351,7 +367,7 @@ export const AppointmentScheduler = () => {
                   name="client_email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email (Optional)</FormLabel>
+                      <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input placeholder="your.email@example.com" {...field} />
                       </FormControl>
