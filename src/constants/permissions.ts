@@ -3,6 +3,7 @@ export const USER_ROLES = {
   USER: 'user',
   ADMIN: 'admin',
   SUPER_ADMIN: 'super-admin',
+  TREASURER: 'treasurer',
 } as const;
 
 export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
@@ -32,6 +33,8 @@ export const PERMISSIONS = [
   'send_notifications',
   'send_emails',
   'manage_username_permissions',
+  'approve_budgets_treasurer',
+  'approve_budgets_super_admin',
 ] as const;
 
 export type Permission = typeof PERMISSIONS[number];
@@ -58,11 +61,17 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     'send_emails',
     'manage_username_permissions',
   ],
+  [USER_ROLES.TREASURER]: [
+    'approve_budgets_treasurer',
+    'access_budget_creation',
+    'view_all_payments',
+  ],
   [USER_ROLES.SUPER_ADMIN]: [
     'all_permissions',
     'delete_users',
     'manage_system_settings',
     'view_activity_logs',
+    'approve_budgets_super_admin',
   ],
 } as const;
 

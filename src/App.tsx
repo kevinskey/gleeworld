@@ -24,6 +24,7 @@ import UserDashboard from "./pages/UserDashboard";
 import { MemberViewDashboard } from "./components/member-view/MemberViewDashboard";
 import ContentCreator from "./pages/ContentCreator";
 import EventPlanner from "./pages/EventPlanner";
+import BudgetApprovals from "./pages/BudgetApprovals";
 import { Shop } from "./pages/Shop";
 import Payments from "./pages/Payments";
 import Profile from "./pages/Profile";
@@ -206,6 +207,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <EventPlanner />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/budget-approvals" 
+                element={
+                  <ProtectedRoute>
+                    <BudgetApprovals />
                   </ProtectedRoute>
                 } 
               />

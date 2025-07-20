@@ -3,10 +3,11 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DollarSign, FileText, Calendar, Users } from "lucide-react";
+import { DollarSign, FileText, Calendar, Users, CheckCircle, Clock, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { SubmitForApprovalButton } from "@/components/admin/budget/SubmitForApprovalButton";
 
 interface EventWithBudget {
   id: string;
@@ -90,11 +91,36 @@ export const BudgetsList = () => {
   const getBudgetStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       'draft': 'bg-yellow-100 text-yellow-800 border-yellow-300',
+      'pending_approval': 'bg-blue-100 text-blue-800 border-blue-300',
       'submitted': 'bg-blue-100 text-blue-800 border-blue-300',
       'approved': 'bg-green-100 text-green-800 border-green-300',
       'rejected': 'bg-red-100 text-red-800 border-red-300'
     };
     return colors[status] || colors.draft;
+  };
+
+  const getBudgetStatusIcon = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'rejected':
+        return <XCircle className="h-4 w-4 text-red-600" />;
+      case 'pending_approval':
+        return <Clock className="h-4 w-4 text-blue-600" />;
+      default:
+        return <FileText className="h-4 w-4 text-yellow-600" />;
+    }
+  };
+
+  const getBudgetStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      'draft': 'Draft',
+      'pending_approval': 'Pending Approval',
+      'submitted': 'Submitted',
+      'approved': 'Approved',
+      'rejected': 'Rejected'
+    };
+    return labels[status] || 'Draft';
   };
 
   if (loading) {
@@ -137,9 +163,12 @@ export const BudgetsList = () => {
                 <CardTitle className="text-lg">
                   {event.event_name || event.title}
                 </CardTitle>
-                <Badge className={getBudgetStatusColor(event.budget_status || 'draft')}>
-                  {event.budget_status || 'Draft'}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  {getBudgetStatusIcon(event.budget_status || 'draft')}
+                  <Badge className={getBudgetStatusColor(event.budget_status || 'draft')}>
+                    {getBudgetStatusLabel(event.budget_status || 'draft')}
+                  </Badge>
+                </div>
               </div>
             </div>
           </CardHeader>
@@ -186,14 +215,21 @@ export const BudgetsList = () => {
               </div>
             </div>
             
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full mt-4"
-            >
-              <DollarSign className="h-4 w-4 mr-1" />
-              Manage Budget
-            </Button>
+            <div className="space-y-2 mt-4">
+              <SubmitForApprovalButton
+                eventId={event.id}
+                currentStatus={event.budget_status || 'draft'}
+                onStatusUpdate={fetchBudgetEvents}
+              />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full"
+              >
+                <DollarSign className="h-4 w-4 mr-1" />
+                Manage Budget
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ))}
