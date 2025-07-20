@@ -8,7 +8,7 @@ import { EventsList } from "@/components/events/EventsList";
 import { CreateEventDialog } from "@/components/events/CreateEventDialog";
 
 export default function EventPlanner() {
-  const [activeTab, setActiveTab] = useState("events");
+  const [activeTab, setActiveTab] = useState("all-events");
 
   return (
     <UniversalLayout>
@@ -61,47 +61,68 @@ export default function EventPlanner() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="events" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="all-events" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Events
+              All Events
             </TabsTrigger>
-            <TabsTrigger value="budget" className="flex items-center gap-2">
+            <TabsTrigger value="my-events" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              My Events
+            </TabsTrigger>
+            <TabsTrigger value="my-budgets" className="flex items-center gap-2">
               <DollarSign className="h-4 w-4" />
-              Budget Overview
+              My Budgets
             </TabsTrigger>
-            <TabsTrigger value="team" className="flex items-center gap-2">
+            <TabsTrigger value="my-teams" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              Team Management
+              My Teams
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="events" className="space-y-6">
+          <TabsContent value="all-events" className="space-y-6">
             <div className="mb-6">
-              <h2 className="text-xl font-semibold text-white">Your Events</h2>
+              <h2 className="text-xl font-semibold text-white">All Events</h2>
+              <p className="text-white/60">View all events across the organization</p>
             </div>
             <EventsList />
           </TabsContent>
 
-          <TabsContent value="budget" className="space-y-6">
+          <TabsContent value="my-events" className="space-y-6">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-white">My Events</h2>
+              <p className="text-white/60">Events you've created or are managing</p>
+            </div>
+            <EventsList />
+          </TabsContent>
+
+          <TabsContent value="my-budgets" className="space-y-6">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-white">My Budgets</h2>
+              <p className="text-white/60">Budget worksheets you're responsible for</p>
+            </div>
             <Card>
               <CardContent className="py-12 text-center">
                 <DollarSign className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium mb-2">Budget Overview</h3>
+                <h3 className="text-lg font-medium mb-2">Budget Management</h3>
                 <p className="text-muted-foreground mb-4">
-                  Select an event to view its budget details and line items.
+                  View and manage budgets for events you're responsible for.
                 </p>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="team" className="space-y-6">
+          <TabsContent value="my-teams" className="space-y-6">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-white">My Teams</h2>
+              <p className="text-white/60">Teams you're leading or collaborating with</p>
+            </div>
             <Card>
               <CardContent className="py-12 text-center">
                 <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium mb-2">Team Management</h3>
+                <h3 className="text-lg font-medium mb-2">Team Collaboration</h3>
                 <p className="text-muted-foreground mb-4">
-                  Select an event to manage team members and assign roles.
+                  Manage team members and assign roles for your events.
                 </p>
               </CardContent>
             </Card>
