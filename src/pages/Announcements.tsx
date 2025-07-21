@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PageHeader } from "@/components/shared/PageHeader";
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -117,21 +117,19 @@ const Announcements = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <PageHeader
-          title="Announcements"
-          description="Stay updated with the latest news and updates"
-          backgroundVariant="gradient"
-        >
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Announcements</h1>
+          <p className="text-gray-600 mb-4">Stay updated with the latest news and updates</p>
           {isAdmin && (
             <Button
               onClick={() => navigate('/admin/announcements/new')}
-              className="bg-white/20 hover:bg-white/30 text-white border-white/20"
+              className="bg-primary hover:bg-primary/90"
             >
               <Plus className="h-4 w-4 mr-2" />
               New Announcement
             </Button>
           )}
-        </PageHeader>
+        </div>
 
         
         {/* Announcements List */}
