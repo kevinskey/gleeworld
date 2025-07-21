@@ -106,15 +106,6 @@ export const AttendanceDashboard = () => {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="text-center space-y-3">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-          Attendance Management
-        </h1>
-        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-          Track and manage attendance for Spelman College Glee Club events
-        </p>
-      </div>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">

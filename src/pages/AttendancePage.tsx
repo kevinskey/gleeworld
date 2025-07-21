@@ -9,7 +9,6 @@ export default function AttendancePage() {
       <div className="animate-fade-in">
         <PageHeader
           title="Attendance Management"
-          description="Track attendance, manage excuses, and generate reports for glee club events"
           backgroundVariant="gradient"
         />
         <AttendanceDashboard />
