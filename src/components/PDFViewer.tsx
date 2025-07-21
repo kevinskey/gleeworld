@@ -60,7 +60,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
           )}
           
           <iframe
-            src={pdfUrl}
+            src={`https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`}
             className="w-full h-full border-0"
             onLoad={handleLoad}
             onError={handleError}
