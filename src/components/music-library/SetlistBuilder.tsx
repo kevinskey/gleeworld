@@ -298,6 +298,21 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
   const addToSetlist = async (sheetMusicId: string) => {
     if (!selectedSetlist) return;
 
+    // Check if this sheet music is already in the setlist
+    const isAlreadyInSetlist = selectedSetlist.items?.some(
+      item => item.sheet_music?.id === sheetMusicId
+    );
+
+    if (isAlreadyInSetlist) {
+      const musicTitle = sheetMusic.find(m => m.id === sheetMusicId)?.title || 'Unknown';
+      toast({
+        title: "Already in Setlist",
+        description: `"${musicTitle}" is already in this setlist.`,
+        variant: "default",
+      });
+      return;
+    }
+
     console.log('SetlistBuilder: Adding sheet music to setlist:', { selectedSetlist: selectedSetlist.id, sheetMusicId });
 
     try {
@@ -311,17 +326,36 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
           position: nextPosition,
         })
         .select()
-        .single();
+        .maybeSingle();
 
       console.log('SetlistBuilder: Add to setlist result:', { data, error });
 
-      if (error) throw error;
+      if (error) {
+        console.error('SetlistBuilder: Error adding to setlist:', error);
+        
+        // Handle specific constraint errors
+        if (error.code === '23505' && error.message.includes('setlist_items_setlist_id_sheet_music_id_key')) {
+          const musicTitle = sheetMusic.find(m => m.id === sheetMusicId)?.title || 'Unknown';
+          toast({
+            title: "Already in Setlist",
+            description: `"${musicTitle}" is already in this setlist.`,
+            variant: "default",
+          });
+        } else {
+          toast({
+            title: "Error Adding to Setlist",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
+        return;
+      }
 
-      loadSetlistItems(selectedSetlist.id);
-      
+      await loadSetlistItems(selectedSetlist.id);
+      const musicTitle = sheetMusic.find(m => m.id === sheetMusicId)?.title || 'Unknown';
       toast({
         title: "Added",
-        description: "Sheet music added to setlist.",
+        description: `"${musicTitle}" added to setlist.`,
       });
     } catch (error) {
       console.error('Error adding to setlist:', error);
@@ -341,10 +375,18 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
         .delete()
         .eq('id', itemId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('SetlistBuilder: Error removing from setlist:', error);
+        toast({
+          title: "Error Removing Item",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
 
       if (selectedSetlist) {
-        loadSetlistItems(selectedSetlist.id);
+        await loadSetlistItems(selectedSetlist.id);
       }
       
       toast({
