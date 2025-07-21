@@ -108,19 +108,25 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
                          {user.email}
                        </p>
                      </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/profile" className="flex items-center">
-                        <User className="mr-2 h-4 w-4" />
-                        Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/system" className="flex items-center">
-                        <Settings className="mr-2 h-4 w-4" />
-                        Settings
-                      </Link>
-                    </DropdownMenuItem>
+                     <DropdownMenuSeparator />
+                     <DropdownMenuItem asChild>
+                       <Link to="/dashboard" className="flex items-center">
+                         <LayoutDashboard className="mr-2 h-4 w-4" />
+                         Dashboard
+                       </Link>
+                     </DropdownMenuItem>
+                     <DropdownMenuItem asChild>
+                       <Link to="/profile" className="flex items-center">
+                         <User className="mr-2 h-4 w-4" />
+                         Profile
+                       </Link>
+                     </DropdownMenuItem>
+                     <DropdownMenuItem asChild>
+                       <Link to="/system" className="flex items-center">
+                         <Settings className="mr-2 h-4 w-4" />
+                         Settings
+                       </Link>
+                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="mr-2 h-4 w-4" />
