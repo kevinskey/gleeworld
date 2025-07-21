@@ -488,12 +488,11 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
         </Card>
       </div>
 
-      {/* Create Setlist Dialog */}
+      {/* Create Setlist Form */}
       {isCreating && (
-        <Card className="mt-6 bg-background border-2 border-primary p-4" style={{ minHeight: '200px' }}>
+        <Card className="mt-6">
           <CardHeader>
-            <CardTitle className="text-base text-primary">✨ Create New Setlist ✨</CardTitle>
-            <div className="text-sm text-muted-foreground">Form is now visible - isCreating: {isCreating.toString()}</div>
+            <CardTitle className="text-base">Create New Setlist</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
