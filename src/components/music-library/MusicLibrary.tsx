@@ -1,14 +1,16 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { SheetMusicLibrary } from './SheetMusicLibrary';
 import { SetlistBuilder } from './SetlistBuilder';
 import { SetlistDiagnostics } from './SetlistDiagnostics';
 import { PDFViewer } from '@/components/PDFViewer';
-import { Settings } from 'lucide-react';
+import { Settings, ArrowLeft, Home } from 'lucide-react';
 
 export const MusicLibrary = () => {
+  const navigate = useNavigate();
   const [selectedPdf, setSelectedPdf] = useState<{url: string; title: string} | null>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
 
@@ -16,14 +18,29 @@ export const MusicLibrary = () => {
     setSelectedPdf({ url: pdfUrl, title });
   };
 
+  const handleBackToHome = () => {
+    navigate('/');
+  };
+
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold mb-2">Music Library</h1>
-          <p className="text-muted-foreground">
-            Manage your sheet music collection and create performance setlists
-          </p>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleBackToHome}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold mb-2">Music Library</h1>
+            <p className="text-muted-foreground">
+              Manage your sheet music collection and create performance setlists
+            </p>
+          </div>
         </div>
         <Button
           variant="outline"
