@@ -284,10 +284,10 @@ export const UserDashboard = () => {
           <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 rounded-xl shadow-lg p-4">
             <div className="text-center">
               <h1 className="text-xl font-bold text-white">
-                Welcome to your dashboard
+                Welcome back {displayName}!
               </h1>
               <p className="text-white/80 text-sm mt-1">
-                Spelman College Glee Club
+                {getUserTitle()} • Spelman College Glee Club • Member since {profile?.created_at ? format(new Date(profile.created_at), 'MMMM yyyy') : 'Recently'}
               </p>
             </div>
           </div>
