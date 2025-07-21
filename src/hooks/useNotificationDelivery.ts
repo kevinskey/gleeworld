@@ -48,7 +48,11 @@ export const useNotificationDelivery = () => {
         return;
       }
 
-      setDeliveryLogs(data || []);
+      setDeliveryLogs(data?.map(log => ({
+        ...log,
+        delivery_method: log.delivery_method as 'internal' | 'email' | 'sms' | 'push',
+        status: log.status as 'pending' | 'sent' | 'delivered' | 'failed'
+      })) || []);
     } catch (error) {
       console.error('Error loading delivery logs:', error);
     } finally {

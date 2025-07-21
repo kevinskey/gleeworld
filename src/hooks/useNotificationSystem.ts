@@ -49,10 +49,10 @@ export const useNotificationSystem = () => {
         // Continue without preferences - default to no SMS
       }
 
-      // Get user's profile for phone number
+      // Get user's profile for phone number and email
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('phone_number, full_name')
+        .select('phone_number, full_name, email')
         .eq('id', params.user_id)
         .single();
 
