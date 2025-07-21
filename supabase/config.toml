@@ -33,6 +33,9 @@ verify_jwt = true
 [functions.gw-validate-sso-token]
 verify_jwt = false
 
+[functions.handle-sms-approval]
+verify_jwt = false
+
 [functions.import-users]
 verify_jwt = true
 

@@ -174,13 +174,33 @@ export const AppointmentScheduler = () => {
 
       if (error) throw error;
 
-      // Send SMS notification
+      // Send SMS notifications to both parties
       try {
+        // Send confirmation SMS to client
         await supabase.functions.invoke('send-sms', {
           body: {
             to: data.client_phone,
-            message: `Appointment confirmed for ${format(appointmentDateTime, 'PPP')} at ${selectedTime}. Thank you!`,
+            message: `Your appointment request for ${format(appointmentDateTime, 'PPP')} at ${selectedTime} has been submitted. You'll receive confirmation once approved.`,
             notificationId: appointment.id
+          }
+        });
+
+        // Get admin phone number from dashboard settings
+        const { data: adminSettings } = await supabase
+          .from('dashboard_settings')
+          .select('setting_value')
+          .eq('setting_name', 'admin_phone')
+          .single();
+
+        const adminPhone = adminSettings?.setting_value || '+1234567890'; // Fallback number
+
+        // Send approval SMS to admin/receiver
+        await supabase.functions.invoke('send-sms', {
+          body: {
+            to: adminPhone,
+            message: `New appointment request from ${data.client_name} for ${format(appointmentDateTime, 'PPP')} at ${selectedTime}. Reply "APPROVE ${appointment.id}" or "DENY ${appointment.id}"`,
+            notificationId: appointment.id,
+            isApprovalRequest: true
           }
         });
       } catch (smsError) {
