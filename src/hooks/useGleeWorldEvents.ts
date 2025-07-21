@@ -111,14 +111,16 @@ export const useGleeWorldEvents = () => {
   };
 
   const setupRealtime = () => {
-    // Clean up existing channel
+    // Clean up existing channel first and wait for cleanup
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
     }
 
-    // Create a new channel for real-time updates
+    // Create a new channel with unique identifier to avoid conflicts
+    const channelId = `events-changes-${Date.now()}`;
     const channel = supabase
-      .channel('events-changes')
+      .channel(channelId)
       .on(
         'postgres_changes',
         {
@@ -128,7 +130,6 @@ export const useGleeWorldEvents = () => {
         },
         (payload) => {
           console.log('Real-time event change:', payload);
-          // Refresh events when any change occurs
           fetchEvents();
         }
       )
@@ -141,7 +142,6 @@ export const useGleeWorldEvents = () => {
         },
         (payload) => {
           console.log('Real-time events table change:', payload);
-          // Refresh events when any change occurs to events table
           fetchEvents();
         }
       )
@@ -154,7 +154,6 @@ export const useGleeWorldEvents = () => {
         },
         (payload) => {
           console.log('Real-time appointment change:', payload);
-          // Refresh events when any appointment change occurs
           fetchEvents();
         }
       )
