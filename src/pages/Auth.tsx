@@ -32,7 +32,7 @@ const Auth = () => {
 
   return (
     <AuthLayout 
-      title={isReset ? "Reset Password" : "Welcome Back"}
+      title={isReset ? "Reset Password" : "Welcome Back to Glee World!"}
       subtitle={isReset ? "Enter your new password" : "Sign in to your account or create a new one"}
     >
       <AuthTabs />
