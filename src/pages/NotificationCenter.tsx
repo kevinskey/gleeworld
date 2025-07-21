@@ -12,6 +12,9 @@ import { NotificationHistoryWithDelivery } from '@/components/notifications/Noti
 
 export default function NotificationCenter() {
   const [activeTab, setActiveTab] = useState('overview');
+  
+  // Debug logging
+  console.log('NotificationCenter rendering, activeTab:', activeTab);
 
   return (
     <UniversalLayout>

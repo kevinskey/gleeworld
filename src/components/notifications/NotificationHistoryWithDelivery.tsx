@@ -14,6 +14,13 @@ export const NotificationHistoryWithDelivery = () => {
   const { deliveryLogs, loadDeliveryLogs } = useNotificationDelivery();
   const [expandedNotifications, setExpandedNotifications] = useState<Set<string>>(new Set());
 
+  // Debug logging
+  console.log('NotificationHistoryWithDelivery:', {
+    notificationsCount: notifications?.length || 0,
+    loading,
+    deliveryLogsCount: deliveryLogs?.length || 0
+  });
+
   useEffect(() => {
     loadDeliveryLogs();
   }, []);
