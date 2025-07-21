@@ -69,7 +69,7 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
   });
 
   const eventTypes = [
-    { value: 'performance', label: 'Performance', color: 'bg-purple-100 text-purple-800' },
+    { value: 'performance', label: 'Performance', color: 'bg-event-performance text-event-performance-fg' },
     { value: 'rehearsal', label: 'Rehearsal', color: 'bg-blue-100 text-blue-800' },
     { value: 'sectionals', label: 'Sectionals', color: 'bg-indigo-100 text-indigo-800' },
     { value: 'social', label: 'Social Event', color: 'bg-pink-100 text-pink-800' },

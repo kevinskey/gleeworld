@@ -49,8 +49,8 @@
     --hover-tint: 203 85% 94%; /* #D6F0FB */
     
     /* Event type colors - using design system */
-    --event-performance: 267 57% 83%; /* Light purple */
-    --event-performance-fg: 267 57% 30%; /* Dark purple */
+    --event-performance: 203 85% 83%; /* Light blue */
+    --event-performance-fg: 203 85% 30%; /* Dark blue */
     --event-rehearsal: 203 85% 83%; /* Light blue */
     --event-rehearsal-fg: 203 85% 30%; /* Dark blue */
     --event-meeting: 34 100% 83%; /* Light orange */

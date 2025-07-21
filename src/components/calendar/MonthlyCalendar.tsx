@@ -61,7 +61,7 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
   const getEventTypeColor = (type: string | null) => {
     switch (type) {
       case 'performance':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+        return 'bg-event-performance text-event-performance-fg';
       case 'rehearsal':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
       case 'sectionals':
