@@ -243,12 +243,12 @@ export const MemberCommunications = () => {
 
             <div>
               <Label htmlFor="recipient">Recipient (Optional)</Label>
-              <Select value={formData.recipient_id} onValueChange={(value) => setFormData(prev => ({ ...prev, recipient_id: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select recipient or leave blank for general notice" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">General Notice (No specific recipient)</SelectItem>
+                <Select value={formData.recipient_id || 'general'} onValueChange={(value) => setFormData(prev => ({ ...prev, recipient_id: value === 'general' ? '' : value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select recipient or leave blank for general notice" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="general">General Notice (No specific recipient)</SelectItem>
                   {members.map((member) => (
                     <SelectItem key={member.id} value={member.id}>
                       {member.full_name} ({member.email})
