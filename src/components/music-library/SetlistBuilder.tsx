@@ -84,6 +84,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
   });
 
   useEffect(() => {
+    console.log('SetlistBuilder: useEffect triggered, user:', user?.id);
     if (user) {
       loadSetlists();
       loadSheetMusic();
@@ -91,6 +92,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
   }, [user]);
 
   const loadSetlists = async () => {
+    console.log('SetlistBuilder: Loading setlists for user:', user?.id);
     try {
       const { data, error } = await supabase
         .from('setlists')
@@ -98,6 +100,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
         .eq('created_by', user?.id)
         .order('created_at', { ascending: false });
 
+      console.log('SetlistBuilder: Setlists query result:', { data, error });
       if (error) throw error;
       setSetlists(data || []);
     } catch (error) {
@@ -113,12 +116,14 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
   };
 
   const loadSheetMusic = async () => {
+    console.log('SetlistBuilder: Loading sheet music...');
     try {
       const { data, error } = await supabase
         .from('gw_sheet_music')
         .select('id, title, composer, pdf_url')
         .order('title');
 
+      console.log('SetlistBuilder: Sheet music query result:', { count: data?.length, error });
       if (error) throw error;
       setSheetMusic(data || []);
     } catch (error) {
