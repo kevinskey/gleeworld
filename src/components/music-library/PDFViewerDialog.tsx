@@ -37,53 +37,6 @@ export const PDFViewerDialog: React.FC<PDFViewerDialogProps> = ({
   const [libraryLoading, setLibraryLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleUrlSubmit = () => {
-    if (!pdfUrl.trim()) {
-      toast({
-        title: "URL Required",
-        description: "Please enter a PDF URL to view.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!pdfUrl.toLowerCase().includes('.pdf')) {
-      toast({
-        title: "Invalid URL",
-        description: "Please enter a valid PDF URL.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setCurrentPdfUrl(pdfUrl);
-    toast({
-      title: "PDF Loaded",
-      description: "PDF viewer opened successfully.",
-    });
-  };
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file && file.type === 'application/pdf') {
-      setIsLoading(true);
-      const url = URL.createObjectURL(file);
-      setCurrentPdfUrl(url);
-      setPdfUrl(file.name);
-      setIsLoading(false);
-      toast({
-        title: "PDF Uploaded",
-        description: "PDF file loaded successfully.",
-      });
-    } else {
-      toast({
-        title: "Invalid File",
-        description: "Please select a valid PDF file.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const clearPdf = () => {
     setCurrentPdfUrl('');
     setPdfUrl('');
@@ -165,88 +118,40 @@ export const PDFViewerDialog: React.FC<PDFViewerDialogProps> = ({
                   <FileText className="h-16 w-16 text-muted-foreground mx-auto" />
                   <h3 className="text-lg font-semibold">Open a PDF</h3>
                   <p className="text-muted-foreground">
-                    Choose a PDF file, enter a URL, or select from setlists
+                    Select from your library or create a new setlist
                   </p>
                 </div>
 
                 <div className="w-full max-w-md space-y-4">
-                  {/* URL Input */}
-                  <div className="space-y-2">
-                    <Label htmlFor="pdf-url" className="flex items-center gap-2">
-                      <Link className="h-4 w-4" />
-                      PDF URL
-                    </Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="pdf-url"
-                        placeholder="https://example.com/document.pdf"
-                        value={pdfUrl}
-                        onChange={(e) => setPdfUrl(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleUrlSubmit()}
-                      />
-                      <Button onClick={handleUrlSubmit} disabled={!pdfUrl.trim()}>
-                        View
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">Or</span>
-                    </div>
-                  </div>
-
-                  {/* File Upload */}
-                  <div className="space-y-2">
-                    <Label htmlFor="pdf-file" className="flex items-center gap-2">
-                      <Upload className="h-4 w-4" />
-                      Upload PDF File
-                    </Label>
-                    <Input
-                      id="pdf-file"
-                      type="file"
-                      accept=".pdf,application/pdf"
-                      onChange={handleFileUpload}
-                      disabled={isLoading}
-                    />
-                  </div>
-
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">Or</span>
-                    </div>
-                  </div>
-
-                  {/* Browse Library */}
-                  <div className="grid grid-cols-2 gap-2">
+                  {/* Two main options */}
+                  <div className="grid grid-cols-1 gap-4">
                     <Button 
                       variant="outline" 
+                      size="lg"
+                      className="h-16 flex flex-col gap-2"
                       onClick={() => {
                         setShowLibrary(true);
                         loadSheetMusic();
                       }}
                     >
-                      <Library className="h-4 w-4 mr-2" />
-                      Library
+                      <Library className="h-6 w-6" />
+                      <span>Select from Library</span>
                     </Button>
+                    
                     <Button 
                       variant="outline" 
+                      size="lg"
+                      className="h-16 flex flex-col gap-2"
                       onClick={() => setActiveTab('setlists')}
                     >
-                      <Music className="h-4 w-4 mr-2" />
-                      Setlists
+                      <Music className="h-6 w-6" />
+                      <span>Create Setlist</span>
                     </Button>
                   </div>
 
                   {/* Library Browser */}
                   {showLibrary && (
-                    <div className="border rounded-lg p-4 space-y-4 max-h-64">
+                    <div className="border rounded-lg p-4 space-y-4 max-h-96">
                       <div className="flex items-center justify-between">
                         <h4 className="font-medium">Sheet Music Library</h4>
                         <Button variant="ghost" size="sm" onClick={() => setShowLibrary(false)}>
@@ -259,7 +164,7 @@ export const PDFViewerDialog: React.FC<PDFViewerDialogProps> = ({
                           Loading library...
                         </div>
                       ) : (
-                        <ScrollArea className="h-48">
+                        <ScrollArea className="h-64">
                           <div className="space-y-2">
                             {sheetMusic.length === 0 ? (
                               <div className="text-center py-4 text-muted-foreground">
