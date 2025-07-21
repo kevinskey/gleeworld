@@ -287,7 +287,7 @@ export const UserDashboard = () => {
                 Welcome back {displayName}!
               </h1>
               <p className="text-white/80 text-sm mt-1">
-                {profile?.voice_part || getUserTitle()} • Spelman College Glee Club • Member since {profile?.created_at ? format(new Date(profile.created_at), 'MMMM yyyy') : 'Recently'}
+                {profile?.exec_board_role || profile?.voice_part || getUserTitle()} • Spelman College Glee Club • Member since {profile?.created_at ? format(new Date(profile.created_at), 'MMMM yyyy') : 'Recently'}
               </p>
             </div>
           </div>
