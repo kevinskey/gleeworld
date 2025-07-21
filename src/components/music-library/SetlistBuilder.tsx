@@ -76,6 +76,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [createLoading, setCreateLoading] = useState(false);
+  const [sheetMusicSearch, setSheetMusicSearch] = useState('');
   
   // Form state for creating/editing setlists
   const [formData, setFormData] = useState({
@@ -376,6 +377,12 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
     }
   };
 
+  // Filter sheet music based on search
+  const filteredSheetMusic = sheetMusic.filter(music => 
+    music.title.toLowerCase().includes(sheetMusicSearch.toLowerCase()) ||
+    (music.composer && music.composer.toLowerCase().includes(sheetMusicSearch.toLowerCase()))
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -557,11 +564,17 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
                 
                 <div className="space-y-2">
                   <h5 className="font-medium text-sm">Add Sheet Music</h5>
-                  <div className="max-h-48 overflow-y-auto space-y-2">
-                    {sheetMusic.map((music) => (
-                      <div key={music.id} className="flex items-center justify-between p-2 border rounded">
+                  <Input
+                    placeholder="Search sheet music..."
+                    value={sheetMusicSearch}
+                    onChange={(e) => setSheetMusicSearch(e.target.value)}
+                    className="text-xs"
+                  />
+                  <div className="max-h-48 overflow-y-auto space-y-1">
+                    {filteredSheetMusic.map((music) => (
+                      <div key={music.id} className="flex items-center justify-between p-1.5 border rounded">
                         <div className="flex-1 min-w-0">
-                          <h6 className="text-sm font-medium truncate">{music.title}</h6>
+                          <h6 className="text-xs font-medium truncate">{music.title}</h6>
                           {music.composer && (
                             <p className="text-xs text-muted-foreground">{music.composer}</p>
                           )}
@@ -570,6 +583,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
                           size="sm"
                           variant="outline"
                           onClick={() => addToSetlist(music.id)}
+                          className="h-6 px-2"
                         >
                           <Plus className="h-3 w-3" />
                         </Button>
@@ -580,24 +594,33 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
               </div>
             ) : (
               <div className="space-y-3">
-                {sheetMusic.map((music) => (
-                  <div key={music.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium truncate">{music.title}</h4>
-                      {music.composer && (
-                        <p className="text-sm text-muted-foreground">{music.composer}</p>
-                      )}
+                <Input
+                  placeholder="Search sheet music..."
+                  value={sheetMusicSearch}
+                  onChange={(e) => setSheetMusicSearch(e.target.value)}
+                  className="text-xs"
+                />
+                <div className="max-h-96 overflow-y-auto space-y-2">
+                  {filteredSheetMusic.map((music) => (
+                    <div key={music.id} className="flex items-center justify-between p-2 border rounded">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium truncate">{music.title}</h4>
+                        {music.composer && (
+                          <p className="text-xs text-muted-foreground">{music.composer}</p>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => music.pdf_url && onPdfSelect(music.pdf_url, music.title)}
+                        disabled={!music.pdf_url}
+                        className="h-7 px-2"
+                      >
+                        <Eye className="h-3 w-3" />
+                      </Button>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => music.pdf_url && onPdfSelect(music.pdf_url, music.title)}
-                      disabled={!music.pdf_url}
-                    >
-                      <Eye className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </CardContent>
