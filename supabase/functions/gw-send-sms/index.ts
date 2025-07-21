@@ -88,13 +88,21 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("SMS sent successfully:", {
       sid: responseData.sid,
-      status: responseData.status
+      status: responseData.status,
+      to: responseData.to,
+      from: responseData.from,
+      error_code: responseData.error_code,
+      error_message: responseData.error_message
     });
 
     return new Response(JSON.stringify({
       success: true,
       sid: responseData.sid,
       status: responseData.status,
+      to: responseData.to,
+      from: responseData.from,
+      error_code: responseData.error_code,
+      error_message: responseData.error_message,
       message: "SMS sent successfully"
     }), {
       status: 200,
