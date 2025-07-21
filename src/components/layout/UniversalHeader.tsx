@@ -61,7 +61,7 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
                   {pageName !== 'GleeWorld' && (
                     <>
                       <span className="text-gray-500 text-lg sm:text-xl md:text-2xl hidden sm:inline">|</span>
-                      <span className="text-white font-medium text-sm sm:text-base md:text-lg truncate max-w-32 sm:max-w-48 md:max-w-64 bg-slate-900 px-2 py-0.5 rounded-md">
+                      <span className="text-white font-medium text-sm sm:text-base md:text-lg truncate max-w-32 sm:max-w-48 md:max-w-64 bg-slate-900 pl-[5px] pr-2 py-0.5 rounded-md">
                         {pageName}
                       </span>
                     </>
