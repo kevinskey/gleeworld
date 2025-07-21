@@ -569,10 +569,10 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
           </Card>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-between pt-6 border-t">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-6 border-t gap-3">
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button type="button" variant="destructive" size="sm">
+                <Button type="button" variant="destructive" size="sm" className="w-full sm:w-auto">
                   <TrashIcon className="h-4 w-4 mr-2" />
                   Delete Event
                 </Button>
@@ -600,12 +600,12 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
               </AlertDialogContent>
             </AlertDialog>
 
-            <div className="flex gap-3">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
                 <XIcon className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading} className="hover-scale">
+              <Button type="submit" disabled={loading} className="hover-scale w-full sm:w-auto">
                 <SaveIcon className="h-4 w-4 mr-2" />
                 {loading ? "Saving..." : "Save Changes"}
               </Button>
