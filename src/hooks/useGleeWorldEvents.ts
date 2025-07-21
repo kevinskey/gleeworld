@@ -32,6 +32,7 @@ export const useGleeWorldEvents = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const isSubscribedRef = useRef(false);
 
   const fetchEvents = async () => {
     try {
@@ -110,17 +111,24 @@ export const useGleeWorldEvents = () => {
     }
   };
 
-  const setupRealtime = () => {
-    // Clean up existing channel first and wait for cleanup
+  const setupRealtime = async () => {
+    // Prevent multiple subscriptions
+    if (isSubscribedRef.current) {
+      return;
+    }
+
+    // Clean up existing channel completely
     if (channelRef.current) {
-      supabase.removeChannel(channelRef.current);
+      await supabase.removeChannel(channelRef.current);
       channelRef.current = null;
     }
 
-    // Create a new channel with unique identifier to avoid conflicts
-    const channelId = `events-changes-${Date.now()}`;
-    const channel = supabase
-      .channel(channelId)
+    // Create a new channel with unique identifier
+    const channelId = `events-changes-${Date.now()}-${Math.random()}`;
+    const channel = supabase.channel(channelId);
+
+    // Add event listeners
+    channel
       .on(
         'postgres_changes',
         {
@@ -156,10 +164,17 @@ export const useGleeWorldEvents = () => {
           console.log('Real-time appointment change:', payload);
           fetchEvents();
         }
-      )
-      .subscribe();
+      );
 
-    channelRef.current = channel;
+    // Subscribe and track state
+    try {
+      await channel.subscribe();
+      channelRef.current = channel;
+      isSubscribedRef.current = true;
+    } catch (error) {
+      console.error('Failed to subscribe to realtime channel:', error);
+      isSubscribedRef.current = false;
+    }
   };
 
   const getEventsByDateRange = (startDate: Date, endDate: Date) => {
@@ -186,11 +201,13 @@ export const useGleeWorldEvents = () => {
 
     // Cleanup function
     return () => {
+      isSubscribedRef.current = false;
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
     };
-  }, [user]); // Re-fetch events when user authentication status changes
+  }, [user?.id]); // Only depend on user.id to reduce re-runs
 
   // Make fetchEvents available for manual refresh after updates
   const refreshEvents = () => {
