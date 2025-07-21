@@ -590,6 +590,120 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
           </CardContent>
         </Card>
 
+        {/* Create Setlist Form */}
+        {isCreating && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="text-base">Create New Setlist</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Title *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="Concert Setlist"
+                    disabled={createLoading}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="venue">Venue</Label>
+                  <Input
+                    id="venue"
+                    value={formData.venue}
+                    onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+                    placeholder="Concert Hall"
+                    disabled={createLoading}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Spring concert program..."
+                  rows={3}
+                  disabled={createLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Performance Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !formData.performance_date && "text-muted-foreground"
+                      )}
+                      disabled={createLoading}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.performance_date ? (
+                        format(formData.performance_date, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.performance_date}
+                      onSelect={(date) => setFormData({ ...formData, performance_date: date })}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="is_public"
+                    checked={formData.is_public}
+                    onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
+                    className="rounded"
+                    disabled={createLoading}
+                  />
+                  <Label htmlFor="is_public" className="text-sm">
+                    Make this setlist public
+                  </Label>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => { 
+                      setIsCreating(false); 
+                      resetForm(); 
+                    }}
+                    disabled={createLoading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={createSetlist}
+                    disabled={createLoading || !formData.title.trim()}
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {createLoading ? 'Creating...' : 'Create Setlist'}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Current Setlist or Sheet Music Panel */}
         <Card>
           <CardHeader>
@@ -719,119 +833,6 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
         </Card>
       </div>
 
-      {/* Create Setlist Form */}
-      {isCreating && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="text-base">Create New Setlist</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Title *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Concert Setlist"
-                  disabled={createLoading}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="venue">Venue</Label>
-                <Input
-                  id="venue"
-                  value={formData.venue}
-                  onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                  placeholder="Concert Hall"
-                  disabled={createLoading}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Spring concert program..."
-                rows={3}
-                disabled={createLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Performance Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !formData.performance_date && "text-muted-foreground"
-                    )}
-                    disabled={createLoading}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.performance_date ? (
-                      format(formData.performance_date, "PPP")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={formData.performance_date}
-                    onSelect={(date) => setFormData({ ...formData, performance_date: date })}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="is_public"
-                  checked={formData.is_public}
-                  onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
-                  className="rounded"
-                  disabled={createLoading}
-                />
-                <Label htmlFor="is_public" className="text-sm">
-                  Make this setlist public
-                </Label>
-              </div>
-              
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => { 
-                    setIsCreating(false); 
-                    resetForm(); 
-                  }}
-                  disabled={createLoading}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={createSetlist}
-                  disabled={createLoading || !formData.title.trim()}
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {createLoading ? 'Creating...' : 'Create Setlist'}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
