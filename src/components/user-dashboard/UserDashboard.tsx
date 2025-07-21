@@ -281,7 +281,7 @@ export const UserDashboard = () => {
         <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6 space-y-4 sm:space-y-6">
           
           {/* Compact Welcome Card */}
-          <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 rounded-3xl shadow-lg p-4">
+          <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 rounded-3xl shadow-lg p-6">
             <div className="text-center">
               <h1 className="text-xl font-medium text-white">
                 Welcome back {displayName}!
