@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +21,8 @@ import {
   Save,
   Edit,
   Eye,
-  FileText
+  FileText,
+  AlertCircle
 } from 'lucide-react';
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -73,6 +75,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [createLoading, setCreateLoading] = useState(false);
   
   // Form state for creating/editing setlists
   const [formData, setFormData] = useState({
@@ -88,8 +91,37 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
     if (user) {
       loadSetlists();
       loadSheetMusic();
+      testDatabaseConnection();
     }
   }, [user]);
+
+  const testDatabaseConnection = async () => {
+    try {
+      console.log('SetlistBuilder: Testing database connection...');
+      const { data: authUser } = await supabase.auth.getUser();
+      console.log('SetlistBuilder: Auth user:', authUser?.user?.id);
+      
+      // Test if we can query the setlists table
+      const { data, error, count } = await supabase
+        .from('setlists')
+        .select('*', { count: 'exact', head: true });
+      
+      console.log('SetlistBuilder: Database test result:', { data, error, count });
+      
+      if (error) {
+        console.error('SetlistBuilder: Database connection test failed:', error);
+        toast({
+          title: "Database Connection Issue",
+          description: `Unable to connect to setlists table: ${error.message}`,
+          variant: "destructive",
+        });
+      } else {
+        console.log('SetlistBuilder: Database connection successful');
+      }
+    } catch (error) {
+      console.error('SetlistBuilder: Database connection test error:', error);
+    }
+  };
 
   const loadSetlists = async () => {
     console.log('SetlistBuilder: Loading setlists for user:', user?.id);
@@ -101,7 +133,15 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
         .order('created_at', { ascending: false });
 
       console.log('SetlistBuilder: Setlists query result:', { data, error });
-      if (error) throw error;
+      if (error) {
+        console.error('SetlistBuilder: Error loading setlists:', error);
+        toast({
+          title: "Error Loading Setlists",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
       setSetlists(data || []);
     } catch (error) {
       console.error('Error loading setlists:', error);
@@ -124,7 +164,15 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
         .order('title');
 
       console.log('SetlistBuilder: Sheet music query result:', { count: data?.length, error });
-      if (error) throw error;
+      if (error) {
+        console.error('SetlistBuilder: Error loading sheet music:', error);
+        toast({
+          title: "Error Loading Sheet Music",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
       setSheetMusic(data || []);
     } catch (error) {
       console.error('Error loading sheet music:', error);
@@ -132,6 +180,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
   };
 
   const loadSetlistItems = async (setlistId: string) => {
+    console.log('SetlistBuilder: Loading items for setlist:', setlistId);
     try {
       const { data, error } = await supabase
         .from('setlist_items')
@@ -142,7 +191,16 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
         .eq('setlist_id', setlistId)
         .order('position');
 
-      if (error) throw error;
+      console.log('SetlistBuilder: Setlist items query result:', { data, error });
+      if (error) {
+        console.error('SetlistBuilder: Error loading setlist items:', error);
+        toast({
+          title: "Error Loading Setlist Items",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
       
       if (selectedSetlist) {
         setSelectedSetlist({
@@ -156,7 +214,11 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
   };
 
   const createSetlist = async () => {
+    console.log('SetlistBuilder: createSetlist called with data:', formData);
+    console.log('SetlistBuilder: Current user:', user?.id);
+
     if (!formData.title.trim()) {
+      console.log('SetlistBuilder: Title validation failed');
       toast({
         title: "Title Required",
         description: "Please enter a setlist title.",
@@ -165,22 +227,51 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
       return;
     }
 
+    if (!user?.id) {
+      console.log('SetlistBuilder: User not authenticated');
+      toast({
+        title: "Authentication Error",
+        description: "Please log in to create setlists.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCreateLoading(true);
+    
     try {
+      console.log('SetlistBuilder: Attempting to create setlist...');
+      
+      const insertData = {
+        title: formData.title.trim(),
+        description: formData.description?.trim() || null,
+        venue: formData.venue?.trim() || null,
+        performance_date: formData.performance_date ? format(formData.performance_date, 'yyyy-MM-dd') : null,
+        is_public: formData.is_public,
+        created_by: user.id,
+      };
+
+      console.log('SetlistBuilder: Insert data:', insertData);
+
       const { data, error } = await supabase
         .from('setlists')
-        .insert({
-          title: formData.title,
-          description: formData.description || null,
-          venue: formData.venue || null,
-          performance_date: formData.performance_date ? format(formData.performance_date, 'yyyy-MM-dd') : null,
-          is_public: formData.is_public,
-          created_by: user?.id,
-        })
+        .insert(insertData)
         .select()
         .single();
 
-      if (error) throw error;
+      console.log('SetlistBuilder: Insert result:', { data, error });
 
+      if (error) {
+        console.error('SetlistBuilder: Insert error:', error);
+        toast({
+          title: "Database Error",
+          description: `Failed to create setlist: ${error.message}`,
+          variant: "destructive",
+        });
+        throw error;
+      }
+
+      console.log('SetlistBuilder: Setlist created successfully:', data);
       setSetlists([data, ...setlists]);
       setSelectedSetlist(data);
       setIsCreating(false);
@@ -191,17 +282,21 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
         description: "Setlist created successfully.",
       });
     } catch (error) {
-      console.error('Error creating setlist:', error);
+      console.error('SetlistBuilder: Error in createSetlist:', error);
       toast({
         title: "Error",
-        description: "Failed to create setlist.",
+        description: `Failed to create setlist: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
+    } finally {
+      setCreateLoading(false);
     }
   };
 
   const addToSetlist = async (sheetMusicId: string) => {
     if (!selectedSetlist) return;
+
+    console.log('SetlistBuilder: Adding sheet music to setlist:', { selectedSetlist: selectedSetlist.id, sheetMusicId });
 
     try {
       const nextPosition = (selectedSetlist.items?.length || 0) + 1;
@@ -216,6 +311,8 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
         .select()
         .single();
 
+      console.log('SetlistBuilder: Add to setlist result:', { data, error });
+
       if (error) throw error;
 
       loadSetlistItems(selectedSetlist.id);
@@ -228,13 +325,14 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
       console.error('Error adding to setlist:', error);
       toast({
         title: "Error",
-        description: "Failed to add to setlist.",
+        description: `Failed to add to setlist: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     }
   };
 
   const removeFromSetlist = async (itemId: string) => {
+    console.log('SetlistBuilder: Removing item from setlist:', itemId);
     try {
       const { error } = await supabase
         .from('setlist_items')
@@ -255,13 +353,14 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
       console.error('Error removing from setlist:', error);
       toast({
         title: "Error",
-        description: "Failed to remove from setlist.",
+        description: `Failed to remove from setlist: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     }
   };
 
   const resetForm = () => {
+    console.log('SetlistBuilder: Resetting form');
     setFormData({
       title: '',
       description: '',
@@ -285,7 +384,23 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
     );
   }
 
-  console.log('SetlistBuilder render: isCreating =', isCreating);
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <AlertCircle className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+              <h3 className="text-lg font-semibold mb-2">Authentication Required</h3>
+              <p className="text-muted-foreground">Please log in to create and manage setlists.</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  console.log('SetlistBuilder render: isCreating =', isCreating, 'createLoading =', createLoading);
 
   return (
     <div className="space-y-6">
@@ -306,6 +421,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
             setIsCreating(true);
           }} 
           className="flex items-center gap-2"
+          disabled={createLoading}
         >
           <Plus className="h-4 w-4" />
           New Setlist
@@ -503,6 +619,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="Concert Setlist"
+                  disabled={createLoading}
                 />
               </div>
               
@@ -513,6 +630,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
                   value={formData.venue}
                   onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
                   placeholder="Concert Hall"
+                  disabled={createLoading}
                 />
               </div>
             </div>
@@ -525,6 +643,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Spring concert program..."
                 rows={3}
+                disabled={createLoading}
               />
             </div>
 
@@ -538,6 +657,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
                       "w-full justify-start text-left font-normal",
                       !formData.performance_date && "text-muted-foreground"
                     )}
+                    disabled={createLoading}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {formData.performance_date ? (
@@ -567,6 +687,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
                   checked={formData.is_public}
                   onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
                   className="rounded"
+                  disabled={createLoading}
                 />
                 <Label htmlFor="is_public" className="text-sm">
                   Make this setlist public
@@ -574,12 +695,22 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
               </div>
               
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => { setIsCreating(false); resetForm(); }}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => { 
+                    setIsCreating(false); 
+                    resetForm(); 
+                  }}
+                  disabled={createLoading}
+                >
                   Cancel
                 </Button>
-                <Button onClick={createSetlist}>
+                <Button 
+                  onClick={createSetlist}
+                  disabled={createLoading || !formData.title.trim()}
+                >
                   <Save className="h-4 w-4 mr-2" />
-                  Create Setlist
+                  {createLoading ? 'Creating...' : 'Create Setlist'}
                 </Button>
               </div>
             </div>
