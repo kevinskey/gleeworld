@@ -109,11 +109,11 @@ export const MemberCommunications = () => {
       const { data, error } = await supabase
         .from('gw_member_communications' as any)
         .insert([{
-          subject: formData.title,
+          title: formData.title,
           content: formData.content,
           communication_type: formData.communication_type,
           recipient_id: formData.recipient_id || null,
-          sender_id: user?.id,
+          created_by: user?.id,
           status: 'sent',
         }])
         .select()
