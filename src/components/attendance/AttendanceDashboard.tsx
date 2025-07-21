@@ -223,26 +223,57 @@ export const AttendanceDashboard = () => {
         </Card>
       </div>
 
-      {/* Main Content Tabs */}
-      <div className="bg-white/50 backdrop-blur-sm rounded-xl p-1 border">
+      {/* Excuse Generation Section */}
+      <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border">
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <FileText className="h-5 w-5" />
+          Excuse Management
+        </h2>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 h-auto p-1 bg-white/80 backdrop-blur-sm">
-            <TabsTrigger 
-              value="overview" 
-              className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
-            >
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">My Attendance</span>
-              <span className="sm:hidden">Attendance</span>
-            </TabsTrigger>
-            
+          <TabsList className="grid w-full grid-cols-2 h-auto p-1 bg-white/80 backdrop-blur-sm">
             <TabsTrigger 
               value="pre-excuses" 
               className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
             >
               <Calendar className="h-4 w-4" />
-              <span className="hidden sm:inline">Pre-Event Excuses</span>
-              <span className="sm:hidden">Pre-Excuse</span>
+              <span>Pre-Event Excuses</span>
+            </TabsTrigger>
+            
+            <TabsTrigger 
+              value="excuses" 
+              className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
+            >
+              <FileText className="h-4 w-4" />
+              <span>Post-Event Excuses</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <div className="mt-6">
+            <TabsContent value="pre-excuses" className="space-y-6 animate-fade-in">
+              <PreEventExcuses />
+            </TabsContent>
+
+            <TabsContent value="excuses" className="space-y-6 animate-fade-in">
+              <ExcuseRequests />
+            </TabsContent>
+          </div>
+        </Tabs>
+      </div>
+
+      {/* Attendance Records & Management Section */}
+      <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border">
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Users className="h-5 w-5" />
+          Attendance Records & Management
+        </h2>
+        <Tabs value={activeTab === 'overview' ? 'overview' : activeTab === 'take-attendance' ? 'take-attendance' : activeTab === 'reports' ? 'reports' : 'overview'} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className={`grid w-full ${canTakeAttendance && isAdmin ? 'grid-cols-3' : canTakeAttendance || isAdmin ? 'grid-cols-2' : 'grid-cols-1'} h-auto p-1 bg-white/80 backdrop-blur-sm`}>
+            <TabsTrigger 
+              value="overview" 
+              className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
+            >
+              <Users className="h-4 w-4" />
+              <span>My Attendance</span>
             </TabsTrigger>
             
             {canTakeAttendance && (
@@ -251,19 +282,9 @@ export const AttendanceDashboard = () => {
                 className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
               >
                 <ClipboardCheck className="h-4 w-4" />
-                <span className="hidden sm:inline">Take Attendance</span>
-                <span className="sm:hidden">Take</span>
+                <span>Take Attendance</span>
               </TabsTrigger>
             )}
-            
-            <TabsTrigger 
-              value="excuses" 
-              className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
-            >
-              <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">Post-Event Excuses</span>
-              <span className="sm:hidden">Excuses</span>
-            </TabsTrigger>
             
             {isAdmin && (
               <TabsTrigger 
@@ -271,19 +292,14 @@ export const AttendanceDashboard = () => {
                 className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
               >
                 <BarChart3 className="h-4 w-4" />
-                <span className="hidden sm:inline">Reports</span>
-                <span className="sm:hidden">Reports</span>
+                <span>Reports</span>
               </TabsTrigger>
             )}
           </TabsList>
 
-          <div className="mt-8">
+          <div className="mt-6">
             <TabsContent value="overview" className="space-y-6 animate-fade-in">
               <MyAttendance />
-            </TabsContent>
-
-            <TabsContent value="pre-excuses" className="space-y-6 animate-fade-in">
-              <PreEventExcuses />
             </TabsContent>
 
             {canTakeAttendance && (
@@ -291,10 +307,6 @@ export const AttendanceDashboard = () => {
                 <TakeAttendance />
               </TabsContent>
             )}
-
-            <TabsContent value="excuses" className="space-y-6 animate-fade-in">
-              <ExcuseRequests />
-            </TabsContent>
 
             {isAdmin && (
               <TabsContent value="reports" className="space-y-6 animate-fade-in">
