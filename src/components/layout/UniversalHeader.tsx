@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { LogOut, User, Settings, Menu, Home, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { AppNavigation } from "@/components/navigation/AppNavigation";
 import { SystemNavigation } from "@/components/navigation/SystemNavigation";
 import { DashboardSwitcher } from "@/components/navigation/DashboardSwitcher";
@@ -24,6 +25,7 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
   const isMobile = useIsMobile();
   const location = useLocation();
   const { profile } = useProfile();
+  const { pageName } = usePageTitle();
   
   const isSystemPage = location.pathname.startsWith('/system');
 
@@ -52,22 +54,27 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
                   alt="Spelman College Glee Club" 
                   className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 object-contain flex-shrink-0"
                 />
-                <span className="text-gray-900 font-bold text-base sm:text-lg md:text-xl whitespace-nowrap">
-                  GleeWorld
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-900 font-bold text-base sm:text-lg md:text-xl whitespace-nowrap">
+                    GleeWorld
+                  </span>
+                  {pageName !== 'GleeWorld' && (
+                    <>
+                      <span className="text-gray-500 text-sm sm:text-base md:text-lg hidden sm:inline">|</span>
+                      <span className="text-gray-700 font-medium text-sm sm:text-base md:text-lg truncate max-w-32 sm:max-w-48 md:max-w-64">
+                        {pageName}
+                      </span>
+                    </>
+                  )}
+                </div>
               </Link>
             </EnhancedTooltip>
-            
-
-            
           </div>
 
           {/* Right side actions */}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
             {user && (
               <>
-                
-                
                 <EnhancedTooltip content="View notifications and tasks">
                   <TaskNotifications />
                 </EnhancedTooltip>
