@@ -275,7 +275,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
 
       console.log('SetlistBuilder: Setlist created successfully:', data);
       setSetlists([data, ...setlists]);
-      setSelectedSetlist(data);
+      // Don't auto-select the setlist - keep showing available sheet music
       setIsCreating(false);
       resetForm();
       
