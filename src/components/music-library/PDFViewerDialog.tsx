@@ -118,7 +118,106 @@ export const PDFViewerDialog: React.FC<PDFViewerDialogProps> = ({
           </TabsList>
 
           <TabsContent value="viewer" className="flex-1 flex flex-col space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+            {/* Mobile/Tablet: Full screen PDF when selected, Library when not */}
+            <div className="lg:hidden">
+              {currentPdfUrl ? (
+                /* Mobile PDF View */
+                <div className="flex flex-col h-full">
+                  <div className="bg-muted p-3 border-b rounded-t-lg">
+                    <div className="flex items-center justify-between">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={clearPdf}
+                        className="flex items-center gap-2"
+                      >
+                        <Library className="h-4 w-4" />
+                        <span className="text-sm">Back to Library</span>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setActiveTab('setlists')}
+                      >
+                        <Music className="h-3 w-3 mr-1" />
+                        Setlists
+                      </Button>
+                    </div>
+                    <div className="mt-2">
+                      <span className="text-sm font-medium truncate block">
+                        {currentPdfTitle}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex-1 border border-t-0 rounded-b-lg overflow-hidden">
+                    <PDFViewer 
+                      pdfUrl={currentPdfUrl}
+                      className="w-full h-full"
+                    />
+                  </div>
+                </div>
+              ) : (
+                /* Mobile Library View */
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <Library className="h-5 w-5" />
+                      Sheet Music Library
+                    </h3>
+                    <Button 
+                      onClick={() => setActiveTab('setlists')}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <Music className="h-4 w-4 mr-1" />
+                      Setlists
+                    </Button>
+                  </div>
+                  
+                  <div className="flex-1 border rounded-lg overflow-hidden">
+                    <ScrollArea className="h-full">
+                      <div className="p-4 space-y-3">
+                        {libraryLoading ? (
+                          <div className="text-center py-8 text-muted-foreground">
+                            Loading library...
+                          </div>
+                        ) : sheetMusic.length === 0 ? (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                            <p>No sheet music found</p>
+                          </div>
+                        ) : (
+                          sheetMusic.filter(item => item.pdf_url).map((item) => (
+                            <div
+                              key={item.id}
+                              className="p-4 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 active:bg-muted"
+                              onClick={() => handleLibrarySelect(item)}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-medium truncate text-base">{item.title}</h4>
+                                  {item.composer && (
+                                    <p className="text-sm text-muted-foreground truncate mt-1">
+                                      by {item.composer}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="ml-3">
+                                  <FileText className="h-5 w-5 text-muted-foreground" />
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Desktop: Side-by-side layout */}
+            <div className="hidden lg:grid lg:grid-cols-2 gap-6 h-full">
               {/* Sheet Music Library Panel */}
               <div className="flex flex-col" data-library-panel>
                 <div className="flex-1 border rounded-lg overflow-hidden">
@@ -192,24 +291,6 @@ export const PDFViewerDialog: React.FC<PDFViewerDialogProps> = ({
                         pdfUrl={currentPdfUrl}
                         className="w-full h-full"
                       />
-                      
-                      {/* Floating PDF Selection Button */}
-                      <div className="absolute top-4 left-4 z-50">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="shadow-lg bg-background/90 backdrop-blur-sm border"
-                          onClick={() => {
-                            const libraryPanel = document.querySelector('[data-library-panel]');
-                            if (libraryPanel) {
-                              libraryPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }
-                          }}
-                        >
-                          <Library className="h-3 w-3 mr-1" />
-                          Select PDF
-                        </Button>
-                      </div>
                     </>
                   ) : (
                     <div className="flex-1 flex items-center justify-center p-8">
