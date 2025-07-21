@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +23,8 @@ import {
   List,
   SortAsc,
   SortDesc,
-  Plus
+  Plus,
+  ArrowLeft
 } from "lucide-react";
 import { SheetMusicLibrary } from "./SheetMusicLibrary";
 import { AudioLibrary } from "./AudioLibrary";
@@ -64,6 +66,19 @@ export const MusicLibrary = () => {
       {/* Enhanced Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-border/50 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-8">
+          {/* Back to Dashboard */}
+          <div className="mb-6">
+            <Link to="/">
+              <Button 
+                variant="ghost" 
+                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+            </Link>
+          </div>
+          
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
             <div className="space-y-2">
               <div className="flex items-center gap-3">
