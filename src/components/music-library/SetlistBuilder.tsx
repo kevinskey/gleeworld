@@ -298,7 +298,13 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
             Create and manage performance setlists
           </p>
         </div>
-        <Button onClick={() => setIsCreating(true)} className="flex items-center gap-2">
+        <Button 
+          onClick={() => {
+            console.log('SetlistBuilder: New Setlist button clicked');
+            setIsCreating(true);
+          }} 
+          className="flex items-center gap-2"
+        >
           <Plus className="h-4 w-4" />
           New Setlist
         </Button>
