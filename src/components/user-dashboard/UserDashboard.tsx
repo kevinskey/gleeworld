@@ -280,109 +280,145 @@ export const UserDashboard = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
         <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6 space-y-4 sm:space-y-6">
           
-          {/* Dashboard Header with Background */}
-          <div 
-            className="relative bg-white rounded-lg shadow-sm border p-3 sm:p-6 overflow-hidden"
-            style={{
-              backgroundImage: welcomeCardSetting?.image_url ? `url(${welcomeCardSetting.image_url})` : 'none',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat'
-            }}
-          >
-            {/* Overlay for text readability when background image is present */}
-            {welcomeCardSetting?.image_url && (
-              <div className="absolute inset-0 bg-black bg-opacity-40 rounded-lg" />
-            )}
+          {/* Modern Dashboard Header */}
+          <div className="relative bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 rounded-2xl shadow-xl overflow-hidden">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/5 to-white/10"></div>
+            </div>
             
-            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-              <div className="flex items-center space-x-3 sm:space-x-4">
-                <Avatar className="h-12 w-12 sm:h-16 sm:w-16 ring-2 ring-white/50">
-                  <AvatarImage src={profile?.avatar_url || "/placeholder-avatar.jpg"} />
-                  <AvatarFallback className="bg-blue-100 text-blue-600 text-base sm:text-lg font-semibold">
-                    {displayName.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h1 className={`text-lg sm:text-2xl font-bold ${welcomeCardSetting?.image_url ? 'text-white drop-shadow-lg' : 'text-gray-900'}`}>
-                    Welcome back, {displayName}!
-                  </h1>
-                  <p className={`text-sm sm:text-base ${welcomeCardSetting?.image_url ? 'text-white/90 drop-shadow' : 'text-gray-600'}`}>
-                    Spelman College Glee Club {getUserTitle()}
-                  </p>
-                  <div className="flex flex-wrap gap-1 sm:gap-2 mt-1 sm:mt-2">
-                    {profile?.voice_part && (
-                      <Badge variant="secondary" className="bg-white/20 text-white border-white/30 text-xs">
-                        {profile.voice_part}
+            {/* Content */}
+            <div className="relative z-10 p-6 sm:p-8">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                {/* Left Section - User Info */}
+                <div className="flex items-start sm:items-center gap-6">
+                  <div className="relative">
+                    <Avatar className="h-16 w-16 sm:h-20 sm:w-20 ring-4 ring-white/30 shadow-lg">
+                      <AvatarImage src={profile?.avatar_url || "/placeholder-avatar.jpg"} className="object-cover" />
+                      <AvatarFallback className="bg-white text-purple-600 text-xl font-bold">
+                        {displayName.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    {/* Status Indicator */}
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 border-4 border-white rounded-full flex items-center justify-center">
+                      <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div>
+                      <h1 className="text-2xl sm:text-3xl font-bold text-white">
+                        Hello, {displayName}
+                      </h1>
+                      <p className="text-white/80 text-lg">
+                        Welcome to your dashboard
+                      </p>
+                    </div>
+                    
+                    {/* Enhanced Badges */}
+                    <div className="flex flex-wrap gap-2">
+                      <Badge className="bg-white/20 hover:bg-white/30 text-white border-white/20 px-3 py-1">
+                        <Crown className="h-3 w-3 mr-1" />
+                        {getUserTitle()}
                       </Badge>
+                      {profile?.voice_part && (
+                        <Badge className="bg-purple-500/30 hover:bg-purple-500/40 text-white border-purple-300/30 px-3 py-1">
+                          <Mic className="h-3 w-3 mr-1" />
+                          {profile.voice_part}
+                        </Badge>
+                      )}
+                      <Badge className="bg-green-500/30 hover:bg-green-500/40 text-white border-green-300/30 px-3 py-1">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Active
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Right Section - Stats & Actions */}
+                <div className="flex flex-col sm:flex-row gap-4 lg:flex-col lg:items-end">
+                  {/* Quick Stats Cards */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-3">
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-white">{events?.length || 0}</div>
+                      <div className="text-xs text-white/70">Events</div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-white">{contracts?.length || 0}</div>
+                      <div className="text-xs text-white/70">Contracts</div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center sm:block lg:hidden">
+                      <div className="text-2xl font-bold text-white">{notifications?.length || 0}</div>
+                      <div className="text-xs text-white/70">Alerts</div>
+                    </div>
+                  </div>
+                  
+                  {/* Member Since & Special Access */}
+                  <div className="text-right space-y-2">
+                    {profile?.role === 'super-admin' && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm"
+                          >
+                            <Users className="h-4 w-4 mr-2" />
+                            Member Views
+                            <ChevronDown className="h-4 w-4 ml-2" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent 
+                          align="end" 
+                          className="w-64 bg-white border shadow-lg z-50 max-h-64 overflow-y-auto"
+                        >
+                          {mockUsers.length > 0 ? (
+                            mockUsers.map((user) => (
+                              <DropdownMenuItem 
+                                key={user.id} 
+                                onClick={() => navigate(`/dashboard/member-view/${user.id}`)}
+                                className="cursor-pointer"
+                              >
+                                <div className="flex items-center space-x-3 w-full">
+                                  <Avatar className="h-6 w-6">
+                                    <AvatarFallback className="text-xs">
+                                      {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="font-medium text-sm truncate">
+                                      {user.full_name || user.email}
+                                    </div>
+                                    <div className="text-xs text-gray-500 truncate">
+                                      {user.role} {user.exec_board_role && `• ${user.exec_board_role}`}
+                                    </div>
+                                  </div>
+                                </div>
+                              </DropdownMenuItem>
+                            ))
+                          ) : (
+                            <DropdownMenuItem disabled>
+                              No test members available
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     )}
-                    <Badge variant="outline" className="bg-white/20 text-white border-white/30 text-xs">
-                      {getUserTitle()}
-                    </Badge>
-                    <Badge className="bg-green-500/80 text-white border-green-300/30 text-xs">
-                      Active Member
-                    </Badge>
+                    
+                    <div className="text-white/80 text-sm">
+                      <div>Member since</div>
+                      <div className="font-semibold text-white">
+                        {profile?.created_at ? format(new Date(profile.created_at), 'MMMM yyyy') : 'Recently'}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className={`text-left sm:text-right ${welcomeCardSetting?.image_url ? 'text-white' : 'text-gray-900'}`}>
-                {profile?.role === 'super-admin' && (
-                  <div className="mb-3">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className={`${welcomeCardSetting?.image_url ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
-                        >
-                          <Users className="h-4 w-4 mr-2" />
-                          Member Views
-                          <ChevronDown className="h-4 w-4 ml-2" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent 
-                        align="end" 
-                        className="w-64 bg-white border shadow-lg z-50 max-h-64 overflow-y-auto"
-                      >
-                        {mockUsers.length > 0 ? (
-                          mockUsers.map((user) => (
-                            <DropdownMenuItem 
-                              key={user.id} 
-                              onClick={() => navigate(`/dashboard/member-view/${user.id}`)}
-                              className="cursor-pointer"
-                            >
-                              <div className="flex items-center space-x-3 w-full">
-                                <Avatar className="h-6 w-6">
-                                  <AvatarFallback className="text-xs">
-                                    {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1 min-w-0">
-                                  <div className="font-medium text-sm truncate">
-                                    {user.full_name || user.email}
-                                  </div>
-                                  <div className="text-xs text-gray-500 truncate">
-                                    {user.role} {user.exec_board_role && `• ${user.exec_board_role}`}
-                                  </div>
-                                </div>
-                              </div>
-                            </DropdownMenuItem>
-                          ))
-                        ) : (
-                          <DropdownMenuItem disabled>
-                            No test members available
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                )}
-                <p className={`text-xs sm:text-sm ${welcomeCardSetting?.image_url ? 'text-white/80' : 'text-gray-600'}`}>
-                  Member since
-                </p>
-                <p className="font-medium text-sm sm:text-base">{profile?.created_at ? format(new Date(profile.created_at), 'MMMM yyyy') : 'Recently'}</p>
-              </div>
             </div>
+            
+            {/* Decorative Elements */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
           </div>
 
           {/* Grid Layout: Quick Actions & Admin Controls/Glee Club Spotlight */}
