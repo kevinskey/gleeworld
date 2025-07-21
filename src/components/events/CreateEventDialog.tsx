@@ -72,8 +72,36 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
       description: 'Managed by tour manager/admin with contracts'
     },
     { 
-      value: 'sectionals', 
-      label: 'Sectionals',
+      value: 'sectional', 
+      label: 'Sectional',
+      requiresBudget: true,
+      requiresContract: false,
+      description: 'Executive board creates budget'
+    },
+    { 
+      value: 'member-meeting', 
+      label: 'Member Meeting',
+      requiresBudget: true,
+      requiresContract: false,
+      description: 'Executive board creates budget'
+    },
+    { 
+      value: 'exec-meeting', 
+      label: 'Exec Board Meeting',
+      requiresBudget: true,
+      requiresContract: false,
+      description: 'Executive board creates budget'
+    },
+    { 
+      value: 'voice-lesson', 
+      label: 'Voice Lesson',
+      requiresBudget: true,
+      requiresContract: false,
+      description: 'Executive board creates budget'
+    },
+    { 
+      value: 'tutorial', 
+      label: 'Tutorial',
       requiresBudget: true,
       requiresContract: false,
       description: 'Executive board creates budget'

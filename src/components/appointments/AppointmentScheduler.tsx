@@ -299,6 +299,10 @@ export const AppointmentScheduler = () => {
                         <SelectContent className="bg-background border shadow-lg z-50">
                           <SelectItem value="general">General</SelectItem>
                           <SelectItem value="meeting">Meeting</SelectItem>
+                          <SelectItem value="member-meeting">Member Meeting</SelectItem>
+                          <SelectItem value="exec-meeting">Exec Board Meeting</SelectItem>
+                          <SelectItem value="voice-lesson">Voice Lesson</SelectItem>
+                          <SelectItem value="tutorial">Tutorial</SelectItem>
                           <SelectItem value="consultation">Consultation</SelectItem>
                           <SelectItem value="rehearsal">Rehearsal</SelectItem>
                           <SelectItem value="audition">Audition</SelectItem>

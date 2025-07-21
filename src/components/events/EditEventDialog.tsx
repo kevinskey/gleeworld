@@ -67,14 +67,16 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
 
   const eventTypes = [
     { value: 'performance', label: 'Performance' },
-    { value: 'tour_stop', label: 'Tour Stop' },
+    { value: 'rehearsal', label: 'Rehearsal' },
+    { value: 'sectional', label: 'Sectional' },
+    { value: 'member-meeting', label: 'Member Meeting' },
+    { value: 'exec-meeting', label: 'Exec Board Meeting' },
+    { value: 'voice-lesson', label: 'Voice Lesson' },
+    { value: 'tutorial', label: 'Tutorial' },
     { value: 'social', label: 'Social Event' },
-    { value: 'banquet', label: 'Banquet' },
-    { value: 'fundraiser', label: 'Fundraiser' },
-    { value: 'worship_event', label: 'Worship Event' },
-    { value: 'travel', label: 'Travel' },
-    { value: 'volunteer', label: 'Volunteer Event' },
     { value: 'meeting', label: 'Meeting' },
+    { value: 'workshop', label: 'Workshop' },
+    { value: 'audition', label: 'Audition' },
     { value: 'other', label: 'Other' }
   ];
 
