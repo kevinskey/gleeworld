@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Send } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Upload, Send, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -41,6 +42,7 @@ export const ExcuseGenerator = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const reasonOptions = [
     'Medical appointment',
@@ -288,128 +290,145 @@ export const ExcuseGenerator = () => {
       }));
 
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle>Excuse Generator</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Excuse Type Selector */}
-          <div>
-            <Label htmlFor="excuse-type">Excuse Type</Label>
-            <Select value={excuseType} onValueChange={(value: 'pre-event' | 'post-event') => setExcuseType(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select excuse type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pre-event">Pre-Event</SelectItem>
-                <SelectItem value="post-event">Post-Event</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+    <Collapsible open={!isCollapsed} onOpenChange={setIsCollapsed}>
+      <Card className="mb-6">
+        <CollapsibleTrigger asChild>
+          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Send className="w-5 h-5" />
+                Excuse Generator
+              </CardTitle>
+              {isCollapsed ? (
+                <ChevronDown className="w-5 h-5 text-muted-foreground" />
+              ) : (
+                <ChevronUp className="w-5 h-5 text-muted-foreground" />
+              )}
+            </div>
+          </CardHeader>
+        </CollapsibleTrigger>
+        
+        <CollapsibleContent className="animate-accordion-down">
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Excuse Type Selector */}
+              <div>
+                <Label htmlFor="excuse-type">Excuse Type</Label>
+                <Select value={excuseType} onValueChange={(value: 'pre-event' | 'post-event') => setExcuseType(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select excuse type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pre-event">Pre-Event</SelectItem>
+                    <SelectItem value="post-event">Post-Event</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-          {/* Event Selector */}
-          <div>
-            <Label htmlFor="event-select">
-              {excuseType === 'pre-event' ? 'Upcoming Event' : 'Missed Event'}
-            </Label>
-            <Select value={selectedEvent} onValueChange={setSelectedEvent}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select event" />
-              </SelectTrigger>
-              <SelectContent>
-                {eventOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              {/* Event Selector */}
+              <div>
+                <Label htmlFor="event-select">
+                  {excuseType === 'pre-event' ? 'Upcoming Event' : 'Missed Event'}
+                </Label>
+                <Select value={selectedEvent} onValueChange={setSelectedEvent}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select event" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {eventOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          {/* Reason Selector */}
-          <div>
-            <Label htmlFor="reason-select">Reason</Label>
-            <Select value={selectedReason} onValueChange={setSelectedReason}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select reason" />
-              </SelectTrigger>
-              <SelectContent>
-                {reasonOptions.map((reason) => (
-                  <SelectItem key={reason} value={reason}>
-                    {reason}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              {/* Reason Selector */}
+              <div>
+                <Label htmlFor="reason-select">Reason</Label>
+                <Select value={selectedReason} onValueChange={setSelectedReason}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select reason" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {reasonOptions.map((reason) => (
+                      <SelectItem key={reason} value={reason}>
+                        {reason}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          {/* Submit Button */}
-          <div className="flex items-end">
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  disabled={!selectedEvent || !selectedReason}
-                  className="w-full"
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  Submit Excuse
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Submit Excuse Request</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  {selectedReason === 'Other' && (
-                    <div>
-                      <Label htmlFor="custom-reason">Custom Reason</Label>
-                      <Textarea
-                        id="custom-reason"
-                        value={customReason}
-                        onChange={(e) => setCustomReason(e.target.value)}
-                        placeholder="Please provide details..."
-                        rows={3}
-                      />
+              {/* Submit Button */}
+              <div className="flex items-end">
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      disabled={!selectedEvent || !selectedReason}
+                      className="w-full"
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      Submit Excuse
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Submit Excuse Request</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      {selectedReason === 'Other' && (
+                        <div>
+                          <Label htmlFor="custom-reason">Custom Reason</Label>
+                          <Textarea
+                            id="custom-reason"
+                            value={customReason}
+                            onChange={(e) => setCustomReason(e.target.value)}
+                            placeholder="Please provide details..."
+                            rows={3}
+                          />
+                        </div>
+                      )}
+                      
+                      <div>
+                        <Label htmlFor="excuse-file">Upload Documentation (Optional)</Label>
+                        <Input
+                          id="excuse-file"
+                          type="file"
+                          onChange={handleFileChange}
+                          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                        />
+                        {excuseFile && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Selected: {excuseFile.name}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex justify-end space-x-2">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setIsDialogOpen(false)}
+                          disabled={isSubmitting}
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          onClick={submitExcuse}
+                          disabled={isSubmitting}
+                        >
+                          {isSubmitting ? 'Submitting...' : 'Submit Excuse'}
+                        </Button>
+                      </div>
                     </div>
-                  )}
-                  
-                  <div>
-                    <Label htmlFor="excuse-file">Upload Documentation (Optional)</Label>
-                    <Input
-                      id="excuse-file"
-                      type="file"
-                      onChange={handleFileChange}
-                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                    />
-                    {excuseFile && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Selected: {excuseFile.name}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex justify-end space-x-2">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setIsDialogOpen(false)}
-                      disabled={isSubmitting}
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      onClick={submitExcuse}
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? 'Submitting...' : 'Submit Excuse'}
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 };
