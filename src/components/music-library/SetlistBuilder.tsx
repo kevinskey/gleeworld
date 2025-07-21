@@ -510,13 +510,14 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
         <Button 
           onClick={() => {
             console.log('SetlistBuilder: New Setlist button clicked');
-            setIsCreating(true);
+            setIsCreating(!isCreating);
           }} 
           className="flex items-center gap-2"
           disabled={createLoading}
+          variant={isCreating ? "secondary" : "default"}
         >
           <Plus className="h-4 w-4" />
-          New Setlist
+          {isCreating ? 'Cancel' : 'New Setlist'}
         </Button>
       </div>
 
