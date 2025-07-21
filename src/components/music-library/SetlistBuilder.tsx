@@ -490,7 +490,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
 
       {/* Create Setlist Dialog */}
       {isCreating && (
-        <Card className="mt-6">
+        <Card className="mt-6 bg-background border-2 border-primary">
           <CardHeader>
             <CardTitle className="text-base">Create New Setlist</CardTitle>
           </CardHeader>
