@@ -60,14 +60,12 @@ export const EXEC_BOARD_MODULE_PERMISSIONS: Record<ExecutiveBoardRole, string[]>
     'hero_management',
     'dashboard_settings',
     'youtube_management',
-    'send_notifications',
     'budget_creation',
     'contracts',
     'send_emails',
     'manage_permissions',
   ],
   [EXECUTIVE_BOARD_ROLES.VICE_PRESIDENT]: [
-    'send_notifications',
     'budget_creation',
     'contracts',
     'send_emails',
@@ -76,63 +74,50 @@ export const EXEC_BOARD_MODULE_PERMISSIONS: Record<ExecutiveBoardRole, string[]>
   [EXECUTIVE_BOARD_ROLES.TREASURER]: [
     'budget_creation',
     'contracts',
-    'send_notifications',
     'send_emails',
   ],
   [EXECUTIVE_BOARD_ROLES.SECRETARY]: [
-    'send_notifications',
     'send_emails',
     'contracts',
   ],
   [EXECUTIVE_BOARD_ROLES.MUSIC_DIRECTOR]: [
     'youtube_management',
-    'send_notifications',
     'send_emails',
   ],
   [EXECUTIVE_BOARD_ROLES.ASSISTANT_MUSIC_DIRECTOR]: [
     'youtube_management',
-    'send_notifications',
   ],
   [EXECUTIVE_BOARD_ROLES.SOCIAL_CHAIR]: [
-    'send_notifications',
     'send_emails',
     'budget_creation',
   ],
   [EXECUTIVE_BOARD_ROLES.PUBLICITY_CHAIR]: [
     'hero_management',
-    'send_notifications',
     'send_emails',
     'youtube_management',
   ],
   [EXECUTIVE_BOARD_ROLES.EVENTS_COORDINATOR]: [
     'budget_creation',
     'contracts',
-    'send_notifications',
     'send_emails',
   ],
   [EXECUTIVE_BOARD_ROLES.HISTORIAN]: [
     'youtube_management',
-    'send_notifications',
   ],
   [EXECUTIVE_BOARD_ROLES.LIBRARIAN]: [
-    'send_notifications',
   ],
   [EXECUTIVE_BOARD_ROLES.TECHNICAL_DIRECTOR]: [
     'dashboard_settings',
     'youtube_management',
-    'send_notifications',
   ],
   [EXECUTIVE_BOARD_ROLES.FUNDRAISING_CHAIR]: [
     'budget_creation',
-    'send_notifications',
     'send_emails',
   ],
   [EXECUTIVE_BOARD_ROLES.ALUMNI_RELATIONS]: [
-    'send_notifications',
     'send_emails',
   ],
   [EXECUTIVE_BOARD_ROLES.MEMBERSHIP_CHAIR]: [
-    'send_notifications',
     'send_emails',
   ],
 };
@@ -184,7 +169,7 @@ export const ROLE_QUICK_ACTIONS: Record<ExecutiveBoardRole, Array<{
     { action: 'create_budget', label: 'Create Budget', description: 'Set up new project budget' },
     { action: 'create_event_with_budget', label: 'Create Event with Budget', description: 'Create event and budget together' },
     { action: 'schedule_event', label: 'Schedule Event', description: 'Plan upcoming events' },
-    { action: 'send_notifications', label: 'Send Notifications', description: 'Notify members about updates' },
+    
   ],
   [EXECUTIVE_BOARD_ROLES.TREASURER]: [
     { action: 'create_budget', label: 'Create Budget', description: 'Set up financial budgets' },

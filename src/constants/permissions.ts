@@ -30,7 +30,6 @@ export const PERMISSIONS = [
   'access_youtube_management',
   'access_budget_creation',
   'access_contracts',
-  'send_notifications',
   'send_emails',
   'manage_username_permissions',
   'approve_budgets_treasurer',
@@ -57,7 +56,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     'access_hero_management',
     'access_dashboard_settings',
     'access_youtube_management',
-    'send_notifications',
     'send_emails',
     'manage_username_permissions',
   ],
@@ -91,11 +89,6 @@ export const DASHBOARD_MODULES = {
     name: 'YouTube Management',
     description: 'Sync and manage YouTube content',
     permission: 'access_youtube_management' as Permission,
-  },
-  send_notifications: {
-    name: 'Send Notifications',
-    description: 'Send notifications to members',
-    permission: 'send_notifications' as Permission,
   },
   budget_creation: {
     name: 'Budget Creation',
@@ -172,7 +165,7 @@ export const hasExecutiveBoardPermissions = (
   usernamePermissions: string[] = []
 ): boolean => {
   // Admin role always has permissions
-  if (hasPermission(userRole, 'send_notifications') || hasPermission(userRole, 'send_emails')) {
+  if (hasPermission(userRole, 'send_emails')) {
     return true;
   }
   
@@ -182,7 +175,7 @@ export const hasExecutiveBoardPermissions = (
   }
   
   // Check username-based permissions
-  return usernamePermissions.includes('send_notifications') || usernamePermissions.includes('send_emails');
+  return usernamePermissions.includes('send_emails');
 };
 
 // Enhanced permission check with executive board role consideration
@@ -229,21 +222,21 @@ export const hasEnhancedModuleAccess = (
 const getExecutiveBoardPermissions = (execBoardRole: string): string[] => {
   // This will be populated from executiveBoardRoles.ts
   const rolePermissionMap: Record<string, string[]> = {
-    'president': ['hero_management', 'dashboard_settings', 'youtube_management', 'send_notifications', 'budget_creation', 'contracts', 'send_emails', 'manage_permissions'],
-    'vice-president': ['send_notifications', 'budget_creation', 'contracts', 'send_emails', 'youtube_management'],
-    'treasurer': ['budget_creation', 'contracts', 'send_notifications', 'send_emails'],
-    'secretary': ['send_notifications', 'send_emails', 'contracts'],
-    'music-director': ['youtube_management', 'send_notifications', 'send_emails'],
-    'assistant-music-director': ['youtube_management', 'send_notifications'],
-    'social-chair': ['send_notifications', 'send_emails', 'budget_creation'],
-    'publicity-chair': ['hero_management', 'send_notifications', 'send_emails', 'youtube_management'],
-    'events-coordinator': ['budget_creation', 'contracts', 'send_notifications', 'send_emails'],
-    'historian': ['youtube_management', 'send_notifications'],
-    'librarian': ['send_notifications'],
-    'technical-director': ['dashboard_settings', 'youtube_management', 'send_notifications'],
-    'fundraising-chair': ['budget_creation', 'send_notifications', 'send_emails'],
-    'alumni-relations': ['send_notifications', 'send_emails'],
-    'membership-chair': ['send_notifications', 'send_emails'],
+    'president': ['hero_management', 'dashboard_settings', 'youtube_management', 'budget_creation', 'contracts', 'send_emails', 'manage_permissions'],
+    'vice-president': ['budget_creation', 'contracts', 'send_emails', 'youtube_management'],
+    'treasurer': ['budget_creation', 'contracts', 'send_emails'],
+    'secretary': ['send_emails', 'contracts'],
+    'music-director': ['youtube_management', 'send_emails'],
+    'assistant-music-director': ['youtube_management'],
+    'social-chair': ['send_emails', 'budget_creation'],
+    'publicity-chair': ['hero_management', 'send_emails', 'youtube_management'],
+    'events-coordinator': ['budget_creation', 'contracts', 'send_emails'],
+    'historian': ['youtube_management'],
+    'librarian': [],
+    'technical-director': ['dashboard_settings', 'youtube_management'],
+    'fundraising-chair': ['budget_creation', 'send_emails'],
+    'alumni-relations': ['send_emails'],
+    'membership-chair': ['send_emails'],
   };
   
   return rolePermissionMap[execBoardRole] || [];
