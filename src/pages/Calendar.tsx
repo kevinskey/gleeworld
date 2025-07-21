@@ -9,8 +9,8 @@ const Calendar = () => {
   
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
-      <div className="container mx-auto py-2 md:py-3 space-y-3 md:space-y-4 px-4">
-        <div className="flex items-center justify-between">
+      <div className="container mx-auto py-2 md:py-3 space-y-3 md:space-y-4 px-4 glass-modal-overlay">
+        <div className="flex items-center justify-between glass-signature-panel p-4 rounded-lg">
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-foreground">Glee World Calendar</h1>
           </div>

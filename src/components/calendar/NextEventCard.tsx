@@ -17,7 +17,7 @@ export const NextEventCard = () => {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="glass-dashboard-card">
         <CardContent className="p-4">
           <div className="flex items-center justify-center py-4">
             <div className="animate-pulse">Loading next event...</div>
@@ -29,7 +29,7 @@ export const NextEventCard = () => {
 
   if (!nextEvent) {
     return (
-      <Card>
+      <Card className="glass-dashboard-card">
         <CardContent className="p-4">
           <div className="text-center py-4">
             <CalendarIcon className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
@@ -42,7 +42,7 @@ export const NextEventCard = () => {
   }
 
   return (
-    <Card>
+    <Card className="glass-dashboard-card">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-lg">
           <CalendarIcon className="h-5 w-5" />
@@ -53,7 +53,7 @@ export const NextEventCard = () => {
       <CardContent className="pt-0">
         <EventHoverCard event={nextEvent} canEdit={false}>
           <div
-            className="flex items-start gap-4 p-4 border border-border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-primary/50 active:scale-[0.99]"
+            className="flex items-start gap-4 p-4 border border-border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-primary/50 active:scale-[0.99] glass-upload-zone"
             onClick={() => setSelectedEvent(nextEvent)}
           >
             <div className="text-center min-w-[48px]">
