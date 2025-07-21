@@ -537,8 +537,14 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
                     : "hover:bg-muted/50"
                 )}
                 onClick={() => {
-                  setSelectedSetlist(setlist);
-                  loadSetlistItems(setlist.id);
+                  if (selectedSetlist?.id === setlist.id) {
+                    // If clicking the same setlist, deselect it
+                    setSelectedSetlist(null);
+                  } else {
+                    // If clicking a different setlist, select it and load items
+                    setSelectedSetlist(setlist);
+                    loadSetlistItems(setlist.id);
+                  }
                 }}
               >
                 <div className="flex items-start justify-between">
