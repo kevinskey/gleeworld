@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { SheetMusicLibrary } from './SheetMusicLibrary';
 import { SetlistBuilder } from './SetlistBuilder';
 import { SetlistDiagnostics } from './SetlistDiagnostics';
-import { PDFViewer } from './PDFViewer';
+import { PDFViewer } from '@/components/PDFViewer';
 import { Settings } from 'lucide-react';
 
 export const MusicLibrary = () => {
@@ -55,7 +55,14 @@ export const MusicLibrary = () => {
             </TabsContent>
             
             <TabsContent value="library" className="mt-6">
-              <SheetMusicLibrary onPdfSelect={handlePdfSelect} />
+              <SheetMusicLibrary 
+                searchQuery=""
+                selectedCategory="all"
+                sortBy="title"
+                sortOrder="asc"
+                viewMode="grid"
+                onPdfSelect={handlePdfSelect} 
+              />
             </TabsContent>
           </Tabs>
         </div>
@@ -64,9 +71,7 @@ export const MusicLibrary = () => {
           {selectedPdf ? (
             <div className="sticky top-6">
               <PDFViewer 
-                pdfUrl={selectedPdf.url} 
-                title={selectedPdf.title}
-                onClose={() => setSelectedPdf(null)}
+                pdfUrl={selectedPdf.url}
               />
             </div>
           ) : (

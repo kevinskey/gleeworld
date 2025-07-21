@@ -49,6 +49,7 @@ interface SheetMusicLibraryProps {
   sortBy: string;
   sortOrder: "asc" | "desc";
   viewMode: "grid" | "list";
+  onPdfSelect?: (pdfUrl: string, title: string) => void;
 }
 
 export const SheetMusicLibrary = ({
@@ -57,6 +58,7 @@ export const SheetMusicLibrary = ({
   sortBy,
   sortOrder,
   viewMode,
+  onPdfSelect,
 }: SheetMusicLibraryProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -309,7 +311,16 @@ export const SheetMusicLibrary = ({
 
             {/* Actions */}
             <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button size="sm" variant="outline" onClick={() => handleView(item)}>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => {
+                  handleView(item);
+                  if (item.pdf_url && onPdfSelect) {
+                    onPdfSelect(item.pdf_url, item.title);
+                  }
+                }}
+              >
                 <Eye className="h-3 w-3" />
               </Button>
               <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>
@@ -379,7 +390,16 @@ export const SheetMusicLibrary = ({
 
                   {/* Actions */}
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => handleView(item)}>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => {
+                        handleView(item);
+                        if (item.pdf_url && onPdfSelect) {
+                          onPdfSelect(item.pdf_url, item.title);
+                        }
+                      }}
+                    >
                       <Eye className="h-3 w-3" />
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>
