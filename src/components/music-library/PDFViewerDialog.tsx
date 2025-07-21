@@ -120,7 +120,7 @@ export const PDFViewerDialog: React.FC<PDFViewerDialogProps> = ({
           <TabsContent value="viewer" className="flex-1 flex flex-col space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
               {/* Sheet Music Library Panel */}
-              <div className="flex flex-col">
+              <div className="flex flex-col" data-library-panel>
                 <div className="flex-1 border rounded-lg overflow-hidden">
                   <ScrollArea className="h-full">
                     <div className="p-4 space-y-3">
@@ -164,7 +164,7 @@ export const PDFViewerDialog: React.FC<PDFViewerDialogProps> = ({
               </div>
 
               {/* PDF Viewer Panel */}
-              <div className="flex flex-col">
+              <div className="flex flex-col relative">
                 <div className="flex-1 border rounded-lg overflow-hidden">
                   {currentPdfUrl ? (
                     <>
@@ -173,15 +173,43 @@ export const PDFViewerDialog: React.FC<PDFViewerDialogProps> = ({
                           <span className="text-sm font-medium truncate">
                             {currentPdfTitle}
                           </span>
-                          <Button variant="outline" size="sm" onClick={clearPdf}>
-                            Close PDF
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => setActiveTab('setlists')}
+                            >
+                              <Music className="h-3 w-3 mr-1" />
+                              Setlists
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={clearPdf}>
+                              Close PDF
+                            </Button>
+                          </div>
                         </div>
                       </div>
                       <PDFViewer 
                         pdfUrl={currentPdfUrl}
                         className="w-full h-full"
                       />
+                      
+                      {/* Floating PDF Selection Button */}
+                      <div className="absolute top-4 left-4 z-50">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="shadow-lg bg-background/90 backdrop-blur-sm border"
+                          onClick={() => {
+                            const libraryPanel = document.querySelector('[data-library-panel]');
+                            if (libraryPanel) {
+                              libraryPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                          }}
+                        >
+                          <Library className="h-3 w-3 mr-1" />
+                          Select PDF
+                        </Button>
+                      </div>
                     </>
                   ) : (
                     <div className="flex-1 flex items-center justify-center p-8">
