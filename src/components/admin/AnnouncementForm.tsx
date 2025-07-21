@@ -152,28 +152,27 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ mode }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center space-x-4 mb-8">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => navigate('/announcements')}
-            className="hover:bg-white/20"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Announcements
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-white">
-              {mode === 'create' ? 'Create Announcement' : 'Edit Announcement'}
-            </h1>
-            <p className="text-white/80">
-              {mode === 'create' ? 'Create a new announcement for the community' : 'Edit the announcement details'}
-            </p>
-          </div>
+    <div className="max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center space-x-4 mb-8">
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => navigate('/announcements')}
+          className="hover:bg-gray-200"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Announcements
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {mode === 'create' ? 'Create Announcement' : 'Edit Announcement'}
+          </h1>
+          <p className="text-gray-600">
+            {mode === 'create' ? 'Create a new announcement for the community' : 'Edit the announcement details'}
+          </p>
         </div>
+      </div>
 
         <Card>
           <CardHeader>
@@ -310,7 +309,6 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ mode }) => {
             </div>
           </CardContent>
         </Card>
-      </div>
     </div>
   );
 };

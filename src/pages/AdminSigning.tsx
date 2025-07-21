@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
 import { EmbeddedSignature } from "@/types/contractSigning";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 interface ContractSignature {
   id: string;
@@ -272,8 +273,8 @@ const AdminSigning = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4 space-y-6">
+    <UniversalLayout>
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Admin Contract Signing</h1>
@@ -413,7 +414,7 @@ const AdminSigning = () => {
           </div>
         )}
       </div>
-    </div>
+    </UniversalLayout>
   );
 };
 
