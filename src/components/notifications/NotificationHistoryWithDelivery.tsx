@@ -143,10 +143,8 @@ export const NotificationHistoryWithDelivery = () => {
                           </span>
                           {log.delivery_method === 'sms' && (
                             <SMSDeliveryStatus
-                              status={log.status as any}
-                              errorMessage={log.error_message}
-                              sentAt={log.sent_at}
-                              deliveredAt={log.delivered_at}
+                              notification_id={log.notification_id}
+                              delivery_method={log.delivery_method}
                             />
                           )}
                           {log.delivery_method !== 'sms' && (

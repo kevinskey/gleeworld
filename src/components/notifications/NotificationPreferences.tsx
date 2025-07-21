@@ -5,6 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Mail, MessageSquare, Bell, Phone } from 'lucide-react';
@@ -13,6 +14,7 @@ import PhoneNumberInput from './PhoneNumberInput';
 const NotificationPreferences = () => {
   const { preferences, loading, updatePreferences } = useNotificationPreferences();
   const [updatingPhone, setUpdatingPhone] = useState(false);
+  const [tempPhone, setTempPhone] = useState('');
 
   if (loading || !preferences) {
     return (
@@ -26,6 +28,19 @@ const NotificationPreferences = () => {
 
   const handleToggle = async (field: string, value: boolean) => {
     await updatePreferences({ [field]: value });
+  };
+
+  const handlePhoneChange = (phone: string) => {
+    setTempPhone(phone);
+  };
+
+  const handlePhoneSave = async () => {
+    if (tempPhone.trim()) {
+      const success = await handlePhoneUpdate(tempPhone);
+      if (success) {
+        setTempPhone('');
+      }
+    }
   };
 
   const handlePhoneUpdate = async (phone: string) => {
@@ -102,12 +117,21 @@ const NotificationPreferences = () => {
               
               {preferences.sms_enabled && (
                 <div className="ml-7 mt-4 p-4 bg-muted/50 rounded-lg">
-                  <PhoneNumberInput
-                    value={preferences.phone_number || ''}
-                    onChange={() => {}} // Handled by onSave
-                    onSave={handlePhoneUpdate}
-                    disabled={updatingPhone}
-                  />
+                  <div className="flex gap-2">
+                    <PhoneNumberInput
+                      value={tempPhone || preferences.phone_number || ''}
+                      onChange={handlePhoneChange}
+                      placeholder="Enter phone number"
+                      disabled={updatingPhone}
+                    />
+                    <Button
+                      onClick={handlePhoneSave}
+                      disabled={updatingPhone || !tempPhone.trim()}
+                      size="sm"
+                    >
+                      Save
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
