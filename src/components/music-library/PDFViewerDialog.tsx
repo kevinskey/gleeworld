@@ -1,17 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Upload, Link, Music } from 'lucide-react';
+import { FileText, Upload, Link, Music, Library, X } from 'lucide-react';
 import { PDFViewer } from "@/components/PDFViewer";
 import { SetlistBuilder } from "./SetlistBuilder";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface PDFViewerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+interface SheetMusic {
+  id: string;
+  title: string;
+  composer: string | null;
+  pdf_url: string | null;
 }
 
 export const PDFViewerDialog: React.FC<PDFViewerDialogProps> = ({
@@ -23,6 +32,9 @@ export const PDFViewerDialog: React.FC<PDFViewerDialogProps> = ({
   const [currentPdfTitle, setCurrentPdfTitle] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('viewer');
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [sheetMusic, setSheetMusic] = useState<SheetMusic[]>([]);
+  const [libraryLoading, setLibraryLoading] = useState(false);
   const { toast } = useToast();
 
   const handleUrlSubmit = () => {
@@ -83,10 +95,45 @@ export const PDFViewerDialog: React.FC<PDFViewerDialogProps> = ({
     setCurrentPdfTitle(title);
     setPdfUrl(title);
     setActiveTab('viewer');
+    setShowLibrary(false);
     toast({
       title: "PDF Loaded",
       description: `Viewing: ${title}`,
     });
+  };
+
+  const loadSheetMusic = async () => {
+    setLibraryLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('gw_sheet_music')
+        .select('id, title, composer, pdf_url')
+        .order('title');
+
+      if (error) throw error;
+      setSheetMusic(data || []);
+    } catch (error) {
+      console.error('Error loading sheet music:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load sheet music library.",
+        variant: "destructive",
+      });
+    } finally {
+      setLibraryLoading(false);
+    }
+  };
+
+  const handleLibrarySelect = (item: SheetMusic) => {
+    if (item.pdf_url) {
+      handlePdfSelect(item.pdf_url, item.title);
+    } else {
+      toast({
+        title: "No PDF Available",
+        description: "This sheet music doesn't have a PDF file.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -176,15 +223,72 @@ export const PDFViewerDialog: React.FC<PDFViewerDialogProps> = ({
                     </div>
                   </div>
 
-                  {/* Browse Setlists */}
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => setActiveTab('setlists')}
-                  >
-                    <Music className="h-4 w-4 mr-2" />
-                    Browse Setlists
-                  </Button>
+                  {/* Browse Library */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setShowLibrary(true);
+                        loadSheetMusic();
+                      }}
+                    >
+                      <Library className="h-4 w-4 mr-2" />
+                      Library
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setActiveTab('setlists')}
+                    >
+                      <Music className="h-4 w-4 mr-2" />
+                      Setlists
+                    </Button>
+                  </div>
+
+                  {/* Library Browser */}
+                  {showLibrary && (
+                    <div className="border rounded-lg p-4 space-y-4 max-h-64">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium">Sheet Music Library</h4>
+                        <Button variant="ghost" size="sm" onClick={() => setShowLibrary(false)}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      {libraryLoading ? (
+                        <div className="text-center py-4 text-muted-foreground">
+                          Loading library...
+                        </div>
+                      ) : (
+                        <ScrollArea className="h-48">
+                          <div className="space-y-2">
+                            {sheetMusic.length === 0 ? (
+                              <div className="text-center py-4 text-muted-foreground">
+                                No sheet music found
+                              </div>
+                            ) : (
+                              sheetMusic.filter(item => item.pdf_url).map((item) => (
+                                <Button
+                                  key={item.id}
+                                  variant="ghost"
+                                  className="w-full justify-start text-left h-auto p-3"
+                                  onClick={() => handleLibrarySelect(item)}
+                                >
+                                  <div>
+                                    <div className="font-medium">{item.title}</div>
+                                    {item.composer && (
+                                      <div className="text-sm text-muted-foreground">
+                                        by {item.composer}
+                                      </div>
+                                    )}
+                                  </div>
+                                </Button>
+                              ))
+                            )}
+                          </div>
+                        </ScrollArea>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
