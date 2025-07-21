@@ -297,7 +297,7 @@ export const ExcuseGenerator = () => {
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Send className="w-5 h-5" />
-                Excuse Generator
+                Single Excuse Generator
               </CardTitle>
               {isCollapsed ? (
                 <ChevronDown className="w-5 h-5 text-muted-foreground" />
