@@ -96,6 +96,7 @@ export const ExcuseRequests = () => {
           created_at,
           gw_event_attendance!gw_attendance_excuses_attendance_id_fkey(
             id,
+            attendance_status,
             gw_events!gw_event_attendance_event_id_fkey(
               title,
               event_type,
