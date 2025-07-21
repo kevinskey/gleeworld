@@ -52,16 +52,16 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
                 <img 
                   src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
                   alt="Spelman College Glee Club" 
-                  className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 object-contain flex-shrink-0"
+                  className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 object-contain flex-shrink-0"
                 />
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-900 font-bold text-base sm:text-lg md:text-xl whitespace-nowrap">
+                  <span className="text-gray-900 font-bold text-xl sm:text-2xl md:text-3xl whitespace-nowrap">
                     GleeWorld
                   </span>
                   {pageName !== 'GleeWorld' && (
                     <>
-                      <span className="text-gray-500 text-sm sm:text-base md:text-lg hidden sm:inline">|</span>
-                      <span className="text-gray-700 font-medium text-sm sm:text-base md:text-lg truncate max-w-32 sm:max-w-48 md:max-w-64">
+                      <span className="text-gray-500 text-lg sm:text-xl md:text-2xl hidden sm:inline">|</span>
+                      <span className="text-gray-700 font-medium text-lg sm:text-xl md:text-2xl truncate max-w-32 sm:max-w-48 md:max-w-64">
                         {pageName}
                       </span>
                     </>
