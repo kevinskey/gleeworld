@@ -615,23 +615,20 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
                   />
                   <div className="max-h-48 overflow-y-auto space-y-1">
                     {filteredSheetMusic.map((music) => (
-                      <div key={music.id} className="flex items-center justify-between p-1.5 border rounded">
-                         <div className="flex-1 min-w-0">
-                           <SheetMusicHoverCard music={music}>
-                             <h6 className="text-xs font-medium truncate cursor-pointer hover:underline">{music.title}</h6>
-                           </SheetMusicHoverCard>
-                           {music.composer && (
-                             <p className="text-xs text-muted-foreground">{music.composer}</p>
-                           )}
-                         </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => addToSetlist(music.id)}
-                          className="h-6 px-2"
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
+                      <div 
+                        key={music.id} 
+                        className="flex items-center justify-between p-1.5 border rounded cursor-pointer hover:bg-accent hover:border-accent-foreground/20 transition-colors"
+                        onClick={() => addToSetlist(music.id)}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <SheetMusicHoverCard music={music}>
+                            <h6 className="text-xs font-medium truncate hover:underline">{music.title}</h6>
+                          </SheetMusicHoverCard>
+                          {music.composer && (
+                            <p className="text-xs text-muted-foreground">{music.composer}</p>
+                          )}
+                        </div>
+                        <Plus className="h-3 w-3 text-muted-foreground ml-2 flex-shrink-0" />
                       </div>
                     ))}
                   </div>
@@ -647,24 +644,24 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
                 />
                 <div className="max-h-96 overflow-y-auto space-y-2">
                   {filteredSheetMusic.map((music) => (
-                    <div key={music.id} className="flex items-center justify-between p-2 border rounded">
+                    <div 
+                      key={music.id} 
+                      className="flex items-center justify-between p-2 border rounded cursor-pointer hover:bg-accent hover:border-accent-foreground/20 transition-colors"
+                      onClick={() => music.pdf_url && onPdfSelect(music.pdf_url, music.title)}
+                    >
                        <div className="flex-1 min-w-0">
                          <SheetMusicHoverCard music={music}>
-                           <h4 className="text-sm font-medium truncate cursor-pointer hover:underline">{music.title}</h4>
+                           <h4 className="text-sm font-medium truncate hover:underline">{music.title}</h4>
                          </SheetMusicHoverCard>
                          {music.composer && (
                            <p className="text-xs text-muted-foreground">{music.composer}</p>
                          )}
                        </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => music.pdf_url && onPdfSelect(music.pdf_url, music.title)}
-                        disabled={!music.pdf_url}
-                        className="h-7 px-2"
-                      >
-                        <Eye className="h-3 w-3" />
-                      </Button>
+                       {music.pdf_url ? (
+                         <FileText className="h-3 w-3 text-muted-foreground ml-2 flex-shrink-0" />
+                       ) : (
+                         <div className="h-3 w-3 ml-2 flex-shrink-0" />
+                       )}
                     </div>
                   ))}
                 </div>
