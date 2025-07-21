@@ -59,10 +59,11 @@ export const MemberCommunications = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('gw_member_communications' as any)
+        .from('gw_member_communications')
         .select(`
           *,
-          recipient:profiles(full_name, email)
+          recipient:profiles!gw_member_communications_recipient_id_fkey(full_name, email),
+          sender:profiles!gw_member_communications_created_by_fkey(full_name, email)
         `)
         .order('created_at', { ascending: false });
 
@@ -107,7 +108,7 @@ export const MemberCommunications = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('gw_member_communications' as any)
+        .from('gw_member_communications')
         .insert([{
           title: formData.title,
           content: formData.content,
@@ -332,9 +333,14 @@ export const MemberCommunications = () => {
                         <Badge className={getTypeColor(comm.communication_type)}>
                           {COMMUNICATION_TYPES.find(t => t.value === comm.communication_type)?.label}
                         </Badge>
-                        {comm.recipient_name && (
+                        {(comm as any).recipient && (
                           <Badge variant="outline">
-                            To: {comm.recipient_name}
+                            To: {(comm as any).recipient.full_name}
+                          </Badge>
+                        )}
+                        {!(comm as any).recipient && (
+                          <Badge variant="outline">
+                            General Notice
                           </Badge>
                         )}
                       </div>
