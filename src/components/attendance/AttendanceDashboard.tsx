@@ -19,6 +19,7 @@ import { MyAttendance } from './MyAttendance';
 import { ExcuseRequests } from './ExcuseRequests';
 import { AttendanceReports } from './AttendanceReports';
 import { PreEventExcuses } from './PreEventExcuses';
+import { ExcuseGenerator } from './ExcuseGenerator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
@@ -115,6 +116,9 @@ export const AttendanceDashboard = () => {
 
   return (
     <div className="space-y-8">
+      {/* Excuse Generator at the top */}
+      <ExcuseGenerator />
+      
       {/* Overall Statistics Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="hover-scale transition-all duration-300 hover:shadow-lg">
