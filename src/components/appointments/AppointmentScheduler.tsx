@@ -153,6 +153,39 @@ export const AppointmentScheduler = () => {
       const appointmentDateTime = new Date(selectedDate);
       appointmentDateTime.setHours(hour, minute, 0, 0);
 
+      // CRITICAL: Double-check for conflicts before creating appointment to prevent overbooking
+      const appointmentEndTime = new Date(appointmentDateTime.getTime() + data.duration_minutes * 60000);
+      
+      const { data: conflictCheck } = await supabase
+        .from('gw_appointments')
+        .select('id, appointment_date, duration_minutes, client_name')
+        .gte('appointment_date', startOfDay(selectedDate).toISOString())
+        .lte('appointment_date', endOfDay(selectedDate).toISOString())
+        .neq('status', 'cancelled');
+
+      // Check for any overlapping appointments
+      const hasConflict = conflictCheck?.some(apt => {
+        const aptStart = new Date(apt.appointment_date);
+        const aptEnd = new Date(aptStart.getTime() + apt.duration_minutes * 60000);
+        
+        // Check for any overlap between existing appointment and new request
+        return (
+          (appointmentDateTime < aptEnd && appointmentEndTime > aptStart) ||
+          (aptStart < appointmentEndTime && aptEnd > appointmentDateTime)
+        );
+      });
+
+      if (hasConflict) {
+        toast({
+          title: "Time Slot Unavailable",
+          description: "This time slot has just been booked by another user. Please select a different time.",
+          variant: "destructive"
+        });
+        // Refresh available slots to show current availability
+        generateTimeSlots(selectedDate, data.duration_minutes);
+        return;
+      }
+
       // Create appointment with pending approval status
       const appointmentData = {
         title: data.title,
