@@ -206,6 +206,7 @@ export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }:
                     // Navigate to contract management for this event
                     window.location.href = `/event-planner?eventId=${event.id}`;
                   }}
+                  className="w-full sm:w-auto"
                 >
                   <FileText className="h-4 w-4 mr-2" />
                   Manage Contracts
@@ -217,6 +218,7 @@ export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }:
                     // Navigate to budget planning for this event
                     window.location.href = `/event-planner?eventId=${event.id}&tab=budget`;
                   }}
+                  className="w-full sm:w-auto"
                 >
                   <DollarSign className="h-4 w-4 mr-2" />
                   Budget Planning
@@ -230,7 +232,7 @@ export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }:
           </div>
           
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
-            <Button onClick={handleAddToCalendar} variant="outline">
+            <Button onClick={handleAddToCalendar} variant="outline" className="w-full sm:w-auto">
               <CalendarIcon className="h-4 w-4 mr-2" />
               Add to Calendar
             </Button>
@@ -242,6 +244,7 @@ export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }:
                   const mapsUrl = `https://maps.google.com/maps?q=${encodeURIComponent(event.location + (event.address ? `, ${event.address}` : ''))}`;
                   window.open(mapsUrl, '_blank');
                 }}
+                className="w-full sm:w-auto"
               >
                 <MapPinIcon className="h-4 w-4 mr-2" />
                 Get Directions

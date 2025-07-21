@@ -478,10 +478,10 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
           </div>
 
           <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               {loading ? "Creating..." : "Create Event"}
             </Button>
           </div>
