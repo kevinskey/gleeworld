@@ -1,59 +1,30 @@
-import React, { useState, useCallback } from 'react';
-import { Worker, Viewer, SpecialZoomLevel } from '@react-pdf-viewer/core';
-import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
-import { toolbarPlugin } from '@react-pdf-viewer/toolbar';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Import CSS
-import '@react-pdf-viewer/core/lib/styles/index.css';
-import '@react-pdf-viewer/default-layout/lib/styles/index.css';
-import '@react-pdf-viewer/toolbar/lib/styles/index.css';
-
 interface PDFViewerProps {
   pdfUrl: string;
   className?: string;
-  initialScale?: number;
 }
 
 export const PDFViewer: React.FC<PDFViewerProps> = ({
   pdfUrl,
-  className,
-  initialScale = 1.0
+  className
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Create plugins
-  const defaultLayoutPluginInstance = defaultLayoutPlugin({
-    sidebarTabs: (defaultTabs) => [
-      defaultTabs[0], // Thumbnails
-      defaultTabs[1], // Bookmarks
-    ],
-    toolbarPlugin: {
-      searchPlugin: {
-        keyword: '',
-      },
-    },
-  });
-
-  const toolbarPluginInstance = toolbarPlugin();
-
-  // Document load handlers
-  const handleDocumentLoad = useCallback(() => {
-    console.log('PDF loaded successfully');
+  const handleLoad = () => {
     setIsLoading(false);
     setError(null);
-  }, []);
+  };
 
-  const handleDocumentError = useCallback((error: any) => {
-    console.error('PDF Load Error:', error);
+  const handleError = () => {
     setIsLoading(false);
-    setError(error.message || 'Failed to load PDF');
-  }, []);
-
+    setError('Failed to load PDF');
+  };
 
   if (error) {
     return (
@@ -88,14 +59,13 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
             </div>
           )}
           
-          <Worker workerUrl="https://unpkg.com/pdfjs-dist@5.3.93/build/pdf.worker.js">
-            <Viewer
-              fileUrl={pdfUrl}
-              plugins={[defaultLayoutPluginInstance]}
-              onDocumentLoad={handleDocumentLoad}
-              defaultScale={initialScale}
-            />
-          </Worker>
+          <iframe
+            src={pdfUrl}
+            className="w-full h-full border-0"
+            onLoad={handleLoad}
+            onError={handleError}
+            title="PDF Viewer"
+          />
         </div>
       </CardContent>
     </Card>
