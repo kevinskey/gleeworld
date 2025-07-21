@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface GleeWorldEvent {
   id: string;
@@ -30,6 +31,7 @@ export const useGleeWorldEvents = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   const fetchEvents = async () => {
     try {
@@ -108,6 +110,59 @@ export const useGleeWorldEvents = () => {
     }
   };
 
+  const setupRealtime = () => {
+    // Clean up existing channel
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+    }
+
+    // Create a new channel for real-time updates
+    const channel = supabase
+      .channel('events-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'gw_events'
+        },
+        (payload) => {
+          console.log('Real-time event change:', payload);
+          // Refresh events when any change occurs
+          fetchEvents();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'events'
+        },
+        (payload) => {
+          console.log('Real-time events table change:', payload);
+          // Refresh events when any change occurs to events table
+          fetchEvents();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'gw_appointments'
+        },
+        (payload) => {
+          console.log('Real-time appointment change:', payload);
+          // Refresh events when any appointment change occurs
+          fetchEvents();
+        }
+      )
+      .subscribe();
+
+    channelRef.current = channel;
+  };
+
   const getEventsByDateRange = (startDate: Date, endDate: Date) => {
     return events.filter(event => {
       const eventDate = new Date(event.start_date);
@@ -128,6 +183,14 @@ export const useGleeWorldEvents = () => {
 
   useEffect(() => {
     fetchEvents();
+    setupRealtime();
+
+    // Cleanup function
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
+    };
   }, [user]); // Re-fetch events when user authentication status changes
 
   // Make fetchEvents available for manual refresh after updates
