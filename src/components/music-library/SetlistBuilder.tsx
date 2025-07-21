@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { 
   Music, 
   Plus, 
@@ -383,6 +384,48 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
     (music.composer && music.composer.toLowerCase().includes(sheetMusicSearch.toLowerCase()))
   );
 
+  // Component for sheet music hover card
+  const SheetMusicHoverCard = ({ music, children }: { music: SheetMusic; children: React.ReactNode }) => (
+    <HoverCard>
+      <HoverCardTrigger asChild>
+        {children}
+      </HoverCardTrigger>
+      <HoverCardContent 
+        className="w-80 bg-background/80 backdrop-blur-sm border shadow-lg" 
+        side="right"
+        sideOffset={5}
+      >
+        <div className="space-y-2">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1 flex-1">
+              <h4 className="text-sm font-semibold leading-tight">{music.title}</h4>
+              {music.composer && (
+                <p className="text-xs text-muted-foreground">Composed by {music.composer}</p>
+              )}
+            </div>
+            {music.pdf_url && (
+              <Badge variant="outline" className="ml-2">
+                <FileText className="h-3 w-3 mr-1" />
+                PDF
+              </Badge>
+            )}
+          </div>
+          <div className="pt-2 border-t">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Music className="h-3 w-3" />
+              <span>Sheet Music</span>
+              {music.pdf_url ? (
+                <span className="text-green-600">• Available</span>
+              ) : (
+                <span className="text-amber-600">• No PDF</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </HoverCardContent>
+    </HoverCard>
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -573,12 +616,14 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
                   <div className="max-h-48 overflow-y-auto space-y-1">
                     {filteredSheetMusic.map((music) => (
                       <div key={music.id} className="flex items-center justify-between p-1.5 border rounded">
-                        <div className="flex-1 min-w-0">
-                          <h6 className="text-xs font-medium truncate">{music.title}</h6>
-                          {music.composer && (
-                            <p className="text-xs text-muted-foreground">{music.composer}</p>
-                          )}
-                        </div>
+                         <div className="flex-1 min-w-0">
+                           <SheetMusicHoverCard music={music}>
+                             <h6 className="text-xs font-medium truncate cursor-pointer hover:underline">{music.title}</h6>
+                           </SheetMusicHoverCard>
+                           {music.composer && (
+                             <p className="text-xs text-muted-foreground">{music.composer}</p>
+                           )}
+                         </div>
                         <Button
                           size="sm"
                           variant="outline"
@@ -603,12 +648,14 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
                 <div className="max-h-96 overflow-y-auto space-y-2">
                   {filteredSheetMusic.map((music) => (
                     <div key={music.id} className="flex items-center justify-between p-2 border rounded">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium truncate">{music.title}</h4>
-                        {music.composer && (
-                          <p className="text-xs text-muted-foreground">{music.composer}</p>
-                        )}
-                      </div>
+                       <div className="flex-1 min-w-0">
+                         <SheetMusicHoverCard music={music}>
+                           <h4 className="text-sm font-medium truncate cursor-pointer hover:underline">{music.title}</h4>
+                         </SheetMusicHoverCard>
+                         {music.composer && (
+                           <p className="text-xs text-muted-foreground">{music.composer}</p>
+                         )}
+                       </div>
                       <Button
                         size="sm"
                         variant="outline"
