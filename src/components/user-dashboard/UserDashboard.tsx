@@ -105,9 +105,6 @@ export const UserDashboard = () => {
           case 'youtube_management':
             icon = Youtube;
             break;
-          case 'send_notifications':
-            icon = Bell;
-            break;
           case 'send_emails':
             icon = Mail;
             break;
@@ -882,13 +879,6 @@ export const UserDashboard = () => {
                       Executive Board
                     </h3>
                     <div className="space-y-2">
-                      <Button variant="ghost" className="w-full justify-start h-auto p-3">
-                        <Bell className="h-4 w-4 mr-2" />
-                        <div className="text-left">
-                          <div>Send Notifications</div>
-                          <div className="text-xs text-gray-500">Notify members</div>
-                        </div>
-                      </Button>
                       <Button variant="ghost" className="w-full justify-start h-auto p-3">
                         <Mail className="h-4 w-4 mr-2" />
                         <div className="text-left">
