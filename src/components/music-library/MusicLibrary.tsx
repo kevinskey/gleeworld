@@ -42,7 +42,7 @@ export const MusicLibrary = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Setlists Column */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Setlist Builder</h2>
@@ -63,19 +63,6 @@ export const MusicLibrary = () => {
               <p className="text-sm">Select sheet music to view PDF</p>
             </div>
           )}
-        </div>
-
-        {/* Available Sheet Music Column */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Available Sheet Music</h2>
-          <SheetMusicLibrary 
-            searchQuery=""
-            selectedCategory="all"
-            sortBy="title"
-            sortOrder="asc"
-            viewMode="grid"
-            onPdfSelect={handlePdfSelect} 
-          />
         </div>
       </div>
     </div>
