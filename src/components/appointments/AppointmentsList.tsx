@@ -137,6 +137,16 @@ export const AppointmentsList = () => {
     }
   };
 
+  // Group appointments by user
+  const appointmentsByUser = appointments.reduce((groups, appointment) => {
+    const userName = appointment.client_name;
+    if (!groups[userName]) {
+      groups[userName] = [];
+    }
+    groups[userName].push(appointment);
+    return groups;
+  }, {} as Record<string, Appointment[]>);
+
   return (
     <Card>
       <CardHeader>
@@ -151,96 +161,106 @@ export const AppointmentsList = () => {
             No upcoming appointments
           </div>
         ) : (
-          <div className="space-y-4">
-            {appointments.map((appointment) => (
-              <div key={appointment.id} className="border rounded-lg p-4 space-y-3">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <h3 className="font-semibold">{appointment.title}</h3>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      {format(new Date(appointment.appointment_date), 'PPP p')}
-                      <span>({appointment.duration_minutes} min)</span>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Badge className={getStatusColor(appointment.status)}>
-                      {appointment.status}
-                    </Badge>
-                    <Badge className={getTypeColor(appointment.appointment_type)}>
-                      {appointment.appointment_type}
-                    </Badge>
-                  </div>
+          <div className="space-y-6">
+            {Object.entries(appointmentsByUser).map(([userName, userAppointments]) => (
+              <div key={userName} className="space-y-4">
+                <div className="flex items-center gap-2 border-b pb-2">
+                  <User className="h-5 w-5" />
+                  <h3 className="text-lg font-semibold">{userName}</h3>
+                  <Badge variant="outline" className="ml-auto">
+                    {userAppointments.length} appointment{userAppointments.length !== 1 ? 's' : ''}
+                  </Badge>
                 </div>
+                
+                <div className="space-y-3 ml-7">
+                  {userAppointments.map((appointment) => (
+                    <div key={appointment.id} className="border rounded-lg p-4 space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <h4 className="font-semibold">{appointment.title}</h4>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Clock className="h-4 w-4" />
+                            {format(new Date(appointment.appointment_date), 'PPP p')}
+                            <span>({appointment.duration_minutes} min)</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Badge className={getStatusColor(appointment.status)}>
+                            {appointment.status}
+                          </Badge>
+                          <Badge className={getTypeColor(appointment.appointment_type)}>
+                            {appointment.appointment_type}
+                          </Badge>
+                        </div>
+                      </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <User className="h-4 w-4" />
-                      <span className="font-medium">{appointment.client_name}</span>
-                    </div>
-                    {appointment.client_phone && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Phone className="h-4 w-4" />
-                        <span>{appointment.client_phone}</span>
-                      </div>
-                    )}
-                    {appointment.client_email && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Mail className="h-4 w-4" />
-                        <span>{appointment.client_email}</span>
-                      </div>
-                    )}
-                  </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          {appointment.client_phone && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Phone className="h-4 w-4" />
+                              <span>{appointment.client_phone}</span>
+                            </div>
+                          )}
+                          {appointment.client_email && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Mail className="h-4 w-4" />
+                              <span>{appointment.client_email}</span>
+                            </div>
+                          )}
+                        </div>
 
-                  {appointment.description && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm font-medium">
-                        <FileText className="h-4 w-4" />
-                        Description
+                        {appointment.description && (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm font-medium">
+                              <FileText className="h-4 w-4" />
+                              Description
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {appointment.description}
+                            </p>
+                          </div>
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {appointment.description}
-                      </p>
+
+                      {appointment.status === 'scheduled' && (
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
+                          >
+                            Confirm
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      )}
+
+                      {appointment.status === 'confirmed' && (
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
+                          >
+                            Mark Complete
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  ))}
                 </div>
-
-                {appointment.status === 'scheduled' && (
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
-                    >
-                      Confirm
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                )}
-
-                {appointment.status === 'confirmed' && (
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
-                    >
-                      Mark Complete
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                )}
               </div>
             ))}
           </div>
