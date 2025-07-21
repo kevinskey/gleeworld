@@ -49,21 +49,9 @@ export const MusicLibrary = () => {
           <SetlistBuilder onPdfSelect={handlePdfSelect} />
         </div>
 
-        {/* Sheet Music Column */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Sheet Music Library</h2>
-          <SheetMusicLibrary 
-            searchQuery=""
-            selectedCategory="all"
-            sortBy="title"
-            sortOrder="asc"
-            viewMode="grid"
-            onPdfSelect={handlePdfSelect} 
-          />
-        </div>
-
         {/* PDF Viewer Column */}
-        <div>
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold">PDF Viewer</h2>
           {selectedPdf ? (
             <div className="sticky top-6">
               <PDFViewer 
@@ -75,6 +63,19 @@ export const MusicLibrary = () => {
               <p className="text-sm">Select sheet music to view PDF</p>
             </div>
           )}
+        </div>
+
+        {/* Available Sheet Music Column */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold">Available Sheet Music</h2>
+          <SheetMusicLibrary 
+            searchQuery=""
+            selectedCategory="all"
+            sortBy="title"
+            sortOrder="asc"
+            viewMode="grid"
+            onPdfSelect={handlePdfSelect} 
+          />
         </div>
       </div>
     </div>
