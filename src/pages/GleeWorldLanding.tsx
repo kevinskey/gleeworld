@@ -575,19 +575,20 @@ export const GleeWorldLanding = () => {
                           </div>
                           
                           <div className="h-64 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
-                            {event.image_url ? (
-                              <img 
-                                src={event.image_url}
-                                alt={event.title}
-                                className="w-full h-full object-cover rounded-t-lg brightness-110 contrast-105"
-                                onError={(e) => {
+                            <img 
+                              src={event.image_url || "/lovable-uploads/94104cd1-1d3a-4685-a8d8-7fb041f38231.png"}
+                              alt={event.title}
+                              className="w-full h-full object-cover rounded-t-lg brightness-110 contrast-105"
+                              onError={(e) => {
+                                // Fallback to default GLEE crest if the event image fails to load
+                                if (e.currentTarget.src !== "/lovable-uploads/94104cd1-1d3a-4685-a8d8-7fb041f38231.png") {
+                                  e.currentTarget.src = "/lovable-uploads/94104cd1-1d3a-4685-a8d8-7fb041f38231.png";
+                                } else {
                                   e.currentTarget.style.display = 'none';
                                   e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center"><div class="h-12 w-12 text-blue-600"><svg class="w-12 h-12" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg></div></div>';
-                                }}
-                              />
-                            ) : (
-                              <Calendar className="h-12 w-12 text-blue-600" />
-                            )}
+                                }
+                              }}
+                            />
                           </div>
                           <CardContent className="p-6">
                             <h3 className="text-xl font-semibold text-gray-900 mb-4 line-clamp-2">{event.title}</h3>
@@ -629,19 +630,20 @@ export const GleeWorldLanding = () => {
                               </div>
                               
                               <div className="h-64 sm:h-80 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
-                                {event.image_url ? (
-                                  <img 
-                                    src={event.image_url}
-                                    alt={event.title}
-                                    className="w-full h-full object-cover rounded-t-lg brightness-110 contrast-105"
-                                    onError={(e) => {
+                                <img 
+                                  src={event.image_url || "/lovable-uploads/94104cd1-1d3a-4685-a8d8-7fb041f38231.png"}
+                                  alt={event.title}
+                                  className="w-full h-full object-cover rounded-t-lg brightness-110 contrast-105"
+                                  onError={(e) => {
+                                    // Fallback to default GLEE crest if the event image fails to load
+                                    if (e.currentTarget.src !== "/lovable-uploads/94104cd1-1d3a-4685-a8d8-7fb041f38231.png") {
+                                      e.currentTarget.src = "/lovable-uploads/94104cd1-1d3a-4685-a8d8-7fb041f38231.png";
+                                    } else {
                                       e.currentTarget.style.display = 'none';
                                       e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center"><div class="h-12 w-12 text-blue-600"><svg class="w-12 h-12" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg></div></div>';
-                                    }}
-                                  />
-                                ) : (
-                                  <Calendar className="h-12 w-12 text-blue-600" />
-                                )}
+                                    }
+                                  }}
+                                />
                               </div>
                               <CardContent className="p-6 sm:p-8">
                                 <h3 className="text-2xl sm:text-2xl font-semibold text-gray-900 mb-4 line-clamp-2">{event.title}</h3>
