@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -405,16 +406,15 @@ const Profile = () => {
   return (
     <UniversalLayout>
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-white">Profile</h1>
-            <p className="text-white/80">
-              {isEditing ? "Make changes to your profile information" : "Manage your personal information"}
-            </p>
-          </div>
+        <PageHeader
+          title="Profile"
+          description={isEditing ? "Make changes to your profile information" : "Manage your personal information"}
+          backgroundVariant="gradient"
+        >
           <Button
             onClick={() => setIsEditing(!isEditing)}
             variant={isEditing ? "outline" : "default"}
+            className={isEditing ? "bg-white/20 hover:bg-white/30 text-white border-white/20" : ""}
           >
             {isEditing ? (
               "Cancel Editing"
@@ -425,7 +425,7 @@ const Profile = () => {
               </>
             )}
           </Button>
-        </div>
+        </PageHeader>
 
         {!isEditing && (
           <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">

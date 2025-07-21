@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -100,10 +101,11 @@ export default function Payments() {
   return (
     <UniversalLayout>
       <div className="container mx-auto px-4 py-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white mb-2">Payment History</h1>
-          <p className="text-gray-300">View and manage your payment transactions</p>
-        </div>
+        <PageHeader
+          title="Payment History"
+          description="View and manage your payment transactions"
+          backgroundVariant="gradient"
+        />
 
         {/* Payment Summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -191,12 +192,11 @@ export const Shop = () => {
   return (
     <UniversalLayout>
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">GleeWorld Shop</h1>
-            <p className="text-gray-600 mt-2">Official Spelman College Glee Club merchandise and recordings</p>
-          </div>
-          
+        <PageHeader
+          title="GleeWorld Shop"
+          description="Official Spelman College Glee Club merchandise and recordings"
+          backgroundVariant="white"
+        >
           {user && (
             <div className="flex items-center space-x-4">
               <div className="relative">
@@ -216,7 +216,7 @@ export const Shop = () => {
               </div>
             </div>
           )}
-        </div>
+        </PageHeader>
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8 p-4 bg-white rounded-lg shadow-sm">

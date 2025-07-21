@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -178,28 +179,29 @@ export default function Notifications() {
   return (
     <UniversalLayout>
       <div className="container mx-auto px-4 py-6">
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-                <Bell className="h-6 w-6" />
-                Notifications
-                {unreadCount > 0 && (
-                  <Badge variant="destructive" className="ml-2">
-                    {unreadCount} unread
-                  </Badge>
-                )}
-              </h1>
-              <p className="text-gray-300">Stay updated with your latest notifications</p>
-            </div>
+        <PageHeader
+          title="Notifications"
+          description="Stay updated with your latest notifications"
+          backgroundVariant="gradient"
+        >
+          <div className="flex items-center gap-2">
             {unreadCount > 0 && (
-              <Button onClick={markAllAsRead} variant="outline">
+              <Badge variant="destructive">
+                {unreadCount} unread
+              </Badge>
+            )}
+            {unreadCount > 0 && (
+              <Button 
+                onClick={markAllAsRead} 
+                variant="outline"
+                className="bg-white/20 hover:bg-white/30 text-white border-white/20"
+              >
                 <Mail className="h-4 w-4 mr-2" />
                 Mark All Read
               </Button>
             )}
           </div>
-        </div>
+        </PageHeader>
 
         {notifications.length === 0 ? (
           <Card>

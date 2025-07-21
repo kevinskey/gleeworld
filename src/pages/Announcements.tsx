@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -116,36 +117,25 @@ const Announcements = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => navigate('/dashboard')}
-              className="hover:bg-white/20"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold text-white">Announcements</h1>
-              <p className="text-white/80">Stay updated with the latest news and updates</p>
-            </div>
-          </div>
-          
+        <PageHeader
+          title="Announcements"
+          description="Stay updated with the latest news and updates"
+          backgroundVariant="gradient"
+        >
           {isAdmin && (
             <Button
               onClick={() => navigate('/admin/announcements/new')}
-              className="bg-white/20 hover:bg-white/30 text-white"
+              className="bg-white/20 hover:bg-white/30 text-white border-white/20"
             >
               <Plus className="h-4 w-4 mr-2" />
               New Announcement
             </Button>
           )}
-        </div>
+        </PageHeader>
 
+        
         {/* Announcements List */}
-        <div className="space-y-6">
+        <div className="space-y-6 mt-6">
           {visibleAnnouncements.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">

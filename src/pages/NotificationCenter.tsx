@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { PageHeader } from "@/components/shared/PageHeader";
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,14 +20,14 @@ export default function NotificationCenter() {
   return (
     <UniversalLayout>
       <div className="container mx-auto p-6 max-w-7xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Notification Center</h1>
-          <p className="text-muted-foreground">
-            Manage all member communications, mass emails, SMS notifications, and public forms
-          </p>
-        </div>
+        <PageHeader
+          title="Notification Center"
+          description="Manage all member communications, mass emails, SMS notifications, and public forms"
+          backgroundVariant="white"
+        />
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 mt-6">
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="mass-email">Mass Email</TabsTrigger>

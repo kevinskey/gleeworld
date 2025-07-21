@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -275,15 +276,11 @@ const AdminSigning = () => {
   return (
     <UniversalLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Admin Contract Signing</h1>
-            <p className="text-gray-600">Review and sign contracts pending your approval</p>
-          </div>
-          <Button onClick={() => navigate("/")} variant="outline">
-            Back to Dashboard
-          </Button>
-        </div>
+        <PageHeader
+          title="Admin Contract Signing"
+          description="Review and sign contracts pending your approval"
+          backgroundVariant="white"
+        />
 
         {pendingContracts.length === 0 ? (
           <Card>
