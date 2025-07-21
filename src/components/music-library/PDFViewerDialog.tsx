@@ -37,6 +37,12 @@ export const PDFViewerDialog: React.FC<PDFViewerDialogProps> = ({
   const [libraryLoading, setLibraryLoading] = useState(false);
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (open) {
+      loadSheetMusic();
+    }
+  }, [open]);
+
   const clearPdf = () => {
     setCurrentPdfUrl('');
     setPdfUrl('');
@@ -112,115 +118,107 @@ export const PDFViewerDialog: React.FC<PDFViewerDialogProps> = ({
           </TabsList>
 
           <TabsContent value="viewer" className="flex-1 flex flex-col space-y-4">
-            {!currentPdfUrl ? (
-              <div className="flex-1 flex flex-col items-center justify-center space-y-6 p-8">
-                <div className="text-center space-y-2">
-                  <FileText className="h-16 w-16 text-muted-foreground mx-auto" />
-                  <h3 className="text-lg font-semibold">Open a PDF</h3>
-                  <p className="text-muted-foreground">
-                    Select from your library or create a new setlist
-                  </p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+              {/* Sheet Music Library Panel */}
+              <div className="flex flex-col">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <Library className="h-5 w-5" />
+                    Sheet Music Library
+                  </h3>
+                  <Button 
+                    onClick={() => setActiveTab('setlists')}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Music className="h-4 w-4 mr-1" />
+                    Setlists
+                  </Button>
                 </div>
 
-                <div className="w-full max-w-md space-y-4">
-                  {/* Two main options */}
-                  <div className="grid grid-cols-1 gap-4">
-                    <Button 
-                      variant="outline" 
-                      size="lg"
-                      className="h-16 flex flex-col gap-2"
-                      onClick={() => {
-                        setShowLibrary(true);
-                        loadSheetMusic();
-                      }}
-                    >
-                      <Library className="h-6 w-6" />
-                      <span>Select from Library</span>
-                    </Button>
-                    
-                    <Button 
-                      variant="outline" 
-                      size="lg"
-                      className="h-16 flex flex-col gap-2"
-                      onClick={() => setActiveTab('setlists')}
-                    >
-                      <Music className="h-6 w-6" />
-                      <span>Create Setlist</span>
-                    </Button>
-                  </div>
-
-                  {/* Library Browser */}
-                  {showLibrary && (
-                    <div className="border rounded-lg p-4 space-y-4 max-h-96">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium">Sheet Music Library</h4>
-                        <Button variant="ghost" size="sm" onClick={() => setShowLibrary(false)}>
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      
+                <div className="flex-1 border rounded-lg overflow-hidden">
+                  <ScrollArea className="h-full">
+                    <div className="p-4 space-y-3">
                       {libraryLoading ? (
-                        <div className="text-center py-4 text-muted-foreground">
+                        <div className="text-center py-8 text-muted-foreground">
                           Loading library...
                         </div>
+                      ) : sheetMusic.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                          <p>No sheet music found</p>
+                        </div>
                       ) : (
-                        <ScrollArea className="h-64">
-                          <div className="space-y-2">
-                            {sheetMusic.length === 0 ? (
-                              <div className="text-center py-4 text-muted-foreground">
-                                No sheet music found
+                        sheetMusic.filter(item => item.pdf_url).map((item) => (
+                          <div
+                            key={item.id}
+                            className={`p-3 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 ${
+                              currentPdfUrl === item.pdf_url ? 'border-primary bg-primary/5' : ''
+                            }`}
+                            onClick={() => handleLibrarySelect(item)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium truncate">{item.title}</h4>
+                                {item.composer && (
+                                  <p className="text-sm text-muted-foreground truncate">
+                                    by {item.composer}
+                                  </p>
+                                )}
                               </div>
-                            ) : (
-                              sheetMusic.filter(item => item.pdf_url).map((item) => (
-                                <Button
-                                  key={item.id}
-                                  variant="ghost"
-                                  className="w-full justify-start text-left h-auto p-3"
-                                  onClick={() => handleLibrarySelect(item)}
-                                >
-                                  <div>
-                                    <div className="font-medium">{item.title}</div>
-                                    {item.composer && (
-                                      <div className="text-sm text-muted-foreground">
-                                        by {item.composer}
-                                      </div>
-                                    )}
-                                  </div>
-                                </Button>
-                              ))
-                            )}
+                              <div className="ml-2">
+                                <FileText className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                            </div>
                           </div>
-                        </ScrollArea>
+                        ))
                       )}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </div>
+
+              {/* PDF Viewer Panel */}
+              <div className="flex flex-col">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    PDF Viewer
+                  </h3>
+                  {currentPdfUrl && (
+                    <Button variant="outline" size="sm" onClick={clearPdf}>
+                      Close PDF
+                    </Button>
+                  )}
+                </div>
+
+                <div className="flex-1 border rounded-lg overflow-hidden">
+                  {currentPdfUrl ? (
+                    <>
+                      <div className="bg-muted p-3 border-b">
+                        <span className="text-sm font-medium truncate block">
+                          {currentPdfTitle}
+                        </span>
+                      </div>
+                      <PDFViewer 
+                        pdfUrl={currentPdfUrl}
+                        className="w-full h-full"
+                      />
+                    </>
+                  ) : (
+                    <div className="flex-1 flex items-center justify-center p-8">
+                      <div className="text-center space-y-2">
+                        <FileText className="h-16 w-16 text-muted-foreground mx-auto opacity-50" />
+                        <h4 className="font-medium text-muted-foreground">No PDF selected</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Select a sheet music from the library to view
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
-            ) : (
-              <div className="flex-1 flex flex-col space-y-4">
-                <div className="flex items-center justify-between bg-muted p-3 rounded-lg">
-                  <span className="text-sm font-medium truncate">
-                    {currentPdfTitle || (pdfUrl.includes('http') ? pdfUrl : `Uploaded: ${pdfUrl}`)}
-                  </span>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setActiveTab('setlists')}>
-                      <Music className="h-3 w-3 mr-1" />
-                      Setlists
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={clearPdf}>
-                      Close PDF
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="flex-1 border rounded-lg overflow-hidden">
-                  <PDFViewer 
-                    pdfUrl={currentPdfUrl}
-                    className="w-full h-full"
-                  />
-                </div>
-              </div>
-            )}
+            </div>
           </TabsContent>
 
           <TabsContent value="setlists" className="flex-1">
