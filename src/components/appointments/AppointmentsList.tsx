@@ -120,6 +120,7 @@ export const AppointmentsList = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'pending_approval': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'scheduled': return 'bg-status-scheduled text-status-scheduled-fg';
       case 'confirmed': return 'bg-status-confirmed text-status-confirmed-fg';
       case 'cancelled': return 'bg-status-cancelled text-status-cancelled-fg';
@@ -222,6 +223,24 @@ export const AppointmentsList = () => {
                           </div>
                         )}
                       </div>
+
+                      {appointment.status === 'pending_approval' && (
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
+                          >
+                            Approve
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
+                          >
+                            Deny
+                          </Button>
+                        </div>
+                      )}
 
                       {appointment.status === 'scheduled' && (
                         <div className="flex gap-2">

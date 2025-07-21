@@ -153,7 +153,7 @@ export const AppointmentScheduler = () => {
       const appointmentDateTime = new Date(selectedDate);
       appointmentDateTime.setHours(hour, minute, 0, 0);
 
-      // Create appointment
+      // Create appointment with pending approval status
       const appointmentData = {
         title: data.title,
         description: data.description,
@@ -161,8 +161,9 @@ export const AppointmentScheduler = () => {
         duration_minutes: data.duration_minutes,
         appointment_type: data.appointment_type,
         client_name: data.client_name,
-          client_email: data.client_email,
+        client_email: data.client_email,
         client_phone: data.client_phone,
+        status: 'pending_approval',
         ...(user?.id && { created_by: user.id }),
       };
 
