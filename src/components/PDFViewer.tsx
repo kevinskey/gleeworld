@@ -4,7 +4,7 @@ import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import { toolbarPlugin } from '@react-pdf-viewer/toolbar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Download, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Import CSS
@@ -54,23 +54,6 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
     setError(error.message || 'Failed to load PDF');
   }, []);
 
-  // Download handler
-  const downloadPDF = useCallback(async () => {
-    try {
-      const response = await fetch(pdfUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'document.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Download failed:', error);
-    }
-  }, [pdfUrl]);
 
   if (error) {
     return (
@@ -93,17 +76,6 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
 
   return (
     <Card className={cn("w-full max-w-6xl mx-auto", className)}>
-      {/* Custom Header */}
-      <div className="border-b p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">PDF Viewer</h2>
-          <Button onClick={downloadPDF} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Download
-          </Button>
-        </div>
-      </div>
-
       {/* PDF Content */}
       <CardContent className="p-0">
         <div className="relative h-[800px] w-full">

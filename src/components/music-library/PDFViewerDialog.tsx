@@ -121,21 +121,6 @@ export const PDFViewerDialog: React.FC<PDFViewerDialogProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
               {/* Sheet Music Library Panel */}
               <div className="flex flex-col">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <Library className="h-5 w-5" />
-                    Sheet Music Library
-                  </h3>
-                  <Button 
-                    onClick={() => setActiveTab('setlists')}
-                    variant="outline"
-                    size="sm"
-                  >
-                    <Music className="h-4 w-4 mr-1" />
-                    Setlists
-                  </Button>
-                </div>
-
                 <div className="flex-1 border rounded-lg overflow-hidden">
                   <ScrollArea className="h-full">
                     <div className="p-4 space-y-3">
@@ -180,25 +165,18 @@ export const PDFViewerDialog: React.FC<PDFViewerDialogProps> = ({
 
               {/* PDF Viewer Panel */}
               <div className="flex flex-col">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    PDF Viewer
-                  </h3>
-                  {currentPdfUrl && (
-                    <Button variant="outline" size="sm" onClick={clearPdf}>
-                      Close PDF
-                    </Button>
-                  )}
-                </div>
-
                 <div className="flex-1 border rounded-lg overflow-hidden">
                   {currentPdfUrl ? (
                     <>
                       <div className="bg-muted p-3 border-b">
-                        <span className="text-sm font-medium truncate block">
-                          {currentPdfTitle}
-                        </span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium truncate">
+                            {currentPdfTitle}
+                          </span>
+                          <Button variant="outline" size="sm" onClick={clearPdf}>
+                            Close PDF
+                          </Button>
+                        </div>
                       </div>
                       <PDFViewer 
                         pdfUrl={currentPdfUrl}
