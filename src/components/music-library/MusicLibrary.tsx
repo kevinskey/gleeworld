@@ -43,31 +43,27 @@ export const MusicLibrary = () => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Tabs defaultValue="setlists" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="setlists">Setlist Builder</TabsTrigger>
-              <TabsTrigger value="library">Sheet Music Library</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="setlists" className="mt-6">
-              <SetlistBuilder onPdfSelect={handlePdfSelect} />
-            </TabsContent>
-            
-            <TabsContent value="library" className="mt-6">
-              <SheetMusicLibrary 
-                searchQuery=""
-                selectedCategory="all"
-                sortBy="title"
-                sortOrder="asc"
-                viewMode="grid"
-                onPdfSelect={handlePdfSelect} 
-              />
-            </TabsContent>
-          </Tabs>
+        {/* Setlists Column */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold">Setlist Builder</h2>
+          <SetlistBuilder onPdfSelect={handlePdfSelect} />
         </div>
 
-        <div className="lg:col-span-1">
+        {/* Sheet Music Column */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold">Sheet Music Library</h2>
+          <SheetMusicLibrary 
+            searchQuery=""
+            selectedCategory="all"
+            sortBy="title"
+            sortOrder="asc"
+            viewMode="grid"
+            onPdfSelect={handlePdfSelect} 
+          />
+        </div>
+
+        {/* PDF Viewer Column */}
+        <div>
           {selectedPdf ? (
             <div className="sticky top-6">
               <PDFViewer 
