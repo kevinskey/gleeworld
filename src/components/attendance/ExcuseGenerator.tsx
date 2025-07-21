@@ -7,7 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Upload, Send, ChevronDown, ChevronUp } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Upload, Send, ChevronDown, ChevronUp, Calendar, Clock, AlertTriangle, CheckCircle, XCircle, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -28,6 +30,54 @@ interface AttendanceRecord {
   };
 }
 
+interface ClassSchedule {
+  id: string;
+  courseName: string;
+  courseCode: string;
+  instructor: string;
+  days: string[];
+  startTime: string;
+  endTime: string;
+  location: string;
+}
+
+interface ConflictAnalysis {
+  totalConflictMinutes: number;
+  conflictDays: string[];
+  exceedsThreshold: boolean;
+  conflicts: {
+    day: string;
+    conflictMinutes: number;
+    rehearsalTime: string;
+    classTime: string;
+  }[];
+}
+
+interface ClassConflictRequest {
+  id: string;
+  user_id: string;
+  schedule: ClassSchedule[];
+  conflict_analysis: ConflictAnalysis;
+  status: 'pending_section_leader' | 'pending_secretary' | 'pending_final' | 'approved' | 'rejected';
+  section_leader_approval?: {
+    approved_by: string;
+    approved_at: string;
+    notes?: string;
+  };
+  secretary_approval?: {
+    approved_by: string;
+    approved_at: string;
+    notes?: string;
+  };
+  final_approval?: {
+    approved_by: string;
+    approved_at: string;
+    notes?: string;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
 export const ExcuseGenerator = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -43,6 +93,23 @@ export const ExcuseGenerator = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Class Conflict Worksheet states
+  const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
+  const [classSchedules, setClassSchedules] = useState<ClassSchedule[]>([]);
+  const [currentSchedule, setCurrentSchedule] = useState<ClassSchedule>({
+    id: '',
+    courseName: '',
+    courseCode: '',
+    instructor: '',
+    days: [],
+    startTime: '',
+    endTime: '',
+    location: ''
+  });
+  const [conflictAnalysis, setConflictAnalysis] = useState<ConflictAnalysis | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isSubmittingConflict, setIsSubmittingConflict] = useState(false);
 
   const reasonOptions = [
     'Medical appointment',
@@ -266,6 +333,161 @@ export const ExcuseGenerator = () => {
     }
   };
 
+  // Class Conflict Worksheet functions
+  const daysOfWeek = ['Monday', 'Wednesday', 'Friday'];
+  const rehearsalTimes = {
+    Monday: { start: '17:00', end: '18:15' },
+    Wednesday: { start: '17:00', end: '18:15' },
+    Friday: { start: '17:00', end: '18:15' }
+  };
+
+  const timeToMinutes = (time: string): number => {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
+  const calculateOverlap = (start1: string, end1: string, start2: string, end2: string): number => {
+    const start1Min = timeToMinutes(start1);
+    const end1Min = timeToMinutes(end1);
+    const start2Min = timeToMinutes(start2);
+    const end2Min = timeToMinutes(end2);
+    
+    const overlapStart = Math.max(start1Min, start2Min);
+    const overlapEnd = Math.min(end1Min, end2Min);
+    
+    return overlapEnd > overlapStart ? overlapEnd - overlapStart : 0;
+  };
+
+  const analyzeScheduleConflicts = (): ConflictAnalysis => {
+    const conflicts: ConflictAnalysis['conflicts'] = [];
+    let totalConflictMinutes = 0;
+    const conflictDays: string[] = [];
+
+    classSchedules.forEach(schedule => {
+      schedule.days.forEach(day => {
+        if (rehearsalTimes[day as keyof typeof rehearsalTimes]) {
+          const rehearsal = rehearsalTimes[day as keyof typeof rehearsalTimes];
+          const conflictMinutes = calculateOverlap(
+            schedule.startTime,
+            schedule.endTime,
+            rehearsal.start,
+            rehearsal.end
+          );
+
+          if (conflictMinutes > 0) {
+            conflicts.push({
+              day,
+              conflictMinutes,
+              rehearsalTime: `${rehearsal.start} - ${rehearsal.end}`,
+              classTime: `${schedule.startTime} - ${schedule.endTime} (${schedule.courseName})`
+            });
+            totalConflictMinutes += conflictMinutes;
+            if (!conflictDays.includes(day)) {
+              conflictDays.push(day);
+            }
+          }
+        }
+      });
+    });
+
+    return {
+      totalConflictMinutes,
+      conflictDays,
+      exceedsThreshold: totalConflictMinutes > 30,
+      conflicts
+    };
+  };
+
+  const addScheduleEntry = () => {
+    if (!currentSchedule.courseName || !currentSchedule.startTime || !currentSchedule.endTime || currentSchedule.days.length === 0) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newSchedule = {
+      ...currentSchedule,
+      id: Date.now().toString()
+    };
+
+    setClassSchedules([...classSchedules, newSchedule]);
+    setCurrentSchedule({
+      id: '',
+      courseName: '',
+      courseCode: '',
+      instructor: '',
+      days: [],
+      startTime: '',
+      endTime: '',
+      location: ''
+    });
+  };
+
+  const removeScheduleEntry = (id: string) => {
+    setClassSchedules(classSchedules.filter(schedule => schedule.id !== id));
+  };
+
+  const handleDayChange = (day: string, checked: boolean) => {
+    if (checked) {
+      setCurrentSchedule({
+        ...currentSchedule,
+        days: [...currentSchedule.days, day]
+      });
+    } else {
+      setCurrentSchedule({
+        ...currentSchedule,
+        days: currentSchedule.days.filter(d => d !== day)
+      });
+    }
+  };
+
+  const analyzeConflicts = () => {
+    setIsAnalyzing(true);
+    setTimeout(() => {
+      const analysis = analyzeScheduleConflicts();
+      setConflictAnalysis(analysis);
+      setIsAnalyzing(false);
+    }, 1000);
+  };
+
+  const submitClassConflictRequest = async () => {
+    if (!conflictAnalysis || classSchedules.length === 0) {
+      toast({
+        title: "Missing Information",
+        description: "Please add your schedule and analyze conflicts first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmittingConflict(true);
+
+    try {
+      // For now, we'll show the conflict analysis in a toast
+      // The database table 'gw_class_conflict_requests' needs to be created first
+      toast({
+        title: "Conflict Analysis Complete",
+        description: `Found ${conflictAnalysis.totalConflictMinutes} minutes of conflicts${conflictAnalysis.exceedsThreshold ? ' (exceeds 30 min threshold)' : ''}`,
+      });
+
+      setIsConflictDialogOpen(false);
+      setClassSchedules([]);
+      setConflictAnalysis(null);
+    } catch (error) {
+      console.error('Error submitting conflict request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit conflict request",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingConflict(false);
+    }
+  };
+
   if (loading) {
     return (
       <Card className="mb-6">
@@ -447,10 +669,232 @@ export const ExcuseGenerator = () => {
           </CollapsibleTrigger>
           
           <CollapsibleContent className="animate-accordion-down">
-            <CardContent className="space-y-4">
-              <div className="text-center text-muted-foreground">
-                Class conflict worksheet content will be added here.
+            <CardContent className="space-y-6">
+              <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-blue-900 dark:text-blue-100">Rehearsal Schedule</h4>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                      Regular rehearsals are held Monday, Wednesday, and Friday from 5:00 PM to 6:15 PM.
+                      If your class schedule conflicts with more than 30 minutes of rehearsal time per week, you'll need approval.
+                    </p>
+                  </div>
+                </div>
               </div>
+
+              {/* Added Schedules Display */}
+              {classSchedules.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="font-medium">Your Class Schedule</h4>
+                  {classSchedules.map((schedule) => (
+                    <div key={schedule.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <div className="space-y-1">
+                        <div className="font-medium">{schedule.courseName} ({schedule.courseCode})</div>
+                        <div className="text-sm text-muted-foreground">
+                          {schedule.days.join(', ')} • {schedule.startTime} - {schedule.endTime}
+                        </div>
+                        <div className="text-sm text-muted-foreground">{schedule.instructor} • {schedule.location}</div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeScheduleEntry(schedule.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Conflict Analysis Display */}
+              {conflictAnalysis && (
+                <div className="space-y-3">
+                  <h4 className="font-medium">Conflict Analysis</h4>
+                  <div className={`p-4 rounded-lg border-2 ${
+                    conflictAnalysis.exceedsThreshold 
+                      ? 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800' 
+                      : 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800'
+                  }`}>
+                    <div className="flex items-center gap-2 mb-3">
+                      {conflictAnalysis.exceedsThreshold ? (
+                        <XCircle className="w-5 h-5 text-red-600" />
+                      ) : (
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                      )}
+                      <span className={`font-medium ${
+                        conflictAnalysis.exceedsThreshold ? 'text-red-900 dark:text-red-100' : 'text-green-900 dark:text-green-100'
+                      }`}>
+                        {conflictAnalysis.exceedsThreshold 
+                          ? 'Approval Required' 
+                          : 'No Approval Needed'
+                        }
+                      </span>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div>Total conflict time: <strong>{conflictAnalysis.totalConflictMinutes} minutes per week</strong></div>
+                      {conflictAnalysis.conflicts.length > 0 && (
+                        <div>
+                          <div className="font-medium mb-1">Conflicts:</div>
+                          {conflictAnalysis.conflicts.map((conflict, index) => (
+                            <div key={index} className="pl-4 text-muted-foreground">
+                              • {conflict.day}: {conflict.conflictMinutes} min conflict ({conflict.classTime})
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <Dialog open={isConflictDialogOpen} onOpenChange={setIsConflictDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Class Schedule
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Add Class to Schedule</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="course-name">Course Name *</Label>
+                          <Input
+                            id="course-name"
+                            value={currentSchedule.courseName}
+                            onChange={(e) => setCurrentSchedule({...currentSchedule, courseName: e.target.value})}
+                            placeholder="e.g., Calculus I"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="course-code">Course Code</Label>
+                          <Input
+                            id="course-code"
+                            value={currentSchedule.courseCode}
+                            onChange={(e) => setCurrentSchedule({...currentSchedule, courseCode: e.target.value})}
+                            placeholder="e.g., MATH 1501"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="instructor">Instructor</Label>
+                        <Input
+                          id="instructor"
+                          value={currentSchedule.instructor}
+                          onChange={(e) => setCurrentSchedule({...currentSchedule, instructor: e.target.value})}
+                          placeholder="Professor name"
+                        />
+                      </div>
+
+                      <div>
+                        <Label>Days of Week *</Label>
+                        <div className="flex gap-4 mt-2">
+                          {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) => (
+                            <div key={day} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={day}
+                                checked={currentSchedule.days.includes(day)}
+                                onCheckedChange={(checked) => handleDayChange(day, checked as boolean)}
+                              />
+                              <Label htmlFor={day} className="text-sm">{day.slice(0, 3)}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="start-time">Start Time *</Label>
+                          <Input
+                            id="start-time"
+                            type="time"
+                            value={currentSchedule.startTime}
+                            onChange={(e) => setCurrentSchedule({...currentSchedule, startTime: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="end-time">End Time *</Label>
+                          <Input
+                            id="end-time"
+                            type="time"
+                            value={currentSchedule.endTime}
+                            onChange={(e) => setCurrentSchedule({...currentSchedule, endTime: e.target.value})}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="location">Location</Label>
+                        <Input
+                          id="location"
+                          value={currentSchedule.location}
+                          onChange={(e) => setCurrentSchedule({...currentSchedule, location: e.target.value})}
+                          placeholder="Building and room number"
+                        />
+                      </div>
+
+                      <div className="flex justify-end space-x-2">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setIsConflictDialogOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button onClick={addScheduleEntry}>
+                          Add Class
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                {classSchedules.length > 0 && (
+                  <Button 
+                    variant="outline" 
+                    onClick={analyzeConflicts}
+                    disabled={isAnalyzing}
+                  >
+                    <Clock className="w-4 h-4 mr-2" />
+                    {isAnalyzing ? 'Analyzing...' : 'Analyze Conflicts'}
+                  </Button>
+                )}
+
+                {conflictAnalysis && conflictAnalysis.exceedsThreshold && (
+                  <Button 
+                    onClick={submitClassConflictRequest}
+                    disabled={isSubmittingConflict}
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    {isSubmittingConflict ? 'Submitting...' : 'Submit for Approval'}
+                  </Button>
+                )}
+              </div>
+
+              {conflictAnalysis && conflictAnalysis.exceedsThreshold && (
+                <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-yellow-900 dark:text-yellow-100">Approval Process</h4>
+                      <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                        Your schedule conflicts exceed 30 minutes per week. The approval process is:
+                      </p>
+                      <ol className="text-sm text-yellow-700 dark:text-yellow-300 mt-2 pl-4 list-decimal">
+                        <li>Section Leader approval</li>
+                        <li>Secretary approval</li>
+                        <li>Final approval from director</li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </CollapsibleContent>
         </Card>
