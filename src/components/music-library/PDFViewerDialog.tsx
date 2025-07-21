@@ -14,6 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface PDFViewerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onPdfSelect?: (pdfUrl: string, title: string) => void;
 }
 
 interface SheetMusic {
@@ -26,6 +27,7 @@ interface SheetMusic {
 export const PDFViewerDialog: React.FC<PDFViewerDialogProps> = ({
   open,
   onOpenChange,
+  onPdfSelect,
 }) => {
   const [pdfUrl, setPdfUrl] = useState('');
   const [currentPdfUrl, setCurrentPdfUrl] = useState('');
@@ -85,7 +87,14 @@ export const PDFViewerDialog: React.FC<PDFViewerDialogProps> = ({
 
   const handleLibrarySelect = (item: SheetMusic) => {
     if (item.pdf_url) {
-      handlePdfSelect(item.pdf_url, item.title);
+      // Use parent's PDF selection handler if provided
+      if (onPdfSelect) {
+        onPdfSelect(item.pdf_url, item.title);
+        onOpenChange(false); // Close the dialog
+      } else {
+        // Fallback to local handling
+        handlePdfSelect(item.pdf_url, item.title);
+      }
     } else {
       toast({
         title: "No PDF Available",
