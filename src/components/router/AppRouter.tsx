@@ -17,6 +17,7 @@ import System from "@/pages/System";
 import BudgetApprovals from "@/pages/BudgetApprovals";
 import W9FormPage from "@/pages/W9FormPage";
 import NotFound from "@/pages/NotFound";
+import NotificationCenter from "@/pages/NotificationCenter";
 
 export const router = createBrowserRouter([
   {
@@ -50,6 +51,10 @@ export const router = createBrowserRouter([
   {
     path: "/sms-test",
     element: <SMSTest />,
+  },
+  {
+    path: "/notification-center",
+    element: <NotificationCenter />,
   },
   {
     path: "/notification-preferences",
