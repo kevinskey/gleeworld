@@ -42,7 +42,7 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
   };
 
   return (
-    <header className="bg-slate-900 border-b border-slate-700 sticky top-0 z-50">
+    <header className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
       <div className="container mx-auto px-2 sm:px-4">
         <div className="flex items-center justify-between h-16 sm:h-16 md:h-16">
           {/* Logo and Navigation */}
