@@ -42,7 +42,7 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
   };
 
   return (
-    <header className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
+    <header className="bg-slate-900 border-b border-slate-700 sticky top-0 z-50">
       <div className="container mx-auto px-2 sm:px-4">
         <div className="flex items-center justify-between h-16 sm:h-16 md:h-16">
           {/* Logo and Navigation */}
@@ -55,13 +55,13 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
                   className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 object-contain flex-shrink-0"
                 />
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-900 font-bold text-base sm:text-lg md:text-xl whitespace-nowrap">
+                  <span className="text-white font-bold text-base sm:text-lg md:text-xl whitespace-nowrap">
                     GleeWorld
                   </span>
                   {pageName !== 'GleeWorld' && (
                     <>
-                      <span className="text-gray-500 text-sm sm:text-base md:text-lg hidden sm:inline">|</span>
-                      <span className="text-gray-700 font-medium text-sm sm:text-base md:text-lg truncate max-w-32 sm:max-w-48 md:max-w-64">
+                      <span className="text-gray-300 text-sm sm:text-base md:text-lg hidden sm:inline">|</span>
+                      <span className="text-gray-100 font-medium text-sm sm:text-base md:text-lg truncate max-w-32 sm:max-w-48 md:max-w-64">
                         {pageName}
                       </span>
                     </>
