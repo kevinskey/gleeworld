@@ -283,7 +283,7 @@ export const UserDashboard = () => {
           {/* Compact Welcome Card */}
           <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 rounded-xl shadow-lg p-4">
             <div className="text-center">
-              <h1 className="text-xl font-bold text-white">
+              <h1 className="text-xl font-medium text-white">
                 Welcome back {displayName}!
               </h1>
               <p className="text-white/80 text-sm mt-1">
