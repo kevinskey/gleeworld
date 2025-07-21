@@ -70,13 +70,17 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
 
   const eventTypes = [
     { value: 'performance', label: 'Performance', color: 'bg-event-performance text-event-performance-fg' },
-    { value: 'rehearsal', label: 'Rehearsal', color: 'bg-blue-100 text-blue-800' },
-    { value: 'sectionals', label: 'Sectionals', color: 'bg-indigo-100 text-indigo-800' },
-    { value: 'social', label: 'Social Event', color: 'bg-pink-100 text-pink-800' },
-    { value: 'meeting', label: 'Meeting', color: 'bg-green-100 text-green-800' },
-    { value: 'workshop', label: 'Workshop', color: 'bg-orange-100 text-orange-800' },
-    { value: 'audition', label: 'Audition', color: 'bg-red-100 text-red-800' },
-    { value: 'other', label: 'Other', color: 'bg-gray-100 text-gray-800' }
+    { value: 'rehearsal', label: 'Rehearsal', color: 'bg-event-rehearsal text-event-rehearsal-fg' },
+    { value: 'sectional', label: 'Sectional', color: 'bg-event-sectional text-event-sectional-fg' },
+    { value: 'member-meeting', label: 'Member Meeting', color: 'bg-event-member-meeting text-event-member-meeting-fg' },
+    { value: 'exec-meeting', label: 'Exec Board Meeting', color: 'bg-event-exec-meeting text-event-exec-meeting-fg' },
+    { value: 'voice-lesson', label: 'Voice Lesson', color: 'bg-event-voice-lesson text-event-voice-lesson-fg' },
+    { value: 'tutorial', label: 'Tutorial', color: 'bg-event-tutorial text-event-tutorial-fg' },
+    { value: 'social', label: 'Social Event', color: 'bg-event-social text-event-social-fg' },
+    { value: 'meeting', label: 'Meeting', color: 'bg-event-meeting text-event-meeting-fg' },
+    { value: 'workshop', label: 'Workshop', color: 'bg-event-workshop text-event-workshop-fg' },
+    { value: 'audition', label: 'Audition', color: 'bg-event-audition text-event-audition-fg' },
+    { value: 'other', label: 'Other', color: 'bg-event-general text-event-general-fg' }
   ];
 
   const statusOptions = [

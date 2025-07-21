@@ -53,8 +53,24 @@
     --event-performance-fg: 203 85% 30%; /* Dark blue */
     --event-rehearsal: 203 85% 83%; /* Light blue */
     --event-rehearsal-fg: 203 85% 30%; /* Dark blue */
+    --event-sectional: 250 100% 83%; /* Light indigo */
+    --event-sectional-fg: 250 100% 30%; /* Dark indigo */
     --event-meeting: 34 100% 83%; /* Light orange */
     --event-meeting-fg: 34 100% 30%; /* Dark orange */
+    --event-member-meeting: 142 76% 83%; /* Light green */
+    --event-member-meeting-fg: 142 76% 30%; /* Dark green */
+    --event-exec-meeting: 267 57% 83%; /* Light purple */
+    --event-exec-meeting-fg: 267 57% 30%; /* Dark purple */
+    --event-voice-lesson: 320 70% 83%; /* Light pink */
+    --event-voice-lesson-fg: 320 70% 30%; /* Dark pink */
+    --event-tutorial: 290 100% 83%; /* Light violet */
+    --event-tutorial-fg: 290 100% 30%; /* Dark violet */
+    --event-social: 320 70% 83%; /* Light pink */
+    --event-social-fg: 320 70% 30%; /* Dark pink */
+    --event-workshop: 34 100% 83%; /* Light orange */
+    --event-workshop-fg: 34 100% 30%; /* Dark orange */
+    --event-audition: 0 84% 83%; /* Light red */
+    --event-audition-fg: 0 84% 30%; /* Dark red */
     --event-general: 210 20% 83%; /* Light gray */
     --event-general-fg: 210 20% 30%; /* Dark gray */
     
