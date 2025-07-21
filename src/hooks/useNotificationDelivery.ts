@@ -75,9 +75,13 @@ export const useNotificationDelivery = () => {
     notificationId?: string
   ) => {
     try {
+      // Clean phone number - remove formatting and ensure proper format
+      const cleanedPhone = phoneNumber.replace(/\D/g, ''); // Remove all non-digits
+      const formattedPhone = cleanedPhone.startsWith('1') ? `+${cleanedPhone}` : `+1${cleanedPhone}`;
+      
       const { data, error } = await supabase.functions.invoke('gw-send-sms', {
         body: {
-          to: phoneNumber,
+          to: formattedPhone,
           message: message,
           notificationId: notificationId
         }
