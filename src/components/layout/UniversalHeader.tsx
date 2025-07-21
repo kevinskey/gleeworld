@@ -44,7 +44,7 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
   return (
     <header className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
       <div className="container mx-auto px-2 sm:px-4">
-        <div className="flex items-center justify-between h-16 sm:h-16 md:h-16">
+        <div className="flex items-center justify-between min-h-16 py-3">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-1 sm:gap-4 md:gap-6 min-w-0 flex-1">
             <EnhancedTooltip content="Go to GleeWorld Home">
