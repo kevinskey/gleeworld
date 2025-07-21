@@ -40,6 +40,7 @@ import About from "./pages/About";
 import AttendanceTestPage from "./pages/AttendanceTestPage";
 import AttendancePage from "./pages/AttendancePage";
 import MusicLibraryPage from "./pages/MusicLibrary";
+import NotificationCenter from "./pages/NotificationCenter";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -323,22 +324,30 @@ const App = () => {
                       </ProtectedRoute>
                     } 
                   />
+                   <Route 
+                     path="/music-library" 
+                     element={
+                       <ProtectedRoute>
+                         <MusicLibraryPage />
+                       </ProtectedRoute>
+                     } 
+                   />
+                   <Route 
+                     path="/notification-center" 
+                     element={
+                       <ProtectedRoute>
+                         <NotificationCenter />
+                       </ProtectedRoute>
+                     } 
+                   />
                   <Route 
-                    path="/music-library" 
-                    element={
-                      <ProtectedRoute>
-                        <MusicLibraryPage />
-                      </ProtectedRoute>
-                    } 
-                  />
-                 <Route 
-                   path="/landing"
-                  element={
-                    <PublicRoute>
-                      <GleeWorldLanding />
-                    </PublicRoute>
-                  } 
-                />
+                    path="/landing"
+                   element={
+                     <PublicRoute>
+                       <GleeWorldLanding />
+                     </PublicRoute>
+                   } 
+                 />
                 <Route 
                   path="/" 
                   element={<RootRoute />} 
