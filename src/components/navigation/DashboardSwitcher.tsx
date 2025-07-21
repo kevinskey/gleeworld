@@ -4,7 +4,7 @@ import { useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Shield, User, BarChart3, Home } from "lucide-react";
+import { Shield, User, BarChart3, Home } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { isAdmin } from "@/constants/permissions";
@@ -44,7 +44,6 @@ export const DashboardSwitcher = () => {
           <Badge variant="secondary" className="bg-white/20 text-white border-0 text-xs px-1 sm:px-2">
             {userProfile.role}
           </Badge>
-          <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-48 sm:w-56">
