@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/useProfile";
@@ -35,7 +36,11 @@ import {
   Facebook,
   Youtube,
   Music2,
-  DollarSign
+  DollarSign,
+  Shirt,
+  Heart,
+  Home,
+  Shield
 } from "lucide-react";
 import { AvatarCropDialog } from "@/components/shared/AvatarCropDialog";
 
@@ -51,6 +56,25 @@ const profileSchema = z.object({
   voice_part: z.enum(["S1", "S2", "A1", "A2", "T1", "T2", "B1", "B2"]).optional().or(z.literal("")),
   can_dance: z.boolean().default(false),
   preferred_payment_method: z.enum(["zelle", "cashapp", "venmo", "apple_pay", "check"]).optional().or(z.literal("")),
+  
+  // New Wardrobe & Identity fields
+  dress_size: z.string().optional(),
+  shoe_size: z.string().optional(),
+  hair_color: z.string().optional(),
+  has_tattoos: z.boolean().default(false),
+  visible_piercings: z.boolean().default(false),
+  
+  // Academic & Personal fields
+  academic_major: z.string().optional(),
+  pronouns: z.string().optional(),
+  class_year: z.number().min(1900).max(2050).optional().or(z.literal("")),
+  
+  // Health & Safety fields
+  emergency_contact: z.string().optional(),
+  allergies: z.string().optional(),
+  parent_guardian_contact: z.string().optional(),
+  
+  // Social media
   instagram: z.string().optional(),
   twitter: z.string().optional(),
   facebook: z.string().optional(),
@@ -64,6 +88,14 @@ const instruments = [
   "Trombone", "French Horn", "Tuba", "Drums", "Bass Guitar", "Harp", "Oboe", "Bassoon",
   "Percussion", "Accordion", "Banjo", "Mandolin", "Ukulele", "Organ", "Synthesizer"
 ];
+
+const dietaryRestrictions = [
+  "Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Nut Allergy", "Kosher", "Halal", "Low Sodium"
+];
+
+const dressSizes = ["XS", "S", "M", "L", "XL", "XXL", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20"];
+const shoeSizes = ["5", "5.5", "6", "6.5", "7", "7.5", "8", "8.5", "9", "9.5", "10", "10.5", "11", "11.5", "12"];
+const pronounOptions = ["She/Her", "He/Him", "They/Them", "Other"];
 
 const paymentMethods = [
   { value: "zelle", label: "Zelle" },
@@ -86,11 +118,13 @@ const voiceParts = [
 
 const Profile = () => {
   const { user } = useAuth();
+  const { profile: userRole } = useUserRole();
   const { toast } = useToast();
   const { profile, loading: profileLoading, updateAvatarUrl } = useProfile();
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedInstruments, setSelectedInstruments] = useState<string[]>([]);
+  const [selectedDietaryRestrictions, setSelectedDietaryRestrictions] = useState<string[]>([]);
   const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
   const [selectedImageForCrop, setSelectedImageForCrop] = useState<string>("");
   const [isAvatarUploading, setIsAvatarUploading] = useState(false);
@@ -122,6 +156,19 @@ const Profile = () => {
       setValue("can_dance", profile.can_dance || false);
       setValue("preferred_payment_method", profile.preferred_payment_method || "");
       
+      // New fields
+      setValue("dress_size", profile.dress_size || "");
+      setValue("shoe_size", profile.shoe_size || "");
+      setValue("hair_color", profile.hair_color || "");
+      setValue("has_tattoos", profile.has_tattoos || false);
+      setValue("visible_piercings", profile.visible_piercings || false);
+      setValue("academic_major", profile.academic_major || "");
+      setValue("pronouns", profile.pronouns || "");
+      setValue("class_year", profile.class_year || "");
+      setValue("emergency_contact", profile.emergency_contact || "");
+      setValue("allergies", profile.allergies || "");
+      setValue("parent_guardian_contact", profile.parent_guardian_contact || "");
+      
       // Set social media links
       const socialLinks = profile.social_media_links || {};
       setValue("instagram", socialLinks.instagram || "");
@@ -129,8 +176,9 @@ const Profile = () => {
       setValue("facebook", socialLinks.facebook || "");
       setValue("youtube", socialLinks.youtube || "");
 
-      // Set instruments
+      // Set instruments and dietary restrictions
       setSelectedInstruments(profile.instruments_played || []);
+      setSelectedDietaryRestrictions(profile.dietary_restrictions || []);
     }
   }, [profile, setValue]);
 
@@ -186,6 +234,21 @@ const Profile = () => {
           preferred_payment_method: data.preferred_payment_method === "" ? null : data.preferred_payment_method,
           instruments_played: selectedInstruments,
           social_media_links: socialMediaLinks,
+          
+          // New fields
+          dress_size: data.dress_size,
+          shoe_size: data.shoe_size,
+          hair_color: data.hair_color,
+          has_tattoos: data.has_tattoos,
+          visible_piercings: data.visible_piercings,
+          academic_major: data.academic_major,
+          pronouns: data.pronouns,
+          class_year: data.class_year === "" ? null : Number(data.class_year),
+          emergency_contact: data.emergency_contact,
+          dietary_restrictions: selectedDietaryRestrictions,
+          allergies: data.allergies,
+          parent_guardian_contact: data.parent_guardian_contact,
+          
           updated_at: new Date().toISOString(),
         })
         .eq("id", user.id);
@@ -218,6 +281,35 @@ const Profile = () => {
       setSelectedInstruments([...selectedInstruments, instrument]);
     } else {
       setSelectedInstruments(selectedInstruments.filter(i => i !== instrument));
+    }
+  };
+
+  const handleDietaryRestrictionChange = (restriction: string, checked: boolean) => {
+    if (checked) {
+      setSelectedDietaryRestrictions([...selectedDietaryRestrictions, restriction]);
+    } else {
+      setSelectedDietaryRestrictions(selectedDietaryRestrictions.filter(r => r !== restriction));
+    }
+  };
+
+  const shouldShowField = (fieldType: string) => {
+    const role = userRole?.role || 'user';
+    
+    switch (fieldType) {
+      case 'basic':
+        return true; // All roles see basic info
+      case 'academic':
+        return role !== 'fan'; // All except fans
+      case 'wardrobe':
+        return ['user', 'admin', 'super-admin'].includes(role); // Members and above
+      case 'health':
+        return ['user', 'admin', 'super-admin'].includes(role); // Members and above
+      case 'professional':
+        return ['admin', 'super-admin'].includes(role); // Admin and above
+      case 'social':
+        return true; // All roles
+      default:
+        return true;
     }
   };
 
@@ -388,6 +480,25 @@ const Profile = () => {
                     )}
                   </div>
                   <div>
+                    <Label htmlFor="pronouns">Pronouns</Label>
+                    <Select
+                      value={watch("pronouns") || ""}
+                      onValueChange={(value) => setValue("pronouns", value)}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select pronouns" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {pronounOptions.map((pronoun) => (
+                          <SelectItem key={pronoun} value={pronoun}>
+                            {pronoun}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
                     <Label htmlFor="bio">Bio</Label>
                     <Textarea
                       id="bio"
@@ -469,35 +580,231 @@ const Profile = () => {
             </CardContent>
           </Card>
 
+          {/* Academic Information */}
+          {shouldShowField('academic') && (
+            <Card className="bg-white/95 backdrop-blur-sm border border-white/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5" />
+                  Academic Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="academic_major">Academic Major</Label>
+                  <Input
+                    id="academic_major"
+                    {...register("academic_major")}
+                    disabled={!isEditing}
+                    className="mt-1"
+                    placeholder="e.g., Music, Business, Biology"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="class_year">Class Year</Label>
+                  <Input
+                    id="class_year"
+                    type="number"
+                    {...register("class_year", { valueAsNumber: true })}
+                    disabled={!isEditing}
+                    className="mt-1"
+                    placeholder="2024"
+                    min="1900"
+                    max="2050"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="student_number">Student Number</Label>
+                  <Input
+                    id="student_number"
+                    {...register("student_number")}
+                    disabled={!isEditing}
+                    className="mt-1"
+                    placeholder="Your student ID"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Wardrobe & Wellness */}
+          {shouldShowField('wardrobe') && (
+            <Card className="bg-white/95 backdrop-blur-sm border border-white/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shirt className="h-5 w-5" />
+                  Wardrobe & Wellness
+                </CardTitle>
+                <CardDescription>Information for performances and health requirements</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="dress_size">Dress/Top Size</Label>
+                    <Select
+                      value={watch("dress_size") || ""}
+                      onValueChange={(value) => setValue("dress_size", value)}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {dressSizes.map((size) => (
+                          <SelectItem key={size} value={size}>
+                            {size}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="shoe_size">Shoe Size</Label>
+                    <Select
+                      value={watch("shoe_size") || ""}
+                      onValueChange={(value) => setValue("shoe_size", value)}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {shoeSizes.map((size) => (
+                          <SelectItem key={size} value={size}>
+                            {size}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="hair_color">Hair Color</Label>
+                    <Input
+                      id="hair_color"
+                      {...register("hair_color")}
+                      disabled={!isEditing}
+                      className="mt-1"
+                      placeholder="e.g., Brown, Black, Blonde"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="has_tattoos"
+                      checked={watch("has_tattoos")}
+                      onCheckedChange={(checked) => setValue("has_tattoos", checked as boolean)}
+                      disabled={!isEditing}
+                    />
+                    <Label htmlFor="has_tattoos">Has Tattoos</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="visible_piercings"
+                      checked={watch("visible_piercings")}
+                      onCheckedChange={(checked) => setValue("visible_piercings", checked as boolean)}
+                      disabled={!isEditing}
+                    />
+                    <Label htmlFor="visible_piercings">Has Visible Piercings</Label>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Health & Safety */}
+          {shouldShowField('health') && (
+            <Card className="bg-white/95 backdrop-blur-sm border border-white/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Heart className="h-5 w-5" />
+                  Health & Safety
+                </CardTitle>
+                <CardDescription>Emergency contacts and health information</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="emergency_contact">Emergency Contact</Label>
+                    <Input
+                      id="emergency_contact"
+                      {...register("emergency_contact")}
+                      disabled={!isEditing}
+                      className="mt-1"
+                      placeholder="Name and phone number"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="parent_guardian_contact">Parent/Guardian Contact</Label>
+                    <Input
+                      id="parent_guardian_contact"
+                      {...register("parent_guardian_contact")}
+                      disabled={!isEditing}
+                      className="mt-1"
+                      placeholder="If applicable"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Dietary Restrictions</Label>
+                  <div className="mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    {dietaryRestrictions.map((restriction) => (
+                      <div key={restriction} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`dietary_${restriction}`}
+                          checked={selectedDietaryRestrictions.includes(restriction)}
+                          onCheckedChange={(checked) =>
+                            handleDietaryRestrictionChange(restriction, checked as boolean)
+                          }
+                          disabled={!isEditing}
+                        />
+                        <Label htmlFor={`dietary_${restriction}`} className="text-sm">
+                          {restriction}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="allergies">Allergies & Medical Notes</Label>
+                  <Textarea
+                    id="allergies"
+                    {...register("allergies")}
+                    disabled={!isEditing}
+                    className="mt-1"
+                    rows={2}
+                    placeholder="List any allergies or important medical information..."
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Professional Information */}
-          <Card className="bg-white/95 backdrop-blur-sm border border-white/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Briefcase className="h-5 w-5" />
-                Professional Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="workplace">Where do you work?</Label>
-                <Input
-                  id="workplace"
-                  {...register("workplace")}
-                  disabled={!isEditing}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="student_number">Student Number</Label>
-                <Input
-                  id="student_number"
-                  {...register("student_number")}
-                  disabled={!isEditing}
-                  className="mt-1"
-                />
-              </div>
-            </CardContent>
-          </Card>
+          {shouldShowField('professional') && (
+            <Card className="bg-white/95 backdrop-blur-sm border border-white/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5" />
+                  Professional Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="workplace">Where do you work?</Label>
+                  <Input
+                    id="workplace"
+                    {...register("workplace")}
+                    disabled={!isEditing}
+                    className="mt-1"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Musical Information */}
           <Card className="bg-white/95 backdrop-blur-sm border border-white/20">

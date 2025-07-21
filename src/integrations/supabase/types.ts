@@ -3743,70 +3743,106 @@ export type Database = {
       }
       profiles: {
         Row: {
+          academic_major: string | null
+          allergies: string | null
           avatar_url: string | null
           bio: string | null
           can_dance: boolean | null
+          class_year: number | null
           created_at: string | null
+          dietary_restrictions: string[] | null
+          dress_size: string | null
           email: string | null
+          emergency_contact: string | null
           full_name: string | null
+          hair_color: string | null
+          has_tattoos: boolean | null
           home_address: string | null
           id: string
           instruments_played: string[] | null
+          parent_guardian_contact: string | null
           phone_number: string | null
           preferred_payment_method:
             | Database["public"]["Enums"]["payment_method_enum"]
             | null
+          pronouns: string | null
           role: string | null
           school_address: string | null
+          shoe_size: string | null
           social_media_links: Json | null
           student_number: string | null
           updated_at: string | null
+          visible_piercings: boolean | null
           voice_part: Database["public"]["Enums"]["voice_part_enum"] | null
           website_url: string | null
           workplace: string | null
         }
         Insert: {
+          academic_major?: string | null
+          allergies?: string | null
           avatar_url?: string | null
           bio?: string | null
           can_dance?: boolean | null
+          class_year?: number | null
           created_at?: string | null
+          dietary_restrictions?: string[] | null
+          dress_size?: string | null
           email?: string | null
+          emergency_contact?: string | null
           full_name?: string | null
+          hair_color?: string | null
+          has_tattoos?: boolean | null
           home_address?: string | null
           id: string
           instruments_played?: string[] | null
+          parent_guardian_contact?: string | null
           phone_number?: string | null
           preferred_payment_method?:
             | Database["public"]["Enums"]["payment_method_enum"]
             | null
+          pronouns?: string | null
           role?: string | null
           school_address?: string | null
+          shoe_size?: string | null
           social_media_links?: Json | null
           student_number?: string | null
           updated_at?: string | null
+          visible_piercings?: boolean | null
           voice_part?: Database["public"]["Enums"]["voice_part_enum"] | null
           website_url?: string | null
           workplace?: string | null
         }
         Update: {
+          academic_major?: string | null
+          allergies?: string | null
           avatar_url?: string | null
           bio?: string | null
           can_dance?: boolean | null
+          class_year?: number | null
           created_at?: string | null
+          dietary_restrictions?: string[] | null
+          dress_size?: string | null
           email?: string | null
+          emergency_contact?: string | null
           full_name?: string | null
+          hair_color?: string | null
+          has_tattoos?: boolean | null
           home_address?: string | null
           id?: string
           instruments_played?: string[] | null
+          parent_guardian_contact?: string | null
           phone_number?: string | null
           preferred_payment_method?:
             | Database["public"]["Enums"]["payment_method_enum"]
             | null
+          pronouns?: string | null
           role?: string | null
           school_address?: string | null
+          shoe_size?: string | null
           social_media_links?: Json | null
           student_number?: string | null
           updated_at?: string | null
+          visible_piercings?: boolean | null
           voice_part?: Database["public"]["Enums"]["voice_part_enum"] | null
           website_url?: string | null
           workplace?: string | null

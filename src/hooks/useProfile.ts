@@ -7,27 +7,46 @@ export interface ProfileData {
   id: string;
   email: string;
   full_name: string;
-  bio: string;
-  avatar_url: string;
-  website_url: string;
-  phone_number: string;
-  student_number: string;
-  workplace: string;
-  school_address: string;
-  home_address: string;
-  voice_part: "S1" | "S2" | "A1" | "A2" | "T1" | "T2" | "B1" | "B2" | null;
-  can_dance: boolean;
-  instruments_played: string[];
-  preferred_payment_method: "zelle" | "cashapp" | "venmo" | "apple_pay" | "check" | null;
-  social_media_links: {
+  bio?: string;
+  avatar_url?: string;
+  website_url?: string;
+  phone_number?: string;
+  student_number?: string;
+  workplace?: string;
+  school_address?: string;
+  home_address?: string;
+  voice_part?: "S1" | "S2" | "A1" | "A2" | "T1" | "T2" | "B1" | "B2" | null;
+  can_dance?: boolean;
+  instruments_played?: string[];
+  preferred_payment_method?: "zelle" | "cashapp" | "venmo" | "apple_pay" | "check" | null;
+  social_media_links?: {
     instagram?: string;
     twitter?: string;
     facebook?: string;
     youtube?: string;
   };
-  role: string;
-  created_at: string;
-  updated_at: string;
+  
+  // New Wardrobe & Identity fields
+  dress_size?: string;
+  shoe_size?: string;
+  hair_color?: string;
+  has_tattoos?: boolean;
+  visible_piercings?: boolean;
+  
+  // Academic & Personal fields
+  academic_major?: string;
+  pronouns?: string;
+  class_year?: number;
+  
+  // Health & Safety fields
+  emergency_contact?: string;
+  dietary_restrictions?: string[];
+  allergies?: string;
+  parent_guardian_contact?: string;
+  
+  role?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const useProfile = () => {

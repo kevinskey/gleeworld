@@ -28,6 +28,7 @@ import BudgetApprovals from "./pages/BudgetApprovals";
 import { Shop } from "./pages/Shop";
 import Payments from "./pages/Payments";
 import Profile from "./pages/Profile";
+import ProfileSetup from "./pages/ProfileSetup";
 import Calendar from "./pages/Calendar";
 
 import PublicCalendar from "./pages/PublicCalendar";
@@ -227,7 +228,15 @@ const App = () => {
                     <Profile />
                   </ProtectedRoute>
                 } 
-                /> 
+                />
+                <Route
+                  path="/profile/setup" 
+                  element={
+                    <ProtectedRoute>
+                      <ProfileSetup />
+                    </ProtectedRoute>
+                  } 
+                />
                <Route
                  path="/notifications" 
                  element={
