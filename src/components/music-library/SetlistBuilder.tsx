@@ -285,6 +285,8 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
     );
   }
 
+  console.log('SetlistBuilder render: isCreating =', isCreating);
+
   return (
     <div className="space-y-6">
       {/* Header */}
