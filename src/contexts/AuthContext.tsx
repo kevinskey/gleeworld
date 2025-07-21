@@ -97,16 +97,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log('AuthContext: Starting sign out...');
       setLoading(true);
       
+      // Clear auth state first
+      setUser(null);
+      setSession(null);
+      
+      // Clear any stored auth tokens
+      try {
+        Object.keys(localStorage).forEach((key) => {
+          if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+            localStorage.removeItem(key);
+          }
+        });
+      } catch (e) {
+        console.warn('Failed to clear localStorage:', e);
+      }
+      
+      // Sign out from Supabase
       const { error } = await supabase.auth.signOut({ scope: 'global' });
       
       if (error) {
         console.error('AuthContext: Error signing out:', error);
       }
       
-      setUser(null);
-      setSession(null);
       setLoading(false);
       
+      // Force page refresh to ensure clean state
       window.location.href = '/auth';
     } catch (error) {
       console.error('AuthContext: Sign out failed:', error);
