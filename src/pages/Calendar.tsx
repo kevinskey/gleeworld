@@ -9,7 +9,7 @@ const Calendar = () => {
   
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
-      <div className="container mx-auto pt-0 pb-2 md:pb-3 space-y-3 md:space-y-4 px-4 glass-modal-overlay">
+      <div className="container mx-auto -mt-2.5 pt-0 pb-2 md:pb-3 space-y-3 md:space-y-4 px-4 glass-modal-overlay">
         <CalendarViews />
       </div>
     </UniversalLayout>
