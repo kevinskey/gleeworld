@@ -1,17 +1,18 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Mail, MessageSquare, Bell, Phone } from 'lucide-react';
+import PhoneNumberInput from './PhoneNumberInput';
 
 const NotificationPreferences = () => {
   const { preferences, loading, updatePreferences } = useNotificationPreferences();
+  const [updatingPhone, setUpdatingPhone] = useState(false);
 
   if (loading || !preferences) {
     return (
@@ -28,7 +29,13 @@ const NotificationPreferences = () => {
   };
 
   const handlePhoneUpdate = async (phone: string) => {
-    await updatePreferences({ phone_number: phone });
+    setUpdatingPhone(true);
+    try {
+      const success = await updatePreferences({ phone_number: phone });
+      return success;
+    } finally {
+      setUpdatingPhone(false);
+    }
   };
 
   return (
@@ -94,20 +101,13 @@ const NotificationPreferences = () => {
               </div>
               
               {preferences.sms_enabled && (
-                <div className="ml-7 mt-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <div className="flex space-x-2 mt-1">
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="+1 (555) 123-4567"
-                      defaultValue={preferences.phone_number || ''}
-                      onBlur={(e) => handlePhoneUpdate(e.target.value)}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Include country code (e.g., +1 for US)
-                  </p>
+                <div className="ml-7 mt-4 p-4 bg-muted/50 rounded-lg">
+                  <PhoneNumberInput
+                    value={preferences.phone_number || ''}
+                    onChange={() => {}} // Handled by onSave
+                    onSave={handlePhoneUpdate}
+                    disabled={updatingPhone}
+                  />
                 </div>
               )}
             </div>

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -7,6 +8,8 @@ interface CreateNotificationParams {
   message: string;
   type?: string;
   related_contract_id?: string;
+  sendSMS?: boolean;
+  sendEmail?: boolean;
 }
 
 export const useNotificationSystem = () => {
@@ -23,7 +26,7 @@ export const useNotificationSystem = () => {
           message: params.message,
           type: params.type || 'info',
           related_contract_id: params.related_contract_id,
-          is_read: false, // Always start as unread
+          is_read: false,
           created_by: (await supabase.auth.getUser()).data.user?.id
         }])
         .select()
@@ -34,7 +37,19 @@ export const useNotificationSystem = () => {
         throw notificationError;
       }
 
-      // Get user's phone number from profiles
+      // Get user's notification preferences and profile
+      const { data: preferences, error: preferencesError } = await supabase
+        .from('gw_notification_preferences')
+        .select('*')
+        .eq('user_id', params.user_id)
+        .single();
+
+      if (preferencesError) {
+        console.error('Error fetching preferences:', preferencesError);
+        // Continue without preferences - default to no SMS
+      }
+
+      // Get user's profile for phone number
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('phone_number, full_name')
@@ -43,31 +58,56 @@ export const useNotificationSystem = () => {
 
       if (profileError) {
         console.error('Error fetching user profile:', profileError);
-        // Don't throw here - notification was created successfully
-        return notification;
+        // Continue without profile - no SMS will be sent
       }
 
-      // If user has a phone number, send SMS
-      if (profile?.phone_number) {
+      // Send SMS if enabled and phone number available
+      if (
+        (params.sendSMS || preferences?.sms_enabled) &&
+        (profile?.phone_number || preferences?.phone_number)
+      ) {
+        const phoneNumber = profile?.phone_number || preferences?.phone_number;
+        
         try {
           const smsMessage = `🔔 New notification: ${params.title}. Check the app to view details.`;
           
-          const { error: smsError } = await supabase.functions.invoke('gw-send-sms', {
+          const { data: smsData, error: smsError } = await supabase.functions.invoke('gw-send-sms', {
             body: {
-              to: profile.phone_number,
-              message: smsMessage
+              to: phoneNumber,
+              message: smsMessage,
+              notificationId: notification.id
             }
           });
 
           if (smsError) {
             console.error('Error sending SMS:', smsError);
-            // Don't throw here - notification was created successfully
-          } else {
+          } else if (smsData?.success) {
             console.log('SMS sent successfully for notification:', notification.id);
           }
         } catch (smsError) {
           console.error('Error in SMS sending process:', smsError);
-          // Don't throw here - notification was created successfully
+        }
+      }
+
+      // Send email if enabled
+      if (params.sendEmail || preferences?.email_enabled) {
+        try {
+          const { error: emailError } = await supabase.functions.invoke('gw-send-email', {
+            body: {
+              to: profile?.email || (await supabase.auth.getUser()).data.user?.email,
+              subject: params.title,
+              message: params.message,
+              notificationId: notification.id
+            }
+          });
+
+          if (emailError) {
+            console.error('Error sending email:', emailError);
+          } else {
+            console.log('Email sent successfully for notification:', notification.id);
+          }
+        } catch (emailError) {
+          console.error('Error in email sending process:', emailError);
         }
       }
 
