@@ -157,15 +157,15 @@ export const MassEmailManager = () => {
 
     setLoading(true);
     try {
-      // Call edge function to send mass email
-      const { data, error } = await supabase.functions.invoke('send-mass-email', {
+      // Call edge function to send mass email via Elastic Email
+      const { data, error } = await supabase.functions.invoke('send-elastic-email', {
         body: {
           subject: emailData.subject,
-          message: emailData.message,
+          content: emailData.message,
           recipients: finalRecipients.map(r => ({ email: r.email, name: r.full_name })),
           priority: emailData.priority,
-          scheduleFor: emailData.scheduleFor || null,
-          sentBy: user?.id,
+          scheduleTime: emailData.scheduleFor || null,
+          sender: user?.id,
         }
       });
 

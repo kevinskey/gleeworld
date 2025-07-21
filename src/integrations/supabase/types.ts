@@ -1928,6 +1928,45 @@ export type Database = {
           },
         ]
       }
+      gw_member_communications: {
+        Row: {
+          communication_type: string
+          content: string
+          created_at: string
+          created_by: string | null
+          file_url: string | null
+          id: string
+          recipient_id: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          communication_type?: string
+          content: string
+          created_at?: string
+          created_by?: string | null
+          file_url?: string | null
+          id?: string
+          recipient_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          communication_type?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          file_url?: string | null
+          id?: string
+          recipient_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_music_analytics: {
         Row: {
           device_info: Json | null
@@ -2093,6 +2132,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gw_newsletters: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          recipient_count: number | null
+          scheduled_date: string | null
+          sent_date: string | null
+          status: string
+          target_audience: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          recipient_count?: number | null
+          scheduled_date?: string | null
+          sent_date?: string | null
+          status?: string
+          target_audience: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          recipient_count?: number | null
+          scheduled_date?: string | null
+          sent_date?: string | null
+          status?: string
+          target_audience?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       gw_notification_delivery_log: {
         Row: {
@@ -2700,6 +2781,57 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
           voice_part?: string | null
+        }
+        Relationships: []
+      }
+      gw_public_form_submissions: {
+        Row: {
+          budget_range: string | null
+          created_at: string
+          email: string
+          event_date: string | null
+          event_location: string | null
+          form_type: string
+          full_name: string
+          id: string
+          message: string | null
+          organization_name: string | null
+          phone_number: string | null
+          status: string
+          submission_data: Json | null
+          updated_at: string
+        }
+        Insert: {
+          budget_range?: string | null
+          created_at?: string
+          email: string
+          event_date?: string | null
+          event_location?: string | null
+          form_type: string
+          full_name: string
+          id?: string
+          message?: string | null
+          organization_name?: string | null
+          phone_number?: string | null
+          status?: string
+          submission_data?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          budget_range?: string | null
+          created_at?: string
+          email?: string
+          event_date?: string | null
+          event_location?: string | null
+          form_type?: string
+          full_name?: string
+          id?: string
+          message?: string | null
+          organization_name?: string | null
+          phone_number?: string | null
+          status?: string
+          submission_data?: Json | null
+          updated_at?: string
         }
         Relationships: []
       }

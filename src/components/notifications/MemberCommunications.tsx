@@ -59,7 +59,7 @@ export const MemberCommunications = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('gw_member_communications')
+        .from('gw_member_communications' as any)
         .select(`
           *,
           recipient:profiles(full_name, email)
@@ -67,7 +67,7 @@ export const MemberCommunications = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCommunications(data || []);
+      setCommunications((data || []) as any);
     } catch (error) {
       console.error('Error loading communications:', error);
       toast({
@@ -107,14 +107,14 @@ export const MemberCommunications = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('gw_member_communications')
+        .from('gw_member_communications' as any)
         .insert([{
-          title: formData.title,
+          subject: formData.title,
           content: formData.content,
           communication_type: formData.communication_type,
           recipient_id: formData.recipient_id || null,
-          created_by: user?.id,
-          status: 'active',
+          sender_id: user?.id,
+          status: 'sent',
         }])
         .select()
         .single();
@@ -130,7 +130,7 @@ export const MemberCommunications = () => {
               to: recipient.email,
               subject: `New Communication: ${formData.title}`,
               message: `Dear ${recipient.full_name},\n\nYou have received a new communication from the Glee Club.\n\nTitle: ${formData.title}\nType: ${COMMUNICATION_TYPES.find(t => t.value === formData.communication_type)?.label}\n\nPlease log in to your dashboard to view the full details.\n\nBest regards,\nSpelman Glee Club Administration`,
-              notificationId: data.id
+              notificationId: (data as any).id
             }
           });
 

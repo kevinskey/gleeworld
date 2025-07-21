@@ -62,12 +62,12 @@ export const NewsletterManager = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('gw_newsletters')
+        .from('gw_newsletters' as any)
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setNewsletters(data || []);
+      setNewsletters((data || []) as any);
     } catch (error) {
       console.error('Error loading newsletters:', error);
       toast({
@@ -115,13 +115,13 @@ export const NewsletterManager = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('gw_newsletters')
+        .from('gw_newsletters' as any)
         .insert([{
           title: formData.title,
           content: content,
           target_audience: formData.target_audience,
           status: formData.status,
-          scheduled_date: formData.scheduled_date || null,
+          scheduled_for: formData.scheduled_date || null,
           created_by: user?.id,
         }])
         .select()
@@ -131,7 +131,7 @@ export const NewsletterManager = () => {
 
       // If status is 'sent', actually send the newsletter
       if (formData.status === 'sent') {
-        await sendNewsletter(data.id);
+        await sendNewsletter((data as any).id);
       }
 
       toast({
@@ -167,10 +167,10 @@ export const NewsletterManager = () => {
 
       // Update newsletter status
       await supabase
-        .from('gw_newsletters')
+        .from('gw_newsletters' as any)
         .update({ 
           status: 'sent', 
-          sent_date: new Date().toISOString() 
+          sent_at: new Date().toISOString() 
         })
         .eq('id', newsletterId);
 

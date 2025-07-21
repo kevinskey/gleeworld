@@ -9,8 +9,8 @@ import { Separator } from '@/components/ui/separator';
 import { MessageSquare, Phone, Send, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNotificationDelivery } from '@/hooks/useNotificationDelivery';
-import { PhoneNumberInput } from '@/components/notifications/PhoneNumberInput';
-import { SMSDeliveryStatus } from '@/components/notifications/SMSDeliveryStatus';
+import PhoneNumberInput from '@/components/notifications/PhoneNumberInput';
+import SMSDeliveryStatus from '@/components/notifications/SMSDeliveryStatus';
 
 export const SMSHistoryManager = () => {
   const { toast } = useToast();
@@ -163,10 +163,10 @@ export const SMSHistoryManager = () => {
                     </div>
                   </div>
 
-                  <SMSDeliveryStatus 
-                    notificationId={log.notification_id}
-                    deliveryMethod="sms"
-                  />
+                   <SMSDeliveryStatus 
+                     notification_id={log.notification_id}
+                     delivery_method="sms"
+                   />
 
                   {log.error_message && (
                     <div className="bg-red-50 border border-red-200 rounded p-3">

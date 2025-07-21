@@ -48,7 +48,7 @@ export const PublicFormsManager = () => {
     try {
       setLoading(true);
       let query = supabase
-        .from('gw_public_form_submissions')
+        .from('gw_public_form_submissions' as any)
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -63,7 +63,7 @@ export const PublicFormsManager = () => {
       const { data, error } = await query;
 
       if (error) throw error;
-      setSubmissions(data || []);
+      setSubmissions((data || []) as any);
     } catch (error) {
       console.error('Error loading form submissions:', error);
       toast({
@@ -79,7 +79,7 @@ export const PublicFormsManager = () => {
   const updateSubmissionStatus = async (submissionId: string, status: string) => {
     try {
       const { error } = await supabase
-        .from('gw_public_form_submissions')
+        .from('gw_public_form_submissions' as any)
         .update({ status })
         .eq('id', submissionId);
 
