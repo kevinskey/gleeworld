@@ -42,6 +42,7 @@ import AttendanceTestPage from "./pages/AttendanceTestPage";
 import AttendancePage from "./pages/AttendancePage";
 import MusicLibraryPage from "./pages/MusicLibrary";
 import NotificationCenter from "./pages/NotificationCenter";
+import Budgets from "./pages/Budgets";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -341,14 +342,22 @@ const App = () => {
                        </ProtectedRoute>
                      } 
                    />
-                   <Route 
-                     path="/notification-center" 
-                     element={
-                       <ProtectedRoute>
-                         <NotificationCenter />
-                       </ProtectedRoute>
-                     } 
-                   />
+                    <Route 
+                      path="/notification-center" 
+                      element={
+                        <ProtectedRoute>
+                          <NotificationCenter />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/budgets" 
+                      element={
+                        <ProtectedRoute>
+                          <Budgets />
+                        </ProtectedRoute>
+                      } 
+                    />
                   <Route 
                     path="/landing"
                    element={
