@@ -162,27 +162,6 @@ export default function NotificationCenter() {
               </Card>
             </div>
 
-            {/* Debug info */}
-            <Card className="bg-yellow-50 border-yellow-200">
-              <CardHeader>
-                <CardTitle className="text-sm text-yellow-600">Debug Info</CardTitle>
-                <CardDescription>
-                  Super Admin: {isSuperAdmin ? 'Yes' : 'No'} | 
-                  Permissions: {JSON.stringify(permissions)} | 
-                  Loading: {isLoading ? 'Yes' : 'No'}
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Notification Activity</CardTitle>
-                <CardDescription>Latest communications sent to members</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <NotificationHistoryWithDelivery />
-              </CardContent>
-            </Card>
           </TabsContent>
 
           {/* Show all tabs for debugging */}
