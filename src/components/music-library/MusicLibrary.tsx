@@ -6,7 +6,7 @@ import { SheetMusicLibrary } from './SheetMusicLibrary';
 import { SetlistBuilder } from './SetlistBuilder';
 import { SetlistDiagnostics } from './SetlistDiagnostics';
 import { PDFViewer } from '@/components/PDFViewer';
-import { Settings, Home, Users, Calendar, FileText, Activity } from 'lucide-react';
+import { Settings, Home, Users, Calendar, FileText, Activity, ArrowLeft } from 'lucide-react';
 
 export const MusicLibrary = () => {
   const navigate = useNavigate();
@@ -69,8 +69,19 @@ export const MusicLibrary = () => {
       </header>
 
     <div className="container mx-auto px-4 py-6">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
+          <div className="flex items-center gap-3 mb-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Menu
+            </Button>
+          </div>
           <h1 className="text-2xl font-bold mb-2">Music Library</h1>
           <p className="text-muted-foreground">
             Manage your sheet music collection and create performance setlists
@@ -93,20 +104,21 @@ export const MusicLibrary = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
-        {/* Setlists Column - 30% */}
-        <div className="lg:col-span-3 space-y-4">
+      <div className="flex flex-col xl:grid xl:grid-cols-10 gap-6">
+        {/* Setlists Column - 30% on desktop, full width on mobile */}
+        <div className="xl:col-span-4 space-y-4">
           <h2 className="text-lg font-semibold">Setlist Builder</h2>
           <SetlistBuilder onPdfSelect={handlePdfSelect} />
         </div>
 
-        {/* PDF Viewer Column - 70% */}
-        <div className="lg:col-span-7 space-y-4">
+        {/* PDF Viewer Column - 70% on desktop, full width on mobile */}
+        <div className="xl:col-span-6 space-y-4">
           <h2 className="text-lg font-semibold">PDF Viewer</h2>
           {selectedPdf ? (
             <div className="sticky top-6">
               <PDFViewer 
                 pdfUrl={selectedPdf.url}
+                className="min-h-[500px] md:min-h-[600px]"
               />
             </div>
           ) : (

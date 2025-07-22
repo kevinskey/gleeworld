@@ -527,57 +527,140 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
           <CardHeader>
             <CardTitle className="text-base">My Setlists</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-4">
             {setlists.map((setlist) => (
-              <div
-                key={setlist.id}
-                className={cn(
-                  "p-3 border rounded-lg cursor-pointer transition-colors",
-                  selectedSetlist?.id === setlist.id 
-                    ? "border-primary bg-primary/5" 
-                    : "hover:bg-muted/50"
-                )}
-                onClick={() => {
-                  if (selectedSetlist?.id === setlist.id) {
-                    // If clicking the same setlist, deselect it
-                    setSelectedSetlist(null);
-                  } else {
-                    // If clicking a different setlist, select it and load items
-                    setSelectedSetlist(setlist);
-                    loadSetlistItems(setlist.id);
-                  }
-                }}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium truncate">{setlist.title}</h4>
-                    {setlist.description && (
-                      <p className="text-sm text-muted-foreground truncate">
-                        {setlist.description}
-                      </p>
+              <div key={setlist.id} className="space-y-3">
+                <div
+                  className={cn(
+                    "p-3 border rounded-lg cursor-pointer transition-colors",
+                    selectedSetlist?.id === setlist.id 
+                      ? "border-primary bg-primary/5" 
+                      : "hover:bg-muted/50"
+                  )}
+                  onClick={() => {
+                    if (selectedSetlist?.id === setlist.id) {
+                      // If clicking the same setlist, deselect it
+                      setSelectedSetlist(null);
+                    } else {
+                      // If clicking a different setlist, select it and load items
+                      setSelectedSetlist(setlist);
+                      loadSetlistItems(setlist.id);
+                    }
+                  }}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium truncate">{setlist.title}</h4>
+                      {setlist.description && (
+                        <p className="text-sm text-muted-foreground truncate">
+                          {setlist.description}
+                        </p>
+                      )}
+                      <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-muted-foreground">
+                        {setlist.performance_date && (
+                          <span className="flex items-center gap-1">
+                            <CalendarIcon className="h-3 w-3" />
+                            {format(new Date(setlist.performance_date), 'MMM d, yyyy')}
+                          </span>
+                        )}
+                        {setlist.venue && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {setlist.venue}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {setlist.is_public && (
+                      <Badge variant="secondary" className="ml-2">
+                        <Users className="h-3 w-3 mr-1" />
+                        Public
+                      </Badge>
                     )}
-                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                      {setlist.performance_date && (
-                        <span className="flex items-center gap-1">
-                          <CalendarIcon className="h-3 w-3" />
-                          {format(new Date(setlist.performance_date), 'MMM d, yyyy')}
+                  </div>
+                </div>
+                
+                {/* Setlist Items - Show below the card when selected */}
+                {selectedSetlist?.id === setlist.id && (
+                  <div className="ml-4 pl-4 border-l-2 border-muted space-y-2">
+                    {selectedSetlist.items?.map((item, index) => (
+                      <div key={item.id} className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg">
+                        <span className="text-xs font-medium text-muted-foreground min-w-[1.5rem]">
+                          {index + 1}.
                         </span>
-                      )}
-                      {setlist.venue && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {setlist.venue}
-                        </span>
-                      )}
+                        <div className="flex-1 min-w-0">
+                          <h5 className="text-sm font-medium truncate">
+                            {item.sheet_music?.title}
+                          </h5>
+                          {item.sheet_music?.composer && (
+                            <p className="text-xs text-muted-foreground">
+                              {item.sheet_music.composer}
+                            </p>
+                          )}
+                          {item.notes && (
+                            <p className="text-xs text-muted-foreground italic">
+                              {item.notes}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleViewPdf(item)}
+                            disabled={!item.sheet_music?.pdf_url}
+                            className="h-7 w-7 p-0"
+                          >
+                            <FileText className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => removeFromSetlist(item.id)}
+                            className="h-7 w-7 p-0"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {(!selectedSetlist.items || selectedSetlist.items.length === 0) && (
+                      <div className="text-center py-4 text-muted-foreground">
+                        <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-xs">No songs in this setlist</p>
+                      </div>
+                    )}
+                    
+                    {/* Add Sheet Music Section */}
+                    <div className="pt-2 border-t">
+                      <h6 className="text-xs font-medium mb-2">Add Sheet Music</h6>
+                      <Input
+                        placeholder="Search sheet music to add..."
+                        value={sheetMusicSearch}
+                        onChange={(e) => setSheetMusicSearch(e.target.value)}
+                        className="text-xs mb-2"
+                      />
+                      <div className="max-h-32 overflow-y-auto space-y-1">
+                        {filteredSheetMusic.map((music) => (
+                          <div 
+                            key={music.id} 
+                            className="flex items-center justify-between p-1.5 text-xs border rounded cursor-pointer hover:bg-accent/50 transition-colors"
+                            onClick={() => addToSetlist(music.id)}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <h6 className="font-medium truncate">{music.title}</h6>
+                              {music.composer && (
+                                <p className="text-muted-foreground truncate">{music.composer}</p>
+                              )}
+                            </div>
+                            <Plus className="h-3 w-3 text-muted-foreground ml-2 flex-shrink-0" />
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  {setlist.is_public && (
-                    <Badge variant="secondary" className="ml-2">
-                      <Users className="h-3 w-3 mr-1" />
-                      Public
-                    </Badge>
-                  )}
-                </div>
+                )}
               </div>
             ))}
             
@@ -705,99 +788,13 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
           </Card>
         )}
 
-        {/* Current Setlist or Sheet Music Panel */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              {selectedSetlist ? `${selectedSetlist.title} Items` : 'Available Sheet Music'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {selectedSetlist ? (
-              <div className="space-y-3">
-                {selectedSetlist.items?.map((item, index) => (
-                  <div key={item.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                    <GripVertical className="h-4 w-4 text-muted-foreground" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-muted-foreground">
-                          {index + 1}.
-                        </span>
-                        <h4 className="font-medium truncate">
-                          {item.sheet_music?.title}
-                        </h4>
-                      </div>
-                      {item.sheet_music?.composer && (
-                        <p className="text-sm text-muted-foreground">
-                          {item.sheet_music.composer}
-                        </p>
-                      )}
-                      {item.notes && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {item.notes}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleViewPdf(item)}
-                        disabled={!item.sheet_music?.pdf_url}
-                      >
-                        <FileText className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => removeFromSetlist(item.id)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-                
-                {(!selectedSetlist.items || selectedSetlist.items.length === 0) && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No items in this setlist</p>
-                    <p className="text-sm">Add sheet music from the library below</p>
-                  </div>
-                )}
-                
-                <Separator />
-                
-                <div className="space-y-2">
-                  <h5 className="font-medium text-sm">Add Sheet Music</h5>
-                  <Input
-                    placeholder="Search sheet music..."
-                    value={sheetMusicSearch}
-                    onChange={(e) => setSheetMusicSearch(e.target.value)}
-                    className="text-xs"
-                  />
-                  <div className="max-h-48 overflow-y-auto space-y-1">
-                    {filteredSheetMusic.map((music) => (
-                      <div 
-                        key={music.id} 
-                        className="flex items-center justify-between p-1.5 border rounded cursor-pointer hover:bg-accent hover:border-accent-foreground/20 transition-colors"
-                        onClick={() => addToSetlist(music.id)}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <SheetMusicHoverCard music={music}>
-                            <h6 className="text-xs font-medium truncate hover:underline">{music.title}</h6>
-                          </SheetMusicHoverCard>
-                          {music.composer && (
-                            <p className="text-xs text-muted-foreground">{music.composer}</p>
-                          )}
-                        </div>
-                        <Plus className="h-3 w-3 text-muted-foreground ml-2 flex-shrink-0" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : (
+        {/* Available Sheet Music Panel - Show when no setlist is selected */}
+        {!selectedSetlist && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Available Sheet Music</CardTitle>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-3">
                 <Input
                   placeholder="Search sheet music..."
@@ -827,11 +824,19 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
                        )}
                     </div>
                   ))}
+                  
+                  {filteredSheetMusic.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <p>No sheet music found</p>
+                      <p className="text-sm">Try adjusting your search terms</p>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
     </div>
