@@ -29,7 +29,8 @@ export const PAGE_NAMES: Record<string, string> = {
   '/attendance-test': 'Attendance Test',
   '/music-library': 'Music Library',
   '/payments': 'Payments',
-  '/budget-approvals': 'Budget Approvals'
+  '/budget-approvals': 'Budget Approvals',
+  '/budgets': 'Budget Management'
 };
 
 export const getPageName = (pathname: string): string => {
