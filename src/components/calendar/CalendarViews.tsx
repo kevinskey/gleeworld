@@ -10,7 +10,7 @@ import { WeeklyCalendar } from "./WeeklyCalendar";
 import { CalendarExport } from "./CalendarExport";
 import { CalendarToggle } from "./CalendarToggle";
 import { CalendarManager } from "./CalendarManager";
-import { CreateEventDialog } from "@/components/events/CreateEventDialog";
+import { CreateEventDialog } from "./CreateEventDialog";
 import { AppointmentScheduler } from "@/components/appointments/AppointmentScheduler";
 import { AppointmentsList } from "@/components/appointments/AppointmentsList";
 
