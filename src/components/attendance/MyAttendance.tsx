@@ -221,18 +221,18 @@ export const MyAttendance = () => {
   return (
     <div className="space-y-6">
       {/* Period Selection */}
-      <Card>
+      <Card className="glass-dashboard-card border-white/20 shadow-lg">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-slate-800">
+              <BarChart3 className="h-5 w-5 text-blue-600" />
               Attendance Overview
             </CardTitle>
             <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-48 bg-white/50 backdrop-blur-sm border-white/30">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white/95 backdrop-blur-md border-white/30">
                 <SelectItem value="current">This Month</SelectItem>
                 <SelectItem value="last">Last Month</SelectItem>
                 <SelectItem value="semester">This Semester</SelectItem>
@@ -268,28 +268,28 @@ export const MyAttendance = () => {
 
               {/* Stats Grid */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="text-center p-4 border rounded-lg">
+                <div className="text-center p-4 bg-white/40 backdrop-blur-sm border border-white/30 rounded-lg shadow-sm">
                   <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
                   <div className="text-2xl font-bold text-green-600">{stats.present}</div>
-                  <p className="text-sm text-muted-foreground">Present</p>
+                  <p className="text-sm text-slate-600">Present</p>
                 </div>
 
-                <div className="text-center p-4 border rounded-lg">
+                <div className="text-center p-4 bg-white/40 backdrop-blur-sm border border-white/30 rounded-lg shadow-sm">
                   <XCircle className="h-8 w-8 text-red-600 mx-auto mb-2" />
                   <div className="text-2xl font-bold text-red-600">{stats.absent}</div>
-                  <p className="text-sm text-muted-foreground">Absent</p>
+                  <p className="text-sm text-slate-600">Absent</p>
                 </div>
 
-                <div className="text-center p-4 border rounded-lg">
+                <div className="text-center p-4 bg-white/40 backdrop-blur-sm border border-white/30 rounded-lg shadow-sm">
                   <AlertTriangle className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
                   <div className="text-2xl font-bold text-yellow-600">{stats.excused}</div>
-                  <p className="text-sm text-muted-foreground">Excused</p>
+                  <p className="text-sm text-slate-600">Excused</p>
                 </div>
 
-                <div className="text-center p-4 border rounded-lg">
+                <div className="text-center p-4 bg-white/40 backdrop-blur-sm border border-white/30 rounded-lg shadow-sm">
                   <Clock className="h-8 w-8 text-orange-600 mx-auto mb-2" />
                   <div className="text-2xl font-bold text-orange-600">{stats.late}</div>
-                  <p className="text-sm text-muted-foreground">Late</p>
+                  <p className="text-sm text-slate-600">Late</p>
                 </div>
               </div>
 
@@ -301,7 +301,7 @@ export const MyAttendance = () => {
                 </h3>
                 <div className="max-h-96 overflow-y-auto space-y-3">
                   {records.slice(0, 10).map(record => (
-                    <div key={record.id} className="p-4 border rounded-lg space-y-3 animate-fade-in">
+                    <div key={record.id} className="p-4 bg-white/30 backdrop-blur-sm border border-white/20 rounded-lg space-y-3 animate-fade-in shadow-sm">
                       {/* Header with status and date */}
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
@@ -310,22 +310,22 @@ export const MyAttendance = () => {
                             {record.attendance_status.replace('_', ' ')}
                           </Badge>
                         </div>
-                        <div className="text-sm text-muted-foreground flex items-center gap-1">
+                        <div className="text-sm text-slate-600 flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           {format(new Date(record.gw_events.start_date), 'MMM dd')}
                         </div>
                       </div>
 
                       {/* Event title */}
-                      <div className="font-medium text-sm">{record.gw_events.title}</div>
+                      <div className="font-medium text-sm text-slate-800">{record.gw_events.title}</div>
 
                       {/* Bottom row with event type and check-in time */}
                       <div className="flex items-center justify-between gap-2">
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs bg-white/50 border-white/30">
                           {record.gw_events.event_type}
                         </Badge>
                         {record.check_in_time && (
-                          <div className="text-xs text-muted-foreground flex items-center gap-1">
+                          <div className="text-xs text-slate-600 flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             {format(new Date(record.check_in_time), 'h:mm a')}
                           </div>
@@ -334,8 +334,8 @@ export const MyAttendance = () => {
 
                       {/* Notes if present */}
                       {record.notes && (
-                        <div className="pt-2 border-t">
-                          <p className="text-xs text-muted-foreground italic">
+                        <div className="pt-2 border-t border-white/20">
+                          <p className="text-xs text-slate-600 italic">
                             "{record.notes}"
                           </p>
                         </div>
