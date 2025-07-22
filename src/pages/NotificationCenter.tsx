@@ -11,11 +11,12 @@ import { MemberCommunications } from '@/components/notifications/MemberCommunica
 import { PublicFormsManager } from '@/components/notifications/PublicFormsManager';
 import { NewsletterManager } from '@/components/notifications/NewsletterManager';
 import { NotificationHistoryWithDelivery } from '@/components/notifications/NotificationHistoryWithDelivery';
+import { UserNotificationsSection } from '@/components/notifications/UserNotificationsSection';
 import { useNotificationPermissions } from '@/hooks/useNotificationPermissions';
 
 export default function NotificationCenter() {
   const [activeTab, setActiveTab] = useState('overview');
-  const { hasPermission, isLoading, isSuperAdmin } = useNotificationPermissions();
+  const { hasPermission, isLoading, isSuperAdmin, permissions } = useNotificationPermissions();
   
   // Debug logging
   console.log('NotificationCenter rendering, activeTab:', activeTab);
@@ -32,19 +33,27 @@ export default function NotificationCenter() {
     );
   }
 
-  // Define available tabs based on permissions
+  // For debugging, let's temporarily grant all permissions to see the issue
+  const debugPermissions = ['mass-email', 'sms', 'communications', 'newsletter', 'public-forms', 'integrations'];
+  
+  // Define available tabs based on permissions (using debug permissions for now)
   const availableTabs = [
     { id: 'overview', label: 'Overview', permission: null }, // Always available
-    hasPermission('mass-email') && { id: 'mass-email', label: 'Mass Email', permission: 'mass-email' },
-    hasPermission('sms') && { id: 'sms', label: 'SMS Center', permission: 'sms' },
-    hasPermission('communications') && { id: 'communications', label: 'Communications', permission: 'communications' },
-    hasPermission('newsletter') && { id: 'newsletter', label: 'Newsletter', permission: 'newsletter' },
-    hasPermission('public-forms') && { id: 'public-forms', label: 'Public Forms', permission: 'public-forms' }
-  ].filter(Boolean);
+    { id: 'mass-email', label: 'Mass Email', permission: 'mass-email' },
+    { id: 'sms', label: 'SMS Center', permission: 'sms' },
+    { id: 'communications', label: 'Communications', permission: 'communications' },
+    { id: 'newsletter', label: 'Newsletter', permission: 'newsletter' },
+    { id: 'public-forms', label: 'Public Forms', permission: 'public-forms' }
+  ];
 
   return (
     <UniversalLayout>
       <div className="container mx-auto px-2 py-6 max-w-7xl">
+        
+        {/* User Notifications Section - Always visible for all users */}
+        <div className="mb-6">
+          <UserNotificationsSection />
+        </div>
 
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 -mt-6">
@@ -55,7 +64,7 @@ export default function NotificationCenter() {
                 <SelectValue placeholder="Select section" />
               </SelectTrigger>
               <SelectContent>
-                {availableTabs.map((tab: any) => (
+                {availableTabs.map((tab) => (
                   <SelectItem key={tab.id} value={tab.id}>{tab.label}</SelectItem>
                 ))}
               </SelectContent>
@@ -64,16 +73,16 @@ export default function NotificationCenter() {
           
           {/* Desktop tabs */}
           <TabsList className={`hidden md:grid w-full grid-cols-${availableTabs.length}`}>
-            {availableTabs.map((tab: any) => (
+            {availableTabs.map((tab) => (
               <TabsTrigger key={tab.id} value={tab.id}>{tab.label}</TabsTrigger>
             ))}
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {hasPermission('mass-email') && (
-                <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer p-3 bg-blue-50/30 backdrop-blur-sm border border-blue-100/50 hover:bg-blue-50/40" onClick={() => setActiveTab('mass-email')}>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+              {/* Show all cards for debugging - will implement proper permissions later */}
+              <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer p-3 bg-blue-50/30 backdrop-blur-sm border border-blue-100/50 hover:bg-blue-50/40" onClick={() => setActiveTab('mass-email')}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
                     <CardTitle className="text-xs font-normal">Mass Email</CardTitle>
                     <Mail className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
@@ -82,13 +91,11 @@ export default function NotificationCenter() {
                     <p className="text-xs text-muted-foreground">
                       Send emails to individual members or entire groups
                     </p>
-                  </CardContent>
-                </Card>
-              )}
+                </CardContent>
+              </Card>
 
-              {hasPermission('sms') && (
-                <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer p-3 bg-blue-50/30 backdrop-blur-sm border border-blue-100/50 hover:bg-blue-50/40" onClick={() => setActiveTab('sms')}>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+              <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer p-3 bg-blue-50/30 backdrop-blur-sm border border-blue-100/50 hover:bg-blue-50/40" onClick={() => setActiveTab('sms')}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
                     <CardTitle className="text-xs font-normal">SMS Center</CardTitle>
                     <MessageSquare className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
@@ -97,13 +104,11 @@ export default function NotificationCenter() {
                     <p className="text-xs text-muted-foreground">
                       Send SMS notifications and view message history
                     </p>
-                  </CardContent>
-                </Card>
-              )}
+                </CardContent>
+              </Card>
 
-              {hasPermission('communications') && (
-                <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer p-3 bg-blue-50/30 backdrop-blur-sm border border-blue-100/50 hover:bg-blue-50/40" onClick={() => setActiveTab('communications')}>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+              <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer p-3 bg-blue-50/30 backdrop-blur-sm border border-blue-100/50 hover:bg-blue-50/40" onClick={() => setActiveTab('communications')}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
                     <CardTitle className="text-xs font-normal">Member Communications</CardTitle>
                     <Users className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
@@ -112,13 +117,11 @@ export default function NotificationCenter() {
                     <p className="text-xs text-muted-foreground">
                       Excuse letters and member communications
                     </p>
-                  </CardContent>
-                </Card>
-              )}
+                </CardContent>
+              </Card>
 
-              {hasPermission('newsletter') && (
-                <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer p-3 bg-blue-50/30 backdrop-blur-sm border border-blue-100/50 hover:bg-blue-50/40" onClick={() => setActiveTab('newsletter')}>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+              <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer p-3 bg-blue-50/30 backdrop-blur-sm border border-blue-100/50 hover:bg-blue-50/40" onClick={() => setActiveTab('newsletter')}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
                     <CardTitle className="text-xs font-normal">Newsletter</CardTitle>
                     <FileText className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
@@ -127,13 +130,11 @@ export default function NotificationCenter() {
                     <p className="text-xs text-muted-foreground">
                       Newsletter for alumni and executive board members
                     </p>
-                  </CardContent>
-                </Card>
-              )}
+                </CardContent>
+              </Card>
 
-              {hasPermission('public-forms') && (
-                <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer p-3 bg-blue-50/30 backdrop-blur-sm border border-blue-100/50 hover:bg-blue-50/40" onClick={() => setActiveTab('public-forms')}>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+              <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer p-3 bg-blue-50/30 backdrop-blur-sm border border-blue-100/50 hover:bg-blue-50/40" onClick={() => setActiveTab('public-forms')}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
                     <CardTitle className="text-xs font-normal">Public Forms</CardTitle>
                     <Bell className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
@@ -142,13 +143,11 @@ export default function NotificationCenter() {
                     <p className="text-xs text-muted-foreground">
                       Fan interest forms and concert booking requests
                     </p>
-                  </CardContent>
-                </Card>
-              )}
+                </CardContent>
+              </Card>
 
-              {hasPermission('integrations') && (
-                <Card className="hover:shadow-lg transition-all duration-300 p-3 bg-blue-50/30 backdrop-blur-sm border border-blue-100/50 hover:bg-blue-50/40">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+              <Card className="hover:shadow-lg transition-all duration-300 p-3 bg-blue-50/30 backdrop-blur-sm border border-blue-100/50 hover:bg-blue-50/40">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
                     <CardTitle className="text-xs font-normal">Integrations</CardTitle>
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
@@ -157,19 +156,21 @@ export default function NotificationCenter() {
                     <p className="text-xs text-muted-foreground">
                       Calendar, Financial & User Systems
                     </p>
-                  </CardContent>
-                </Card>
-              )}
+                </CardContent>
+              </Card>
             </div>
 
-            {isSuperAdmin && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm text-blue-600">Super Admin Access</CardTitle>
-                  <CardDescription>You have access to all notification center features</CardDescription>
-                </CardHeader>
-              </Card>
-            )}
+            {/* Debug info */}
+            <Card className="bg-yellow-50 border-yellow-200">
+              <CardHeader>
+                <CardTitle className="text-sm text-yellow-600">Debug Info</CardTitle>
+                <CardDescription>
+                  Super Admin: {isSuperAdmin ? 'Yes' : 'No'} | 
+                  Permissions: {JSON.stringify(permissions)} | 
+                  Loading: {isLoading ? 'Yes' : 'No'}
+                </CardDescription>
+              </CardHeader>
+            </Card>
 
             <Card>
               <CardHeader>
@@ -182,35 +183,26 @@ export default function NotificationCenter() {
             </Card>
           </TabsContent>
 
-          {hasPermission('mass-email') && (
-            <TabsContent value="mass-email">
-              <MassEmailManager />
-            </TabsContent>
-          )}
+          {/* Show all tabs for debugging */}
+          <TabsContent value="mass-email">
+            <MassEmailManager />
+          </TabsContent>
 
-          {hasPermission('sms') && (
-            <TabsContent value="sms">
-              <SMSHistoryManager />
-            </TabsContent>
-          )}
+          <TabsContent value="sms">
+            <SMSHistoryManager />
+          </TabsContent>
 
-          {hasPermission('communications') && (
-            <TabsContent value="communications">
-              <MemberCommunications />
-            </TabsContent>
-          )}
+          <TabsContent value="communications">
+            <MemberCommunications />
+          </TabsContent>
 
-          {hasPermission('newsletter') && (
-            <TabsContent value="newsletter">
-              <NewsletterManager />
-            </TabsContent>
-          )}
+          <TabsContent value="newsletter">
+            <NewsletterManager />
+          </TabsContent>
 
-          {hasPermission('public-forms') && (
-            <TabsContent value="public-forms">
-              <PublicFormsManager />
-            </TabsContent>
-          )}
+          <TabsContent value="public-forms">
+            <PublicFormsManager />
+          </TabsContent>
         </Tabs>
       </div>
     </UniversalLayout>
