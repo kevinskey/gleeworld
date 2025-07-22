@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,6 +60,10 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
   const [appointmentDuration, setAppointmentDuration] = useState(30);
   const [appointmentType, setAppointmentType] = useState('planning');
   const [appointmentDescription, setAppointmentDescription] = useState('');
+  
+  // Calendar management state
+  const [calendars, setCalendars] = useState<{ id: string; name: string; color: string }[]>([]);
+  const [selectedCalendarId, setSelectedCalendarId] = useState('');
 
   const eventTypes = [
     { value: 'performance', label: 'Performance' },
@@ -124,6 +128,34 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
       return null;
     }
   };
+
+  // Load calendars when dialog opens
+  const loadCalendars = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gw_calendars')
+        .select('id, name, color')
+        .eq('is_visible', true)
+        .order('is_default', { ascending: false });
+
+      if (error) throw error;
+
+      setCalendars(data || []);
+      // Set default calendar if available
+      const defaultCal = data?.find(cal => cal.name.toLowerCase().includes('default'));
+      if (defaultCal && !selectedCalendarId) {
+        setSelectedCalendarId(defaultCal.id);
+      }
+    } catch (error) {
+      console.error('Error loading calendars:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      loadCalendars();
+    }
+  }, [open]);
 
   // Team member management functions
   const { users, loading: usersLoading } = useUsers();
@@ -212,25 +244,26 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
         status: 'scheduled'
       };
 
-      // Get default calendar or create one if it doesn't exist
-      let defaultCalendar;
-      const { data: existingCalendar } = await supabase
-        .from('gw_calendars')
-        .select('id')
-        .eq('is_default', true)
-        .single();
+      // Use selected calendar or get default calendar
+      let calendarId = selectedCalendarId;
+      
+      if (!calendarId) {
+        const { data: existingCalendar } = await supabase
+          .from('gw_calendars')
+          .select('id')
+          .eq('is_default', true)
+          .single();
 
-      if (existingCalendar) {
-        defaultCalendar = existingCalendar;
-      } else {
-        // If no default calendar exists, we'll proceed without calendar_id
-        // The database should handle this case gracefully
-        console.warn('No default calendar found');
+        if (existingCalendar) {
+          calendarId = existingCalendar.id;
+        } else {
+          console.warn('No default calendar found');
+        }
       }
 
       const eventDataWithCalendar = {
         ...eventData,
-        ...(defaultCalendar?.id && { calendar_id: defaultCalendar.id })
+        ...(calendarId && { calendar_id: calendarId })
       };
 
       const { data: newEvent, error } = await supabase
@@ -385,6 +418,7 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
       setAppointmentDescription('');
       setImageFile(null);
       setImagePreview('');
+      setSelectedCalendarId('');
       onEventCreated();
     } catch (err) {
       console.error('Error creating event:', err);
@@ -481,6 +515,32 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
                   placeholder="Optional"
                 />
               </div>
+            </div>
+
+            {/* Calendar Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="calendar">Calendar *</Label>
+              <Select
+                value={selectedCalendarId}
+                onValueChange={setSelectedCalendarId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a calendar..." />
+                </SelectTrigger>
+                <SelectContent className="max-h-40 overflow-y-auto z-50 bg-background border shadow-lg">
+                  {calendars.map((calendar) => (
+                    <SelectItem key={calendar.id} value={calendar.id}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: calendar.color }}
+                        />
+                        <span>{calendar.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
