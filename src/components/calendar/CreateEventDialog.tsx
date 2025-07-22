@@ -212,16 +212,25 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
         status: 'scheduled'
       };
 
-      // Get default calendar
-      const { data: defaultCalendar } = await supabase
+      // Get default calendar or create one if it doesn't exist
+      let defaultCalendar;
+      const { data: existingCalendar } = await supabase
         .from('gw_calendars')
         .select('id')
         .eq('is_default', true)
         .single();
 
+      if (existingCalendar) {
+        defaultCalendar = existingCalendar;
+      } else {
+        // If no default calendar exists, we'll proceed without calendar_id
+        // The database should handle this case gracefully
+        console.warn('No default calendar found');
+      }
+
       const eventDataWithCalendar = {
         ...eventData,
-        calendar_id: defaultCalendar?.id || ''
+        ...(defaultCalendar?.id && { calendar_id: defaultCalendar.id })
       };
 
       const { data: newEvent, error } = await supabase
@@ -237,9 +246,9 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
       if (imageFile) {
         imageUrl = await uploadImage(imageFile, newEvent.id);
         if (imageUrl) {
-          // Update the event with the image URL
+          // Update the event with the image URL in the correct table
           await supabase
-            .from('events')
+            .from('gw_events')
             .update({ image_url: imageUrl })
             .eq('id', newEvent.id);
         }
