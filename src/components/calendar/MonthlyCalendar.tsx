@@ -22,6 +22,13 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
   const [isMobile, setIsMobile] = useState(false);
 
   console.log('MonthlyCalendar received events:', events.length, events.map(e => ({ title: e.title, date: e.start_date })));
+  
+  useEffect(() => {
+    console.log('MonthlyCalendar mounted with', events.length, 'events');
+    if (events.length > 0) {
+      console.log('Sample events:', events.slice(0, 3));
+    }
+  }, [events]);
 
   // Handle responsive behavior
   useEffect(() => {
