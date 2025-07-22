@@ -62,7 +62,6 @@ export const CalendarViews = () => {
                 <h3 className="text-sm font-medium text-muted-foreground">Member Controls</h3>
               </div>
               <div className="flex flex-wrap gap-2">
-                <CalendarToggle onCalendarsChange={setVisibleCalendarIds} />
                 <CalendarExport />
                 <AppointmentScheduler />
                 {user && <CreateEventDialog onEventCreated={fetchEvents} />}
