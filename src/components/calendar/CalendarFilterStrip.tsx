@@ -29,9 +29,12 @@ export const CalendarFilterStrip = ({ onCalendarsChange }: CalendarFilterStripPr
   const { toast } = useToast();
 
   useEffect(() => {
+    loadCalendars();
     if (user) {
-      loadCalendars();
       loadUserPreferences();
+    } else {
+      // For non-authenticated users, set loading to false after calendars are loaded
+      setLoading(false);
     }
   }, [user]);
 
