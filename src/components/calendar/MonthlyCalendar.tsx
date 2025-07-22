@@ -37,11 +37,18 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
   const getEventsForDate = (date: Date) => {
-    return events.filter(event => {
+    console.log('Getting events for date:', date, 'Total events:', events.length);
+    const dayEvents = events.filter(event => {
       // Use parseISO to properly handle the date string, then compare just the date part
       const eventDate = parseISO(event.start_date);
-      return isSameDay(eventDate, date);
+      const matches = isSameDay(eventDate, date);
+      if (events.length > 0) {
+        console.log('Event:', event.title, 'Event date:', event.start_date, 'Parsed date:', eventDate, 'Checking against:', date, 'Matches:', matches);
+      }
+      return matches;
     });
+    console.log('Events for', date.toDateString(), ':', dayEvents.length);
+    return dayEvents;
   };
 
   const handleEventClick = (event: GleeWorldEvent) => {
