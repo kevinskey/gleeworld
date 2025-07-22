@@ -111,6 +111,7 @@ export const ExcuseGenerator = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSubmittingConflict, setIsSubmittingConflict] = useState(false);
   const [isConflictWorksheetCollapsed, setIsConflictWorksheetCollapsed] = useState(true);
+  const [isAttendanceStatsCollapsed, setIsAttendanceStatsCollapsed] = useState(true);
 
   const reasonOptions = [
     'Medical appointment',
@@ -540,16 +541,6 @@ export const ExcuseGenerator = () => {
 
   return (
     <>
-      {/* Attendance Stats Header */}
-      <Card className="mb-6 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 border-0">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
-            <Calendar className="w-5 h-5" />
-            Attendance Stats
-          </CardTitle>
-        </CardHeader>
-      </Card>
-
       <Collapsible open={!isCollapsed} onOpenChange={(open) => setIsCollapsed(!open)}>
         <Card className="mb-6 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 border-0">
           <CollapsibleTrigger asChild>
@@ -936,6 +927,34 @@ export const ExcuseGenerator = () => {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      <Collapsible open={!isAttendanceStatsCollapsed} onOpenChange={(open) => setIsAttendanceStatsCollapsed(!open)}>
+        <Card className="mb-6 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 border-0">
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer hover:bg-white/10 transition-colors">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Calendar className="w-5 h-5" />
+                  Attendance Stats
+                </CardTitle>
+                {isAttendanceStatsCollapsed ? (
+                  <ChevronDown className="w-5 h-5 text-white/70" />
+                ) : (
+                  <ChevronUp className="w-5 h-5 text-white/70" />
+                )}
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent className="animate-accordion-down">
+            <CardContent className="space-y-4">
+              <div className="text-center text-muted-foreground">
+                Attendance statistics and analytics will be displayed here.
+              </div>
             </CardContent>
           </CollapsibleContent>
         </Card>
