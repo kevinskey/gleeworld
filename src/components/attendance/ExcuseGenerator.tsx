@@ -952,8 +952,31 @@ export const ExcuseGenerator = () => {
           
           <CollapsibleContent className="animate-accordion-down">
             <CardContent className="space-y-4">
-              <div className="text-center text-muted-foreground">
-                Attendance statistics and analytics will be displayed here.
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="stats-type" className="text-sm font-medium">Select Statistics Type</Label>
+                  <Select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Choose attendance statistics to view" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="overall-rate">Overall Attendance Rate</SelectItem>
+                      <SelectItem value="monthly-trends">Monthly Attendance Trends</SelectItem>
+                      <SelectItem value="event-breakdown">Event Attendance Breakdown</SelectItem>
+                      <SelectItem value="member-rankings">Member Attendance Rankings</SelectItem>
+                      <SelectItem value="excuse-history">Excuse Request History</SelectItem>
+                      <SelectItem value="class-conflicts">Class Conflict Reports</SelectItem>
+                      <SelectItem value="perfect-attendance">Perfect Attendance Members</SelectItem>
+                      <SelectItem value="alerts-warnings">Attendance Alerts & Warnings</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="mt-6 p-4 bg-white/10 rounded-lg border border-white/20">
+                  <div className="text-center text-white/70">
+                    Select a statistics type above to view detailed attendance data and analytics.
+                  </div>
+                </div>
               </div>
             </CardContent>
           </CollapsibleContent>
