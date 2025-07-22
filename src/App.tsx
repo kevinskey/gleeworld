@@ -44,6 +44,7 @@ import MusicLibraryPage from "./pages/MusicLibrary";
 import NotificationCenter from "./pages/NotificationCenter";
 import Budgets from "./pages/Budgets";
 import Treasurer from "./pages/Treasurer";
+import TourManager from "./pages/TourManager";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -364,6 +365,14 @@ const App = () => {
                        element={
                          <ProtectedRoute>
                            <Treasurer />
+                         </ProtectedRoute>
+                       } 
+                     />
+                     <Route 
+                       path="/tour-manager" 
+                       element={
+                         <ProtectedRoute>
+                           <TourManager />
                          </ProtectedRoute>
                        } 
                      />
