@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { CalendarIcon, ListIcon, Grid3X3Icon } from "lucide-react";
 import { MonthlyCalendar } from "./MonthlyCalendar";
 import { EventsList } from "./EventsList";
 import { WeeklyCalendar } from "./WeeklyCalendar";
+import { CalendarExport } from "./CalendarExport";
 import { CreateEventDialog } from "@/components/events/CreateEventDialog";
 import { AppointmentScheduler } from "@/components/appointments/AppointmentScheduler";
 import { AppointmentsList } from "@/components/appointments/AppointmentsList";
@@ -41,8 +43,11 @@ export const CalendarViews = () => {
     <div className="space-y-4">
     <Card className="glass-dashboard-card">
       <CardHeader className="pb-0 pt-2">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-1">
-          <div className="flex gap-2 mt-1 sm:mt-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex gap-2">
+            <CalendarExport />
+          </div>
+          <div className="flex gap-2">
             <AppointmentScheduler />
             {user && <CreateEventDialog onEventCreated={fetchEvents} />}
           </div>

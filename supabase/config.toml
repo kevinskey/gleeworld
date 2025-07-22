@@ -1,52 +1,78 @@
+
 project_id = "oopmlreysjzuxzylyheb"
 
-[functions.admin-reset-password]
-verify_jwt = true
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
 
-[functions.admin-sign-contract]
-verify_jwt = true
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
 
-[functions.artist-sign-contract]
+[db.pooler]
+enabled = false
+port = 54329
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
+[realtime]
+enabled = true
+ip_version = "ipv4"
+port = 54323
+max_header_length = 4096
+
+[studio]
+enabled = true
+port = 54324
+api_url = "http://127.0.0.1:54321"
+openai_api_key = "env(OPENAI_API_KEY)"
+
+[inbucket]
+enabled = true
+port = 54325
+smtp_port = 54326
+pop3_port = 54327
+
+[functions.export-calendar]
 verify_jwt = false
 
-[functions.auto-enroll-user]
-verify_jwt = true
-
-[functions.bulk-w9-email]
-verify_jwt = true
-
-[functions.complete-contract-signing]
+[functions.calendar-feed]
 verify_jwt = false
 
-[functions.generate-combined-pdf]
-verify_jwt = true
+[storage]
+enabled = true
+port = 54326
+file_size_limit = "50MiB"
+image_transformation = { enabled = true }
 
-[functions.gw-generate-sso-token]
-verify_jwt = true
+[auth]
+enabled = true
+port = 54327
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+enable_signup = true
+enable_confirmations = false
+enable_recovery = true
+enable_email_change_confirmations = true
+enable_phone_change_confirmations = true
 
-[functions.gw-send-email]
-verify_jwt = true
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
 
-[functions.gw-send-sms]
-verify_jwt = true
+[auth.sms]
+enable_signup = false
+enable_confirmations = false
+template = "Your code is {{ .Code }}"
 
-[functions.gw-validate-sso-token]
-verify_jwt = false
-
-[functions.handle-sms-approval]
-verify_jwt = false
-
-[functions.import-users]
-verify_jwt = true
-
-[functions.send-contract-email]
-verify_jwt = true
-
-[functions.send-payment-notification]
-verify_jwt = true
-
-[functions.send-w9-request]
-verify_jwt = true
-
-[functions.w9-ocr-extract]
-verify_jwt = true
+[edge_runtime]
+enabled = true
+port = 54328
+inspector_port = 8083
