@@ -46,10 +46,7 @@ export const useGleeWorldEvents = () => {
       setLoading(true);
       
       // Fetch events from gw_events table with calendar information
-      // Show events from 6 months ago to future to include academic calendar events
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-      
+      // Show all events for calendar display
       let eventsQuery = supabase
         .from('gw_events')
         .select(`
@@ -60,7 +57,6 @@ export const useGleeWorldEvents = () => {
             is_visible
           )
         `)
-        .gte('start_date', sixMonthsAgo.toISOString())
         .order('start_date', { ascending: true });
 
       // If user is not authenticated, only show public events
