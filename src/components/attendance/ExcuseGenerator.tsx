@@ -92,7 +92,7 @@ export const ExcuseGenerator = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   // Class Conflict Worksheet states
   const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
