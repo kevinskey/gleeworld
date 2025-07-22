@@ -316,7 +316,21 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
     console.log('SetlistBuilder: Adding sheet music to setlist:', { selectedSetlist: selectedSetlist.id, sheetMusicId });
 
     try {
-      const nextPosition = (selectedSetlist.items?.length || 0) + 1;
+      // Query the database for the current max position to avoid race conditions
+      const { data: maxPositionData, error: maxPositionError } = await supabase
+        .from('setlist_items')
+        .select('position')
+        .eq('setlist_id', selectedSetlist.id)
+        .order('position', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (maxPositionError) {
+        console.error('SetlistBuilder: Error getting max position:', maxPositionError);
+        throw maxPositionError;
+      }
+
+      const nextPosition = (maxPositionData?.position || 0) + 1;
       
       const { data, error } = await supabase
         .from('setlist_items')
@@ -341,6 +355,27 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
             description: `"${musicTitle}" is already in this setlist.`,
             variant: "default",
           });
+        } else if (error.code === '23505' && error.message.includes('setlist_items_setlist_id_position_key')) {
+          // If there's still a position conflict, retry with a higher position
+          const retryPosition = nextPosition + 1;
+          const { data: retryData, error: retryError } = await supabase
+            .from('setlist_items')
+            .insert({
+              setlist_id: selectedSetlist.id,
+              sheet_music_id: sheetMusicId,
+              position: retryPosition,
+            })
+            .select()
+            .maybeSingle();
+
+          if (retryError) {
+            toast({
+              title: "Error Adding to Setlist",
+              description: retryError.message,
+              variant: "destructive",
+            });
+            return;
+          }
         } else {
           toast({
             title: "Error Adding to Setlist",
