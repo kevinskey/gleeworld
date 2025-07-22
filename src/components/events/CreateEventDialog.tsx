@@ -490,7 +490,7 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
           <div className="space-y-4">
             <Label>Event Images</Label>
             <div 
-              className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-muted-foreground/50 transition-colors"
+              className="relative border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-muted-foreground/50 transition-colors"
               onDrop={handleDrop}
               onDragOver={handleDragOver}
             >
@@ -500,14 +500,14 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
                   <p className="text-sm font-medium">Drop images here or click to upload</p>
                   <p className="text-xs text-muted-foreground">Supports single or multiple images</p>
                 </div>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={(e) => e.target.files && handleImageSelect(e.target.files)}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                />
               </div>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={(e) => e.target.files && handleImageSelect(e.target.files)}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              />
             </div>
 
             {/* Image Preview Grid */}
