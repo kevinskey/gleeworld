@@ -540,6 +540,16 @@ export const ExcuseGenerator = () => {
 
   return (
     <>
+      {/* Attendance Stats Header */}
+      <Card className="mb-6 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 border-0">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-white">
+            <Calendar className="w-5 h-5" />
+            Attendance Stats
+          </CardTitle>
+        </CardHeader>
+      </Card>
+
       <Collapsible open={!isCollapsed} onOpenChange={(open) => setIsCollapsed(!open)}>
         <Card className="mb-6 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 border-0">
           <CollapsibleTrigger asChild>
