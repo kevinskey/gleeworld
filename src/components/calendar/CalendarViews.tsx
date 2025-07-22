@@ -51,28 +51,41 @@ export const CalendarViews = () => {
     <div className="space-y-4">
       <Card className="glass-dashboard-card">
         <CardHeader className="pb-0 pt-2">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="flex gap-2">
-              <CalendarToggle onCalendarsChange={setVisibleCalendarIds} />
-              <CalendarExport />
-              {isAdmin && (
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Manage Calendars
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-                    <CalendarManager />
-                  </DialogContent>
-                </Dialog>
-              )}
+          <div className="space-y-3">
+            {/* Member Controls */}
+            <div className="bg-muted/30 rounded-lg p-3 border border-border/50">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <h3 className="text-sm font-medium text-muted-foreground">Member Controls</h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <CalendarToggle onCalendarsChange={setVisibleCalendarIds} />
+                <CalendarExport />
+                <AppointmentScheduler />
+                {user && <CreateEventDialog onEventCreated={fetchEvents} />}
+              </div>
             </div>
-            <div className="flex gap-2">
-              <AppointmentScheduler />
-              {user && <CreateEventDialog onEventCreated={fetchEvents} />}
-            </div>
+
+            {/* Admin Controls */}
+            {isAdmin && (
+              <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <h3 className="text-sm font-medium text-primary">Admin Controls</h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="border-primary/30 hover:bg-primary/10">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Manage Calendars
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                      <CalendarManager />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+            )}
           </div>
         </CardHeader>
         <CardContent className="p-2 md:p-4 pt-2">
