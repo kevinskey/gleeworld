@@ -4,7 +4,7 @@ import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Mail, MessageSquare, Users, FileText, Calendar, DollarSign, Bell } from 'lucide-react';
+import { Mail, MessageSquare, Users, FileText, Settings, Bell } from 'lucide-react';
 import { MassEmailManager } from '@/components/notifications/MassEmailManager';
 import { SMSHistoryManager } from '@/components/notifications/SMSHistoryManager';
 import { MemberCommunications } from '@/components/notifications/MemberCommunications';
@@ -12,6 +12,7 @@ import { PublicFormsManager } from '@/components/notifications/PublicFormsManage
 import { NewsletterManager } from '@/components/notifications/NewsletterManager';
 import { NotificationHistoryWithDelivery } from '@/components/notifications/NotificationHistoryWithDelivery';
 import { UserNotificationsSection } from '@/components/notifications/UserNotificationsSection';
+import { PrivacyPreferencesManager } from '@/components/notifications/PrivacyPreferencesManager';
 import { useNotificationPermissions } from '@/hooks/useNotificationPermissions';
 
 export default function NotificationCenter() {
@@ -43,7 +44,8 @@ export default function NotificationCenter() {
     { id: 'sms', label: 'SMS Center', permission: 'sms' },
     { id: 'communications', label: 'Communications', permission: 'communications' },
     { id: 'newsletter', label: 'Newsletter', permission: 'newsletter' },
-    { id: 'public-forms', label: 'Public Forms', permission: 'public-forms' }
+    { id: 'public-forms', label: 'Public Forms', permission: 'public-forms' },
+    { id: 'preferences', label: 'Privacy & Preferences', permission: null } // Always available
   ];
 
   return (
@@ -146,16 +148,16 @@ export default function NotificationCenter() {
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-all duration-300 p-3 bg-blue-50/30 backdrop-blur-sm border border-blue-100/50 hover:bg-blue-50/40">
+              <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer p-3 bg-blue-50/30 backdrop-blur-sm border border-blue-100/50 hover:bg-blue-50/40" onClick={() => setActiveTab('preferences')}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-                    <CardTitle className="text-xs font-normal">Integrations</CardTitle>
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-lg font-bold">Connected</div>
-                    <p className="text-xs text-muted-foreground">
-                      Calendar, Financial & User Systems
-                    </p>
+                  <CardTitle className="text-xs font-normal">Privacy & Preferences</CardTitle>
+                  <Settings className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-bold">Opt-In/Out Settings</div>
+                  <p className="text-xs text-muted-foreground">
+                    Manage communication preferences and compliance settings
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -202,6 +204,10 @@ export default function NotificationCenter() {
 
           <TabsContent value="public-forms">
             <PublicFormsManager />
+          </TabsContent>
+
+          <TabsContent value="preferences">
+            <PrivacyPreferencesManager />
           </TabsContent>
         </Tabs>
       </div>
