@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { getDefaultEventImage } from "@/constants/images";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -234,16 +235,11 @@ export const EventsList = ({ filter = 'all-events' }: EventsListProps) => {
             {/* Event Image */}
             <div className="relative w-full aspect-[4/3] overflow-hidden">
               <img
-                src={event.image_url || "/lovable-uploads/94104cd1-1d3a-4685-a8d8-7fb041f38231.png"}
+                src={event.image_url || getDefaultEventImage(event.id)}
                 alt={event.event_name || event.title}
                 className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                 onError={(e) => {
-                  // Fallback to default image if the event image fails to load
-                  if (e.currentTarget.src !== "/lovable-uploads/94104cd1-1d3a-4685-a8d8-7fb041f38231.png") {
-                    e.currentTarget.src = "/lovable-uploads/94104cd1-1d3a-4685-a8d8-7fb041f38231.png";
-                  } else {
-                    e.currentTarget.style.display = 'none';
-                  }
+                  e.currentTarget.src = getDefaultEventImage(event.id);
                 }}
               />
               <div className="absolute top-2 right-2 flex gap-1">
