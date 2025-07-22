@@ -57,9 +57,15 @@ export const CalendarViews = () => {
             <div className="flex items-center justify-between gap-2 mb-2">
               <h3 className="text-sm font-medium text-muted-foreground">Member Controls</h3>
             </div>
-            <div className="flex flex-nowrap gap-1 overflow-x-auto">
-              <AppointmentScheduler />
-              {user && <CreateEventDialog onEventCreated={fetchEvents} />}
+            <div className="flex flex-nowrap gap-1 w-full">
+              <div className="flex-1 min-w-0">
+                <AppointmentScheduler />
+              </div>
+              {user && (
+                <div className="flex-1 min-w-0">
+                  <CreateEventDialog onEventCreated={fetchEvents} />
+                </div>
+              )}
             </div>
           </div>
         </CardHeader>
