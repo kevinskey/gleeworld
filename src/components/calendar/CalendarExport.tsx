@@ -34,7 +34,7 @@ export const CalendarExport = () => {
         .from('gw_profiles')
         .select('calendar_feed_token')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       setUserToken(profile?.calendar_feed_token || null);
     } catch (error) {
