@@ -50,9 +50,6 @@ export const CalendarViews = () => {
 
   return (
     <div className="space-y-4">
-      {/* Calendar Filter Strip */}
-      <CalendarFilterStrip onCalendarsChange={setVisibleCalendarIds} />
-      
       <Card className="glass-dashboard-card">
         <CardHeader className="pb-0 pt-2">
           {/* Member Controls */}
@@ -101,6 +98,9 @@ export const CalendarViews = () => {
           </Tabs>
         </CardContent>
       </Card>
+      
+      {/* Calendar Filter Strip */}
+      <CalendarFilterStrip onCalendarsChange={setVisibleCalendarIds} />
       
       {/* Admin Controls */}
       {isAdmin && (
