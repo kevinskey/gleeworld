@@ -59,7 +59,7 @@ export default function NotificationCenter() {
                   <Mail className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">Send to Groups</div>
+                  <div className="text-lg font-bold">Send to Groups</div>
                   <p className="text-xs text-muted-foreground">
                     Send emails to individual members or entire groups
                   </p>
@@ -72,7 +72,7 @@ export default function NotificationCenter() {
                   <MessageSquare className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">Text Messaging</div>
+                  <div className="text-lg font-bold">Text Messaging</div>
                   <p className="text-xs text-muted-foreground">
                     Send SMS notifications and view message history
                   </p>
@@ -85,7 +85,7 @@ export default function NotificationCenter() {
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">Letters & Forms</div>
+                  <div className="text-lg font-bold">Letters & Forms</div>
                   <p className="text-xs text-muted-foreground">
                     Excuse letters and member communications
                   </p>
@@ -98,7 +98,7 @@ export default function NotificationCenter() {
                   <FileText className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">Alumni & Board</div>
+                  <div className="text-lg font-bold">Alumni & Board</div>
                   <p className="text-xs text-muted-foreground">
                     Newsletter for alumni and executive board members
                   </p>
@@ -111,7 +111,7 @@ export default function NotificationCenter() {
                   <Bell className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">Bookings & Interest</div>
+                  <div className="text-lg font-bold">Bookings & Interest</div>
                   <p className="text-xs text-muted-foreground">
                     Fan interest forms and concert booking requests
                   </p>
@@ -124,7 +124,7 @@ export default function NotificationCenter() {
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">Connected</div>
+                  <div className="text-lg font-bold">Connected</div>
                   <p className="text-xs text-muted-foreground">
                     Calendar, Financial & User Systems
                   </p>
