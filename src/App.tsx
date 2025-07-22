@@ -43,6 +43,7 @@ import AttendancePage from "./pages/AttendancePage";
 import MusicLibraryPage from "./pages/MusicLibrary";
 import NotificationCenter from "./pages/NotificationCenter";
 import Budgets from "./pages/Budgets";
+import Treasurer from "./pages/Treasurer";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -350,27 +351,35 @@ const App = () => {
                         </ProtectedRoute>
                       } 
                     />
-                    <Route 
-                      path="/budgets" 
-                      element={
-                        <ProtectedRoute>
-                          <Budgets />
-                        </ProtectedRoute>
-                      } 
-                    />
-                  <Route 
-                    path="/landing"
-                   element={
-                     <PublicRoute>
-                       <GleeWorldLanding />
-                     </PublicRoute>
-                   } 
+                     <Route 
+                       path="/budgets" 
+                       element={
+                         <ProtectedRoute>
+                           <Budgets />
+                         </ProtectedRoute>
+                       } 
+                     />
+                     <Route 
+                       path="/treasurer" 
+                       element={
+                         <ProtectedRoute>
+                           <Treasurer />
+                         </ProtectedRoute>
+                       } 
+                     />
+                   <Route 
+                     path="/landing"
+                    element={
+                      <PublicRoute>
+                        <GleeWorldLanding />
+                      </PublicRoute>
+                    } 
+                  />
+                 <Route 
+                   path="/" 
+                   element={<RootRoute />} 
                  />
-                <Route 
-                  path="/" 
-                  element={<RootRoute />} 
-                />
-               <Route path="*" element={<NotFound />} />
+                <Route path="*" element={<NotFound />} />
             </Routes>
               <GlobalMusicPlayer />
             </MusicPlayerProvider>

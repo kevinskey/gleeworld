@@ -200,6 +200,11 @@ export const SystemNavigation = ({ activeTab, onTabChange, isMobile }: SystemNav
             <DollarSign className="h-4 w-4 mr-3" />
             Stipend Management
           </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => window.location.href = '/treasurer'}>
+            <DollarSign className="h-4 w-4 mr-3" />
+            Treasurer Dashboard
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
