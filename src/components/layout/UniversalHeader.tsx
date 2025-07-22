@@ -42,26 +42,29 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
   };
 
   return (
-    <header className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
+    <header className="bg-gradient-to-r from-white/10 via-white/5 to-white/10 backdrop-blur-lg border-b border-white/30 sticky top-0 z-50 shadow-lg">
       <div className="container mx-auto px-2 sm:px-4">
         <div className="flex items-center justify-between min-h-16 py-3">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-1 sm:gap-4 md:gap-6 min-w-0 flex-1">
             <EnhancedTooltip content="Go to GleeWorld Home">
-              <Link to="/landing" className="flex items-center gap-2 flex-shrink-0">
-                <img 
-                  src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
-                  alt="Spelman College Glee Club" 
-                  className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 object-contain flex-shrink-0"
-                />
+              <Link to="/landing" className="flex items-center gap-2 flex-shrink-0 hover:scale-105 transition-transform duration-200">
+                <div className="relative">
+                  <img 
+                    src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
+                    alt="Spelman College Glee Club" 
+                    className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 object-contain flex-shrink-0 drop-shadow-md"
+                  />
+                  <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur opacity-50"></div>
+                </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-900 font-bold text-xl sm:text-2xl md:text-3xl whitespace-nowrap">
+                  <span className="text-gray-900 font-bold text-xl sm:text-2xl md:text-3xl whitespace-nowrap drop-shadow-sm">
                     GleeWorld
                   </span>
                   {pageName !== 'GleeWorld' && (
                     <>
-                      <span className="text-gray-500 text-lg sm:text-xl md:text-2xl hidden sm:inline">|</span>
-                      <span className="text-white font-medium text-sm sm:text-base md:text-lg truncate max-w-32 sm:max-w-48 md:max-w-64 bg-slate-900 pl-[5px] pr-2 py-0.5 rounded-md ml-2.5">
+                      <span className="text-gray-500 text-lg sm:text-xl md:text-2xl hidden sm:inline opacity-60">|</span>
+                      <span className="text-white font-medium text-sm sm:text-base md:text-lg truncate max-w-32 sm:max-w-48 md:max-w-64 bg-gradient-to-r from-slate-800 to-slate-900 pl-[5px] pr-2 py-0.5 rounded-md ml-2.5 shadow-md border border-white/10">
                         {pageName}
                       </span>
                     </>
