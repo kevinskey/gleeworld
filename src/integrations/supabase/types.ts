@@ -1600,6 +1600,48 @@ export type Database = {
           },
         ]
       }
+      gw_class_conflict_requests: {
+        Row: {
+          conflict_analysis: Json
+          created_at: string
+          final_approval: Json | null
+          id: string
+          rejection_reason: string | null
+          schedule: Json
+          secretary_approval: Json | null
+          section_leader_approval: Json | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conflict_analysis: Json
+          created_at?: string
+          final_approval?: Json | null
+          id?: string
+          rejection_reason?: string | null
+          schedule: Json
+          secretary_approval?: Json | null
+          section_leader_approval?: Json | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conflict_analysis?: Json
+          created_at?: string
+          final_approval?: Json | null
+          id?: string
+          rejection_reason?: string | null
+          schedule?: Json
+          secretary_approval?: Json | null
+          section_leader_approval?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_event_attendance: {
         Row: {
           attendance_status: string

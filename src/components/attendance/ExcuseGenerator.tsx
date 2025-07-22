@@ -466,11 +466,37 @@ export const ExcuseGenerator = () => {
     setIsSubmittingConflict(true);
 
     try {
-      // For now, we'll show the conflict analysis in a toast
-      // The database table 'gw_class_conflict_requests' needs to be created first
+      // Create the conflict request
+      const { error } = await supabase
+        .from('gw_class_conflict_requests')
+        .insert({
+          user_id: user?.id,
+          schedule: classSchedules as any,
+          conflict_analysis: conflictAnalysis as any,
+          status: 'pending_section_leader'
+        } as any);
+
+      if (error) throw error;
+
+      // Get section leaders for notifications
+      const { data: sectionLeaders } = await supabase
+        .from('gw_profiles')
+        .select('user_id')
+        .eq('is_section_leader', true);
+
+      const userIds = sectionLeaders?.map(u => u.user_id) || [];
+      
+      if (userIds.length > 0) {
+        await sendNotification(
+          'New Class Conflict Request',
+          'A new class conflict request has been submitted for review.',
+          userIds
+        );
+      }
+
       toast({
-        title: "Conflict Analysis Complete",
-        description: `Found ${conflictAnalysis.totalConflictMinutes} minutes of conflicts${conflictAnalysis.exceedsThreshold ? ' (exceeds 30 min threshold)' : ''}`,
+        title: "Request Submitted",
+        description: "Your class conflict request has been submitted for section leader review",
       });
 
       setIsConflictDialogOpen(false);
