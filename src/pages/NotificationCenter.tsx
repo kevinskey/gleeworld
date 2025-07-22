@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Mail, MessageSquare, Users, FileText, Calendar, DollarSign, Bell } from 'lucide-react';
 import { MassEmailManager } from '@/components/notifications/MassEmailManager';
 import { SMSHistoryManager } from '@/components/notifications/SMSHistoryManager';
@@ -23,7 +24,25 @@ export default function NotificationCenter() {
 
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 mt-6">
-          <TabsList className="grid w-full grid-cols-6">
+          {/* Mobile dropdown */}
+          <div className="md:hidden">
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select section" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="overview">Overview</SelectItem>
+                <SelectItem value="mass-email">Mass Email</SelectItem>
+                <SelectItem value="sms">SMS Center</SelectItem>
+                <SelectItem value="communications">Communications</SelectItem>
+                <SelectItem value="newsletter">Newsletter</SelectItem>
+                <SelectItem value="public-forms">Public Forms</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Desktop tabs */}
+          <TabsList className="hidden md:grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="mass-email">Mass Email</TabsTrigger>
             <TabsTrigger value="sms">SMS Center</TabsTrigger>
