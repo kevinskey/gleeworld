@@ -21,6 +21,8 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
   const [editingEvent, setEditingEvent] = useState<GleeWorldEvent | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
+  console.log('MonthlyCalendar received events:', events.length, events.map(e => ({ title: e.title, date: e.start_date })));
+
   // Handle responsive behavior
   useEffect(() => {
     const checkMobile = () => {
