@@ -56,8 +56,8 @@ export const UpcomingEvents = ({ limit = 6, showHeader = true }: UpcomingEventsP
             <p className="text-muted-foreground text-xs">Check back later!</p>
           </div>
         ) : (
-          <ScrollArea className="h-40">
-            <div className="space-y-1 pr-2">
+          <ScrollArea className="h-60">
+            <div className="space-y-1 pr-3">
             {upcomingEvents.map(event => {
               const isSelected = selectedEvent?.id === event.id;
               return (
