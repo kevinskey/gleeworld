@@ -450,6 +450,32 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
+            {/* Calendar Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="calendar">Calendar *</Label>
+              <Select
+                value={selectedCalendarId}
+                onValueChange={setSelectedCalendarId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a calendar..." />
+                </SelectTrigger>
+                <SelectContent className="max-h-40 overflow-y-auto z-50 bg-background border shadow-lg">
+                  {calendars.map((calendar) => (
+                    <SelectItem key={calendar.id} value={calendar.id}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: calendar.color }}
+                        />
+                        <span>{calendar.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="title">Event Title *</Label>
               <Input
@@ -515,32 +541,6 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
                   placeholder="Optional"
                 />
               </div>
-            </div>
-
-            {/* Calendar Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="calendar">Calendar *</Label>
-              <Select
-                value={selectedCalendarId}
-                onValueChange={setSelectedCalendarId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a calendar..." />
-                </SelectTrigger>
-                <SelectContent className="max-h-40 overflow-y-auto z-50 bg-background border shadow-lg">
-                  {calendars.map((calendar) => (
-                    <SelectItem key={calendar.id} value={calendar.id}>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: calendar.color }}
-                        />
-                        <span>{calendar.name}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
