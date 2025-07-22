@@ -51,13 +51,13 @@ export const CalendarViews = () => {
   return (
     <div className="space-y-4">
       <Card className="glass-dashboard-card">
-        <CardHeader className="pb-0 pt-2">
+        <CardHeader className="p-0">
           {/* Member Controls */}
           <div className="bg-muted/30 rounded-lg border border-border/50">
-            <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center justify-between gap-2 p-2">
               <h3 className="text-sm font-medium text-muted-foreground">Member Controls</h3>
             </div>
-            <div className="flex flex-nowrap gap-1 w-full">
+            <div className="flex flex-nowrap gap-1 w-full p-2">
               <div className="flex-1 min-w-0">
                 <AppointmentScheduler />
               </div>
