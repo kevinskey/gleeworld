@@ -33,18 +33,55 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     const url = new URL(req.url);
-    const feedType = url.searchParams.get('type') || 'public'; // public, all
+    const feedType = url.searchParams.get('type') || 'public'; // public, private, performance, rehearsal, meeting
     const token = url.searchParams.get('token'); // For private feeds
+    const eventType = url.searchParams.get('event_type'); // Filter by event type
+    const range = url.searchParams.get('range') || 'future'; // future, past, all
 
     let query = supabase
       .from('gw_events')
       .select('*')
-      .gte('start_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()) // Include events from last 30 days
       .order('start_date', { ascending: true });
 
-    // For public feeds, only show public events
-    if (feedType === 'public' || !token) {
+    // Apply date range filter
+    const now = new Date();
+    switch (range) {
+      case 'future':
+        query = query.gte('start_date', now.toISOString());
+        break;
+      case 'past':
+        query = query.lt('start_date', now.toISOString())
+                   .gte('start_date', new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString()); // Last 90 days
+        break;
+      case 'all':
+        query = query.gte('start_date', new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString());
+        break;
+    }
+
+    // Handle feed type and authentication
+    if (feedType === 'private' && token) {
+      // Verify token for private feeds
+      const { data: profile } = await supabase
+        .from('gw_profiles')
+        .select('user_id')
+        .eq('calendar_feed_token', token)
+        .single();
+      
+      if (!profile) {
+        return new Response('Invalid feed token', {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
+        });
+      }
+      // Private feeds show all events
+    } else {
+      // Public feeds only show public events
       query = query.eq('is_public', true);
+    }
+
+    // Filter by event type if specified
+    if (eventType) {
+      query = query.eq('event_type', eventType);
     }
 
     const { data: events, error } = await query;
@@ -58,13 +95,14 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Generate iCalendar content
-    const icalContent = generateICalendarFeed(events || [], feedType);
+    const icalContent = generateICalendarFeed(events || [], feedType, eventType);
 
     return new Response(icalContent, {
       status: 200,
       headers: {
         ...corsHeaders,
         'Content-Type': 'text/calendar; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${getFeedFilename(feedType, eventType)}"`,
       }
     });
 
@@ -77,9 +115,12 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-function generateICalendarFeed(events: CalendarEvent[], feedType: string): string {
+function generateICalendarFeed(events: CalendarEvent[], feedType: string, eventType?: string | null): string {
   const now = new Date();
   const timestamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+  const calendarName = getCalendarName(feedType, eventType);
+  const calendarDescription = getCalendarDescription(feedType, eventType);
 
   let icalContent = [
     'BEGIN:VCALENDAR',
@@ -87,10 +128,11 @@ function generateICalendarFeed(events: CalendarEvent[], feedType: string): strin
     'PRODID:-//Spelman College Glee Club//Calendar Feed//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
-    `X-WR-CALNAME:Spelman Glee Club ${feedType === 'public' ? 'Public Events' : 'All Events'}`,
-    'X-WR-CALDESC:Live calendar feed for Spelman College Glee Club events',
+    `X-WR-CALNAME:${calendarName}`,
+    `X-WR-CALDESC:${calendarDescription}`,
     'X-WR-TIMEZONE:America/New_York',
-    'REFRESH-INTERVAL;VALUE=DURATION:PT1H' // Refresh every hour
+    'REFRESH-INTERVAL;VALUE=DURATION:PT1H', // Refresh every hour
+    'X-PUBLISHED-TTL:PT1H' // Cache for 1 hour
   ];
 
   events.forEach(event => {
@@ -153,6 +195,43 @@ function escapeICalText(text: string): string {
     .replace(/;/g, '\\;')
     .replace(/\n/g, '\\n')
     .replace(/\r/g, '');
+}
+
+function getCalendarName(feedType: string, eventType?: string | null): string {
+  const baseNames: Record<string, string> = {
+    public: 'Spelman Glee Club - Public Events',
+    private: 'Spelman Glee Club - All Events',
+    performance: 'Spelman Glee Club - Performances',
+    rehearsal: 'Spelman Glee Club - Rehearsals',
+    meeting: 'Spelman Glee Club - Meetings'
+  };
+
+  if (eventType && baseNames[eventType]) {
+    return baseNames[eventType];
+  }
+
+  return baseNames[feedType] || 'Spelman Glee Club Events';
+}
+
+function getCalendarDescription(feedType: string, eventType?: string | null): string {
+  const descriptions: Record<string, string> = {
+    public: 'Live calendar feed for public Spelman College Glee Club events',
+    private: 'Live calendar feed for all Spelman College Glee Club events (requires authentication)',
+    performance: 'Live calendar feed for Spelman College Glee Club performances only',
+    rehearsal: 'Live calendar feed for Spelman College Glee Club rehearsals only',
+    meeting: 'Live calendar feed for Spelman College Glee Club meetings only'
+  };
+
+  if (eventType && descriptions[eventType]) {
+    return descriptions[eventType];
+  }
+
+  return descriptions[feedType] || 'Live calendar feed for Spelman College Glee Club events';
+}
+
+function getFeedFilename(feedType: string, eventType?: string | null): string {
+  const name = eventType || feedType;
+  return `spelman-glee-${name}-calendar.ics`;
 }
 
 serve(handler);

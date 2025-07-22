@@ -1,21 +1,48 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Download, Calendar, ExternalLink, Copy, Check } from "lucide-react";
+import { Download, Calendar, ExternalLink, Copy, Check, Info, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 export const CalendarExport = () => {
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
   const [copiedFeed, setCopiedFeed] = useState<string | null>(null);
+  const [userToken, setUserToken] = useState<string | null>(null);
+  const [isLoadingToken, setIsLoadingToken] = useState(true);
   const { toast } = useToast();
 
   const projectId = "oopmlreysjzuxzylyheb";
   const baseUrl = `https://${projectId}.supabase.co/functions/v1`;
+
+  useEffect(() => {
+    fetchUserToken();
+  }, []);
+
+  const fetchUserToken = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setIsLoadingToken(false);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('gw_profiles')
+        .select('calendar_feed_token')
+        .eq('user_id', user.id)
+        .single();
+
+      setUserToken(profile?.calendar_feed_token || null);
+    } catch (error) {
+      console.error('Error fetching user token:', error);
+    } finally {
+      setIsLoadingToken(false);
+    }
+  };
 
   const exportCalendar = async (type: string, params: Record<string, string> = {}) => {
     setIsDownloading(type);
@@ -53,11 +80,22 @@ export const CalendarExport = () => {
     }
   };
 
-  const copyFeedUrl = async (feedType: string) => {
-    const feedUrl = `${baseUrl}/calendar-feed?type=${feedType}`;
+  const copyFeedUrl = async (feedType: string, eventType?: string) => {
+    let feedUrl = `${baseUrl}/calendar-feed?type=${feedType}`;
+    
+    if (feedType === 'private' && userToken) {
+      feedUrl += `&token=${userToken}`;
+    }
+    
+    if (eventType) {
+      feedUrl += `&event_type=${eventType}`;
+    }
+    
+    const feedKey = `${feedType}-${eventType || 'all'}`;
+    
     try {
       await navigator.clipboard.writeText(feedUrl);
-      setCopiedFeed(feedType);
+      setCopiedFeed(feedKey);
       setTimeout(() => setCopiedFeed(null), 2000);
       toast({
         title: "Feed URL Copied",
@@ -88,7 +126,7 @@ export const CalendarExport = () => {
           Export Calendar
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Export & Subscribe to Calendar</DialogTitle>
           <DialogDescription>
@@ -160,38 +198,84 @@ export const CalendarExport = () => {
               Subscribe to these feeds to automatically receive calendar updates in your preferred calendar app.
             </p>
             
-            <div className="space-y-3">
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-base">Public Events Feed</CardTitle>
-                      <CardDescription className="text-xs">
-                        Automatically syncs public events to your calendar
-                      </CardDescription>
-                    </div>
-                    <Badge variant="secondary">Live</Badge>
+            <div className="space-y-4">
+              {/* Public Feeds */}
+              <div>
+                <h4 className="font-medium mb-3 flex items-center gap-2">
+                  Public Feeds <Badge variant="secondary">Auto-updating</Badge>
+                </h4>
+                <div className="space-y-3">
+                  <FeedCard
+                    title="All Public Events"
+                    description="All upcoming public events"
+                    url={`${baseUrl}/calendar-feed?type=public`}
+                    onCopy={() => copyFeedUrl('public')}
+                    copied={copiedFeed === 'public-all'}
+                  />
+                  <FeedCard
+                    title="Public Performances"
+                    description="Public performances and concerts only"
+                    url={`${baseUrl}/calendar-feed?type=public&event_type=performance`}
+                    onCopy={() => copyFeedUrl('public', 'performance')}
+                    copied={copiedFeed === 'public-performance'}
+                  />
+                  <FeedCard
+                    title="Public Rehearsals"
+                    description="Public rehearsal schedule"
+                    url={`${baseUrl}/calendar-feed?type=public&event_type=rehearsal`}
+                    onCopy={() => copyFeedUrl('public', 'rehearsal')}
+                    copied={copiedFeed === 'public-rehearsal'}
+                  />
+                </div>
+              </div>
+
+              {/* Private Feeds */}
+              {userToken && !isLoadingToken && (
+                <div>
+                  <h4 className="font-medium mb-3 flex items-center gap-2">
+                    Private Feeds 
+                    <Badge variant="outline"><Lock className="h-3 w-3 mr-1" />Authenticated</Badge>
+                  </h4>
+                  <div className="space-y-3">
+                    <FeedCard
+                      title="All Events (Private)"
+                      description="All events including private ones"
+                      url={`${baseUrl}/calendar-feed?type=private&token=${userToken}`}
+                      onCopy={() => copyFeedUrl('private')}
+                      copied={copiedFeed === 'private-all'}
+                      isPrivate
+                    />
+                    <FeedCard
+                      title="Private Performances"
+                      description="All performances including private ones"
+                      url={`${baseUrl}/calendar-feed?type=private&event_type=performance&token=${userToken}`}
+                      onCopy={() => copyFeedUrl('private', 'performance')}
+                      copied={copiedFeed === 'private-performance'}
+                      isPrivate
+                    />
+                    <FeedCard
+                      title="Private Meetings"
+                      description="Internal meetings and admin events"
+                      url={`${baseUrl}/calendar-feed?type=private&event_type=meeting&token=${userToken}`}
+                      onCopy={() => copyFeedUrl('private', 'meeting')}
+                      copied={copiedFeed === 'private-meeting'}
+                      isPrivate
+                    />
                   </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 text-xs bg-muted p-2 rounded font-mono break-all">
-                      {baseUrl}/calendar-feed?type=public
-                    </code>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => copyFeedUrl('public')}
-                    >
-                      {copiedFeed === 'public' ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
+                </div>
+              )}
+
+              {!userToken && !isLoadingToken && (
+                <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Info className="h-4 w-4 text-amber-600" />
+                    <span className="font-medium text-amber-800">Private Feeds Unavailable</span>
                   </div>
-                </CardContent>
-              </Card>
+                  <p className="text-sm text-amber-700">
+                    Private calendar feeds require a user profile. Please contact an administrator to set up your profile.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -242,3 +326,54 @@ export const CalendarExport = () => {
     </Dialog>
   );
 };
+
+const FeedCard = ({ 
+  title, 
+  description, 
+  url,
+  onCopy, 
+  copied,
+  isPrivate = false
+}: { 
+  title: string; 
+  description: string; 
+  url: string;
+  onCopy: () => void; 
+  copied: boolean;
+  isPrivate?: boolean;
+}) => (
+  <Card>
+    <CardHeader className="pb-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <CardTitle className="text-base flex items-center gap-2">
+            {title}
+            {isPrivate && <Lock className="h-3 w-3 text-muted-foreground" />}
+          </CardTitle>
+          <CardDescription className="text-xs">
+            {description}
+          </CardDescription>
+        </div>
+        <Badge variant="secondary">Live</Badge>
+      </div>
+    </CardHeader>
+    <CardContent className="pt-0">
+      <div className="flex items-center gap-2">
+        <code className="flex-1 text-xs bg-muted p-2 rounded font-mono break-all">
+          {isPrivate ? url.replace(/token=[^&]+/, 'token=***') : url}
+        </code>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onCopy}
+        >
+          {copied ? (
+            <Check className="h-4 w-4" />
+          ) : (
+            <Copy className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
+    </CardContent>
+  </Card>
+);

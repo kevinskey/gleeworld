@@ -2715,6 +2715,7 @@ export type Database = {
           address: string | null
           avatar_url: string | null
           bio: string | null
+          calendar_feed_token: string | null
           class_year: number | null
           created_at: string | null
           current_cart_id: string | null
@@ -2753,6 +2754,7 @@ export type Database = {
           address?: string | null
           avatar_url?: string | null
           bio?: string | null
+          calendar_feed_token?: string | null
           class_year?: number | null
           created_at?: string | null
           current_cart_id?: string | null
@@ -2791,6 +2793,7 @@ export type Database = {
           address?: string | null
           avatar_url?: string | null
           bio?: string | null
+          calendar_feed_token?: string | null
           class_year?: number | null
           created_at?: string | null
           current_cart_id?: string | null
