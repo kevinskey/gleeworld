@@ -48,83 +48,120 @@ export const CalendarViews = () => {
   }
 
   return (
-    <div className="space-y-4">
-      <Card className="glass-dashboard-card">
-        <CardHeader className="pb-0 pt-2">
-          <div className="space-y-3">
-            {/* Member Controls */}
-            <div className="bg-muted/30 rounded-lg p-3 border border-border/50">
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <h3 className="text-sm font-medium text-muted-foreground">Member Controls</h3>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <CalendarToggle onCalendarsChange={setVisibleCalendarIds} />
-                <CalendarExport />
-                <AppointmentScheduler />
-                {user && <CreateEventDialog onEventCreated={fetchEvents} />}
-              </div>
-            </div>
+    <div className="space-y-6 p-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Calendar</h1>
+        <p className="text-muted-foreground">Manage events, appointments, and schedules</p>
+      </div>
 
-            {/* Admin Controls */}
-            {isAdmin && (
-              <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <h3 className="text-sm font-medium text-primary">Admin Controls</h3>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="border-primary/30 hover:bg-primary/10">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Manage Calendars
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-                      <CalendarManager />
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </div>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="p-2 md:p-4 pt-2">
-          <Tabs value={activeView} onValueChange={setActiveView}>
-            <TabsList className="grid w-full grid-cols-3 h-8 md:h-10">
-              <TabsTrigger value="month" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2">
-                <Grid3X3Icon className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline">Month</span>
-                <span className="sm:hidden">Mo</span>
+      {/* Controls Section */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* Member Controls */}
+        <Card className="border-0 shadow-sm bg-gradient-to-br from-background to-muted/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-secondary"></div>
+              Member Controls
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <CalendarToggle onCalendarsChange={setVisibleCalendarIds} />
+              <CalendarExport />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <AppointmentScheduler />
+              {user && <CreateEventDialog onEventCreated={fetchEvents} />}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Admin Controls */}
+        {isAdmin && (
+          <Card className="border-0 shadow-sm bg-gradient-to-br from-primary/5 to-primary/10">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2 text-primary">
+                <div className="w-2 h-2 rounded-full bg-primary"></div>
+                Admin Controls
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button className="w-full justify-start" variant="outline">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Manage Calendars
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                  <CalendarManager />
+                </DialogContent>
+              </Dialog>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Calendar Views */}
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-muted/10">
+        <CardContent className="p-6">
+          <Tabs value={activeView} onValueChange={setActiveView} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3 h-12 bg-muted/50">
+              <TabsTrigger 
+                value="month" 
+                className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                <Grid3X3Icon className="h-4 w-4" />
+                <span>Month</span>
               </TabsTrigger>
-              <TabsTrigger value="week" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2">
-                <CalendarIcon className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline">Week</span>
-                <span className="sm:hidden">Wk</span>
+              <TabsTrigger 
+                value="week" 
+                className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                <CalendarIcon className="h-4 w-4" />
+                <span>Week</span>
               </TabsTrigger>
-              <TabsTrigger value="list" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2">
-                <ListIcon className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline">List</span>
-                <span className="sm:hidden">Li</span>
+              <TabsTrigger 
+                value="list" 
+                className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                <ListIcon className="h-4 w-4" />
+                <span>List</span>
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="month" className="mt-2 md:mt-3">
-              <MonthlyCalendar events={filteredEvents} onEventUpdated={fetchEvents} />
-            </TabsContent>
-            
-            <TabsContent value="week" className="mt-2 md:mt-3">
-              <WeeklyCalendar events={filteredEvents} onEventUpdated={fetchEvents} />
-            </TabsContent>
-            
-            <TabsContent value="list" className="mt-2 md:mt-3">
-              <EventsList events={filteredEvents} onEventUpdated={fetchEvents} />
-            </TabsContent>
+            <div className="rounded-lg border bg-background/50 p-4">
+              <TabsContent value="month" className="mt-0">
+                <MonthlyCalendar events={filteredEvents} onEventUpdated={fetchEvents} />
+              </TabsContent>
+              
+              <TabsContent value="week" className="mt-0">
+                <WeeklyCalendar events={filteredEvents} onEventUpdated={fetchEvents} />
+              </TabsContent>
+              
+              <TabsContent value="list" className="mt-0">
+                <EventsList events={filteredEvents} onEventUpdated={fetchEvents} />
+              </TabsContent>
+            </div>
           </Tabs>
         </CardContent>
       </Card>
       
-      {/* Appointments Section - Only visible to admins, super-admins, and secretaries */}
-      {isAdmin && <AppointmentsList />}
+      {/* Appointments Section */}
+      {isAdmin && (
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-muted/10">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-primary"></div>
+              Appointments Management
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AppointmentsList />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
