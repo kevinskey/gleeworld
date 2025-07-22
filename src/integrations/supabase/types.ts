@@ -921,6 +921,47 @@ export type Database = {
           },
         ]
       }
+      event_images: {
+        Row: {
+          created_by: string | null
+          event_id: string | null
+          file_size: number | null
+          id: string
+          image_name: string | null
+          image_url: string
+          is_primary: boolean
+          uploaded_at: string
+        }
+        Insert: {
+          created_by?: string | null
+          event_id?: string | null
+          file_size?: number | null
+          id?: string
+          image_name?: string | null
+          image_url: string
+          is_primary?: boolean
+          uploaded_at?: string
+        }
+        Update: {
+          created_by?: string | null
+          event_id?: string | null
+          file_size?: number | null
+          id?: string
+          image_name?: string | null
+          image_url?: string
+          is_primary?: boolean
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_images_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "gw_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_line_items: {
         Row: {
           amazon_url: string | null
