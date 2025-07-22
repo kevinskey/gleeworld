@@ -16,9 +16,7 @@ import {
 } from 'lucide-react';
 import { TakeAttendance } from './TakeAttendance';
 import { MyAttendance } from './MyAttendance';
-import { ExcuseRequests } from './ExcuseRequests';
 import { AttendanceReports } from './AttendanceReports';
-import { PreEventExcuses } from './PreEventExcuses';
 import { ExcuseGenerator } from './ExcuseGenerator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -118,43 +116,6 @@ export const AttendanceDashboard = () => {
     <div className="space-y-8">
       {/* Excuse Generator at the top */}
       <ExcuseGenerator />
-
-      {/* Excuse Generation Section */}
-      <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          Excuse Management
-        </h2>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 h-auto p-1 bg-white/80 backdrop-blur-sm">
-            <TabsTrigger 
-              value="pre-excuses" 
-              className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
-            >
-              <Calendar className="h-4 w-4" />
-              <span>Pre-Event Excuses</span>
-            </TabsTrigger>
-            
-            <TabsTrigger 
-              value="excuses" 
-              className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
-            >
-              <FileText className="h-4 w-4" />
-              <span>Post-Event Excuses</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <div className="mt-6">
-            <TabsContent value="pre-excuses" className="space-y-6 animate-fade-in">
-              <PreEventExcuses />
-            </TabsContent>
-
-            <TabsContent value="excuses" className="space-y-6 animate-fade-in">
-              <ExcuseRequests />
-            </TabsContent>
-          </div>
-        </Tabs>
-      </div>
 
       {/* Attendance Records & Management Section */}
       <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border">
