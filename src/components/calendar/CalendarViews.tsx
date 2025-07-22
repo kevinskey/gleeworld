@@ -57,7 +57,7 @@ export const CalendarViews = () => {
             <div className="flex items-center justify-between gap-2 mb-2">
               <h3 className="text-sm font-medium text-muted-foreground">Member Controls</h3>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-nowrap gap-1 overflow-x-auto">
               <AppointmentScheduler />
               {user && <CreateEventDialog onEventCreated={fetchEvents} />}
             </div>
