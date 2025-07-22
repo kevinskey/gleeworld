@@ -58,7 +58,6 @@ export const CalendarViews = () => {
               <h3 className="text-sm font-medium text-muted-foreground">Member Controls</h3>
             </div>
             <div className="flex flex-wrap gap-2">
-              <CalendarExport />
               <AppointmentScheduler />
               {user && <CreateEventDialog onEventCreated={fetchEvents} />}
             </div>
@@ -130,6 +129,11 @@ export const CalendarViews = () => {
       
       {/* Appointments Section - Only visible to admins, super-admins, and secretaries */}
       {isAdmin && <AppointmentsList />}
+      
+      {/* Export Button */}
+      <div className="flex justify-center">
+        <CalendarExport />
+      </div>
     </div>
   );
 };
