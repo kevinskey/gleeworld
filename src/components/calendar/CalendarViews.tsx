@@ -29,9 +29,11 @@ export const CalendarViews = () => {
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
 
   // Filter events based on visible calendars
-  const filteredEvents = events.filter(event => 
-    visibleCalendarIds.length === 0 || visibleCalendarIds.includes(event.calendar_id)
-  );
+  // Show all events if no specific calendars are selected, or if the event's calendar is selected
+  const filteredEvents = events.filter(event => {
+    console.log('Filtering event:', event.title, 'Calendar ID:', event.calendar_id, 'Visible calendars:', visibleCalendarIds);
+    return visibleCalendarIds.length === 0 || visibleCalendarIds.includes(event.calendar_id);
+  });
 
   if (loading) {
     return (
