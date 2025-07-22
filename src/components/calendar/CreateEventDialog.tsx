@@ -6,10 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Sparkles, Send, Upload, X } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Plus, Sparkles, Send, Upload, X, Users, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useUsers } from "@/hooks/useUsers";
 import { AddressInput } from "@/components/shared/AddressInput";
 import { UserPicker } from "./UserPicker";
 
@@ -39,6 +41,16 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
   const [generatingDescription, setGeneratingDescription] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
+  
+  // Team member management state
+  interface TeamMember {
+    userId: string;
+    name: string;
+    email: string;
+    responsibility: string;
+  }
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [notificationMethod, setNotificationMethod] = useState<'email' | 'sms'>('email');
 
   const eventTypes = [
     { value: 'performance', label: 'Performance' },
@@ -102,6 +114,31 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
       console.error('Error uploading image:', error);
       return null;
     }
+  };
+
+  // Team member management functions
+  const { users, loading: usersLoading } = useUsers();
+  
+  const addTeamMember = (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (user && !teamMembers.find(tm => tm.userId === userId)) {
+      setTeamMembers(prev => [...prev, {
+        userId: user.id,
+        name: user.full_name || user.email,
+        email: user.email,
+        responsibility: ''
+      }]);
+    }
+  };
+
+  const removeTeamMember = (userId: string) => {
+    setTeamMembers(prev => prev.filter(tm => tm.userId !== userId));
+  };
+
+  const updateTeamMemberResponsibility = (userId: string, responsibility: string) => {
+    setTeamMembers(prev => prev.map(tm => 
+      tm.userId === userId ? { ...tm, responsibility } : tm
+    ));
   };
 
   const generateDescription = async () => {
@@ -199,6 +236,39 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
         }
       }
 
+      // Save team members to event_team_members table
+      if (teamMembers.length > 0) {
+        const teamMemberData = teamMembers.map(member => ({
+          event_id: newEvent.id,
+          user_id: member.userId,
+          role: member.responsibility || 'Team Member'
+        }));
+
+        const { error: teamError } = await supabase
+          .from('event_team_members')
+          .insert(teamMemberData);
+
+        if (teamError) {
+          console.error('Error saving team members:', teamError);
+        }
+
+        // Send notifications to team members
+        try {
+          await supabase.functions.invoke('send-event-notifications', {
+            body: {
+              eventId: newEvent.id,
+              eventTitle: formData.title,
+              eventDate: formData.start_date,
+              teamMembers: teamMembers,
+              notificationMethod: notificationMethod,
+              message: notificationMessage
+            }
+          });
+        } catch (notificationError) {
+          console.error('Error sending notifications:', notificationError);
+        }
+      }
+
       // Send notifications if users are selected
       if (selectedUserIds.length > 0) {
         try {
@@ -217,9 +287,10 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
         }
       }
 
+      const totalNotifications = teamMembers.length + selectedUserIds.length;
       toast({
         title: "Success",
-        description: `Event created successfully!${selectedUserIds.length > 0 ? ` Notifications sent to ${selectedUserIds.length} user(s).` : ''}`,
+        description: `Event created successfully!${totalNotifications > 0 ? ` Notifications sent to ${totalNotifications} user(s).` : ''}`,
       });
 
       setOpen(false);
@@ -237,6 +308,8 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
       });
       setSelectedUserIds([]);
       setNotificationMessage('');
+      setTeamMembers([]);
+      setNotificationMethod('email');
       setImageFile(null);
       setImagePreview('');
       onEventCreated();
@@ -459,22 +532,101 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
               </div>
             </div>
 
+            {/* Team Member Management Section */}
             <div className="space-y-4 border-t pt-4">
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
-                  <Send className="h-4 w-4" />
-                  Notify Users
+                  <Users className="h-4 w-4" />
+                  Event Team Members
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Select users to notify about this event
+                  Assign team members responsible for this event
                 </p>
-                <UserPicker
-                  selectedUserIds={selectedUserIds}
-                  onSelectionChange={setSelectedUserIds}
-                />
+                
+                {/* User Selection Dropdown */}
+                <Select onValueChange={addTeamMember}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a team member to add..." />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-40 overflow-y-auto z-50 bg-background border shadow-lg">
+                    {usersLoading ? (
+                      <SelectItem value="loading" disabled>Loading users...</SelectItem>
+                    ) : (
+                      users
+                        .filter(user => !teamMembers.find(tm => tm.userId === user.id))
+                        .map((user) => (
+                          <SelectItem key={user.id} value={user.id}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">
+                                {user.full_name || user.email}
+                              </span>
+                              {user.full_name && user.email && (
+                                <span className="text-sm text-muted-foreground">
+                                  {user.email}
+                                </span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
 
-              {selectedUserIds.length > 0 && (
+              {/* Team Members List */}
+              {teamMembers.length > 0 && (
+                <div className="space-y-3">
+                  <Label>Team Members & Responsibilities</Label>
+                  {teamMembers.map((member) => (
+                    <div key={member.userId} className="p-3 border rounded-lg space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{member.name}</p>
+                          <p className="text-sm text-muted-foreground">{member.email}</p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeTeamMember(member.userId)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <Input
+                        placeholder="Enter their responsibility/role..."
+                        value={member.responsibility}
+                        onChange={(e) => updateTeamMemberResponsibility(member.userId, e.target.value)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Notification Preferences */}
+              {teamMembers.length > 0 && (
+                <div className="space-y-3">
+                  <Label>Notification Method</Label>
+                  <RadioGroup 
+                    value={notificationMethod} 
+                    onValueChange={(value: 'email' | 'sms') => setNotificationMethod(value)}
+                    className="flex space-x-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="email" id="email" />
+                      <Label htmlFor="email">Email</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="sms" id="sms" />
+                      <Label htmlFor="sms">SMS/Text</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
+
+              {/* Custom Message */}
+              {teamMembers.length > 0 && (
                 <div className="space-y-2">
                   <Label htmlFor="notificationMessage">Custom Message (Optional)</Label>
                   <Textarea
@@ -482,10 +634,27 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
                     value={notificationMessage}
                     onChange={(e) => setNotificationMessage(e.target.value)}
                     placeholder="Add a personal message to the notification..."
-                    rows={2}
+                    rows={3}
                   />
                 </div>
               )}
+            </div>
+
+            {/* General User Notifications Section */}
+            <div className="space-y-4 border-t pt-4">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Send className="h-4 w-4" />
+                  Additional User Notifications
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Select additional users to notify about this event (not team members)
+                </p>
+                <UserPicker
+                  selectedUserIds={selectedUserIds}
+                  onSelectionChange={setSelectedUserIds}
+                />
+              </div>
             </div>
           </div>
 
