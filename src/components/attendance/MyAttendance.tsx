@@ -299,9 +299,9 @@ export const MyAttendance = () => {
                   <Calendar className="h-5 w-5" />
                   Recent Attendance Records
                 </h3>
-                <div className="space-y-3">
-                  {records.map(record => (
-                    <div key={record.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                <div className="max-h-96 overflow-y-auto space-y-3">
+                  {records.slice(0, 10).map(record => (
+                    <div key={record.id} className="flex items-center gap-4 p-3 border rounded-lg">
                       <div className="flex items-center gap-2">
                         {getStatusIcon(record.attendance_status)}
                         <Badge className={getStatusColor(record.attendance_status)}>
@@ -309,8 +309,8 @@ export const MyAttendance = () => {
                         </Badge>
                       </div>
 
-                      <div className="flex-1">
-                        <div className="font-medium">{record.gw_events.title}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{record.gw_events.title}</div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
@@ -333,7 +333,7 @@ export const MyAttendance = () => {
 
                       {record.notes && (
                         <div className="max-w-xs">
-                          <p className="text-sm text-muted-foreground italic">
+                          <p className="text-sm text-muted-foreground italic truncate">
                             "{record.notes}"
                           </p>
                         </div>
@@ -341,6 +341,11 @@ export const MyAttendance = () => {
                     </div>
                   ))}
                 </div>
+                {records.length > 10 && (
+                  <p className="text-sm text-muted-foreground mt-2 text-center">
+                    Showing 10 of {records.length} records
+                  </p>
+                )}
               </div>
             </div>
           )}
