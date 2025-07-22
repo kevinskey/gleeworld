@@ -110,6 +110,7 @@ export const ExcuseGenerator = () => {
   const [conflictAnalysis, setConflictAnalysis] = useState<ConflictAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSubmittingConflict, setIsSubmittingConflict] = useState(false);
+  const [isConflictWorksheetCollapsed, setIsConflictWorksheetCollapsed] = useState(true);
 
   const reasonOptions = [
     'Medical appointment',
@@ -680,7 +681,7 @@ export const ExcuseGenerator = () => {
         </Card>
       </Collapsible>
 
-      <Collapsible>
+      <Collapsible open={!isConflictWorksheetCollapsed} onOpenChange={(open) => setIsConflictWorksheetCollapsed(!open)}>
         <Card className="mb-6">
           <CollapsibleTrigger asChild>
             <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
@@ -689,7 +690,11 @@ export const ExcuseGenerator = () => {
                   <Send className="w-5 h-5" />
                   Class Conflict Worksheet
                 </CardTitle>
-                <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                {isConflictWorksheetCollapsed ? (
+                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                ) : (
+                  <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                )}
               </div>
             </CardHeader>
           </CollapsibleTrigger>
