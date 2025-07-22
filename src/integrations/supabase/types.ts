@@ -4769,24 +4769,30 @@ export type Database = {
       }
       user_preferences: {
         Row: {
+          calendar_controls_enabled: boolean
           created_at: string
           id: string
+          selected_calendars: string[] | null
           tooltip_delay: number
           tooltips_enabled: boolean
           updated_at: string
           user_id: string
         }
         Insert: {
+          calendar_controls_enabled?: boolean
           created_at?: string
           id?: string
+          selected_calendars?: string[] | null
           tooltip_delay?: number
           tooltips_enabled?: boolean
           updated_at?: string
           user_id: string
         }
         Update: {
+          calendar_controls_enabled?: boolean
           created_at?: string
           id?: string
+          selected_calendars?: string[] | null
           tooltip_delay?: number
           tooltips_enabled?: boolean
           updated_at?: string

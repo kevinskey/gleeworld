@@ -10,6 +10,7 @@ import { WeeklyCalendar } from "./WeeklyCalendar";
 import { CalendarExport } from "./CalendarExport";
 import { CalendarToggle } from "./CalendarToggle";
 import { CalendarManager } from "./CalendarManager";
+import { CalendarFilterStrip } from "./CalendarFilterStrip";
 import { CreateEventDialog } from "./CreateEventDialog";
 import { AppointmentScheduler } from "@/components/appointments/AppointmentScheduler";
 import { AppointmentsList } from "@/components/appointments/AppointmentsList";
@@ -49,6 +50,9 @@ export const CalendarViews = () => {
 
   return (
     <div className="space-y-4">
+      {/* Calendar Filter Strip */}
+      <CalendarFilterStrip onCalendarsChange={setVisibleCalendarIds} />
+      
       <Card className="glass-dashboard-card">
         <CardHeader className="pb-0 pt-2">
           <div className="space-y-3">

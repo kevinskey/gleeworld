@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Settings, Save, RefreshCw } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Settings, Save, RefreshCw, Calendar } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { CalendarControlsAdmin } from "./CalendarControlsAdmin";
 
 export const SystemSettings = () => {
   const [settings, setSettings] = useState({
@@ -54,111 +56,132 @@ export const SystemSettings = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Settings className="h-5 w-5" />
-          System Settings
-        </CardTitle>
-        <CardDescription>
-          Configure system-wide settings and preferences
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Notification Settings */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Notifications</h3>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="email-notifications">Email Notifications</Label>
-                <p className="text-sm text-gray-600">Send email notifications for important events</p>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            System Settings
+          </CardTitle>
+          <CardDescription>
+            Configure system-wide settings and preferences
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="general" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="general" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                General
+              </TabsTrigger>
+              <TabsTrigger value="calendar" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Calendar Controls
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="general" className="space-y-6 mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Notification Settings */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Notifications</h3>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="email-notifications">Email Notifications</Label>
+                      <p className="text-sm text-gray-600">Send email notifications for important events</p>
+                    </div>
+                    <Switch
+                      id="email-notifications"
+                      checked={settings.emailNotifications}
+                      onCheckedChange={(checked) => 
+                        setSettings(prev => ({ ...prev, emailNotifications: checked }))
+                      }
+                    />
+                  </div>
+                </div>
+
+                {/* System Settings */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">System</h3>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="auto-backup">Auto Backup</Label>
+                      <p className="text-sm text-gray-600">Automatically backup data daily</p>
+                    </div>
+                    <Switch
+                      id="auto-backup"
+                      checked={settings.autoBackup}
+                      onCheckedChange={(checked) => 
+                        setSettings(prev => ({ ...prev, autoBackup: checked }))
+                      }
+                    />
+                  </div>
+                </div>
+
+                {/* File Settings */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">File Upload</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="max-file-size">Max File Size (MB)</Label>
+                    <Input
+                      id="max-file-size"
+                      type="number"
+                      value={settings.maxFileSize}
+                      onChange={(e) => 
+                        setSettings(prev => ({ ...prev, maxFileSize: e.target.value }))
+                      }
+                      min="1"
+                      max="100"
+                    />
+                  </div>
+                </div>
+
+                {/* Security Settings */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Security</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="session-timeout">Session Timeout (minutes)</Label>
+                    <Input
+                      id="session-timeout"
+                      type="number"
+                      value={settings.sessionTimeout}
+                      onChange={(e) => 
+                        setSettings(prev => ({ ...prev, sessionTimeout: e.target.value }))
+                      }
+                      min="5"
+                      max="480"
+                    />
+                  </div>
+                </div>
               </div>
-              <Switch
-                id="email-notifications"
-                checked={settings.emailNotifications}
-                onCheckedChange={(checked) => 
-                  setSettings(prev => ({ ...prev, emailNotifications: checked }))
-                }
-              />
-            </div>
-          </div>
 
-          {/* System Settings */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">System</h3>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="auto-backup">Auto Backup</Label>
-                <p className="text-sm text-gray-600">Automatically backup data daily</p>
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-6 border-t">
+                <Button onClick={handleSave} disabled={loading}>
+                  {loading ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Settings
+                    </>
+                  )}
+                </Button>
+                <Button variant="outline" onClick={handleReset} disabled={loading}>
+                  Reset to Defaults
+                </Button>
               </div>
-              <Switch
-                id="auto-backup"
-                checked={settings.autoBackup}
-                onCheckedChange={(checked) => 
-                  setSettings(prev => ({ ...prev, autoBackup: checked }))
-                }
-              />
-            </div>
-          </div>
-
-          {/* File Settings */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">File Upload</h3>
-            <div className="space-y-2">
-              <Label htmlFor="max-file-size">Max File Size (MB)</Label>
-              <Input
-                id="max-file-size"
-                type="number"
-                value={settings.maxFileSize}
-                onChange={(e) => 
-                  setSettings(prev => ({ ...prev, maxFileSize: e.target.value }))
-                }
-                min="1"
-                max="100"
-              />
-            </div>
-          </div>
-
-          {/* Security Settings */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Security</h3>
-            <div className="space-y-2">
-              <Label htmlFor="session-timeout">Session Timeout (minutes)</Label>
-              <Input
-                id="session-timeout"
-                type="number"
-                value={settings.sessionTimeout}
-                onChange={(e) => 
-                  setSettings(prev => ({ ...prev, sessionTimeout: e.target.value }))
-                }
-                min="5"
-                max="480"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-3 pt-6 border-t">
-          <Button onClick={handleSave} disabled={loading}>
-            {loading ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                Save Settings
-              </>
-            )}
-          </Button>
-          <Button variant="outline" onClick={handleReset} disabled={loading}>
-            Reset to Defaults
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+            </TabsContent>
+            
+            <TabsContent value="calendar" className="mt-6">
+              <CalendarControlsAdmin />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
