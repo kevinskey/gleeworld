@@ -137,6 +137,11 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
           const isCurrentMonth = isSameMonth(day, currentDate);
           const isToday = isSameDay(day, new Date());
           
+          if (day.getDate() === 1) {
+            console.log('First day of month, total events available:', events.length);
+            console.log('Sample event dates:', events.slice(0, 3).map(e => e.start_date));
+          }
+          
           return (
             <div
               key={day.toString()}
