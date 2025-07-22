@@ -156,6 +156,7 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
               </div>
               <div className="space-y-0.5 md:space-y-1 mt-1">
                 {dayEvents.slice(0, isMobile ? 1 : 2).map(event => {
+                  console.log('Rendering event:', event.title, 'for day:', day.toDateString());
                   const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
                   const isSelected = (editingEvent?.id === event.id) || (selectedEvent?.id === event.id);
                   return (
