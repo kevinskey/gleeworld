@@ -1831,6 +1831,8 @@ export type Database = {
           description: string | null
           end_date: string | null
           event_type: string | null
+          external_id: string | null
+          external_source: string | null
           id: string
           image_url: string | null
           is_public: boolean | null
@@ -1851,6 +1853,8 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           event_type?: string | null
+          external_id?: string | null
+          external_source?: string | null
           id?: string
           image_url?: string | null
           is_public?: boolean | null
@@ -1871,6 +1875,8 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           event_type?: string | null
+          external_id?: string | null
+          external_source?: string | null
           id?: string
           image_url?: string | null
           is_public?: boolean | null
