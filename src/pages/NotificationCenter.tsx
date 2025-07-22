@@ -23,7 +23,7 @@ export default function NotificationCenter() {
       <div className="container mx-auto p-6 max-w-7xl">
 
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 mt-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 -mt-6">
           {/* Mobile dropdown */}
           <div className="md:hidden">
             <Select value={activeTab} onValueChange={setActiveTab}>
