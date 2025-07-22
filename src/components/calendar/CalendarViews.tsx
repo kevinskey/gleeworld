@@ -31,9 +31,10 @@ export const CalendarViews = () => {
   // Filter events based on visible calendars
   // Show all events if no specific calendars are selected, or if the event's calendar is selected
   const filteredEvents = events.filter(event => {
-    console.log('Filtering event:', event.title, 'Calendar ID:', event.calendar_id, 'Visible calendars:', visibleCalendarIds);
     return visibleCalendarIds.length === 0 || visibleCalendarIds.includes(event.calendar_id);
   });
+
+  console.log('Total events:', events.length, 'Filtered events:', filteredEvents.length, 'Filtered events:', filteredEvents.map(e => e.title));
 
   if (loading) {
     return (
