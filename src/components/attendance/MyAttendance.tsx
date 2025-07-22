@@ -301,39 +301,41 @@ export const MyAttendance = () => {
                 </h3>
                 <div className="max-h-96 overflow-y-auto space-y-3">
                   {records.slice(0, 10).map(record => (
-                    <div key={record.id} className="flex items-center gap-4 p-3 border rounded-lg">
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(record.attendance_status)}
-                        <Badge className={getStatusColor(record.attendance_status)}>
-                          {record.attendance_status.replace('_', ' ')}
-                        </Badge>
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{record.gw_events.title}</div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {format(new Date(record.gw_events.start_date), 'MMM dd, yyyy')}
-                          </span>
-                          <Badge variant="outline" className="text-xs">
-                            {record.gw_events.event_type}
+                    <div key={record.id} className="p-4 border rounded-lg space-y-3 animate-fade-in">
+                      {/* Header with status and date */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(record.attendance_status)}
+                          <Badge className={getStatusColor(record.attendance_status)}>
+                            {record.attendance_status.replace('_', ' ')}
                           </Badge>
+                        </div>
+                        <div className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {format(new Date(record.gw_events.start_date), 'MMM dd')}
                         </div>
                       </div>
 
-                      {record.check_in_time && (
-                        <div className="text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
+                      {/* Event title */}
+                      <div className="font-medium text-sm">{record.gw_events.title}</div>
+
+                      {/* Bottom row with event type and check-in time */}
+                      <div className="flex items-center justify-between gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          {record.gw_events.event_type}
+                        </Badge>
+                        {record.check_in_time && (
+                          <div className="text-xs text-muted-foreground flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             {format(new Date(record.check_in_time), 'h:mm a')}
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
 
+                      {/* Notes if present */}
                       {record.notes && (
-                        <div className="max-w-xs">
-                          <p className="text-sm text-muted-foreground italic truncate">
+                        <div className="pt-2 border-t">
+                          <p className="text-xs text-muted-foreground italic">
                             "{record.notes}"
                           </p>
                         </div>
