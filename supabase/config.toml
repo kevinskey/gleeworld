@@ -44,6 +44,9 @@ verify_jwt = false
 [functions.calendar-feed]
 verify_jwt = false
 
+[functions.sync-google-calendar]
+verify_jwt = true
+
 [storage]
 enabled = true
 port = 54326

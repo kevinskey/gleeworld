@@ -28,7 +28,7 @@ serve(async (req) => {
   }
 
   try {
-    const { calendarId, accessToken } = await req.json();
+    const { calendarId } = await req.json();
     console.log('Syncing Google Calendar:', calendarId);
 
     // Initialize Supabase client
@@ -36,12 +36,16 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch events from Google Calendar
+    // Fetch events from Google Calendar using API key
+    const apiKey = Deno.env.get('GOOGLE_CALENDAR_API_KEY');
+    if (!apiKey) {
+      throw new Error('Google Calendar API key not configured');
+    }
+
     const response = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?maxResults=100&singleEvents=true&orderBy=startTime`,
+      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${apiKey}&maxResults=100&singleEvents=true&orderBy=startTime`,
       {
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       }
