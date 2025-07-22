@@ -53,7 +53,7 @@ export const CalendarViews = () => {
       <Card className="glass-dashboard-card">
         <CardHeader className="pb-0 pt-2">
           {/* Member Controls */}
-          <div className="bg-muted/30 rounded-lg py-3 px-6 border border-border/50">
+          <div className="bg-muted/30 rounded-lg border border-border/50">
             <div className="flex items-center justify-between gap-2 mb-2">
               <h3 className="text-sm font-medium text-muted-foreground">Member Controls</h3>
             </div>
