@@ -81,6 +81,17 @@ export const CreateEventWithBudgetDialog = ({ onSuccess, triggerButton }: Create
     
     setLoading(true);
     try {
+      // Get default calendar for new events
+      const { data: defaultCalendar } = await supabase
+        .from('gw_calendars')
+        .select('id')
+        .eq('is_default', true)
+        .single();
+
+      if (!defaultCalendar) {
+        throw new Error('No default calendar found');
+      }
+
       // First create the event
       const { data: eventResult, error: eventError } = await supabase
         .from('gw_events')
@@ -92,6 +103,7 @@ export const CreateEventWithBudgetDialog = ({ onSuccess, triggerButton }: Create
           end_date: eventData.end_date || null,
           location: eventData.location,
           max_attendees: eventData.expected_headcount ? parseInt(eventData.expected_headcount) : null,
+          calendar_id: defaultCalendar.id,
           created_by: user.id,
           status: 'scheduled'
         })

@@ -19,11 +19,18 @@ export interface GleeWorldEvent {
   is_public: boolean | null;
   status: string | null;
   image_url?: string | null;
+  calendar_id: string;
   created_by: string | null;
   created_at: string | null;
   updated_at: string | null;
   // Add source to differentiate between events and appointments
   source?: 'event' | 'appointment';
+  // Calendar information from join
+  gw_calendars?: {
+    name: string;
+    color: string;
+    is_visible: boolean;
+  };
 }
 
 export const useGleeWorldEvents = () => {
@@ -38,10 +45,17 @@ export const useGleeWorldEvents = () => {
     try {
       setLoading(true);
       
-      // Fetch events from gw_events table
+      // Fetch events from gw_events table with calendar information
       let eventsQuery = supabase
         .from('gw_events')
-        .select('*')
+        .select(`
+          *,
+          gw_calendars (
+            name,
+            color,
+            is_visible
+          )
+        `)
         .gte('start_date', new Date().toISOString())
         .order('start_date', { ascending: true });
 
@@ -72,7 +86,13 @@ export const useGleeWorldEvents = () => {
         source: 'event' as const
       }));
 
-      // Transform appointments to match the interface
+      // Transform appointments to match the interface (assign to default calendar)
+      const { data: defaultCalendar } = await supabase
+        .from('gw_calendars')
+        .select('id')
+        .eq('is_default', true)
+        .single();
+
       const transformedAppointments: GleeWorldEvent[] = (appointmentsResult.data || []).map(appointment => ({
         id: appointment.id,
         title: appointment.title,
@@ -88,6 +108,7 @@ export const useGleeWorldEvents = () => {
         is_public: false,
         status: appointment.status,
         image_url: null,
+        calendar_id: defaultCalendar?.id || '',
         created_by: appointment.created_by,
         created_at: appointment.created_at,
         updated_at: appointment.updated_at,

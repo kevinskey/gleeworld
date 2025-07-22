@@ -166,9 +166,21 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
         status: 'scheduled'
       };
 
+      // Get default calendar
+      const { data: defaultCalendar } = await supabase
+        .from('gw_calendars')
+        .select('id')
+        .eq('is_default', true)
+        .single();
+
+      const eventDataWithCalendar = {
+        ...eventData,
+        calendar_id: defaultCalendar?.id || ''
+      };
+
       const { data: newEvent, error } = await supabase
         .from('gw_events')
-        .insert([eventData])
+        .insert([eventDataWithCalendar])
         .select()
         .single();
 

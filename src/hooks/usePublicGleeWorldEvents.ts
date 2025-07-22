@@ -17,9 +17,16 @@ export interface GleeWorldEvent {
   is_public: boolean | null;
   status: string | null;
   image_url?: string | null;
+  calendar_id: string;
   created_by: string | null;
   created_at: string | null;
   updated_at: string | null;
+  // Calendar information from join
+  gw_calendars?: {
+    name: string;
+    color: string;
+    is_visible: boolean;
+  };
 }
 
 export const usePublicGleeWorldEvents = () => {

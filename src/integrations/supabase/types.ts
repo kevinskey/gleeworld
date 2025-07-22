@@ -1600,6 +1600,42 @@ export type Database = {
           },
         ]
       }
+      gw_calendars: {
+        Row: {
+          color: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_default: boolean
+          is_visible: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          is_visible?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          is_visible?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_class_conflict_requests: {
         Row: {
           conflict_analysis: Json
@@ -1748,6 +1784,7 @@ export type Database = {
       gw_events: {
         Row: {
           address: string | null
+          calendar_id: string
           created_at: string | null
           created_by: string | null
           description: string | null
@@ -1767,6 +1804,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          calendar_id: string
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -1786,6 +1824,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          calendar_id?: string
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -1804,6 +1843,13 @@ export type Database = {
           venue_name?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "gw_events_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "gw_calendars"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "gw_events_created_by_fkey"
             columns: ["created_by"]
