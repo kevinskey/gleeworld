@@ -35,6 +35,7 @@ export const CalendarViews = () => {
   });
 
   console.log('Total events:', events.length, 'Filtered events:', filteredEvents.length, 'Filtered events:', filteredEvents.map(e => e.title));
+  console.log('visibleCalendarIds:', visibleCalendarIds);
 
   if (loading) {
     return (
