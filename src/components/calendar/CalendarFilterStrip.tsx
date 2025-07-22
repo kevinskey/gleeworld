@@ -100,10 +100,12 @@ export const CalendarFilterStrip = ({ onCalendarsChange }: CalendarFilterStripPr
     try {
       const { error } = await supabase
         .from('user_preferences')
-        .insert({
+        .upsert({
           user_id: user.id,
           calendar_controls_enabled: true,
           selected_calendars: []
+        }, { 
+          onConflict: 'user_id' 
         });
 
       if (error) throw error;
