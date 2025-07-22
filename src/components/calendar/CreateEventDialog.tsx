@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Plus, Sparkles, Send, Upload, X, Users, Trash2 } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Plus, Sparkles, Send, Upload, X, Users, Trash2, CalendarDays, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -51,6 +52,14 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
   }
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [notificationMethod, setNotificationMethod] = useState<'email' | 'sms'>('email');
+  
+  // Appointment scheduling state
+  const [requiresAppointments, setRequiresAppointments] = useState(false);
+  const [appointmentDate, setAppointmentDate] = useState<Date>();
+  const [appointmentTime, setAppointmentTime] = useState('');
+  const [appointmentDuration, setAppointmentDuration] = useState(30);
+  const [appointmentType, setAppointmentType] = useState('planning');
+  const [appointmentDescription, setAppointmentDescription] = useState('');
 
   const eventTypes = [
     { value: 'performance', label: 'Performance' },
@@ -269,6 +278,55 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
         }
       }
 
+      // Create appointments if required
+      if (requiresAppointments && appointmentDate && appointmentTime && teamMembers.length > 0) {
+        try {
+          const appointmentPromises = teamMembers.map(async (member, index) => {
+            // Stagger appointments by the duration + 5 min buffer
+            const appointmentDateTime = new Date(appointmentDate);
+            const [hours, minutes] = appointmentTime.split(':').map(Number);
+            appointmentDateTime.setHours(hours, minutes + (index * (appointmentDuration + 5)), 0, 0);
+
+            const appointmentData = {
+              title: `${formData.title} - ${member.responsibility || 'Team Planning'}`,
+              description: appointmentDescription || `Planning meeting for ${formData.title} with ${member.name}`,
+              client_name: member.name,
+              client_email: member.email,
+              client_phone: '',
+              appointment_date: appointmentDateTime.toISOString(),
+              duration_minutes: appointmentDuration,
+              appointment_type: appointmentType,
+              status: 'confirmed',
+              created_by: user.id,
+              assigned_to: member.userId
+            };
+
+            return supabase
+              .from('gw_appointments')
+              .insert(appointmentData)
+              .select()
+              .single();
+          });
+
+          const appointmentResults = await Promise.all(appointmentPromises);
+          const successfulAppointments = appointmentResults.filter(result => !result.error);
+          
+          if (successfulAppointments.length > 0) {
+            // Send appointment notifications
+            await supabase.functions.invoke('send-appointment-notification', {
+              body: {
+                appointments: successfulAppointments.map(result => result.data),
+                eventTitle: formData.title,
+                eventId: newEvent.id
+              }
+            });
+          }
+        } catch (appointmentError) {
+          console.error('Error creating appointments:', appointmentError);
+          // Don't fail event creation if appointments fail
+        }
+      }
+
       // Send notifications if users are selected
       if (selectedUserIds.length > 0) {
         try {
@@ -310,6 +368,12 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
       setNotificationMessage('');
       setTeamMembers([]);
       setNotificationMethod('email');
+      setRequiresAppointments(false);
+      setAppointmentDate(undefined);
+      setAppointmentTime('');
+      setAppointmentDuration(30);
+      setAppointmentType('planning');
+      setAppointmentDescription('');
       setImageFile(null);
       setImagePreview('');
       onEventCreated();
@@ -639,6 +703,119 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
                 </div>
               )}
             </div>
+
+            {/* Appointment Scheduling Section */}
+            {teamMembers.length > 0 && (
+              <div className="space-y-4 border-t pt-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="flex items-center gap-2">
+                        <CalendarDays className="h-4 w-4" />
+                        Schedule Appointments with Team
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Schedule individual planning meetings with team members
+                      </p>
+                    </div>
+                    <Switch
+                      checked={requiresAppointments}
+                      onCheckedChange={setRequiresAppointments}
+                    />
+                  </div>
+                </div>
+
+                {requiresAppointments && (
+                  <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Appointment Date */}
+                      <div className="space-y-2">
+                        <Label>Appointment Date</Label>
+                        <Calendar
+                          mode="single"
+                          selected={appointmentDate}
+                          onSelect={setAppointmentDate}
+                          className="rounded-md border w-full"
+                          disabled={(date) => date < new Date()}
+                        />
+                      </div>
+
+                      {/* Appointment Details */}
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="appointmentTime">Time</Label>
+                          <Input
+                            id="appointmentTime"
+                            type="time"
+                            value={appointmentTime}
+                            onChange={(e) => setAppointmentTime(e.target.value)}
+                            placeholder="Select time"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="appointmentDuration">Duration (minutes)</Label>
+                          <Select 
+                            value={appointmentDuration.toString()} 
+                            onValueChange={(value) => setAppointmentDuration(parseInt(value))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="15">15 minutes</SelectItem>
+                              <SelectItem value="30">30 minutes</SelectItem>
+                              <SelectItem value="45">45 minutes</SelectItem>
+                              <SelectItem value="60">1 hour</SelectItem>
+                              <SelectItem value="90">1.5 hours</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="appointmentType">Appointment Type</Label>
+                          <Select value={appointmentType} onValueChange={setAppointmentType}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="planning">Event Planning</SelectItem>
+                              <SelectItem value="coordination">Coordination Meeting</SelectItem>
+                              <SelectItem value="briefing">Role Briefing</SelectItem>
+                              <SelectItem value="preparation">Event Preparation</SelectItem>
+                              <SelectItem value="general">General Discussion</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="appointmentDescription">Meeting Description</Label>
+                          <Textarea
+                            id="appointmentDescription"
+                            value={appointmentDescription}
+                            onChange={(e) => setAppointmentDescription(e.target.value)}
+                            placeholder="Describe the purpose of these appointments..."
+                            rows={3}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {appointmentDate && appointmentTime && (
+                      <div className="p-3 bg-primary/10 rounded-lg">
+                        <p className="text-sm font-medium flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          Appointments will be scheduled for:
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {appointmentDate.toLocaleDateString()} at {appointmentTime} ({appointmentDuration} min each) with {teamMembers.length} team member{teamMembers.length > 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* General User Notifications Section */}
             <div className="space-y-4 border-t pt-4">
