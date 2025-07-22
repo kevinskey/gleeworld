@@ -113,7 +113,7 @@ export const AttendanceDashboard = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-24">
       {/* Excuse Generator at the top */}
       <ExcuseGenerator />
 
@@ -172,6 +172,59 @@ export const AttendanceDashboard = () => {
             )}
           </div>
         </Tabs>
+      </div>
+
+      {/* Fixed Bottom Navigation */}
+      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+        <div className="bg-white/90 backdrop-blur-md border border-white/30 rounded-full shadow-lg px-2 py-2">
+          <div className={`flex gap-2 ${canTakeAttendance && isAdmin ? 'grid-cols-3' : canTakeAttendance || isAdmin ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            <Button
+              onClick={() => setActiveTab('overview')}
+              variant={activeTab === 'overview' ? 'default' : 'ghost'}
+              size="sm"
+              className={`flex items-center gap-2 rounded-full transition-all duration-200 ${
+                activeTab === 'overview' 
+                  ? 'bg-blue-600 text-white shadow-md' 
+                  : 'text-slate-600 hover:bg-blue-50'
+              }`}
+            >
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">My Attendance</span>
+            </Button>
+            
+            {canTakeAttendance && (
+              <Button
+                onClick={() => setActiveTab('take-attendance')}
+                variant={activeTab === 'take-attendance' ? 'default' : 'ghost'}
+                size="sm"
+                className={`flex items-center gap-2 rounded-full transition-all duration-200 ${
+                  activeTab === 'take-attendance' 
+                    ? 'bg-blue-600 text-white shadow-md' 
+                    : 'text-slate-600 hover:bg-blue-50'
+                }`}
+              >
+                <ClipboardCheck className="h-4 w-4" />
+                <span className="hidden sm:inline">Take Attendance</span>
+              </Button>
+            )}
+            
+            {isAdmin && (
+              <Button
+                onClick={() => setActiveTab('reports')}
+                variant={activeTab === 'reports' ? 'default' : 'ghost'}
+                size="sm"
+                className={`flex items-center gap-2 rounded-full transition-all duration-200 ${
+                  activeTab === 'reports' 
+                    ? 'bg-blue-600 text-white shadow-md' 
+                    : 'text-slate-600 hover:bg-blue-50'
+                }`}
+              >
+                <BarChart3 className="h-4 w-4" />
+                <span className="hidden sm:inline">Reports</span>
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
