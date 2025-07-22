@@ -268,10 +268,9 @@ export const AppointmentScheduler = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="gap-1 text-xs whitespace-nowrap w-full px-2">
-          <CalendarIcon className="h-3 w-3" />
-          <span className="hidden xs:inline">Schedule Appointment</span>
-          <span className="xs:hidden">Schedule</span>
+        <Button size="sm" className="gap-1 text-xs w-full px-1 min-w-0">
+          <CalendarIcon className="h-3 w-3 flex-shrink-0" />
+          <span className="truncate">Schedule</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
