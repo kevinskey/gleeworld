@@ -541,18 +541,18 @@ export const ExcuseGenerator = () => {
   return (
     <>
       <Collapsible open={!isCollapsed} onOpenChange={(open) => setIsCollapsed(!open)}>
-        <Card className="mb-6">
+        <Card className="mb-6 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 border-0">
           <CollapsibleTrigger asChild>
-            <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+            <CardHeader className="cursor-pointer hover:bg-white/10 transition-colors">
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-white">
                   <Send className="w-5 h-5" />
                   Single Excuse Generator
                 </CardTitle>
                 {isCollapsed ? (
-                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                  <ChevronDown className="w-5 h-5 text-white/70" />
                 ) : (
-                  <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                  <ChevronUp className="w-5 h-5 text-white/70" />
                 )}
               </div>
             </CardHeader>
@@ -682,18 +682,18 @@ export const ExcuseGenerator = () => {
       </Collapsible>
 
       <Collapsible open={!isConflictWorksheetCollapsed} onOpenChange={(open) => setIsConflictWorksheetCollapsed(!open)}>
-        <Card className="mb-6">
+        <Card className="mb-6 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 border-0">
           <CollapsibleTrigger asChild>
-            <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+            <CardHeader className="cursor-pointer hover:bg-white/10 transition-colors">
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-white">
                   <Send className="w-5 h-5" />
                   Class Conflict Worksheet
                 </CardTitle>
                 {isConflictWorksheetCollapsed ? (
-                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                  <ChevronDown className="w-5 h-5 text-white/70" />
                 ) : (
-                  <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                  <ChevronUp className="w-5 h-5 text-white/70" />
                 )}
               </div>
             </CardHeader>
