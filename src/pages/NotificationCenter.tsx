@@ -55,7 +55,7 @@ export default function NotificationCenter() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer p-3" onClick={() => setActiveTab('mass-email')}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-                  <CardTitle className="text-sm font-medium">Mass Email</CardTitle>
+                  <CardTitle className="text-xs font-normal">Mass Email</CardTitle>
                   <Mail className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -68,7 +68,7 @@ export default function NotificationCenter() {
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer p-3" onClick={() => setActiveTab('sms')}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-                  <CardTitle className="text-sm font-medium">SMS Center</CardTitle>
+                  <CardTitle className="text-xs font-normal">SMS Center</CardTitle>
                   <MessageSquare className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -81,7 +81,7 @@ export default function NotificationCenter() {
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer p-3" onClick={() => setActiveTab('communications')}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-                  <CardTitle className="text-sm font-medium">Member Communications</CardTitle>
+                  <CardTitle className="text-xs font-normal">Member Communications</CardTitle>
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -94,7 +94,7 @@ export default function NotificationCenter() {
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer p-3" onClick={() => setActiveTab('newsletter')}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-                  <CardTitle className="text-sm font-medium">Newsletter</CardTitle>
+                  <CardTitle className="text-xs font-normal">Newsletter</CardTitle>
                   <FileText className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -107,7 +107,7 @@ export default function NotificationCenter() {
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer p-3" onClick={() => setActiveTab('public-forms')}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-                  <CardTitle className="text-sm font-medium">Public Forms</CardTitle>
+                  <CardTitle className="text-xs font-normal">Public Forms</CardTitle>
                   <Bell className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -120,7 +120,7 @@ export default function NotificationCenter() {
 
               <Card className="hover:shadow-lg transition-shadow p-3">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-                  <CardTitle className="text-sm font-medium">Integrations</CardTitle>
+                  <CardTitle className="text-xs font-normal">Integrations</CardTitle>
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
