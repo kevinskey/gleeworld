@@ -435,8 +435,8 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
+        <Button size="sm" className="gap-1 text-xs whitespace-nowrap">
+          <Plus className="h-3 w-3" />
           Add Event
         </Button>
       </DialogTrigger>
