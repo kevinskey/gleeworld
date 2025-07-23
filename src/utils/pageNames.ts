@@ -30,7 +30,9 @@ export const PAGE_NAMES: Record<string, string> = {
   '/music-library': 'Music Library',
   '/payments': 'Payments',
   '/budget-approvals': 'Budget Approvals',
-  '/budgets': 'Budget Management'
+  '/budgets': 'Budget Management',
+  '/tour-manager': 'Tour Manager',
+  '/treasurer': 'Treasurer Dashboard'
 };
 
 export const getPageName = (pathname: string): string => {

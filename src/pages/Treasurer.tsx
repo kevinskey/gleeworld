@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DollarSign, FileText, Users, BookOpen } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { DollarSign, FileText, Users, BookOpen, ArrowLeft, Calculator, TrendingUp, Receipt } from 'lucide-react';
 import { MemberDuesRegister } from '@/components/treasurer/MemberDuesRegister';
 import { MerchandiseIncomeRegister } from '@/components/treasurer/MerchandiseIncomeRegister';
 import { PerformanceStipendsRegister } from '@/components/treasurer/PerformanceStipendsRegister';
@@ -12,11 +14,43 @@ const Treasurer = () => {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-        <DollarSign className="h-8 w-8 text-primary" />
-        <div>
-          <h1 className="text-3xl font-bold">Treasurer Dashboard</h1>
-          <p className="text-muted-foreground">Manage financial records and registers</p>
+      {/* Navigation Header */}
+      <div className="flex items-center justify-between bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border shadow-sm">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/dashboard" className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Dashboard
+            </Link>
+          </Button>
+          <div className="h-6 w-px bg-border"></div>
+          <div className="flex items-center gap-3">
+            <DollarSign className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-2xl font-bold">Treasurer Dashboard</h1>
+              <p className="text-sm text-muted-foreground">Manage financial records and registers</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/budgets" className="flex items-center gap-2">
+              <Calculator className="h-4 w-4" />
+              Budgets
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/accounting" className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Accounting
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/payments" className="flex items-center gap-2">
+              <Receipt className="h-4 w-4" />
+              Payments
+            </Link>
+          </Button>
         </div>
       </div>
 

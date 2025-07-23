@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import { 
   MapPin, 
   Mail, 
@@ -9,7 +11,11 @@ import {
   Calendar, 
   Route,
   Users,
-  CheckCircle
+  CheckCircle,
+  ArrowLeft,
+  Settings,
+  Home,
+  LayoutDashboard
 } from 'lucide-react';
 import { PerformanceRequestsList } from '@/components/tour-manager/PerformanceRequestsList';
 import { RequestTracker } from '@/components/tour-manager/RequestTracker';
@@ -23,11 +29,43 @@ const TourManager = () => {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-        <Route className="h-8 w-8 text-primary" />
-        <div>
-          <h1 className="text-3xl font-bold">Tour Manager</h1>
-          <p className="text-muted-foreground">Manage performance requests, tours, and payments</p>
+      {/* Navigation Header */}
+      <div className="flex items-center justify-between bg-gradient-to-r from-slate-50 to-blue-50 p-4 rounded-lg border shadow-sm">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/dashboard" className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Dashboard
+            </Link>
+          </Button>
+          <div className="h-6 w-px bg-border"></div>
+          <div className="flex items-center gap-3">
+            <Route className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-2xl font-bold">Tour Manager</h1>
+              <p className="text-sm text-muted-foreground">Manage performance requests, tours, and payments</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/calendar" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Calendar
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/events" className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4" />
+              Events
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/contracts" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Contracts
+            </Link>
+          </Button>
         </div>
       </div>
 
