@@ -6,9 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Save, Trash2, Eye, EyeOff, ExternalLink, Edit, ChevronDown, ChevronUp } from "lucide-react";
+import { Upload, Save, Trash2, Eye, EyeOff, ExternalLink, Edit } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -50,13 +49,6 @@ export const HeroManagement = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  
-  // Collapsible states
-  const [isEditWindowOpen, setIsEditWindowOpen] = useState(true);
-  const [isContentSectionOpen, setIsContentSectionOpen] = useState(true);
-  const [isImagesSectionOpen, setIsImagesSectionOpen] = useState(true);
-  const [isSettingsSectionOpen, setIsSettingsSectionOpen] = useState(true);
-  
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -382,477 +374,387 @@ export const HeroManagement = () => {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header Card with Dropdown */}
-      <Collapsible open={isEditWindowOpen} onOpenChange={setIsEditWindowOpen}>
-        <Card className="border-2 border-primary/20">
-          <CollapsibleTrigger asChild>
-            <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 cursor-pointer hover:from-primary/10 hover:to-primary/15 transition-all">
-              <CardTitle className="text-2xl flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${editingId ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
-                    {editingId ? '✏️' : '➕'}
-                  </div>
-                  {editingId ? "Edit Hero Slide" : "Create New Hero Slide"}
-                </div>
-                {isEditWindowOpen ? (
-                  <ChevronUp className="h-6 w-6 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-6 w-6 text-muted-foreground" />
-                )}
+    <div className="space-y-6">
+      {/* Header */}
+      <Card className="border-2 border-primary/20">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10">
+          <CardTitle className="text-xl md:text-2xl flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${editingId ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+              {editingId ? '✏️' : '➕'}
+            </div>
+            <span className="hidden sm:inline">{editingId ? "Edit Hero Slide" : "Create New Hero Slide"}</span>
+            <span className="sm:hidden">{editingId ? "Edit Slide" : "New Slide"}</span>
+          </CardTitle>
+        </CardHeader>
+      </Card>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        {/* Content Area */}
+        <div className="lg:col-span-3 space-y-4">
+          {/* Content & Text */}
+          <Card className="shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <div className="p-1 rounded bg-blue-100 text-blue-700 text-sm">📝</div>
+                Content & Text
               </CardTitle>
             </CardHeader>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="border-t bg-card">
-              <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 p-6">
-                {/* Combined Edit Window */}
-                <div className="xl:col-span-3">
-                  <Card className="shadow-md">
-                    <CardHeader className="bg-muted/50 border-b">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <div className="p-1.5 rounded bg-blue-100 text-blue-700">✏️</div>
-                        Form Fields
-                      </CardTitle>
-                    </CardHeader>
-                  <CardContent className="space-y-8 pt-6">
-                  <Collapsible open={isContentSectionOpen} onOpenChange={setIsContentSectionOpen}>
-                    <div className="space-y-4">
-                      <CollapsibleTrigger asChild>
-                        <div className="flex items-center justify-between pb-2 border-b cursor-pointer hover:bg-muted/30 p-2 rounded transition-colors">
-                          <div className="flex items-center gap-2">
-                            <div className="p-1.5 rounded bg-blue-100 text-blue-700">📝</div>
-                            <h3 className="text-lg font-semibold">Content & Text</h3>
-                          </div>
-                          {isContentSectionOpen ? (
-                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </div>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="title" className="text-sm font-medium">Title</Label>
-                            <Input
-                              id="title"
-                              value={formData.title}
-                              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                              placeholder="Enter slide title..."
-                              className="border-2 focus:border-primary"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="button_text" className="text-sm font-medium">Button Text</Label>
-                            <Input
-                              id="button_text"
-                              value={formData.button_text}
-                              onChange={(e) => setFormData(prev => ({ ...prev, button_text: e.target.value }))}
-                              placeholder="Enter button text..."
-                              className="border-2 focus:border-primary"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="description" className="text-sm font-medium">Description</Label>
-                          <Textarea
-                            id="description"
-                            value={formData.description}
-                            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                            placeholder="Enter slide description..."
-                            rows={3}
-                            className="border-2 focus:border-primary resize-none"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="link_url" className="text-sm font-medium">Link URL</Label>
-                          <Input
-                            id="link_url"
-                            value={formData.link_url}
-                            onChange={(e) => setFormData(prev => ({ ...prev, link_url: e.target.value }))}
-                            placeholder="https://example.com"
-                            className="border-2 focus:border-primary"
-                          />
-                        </div>
-                      </CollapsibleContent>
-                    </div>
-                  </Collapsible>
-
-                  {/* Images Section */}
-                  <Collapsible open={isImagesSectionOpen} onOpenChange={setIsImagesSectionOpen}>
-                    <div className="space-y-4">
-                      <CollapsibleTrigger asChild>
-                        <div className="flex items-center justify-between pb-2 border-b cursor-pointer hover:bg-muted/30 p-2 rounded transition-colors">
-                          <div className="flex items-center gap-2">
-                            <div className="p-1.5 rounded bg-purple-100 text-purple-700">🖼️</div>
-                            <h3 className="text-lg font-semibold">Images</h3>
-                          </div>
-                          {isImagesSectionOpen ? (
-                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </div>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                          {/* Desktop Image */}
-                          <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border-2 border-blue-200">
-                            <div className="flex items-center gap-2 mb-3">
-                              <div className="p-1 rounded bg-blue-500 text-white text-xs font-bold">🖥️</div>
-                              <Label className="text-sm font-semibold text-blue-800">Desktop *</Label>
-                            </div>
-                            <div className="space-y-2">
-                              <Input
-                                id="image_url"
-                                value={formData.image_url}
-                                onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-                                placeholder="Image URL"
-                                className="border-2 border-blue-300 focus:border-blue-500"
-                              />
-                              <div className="relative">
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => handleImageUpload(e, 'desktop')}
-                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                />
-                                <Button variant="outline" className="w-full border-2 border-blue-300 hover:bg-blue-100">
-                                  <Upload className="h-4 w-4 mr-2" />
-                                  Upload
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Mobile Image */}
-                          <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border-2 border-green-200">
-                            <div className="flex items-center gap-2 mb-3">
-                              <div className="p-1 rounded bg-green-500 text-white text-xs font-bold">📱</div>
-                              <Label className="text-sm font-semibold text-green-800">Mobile</Label>
-                            </div>
-                            <div className="space-y-2">
-                              <Input
-                                id="mobile_image_url"
-                                value={formData.mobile_image_url}
-                                onChange={(e) => setFormData(prev => ({ ...prev, mobile_image_url: e.target.value }))}
-                                placeholder="Image URL"
-                                className="border-2 border-green-300 focus:border-green-500"
-                              />
-                              <div className="relative">
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => handleImageUpload(e, 'mobile')}
-                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                />
-                                <Button variant="outline" className="w-full border-2 border-green-300 hover:bg-green-100">
-                                  <Upload className="h-4 w-4 mr-2" />
-                                  Upload
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* iPad Image */}
-                          <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border-2 border-purple-200">
-                            <div className="flex items-center gap-2 mb-3">
-                              <div className="p-1 rounded bg-purple-500 text-white text-xs font-bold">📄</div>
-                              <Label className="text-sm font-semibold text-purple-800">iPad</Label>
-                            </div>
-                            <div className="space-y-2">
-                              <Input
-                                id="ipad_image_url"
-                                value={formData.ipad_image_url}
-                                onChange={(e) => setFormData(prev => ({ ...prev, ipad_image_url: e.target.value }))}
-                                placeholder="Image URL"
-                                className="border-2 border-purple-300 focus:border-purple-500"
-                              />
-                              <div className="relative">
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => handleImageUpload(e, 'ipad')}
-                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                />
-                                <Button variant="outline" className="w-full border-2 border-purple-300 hover:bg-purple-100">
-                                  <Upload className="h-4 w-4 mr-2" />
-                                  Upload
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </CollapsibleContent>
-                    </div>
-                  </Collapsible>
-
-                  {/* Slide Settings Section */}
-                  <Collapsible open={isSettingsSectionOpen} onOpenChange={setIsSettingsSectionOpen}>
-                    <div className="space-y-6">
-                      <CollapsibleTrigger asChild>
-                        <div className="flex items-center justify-between pb-2 border-b cursor-pointer hover:bg-muted/30 p-2 rounded transition-colors">
-                          <div className="flex items-center gap-2">
-                            <div className="p-1.5 rounded bg-orange-100 text-orange-700">⚙️</div>
-                            <h3 className="text-lg font-semibold">Slide Settings</h3>
-                          </div>
-                          {isSettingsSectionOpen ? (
-                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </div>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="space-y-6">
-                        {/* Basic Settings */}
-                        <div className="space-y-4">
-                          <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Basic Settings</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-3">
-                              <Label className="text-sm font-medium">Display Order: {formData.display_order}</Label>
-                              <Slider
-                                value={[formData.display_order]}
-                                onValueChange={(value) => setFormData(prev => ({ ...prev, display_order: value[0] }))}
-                                min={0}
-                                max={10}
-                                step={1}
-                                className="w-full"
-                              />
-                              <div className="flex justify-between text-xs text-muted-foreground">
-                                <span>First (0)</span>
-                                <span>Last (10)</span>
-                              </div>
-                            </div>
-                            <div className="space-y-3">
-                              <Label className="text-sm font-medium">Duration: {formData.slide_duration_seconds}s</Label>
-                              <Slider
-                                value={[formData.slide_duration_seconds]}
-                                onValueChange={(value) => setFormData(prev => ({ ...prev, slide_duration_seconds: value[0] }))}
-                                min={1}
-                                max={15}
-                                step={1}
-                                className="w-full"
-                              />
-                              <div className="flex justify-between text-xs text-muted-foreground">
-                                <span>1 sec</span>
-                                <span>15 sec</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg border">
-                            <Switch
-                              id="is_active"
-                              checked={formData.is_active}
-                              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
-                            />
-                            <Label htmlFor="is_active" className="text-sm font-medium">Active Slide</Label>
-                          </div>
-                        </div>
-
-                        {/* Text Positioning */}
-                        <div className="space-y-4">
-                          <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Text Positioning</h4>
-                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {/* Title Settings */}
-                            <div className="space-y-3">
-                              <Label className="text-sm font-medium text-cyan-700">Title Settings</Label>
-                              <div className="space-y-2">
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">Horizontal</Label>
-                                    <Select 
-                                      value={formData.title_position_horizontal} 
-                                      onValueChange={(value) => setFormData(prev => ({ ...prev, title_position_horizontal: value }))}
-                                    >
-                                      <SelectTrigger className="border-2 focus:border-primary h-8">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent className="bg-background border shadow-md z-50">
-                                        <SelectItem value="left">Left</SelectItem>
-                                        <SelectItem value="center">Center</SelectItem>
-                                        <SelectItem value="right">Right</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">Vertical</Label>
-                                    <Select 
-                                      value={formData.title_position_vertical} 
-                                      onValueChange={(value) => setFormData(prev => ({ ...prev, title_position_vertical: value }))}
-                                    >
-                                      <SelectTrigger className="border-2 focus:border-primary h-8">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent className="bg-background border shadow-md z-50">
-                                        <SelectItem value="top">Top</SelectItem>
-                                        <SelectItem value="middle">Middle</SelectItem>
-                                        <SelectItem value="bottom">Bottom</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                </div>
-                                <div className="space-y-1">
-                                  <Label className="text-xs">Size</Label>
-                                  <Select 
-                                    value={formData.title_size} 
-                                    onValueChange={(value) => setFormData(prev => ({ ...prev, title_size: value }))}
-                                  >
-                                    <SelectTrigger className="border-2 focus:border-primary h-8">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-background border shadow-md z-50">
-                                      <SelectItem value="small">Small</SelectItem>
-                                      <SelectItem value="medium">Medium</SelectItem>
-                                      <SelectItem value="large">Large</SelectItem>
-                                      <SelectItem value="xl">Extra Large</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Description Settings */}
-                            <div className="space-y-3">
-                              <Label className="text-sm font-medium text-teal-700">Description Settings</Label>
-                              <div className="space-y-2">
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">Horizontal</Label>
-                                    <Select 
-                                      value={formData.description_position_horizontal} 
-                                      onValueChange={(value) => setFormData(prev => ({ ...prev, description_position_horizontal: value }))}
-                                    >
-                                      <SelectTrigger className="border-2 focus:border-primary h-8">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent className="bg-background border shadow-md z-50">
-                                        <SelectItem value="left">Left</SelectItem>
-                                        <SelectItem value="center">Center</SelectItem>
-                                        <SelectItem value="right">Right</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">Vertical</Label>
-                                    <Select 
-                                      value={formData.description_position_vertical} 
-                                      onValueChange={(value) => setFormData(prev => ({ ...prev, description_position_vertical: value }))}
-                                    >
-                                      <SelectTrigger className="border-2 focus:border-primary h-8">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent className="bg-background border shadow-md z-50">
-                                        <SelectItem value="top">Top</SelectItem>
-                                        <SelectItem value="middle">Middle</SelectItem>
-                                        <SelectItem value="bottom">Bottom</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                </div>
-                                <div className="space-y-1">
-                                  <Label className="text-xs">Size</Label>
-                                  <Select 
-                                    value={formData.description_size} 
-                                    onValueChange={(value) => setFormData(prev => ({ ...prev, description_size: value }))}
-                                  >
-                                    <SelectTrigger className="border-2 focus:border-primary h-8">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-background border shadow-md z-50">
-                                      <SelectItem value="small">Small</SelectItem>
-                                      <SelectItem value="medium">Medium</SelectItem>
-                                      <SelectItem value="large">Large</SelectItem>
-                                      <SelectItem value="xl">Extra Large</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Action Button */}
-                        <div className="space-y-4">
-                          <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Action Button</h4>
-                          <div className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg border">
-                            <Switch
-                              id="action_button_enabled"
-                              checked={formData.action_button_enabled}
-                              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, action_button_enabled: checked }))}
-                            />
-                            <Label htmlFor="action_button_enabled" className="text-sm font-medium">Enable Action Button</Label>
-                          </div>
-                          
-                          {formData.action_button_enabled && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-red-50 rounded-lg border border-red-200">
-                              <div className="space-y-2">
-                                <Label htmlFor="action_button_text" className="text-sm font-medium">Button Text</Label>
-                                <Input
-                                  id="action_button_text"
-                                  value={formData.action_button_text}
-                                  onChange={(e) => setFormData(prev => ({ ...prev, action_button_text: e.target.value }))}
-                                  placeholder="Button text"
-                                  className="border-2 border-red-300 focus:border-red-500"
-                                />
-                              </div>
-                              
-                              <div className="space-y-2">
-                                <Label htmlFor="action_button_url" className="text-sm font-medium">Button URL</Label>
-                                <Input
-                                  id="action_button_url"
-                                  value={formData.action_button_url}
-                                  onChange={(e) => setFormData(prev => ({ ...prev, action_button_url: e.target.value }))}
-                                  placeholder="https://example.com"
-                                  className="border-2 border-red-300 focus:border-red-500"
-                                />
-                              </div>
-                            </div>
-                          )}
-                         </div>
-                       </CollapsibleContent>
-                     </div>
-                   </Collapsible>
-                    </CardContent>
-                  </Card>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="title" className="text-sm">Title</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Slide title"
+                    className="h-9"
+                  />
                 </div>
-
-                {/* Right Column - Save Actions */}
-                <div className="space-y-6">
-                  <Card className="shadow-md border-2 border-primary/30">
-                    <CardContent className="pt-6">
-                      <div className="space-y-3">
-                        <Button 
-                          onClick={handleSave} 
-                          disabled={saving}
-                          className="w-full h-12 text-lg font-semibold"
-                          size="lg"
-                        >
-                          <Save className="w-5 h-5 mr-2" />
-                          {saving ? "Saving..." : editingId ? "Update Slide" : "Create Slide"}
-                        </Button>
-                        {editingId && (
-                          <Button 
-                            variant="outline" 
-                            onClick={resetForm}
-                            className="w-full h-10 border-2"
-                          >
-                            Cancel
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                <div className="space-y-2">
+                  <Label htmlFor="button_text" className="text-sm">Button Text</Label>
+                  <Input
+                    id="button_text"
+                    value={formData.button_text}
+                    onChange={(e) => setFormData(prev => ({ ...prev, button_text: e.target.value }))}
+                    placeholder="Button text"
+                    className="h-9"
+                  />
                 </div>
               </div>
-            </div>
-          </CollapsibleContent>
-        </Card>
-      </Collapsible>
+              <div className="space-y-2">
+                <Label htmlFor="description" className="text-sm">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Description"
+                  rows={2}
+                  className="resize-none"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="link_url" className="text-sm">Link URL</Label>
+                <Input
+                  id="link_url"
+                  value={formData.link_url}
+                  onChange={(e) => setFormData(prev => ({ ...prev, link_url: e.target.value }))}
+                  placeholder="https://example.com"
+                  className="h-9"
+                />
+              </div>
+            </CardContent>
+          </Card>
 
+          {/* Images */}
+          <Card className="shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <div className="p-1 rounded bg-purple-100 text-purple-700 text-sm">🖼️</div>
+                Images
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {/* Desktop */}
+                <div className="p-3 bg-blue-50 rounded border border-blue-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-0.5 rounded bg-blue-500 text-white text-xs">🖥️</div>
+                    <Label className="text-xs font-medium text-blue-800">Desktop *</Label>
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      value={formData.image_url}
+                      onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
+                      placeholder="Image URL"
+                      className="h-8 text-xs"
+                    />
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, 'desktop')}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <Button variant="outline" size="sm" className="w-full h-7 text-xs">
+                        <Upload className="h-3 w-3 mr-1" />
+                        Upload
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mobile */}
+                <div className="p-3 bg-green-50 rounded border border-green-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-0.5 rounded bg-green-500 text-white text-xs">📱</div>
+                    <Label className="text-xs font-medium text-green-800">Mobile</Label>
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      value={formData.mobile_image_url}
+                      onChange={(e) => setFormData(prev => ({ ...prev, mobile_image_url: e.target.value }))}
+                      placeholder="Image URL"
+                      className="h-8 text-xs"
+                    />
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, 'mobile')}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <Button variant="outline" size="sm" className="w-full h-7 text-xs">
+                        <Upload className="h-3 w-3 mr-1" />
+                        Upload
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* iPad */}
+                <div className="p-3 bg-purple-50 rounded border border-purple-200 sm:col-span-2 lg:col-span-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-0.5 rounded bg-purple-500 text-white text-xs">📄</div>
+                    <Label className="text-xs font-medium text-purple-800">iPad</Label>
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      value={formData.ipad_image_url}
+                      onChange={(e) => setFormData(prev => ({ ...prev, ipad_image_url: e.target.value }))}
+                      placeholder="Image URL"
+                      className="h-8 text-xs"
+                    />
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, 'ipad')}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <Button variant="outline" size="sm" className="w-full h-7 text-xs">
+                        <Upload className="h-3 w-3 mr-1" />
+                        Upload
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Settings Cockpit */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-4 space-y-4">
+            {/* Quick Actions */}
+            <Card className="shadow-sm border-2 border-primary/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Save className="h-4 w-4" />
+                  Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button 
+                  onClick={handleSave} 
+                  disabled={saving}
+                  className="w-full h-8 text-sm"
+                  size="sm"
+                >
+                  {saving ? "Saving..." : editingId ? "Update" : "Create"}
+                </Button>
+                {editingId && (
+                  <Button 
+                    variant="outline" 
+                    onClick={resetForm}
+                    className="w-full h-8 text-sm"
+                    size="sm"
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Basic Settings */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <div className="p-1 rounded bg-orange-100 text-orange-700 text-xs">⚙️</div>
+                  Settings
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-2">
+                  <Label className="text-xs">Order: {formData.display_order}</Label>
+                  <Slider
+                    value={[formData.display_order]}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, display_order: value[0] }))}
+                    min={0}
+                    max={10}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Duration: {formData.slide_duration_seconds}s</Label>
+                  <Slider
+                    value={[formData.slide_duration_seconds]}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, slide_duration_seconds: value[0] }))}
+                    min={1}
+                    max={15}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+                <div className="flex items-center space-x-2 p-2 bg-muted/30 rounded">
+                  <Switch
+                    id="is_active"
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
+                  />
+                  <Label htmlFor="is_active" className="text-xs">Active</Label>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Text Position */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Text Position</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-2">
+                  <Label className="text-xs text-cyan-700">Title</Label>
+                  <div className="grid grid-cols-2 gap-1">
+                    <Select 
+                      value={formData.title_position_horizontal} 
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, title_position_horizontal: value }))}
+                    >
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border shadow-md z-50">
+                        <SelectItem value="left">L</SelectItem>
+                        <SelectItem value="center">C</SelectItem>
+                        <SelectItem value="right">R</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select 
+                      value={formData.title_position_vertical} 
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, title_position_vertical: value }))}
+                    >
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border shadow-md z-50">
+                        <SelectItem value="top">T</SelectItem>
+                        <SelectItem value="middle">M</SelectItem>
+                        <SelectItem value="bottom">B</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Select 
+                    value={formData.title_size} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, title_size: value }))}
+                  >
+                    <SelectTrigger className="h-7 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border shadow-md z-50">
+                      <SelectItem value="small">Small</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="large">Large</SelectItem>
+                      <SelectItem value="xl">XL</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs text-teal-700">Description</Label>
+                  <div className="grid grid-cols-2 gap-1">
+                    <Select 
+                      value={formData.description_position_horizontal} 
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, description_position_horizontal: value }))}
+                    >
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border shadow-md z-50">
+                        <SelectItem value="left">L</SelectItem>
+                        <SelectItem value="center">C</SelectItem>
+                        <SelectItem value="right">R</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select 
+                      value={formData.description_position_vertical} 
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, description_position_vertical: value }))}
+                    >
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border shadow-md z-50">
+                        <SelectItem value="top">T</SelectItem>
+                        <SelectItem value="middle">M</SelectItem>
+                        <SelectItem value="bottom">B</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Select 
+                    value={formData.description_size} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, description_size: value }))}
+                  >
+                    <SelectTrigger className="h-7 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border shadow-md z-50">
+                      <SelectItem value="small">Small</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="large">Large</SelectItem>
+                      <SelectItem value="xl">XL</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Action Button */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Action Button</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-center space-x-2 p-2 bg-muted/30 rounded">
+                  <Switch
+                    id="action_button_enabled"
+                    checked={formData.action_button_enabled}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, action_button_enabled: checked }))}
+                  />
+                  <Label htmlFor="action_button_enabled" className="text-xs">Enable</Label>
+                </div>
+                {formData.action_button_enabled && (
+                  <div className="space-y-2">
+                    <Input
+                      value={formData.action_button_text}
+                      onChange={(e) => setFormData(prev => ({ ...prev, action_button_text: e.target.value }))}
+                      placeholder="Button text"
+                      className="h-7 text-xs"
+                    />
+                    <Input
+                      value={formData.action_button_url}
+                      onChange={(e) => setFormData(prev => ({ ...prev, action_button_url: e.target.value }))}
+                      placeholder="Button URL"
+                      className="h-7 text-xs"
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
 
       {/* Existing Slides */}
       <Card className="shadow-md">
@@ -903,12 +805,12 @@ export const HeroManagement = () => {
                                 <img
                                   src={slide.mobile_image_url}
                                   alt="Mobile preview"
-                                  className="w-8 h-12 object-cover rounded border-2 border-green-200"
+                                  className="w-12 h-8 object-cover rounded border border-green-200"
                                   onError={(e) => {
-                                    e.currentTarget.src = slide.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                                    e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
                                   }}
                                 />
-                                <div className="absolute -top-1 -right-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded-full font-bold text-[8px]">
+                                <div className="absolute -top-1 -right-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded-full font-bold">
                                   📱
                                 </div>
                               </div>
@@ -920,12 +822,12 @@ export const HeroManagement = () => {
                                 <img
                                   src={slide.ipad_image_url}
                                   alt="iPad preview"
-                                  className="w-14 h-10 object-cover rounded border-2 border-purple-200"
+                                  className="w-12 h-8 object-cover rounded border border-purple-200"
                                   onError={(e) => {
-                                    e.currentTarget.src = slide.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                                    e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
                                   }}
                                 />
-                                <div className="absolute -top-1 -right-1 bg-purple-500 text-white text-xs px-1 py-0.5 rounded-full font-bold text-[8px]">
+                                <div className="absolute -top-1 -right-1 bg-purple-500 text-white text-xs px-1 py-0.5 rounded-full font-bold">
                                   📄
                                 </div>
                               </div>
@@ -936,64 +838,100 @@ export const HeroManagement = () => {
 
                       {/* Content Section */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-bold text-lg truncate">
-                            {slide.title || <span className="text-muted-foreground italic">Untitled Slide</span>}
-                          </h3>
-                          <div className="flex items-center gap-1">
-                            {slide.is_active ? (
-                              <div className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold">
-                                <Eye className="h-3 w-3" />
-                                Active
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between">
+                            <div className="space-y-1 min-w-0 flex-1">
+                              <h4 className="font-semibold text-lg text-primary leading-tight">
+                                {slide.title || 'Untitled Slide'}
+                              </h4>
+                              {slide.description && (
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                  {slide.description}
+                                </p>
+                              )}
+                              {slide.link_url && (
+                                <a 
+                                  href={slide.link_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  {slide.link_url}
+                                </a>
+                              )}
+                            </div>
+                            
+                            {/* Status Badge */}
+                            <div className="flex items-center gap-2 ml-4">
+                              <div className={`px-2 py-1 rounded-full text-xs font-medium ${slide.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                                {slide.is_active ? 'Active' : 'Inactive'}
                               </div>
-                            ) : (
-                              <div className="flex items-center gap-1 bg-gray-100 text-gray-500 px-2 py-1 rounded-full text-xs font-bold">
-                                <EyeOff className="h-3 w-3" />
-                                Inactive
+                              <div className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 font-mono">
+                                #{slide.display_order}
                               </div>
-                            )}
-                            {slide.link_url && (
-                              <div className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-bold">
-                                <ExternalLink className="h-3 w-3" />
-                              </div>
+                            </div>
+                          </div>
+
+                          {/* Metadata Row */}
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
+                            <span className="flex items-center gap-1">
+                              ⏱️ {slide.slide_duration_seconds}s
+                            </span>
+                            <span className="flex items-center gap-1">
+                              📍 {slide.title_position_horizontal} / {slide.title_position_vertical}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              🔤 {slide.title_size}
+                            </span>
+                            {slide.action_button_enabled && (
+                              <span className="flex items-center gap-1">
+                                🔘 Action Button
+                              </span>
                             )}
                           </div>
                         </div>
-                        {slide.description && (
-                          <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{slide.description}</p>
-                        )}
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span className="bg-slate-100 px-2 py-1 rounded">Order: {slide.display_order || 0}</span>
-                          <span className="bg-slate-100 px-2 py-1 rounded">Duration: {slide.slide_duration_seconds || 5}s</span>
-                          {slide.button_text && <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">Button: {slide.button_text}</span>}
-                        </div>
                       </div>
-                      
+
                       {/* Actions Section */}
-                      <div className="flex flex-col gap-2 flex-shrink-0">
-                        <Button
-                          variant={slide.is_active ? "destructive" : "default"}
-                          size="sm"
-                          onClick={() => toggleActive(slide.id, slide.is_active)}
-                          className="h-8"
-                        >
-                          {slide.is_active ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                        </Button>
+                      <div className="flex flex-col gap-2 ml-4">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleEdit(slide)}
-                          className="h-8 border-2 hover:border-primary"
+                          className="h-8 px-3 text-xs"
                         >
-                          <Edit className="h-3 w-3" />
+                          <Edit className="h-3 w-3 mr-1" />
+                          Edit
                         </Button>
+                        
                         <Button
-                          variant="destructive"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toggleActive(slide.id, slide.is_active)}
+                          className="h-8 px-3 text-xs"
+                        >
+                          {slide.is_active ? (
+                            <>
+                              <EyeOff className="h-3 w-3 mr-1" />
+                              Hide
+                            </>
+                          ) : (
+                            <>
+                              <Eye className="h-3 w-3 mr-1" />
+                              Show
+                            </>
+                          )}
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => handleDelete(slide.id)}
-                          className="h-8"
+                          className="h-8 px-3 text-xs text-red-600 hover:text-red-800"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete
                         </Button>
                       </div>
                     </div>
