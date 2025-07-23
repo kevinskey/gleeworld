@@ -96,14 +96,14 @@ export default function AlumnaeAdmin() {
     if (!user) return;
 
     try {
-      // Check if user is admin
+      // Check if user is admin - look at the profiles table
       const { data: profileData } = await supabase
-        .from('gw_profiles')
-        .select('is_admin, is_super_admin')
-        .eq('user_id', user.id)
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
         .single();
 
-      const adminStatus = profileData?.is_admin || profileData?.is_super_admin;
+      const adminStatus = profileData?.role === 'admin' || profileData?.role === 'super-admin';
       setIsAdmin(adminStatus);
 
       if (adminStatus) {
