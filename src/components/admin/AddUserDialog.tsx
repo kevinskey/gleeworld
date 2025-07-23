@@ -59,9 +59,14 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
       }
 
       if (data.success > 0) {
+        const successMessage = data.users && data.users.length > 0 && data.users[0].temp_password
+          ? `${email} has been added to the system. Temporary password: ${data.users[0].temp_password}`
+          : `${email} has been added to the system.`;
+          
         toast({
           title: "User Added Successfully",
-          description: `${email} has been added to the system.`,
+          description: successMessage,
+          duration: 10000, // Show for 10 seconds so they can copy the password
         });
         resetForm();
         onOpenChange(false);
@@ -94,7 +99,7 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
             Add New User
           </DialogTitle>
           <DialogDescription>
-            Add a new user to the system. They will receive login credentials via email.
+            Add a new user to the system. They will receive a temporary password that should be shared securely.
           </DialogDescription>
         </DialogHeader>
 
@@ -129,6 +134,7 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="user">User</SelectItem>
+                <SelectItem value="alumnae">Alumnae</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="super-admin">Super Admin</SelectItem>
               </SelectContent>
