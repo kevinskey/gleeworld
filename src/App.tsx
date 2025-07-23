@@ -46,6 +46,7 @@ import Budgets from "./pages/Budgets";
 import Treasurer from "./pages/Treasurer";
 import TourManager from "./pages/TourManager";
 import AlumnaeLanding from "./pages/AlumnaeLanding";
+import AlumnaeAdmin from "./pages/admin/AlumnaeAdmin";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -377,14 +378,22 @@ const App = () => {
                           </ProtectedRoute>
                         } 
                       />
-                      <Route 
-                        path="/alumnae" 
-                        element={
-                          <ProtectedRoute>
-                            <AlumnaeLanding />
-                          </ProtectedRoute>
-                        } 
-                      />
+                       <Route 
+                         path="/alumnae" 
+                         element={
+                           <ProtectedRoute>
+                             <AlumnaeLanding />
+                           </ProtectedRoute>
+                         } 
+                       />
+                       <Route 
+                         path="/admin/alumnae" 
+                         element={
+                           <ProtectedRoute>
+                             <AlumnaeAdmin />
+                           </ProtectedRoute>
+                         } 
+                       />
                    <Route 
                      path="/landing"
                     element={
