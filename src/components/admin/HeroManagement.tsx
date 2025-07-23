@@ -383,41 +383,39 @@ export const HeroManagement = () => {
 
   return (
     <div className="space-y-8">
-      {/* Header Card */}
-      <Card className="border-2 border-primary/20">
-        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10">
-          <CardTitle className="text-2xl flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${editingId ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
-              {editingId ? '✏️' : '➕'}
-            </div>
-            {editingId ? "Edit Hero Slide" : "Create New Hero Slide"}
-          </CardTitle>
-        </CardHeader>
-      </Card>
-
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-        {/* Combined Edit Window */}
-        <div className="xl:col-span-3">
-          <Collapsible open={isEditWindowOpen} onOpenChange={setIsEditWindowOpen}>
-            <Card className="shadow-md">
-              <CollapsibleTrigger asChild>
-                <CardHeader className="bg-muted/50 border-b cursor-pointer hover:bg-muted/70 transition-colors">
-                  <CardTitle className="text-lg flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1.5 rounded bg-blue-100 text-blue-700">✏️</div>
-                      {editingId ? "Edit Hero Slide" : "Create New Hero Slide"}
-                    </div>
-                    {isEditWindowOpen ? (
-                      <ChevronUp className="h-5 w-5 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                    )}
-                  </CardTitle>
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className="space-y-8 pt-6">
-                  {/* Content & Text Section */}
+      {/* Header Card with Dropdown */}
+      <Collapsible open={isEditWindowOpen} onOpenChange={setIsEditWindowOpen}>
+        <Card className="border-2 border-primary/20">
+          <CollapsibleTrigger asChild>
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 cursor-pointer hover:from-primary/10 hover:to-primary/15 transition-all">
+              <CardTitle className="text-2xl flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${editingId ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+                    {editingId ? '✏️' : '➕'}
+                  </div>
+                  {editingId ? "Edit Hero Slide" : "Create New Hero Slide"}
+                </div>
+                {isEditWindowOpen ? (
+                  <ChevronUp className="h-6 w-6 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-6 w-6 text-muted-foreground" />
+                )}
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="border-t bg-card">
+              <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 p-6">
+                {/* Combined Edit Window */}
+                <div className="xl:col-span-3">
+                  <Card className="shadow-md">
+                    <CardHeader className="bg-muted/50 border-b">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <div className="p-1.5 rounded bg-blue-100 text-blue-700">✏️</div>
+                        Form Fields
+                      </CardTitle>
+                    </CardHeader>
+                  <CardContent className="space-y-8 pt-6">
                   <Collapsible open={isContentSectionOpen} onOpenChange={setIsContentSectionOpen}>
                     <div className="space-y-4">
                       <CollapsibleTrigger asChild>
@@ -814,44 +812,46 @@ export const HeroManagement = () => {
                               </div>
                             </div>
                           )}
-                        </div>
-                      </CollapsibleContent>
-                    </div>
-                  </Collapsible>
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-        </div>
+                         </div>
+                       </CollapsibleContent>
+                     </div>
+                   </Collapsible>
+                    </CardContent>
+                  </Card>
+                </div>
 
-        {/* Right Column - Save Actions */}
-        <div className="space-y-6">
-          <Card className="shadow-md border-2 border-primary/30">
-            <CardContent className="pt-6">
-              <div className="space-y-3">
-                <Button 
-                  onClick={handleSave} 
-                  disabled={saving}
-                  className="w-full h-12 text-lg font-semibold"
-                  size="lg"
-                >
-                  <Save className="w-5 h-5 mr-2" />
-                  {saving ? "Saving..." : editingId ? "Update Slide" : "Create Slide"}
-                </Button>
-                {editingId && (
-                  <Button 
-                    variant="outline" 
-                    onClick={resetForm}
-                    className="w-full h-10 border-2"
-                  >
-                    Cancel
-                  </Button>
-                )}
+                {/* Right Column - Save Actions */}
+                <div className="space-y-6">
+                  <Card className="shadow-md border-2 border-primary/30">
+                    <CardContent className="pt-6">
+                      <div className="space-y-3">
+                        <Button 
+                          onClick={handleSave} 
+                          disabled={saving}
+                          className="w-full h-12 text-lg font-semibold"
+                          size="lg"
+                        >
+                          <Save className="w-5 h-5 mr-2" />
+                          {saving ? "Saving..." : editingId ? "Update Slide" : "Create Slide"}
+                        </Button>
+                        {editingId && (
+                          <Button 
+                            variant="outline" 
+                            onClick={resetForm}
+                            className="w-full h-10 border-2"
+                          >
+                            Cancel
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+            </div>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
 
       {/* Existing Slides */}
