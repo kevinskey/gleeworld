@@ -139,7 +139,7 @@ export default function AlumnaeLanding() {
               <span className="text-accent">Still Amazing, Still Inspiring!</span>
             </h1>
             <p className="text-xl text-white/90 mb-8 max-w-2xl">
-              Welcome back, {userProfile?.display_name}. Your voice continues to echo through the halls of Spelman.
+              Welcome back, {userProfile?.first_name}. Keep on singing in my ear. #SCGC4Life
             </p>
             <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-accent">
               <Users className="mr-2 h-5 w-5" />
