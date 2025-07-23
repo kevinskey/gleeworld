@@ -65,24 +65,23 @@ export const UserCard = ({
   };
 
   return (
-    <Card className="hover:bg-gray-50 transition-colors">
+    <Card className="hover:bg-slate-50 transition-colors border-2 hover:border-slate-300 shadow-sm">
       <CardContent className="p-4">
         {/* Main User Info - Clickable */}
         <div 
           className={`flex items-start gap-3 ${onClick ? 'cursor-pointer' : ''}`}
           onClick={() => onClick?.(user)}
         >
-          <Avatar className="h-12 w-12 border-2 border-brand-200/50 shadow-sm flex-shrink-0">
+          <Avatar className="h-12 w-12 border-2 border-slate-300 shadow-sm flex-shrink-0">
             <AvatarImage 
               src={getAvatarUrl(user.avatar_url)} 
               alt={user.full_name || user.email || "User"} 
               className="object-cover"
               onError={(e) => {
-                console.log('Avatar failed to load:', user.avatar_url);
                 e.currentTarget.src = "/placeholder.svg";
               }}
             />
-            <AvatarFallback className="bg-gradient-to-br from-brand-100 to-brand-200 text-brand-700">
+            <AvatarFallback className="bg-gradient-to-br from-slate-100 to-slate-200 text-slate-700 font-semibold">
               {user.full_name ? 
                 getInitials(user.full_name) :
                 <UserIcon className="h-5 w-5" />
@@ -93,18 +92,18 @@ export const UserCard = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               {getRoleIcon(user.role)}
-              <h3 className="font-medium text-sm sm:text-base truncate">
+              <h3 className="font-semibold text-sm sm:text-base truncate text-slate-900">
                 {user.full_name || 'No name provided'}
               </h3>
             </div>
-            <p className="text-xs sm:text-sm text-gray-600 truncate">
+            <p className="text-xs sm:text-sm text-slate-600 truncate font-medium">
               {user.email || 'No email'}
             </p>
             <div className="flex items-center gap-2 mt-2">
-              <Badge variant={getRoleBadgeVariant(user.role)} className="text-xs">
+              <Badge variant={getRoleBadgeVariant(user.role)} className="text-xs font-medium">
                 {user.role}
               </Badge>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-slate-500 font-medium">
                 {new Date(user.created_at).toLocaleDateString()}
               </span>
             </div>
