@@ -14,8 +14,10 @@ interface Event {
   title: string;
   event_name: string;
   event_type: string;
-  event_date_start: string;
-  event_date_end?: string;
+  event_date_start: string | null;
+  event_date_end?: string | null;
+  start_date?: string;
+  end_date?: string;
   location?: string;
   expected_headcount?: number;
   is_travel_involved: boolean;
@@ -178,8 +180,13 @@ export const EventsList = ({ filter = 'all-events' }: EventsListProps) => {
     return colors[type] || colors.other;
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'Date TBD';
+    
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Invalid Date';
+    
+    return date.toLocaleDateString();
   };
 
   const openEventDetails = (event: Event) => {
@@ -268,8 +275,8 @@ export const EventsList = ({ filter = 'all-events' }: EventsListProps) => {
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Calendar className="h-4 w-4" />
                 <span>
-                  {formatDate(event.event_date_start)}
-                  {event.event_date_end && ` - ${formatDate(event.event_date_end)}`}
+                  {formatDate(event.event_date_start || event.start_date)}
+                  {(event.event_date_end || event.end_date) && ` - ${formatDate(event.event_date_end || event.end_date)}`}
                 </span>
               </div>
               
