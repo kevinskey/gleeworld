@@ -64,9 +64,10 @@ interface SheetMusic {
 
 interface SetlistBuilderProps {
   onPdfSelect: (pdfUrl: string, title: string) => void;
+  onOpenPlayer?: (setlistId: string) => void;
 }
 
-export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) => {
+export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onOpenPlayer }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -449,6 +450,12 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
     });
   };
 
+  const openSetlistPlayer = (setlistId: string) => {
+    if (onOpenPlayer) {
+      onOpenPlayer(setlistId);
+    }
+  };
+
   const handleViewPdf = (item: SetlistItem) => {
     if (item.sheet_music?.pdf_url) {
       onPdfSelect(item.sheet_music.pdf_url, item.sheet_music.title);
@@ -647,6 +654,14 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect }) =
                             className="h-7 w-7 p-0"
                           >
                             <FileText className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => openSetlistPlayer(selectedSetlist.id)}
+                            className="h-7 px-2 text-xs"
+                          >
+                            Open Player
                           </Button>
                           <Button
                             size="sm"

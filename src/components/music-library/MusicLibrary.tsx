@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { SheetMusicLibrary } from './SheetMusicLibrary';
 import { SetlistBuilder } from './SetlistBuilder';
 import { SetlistDiagnostics } from './SetlistDiagnostics';
+import { SetlistPlayer } from './SetlistPlayer';
 import { PDFViewer } from '@/components/PDFViewer';
 import { Settings, Home, Users, Calendar, FileText, Activity, ArrowLeft } from 'lucide-react';
 
@@ -13,10 +14,29 @@ export const MusicLibrary = () => {
   const location = useLocation();
   const [selectedPdf, setSelectedPdf] = useState<{url: string; title: string} | null>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [activeSetlistPlayer, setActiveSetlistPlayer] = useState<string | null>(null);
 
   const handlePdfSelect = (pdfUrl: string, title: string) => {
     setSelectedPdf({ url: pdfUrl, title });
   };
+
+  const handleOpenSetlistPlayer = (setlistId: string) => {
+    setActiveSetlistPlayer(setlistId);
+  };
+
+  const handleCloseSetlistPlayer = () => {
+    setActiveSetlistPlayer(null);
+  };
+
+  // If setlist player is active, show only the player
+  if (activeSetlistPlayer) {
+    return (
+      <SetlistPlayer
+        setlistId={activeSetlistPlayer}
+        onClose={handleCloseSetlistPlayer}
+      />
+    );
+  }
 
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, route: '/dashboard' },
@@ -108,7 +128,10 @@ export const MusicLibrary = () => {
         {/* Setlists Column - 30% on desktop, full width on mobile */}
         <div className="xl:col-span-4 space-y-4">
           <h2 className="text-lg font-semibold">Setlist Builder</h2>
-          <SetlistBuilder onPdfSelect={handlePdfSelect} />
+          <SetlistBuilder 
+            onPdfSelect={handlePdfSelect} 
+            onOpenPlayer={handleOpenSetlistPlayer}
+          />
         </div>
 
         {/* PDF Viewer Column - 70% on desktop, full width on mobile */}
