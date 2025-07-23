@@ -134,8 +134,8 @@ export default function AlumnaeLanding() {
           </div>
           <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-secondary/80"></div>
           <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
-            <h1 className="text-4xl md:text-6xl font-serif text-white mb-4 leading-tight">
-              Spelman College Glee Club Alumnae,<br />
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-serif text-white mb-4 leading-tight">
+              <span className="whitespace-nowrap">Spelman College Glee Club Alumnae,</span><br />
               <span className="text-accent">Still Amazing, Still Inspiring!</span>
             </h1>
             <p className="text-xl text-white/90 mb-8 max-w-2xl">
