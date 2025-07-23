@@ -1,7 +1,7 @@
-import { MusicLibrary } from "@/components/music-library/MusicLibrary";
+import { LibraryManagement } from "@/components/music-library/LibraryManagement";
 
 const MusicLibraryPage = () => {
-  return <MusicLibrary />;
+  return <LibraryManagement />;
 };
 
 export default MusicLibraryPage;

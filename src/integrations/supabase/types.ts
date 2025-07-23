@@ -3414,14 +3414,25 @@ export type Database = {
           arranger: string | null
           audio_preview_url: string | null
           composer: string | null
+          condition_notes: string | null
+          copyright_year: number | null
           created_at: string | null
           created_by: string | null
           difficulty_level: string | null
+          donor_name: string | null
           id: string
           is_public: boolean | null
+          isbn_barcode: string | null
           key_signature: string | null
           language: string | null
+          last_inventory_date: string | null
+          notes: string | null
           pdf_url: string | null
+          physical_copies_count: number | null
+          physical_location: string | null
+          publisher: string | null
+          purchase_date: string | null
+          purchase_price: number | null
           tags: string[] | null
           tempo_marking: string | null
           thumbnail_url: string | null
@@ -3433,14 +3444,25 @@ export type Database = {
           arranger?: string | null
           audio_preview_url?: string | null
           composer?: string | null
+          condition_notes?: string | null
+          copyright_year?: number | null
           created_at?: string | null
           created_by?: string | null
           difficulty_level?: string | null
+          donor_name?: string | null
           id?: string
           is_public?: boolean | null
+          isbn_barcode?: string | null
           key_signature?: string | null
           language?: string | null
+          last_inventory_date?: string | null
+          notes?: string | null
           pdf_url?: string | null
+          physical_copies_count?: number | null
+          physical_location?: string | null
+          publisher?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
           tags?: string[] | null
           tempo_marking?: string | null
           thumbnail_url?: string | null
@@ -3452,14 +3474,25 @@ export type Database = {
           arranger?: string | null
           audio_preview_url?: string | null
           composer?: string | null
+          condition_notes?: string | null
+          copyright_year?: number | null
           created_at?: string | null
           created_by?: string | null
           difficulty_level?: string | null
+          donor_name?: string | null
           id?: string
           is_public?: boolean | null
+          isbn_barcode?: string | null
           key_signature?: string | null
           language?: string | null
+          last_inventory_date?: string | null
+          notes?: string | null
           pdf_url?: string | null
+          physical_copies_count?: number | null
+          physical_location?: string | null
+          publisher?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
           tags?: string[] | null
           tempo_marking?: string | null
           thumbnail_url?: string | null
@@ -3878,6 +3911,87 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      library_inventory_entries: {
+        Row: {
+          copies_found: number | null
+          id: string
+          location_found: string | null
+          notes: string | null
+          physical_condition: string | null
+          scanned_at: string
+          scanned_by: string
+          session_id: string
+          sheet_music_id: string
+        }
+        Insert: {
+          copies_found?: number | null
+          id?: string
+          location_found?: string | null
+          notes?: string | null
+          physical_condition?: string | null
+          scanned_at?: string
+          scanned_by: string
+          session_id: string
+          sheet_music_id: string
+        }
+        Update: {
+          copies_found?: number | null
+          id?: string
+          location_found?: string | null
+          notes?: string | null
+          physical_condition?: string | null
+          scanned_at?: string
+          scanned_by?: string
+          session_id?: string
+          sheet_music_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_inventory_entries_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "library_inventory_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "library_inventory_entries_sheet_music_id_fkey"
+            columns: ["sheet_music_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sheet_music"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      library_inventory_sessions: {
+        Row: {
+          completed_at: string | null
+          created_by: string
+          id: string
+          notes: string | null
+          session_name: string
+          started_at: string
+          total_items_scanned: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_by: string
+          id?: string
+          notes?: string | null
+          session_name: string
+          started_at?: string
+          total_items_scanned?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_by?: string
+          id?: string
+          notes?: string | null
+          session_name?: string
+          started_at?: string
+          total_items_scanned?: number | null
+        }
+        Relationships: []
       }
       materials_budget: {
         Row: {
