@@ -33,6 +33,7 @@ interface CSVRow {
 interface ImportMapping {
   title: string;
   composer: string;
+  voicing: string;
   library_number: string;
   physical_copies: string;
 }
@@ -53,6 +54,7 @@ interface ImportResult {
 const EXPECTED_COLUMNS = [
   { key: 'title', label: 'Title', required: true },
   { key: 'composer', label: 'Composer', required: false },
+  { key: 'voicing', label: 'Voicing', required: false },
   { key: 'library_number', label: 'Library Number', required: false },
   { key: 'physical_copies', label: 'Physical Copies', required: true },
 ];
@@ -67,6 +69,7 @@ export const CSVImportDialog = ({ open, onOpenChange, onSuccess }: CSVImportDial
   const [columnMapping, setColumnMapping] = useState<ImportMapping>({
     title: '',
     composer: '',
+    voicing: '',
     library_number: '',
     physical_copies: '',
   });
@@ -181,6 +184,7 @@ export const CSVImportDialog = ({ open, onOpenChange, onSuccess }: CSVImportDial
       const row = csvData[i];
       const title = row[columnMapping.title]?.trim();
       const composer = row[columnMapping.composer]?.trim();
+      const voicing = row[columnMapping.voicing]?.trim();
       const libraryNumber = row[columnMapping.library_number]?.trim();
       const physicalCopiesStr = row[columnMapping.physical_copies]?.trim();
 
@@ -213,13 +217,19 @@ export const CSVImportDialog = ({ open, onOpenChange, onSuccess }: CSVImportDial
 
         if (existingSheet) {
           // Update existing record
+          const updateData: any = {
+            physical_copies_count: physicalCopies,
+            physical_location: libraryNumber || existingSheet.physical_location,
+            last_inventory_date: new Date().toISOString().split('T')[0],
+          };
+          
+          if (voicing) {
+            updateData.voicing = voicing;
+          }
+
           const { error } = await supabase
             .from('gw_sheet_music')
-            .update({
-              physical_copies_count: physicalCopies,
-              physical_location: libraryNumber || existingSheet.physical_location,
-              last_inventory_date: new Date().toISOString().split('T')[0],
-            })
+            .update(updateData)
             .eq('id', existingSheet.id);
 
           if (error) throw error;
@@ -234,17 +244,23 @@ export const CSVImportDialog = ({ open, onOpenChange, onSuccess }: CSVImportDial
           });
         } else {
           // Create new record
+          const insertData: any = {
+            title,
+            composer: composer || null,
+            physical_copies_count: physicalCopies,
+            physical_location: libraryNumber || null,
+            last_inventory_date: new Date().toISOString().split('T')[0],
+            is_public: true,
+            created_by: user?.id,
+          };
+
+          if (voicing) {
+            insertData.voicing = voicing;
+          }
+
           const { error } = await supabase
             .from('gw_sheet_music')
-            .insert({
-              title,
-              composer: composer || null,
-              physical_copies_count: physicalCopies,
-              physical_location: libraryNumber || null,
-              last_inventory_date: new Date().toISOString().split('T')[0],
-              is_public: true,
-              created_by: user?.id,
-            });
+            .insert(insertData);
 
           if (error) throw error;
 
@@ -286,6 +302,7 @@ export const CSVImportDialog = ({ open, onOpenChange, onSuccess }: CSVImportDial
     setColumnMapping({
       title: '',
       composer: '',
+      voicing: '',
       library_number: '',
       physical_copies: '',
     });
@@ -295,10 +312,10 @@ export const CSVImportDialog = ({ open, onOpenChange, onSuccess }: CSVImportDial
 
   const downloadTemplate = () => {
     const template = [
-      ['Title', 'Composer', 'Library Number', 'Physical Copies'],
-      ['Amazing Grace', 'John Newton', 'A-001', '3'],
-      ['Ave Maria', 'Franz Schubert', 'A-002', '2'],
-      ['Hallelujah Chorus', 'George Frideric Handel', 'H-001', '5'],
+      ['Title', 'Composer', 'Voicing', 'Library Number', 'Physical Copies'],
+      ['Amazing Grace', 'John Newton', 'SATB', 'A-001', '3'],
+      ['Ave Maria', 'Franz Schubert', 'SSA', 'A-002', '2'],
+      ['Hallelujah Chorus', 'George Frideric Handel', 'SATB', 'H-001', '5'],
     ];
 
     const csvContent = template.map(row => row.join(',')).join('\n');
@@ -350,6 +367,7 @@ export const CSVImportDialog = ({ open, onOpenChange, onSuccess }: CSVImportDial
                   <p><strong>Optional columns:</strong></p>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                     <li>Composer - Composer name</li>
+                    <li>Voicing - Voice arrangement (e.g., SATB, SSA)</li>
                     <li>Library Number - Your internal library numbering system</li>
                   </ul>
                 </div>
