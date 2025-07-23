@@ -22,7 +22,7 @@ export const useAccountingData = () => {
   const { toast } = useToast();
 
   const extractStipendFromContent = (content: string): number => {
-    console.log('Extracting stipend from content:', content.substring(0, 200) + '...');
+    
     
     // Multiple patterns to match different stipend formats
     const stipendPatterns = [
@@ -47,7 +47,6 @@ export const useAccountingData = () => {
 
     // Return the largest reasonable amount found
     const stipend = amounts.length > 0 ? Math.max(...amounts) : 0;
-    console.log('Extracted stipend amount:', stipend);
     return stipend;
   };
 
@@ -76,7 +75,7 @@ export const useAccountingData = () => {
   const fetchAccountingData = async () => {
     try {
       setLoading(true);
-      console.log('Fetching contracts for accounting...');
+      
       
       // Query contracts first
       const { data: contracts, error: contractsError } = await supabase
@@ -90,14 +89,14 @@ export const useAccountingData = () => {
         throw contractsError;
       }
 
-      console.log('Found contracts:', contracts?.length || 0);
+      
 
       // Get unique template IDs from contracts
       const templateIds = [...new Set(contracts
         ?.map(contract => contract.template_id)
         .filter(Boolean) || [])];
 
-      console.log('Template IDs found in contracts:', templateIds);
+      
 
       // Fetch template names if we have template IDs
       let templatesMap: Record<string, string> = {};
@@ -112,7 +111,7 @@ export const useAccountingData = () => {
             acc[template.id] = template.name;
             return acc;
           }, {} as Record<string, string>);
-          console.log('Templates map:', templatesMap);
+          
         }
       }
 
@@ -120,13 +119,13 @@ export const useAccountingData = () => {
       let total = 0;
 
       contracts?.forEach(contract => {
-        console.log('Processing contract:', contract.title, 'Status:', contract.status, 'Template ID:', contract.template_id);
+        
         
         // Extract stipend from contract content
         const stipendAmount = extractStipendFromContent(contract.content);
         
         if (stipendAmount > 0) {
-          console.log('Found stipend in contract:', contract.title, 'Amount:', stipendAmount);
+          
           
           // Check for embedded signatures or use status
           let dateSigned = new Date().toLocaleDateString();
@@ -144,7 +143,7 @@ export const useAccountingData = () => {
               }
             }
           } catch (e) {
-            console.log('No embedded signatures found, using status-based logic');
+            
           }
 
           // Include contracts with stipends that are completed or have signatures
@@ -163,14 +162,14 @@ export const useAccountingData = () => {
             });
             
             total += stipendAmount;
-            console.log('Added contract to accounting:', contract.title, 'Stipend:', stipendAmount, 'Template ID:', contract.template_id);
+            
           }
         } else {
-          console.log('No stipend found in contract:', contract.title);
+          
         }
       });
 
-      console.log('Final accounting data:', entries.length, 'contracts, Total:', total);
+      
       setAccountingData(entries);
       setTotalStipends(total);
       setContractCount(entries.length);
@@ -201,7 +200,7 @@ export const useAccountingData = () => {
           table: 'contracts_v2'
         },
         () => {
-          console.log('Contract updated, refreshing accounting data');
+          
           fetchAccountingData();
         }
       )
