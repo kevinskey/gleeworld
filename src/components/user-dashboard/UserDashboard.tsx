@@ -58,14 +58,16 @@ import { mockUsers } from "@/utils/mockUsers";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useState } from "react";
 import { format } from "date-fns";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { DASHBOARD_MODULES, hasModuleAccess, hasExecutiveBoardPermissions, DashboardModule } from "@/constants/permissions";
 import { ChevronUp } from "lucide-react";
+import { AdminPanel } from "@/components/AdminPanel";
 
 export const UserDashboard = () => {
   const { user } = useAuth();
   const { profile } = useMergedProfile(user);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { getSettingByName } = useDashboardSettings();
   const { dashboardData, payments, notifications, loading: dashboardLoading } = useUserDashboard();
   const { events, loading: eventsLoading, getUpcomingEvents } = useGleeWorldEvents();
@@ -75,8 +77,18 @@ export const UserDashboard = () => {
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [isRecentActivityExpanded, setIsRecentActivityExpanded] = useState(false);
   
-
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
+  
+  // Check for admin tab in URL
+  const activeTab = searchParams.get('tab');
+  const showAdminPanel = isAdmin && activeTab;
+  
+  console.log('UserDashboard Debug:', { 
+    isAdmin, 
+    activeTab, 
+    showAdminPanel, 
+    searchParams: searchParams.toString() 
+  });
   const userRole = profile?.role || 'user';
   const userEmail = user?.email || '';
   const welcomeCardSetting = getSettingByName('welcome_card_background');
@@ -143,22 +155,31 @@ export const UserDashboard = () => {
     availableModuleKeys: availableModules.map(m => m.key)
   });
 
-  if (!user) {
+  if (!user || dashboardLoading) {
     return (
       <UniversalLayout>
-        <div className="flex items-center justify-center py-20">
-          <Card className="w-full max-w-md mx-4">
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <User className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold mb-2 text-gray-900">Authentication Required</h3>
-                <p className="text-gray-600 mb-4">Please sign in to access your dashboard.</p>
-                <Button onClick={() => window.location.href = '/auth'}>
-                  Sign In
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <LoadingSpinner size="lg" text="Loading dashboard..." />
+        </div>
+      </UniversalLayout>
+    );
+  }
+
+  // Show AdminPanel if admin user has a tab parameter
+  if (showAdminPanel) {
+    return (
+      <UniversalLayout>
+        <div className="container mx-auto px-4 py-6">
+          <div className="mb-6">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/dashboard')}
+              className="mb-4"
+            >
+              ← Back to Dashboard
+            </Button>
+          </div>
+          <AdminPanel activeTab={activeTab} />
         </div>
       </UniversalLayout>
     );
