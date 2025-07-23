@@ -5,24 +5,41 @@ import { supabase } from "@/integrations/supabase/client";
  * Handles both full URLs and file paths
  */
 export const getAvatarUrl = (avatarUrl: string | null | undefined): string => {
+  console.log('getAvatarUrl called with:', avatarUrl);
+  
   if (!avatarUrl) {
+    console.log('No avatar URL provided, using placeholder');
     return getRandomPlaceholderAvatar();
   }
 
   // If it's already a full URL, return as is
   if (avatarUrl.startsWith('http')) {
+    console.log('Avatar URL is already a full URL');
     return avatarUrl;
   }
 
   // If it's a file path, construct the public URL
   if (avatarUrl.startsWith('avatars/')) {
+    console.log('Avatar URL is a storage path, constructing public URL');
     const { data } = supabase.storage
       .from('user-files')
       .getPublicUrl(avatarUrl);
+    console.log('Constructed public URL:', data.publicUrl);
+    return data.publicUrl;
+  }
+
+  // Handle other possible storage paths
+  if (avatarUrl.includes('/') && !avatarUrl.startsWith('http')) {
+    console.log('Avatar URL appears to be a storage path, constructing public URL');
+    const { data } = supabase.storage
+      .from('user-files')
+      .getPublicUrl(avatarUrl);
+    console.log('Constructed public URL:', data.publicUrl);
     return data.publicUrl;
   }
 
   // Fallback to random placeholder
+  console.log('Avatar URL format not recognized, using placeholder');
   return getRandomPlaceholderAvatar();
 };
 
