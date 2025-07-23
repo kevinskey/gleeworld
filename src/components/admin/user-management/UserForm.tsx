@@ -21,6 +21,9 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState("user");
+  const [phone, setPhone] = useState("");
+  const [voicePart, setVoicePart] = useState("");
+  const [execBoardRole, setExecBoardRole] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [tempPassword, setTempPassword] = useState("");
   const { toast } = useToast();
@@ -31,6 +34,9 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
       setEmail(user.email || "");
       setFullName(user.full_name || "");
       setRole(user.role || "user");
+      setPhone((user as any)?.phone || "");
+      setVoicePart((user as any)?.voice_part || "");
+      setExecBoardRole((user as any)?.exec_board_role || "");
     }
   }, [user, mode]);
 
@@ -38,6 +44,9 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
     setEmail("");
     setFullName("");
     setRole("user");
+    setPhone("");
+    setVoicePart("");
+    setExecBoardRole("");
     setTempPassword("");
   };
 
@@ -89,7 +98,10 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
           users: [{
             email: email.trim(),
             full_name: fullName.trim(),
-            role: role
+            role: role,
+            phone: phone.trim(),
+            voice_part: voicePart,
+            exec_board_role: execBoardRole || null
           }],
           source: 'manual'
         }
@@ -146,6 +158,10 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
           full_name: fullName.trim(),
           first_name: fullName.trim().split(' ')[0],
           last_name: fullName.trim().split(' ').slice(1).join(' ') || null,
+          phone: phone.trim() || null,
+          voice_part: voicePart || null,
+          exec_board_role: execBoardRole || null,
+          is_exec_board: !!execBoardRole
         })
         .eq('user_id', user.id);
 
@@ -274,6 +290,64 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
                 <SelectItem value="alumnae">Alumnae</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="super-admin">Super Admin</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Phone Field */}
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone Number</Label>
+            <Input
+              id="phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="(555) 123-4567"
+              disabled={isLoading}
+            />
+          </div>
+
+          {/* Voice Part Field */}
+          <div className="space-y-2">
+            <Label htmlFor="voicePart">Voice Part/Section</Label>
+            <Select value={voicePart} onValueChange={setVoicePart} disabled={isLoading}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select voice part" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">None</SelectItem>
+                <SelectItem value="Soprano 1">Soprano 1</SelectItem>
+                <SelectItem value="Soprano 2">Soprano 2</SelectItem>
+                <SelectItem value="Alto 1">Alto 1</SelectItem>
+                <SelectItem value="Alto 2">Alto 2</SelectItem>
+                <SelectItem value="Tenor 1">Tenor 1</SelectItem>
+                <SelectItem value="Tenor 2">Tenor 2</SelectItem>
+                <SelectItem value="Bass 1">Bass 1</SelectItem>
+                <SelectItem value="Bass 2">Bass 2</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Executive Board Role Field */}
+          <div className="space-y-2">
+            <Label htmlFor="execBoardRole">Executive Board Position</Label>
+            <Select value={execBoardRole} onValueChange={setExecBoardRole} disabled={isLoading}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select position (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">None</SelectItem>
+                <SelectItem value="President">President</SelectItem>
+                <SelectItem value="Vice President">Vice President</SelectItem>
+                <SelectItem value="Secretary">Secretary</SelectItem>
+                <SelectItem value="Treasurer">Treasurer</SelectItem>
+                <SelectItem value="Historian">Historian</SelectItem>
+                <SelectItem value="Librarian">Librarian</SelectItem>
+                <SelectItem value="Chaplain">Chaplain</SelectItem>
+                <SelectItem value="Public Relations">Public Relations</SelectItem>
+                <SelectItem value="Social Chair">Social Chair</SelectItem>
+                <SelectItem value="Tour Manager">Tour Manager</SelectItem>
+                <SelectItem value="Section Leader">Section Leader</SelectItem>
               </SelectContent>
             </Select>
           </div>
