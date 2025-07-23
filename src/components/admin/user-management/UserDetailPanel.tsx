@@ -183,10 +183,12 @@ export const UserDetailPanel = ({
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-16 w-16 border-2 border-brand-200/50">
-                    <AvatarImage 
-                      src={user.avatar_url || `https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=150&h=150&fit=crop&crop=face`}
-                      alt={user.full_name || user.email || "User"} 
-                    />
+                    {user.avatar_url && (
+                      <AvatarImage 
+                        src={user.avatar_url} 
+                        alt={user.full_name || user.email || "User"} 
+                      />
+                    )}
                     <AvatarFallback className="bg-gradient-to-br from-brand-100 to-brand-200 text-brand-700 text-lg">
                       {user.full_name ? 
                         user.full_name.split(' ').map(n => n[0]).join('').toUpperCase() :

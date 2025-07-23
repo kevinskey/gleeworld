@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
  * Constructs a proper avatar URL from the stored avatar_url field
  * Handles both full URLs and file paths
  */
-export const getAvatarUrl = (avatarUrl: string | null | undefined): string => {
+export const getAvatarUrl = (avatarUrl: string | null | undefined): string | null => {
   if (!avatarUrl) {
-    return getRandomPlaceholderAvatar();
+    return null; // Return null so AvatarFallback with initials shows instead
   }
 
   // If it's already a full URL, return as is
@@ -30,8 +30,8 @@ export const getAvatarUrl = (avatarUrl: string | null | undefined): string => {
     return data.publicUrl;
   }
 
-  // Fallback to random placeholder
-  return getRandomPlaceholderAvatar();
+  // Fallback to null so initials show
+  return null;
 };
 
 /**

@@ -73,14 +73,13 @@ export const UserCard = ({
           onClick={() => onClick?.(user)}
         >
           <Avatar className="h-14 w-14 border-2 border-slate-300 shadow-md flex-shrink-0 ring-2 ring-slate-100">
-            <AvatarImage 
-              src={getAvatarUrl(user.avatar_url)} 
-              alt={user.full_name || user.email || "User"} 
-              className="object-cover hover:scale-105 transition-transform"
-              onError={(e) => {
-                e.currentTarget.src = "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=150&h=150&fit=crop&crop=face";
-              }}
-            />
+            {getAvatarUrl(user.avatar_url) && (
+              <AvatarImage 
+                src={getAvatarUrl(user.avatar_url)!} 
+                alt={user.full_name || user.email || "User"} 
+                className="object-cover hover:scale-105 transition-transform"
+              />
+            )}
             <AvatarFallback className="bg-gradient-to-br from-blue-100 to-indigo-200 text-blue-800 font-bold text-lg border border-blue-200">
               {user.full_name ? 
                 getInitials(user.full_name) :
