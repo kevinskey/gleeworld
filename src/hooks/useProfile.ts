@@ -187,6 +187,20 @@ export const useProfile = () => {
         throw error;
       }
 
+      // Also update gw_profiles table to keep data in sync
+      const { error: gwError } = await supabase
+        .from("gw_profiles")
+        .update({
+          avatar_url: avatarUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", user.id);
+
+      if (gwError) {
+        console.warn("Failed to update gw_profiles avatar:", gwError);
+        // Don't throw error since profiles update succeeded
+      }
+
       console.log("Database update successful, updating local state");
       
       // Update local state immediately without full refetch
