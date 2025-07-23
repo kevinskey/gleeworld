@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserManagement } from "./admin/UserManagement";
+import { EnhancedUserManagement } from "./admin/user-management/EnhancedUserManagement";
 import { SystemSettings } from "./admin/SystemSettings";
 import { AdminSummaryStats } from "./admin/AdminSummaryStats";
 import { ActivityLogs } from "./admin/ActivityLogs";
@@ -111,7 +111,7 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
         );
       case 'users':
         return (
-          <UserManagement 
+          <EnhancedUserManagement 
             users={users}
             loading={usersLoading}
             error={usersError}

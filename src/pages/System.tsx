@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SystemDashboard } from "@/components/admin/SystemDashboard";
-import { UserManagement } from "@/components/admin/UserManagement";
+import { EnhancedUserManagement } from "@/components/admin/user-management/EnhancedUserManagement";
 import { ExecutiveBoardManager } from "@/components/admin/ExecutiveBoardManager";
 import { AccessibilitySettings } from "@/components/settings/AccessibilitySettings";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
@@ -86,7 +86,7 @@ const System = () => {
           )}
 
           {activeTab === "users" && (
-            <UserManagement 
+            <EnhancedUserManagement 
               users={users} 
               loading={loading} 
               error={error} 
