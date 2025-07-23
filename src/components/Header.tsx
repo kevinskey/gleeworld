@@ -208,7 +208,6 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
               </DropdownMenu>
             )}
             
-          </div>
             {/* Mobile Menu Button */}
             <div className="lg:hidden">
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
