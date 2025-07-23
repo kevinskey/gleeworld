@@ -223,7 +223,7 @@ export default function AlumnaeLanding() {
                   <Button 
                     variant="outline" 
                     className="w-full mt-6"
-                    onClick={() => navigate("/legacy-lounge")}
+                    onClick={() => navigate("/alumnae/legacy-lounge")}
                   >
                     Visit Legacy Lounge
                   </Button>

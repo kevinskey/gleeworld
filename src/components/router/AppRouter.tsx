@@ -18,6 +18,11 @@ import BudgetApprovals from "@/pages/BudgetApprovals";
 import W9FormPage from "@/pages/W9FormPage";
 import NotFound from "@/pages/NotFound";
 import NotificationCenter from "@/pages/NotificationCenter";
+import AlumnaeLanding from "@/pages/AlumnaeLanding";
+import AlumnaeLegacyLounge from "@/pages/AlumnaeLegacyLounge";
+import AlumnaeStorySubmission from "@/pages/AlumnaeStorySubmission";
+import AlumnaeMessages from "@/pages/AlumnaeMessages";
+import AlumnaeAdmin from "@/pages/admin/AlumnaeAdmin";
 
 export const router = createBrowserRouter([
   {
@@ -91,6 +96,26 @@ export const router = createBrowserRouter([
   {
     path: "/w9-form",
     element: <W9FormPage />,
+  },
+  {
+    path: "/alumnae",
+    element: <AlumnaeLanding />,
+  },
+  {
+    path: "/alumnae/legacy-lounge",
+    element: <AlumnaeLegacyLounge />,
+  },
+  {
+    path: "/alumnae/story-submission",
+    element: <AlumnaeStorySubmission />,
+  },
+  {
+    path: "/alumnae/messages",
+    element: <AlumnaeMessages />,
+  },
+  {
+    path: "/admin/alumnae",
+    element: <AlumnaeAdmin />,
   },
   {
     path: "*",
