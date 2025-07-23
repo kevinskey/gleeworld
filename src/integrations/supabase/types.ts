@@ -4655,6 +4655,47 @@ export type Database = {
           },
         ]
       }
+      story_images: {
+        Row: {
+          created_by: string | null
+          display_order: number | null
+          file_size: number | null
+          id: string
+          image_name: string | null
+          image_url: string
+          story_id: string | null
+          uploaded_at: string | null
+        }
+        Insert: {
+          created_by?: string | null
+          display_order?: number | null
+          file_size?: number | null
+          id?: string
+          image_name?: string | null
+          image_url: string
+          story_id?: string | null
+          uploaded_at?: string | null
+        }
+        Update: {
+          created_by?: string | null
+          display_order?: number | null
+          file_size?: number | null
+          id?: string
+          image_name?: string | null
+          image_url?: string
+          story_id?: string | null
+          uploaded_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_images_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "alumnae_stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_notifications: {
         Row: {
           created_at: string
