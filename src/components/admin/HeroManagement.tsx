@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Save, Trash2, Eye, EyeOff, ExternalLink, Edit } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -557,28 +558,36 @@ export const HeroManagement = () => {
               {/* Basic Settings Section */}
               <div className="space-y-4">
                 <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Basic Settings</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="display_order" className="text-sm font-medium">Display Order</Label>
-                    <Input
-                      id="display_order"
-                      type="number"
-                      value={formData.display_order}
-                      onChange={(e) => setFormData(prev => ({ ...prev, display_order: parseInt(e.target.value) || 0 }))}
-                      className="border-2 focus:border-primary"
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Display Order: {formData.display_order}</Label>
+                    <Slider
+                      value={[formData.display_order]}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, display_order: value[0] }))}
+                      min={0}
+                      max={10}
+                      step={1}
+                      className="w-full"
                     />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>First (0)</span>
+                      <span>Last (10)</span>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="slide_duration_seconds" className="text-sm font-medium">Duration (seconds)</Label>
-                    <Input
-                      id="slide_duration_seconds"
-                      type="number"
-                      min="1"
-                      max="30"
-                      value={formData.slide_duration_seconds}
-                      onChange={(e) => setFormData(prev => ({ ...prev, slide_duration_seconds: parseInt(e.target.value) || 5 }))}
-                      className="border-2 focus:border-primary"
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Duration: {formData.slide_duration_seconds}s</Label>
+                    <Slider
+                      value={[formData.slide_duration_seconds]}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, slide_duration_seconds: value[0] }))}
+                      min={1}
+                      max={15}
+                      step={1}
+                      className="w-full"
                     />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>1 sec</span>
+                      <span>15 sec</span>
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg border">
