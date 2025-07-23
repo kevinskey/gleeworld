@@ -142,7 +142,8 @@ export const CSVImportDialog = ({ open, onOpenChange, onSuccess }: CSVImportDial
   };
 
   const validateMapping = (): boolean => {
-    return !!(columnMapping.title && columnMapping.physical_copies);
+    return !!(columnMapping.title && columnMapping.title !== 'unmapped' && 
+              columnMapping.physical_copies && columnMapping.physical_copies !== 'unmapped');
   };
 
   const findExistingSheet = async (title: string, composer?: string) => {
@@ -183,9 +184,9 @@ export const CSVImportDialog = ({ open, onOpenChange, onSuccess }: CSVImportDial
     for (let i = 0; i < csvData.length; i++) {
       const row = csvData[i];
       const title = row[columnMapping.title]?.trim();
-      const composer = row[columnMapping.composer]?.trim();
-      const voicing = row[columnMapping.voicing]?.trim();
-      const libraryNumber = row[columnMapping.library_number]?.trim();
+      const composer = columnMapping.composer !== 'unmapped' ? row[columnMapping.composer]?.trim() : '';
+      const voicing = columnMapping.voicing !== 'unmapped' ? row[columnMapping.voicing]?.trim() : '';
+      const libraryNumber = columnMapping.library_number !== 'unmapped' ? row[columnMapping.library_number]?.trim() : '';
       const physicalCopiesStr = row[columnMapping.physical_copies]?.trim();
 
       if (!title) {
@@ -470,7 +471,7 @@ export const CSVImportDialog = ({ open, onOpenChange, onSuccess }: CSVImportDial
                       <SelectValue placeholder="Select CSV column" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">-- Not mapped --</SelectItem>
+                      <SelectItem value="unmapped">-- Not mapped --</SelectItem>
                       {csvHeaders.map((header) => (
                         <SelectItem key={header} value={header}>
                           {header}
