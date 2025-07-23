@@ -17,7 +17,8 @@ import {
   Calendar,
   DollarSign,
   User,
-  Scan
+  Scan,
+  FileSpreadsheet
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,6 +26,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { SheetMusicLibrary } from './SheetMusicLibrary';
 import { UploadDialog } from './UploadDialog';
 import { CameraImportDialog } from './CameraImportDialog';
+import { CSVImportDialog } from './CSVImportDialog';
 
 interface ExtendedSheetMusic {
   id: string;
@@ -71,6 +73,7 @@ export const LibraryManagement = () => {
   
   const [uploadDialog, setUploadDialog] = useState(false);
   const [cameraDialog, setCameraDialog] = useState(false);
+  const [csvDialog, setCsvDialog] = useState(false);
   
   const [sheetMusic, setSheetMusic] = useState<ExtendedSheetMusic[]>([]);
   const [loading, setLoading] = useState(true);
@@ -246,6 +249,10 @@ export const LibraryManagement = () => {
             <Camera className="h-4 w-4" />
             Camera Import
           </Button>
+          <Button onClick={() => setCsvDialog(true)} variant="outline" className="flex items-center gap-2">
+            <FileSpreadsheet className="h-4 w-4" />
+            CSV Import
+          </Button>
           <Button onClick={() => setUploadDialog(true)} variant="outline" className="flex items-center gap-2">
             <Upload className="h-4 w-4" />
             Upload Files
@@ -374,6 +381,12 @@ export const LibraryManagement = () => {
       <CameraImportDialog
         open={cameraDialog}
         onOpenChange={setCameraDialog}
+        onSuccess={fetchSheetMusic}
+      />
+      
+      <CSVImportDialog
+        open={csvDialog}
+        onOpenChange={setCsvDialog}
         onSuccess={fetchSheetMusic}
       />
     </div>
