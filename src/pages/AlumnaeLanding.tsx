@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { Bell, Calendar, Heart, Users, BookOpen, Trophy, Clock, MapPin } from "lucide-react";
 import { format } from "date-fns";
+import { AddStoryDialog } from "@/components/alumnae/AddStoryDialog";
 
 interface AlumnaeStory {
   id: string;
@@ -51,6 +52,7 @@ export default function AlumnaeLanding() {
   const [reunionEvents, setReunionEvents] = useState<Event[]>([]);
   const [alumnaeHeadshots, setAlumnaeHeadshots] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAddStoryDialogOpen, setIsAddStoryDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -327,7 +329,11 @@ export default function AlumnaeLanding() {
                   </div>
                 ))}
               </div>
-              <Button variant="outline" className="w-full mt-6">
+              <Button 
+                variant="outline" 
+                className="w-full mt-6"
+                onClick={() => setIsAddStoryDialogOpen(true)}
+              >
                 <BookOpen className="mr-2 h-4 w-4" />
                 Add My Story
               </Button>
@@ -368,6 +374,12 @@ export default function AlumnaeLanding() {
           </Card>
         </div>
       </div>
+
+      <AddStoryDialog
+        open={isAddStoryDialogOpen}
+        onOpenChange={setIsAddStoryDialogOpen}
+        onStoryAdded={() => {}}
+      />
     </UniversalLayout>
   );
 }
