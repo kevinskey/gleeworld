@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Card, CardContent } from "@/components/ui/card";
 import { User } from "@/hooks/useUsers";
+import { getAvatarUrl, getInitials } from "@/utils/avatarUtils";
 import { 
   Shield, 
   User as UserIcon, 
@@ -73,13 +74,17 @@ export const UserCard = ({
         >
           <Avatar className="h-12 w-12 border-2 border-brand-200/50 shadow-sm flex-shrink-0">
             <AvatarImage 
-              src={user.avatar_url || "/placeholder.svg"} 
+              src={getAvatarUrl(user.avatar_url)} 
               alt={user.full_name || user.email || "User"} 
               className="object-cover"
+              onError={(e) => {
+                console.log('Avatar failed to load:', user.avatar_url);
+                e.currentTarget.src = "/placeholder.svg";
+              }}
             />
             <AvatarFallback className="bg-gradient-to-br from-brand-100 to-brand-200 text-brand-700">
               {user.full_name ? 
-                user.full_name.split(' ').map(n => n[0]).join('').toUpperCase() :
+                getInitials(user.full_name) :
                 <UserIcon className="h-5 w-5" />
               }
             </AvatarFallback>
