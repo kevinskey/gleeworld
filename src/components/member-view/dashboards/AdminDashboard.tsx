@@ -1,6 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import { 
   Calendar, 
   CheckCircle, 
@@ -18,7 +20,8 @@ import {
   Database,
   BarChart3,
   FileText,
-  AlertCircle
+  AlertCircle,
+  GraduationCap
 } from "lucide-react";
 
 interface AdminDashboardProps {
@@ -34,6 +37,7 @@ interface AdminDashboardProps {
 }
 
 export const AdminDashboard = ({ user }: AdminDashboardProps) => {
+  const navigate = useNavigate();
   // Mock data for admin dashboard
   const adminData = {
     systemStats: {
@@ -261,18 +265,29 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           <Star className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span>Create User</span>
-              <Badge variant="outline">Action</Badge>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span>Send Announcement</span>
-              <Badge variant="outline">Action</Badge>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span>Generate Report</span>
-              <Badge variant="outline">Action</Badge>
+          <div className="space-y-3">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full justify-start" 
+              onClick={() => navigate('/admin/alumnae')}
+            >
+              <GraduationCap className="mr-2 h-4 w-4" />
+              Alumnae Portal Admin
+            </Button>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span>Create User</span>
+                <Badge variant="outline">Action</Badge>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span>Send Announcement</span>
+                <Badge variant="outline">Action</Badge>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span>Generate Report</span>
+                <Badge variant="outline">Action</Badge>
+              </div>
             </div>
           </div>
         </CardContent>
