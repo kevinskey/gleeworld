@@ -18,6 +18,7 @@ import {
 import { format } from "date-fns";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EditEventDialog } from "./EditEventDialog";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface EventDetailDialogProps {
@@ -29,6 +30,7 @@ interface EventDetailDialogProps {
 
 export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }: EventDetailDialogProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [editOpen, setEditOpen] = useState(false);
   
   if (!event) return null;
@@ -204,7 +206,7 @@ export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }:
                   size="sm"
                   onClick={() => {
                     // Navigate to contract management for this event
-                    window.location.href = `/event-planner?eventId=${event.id}`;
+                    navigate(`/event-planner?eventId=${event.id}`);
                   }}
                   className="w-full sm:w-auto"
                 >
@@ -216,7 +218,7 @@ export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }:
                   size="sm"
                   onClick={() => {
                     // Navigate to budget planning for this event
-                    window.location.href = `/event-planner?eventId=${event.id}&tab=budget`;
+                    navigate(`/event-planner?eventId=${event.id}&tab=budget`);
                   }}
                   className="w-full sm:w-auto"
                 >

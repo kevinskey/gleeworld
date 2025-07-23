@@ -78,12 +78,7 @@ export const UserCard = ({
               alt={user.full_name || user.email || "User"} 
               className="object-cover hover:scale-105 transition-transform"
               onError={(e) => {
-                console.log('Avatar failed to load for user:', user.id, 'URL was:', user.avatar_url);
-                console.log('Attempted to load:', e.currentTarget.src);
                 e.currentTarget.src = "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=150&h=150&fit=crop&crop=face";
-              }}
-              onLoad={() => {
-                console.log('Avatar loaded successfully for user:', user.id);
               }}
             />
             <AvatarFallback className="bg-gradient-to-br from-blue-100 to-indigo-200 text-blue-800 font-bold text-lg border border-blue-200">
