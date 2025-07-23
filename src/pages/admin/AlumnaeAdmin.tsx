@@ -133,20 +133,50 @@ export default function AlumnaeAdmin() {
         .eq('is_approved', false)
         .order('created_at', { ascending: false });
 
-      // Fetch alumnae profiles
-      const { data: profilesData } = await supabase
+      // Fetch alumnae profiles from gw_profiles
+      const { data: gwProfilesData } = await supabase
         .from('gw_profiles')
         .select('*')
         .eq('role', 'alumna')
         .order('created_at', { ascending: false });
 
+      // Fetch users with 'alumnae' role from main profiles table
+      const { data: alumnaeUsers } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'alumnae')
+        .order('created_at', { ascending: false });
+
+      // Combine both datasets - convert profiles to gw_profiles format
+      const combinedProfiles = [
+        ...(gwProfilesData || []),
+        ...(alumnaeUsers || []).map(user => ({
+          id: user.id,
+          user_id: user.id,
+          email: user.email,
+          full_name: user.full_name,
+          first_name: user.full_name ? user.full_name.split(' ')[0] : '',
+          last_name: user.full_name ? user.full_name.split(' ').slice(1).join(' ') : '',
+          phone: user.phone_number,
+          role: 'alumna', // Normalize to 'alumna' for consistency
+          created_at: user.created_at,
+          updated_at: user.updated_at,
+          verified: true, // Assume users with alumnae role are verified
+          mentor_opt_in: false, // Default values for gw_profiles fields
+          reunion_rsvp: false,
+          graduation_year: null,
+          is_admin: false,
+          is_super_admin: false
+        }))
+      ];
+
       // Calculate mentor stats
-      const mentors = profilesData?.filter(p => p.mentor_opt_in) || [];
-      const rsvps = profilesData?.filter(p => p.reunion_rsvp) || [];
+      const mentors = combinedProfiles?.filter(p => p.mentor_opt_in) || [];
+      const rsvps = combinedProfiles?.filter(p => p.reunion_rsvp) || [];
 
       setPendingStories(storiesData || []);
       setPendingMessages(messagesData || []);
-      setAlumnaeProfiles(profilesData || []);
+      setAlumnaeProfiles(combinedProfiles || []);
       setMentorStats({
         total_mentors: mentors.length,
         active_mentors: mentors.filter(m => m.verified).length,
@@ -232,12 +262,50 @@ export default function AlumnaeAdmin() {
 
   const handleVerifyAlumna = async (userId: string, verify: boolean) => {
     try {
-      const { error } = await supabase
+      // Check if this user exists in gw_profiles first
+      const { data: gwProfile } = await supabase
         .from('gw_profiles')
-        .update({ verified: verify })
-        .eq('user_id', userId);
+        .select('id')
+        .eq('user_id', userId)
+        .single();
 
-      if (error) throw error;
+      if (gwProfile) {
+        // Update gw_profiles if the user exists there
+        const { error } = await supabase
+          .from('gw_profiles')
+          .update({ verified: verify })
+          .eq('user_id', userId);
+
+        if (error) throw error;
+      } else {
+        // This is a user from the main profiles table with 'alumnae' role
+        // We could create a gw_profile record for them or handle verification differently
+        // For now, let's create a basic gw_profile record
+        const { data: userProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+        if (userProfile) {
+          const { error } = await supabase
+            .from('gw_profiles')
+            .insert({
+              user_id: userId,
+              email: userProfile.email,
+              full_name: userProfile.full_name,
+              first_name: userProfile.full_name ? userProfile.full_name.split(' ')[0] : '',
+              last_name: userProfile.full_name ? userProfile.full_name.split(' ').slice(1).join(' ') : '',
+              phone: userProfile.phone_number,
+              role: 'alumna',
+              verified: verify,
+              mentor_opt_in: false,
+              reunion_rsvp: false
+            });
+
+          if (error) throw error;
+        }
+      }
       
       toast.success(`Alumna ${verify ? 'verified' : 'unverified'}!`);
       await fetchAdminData();
