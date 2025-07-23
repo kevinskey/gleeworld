@@ -45,6 +45,7 @@ import NotificationCenter from "./pages/NotificationCenter";
 import Budgets from "./pages/Budgets";
 import Treasurer from "./pages/Treasurer";
 import TourManager from "./pages/TourManager";
+import AlumnaeLanding from "./pages/AlumnaeLanding";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -368,14 +369,22 @@ const App = () => {
                          </ProtectedRoute>
                        } 
                      />
-                     <Route 
-                       path="/tour-manager" 
-                       element={
-                         <ProtectedRoute>
-                           <TourManager />
-                         </ProtectedRoute>
-                       } 
-                     />
+                      <Route 
+                        path="/tour-manager" 
+                        element={
+                          <ProtectedRoute>
+                            <TourManager />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/alumnae" 
+                        element={
+                          <ProtectedRoute>
+                            <AlumnaeLanding />
+                          </ProtectedRoute>
+                        } 
+                      />
                    <Route 
                      path="/landing"
                     element={

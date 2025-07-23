@@ -147,6 +147,45 @@ export type Database = {
           },
         ]
       }
+      alumnae_stories: {
+        Row: {
+          content: string
+          created_at: string | null
+          graduation_year: number | null
+          id: string
+          image_url: string | null
+          is_approved: boolean | null
+          is_featured: boolean | null
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          graduation_year?: number | null
+          id?: string
+          image_url?: string | null
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          graduation_year?: number | null
+          id?: string
+          image_url?: string | null
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       budget_attachments: {
         Row: {
           created_at: string
@@ -396,6 +435,45 @@ export type Database = {
           title?: string
           total_amount?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      bulletin_posts: {
+        Row: {
+          category: string | null
+          content: string
+          created_at: string | null
+          id: string
+          is_alumnae_only: boolean | null
+          is_featured: boolean | null
+          is_public: boolean | null
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          is_alumnae_only?: boolean | null
+          is_featured?: boolean | null
+          is_public?: boolean | null
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_alumnae_only?: boolean | null
+          is_featured?: boolean | null
+          is_public?: boolean | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -2821,6 +2899,8 @@ export type Database = {
           exec_board_role: string | null
           first_name: string | null
           full_name: string | null
+          graduation_year: number | null
+          headshot_url: string | null
           id: string
           is_admin: boolean | null
           is_exec_board: boolean | null
@@ -2829,10 +2909,12 @@ export type Database = {
           join_date: string | null
           last_name: string | null
           last_sign_in_at: string | null
+          mentor_opt_in: boolean | null
           music_role: string | null
           notes: string | null
           org: string | null
           phone: string | null
+          reunion_rsvp: boolean | null
           role: string | null
           role_tags: string[] | null
           special_roles: string[] | null
@@ -2860,6 +2942,8 @@ export type Database = {
           exec_board_role?: string | null
           first_name?: string | null
           full_name?: string | null
+          graduation_year?: number | null
+          headshot_url?: string | null
           id?: string
           is_admin?: boolean | null
           is_exec_board?: boolean | null
@@ -2868,10 +2952,12 @@ export type Database = {
           join_date?: string | null
           last_name?: string | null
           last_sign_in_at?: string | null
+          mentor_opt_in?: boolean | null
           music_role?: string | null
           notes?: string | null
           org?: string | null
           phone?: string | null
+          reunion_rsvp?: boolean | null
           role?: string | null
           role_tags?: string[] | null
           special_roles?: string[] | null
@@ -2899,6 +2985,8 @@ export type Database = {
           exec_board_role?: string | null
           first_name?: string | null
           full_name?: string | null
+          graduation_year?: number | null
+          headshot_url?: string | null
           id?: string
           is_admin?: boolean | null
           is_exec_board?: boolean | null
@@ -2907,10 +2995,12 @@ export type Database = {
           join_date?: string | null
           last_name?: string | null
           last_sign_in_at?: string | null
+          mentor_opt_in?: boolean | null
           music_role?: string | null
           notes?: string | null
           org?: string | null
           phone?: string | null
+          reunion_rsvp?: boolean | null
           role?: string | null
           role_tags?: string[] | null
           special_roles?: string[] | null
@@ -4107,6 +4197,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rhythm_transcriptions: {
+        Row: {
+          audio_data: string | null
+          created_at: string
+          id: string
+          rhythm_notation: Json
+          tempo: number | null
+          time_signature: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audio_data?: string | null
+          created_at?: string
+          id?: string
+          rhythm_notation: Json
+          tempo?: number | null
+          time_signature?: string | null
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audio_data?: string | null
+          created_at?: string
+          id?: string
+          rhythm_notation?: Json
+          tempo?: number | null
+          time_signature?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       setlist_items: {
         Row: {

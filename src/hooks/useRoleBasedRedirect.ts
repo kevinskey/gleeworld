@@ -21,9 +21,13 @@ export const useRoleBasedRedirect = () => {
 
     // Role-based redirect logic
     const isAdmin = userProfile.role === 'admin' || userProfile.role === 'super-admin';
+    const isAlumna = userProfile.role === 'alumna';
     
     if (isAdmin) {
       navigate('/system', { replace: true });
+      window.scrollTo(0, 0);
+    } else if (isAlumna) {
+      navigate('/alumnae', { replace: true });
       window.scrollTo(0, 0);
     } else {
       navigate('/dashboard', { replace: true });
