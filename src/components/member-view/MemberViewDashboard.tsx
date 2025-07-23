@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { mockUsers } from "@/utils/mockUsers";
+import { useUserById } from "@/hooks/useUserById";
 import { DashboardTemplate } from "./DashboardTemplate";
 import { MemberDashboard } from "./dashboards/MemberDashboard";
 import { ExecutiveBoardDashboard } from "./dashboards/ExecutiveBoardDashboard";
@@ -9,14 +10,43 @@ import { AlumnaeDashboard } from "./dashboards/AlumnaeDashboard";
 import { AdminDashboard } from "./dashboards/AdminDashboard";
 import { SuperAdminDashboard } from "./dashboards/SuperAdminDashboard";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { ErrorState } from "@/components/shared/ErrorState";
 
 export const MemberViewDashboard = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const { getSettingByName } = useDashboardSettings();
+  const { user, loading, error } = useUserById(userId);
 
-  const user = mockUsers.find(u => u.id === userId);
-  
+  // Redirect to profile page if user exists but member view isn't appropriate
+  useEffect(() => {
+    if (error === 'User not found') {
+      // Try to navigate to profile page instead
+      navigate(`/profile`, { replace: true });
+    }
+  }, [error, navigate]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="lg" text="Loading user dashboard..." />
+      </div>
+    );
+  }
+
+  if (error && error !== 'User not found') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <ErrorState
+          title="Failed to load user"
+          message={error}
+          onRetry={() => window.location.reload()}
+        />
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
