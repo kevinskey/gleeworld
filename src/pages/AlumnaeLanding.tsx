@@ -135,7 +135,7 @@ export default function AlumnaeLanding() {
           <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-secondary/80"></div>
           <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
             <h1 className="text-4xl md:text-6xl font-serif text-white mb-4 leading-tight">
-              Once a Glee Club Woman,<br />
+              Spelman College Glee Club Alumnae,<br />
               <span className="text-accent">Always a Voice of the Legacy</span>
             </h1>
             <p className="text-xl text-white/90 mb-8 max-w-2xl">
