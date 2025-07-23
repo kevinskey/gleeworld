@@ -19,6 +19,7 @@ import { AccountingFilters } from "./accounting/AccountingFilters";
 import { useAccountingFiltering } from "@/hooks/useAccountingFiltering";
 import { Shield, Users, Settings, FileText, Activity, Receipt, Calculator, Mail, Music } from "lucide-react";
 import { MusicManagement } from "./admin/MusicManagement";
+import { ExecutiveBoardManager } from "./admin/ExecutiveBoardManager";
 
 interface AdminPanelProps {
   activeTab?: string;
@@ -70,6 +71,7 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
      currentPath.includes('receipts') ? 'receipts' : 
      currentPath.includes('accounting') ? 'accounting' : 
      currentPath.includes('music') ? 'music' :
+     currentPath.includes('executive-board') ? 'executive-board' :
      currentPath.includes('settings') ? 'settings' : 'overview');
 
   const handleSort = (column: string) => {
@@ -173,6 +175,14 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
         );
       case 'music':
         return <MusicManagement />;
+      case 'executive-board':
+        return (
+          <ExecutiveBoardManager 
+            users={users}
+            loading={usersLoading}
+            onRefetch={refetchUsers}
+          />
+        );
       case 'settings':
         return <SystemSettings />;
       default:

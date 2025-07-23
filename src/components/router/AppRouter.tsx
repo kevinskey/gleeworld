@@ -13,7 +13,7 @@ import AttendancePage from "@/pages/AttendancePage";
 import EventPlanner from "@/pages/EventPlanner";
 import Payments from "@/pages/Payments";
 import Announcements from "@/pages/Announcements";
-import System from "@/pages/System";
+
 import BudgetApprovals from "@/pages/BudgetApprovals";
 import W9FormPage from "@/pages/W9FormPage";
 import NotFound from "@/pages/NotFound";
@@ -84,10 +84,6 @@ export const router = createBrowserRouter([
   {
     path: "/announcements",
     element: <Announcements />,
-  },
-  {
-    path: "/system",
-    element: <System />,
   },
   {
     path: "/budget-approvals",

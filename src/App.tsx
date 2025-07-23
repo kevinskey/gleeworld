@@ -12,7 +12,7 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useRoleBasedRedirect } from "@/hooks/useRoleBasedRedirect";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import System from "./pages/System";
+
 import { GleeWorldLanding } from "./pages/GleeWorldLanding";
 import ContractSigning from "./pages/ContractSigning";
 import AdminSigning from "./pages/AdminSigning";
@@ -153,14 +153,6 @@ const App = () => {
               <Route 
                 path="/w9-form" 
                 element={<W9FormPage />} 
-              />
-              <Route 
-                path="/system" 
-                element={
-                  <ProtectedRoute>
-                    <System />
-                  </ProtectedRoute>
-                } 
               />
               <Route 
                 path="/admin-signing" 

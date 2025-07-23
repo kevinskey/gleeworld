@@ -9,25 +9,23 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { AppNavigation } from "@/components/navigation/AppNavigation";
-import { SystemNavigation } from "@/components/navigation/SystemNavigation";
+
 import { DashboardSwitcher } from "@/components/navigation/DashboardSwitcher";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TaskNotifications } from "@/components/shared/TaskNotifications";
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 
 interface UniversalHeaderProps {
-  systemActiveTab?: string;
-  onSystemTabChange?: (tab: string) => void;
 }
 
-export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: UniversalHeaderProps) => {
+export const UniversalHeader = ({}: UniversalHeaderProps) => {
   const { user, signOut } = useAuth();
   const isMobile = useIsMobile();
   const location = useLocation();
   const { profile } = useProfile();
   const { pageName } = usePageTitle();
   
-  const isSystemPage = location.pathname.startsWith('/system');
+  
 
   const handleSignOut = async () => {
     try {
@@ -125,7 +123,7 @@ export const UniversalHeader = ({ systemActiveTab, onSystemTabChange }: Universa
                        </Link>
                      </DropdownMenuItem>
                      <DropdownMenuItem asChild>
-                       <Link to="/system" className="flex items-center">
+                       <Link to="/dashboard" className="flex items-center">
                          <Settings className="mr-2 h-4 w-4" />
                          Settings
                        </Link>

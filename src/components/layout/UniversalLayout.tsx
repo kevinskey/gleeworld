@@ -11,8 +11,6 @@ interface UniversalLayoutProps {
   className?: string;
   maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
   containerized?: boolean;
-  systemActiveTab?: string;
-  onSystemTabChange?: (tab: string) => void;
 }
 
 export const UniversalLayout = ({ 
@@ -22,15 +20,11 @@ export const UniversalLayout = ({
   className = "",
   maxWidth = "full",
   containerized = true,
-  systemActiveTab,
-  onSystemTabChange
 }: UniversalLayoutProps) => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {showHeader && (
         <UniversalHeader 
-          systemActiveTab={systemActiveTab}
-          onSystemTabChange={onSystemTabChange}
         />
       )}
       <main className={`flex-1 ${className}`}>
