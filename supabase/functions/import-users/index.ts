@@ -6,17 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-interface UserData {
-  email: string;
-  full_name?: string;
-  role: string;
-}
-
-interface ImportRequest {
-  users: UserData[];
-  source: 'manual' | 'csv';
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -24,20 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    // Get the authorization header
-    const authHeader = req.headers.get('authorization')
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'No authorization header' }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
-
-    // Create Supabase client with service role key for admin operations
-    const supabaseAdmin = createClient(
+    const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
@@ -48,59 +24,10 @@ serve(async (req) => {
       }
     )
 
-    // Create regular client to verify the requesting user is an admin
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
-
-    // Verify the user making the request
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token)
+    const { users, source } = await req.json()
     
-    if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid token' }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
-
-    // Check if user is admin or super-admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (profileError || !profile || !['admin', 'super-admin'].includes(profile.role)) {
-      return new Response(
-        JSON.stringify({ error: 'Insufficient permissions' }),
-        { 
-          status: 403, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
-
-    const { users: usersToImport }: ImportRequest = await req.json()
-
-    if (!usersToImport || !Array.isArray(usersToImport)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid users data' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
+    if (!users || !Array.isArray(users)) {
+      throw new Error('Users array is required')
     }
 
     const results = {
@@ -109,98 +36,101 @@ serve(async (req) => {
       users: [] as any[]
     }
 
-    // Process each user
-    for (const userData of usersToImport) {
+    for (const userData of users) {
       try {
-        const { email, full_name, role } = userData
-
-        // Validate email
-        if (!email || !email.includes('@')) {
-          results.errors.push(`Invalid email: ${email}`)
+        const { email, full_name, role = 'user' } = userData
+        
+        if (!email) {
+          results.errors.push('Email is required')
           continue
         }
 
-        // Validate role
-        if (!['user', 'admin', 'super-admin', 'alumnae'].includes(role)) {
-          results.errors.push(`Invalid role for ${email}: ${role}`)
-          continue
-        }
-
-        // Generate a temporary password (12 characters)
-        const tempPassword = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12)
-
-        // Create user in Supabase Auth using admin client
-        const { data: newUser, error: signUpError } = await supabaseAdmin.auth.admin.createUser({
+        // Generate a temporary password
+        const tempPassword = Math.random().toString(36).slice(-8)
+        
+        // Create user in auth.users
+        const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
           email: email,
           password: tempPassword,
-          email_confirm: true, // Auto-confirm email for admin-created users
+          email_confirm: true,
           user_metadata: {
             full_name: full_name || ''
           }
         })
 
-        if (signUpError) {
-          if (signUpError.message.includes('already registered')) {
-            results.errors.push(`User ${email} already exists`)
-          } else {
-            results.errors.push(`Failed to create ${email}: ${signUpError.message}`)
-          }
+        if (authError) {
+          results.errors.push(`Failed to create auth user for ${email}: ${authError.message}`)
           continue
         }
 
-        if (!newUser.user) {
-          results.errors.push(`Failed to create user ${email}`)
+        if (!authData.user) {
+          results.errors.push(`No user data returned for ${email}`)
           continue
         }
 
-        // Update the profile with the specified role
-        const { error: profileUpdateError } = await supabaseAdmin
+        // Create/update profile
+        const { error: profileError } = await supabaseClient
           .from('profiles')
-          .update({
-            full_name: full_name || null,
+          .upsert({
+            id: authData.user.id,
+            email: email,
+            full_name: full_name || '',
             role: role
           })
-          .eq('id', newUser.user.id)
 
-        if (profileUpdateError) {
-          console.error('Profile update error:', profileUpdateError)
-          // User was created but profile update failed - still count as success
-          results.errors.push(`User ${email} created but role assignment failed`)
+        if (profileError) {
+          results.errors.push(`Failed to create profile for ${email}: ${profileError.message}`)
+          continue
+        }
+
+        // Create/update gw_profile
+        const { error: gwProfileError } = await supabaseClient
+          .from('gw_profiles')
+          .upsert({
+            user_id: authData.user.id,
+            email: email,
+            full_name: full_name || '',
+            first_name: full_name ? full_name.split(' ')[0] : '',
+            last_name: full_name ? full_name.split(' ').slice(1).join(' ') : null,
+          })
+
+        if (gwProfileError) {
+          console.warn(`Warning: Failed to create gw_profile for ${email}:`, gwProfileError.message)
+          // Don't treat this as a fatal error since gw_profiles might not be required
         }
 
         results.success++
         results.users.push({
-          id: newUser.user.id,
           email: email,
-          full_name: full_name,
-          role: role,
-          temp_password: tempPassword
+          temp_password: tempPassword,
+          user_id: authData.user.id
         })
 
-        console.log(`Successfully created user: ${email} with role: ${role}`)
-
-      } catch (error) {
-        console.error('Error processing user:', userData, error)
-        results.errors.push(`Error processing ${userData.email}: ${error.message}`)
+      } catch (userError) {
+        results.errors.push(`Error processing user ${userData.email}: ${userError.message}`)
       }
     }
 
     return new Response(
       JSON.stringify(results),
       { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
+      },
     )
 
   } catch (error) {
-    console.error('Function error:', error)
+    console.error('Error in import-users function:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: 0, 
+        errors: [error.message || 'Unknown error occurred'],
+        users: []
+      }),
       { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      },
     )
   }
 })

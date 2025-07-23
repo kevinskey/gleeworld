@@ -75,8 +75,15 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
   const handleCreateUser = async () => {
     if (!validateForm()) return;
 
+    console.log('Starting user creation process...');
     setIsLoading(true);
     try {
+      console.log('Calling import-users function with:', {
+        email: email.trim(),
+        full_name: fullName.trim(),
+        role: role
+      });
+
       const { data, error } = await supabase.functions.invoke('import-users', {
         body: {
           users: [{
@@ -88,12 +95,18 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
         }
       });
 
-      if (error) throw error;
+      console.log('Function response:', { data, error });
+
+      if (error) {
+        console.error('Function error:', error);
+        throw error;
+      }
 
       if (data.success > 0) {
         const newTempPassword = data.users?.[0]?.temp_password || "";
         setTempPassword(newTempPassword);
         
+        console.log('User created successfully:', data);
         toast({
           title: "User Created Successfully",
           description: `${email} has been added to the system.`,
@@ -102,6 +115,7 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
         resetForm();
         onSuccess();
       } else if (data.errors && data.errors.length > 0) {
+        console.error('Function returned errors:', data.errors);
         toast({
           title: "Error Creating User",
           description: data.errors[0],
