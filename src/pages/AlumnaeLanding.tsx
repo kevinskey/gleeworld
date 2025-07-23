@@ -141,7 +141,7 @@ export default function AlumnaeLanding() {
             <p className="text-xl text-white/90 mb-8 max-w-2xl">
               Welcome back, {userProfile?.first_name}. Keep on singing in my ear. #SCGC4Life
             </p>
-            <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-accent">
+            <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-accent" onClick={() => navigate('/profile')}>
               <Users className="mr-2 h-5 w-5" />
               Update My Profile
             </Button>
