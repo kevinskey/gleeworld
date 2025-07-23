@@ -387,6 +387,23 @@ export const UserDashboard = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {/* Add Alumnae Portal Admin button for super-admins */}
+                  {profile?.role === 'super-admin' && (
+                    <div className="mb-4">
+                      <Button
+                        className="w-full justify-start h-12 bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
+                        onClick={() => navigate('/admin/alumnae')}
+                      >
+                        <div className="h-6 w-6 mr-3 text-yellow-300">
+                          🎓
+                        </div>
+                        <div className="text-left">
+                          <div className="font-medium">Alumnae Portal Admin</div>
+                          <div className="text-xs text-purple-100">Manage alumni content & stories</div>
+                        </div>
+                      </Button>
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     {availableModules.slice(0, 8).map((module) => {
                       const IconComponent = module.icon;
