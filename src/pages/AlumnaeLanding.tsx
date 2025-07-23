@@ -136,7 +136,7 @@ export default function AlumnaeLanding() {
           <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
             <h1 className="text-4xl md:text-6xl font-serif text-white mb-4 leading-tight">
               Spelman College Glee Club Alumnae,<br />
-              <span className="text-accent">Always a Voice of the Legacy</span>
+              <span className="text-accent">Still Amazing, Still Inspiring!</span>
             </h1>
             <p className="text-xl text-white/90 mb-8 max-w-2xl">
               Welcome back, {userProfile?.display_name}. Your voice continues to echo through the halls of Spelman.
