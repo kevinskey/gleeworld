@@ -73,9 +73,9 @@ export const UserCard = ({
           onClick={() => onClick?.(user)}
         >
           <Avatar className="h-14 w-14 border-2 border-slate-300 shadow-md flex-shrink-0 ring-2 ring-slate-100">
-            {getAvatarUrl(user.avatar_url) && (
+            {user.avatar_url && (
               <AvatarImage 
-                src={getAvatarUrl(user.avatar_url)!} 
+                src={user.avatar_url} 
                 alt={user.full_name || user.email || "User"} 
                 className="object-cover hover:scale-105 transition-transform"
               />

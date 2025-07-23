@@ -38,10 +38,10 @@ export const useUsers = () => {
       setLoading(true);
       setError(null);
       
-      // First get profiles data
+      // First get profiles data including avatar_url
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, email, full_name, role, created_at')
+        .select('id, email, full_name, role, created_at, avatar_url')
         .order('created_at', { ascending: false });
 
       if (profilesError) {
@@ -80,7 +80,7 @@ export const useUsers = () => {
           created_at: user.created_at,
           exec_board_role: gwProfile?.exec_board_role || null,
           is_exec_board: gwProfile?.is_exec_board || false,
-          avatar_url: gwProfile?.avatar_url || null,
+          avatar_url: user.avatar_url || gwProfile?.avatar_url || null, // Prioritize profiles table avatar
           // Additional profile fields
           phone: gwProfile?.phone || null,
           voice_part: gwProfile?.voice_part || null,
