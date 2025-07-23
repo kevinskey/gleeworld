@@ -388,387 +388,385 @@ export const HeroManagement = () => {
       </Card>
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-        {/* Left Column - Content */}
-        <div className="xl:col-span-3 space-y-6">
-          {/* Basic Content Section */}
+        {/* Combined Edit Window */}
+        <div className="xl:col-span-3">
           <Card className="shadow-md">
             <CardHeader className="bg-muted/50 border-b">
               <CardTitle className="text-lg flex items-center gap-2">
-                <div className="p-1.5 rounded bg-blue-100 text-blue-700">📝</div>
-                Content & Text
+                <div className="p-1.5 rounded bg-blue-100 text-blue-700">✏️</div>
+                {editingId ? "Edit Hero Slide" : "Create New Hero Slide"}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="space-y-8 pt-6">
+              {/* Content & Text Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <div className="p-1.5 rounded bg-blue-100 text-blue-700">📝</div>
+                  <h3 className="text-lg font-semibold">Content & Text</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title" className="text-sm font-medium">Title</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="Enter slide title..."
+                      className="border-2 focus:border-primary"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="button_text" className="text-sm font-medium">Button Text</Label>
+                    <Input
+                      id="button_text"
+                      value={formData.button_text}
+                      onChange={(e) => setFormData(prev => ({ ...prev, button_text: e.target.value }))}
+                      placeholder="Enter button text..."
+                      className="border-2 focus:border-primary"
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="title" className="text-sm font-medium">Title</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Enter slide title..."
-                    className="border-2 focus:border-primary"
+                  <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Enter slide description..."
+                    rows={3}
+                    className="border-2 focus:border-primary resize-none"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="button_text" className="text-sm font-medium">Button Text</Label>
+                  <Label htmlFor="link_url" className="text-sm font-medium">Link URL</Label>
                   <Input
-                    id="button_text"
-                    value={formData.button_text}
-                    onChange={(e) => setFormData(prev => ({ ...prev, button_text: e.target.value }))}
-                    placeholder="Enter button text..."
+                    id="link_url"
+                    value={formData.link_url}
+                    onChange={(e) => setFormData(prev => ({ ...prev, link_url: e.target.value }))}
+                    placeholder="https://example.com"
                     className="border-2 focus:border-primary"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description" className="text-sm font-medium">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Enter slide description..."
-                  rows={3}
-                  className="border-2 focus:border-primary resize-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="link_url" className="text-sm font-medium">Link URL</Label>
-                <Input
-                  id="link_url"
-                  value={formData.link_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, link_url: e.target.value }))}
-                  placeholder="https://example.com"
-                  className="border-2 focus:border-primary"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Images Section */}
-          <Card className="shadow-md">
-            <CardHeader className="bg-muted/50 border-b">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <div className="p-1.5 rounded bg-purple-100 text-purple-700">🖼️</div>
-                Images
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {/* Desktop Image */}
-                <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border-2 border-blue-200">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="p-1 rounded bg-blue-500 text-white text-xs font-bold">🖥️</div>
-                    <Label className="text-sm font-semibold text-blue-800">Desktop *</Label>
-                  </div>
-                  <div className="space-y-2">
-                    <Input
-                      id="image_url"
-                      value={formData.image_url}
-                      onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-                      placeholder="Image URL"
-                      className="border-2 border-blue-300 focus:border-blue-500"
-                    />
-                    <div className="relative">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleImageUpload(e, 'desktop')}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              {/* Images Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <div className="p-1.5 rounded bg-purple-100 text-purple-700">🖼️</div>
+                  <h3 className="text-lg font-semibold">Images</h3>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  {/* Desktop Image */}
+                  <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border-2 border-blue-200">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="p-1 rounded bg-blue-500 text-white text-xs font-bold">🖥️</div>
+                      <Label className="text-sm font-semibold text-blue-800">Desktop *</Label>
+                    </div>
+                    <div className="space-y-2">
+                      <Input
+                        id="image_url"
+                        value={formData.image_url}
+                        onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
+                        placeholder="Image URL"
+                        className="border-2 border-blue-300 focus:border-blue-500"
                       />
-                      <Button variant="outline" className="w-full border-2 border-blue-300 hover:bg-blue-100">
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload
-                      </Button>
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(e, 'desktop')}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <Button variant="outline" className="w-full border-2 border-blue-300 hover:bg-blue-100">
+                          <Upload className="h-4 w-4 mr-2" />
+                          Upload
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mobile Image */}
+                  <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border-2 border-green-200">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="p-1 rounded bg-green-500 text-white text-xs font-bold">📱</div>
+                      <Label className="text-sm font-semibold text-green-800">Mobile</Label>
+                    </div>
+                    <div className="space-y-2">
+                      <Input
+                        id="mobile_image_url"
+                        value={formData.mobile_image_url}
+                        onChange={(e) => setFormData(prev => ({ ...prev, mobile_image_url: e.target.value }))}
+                        placeholder="Image URL"
+                        className="border-2 border-green-300 focus:border-green-500"
+                      />
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(e, 'mobile')}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <Button variant="outline" className="w-full border-2 border-green-300 hover:bg-green-100">
+                          <Upload className="h-4 w-4 mr-2" />
+                          Upload
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* iPad Image */}
+                  <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border-2 border-purple-200">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="p-1 rounded bg-purple-500 text-white text-xs font-bold">📄</div>
+                      <Label className="text-sm font-semibold text-purple-800">iPad</Label>
+                    </div>
+                    <div className="space-y-2">
+                      <Input
+                        id="ipad_image_url"
+                        value={formData.ipad_image_url}
+                        onChange={(e) => setFormData(prev => ({ ...prev, ipad_image_url: e.target.value }))}
+                        placeholder="Image URL"
+                        className="border-2 border-purple-300 focus:border-purple-500"
+                      />
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(e, 'ipad')}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <Button variant="outline" className="w-full border-2 border-purple-300 hover:bg-purple-100">
+                          <Upload className="h-4 w-4 mr-2" />
+                          Upload
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Slide Settings Section */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <div className="p-1.5 rounded bg-orange-100 text-orange-700">⚙️</div>
+                  <h3 className="text-lg font-semibold">Slide Settings</h3>
+                </div>
+
+                {/* Basic Settings */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Basic Settings</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Display Order: {formData.display_order}</Label>
+                      <Slider
+                        value={[formData.display_order]}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, display_order: value[0] }))}
+                        min={0}
+                        max={10}
+                        step={1}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>First (0)</span>
+                        <span>Last (10)</span>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Duration: {formData.slide_duration_seconds}s</Label>
+                      <Slider
+                        value={[formData.slide_duration_seconds]}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, slide_duration_seconds: value[0] }))}
+                        min={1}
+                        max={15}
+                        step={1}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>1 sec</span>
+                        <span>15 sec</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg border">
+                    <Switch
+                      id="is_active"
+                      checked={formData.is_active}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
+                    />
+                    <Label htmlFor="is_active" className="text-sm font-medium">Active Slide</Label>
+                  </div>
+                </div>
+
+                {/* Text Positioning */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Text Positioning</h4>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Title Settings */}
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium text-cyan-700">Title Settings</Label>
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Horizontal</Label>
+                            <Select 
+                              value={formData.title_position_horizontal} 
+                              onValueChange={(value) => setFormData(prev => ({ ...prev, title_position_horizontal: value }))}
+                            >
+                              <SelectTrigger className="border-2 focus:border-primary h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="left">Left</SelectItem>
+                                <SelectItem value="center">Center</SelectItem>
+                                <SelectItem value="right">Right</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Vertical</Label>
+                            <Select 
+                              value={formData.title_position_vertical} 
+                              onValueChange={(value) => setFormData(prev => ({ ...prev, title_position_vertical: value }))}
+                            >
+                              <SelectTrigger className="border-2 focus:border-primary h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="top">Top</SelectItem>
+                                <SelectItem value="middle">Middle</SelectItem>
+                                <SelectItem value="bottom">Bottom</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Size</Label>
+                          <Select 
+                            value={formData.title_size} 
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, title_size: value }))}
+                          >
+                            <SelectTrigger className="border-2 focus:border-primary h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="small">Small</SelectItem>
+                              <SelectItem value="medium">Medium</SelectItem>
+                              <SelectItem value="large">Large</SelectItem>
+                              <SelectItem value="xl">Extra Large</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Description Settings */}
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium text-teal-700">Description Settings</Label>
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Horizontal</Label>
+                            <Select 
+                              value={formData.description_position_horizontal} 
+                              onValueChange={(value) => setFormData(prev => ({ ...prev, description_position_horizontal: value }))}
+                            >
+                              <SelectTrigger className="border-2 focus:border-primary h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="left">Left</SelectItem>
+                                <SelectItem value="center">Center</SelectItem>
+                                <SelectItem value="right">Right</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Vertical</Label>
+                            <Select 
+                              value={formData.description_position_vertical} 
+                              onValueChange={(value) => setFormData(prev => ({ ...prev, description_position_vertical: value }))}
+                            >
+                              <SelectTrigger className="border-2 focus:border-primary h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="top">Top</SelectItem>
+                                <SelectItem value="middle">Middle</SelectItem>
+                                <SelectItem value="bottom">Bottom</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Size</Label>
+                          <Select 
+                            value={formData.description_size} 
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, description_size: value }))}
+                          >
+                            <SelectTrigger className="border-2 focus:border-primary h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="small">Small</SelectItem>
+                              <SelectItem value="medium">Medium</SelectItem>
+                              <SelectItem value="large">Large</SelectItem>
+                              <SelectItem value="xl">Extra Large</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Mobile Image */}
-                <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border-2 border-green-200">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="p-1 rounded bg-green-500 text-white text-xs font-bold">📱</div>
-                    <Label className="text-sm font-semibold text-green-800">Mobile</Label>
-                  </div>
-                  <div className="space-y-2">
-                    <Input
-                      id="mobile_image_url"
-                      value={formData.mobile_image_url}
-                      onChange={(e) => setFormData(prev => ({ ...prev, mobile_image_url: e.target.value }))}
-                      placeholder="Image URL"
-                      className="border-2 border-green-300 focus:border-green-500"
+                {/* Action Button */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Action Button</h4>
+                  <div className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg border">
+                    <Switch
+                      id="action_button_enabled"
+                      checked={formData.action_button_enabled}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, action_button_enabled: checked }))}
                     />
-                    <div className="relative">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleImageUpload(e, 'mobile')}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      />
-                      <Button variant="outline" className="w-full border-2 border-green-300 hover:bg-green-100">
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload
-                      </Button>
+                    <Label htmlFor="action_button_enabled" className="text-sm font-medium">Enable Action Button</Label>
+                  </div>
+                  
+                  {formData.action_button_enabled && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-red-50 rounded-lg border border-red-200">
+                      <div className="space-y-2">
+                        <Label htmlFor="action_button_text" className="text-sm font-medium">Button Text</Label>
+                        <Input
+                          id="action_button_text"
+                          value={formData.action_button_text}
+                          onChange={(e) => setFormData(prev => ({ ...prev, action_button_text: e.target.value }))}
+                          placeholder="Button text"
+                          className="border-2 border-red-300 focus:border-red-500"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="action_button_url" className="text-sm font-medium">Button URL</Label>
+                        <Input
+                          id="action_button_url"
+                          value={formData.action_button_url}
+                          onChange={(e) => setFormData(prev => ({ ...prev, action_button_url: e.target.value }))}
+                          placeholder="https://example.com"
+                          className="border-2 border-red-300 focus:border-red-500"
+                        />
+                      </div>
                     </div>
-                  </div>
-                </div>
-
-                {/* iPad Image */}
-                <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border-2 border-purple-200">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="p-1 rounded bg-purple-500 text-white text-xs font-bold">📄</div>
-                    <Label className="text-sm font-semibold text-purple-800">iPad</Label>
-                  </div>
-                  <div className="space-y-2">
-                    <Input
-                      id="ipad_image_url"
-                      value={formData.ipad_image_url}
-                      onChange={(e) => setFormData(prev => ({ ...prev, ipad_image_url: e.target.value }))}
-                      placeholder="Image URL"
-                      className="border-2 border-purple-300 focus:border-purple-500"
-                    />
-                    <div className="relative">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleImageUpload(e, 'ipad')}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      />
-                      <Button variant="outline" className="w-full border-2 border-purple-300 hover:bg-purple-100">
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload
-                      </Button>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Right Column - All Settings */}
+        {/* Right Column - Save Actions */}
         <div className="space-y-6">
-          {/* Consolidated Settings Card */}
-          <Card className="shadow-md">
-            <CardHeader className="bg-muted/50 border-b">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <div className="p-1.5 rounded bg-orange-100 text-orange-700">⚙️</div>
-                Slide Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6 pt-6">
-              {/* Basic Settings Section */}
-              <div className="space-y-4">
-                <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Basic Settings</h4>
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium">Display Order: {formData.display_order}</Label>
-                    <Slider
-                      value={[formData.display_order]}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, display_order: value[0] }))}
-                      min={0}
-                      max={10}
-                      step={1}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>First (0)</span>
-                      <span>Last (10)</span>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium">Duration: {formData.slide_duration_seconds}s</Label>
-                    <Slider
-                      value={[formData.slide_duration_seconds]}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, slide_duration_seconds: value[0] }))}
-                      min={1}
-                      max={15}
-                      step={1}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>1 sec</span>
-                      <span>15 sec</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg border">
-                  <Switch
-                    id="is_active"
-                    checked={formData.is_active}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
-                  />
-                  <Label htmlFor="is_active" className="text-sm font-medium">Active Slide</Label>
-                </div>
-              </div>
-
-              {/* Text Positioning Section */}
-              <div className="space-y-4">
-                <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Text Positioning</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Title Settings */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium text-cyan-700">Title Settings</Label>
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-1">
-                          <Label className="text-xs">Horizontal</Label>
-                          <Select 
-                            value={formData.title_position_horizontal} 
-                            onValueChange={(value) => setFormData(prev => ({ ...prev, title_position_horizontal: value }))}
-                          >
-                            <SelectTrigger className="border-2 focus:border-primary h-8">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="left">Left</SelectItem>
-                              <SelectItem value="center">Center</SelectItem>
-                              <SelectItem value="right">Right</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Vertical</Label>
-                          <Select 
-                            value={formData.title_position_vertical} 
-                            onValueChange={(value) => setFormData(prev => ({ ...prev, title_position_vertical: value }))}
-                          >
-                            <SelectTrigger className="border-2 focus:border-primary h-8">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="top">Top</SelectItem>
-                              <SelectItem value="middle">Middle</SelectItem>
-                              <SelectItem value="bottom">Bottom</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Size</Label>
-                        <Select 
-                          value={formData.title_size} 
-                          onValueChange={(value) => setFormData(prev => ({ ...prev, title_size: value }))}
-                        >
-                          <SelectTrigger className="border-2 focus:border-primary h-8">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="small">Small</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="large">Large</SelectItem>
-                            <SelectItem value="xl">Extra Large</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Description Settings */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium text-teal-700">Description Settings</Label>
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-1">
-                          <Label className="text-xs">Horizontal</Label>
-                          <Select 
-                            value={formData.description_position_horizontal} 
-                            onValueChange={(value) => setFormData(prev => ({ ...prev, description_position_horizontal: value }))}
-                          >
-                            <SelectTrigger className="border-2 focus:border-primary h-8">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="left">Left</SelectItem>
-                              <SelectItem value="center">Center</SelectItem>
-                              <SelectItem value="right">Right</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Vertical</Label>
-                          <Select 
-                            value={formData.description_position_vertical} 
-                            onValueChange={(value) => setFormData(prev => ({ ...prev, description_position_vertical: value }))}
-                          >
-                            <SelectTrigger className="border-2 focus:border-primary h-8">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="top">Top</SelectItem>
-                              <SelectItem value="middle">Middle</SelectItem>
-                              <SelectItem value="bottom">Bottom</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Size</Label>
-                        <Select 
-                          value={formData.description_size} 
-                          onValueChange={(value) => setFormData(prev => ({ ...prev, description_size: value }))}
-                        >
-                          <SelectTrigger className="border-2 focus:border-primary h-8">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="small">Small</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="large">Large</SelectItem>
-                            <SelectItem value="xl">Extra Large</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Button Section */}
-              <div className="space-y-4">
-                <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Action Button</h4>
-                <div className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg border">
-                  <Switch
-                    id="action_button_enabled"
-                    checked={formData.action_button_enabled}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, action_button_enabled: checked }))}
-                  />
-                  <Label htmlFor="action_button_enabled" className="text-sm font-medium">Enable Action Button</Label>
-                </div>
-                
-                {formData.action_button_enabled && (
-                  <div className="space-y-3 p-4 bg-red-50 rounded-lg border border-red-200">
-                    <div className="space-y-2">
-                      <Label htmlFor="action_button_text" className="text-sm font-medium">Button Text</Label>
-                      <Input
-                        id="action_button_text"
-                        value={formData.action_button_text}
-                        onChange={(e) => setFormData(prev => ({ ...prev, action_button_text: e.target.value }))}
-                        placeholder="Button text"
-                        className="border-2 border-red-300 focus:border-red-500"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="action_button_url" className="text-sm font-medium">Button URL</Label>
-                      <Input
-                        id="action_button_url"
-                        value={formData.action_button_url}
-                        onChange={(e) => setFormData(prev => ({ ...prev, action_button_url: e.target.value }))}
-                        placeholder="https://example.com"
-                        className="border-2 border-red-300 focus:border-red-500"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Save Actions */}
           <Card className="shadow-md border-2 border-primary/30">
             <CardContent className="pt-6">
               <div className="space-y-3">
