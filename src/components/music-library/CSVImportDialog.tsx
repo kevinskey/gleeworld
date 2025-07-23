@@ -54,8 +54,8 @@ interface ImportResult {
 const EXPECTED_COLUMNS = [
   { key: 'title', label: 'Title', required: true },
   { key: 'composer', label: 'Composer', required: false },
-  { key: 'voicing', label: 'Voicing', required: false },
   { key: 'library_number', label: 'Library Number', required: false },
+  { key: 'voicing', label: 'Voicing', required: false },
   { key: 'physical_copies', label: 'Physical Copies', required: true },
 ];
 
@@ -312,10 +312,10 @@ export const CSVImportDialog = ({ open, onOpenChange, onSuccess }: CSVImportDial
 
   const downloadTemplate = () => {
     const template = [
-      ['Title', 'Composer', 'Voicing', 'Library Number', 'Physical Copies'],
-      ['Amazing Grace', 'John Newton', 'SATB', 'A-001', '3'],
-      ['Ave Maria', 'Franz Schubert', 'SSA', 'A-002', '2'],
-      ['Hallelujah Chorus', 'George Frideric Handel', 'SATB', 'H-001', '5'],
+      ['Title', 'Composer', 'Library Number', 'Voicing', 'Physical Copies'],
+      ['Amazing Grace', 'John Newton', 'A-001', 'SATB', '3'],
+      ['Ave Maria', 'Franz Schubert', 'A-002', 'SSA', '2'],
+      ['Hallelujah Chorus', 'George Frideric Handel', 'H-001', 'SATB', '5'],
     ];
 
     const csvContent = template.map(row => row.join(',')).join('\n');
