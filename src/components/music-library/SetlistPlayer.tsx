@@ -6,6 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { PDFViewer } from "@/components/PDFViewer";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import {
   X,
@@ -24,7 +30,8 @@ import {
   MapPin,
   Search,
   Maximize2,
-  Minimize2
+  Minimize2,
+  MoreVertical
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -42,7 +49,6 @@ interface SetlistItem {
     title: string;
     composer?: string;
     pdf_url?: string;
-    duration?: string;
   };
 }
 
@@ -195,8 +201,7 @@ export const SetlistPlayer = ({ setlistId, onClose }: SetlistPlayerProps) => {
             id,
             title,
             composer,
-            pdf_url,
-            duration
+            pdf_url
           )
         `)
         .single();
@@ -214,6 +219,27 @@ export const SetlistPlayer = ({ setlistId, onClose }: SetlistPlayerProps) => {
     } catch (error) {
       console.error('Error adding track:', error);
       toast.error("Failed to add track");
+    }
+  };
+
+  const deleteSetlist = async () => {
+    if (!confirm("Are you sure you want to delete this setlist? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('setlists')
+        .delete()
+        .eq('id', setlistId);
+
+      if (error) throw error;
+
+      toast.success("Setlist deleted successfully");
+      onClose(); // Return to main library
+    } catch (error) {
+      console.error('Error deleting setlist:', error);
+      toast.error("Failed to delete setlist");
     }
   };
 
@@ -327,6 +353,22 @@ export const SetlistPlayer = ({ setlistId, onClose }: SetlistPlayerProps) => {
                   Public
                 </Badge>
               )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="ghost">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem 
+                    className="text-destructive"
+                    onClick={deleteSetlist}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Setlist
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
         </div>
