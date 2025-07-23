@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export const getAvatarUrl = (avatarUrl: string | null | undefined): string => {
   if (!avatarUrl) {
-    return "/placeholder.svg";
+    return getRandomPlaceholderAvatar();
   }
 
   // If it's already a full URL, return as is
@@ -22,8 +22,23 @@ export const getAvatarUrl = (avatarUrl: string | null | undefined): string => {
     return data.publicUrl;
   }
 
-  // Fallback to placeholder
-  return "/placeholder.svg";
+  // Fallback to random placeholder
+  return getRandomPlaceholderAvatar();
+};
+
+/**
+ * Returns a random placeholder avatar from Unsplash
+ */
+export const getRandomPlaceholderAvatar = (): string => {
+  const placeholders = [
+    'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=150&h=150&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=150&h=150&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1485833077593-4278bba3f11f?w=150&h=150&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1438565434616-3ef039228b15?w=150&h=150&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1501286353178-1ec881214838?w=150&h=150&fit=crop&crop=face'
+  ];
+  
+  return placeholders[Math.floor(Math.random() * placeholders.length)];
 };
 
 /**

@@ -72,19 +72,19 @@ export const UserCard = ({
           className={`flex items-start gap-3 ${onClick ? 'cursor-pointer' : ''}`}
           onClick={() => onClick?.(user)}
         >
-          <Avatar className="h-12 w-12 border-2 border-slate-300 shadow-sm flex-shrink-0">
+          <Avatar className="h-14 w-14 border-2 border-slate-300 shadow-md flex-shrink-0 ring-2 ring-slate-100">
             <AvatarImage 
               src={getAvatarUrl(user.avatar_url)} 
               alt={user.full_name || user.email || "User"} 
-              className="object-cover"
+              className="object-cover hover:scale-105 transition-transform"
               onError={(e) => {
-                e.currentTarget.src = "/placeholder.svg";
+                e.currentTarget.src = "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=150&h=150&fit=crop&crop=face";
               }}
             />
-            <AvatarFallback className="bg-gradient-to-br from-slate-100 to-slate-200 text-slate-700 font-semibold">
+            <AvatarFallback className="bg-gradient-to-br from-blue-100 to-indigo-200 text-blue-800 font-bold text-lg border border-blue-200">
               {user.full_name ? 
                 getInitials(user.full_name) :
-                <UserIcon className="h-5 w-5" />
+                <UserIcon className="h-6 w-6" />
               }
             </AvatarFallback>
           </Avatar>
