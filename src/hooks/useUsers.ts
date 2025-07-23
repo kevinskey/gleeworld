@@ -11,6 +11,7 @@ export interface User {
   created_at: string;
   exec_board_role?: string | null;
   is_exec_board?: boolean;
+  avatar_url?: string | null;
 }
 
 export const useUsers = () => {
@@ -35,10 +36,10 @@ export const useUsers = () => {
         throw profilesError;
       }
 
-      // Then get gw_profiles data for executive board info
+      // Then get gw_profiles data for executive board info and avatar
       const { data: gwProfilesData, error: gwProfilesError } = await supabase
         .from('gw_profiles')
-        .select('user_id, exec_board_role, is_exec_board');
+        .select('user_id, exec_board_role, is_exec_board, avatar_url');
 
       if (gwProfilesError) {
         console.error('Error fetching gw_profiles:', gwProfilesError);
@@ -62,6 +63,7 @@ export const useUsers = () => {
           created_at: user.created_at,
           exec_board_role: gwProfile?.exec_board_role || null,
           is_exec_board: gwProfile?.is_exec_board || false,
+          avatar_url: gwProfile?.avatar_url || null,
         };
       });
 

@@ -73,7 +73,7 @@ export const UserCard = ({
         >
           <Avatar className="h-12 w-12 border-2 border-brand-200/50 shadow-sm flex-shrink-0">
             <AvatarImage 
-              src="/placeholder.svg" 
+              src={user.avatar_url || "/placeholder.svg"} 
               alt={user.full_name || user.email || "User"} 
               className="object-cover"
             />
