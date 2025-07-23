@@ -74,8 +74,10 @@ export const UserDashboard = () => {
   const { contracts, loading: contractsLoading } = useUserContracts();
   const { permissions: usernamePermissions, loading: permissionsLoading } = useUsernamePermissions(user?.email);
   const { users, loading: usersLoading } = useUsers();
-  const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [isRecentActivityExpanded, setIsRecentActivityExpanded] = useState(false);
+  
+  // Get selected module from URL parameter
+  const selectedModule = searchParams.get('module');
   
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
   
@@ -219,7 +221,7 @@ export const UserDashboard = () => {
         <UniversalLayout>
           <div className="container mx-auto px-4 py-6">
             <div className="mb-4 flex items-center justify-between">
-              <Button variant="outline" onClick={() => setSelectedModule(null)}>
+              <Button variant="outline" onClick={() => navigate('/dashboard')}>
                 ← Back to Dashboard
               </Button>
               <div className="flex items-center gap-2">
@@ -433,8 +435,8 @@ export const UserDashboard = () => {
                           <Button
                             className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full relative"
                             variant="outline"
-                            onClick={() => setSelectedModule(module.key.replace(/_/g, '-'))}
-                          >
+            onClick={() => navigate(`/dashboard?module=${module.key.replace(/_/g, '-')}`)}
+          >
                             <IconComponent className="h-5 w-5 sm:h-6 sm:w-6" />
                             <span className="text-center leading-tight">{module.module.name}</span>
                             {module.source === 'username' && (
@@ -791,10 +793,10 @@ export const UserDashboard = () => {
                             key={moduleInfo.key}
                             variant="ghost" 
                             className="w-full justify-start h-auto p-3 relative"
-                            onClick={() => {
-                              console.log('Module clicked:', moduleInfo.key);
-                              setSelectedModule(moduleInfo.key.replace(/_/g, '-'));
-                            }}
+            onClick={() => {
+              console.log('Module clicked:', moduleInfo.key);
+              navigate(`/dashboard?module=${moduleInfo.key.replace(/_/g, '-')}`);
+            }}
                           >
                             <IconComponent className="h-4 w-4 mr-2" />
                             <div className="text-left flex-1">
