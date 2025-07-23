@@ -543,95 +543,214 @@ export const HeroManagement = () => {
           </Card>
         </div>
 
-        {/* Right Column - Settings */}
+        {/* Right Column - All Settings */}
         <div className="space-y-6">
-          {/* Basic Settings */}
+          {/* Consolidated Settings Card */}
           <Card className="shadow-md">
             <CardHeader className="bg-muted/50 border-b">
               <CardTitle className="text-lg flex items-center gap-2">
                 <div className="p-1.5 rounded bg-orange-100 text-orange-700">⚙️</div>
-                Basic Settings
+                Slide Settings
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 pt-6">
-              <div className="space-y-2">
-                <Label htmlFor="display_order" className="text-sm font-medium">Display Order</Label>
-                <Input
-                  id="display_order"
-                  type="number"
-                  value={formData.display_order}
-                  onChange={(e) => setFormData(prev => ({ ...prev, display_order: parseInt(e.target.value) || 0 }))}
-                  className="border-2 focus:border-primary"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="slide_duration_seconds" className="text-sm font-medium">Duration (seconds)</Label>
-                <Input
-                  id="slide_duration_seconds"
-                  type="number"
-                  min="1"
-                  max="30"
-                  value={formData.slide_duration_seconds}
-                  onChange={(e) => setFormData(prev => ({ ...prev, slide_duration_seconds: parseInt(e.target.value) || 5 }))}
-                  className="border-2 focus:border-primary"
-                />
-              </div>
-
-              <div className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg border">
-                <Switch
-                  id="is_active"
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
-                />
-                <Label htmlFor="is_active" className="text-sm font-medium">Active Slide</Label>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Action Buttons Card */}
-          <Card className="shadow-md">
-            <CardHeader className="bg-muted/50 border-b">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <div className="p-1.5 rounded bg-red-100 text-red-700">🔗</div>
-                Action Button
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-6">
-              <div className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg border">
-                <Switch
-                  id="action_button_enabled"
-                  checked={formData.action_button_enabled}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, action_button_enabled: checked }))}
-                />
-                <Label htmlFor="action_button_enabled" className="text-sm font-medium">Enable Action Button</Label>
-              </div>
-              
-              {formData.action_button_enabled && (
-                <div className="space-y-4 p-4 bg-red-50 rounded-lg border border-red-200">
+            <CardContent className="space-y-6 pt-6">
+              {/* Basic Settings Section */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Basic Settings</h4>
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="action_button_text" className="text-sm font-medium">Button Text</Label>
+                    <Label htmlFor="display_order" className="text-sm font-medium">Display Order</Label>
                     <Input
-                      id="action_button_text"
-                      value={formData.action_button_text}
-                      onChange={(e) => setFormData(prev => ({ ...prev, action_button_text: e.target.value }))}
-                      placeholder="Button text"
-                      className="border-2 border-red-300 focus:border-red-500"
+                      id="display_order"
+                      type="number"
+                      value={formData.display_order}
+                      onChange={(e) => setFormData(prev => ({ ...prev, display_order: parseInt(e.target.value) || 0 }))}
+                      className="border-2 focus:border-primary"
                     />
                   </div>
-                  
                   <div className="space-y-2">
-                    <Label htmlFor="action_button_url" className="text-sm font-medium">Button URL</Label>
+                    <Label htmlFor="slide_duration_seconds" className="text-sm font-medium">Duration (seconds)</Label>
                     <Input
-                      id="action_button_url"
-                      value={formData.action_button_url}
-                      onChange={(e) => setFormData(prev => ({ ...prev, action_button_url: e.target.value }))}
-                      placeholder="https://example.com"
-                      className="border-2 border-red-300 focus:border-red-500"
+                      id="slide_duration_seconds"
+                      type="number"
+                      min="1"
+                      max="30"
+                      value={formData.slide_duration_seconds}
+                      onChange={(e) => setFormData(prev => ({ ...prev, slide_duration_seconds: parseInt(e.target.value) || 5 }))}
+                      className="border-2 focus:border-primary"
                     />
                   </div>
                 </div>
-              )}
+                <div className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg border">
+                  <Switch
+                    id="is_active"
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
+                  />
+                  <Label htmlFor="is_active" className="text-sm font-medium">Active Slide</Label>
+                </div>
+              </div>
+
+              {/* Text Positioning Section */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Text Positioning</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Title Settings */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium text-cyan-700">Title Settings</Label>
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Horizontal</Label>
+                          <Select 
+                            value={formData.title_position_horizontal} 
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, title_position_horizontal: value }))}
+                          >
+                            <SelectTrigger className="border-2 focus:border-primary h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="left">Left</SelectItem>
+                              <SelectItem value="center">Center</SelectItem>
+                              <SelectItem value="right">Right</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Vertical</Label>
+                          <Select 
+                            value={formData.title_position_vertical} 
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, title_position_vertical: value }))}
+                          >
+                            <SelectTrigger className="border-2 focus:border-primary h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="top">Top</SelectItem>
+                              <SelectItem value="middle">Middle</SelectItem>
+                              <SelectItem value="bottom">Bottom</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Size</Label>
+                        <Select 
+                          value={formData.title_size} 
+                          onValueChange={(value) => setFormData(prev => ({ ...prev, title_size: value }))}
+                        >
+                          <SelectTrigger className="border-2 focus:border-primary h-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="small">Small</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="large">Large</SelectItem>
+                            <SelectItem value="xl">Extra Large</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Description Settings */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium text-teal-700">Description Settings</Label>
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Horizontal</Label>
+                          <Select 
+                            value={formData.description_position_horizontal} 
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, description_position_horizontal: value }))}
+                          >
+                            <SelectTrigger className="border-2 focus:border-primary h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="left">Left</SelectItem>
+                              <SelectItem value="center">Center</SelectItem>
+                              <SelectItem value="right">Right</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Vertical</Label>
+                          <Select 
+                            value={formData.description_position_vertical} 
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, description_position_vertical: value }))}
+                          >
+                            <SelectTrigger className="border-2 focus:border-primary h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="top">Top</SelectItem>
+                              <SelectItem value="middle">Middle</SelectItem>
+                              <SelectItem value="bottom">Bottom</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Size</Label>
+                        <Select 
+                          value={formData.description_size} 
+                          onValueChange={(value) => setFormData(prev => ({ ...prev, description_size: value }))}
+                        >
+                          <SelectTrigger className="border-2 focus:border-primary h-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="small">Small</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="large">Large</SelectItem>
+                            <SelectItem value="xl">Extra Large</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Button Section */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Action Button</h4>
+                <div className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg border">
+                  <Switch
+                    id="action_button_enabled"
+                    checked={formData.action_button_enabled}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, action_button_enabled: checked }))}
+                  />
+                  <Label htmlFor="action_button_enabled" className="text-sm font-medium">Enable Action Button</Label>
+                </div>
+                
+                {formData.action_button_enabled && (
+                  <div className="space-y-3 p-4 bg-red-50 rounded-lg border border-red-200">
+                    <div className="space-y-2">
+                      <Label htmlFor="action_button_text" className="text-sm font-medium">Button Text</Label>
+                      <Input
+                        id="action_button_text"
+                        value={formData.action_button_text}
+                        onChange={(e) => setFormData(prev => ({ ...prev, action_button_text: e.target.value }))}
+                        placeholder="Button text"
+                        className="border-2 border-red-300 focus:border-red-500"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="action_button_url" className="text-sm font-medium">Button URL</Label>
+                      <Input
+                        id="action_button_url"
+                        value={formData.action_button_url}
+                        onChange={(e) => setFormData(prev => ({ ...prev, action_button_url: e.target.value }))}
+                        placeholder="https://example.com"
+                        className="border-2 border-red-300 focus:border-red-500"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -663,138 +782,6 @@ export const HeroManagement = () => {
         </div>
       </div>
 
-      {/* Text Position Settings - Full Width */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Title Settings */}
-        <Card className="shadow-md">
-          <CardHeader className="bg-muted/50 border-b">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <div className="p-1.5 rounded bg-cyan-100 text-cyan-700">🅰️</div>
-              Title Settings
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Horizontal Position</Label>
-                <Select 
-                  value={formData.title_position_horizontal} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, title_position_horizontal: value }))}
-                >
-                  <SelectTrigger className="border-2 focus:border-primary">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="left">Left</SelectItem>
-                    <SelectItem value="center">Center</SelectItem>
-                    <SelectItem value="right">Right</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Vertical Position</Label>
-                <Select 
-                  value={formData.title_position_vertical} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, title_position_vertical: value }))}
-                >
-                  <SelectTrigger className="border-2 focus:border-primary">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="top">Top</SelectItem>
-                    <SelectItem value="middle">Middle</SelectItem>
-                    <SelectItem value="bottom">Bottom</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Title Size</Label>
-              <Select 
-                value={formData.title_size} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, title_size: value }))}
-              >
-                <SelectTrigger className="border-2 focus:border-primary">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="small">Small</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="large">Large</SelectItem>
-                  <SelectItem value="xl">Extra Large</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Description Settings */}
-        <Card className="shadow-md">
-          <CardHeader className="bg-muted/50 border-b">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <div className="p-1.5 rounded bg-teal-100 text-teal-700">📄</div>
-              Description Settings
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Horizontal Position</Label>
-                <Select 
-                  value={formData.description_position_horizontal} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, description_position_horizontal: value }))}
-                >
-                  <SelectTrigger className="border-2 focus:border-primary">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="left">Left</SelectItem>
-                    <SelectItem value="center">Center</SelectItem>
-                    <SelectItem value="right">Right</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Vertical Position</Label>
-                <Select 
-                  value={formData.description_position_vertical} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, description_position_vertical: value }))}
-                >
-                  <SelectTrigger className="border-2 focus:border-primary">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="top">Top</SelectItem>
-                    <SelectItem value="middle">Middle</SelectItem>
-                    <SelectItem value="bottom">Bottom</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Description Size</Label>
-              <Select 
-                value={formData.description_size} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, description_size: value }))}
-              >
-                <SelectTrigger className="border-2 focus:border-primary">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="small">Small</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="large">Large</SelectItem>
-                  <SelectItem value="xl">Extra Large</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Existing Slides */}
       <Card className="shadow-md">
