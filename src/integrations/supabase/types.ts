@@ -147,6 +147,84 @@ export type Database = {
           },
         ]
       }
+      alumnae_audio_stories: {
+        Row: {
+          audio_url: string
+          created_at: string | null
+          duration_seconds: number | null
+          graduation_year: number | null
+          id: string
+          is_approved: boolean | null
+          is_featured: boolean | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          audio_url: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          graduation_year?: number | null
+          id?: string
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          audio_url?: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          graduation_year?: number | null
+          id?: string
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      alumnae_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          is_approved: boolean | null
+          recipient_type: string | null
+          sender_id: string | null
+          target_graduation_year: number | null
+          updated_at: string | null
+          visible_to: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          is_approved?: boolean | null
+          recipient_type?: string | null
+          sender_id?: string | null
+          target_graduation_year?: number | null
+          updated_at?: string | null
+          visible_to?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_approved?: boolean | null
+          recipient_type?: string | null
+          sender_id?: string | null
+          target_graduation_year?: number | null
+          updated_at?: string | null
+          visible_to?: string | null
+        }
+        Relationships: []
+      }
       alumnae_stories: {
         Row: {
           content: string
@@ -183,6 +261,57 @@ export type Database = {
           title?: string
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      audio_archive: {
+        Row: {
+          artist_info: string | null
+          audio_url: string
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          duration_seconds: number | null
+          id: string
+          is_public: boolean | null
+          performance_date: string | null
+          performance_location: string | null
+          play_count: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          artist_info?: string | null
+          audio_url: string
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          is_public?: boolean | null
+          performance_date?: string | null
+          performance_location?: string | null
+          play_count?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          artist_info?: string | null
+          audio_url?: string
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          is_public?: boolean | null
+          performance_date?: string | null
+          performance_location?: string | null
+          play_count?: number | null
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1470,6 +1599,87 @@ export type Database = {
           },
         ]
       }
+      glee_history: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string
+          event_date: string
+          id: string
+          image_url: string | null
+          is_featured: boolean | null
+          title: string
+          updated_at: string | null
+          year_occurred: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          event_date: string
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          title: string
+          updated_at?: string | null
+          year_occurred: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          event_date?: string
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          title?: string
+          updated_at?: string | null
+          year_occurred?: number
+        }
+        Relationships: []
+      }
+      gw_alumnae_notifications: {
+        Row: {
+          content: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          notification_type: string | null
+          target_audience: string | null
+          target_filter: Json | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          notification_type?: string | null
+          target_audience?: string | null
+          target_filter?: Json | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          notification_type?: string | null
+          target_audience?: string | null
+          target_filter?: Json | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       gw_announcements: {
         Row: {
           announcement_type: string | null
@@ -1919,6 +2129,7 @@ export type Database = {
           registration_required: boolean | null
           start_date: string
           status: string | null
+          tags: string[] | null
           title: string
           updated_at: string | null
           venue_name: string | null
@@ -1941,6 +2152,7 @@ export type Database = {
           registration_required?: boolean | null
           start_date: string
           status?: string | null
+          tags?: string[] | null
           title: string
           updated_at?: string | null
           venue_name?: string | null
@@ -1963,6 +2175,7 @@ export type Database = {
           registration_required?: boolean | null
           start_date?: string
           status?: string | null
+          tags?: string[] | null
           title?: string
           updated_at?: string | null
           venue_name?: string | null
@@ -2893,6 +3106,7 @@ export type Database = {
           default_shipping_address: Json | null
           design_history_ids: string[] | null
           disabled: boolean | null
+          display_name: string | null
           dues_paid: boolean | null
           ecommerce_enabled: boolean | null
           email: string | null
@@ -2922,6 +3136,7 @@ export type Database = {
           title: string | null
           updated_at: string | null
           user_id: string | null
+          verified: boolean | null
           voice_part: string | null
         }
         Insert: {
@@ -2936,6 +3151,7 @@ export type Database = {
           default_shipping_address?: Json | null
           design_history_ids?: string[] | null
           disabled?: boolean | null
+          display_name?: string | null
           dues_paid?: boolean | null
           ecommerce_enabled?: boolean | null
           email?: string | null
@@ -2965,6 +3181,7 @@ export type Database = {
           title?: string | null
           updated_at?: string | null
           user_id?: string | null
+          verified?: boolean | null
           voice_part?: string | null
         }
         Update: {
@@ -2979,6 +3196,7 @@ export type Database = {
           default_shipping_address?: Json | null
           design_history_ids?: string[] | null
           disabled?: boolean | null
+          display_name?: string | null
           dues_paid?: boolean | null
           ecommerce_enabled?: boolean | null
           email?: string | null
@@ -3008,6 +3226,7 @@ export type Database = {
           title?: string | null
           updated_at?: string | null
           user_id?: string | null
+          verified?: boolean | null
           voice_part?: string | null
         }
         Relationships: []
@@ -5302,6 +5521,22 @@ export type Database = {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_graduation_decade: {
+        Args: { grad_year: number }
+        Returns: string
+      }
+      get_on_this_day_content: {
+        Args: { target_date?: string }
+        Returns: {
+          id: string
+          title: string
+          description: string
+          year_occurred: number
+          years_ago: number
+          category: string
+          image_url: string
+        }[]
       }
       get_track_like_count: {
         Args: { track_uuid: string }
