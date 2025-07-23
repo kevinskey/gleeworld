@@ -308,6 +308,51 @@ export const UserDetailPanel = ({
                     {user.role}
                   </Badge>
                 </div>
+                {user.phone && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-600">Phone:</span>
+                    <span>{user.phone}</span>
+                  </div>
+                )}
+                {user.voice_part && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-600">Voice Part:</span>
+                    <span className="capitalize">{user.voice_part.replace('_', ' ')}</span>
+                  </div>
+                )}
+                {user.class_year && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-600">Class Year:</span>
+                    <span>{user.class_year}</span>
+                  </div>
+                )}
+                {user.status && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-600">Status:</span>
+                    <Badge variant="outline" className="text-xs capitalize">
+                      {user.status.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-600">Dues Paid:</span>
+                  <Badge variant={user.dues_paid ? "default" : "destructive"} className="text-xs">
+                    {user.dues_paid ? "Yes" : "No"}
+                  </Badge>
+                </div>
+                {user.exec_board_role && (
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">Executive Role:</span>
+                    <span className="capitalize">{user.exec_board_role.replace('_', ' ')}</span>
+                  </div>
+                )}
+                {user.notes && (
+                  <div className="space-y-1">
+                    <span className="text-gray-600">Notes:</span>
+                    <p className="text-sm bg-gray-50 p-2 rounded">{user.notes}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

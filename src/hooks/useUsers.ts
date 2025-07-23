@@ -12,6 +12,19 @@ export interface User {
   exec_board_role?: string | null;
   is_exec_board?: boolean;
   avatar_url?: string | null;
+  // Additional profile fields
+  phone?: string | null;
+  voice_part?: string | null;
+  class_year?: number | null;
+  join_date?: string | null;
+  status?: string | null;
+  dues_paid?: boolean;
+  notes?: string | null;
+  is_admin?: boolean;
+  is_super_admin?: boolean;
+  title?: string | null;
+  graduation_year?: number | null;
+  bio?: string | null;
 }
 
 export const useUsers = () => {
@@ -36,10 +49,14 @@ export const useUsers = () => {
         throw profilesError;
       }
 
-      // Then get gw_profiles data for executive board info and avatar
+      // Then get gw_profiles data for comprehensive profile info
       const { data: gwProfilesData, error: gwProfilesError } = await supabase
         .from('gw_profiles')
-        .select('user_id, exec_board_role, is_exec_board, avatar_url');
+        .select(`
+          user_id, exec_board_role, is_exec_board, avatar_url,
+          phone, voice_part, class_year, join_date, status, dues_paid, notes,
+          is_admin, is_super_admin, title, bio, graduation_year
+        `);
 
       if (gwProfilesError) {
         console.error('Error fetching gw_profiles:', gwProfilesError);
@@ -64,6 +81,19 @@ export const useUsers = () => {
           exec_board_role: gwProfile?.exec_board_role || null,
           is_exec_board: gwProfile?.is_exec_board || false,
           avatar_url: gwProfile?.avatar_url || null,
+          // Additional profile fields
+          phone: gwProfile?.phone || null,
+          voice_part: gwProfile?.voice_part || null,
+          class_year: gwProfile?.class_year || null,
+          join_date: gwProfile?.join_date || null,
+          status: gwProfile?.status || null,
+          dues_paid: gwProfile?.dues_paid || false,
+          notes: gwProfile?.notes || null,
+          is_admin: gwProfile?.is_admin || false,
+          is_super_admin: gwProfile?.is_super_admin || false,
+          title: gwProfile?.title || null,
+          graduation_year: gwProfile?.graduation_year || null,
+          bio: gwProfile?.bio || null,
         };
       });
 
