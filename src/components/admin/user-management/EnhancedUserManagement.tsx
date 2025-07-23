@@ -173,6 +173,7 @@ export const EnhancedUserManagement = ({
   };
 
   const handleCreateSuccess = () => {
+    console.log('handleCreateSuccess called, setting showCreateForm to false');
     setShowCreateForm(false);
     onRefetch();
   };
@@ -235,8 +236,15 @@ export const EnhancedUserManagement = ({
     );
   }
 
+  console.log('EnhancedUserManagement render - showCreateForm:', showCreateForm);
+
   return (
     <div className="space-y-6">
+      {/* Debug Info */}
+      <div className="bg-yellow-100 p-2 text-xs">
+        Debug: showCreateForm = {showCreateForm.toString()}
+      </div>
+      
       {/* Action Bar */}
       <UserActionBar
         searchTerm={searchTerm}
@@ -247,7 +255,10 @@ export const EnhancedUserManagement = ({
         onSortByChange={setSortBy}
         sortOrder={sortOrder}
         onSortOrderChange={setSortOrder}
-        onCreateUser={() => setShowCreateForm(true)}
+        onCreateUser={() => {
+          console.log('Add User button clicked, setting showCreateForm to true');
+          setShowCreateForm(true);
+        }}
         onBulkOperations={() => setShowBulkPanel(true)}
         onRefresh={onRefetch}
         userCount={users.length}
@@ -323,13 +334,25 @@ export const EnhancedUserManagement = ({
         </div>
 
         {/* Create User Form */}
-        {showCreateForm && (
-          <div className="lg:col-span-1">
+        {showCreateForm ? (
+          <div className="lg:col-span-1 bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+            <div className="text-sm text-blue-800 mb-2">
+              🎯 Add User Form is VISIBLE (showCreateForm = {showCreateForm.toString()})
+            </div>
             <UserForm
               mode="create"
               onSuccess={handleCreateSuccess}
-              onCancel={() => setShowCreateForm(false)}
+              onCancel={() => {
+                console.log('UserForm cancel clicked, setting showCreateForm to false');
+                setShowCreateForm(false);
+              }}
             />
+          </div>
+        ) : (
+          <div className="hidden lg:block lg:col-span-1 bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="text-sm text-gray-600">
+              Add User Form is HIDDEN (showCreateForm = {showCreateForm.toString()})
+            </div>
           </div>
         )}
       </div>
