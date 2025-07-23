@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,6 +46,7 @@ interface Event {
 }
 
 export default function AlumnaeLanding() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
   const [stories, setStories] = useState<AlumnaeStory[]>([]);
@@ -218,7 +220,11 @@ export default function AlumnaeLanding() {
                       <p className="text-muted-foreground">Memory posts will appear here.</p>
                     </TabsContent>
                   </Tabs>
-                  <Button variant="outline" className="w-full mt-6">
+                  <Button 
+                    variant="outline" 
+                    className="w-full mt-6"
+                    onClick={() => navigate("/legacy-lounge")}
+                  >
                     Visit Legacy Lounge
                   </Button>
                 </CardContent>
