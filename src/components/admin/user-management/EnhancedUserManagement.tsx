@@ -267,9 +267,26 @@ export const EnhancedUserManagement = ({
       />
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="space-y-6">
+        {/* Show Create Form at Top When Active */}
+        {showCreateForm && (
+          <div className="w-full bg-blue-50 border-2 border-blue-500 rounded-lg p-6">
+            <div className="text-lg font-semibold text-blue-800 mb-4">
+              🎯 ADD USER FORM (showCreateForm = {showCreateForm.toString()})
+            </div>
+            <UserForm
+              mode="create"
+              onSuccess={handleCreateSuccess}
+              onCancel={() => {
+                console.log('UserForm cancel clicked, setting showCreateForm to false');
+                setShowCreateForm(false);
+              }}
+            />
+          </div>
+        )}
+
         {/* Users List */}
-        <div className={`${showCreateForm ? 'lg:col-span-2' : 'lg:col-span-3'} space-y-4`}>
+        <div className="w-full space-y-4">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
               <TabsTrigger value="list">List View</TabsTrigger>
@@ -332,29 +349,6 @@ export const EnhancedUserManagement = ({
             </TabsContent>
           </Tabs>
         </div>
-
-        {/* Create User Form */}
-        {showCreateForm ? (
-          <div className="lg:col-span-1 bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-            <div className="text-sm text-blue-800 mb-2">
-              🎯 Add User Form is VISIBLE (showCreateForm = {showCreateForm.toString()})
-            </div>
-            <UserForm
-              mode="create"
-              onSuccess={handleCreateSuccess}
-              onCancel={() => {
-                console.log('UserForm cancel clicked, setting showCreateForm to false');
-                setShowCreateForm(false);
-              }}
-            />
-          </div>
-        ) : (
-          <div className="hidden lg:block lg:col-span-1 bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <div className="text-sm text-gray-600">
-              Add User Form is HIDDEN (showCreateForm = {showCreateForm.toString()})
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Side Panels */}
