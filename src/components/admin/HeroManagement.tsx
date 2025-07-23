@@ -456,87 +456,92 @@ export const HeroManagement = () => {
                 Images
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6 pt-6">
-              {/* Desktop Image */}
-              <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border-2 border-blue-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="p-1 rounded bg-blue-500 text-white text-xs font-bold">🖥️</div>
-                  <Label className="text-sm font-semibold text-blue-800">Desktop Image *</Label>
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    id="image_url"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-                    placeholder="Enter image URL or upload below"
-                    className="border-2 border-blue-300 focus:border-blue-500"
-                  />
-                  <div className="relative">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, 'desktop')}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Desktop Image */}
+                <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border-2 border-blue-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="p-1 rounded bg-blue-500 text-white text-xs font-bold">🖥️</div>
+                    <Label className="text-sm font-semibold text-blue-800">Desktop *</Label>
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      id="image_url"
+                      value={formData.image_url}
+                      onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
+                      placeholder="Image URL"
+                      className="border-2 border-blue-300 focus:border-blue-500"
                     />
-                    <Button variant="outline" size="icon" className="border-2 border-blue-300 hover:bg-blue-100">
-                      <Upload className="h-4 w-4" />
-                    </Button>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, 'desktop')}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <Button variant="outline" className="w-full border-2 border-blue-300 hover:bg-blue-100">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Mobile Image */}
-              <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border-2 border-green-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="p-1 rounded bg-green-500 text-white text-xs font-bold">📱</div>
-                  <Label className="text-sm font-semibold text-green-800">Mobile Image</Label>
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    id="mobile_image_url"
-                    value={formData.mobile_image_url}
-                    onChange={(e) => setFormData(prev => ({ ...prev, mobile_image_url: e.target.value }))}
-                    placeholder="Enter mobile image URL or upload below"
-                    className="border-2 border-green-300 focus:border-green-500"
-                  />
-                  <div className="relative">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, 'mobile')}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                {/* Mobile Image */}
+                <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border-2 border-green-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="p-1 rounded bg-green-500 text-white text-xs font-bold">📱</div>
+                    <Label className="text-sm font-semibold text-green-800">Mobile</Label>
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      id="mobile_image_url"
+                      value={formData.mobile_image_url}
+                      onChange={(e) => setFormData(prev => ({ ...prev, mobile_image_url: e.target.value }))}
+                      placeholder="Image URL"
+                      className="border-2 border-green-300 focus:border-green-500"
                     />
-                    <Button variant="outline" size="icon" className="border-2 border-green-300 hover:bg-green-100">
-                      <Upload className="h-4 w-4" />
-                    </Button>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, 'mobile')}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <Button variant="outline" className="w-full border-2 border-green-300 hover:bg-green-100">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* iPad Image */}
-              <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border-2 border-purple-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="p-1 rounded bg-purple-500 text-white text-xs font-bold">📄</div>
-                  <Label className="text-sm font-semibold text-purple-800">iPad Image</Label>
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    id="ipad_image_url"
-                    value={formData.ipad_image_url}
-                    onChange={(e) => setFormData(prev => ({ ...prev, ipad_image_url: e.target.value }))}
-                    placeholder="Enter iPad image URL or upload below"
-                    className="border-2 border-purple-300 focus:border-purple-500"
-                  />
-                  <div className="relative">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, 'ipad')}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                {/* iPad Image */}
+                <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border-2 border-purple-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="p-1 rounded bg-purple-500 text-white text-xs font-bold">📄</div>
+                    <Label className="text-sm font-semibold text-purple-800">iPad</Label>
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      id="ipad_image_url"
+                      value={formData.ipad_image_url}
+                      onChange={(e) => setFormData(prev => ({ ...prev, ipad_image_url: e.target.value }))}
+                      placeholder="Image URL"
+                      className="border-2 border-purple-300 focus:border-purple-500"
                     />
-                    <Button variant="outline" size="icon" className="border-2 border-purple-300 hover:bg-purple-100">
-                      <Upload className="h-4 w-4" />
-                    </Button>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, 'ipad')}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <Button variant="outline" className="w-full border-2 border-purple-300 hover:bg-purple-100">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
