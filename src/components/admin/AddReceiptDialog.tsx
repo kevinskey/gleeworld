@@ -75,8 +75,8 @@ export const AddReceiptDialog = ({ open, onOpenChange, onSubmit, onUploadImage }
       data.amount = parseFloat(data.amount);
       
       // Handle template and event associations
-      if (data.template_id === '') data.template_id = null;
-      if (data.event_id === '') data.event_id = null;
+      if (data.template_id === 'none') data.template_id = null;
+      if (data.event_id === 'none') data.event_id = null;
 
       await onSubmit(data);
       reset();
@@ -209,7 +209,7 @@ export const AddReceiptDialog = ({ open, onOpenChange, onSubmit, onUploadImage }
                   <SelectValue placeholder="Select template (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No template</SelectItem>
+                  <SelectItem value="none">No template</SelectItem>
                   {templates.map((template) => (
                     <SelectItem key={template.id} value={template.id}>
                       {template.name}
@@ -226,7 +226,7 @@ export const AddReceiptDialog = ({ open, onOpenChange, onSubmit, onUploadImage }
                   <SelectValue placeholder="Select event (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No event</SelectItem>
+                  <SelectItem value="none">No event</SelectItem>
                   {events.map((event) => (
                     <SelectItem key={event.id} value={event.id}>
                       {event.title}

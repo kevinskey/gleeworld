@@ -100,8 +100,8 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
             full_name: fullName.trim(),
             role: role,
             phone: phone.trim(),
-            voice_part: voicePart,
-            exec_board_role: execBoardRole || null
+            voice_part: voicePart === 'none' ? null : voicePart,
+            exec_board_role: execBoardRole === 'none' ? null : execBoardRole || null
           }],
           source: 'manual'
         }
@@ -315,7 +315,7 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
                 <SelectValue placeholder="Select voice part" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 <SelectItem value="Soprano 1">Soprano 1</SelectItem>
                 <SelectItem value="Soprano 2">Soprano 2</SelectItem>
                 <SelectItem value="Alto 1">Alto 1</SelectItem>
@@ -336,7 +336,7 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
                 <SelectValue placeholder="Select position (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 <SelectItem value="President">President</SelectItem>
                 <SelectItem value="Vice President">Vice President</SelectItem>
                 <SelectItem value="Secretary">Secretary</SelectItem>

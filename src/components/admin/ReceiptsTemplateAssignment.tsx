@@ -53,7 +53,7 @@ export const ReceiptsTemplateAssignment = ({
   const handleAssignReceipt = async (receiptId: string, templateId: string) => {
     setUpdating(receiptId);
     try {
-      await onUpdate(receiptId, { template_id: templateId || undefined });
+      await onUpdate(receiptId, { template_id: templateId === 'unassigned' ? undefined : templateId });
     } finally {
       setUpdating(null);
     }
@@ -152,8 +152,8 @@ export const ReceiptsTemplateAssignment = ({
                         </Badge>
                       )}
                       
-                      <Select
-                        value={receipt.template_id || ""}
+                        <Select
+                        value={receipt.template_id || "unassigned"}
                         onValueChange={(value) => handleAssignReceipt(receipt.id, value)}
                         disabled={updating === receipt.id}
                       >
@@ -161,7 +161,7 @@ export const ReceiptsTemplateAssignment = ({
                           <SelectValue placeholder="Assign to template" />
                         </SelectTrigger>
                         <SelectContent className="glass-card border-white/20">
-                          <SelectItem value="" className="text-white hover:bg-white/10">
+                          <SelectItem value="unassigned" className="text-white hover:bg-white/10">
                             Unassigned
                           </SelectItem>
                           {templates.map((template) => (

@@ -190,9 +190,9 @@ export const ComprehensiveUserForm = ({ user, mode, onSuccess, onCancel }: Compr
         pronouns: pronouns.trim(),
         class_year: classYear ? parseInt(classYear) : null,
         student_number: studentNumber.trim(),
-        voice_part: voicePart,
+        voice_part: voicePart === 'none' ? null : voicePart,
         can_dance: canDance,
-        exec_board_role: execBoardRole || null,
+        exec_board_role: execBoardRole === 'none' ? null : execBoardRole || null,
         instruments: selectedInstruments,
         dress_size: dressSize.trim(),
         shoe_size: shoeSize.trim(),
@@ -203,7 +203,7 @@ export const ComprehensiveUserForm = ({ user, mode, onSuccess, onCancel }: Compr
         allergies: allergies.trim(),
         parent_guardian_contact: parentGuardianContact.trim(),
         dietary_restrictions: dietaryRestrictions,
-        preferred_payment_method: preferredPaymentMethod,
+        preferred_payment_method: preferredPaymentMethod === 'none' ? null : preferredPaymentMethod,
         instagram: instagram.trim(),
         twitter: twitter.trim(),
         facebook: facebook.trim(),
@@ -481,7 +481,7 @@ export const ComprehensiveUserForm = ({ user, mode, onSuccess, onCancel }: Compr
                       <SelectValue placeholder="Select voice part" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       <SelectItem value="S1">Soprano 1</SelectItem>
                       <SelectItem value="S2">Soprano 2</SelectItem>
                       <SelectItem value="A1">Alto 1</SelectItem>
@@ -500,7 +500,7 @@ export const ComprehensiveUserForm = ({ user, mode, onSuccess, onCancel }: Compr
                       <SelectValue placeholder="Select position (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       <SelectItem value="President">President</SelectItem>
                       <SelectItem value="Vice President">Vice President</SelectItem>
                       <SelectItem value="Secretary">Secretary</SelectItem>
@@ -685,7 +685,7 @@ export const ComprehensiveUserForm = ({ user, mode, onSuccess, onCancel }: Compr
                     <SelectValue placeholder="Select payment method" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None specified</SelectItem>
+                    <SelectItem value="none">None specified</SelectItem>
                     <SelectItem value="zelle">Zelle</SelectItem>
                     <SelectItem value="cashapp">CashApp</SelectItem>
                     <SelectItem value="venmo">Venmo</SelectItem>

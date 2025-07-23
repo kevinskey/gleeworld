@@ -17,8 +17,8 @@ export const GleeClubLedger = () => {
   // Filter records based on selected filters
   const filteredRecords = records.filter(record => {
     if (dateFilter && !record.date.includes(dateFilter)) return false;
-    if (categoryFilter && record.category !== categoryFilter) return false;
-    if (typeFilter && record.type !== typeFilter) return false;
+    if (categoryFilter && categoryFilter !== 'all' && record.category !== categoryFilter) return false;
+    if (typeFilter && typeFilter !== 'all' && record.type !== typeFilter) return false;
     return true;
   });
 
@@ -40,8 +40,8 @@ export const GleeClubLedger = () => {
 
   const clearFilters = () => {
     setDateFilter('');
-    setCategoryFilter('');
-    setTypeFilter('');
+    setCategoryFilter('all');
+    setTypeFilter('all');
   };
 
   if (loading) {
@@ -115,7 +115,7 @@ export const GleeClubLedger = () => {
               <SelectValue placeholder="Filter by category" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Categories</SelectItem>
+              <SelectItem value="all">All Categories</SelectItem>
               {categories.map(category => (
                 <SelectItem key={category} value={category}>{category}</SelectItem>
               ))}
@@ -127,7 +127,7 @@ export const GleeClubLedger = () => {
               <SelectValue placeholder="Filter by type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Types</SelectItem>
+              <SelectItem value="all">All Types</SelectItem>
               {types.map(type => (
                 <SelectItem key={type} value={type} className="capitalize">{type}</SelectItem>
               ))}
