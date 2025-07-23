@@ -31,7 +31,9 @@ import {
   Activity,
   FileText,
   Menu,
-  UserCog
+  UserCog,
+  ChevronDown,
+  GraduationCap
 } from "lucide-react";
 
 interface HeaderProps {
@@ -65,6 +67,7 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
   };
 
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
+  const isSuperAdmin = userProfile?.role === 'super-admin';
   const isOnUserDashboard = location.pathname === '/dashboard';
 
   const navigationItems = [
@@ -74,6 +77,20 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
   const adminItems = [
     { id: 'system', label: 'System', icon: Settings, route: '/system' },
   ];
+
+  // Dashboard views for super-admin dropdown
+  const dashboardViews = [
+    { id: 'personal', label: 'Personal Dashboard', icon: User, route: '/dashboard' },
+    { id: 'admin', label: 'Admin Panel', icon: Shield, route: '/system' },
+    ...(isSuperAdmin ? [{ id: 'alumnae', label: 'Alumnae Portal Admin', icon: GraduationCap, route: '/admin/alumnae' }] : [])
+  ];
+
+  const getCurrentDashboardView = () => {
+    if (location.pathname === '/dashboard') return 'Personal Dashboard';
+    if (location.pathname === '/system') return 'Admin Panel';
+    if (location.pathname === '/admin/alumnae') return 'Alumnae Portal Admin';
+    return 'Dashboard';
+  };
 
   const handleMobileNavClick = (itemId: string, route?: string) => {
     if (route) {
@@ -160,6 +177,38 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
 
           {/* Right side actions */}
           <div className="flex items-center space-x-1 sm:space-x-2">
+            {/* Dashboard Views Dropdown - Only for admins */}
+            {isAdmin && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="text-primary hover:bg-primary/10 border border-primary/30 hidden lg:flex items-center gap-2"
+                  >
+                    <Shield className="h-4 w-4" />
+                    <span className="text-sm">{getCurrentDashboardView()}</span>
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent 
+                  className="w-56 bg-white shadow-lg border border-gray-200 z-50" 
+                  align="end"
+                >
+                  {dashboardViews.map((view) => (
+                    <DropdownMenuItem 
+                      key={view.id}
+                      onClick={() => navigate(view.route)}
+                      className="cursor-pointer hover:bg-gray-50"
+                    >
+                      <view.icon className="mr-2 h-4 w-4" />
+                      <span>{view.label}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            
+          </div>
             {/* Mobile Menu Button */}
             <div className="lg:hidden">
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -177,6 +226,27 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
                     <SheetTitle className="text-white text-left">Navigation</SheetTitle>
                   </SheetHeader>
                   <div className="mt-6 space-y-2">
+                    {/* Dashboard Views in Mobile Menu */}
+                    {isAdmin && (
+                      <>
+                        <div className="text-white/80 text-sm font-medium px-3 mb-2">Dashboard Views</div>
+                        {dashboardViews.map((view) => (
+                          <Button
+                            key={view.id}
+                            variant="ghost"
+                            onClick={() => handleMobileNavClick('', view.route)}
+                            className={`w-full justify-start text-white hover:bg-white/20 h-12 ${
+                              location.pathname === view.route ? 'bg-white/20' : ''
+                            }`}
+                          >
+                            <view.icon className="h-5 w-5 mr-3" />
+                            <span className="text-base">{view.label}</span>
+                          </Button>
+                        ))}
+                        <div className="h-px bg-white/20 my-3" />
+                      </>
+                    )}
+                    
                     {/* Regular navigation items when on user dashboard */}
                     {isOnUserDashboard && navigationItems.map((item) => (
                       <Button
@@ -192,7 +262,7 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
                       </Button>
                     ))}
 
-                    {/* Mobile Dashboard Toggle */}
+                    {/* Mobile Dashboard Toggle - Keep for backward compatibility */}
                     {isAdmin && (
                       <>
                         {(isOnUserDashboard || !isOnUserDashboard) && (
@@ -250,7 +320,7 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuContent className="w-56 bg-white shadow-lg border border-gray-200 z-50" align="end" forceMount>
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
                     <p className="font-medium">{displayName}</p>
