@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/hooks/useUsers";
 import { UserActionBar } from "./UserActionBar";
 import { UserCard } from "./UserCard";
-import { UserForm } from "./UserForm";
+import { ComprehensiveUserForm } from "./ComprehensiveUserForm";
 import { UserDetailPanel } from "./UserDetailPanel";
 import { BulkOperationsPanel } from "./BulkOperationsPanel";
 import { Users, RefreshCw, UserPlus } from "lucide-react";
@@ -274,7 +274,7 @@ export const EnhancedUserManagement = ({
             <div className="text-lg font-semibold text-blue-800 mb-4">
               🎯 ADD USER FORM (showCreateForm = {showCreateForm.toString()})
             </div>
-            <UserForm
+            <ComprehensiveUserForm
               mode="create"
               onSuccess={handleCreateSuccess}
               onCancel={() => {
