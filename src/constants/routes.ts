@@ -3,7 +3,7 @@ export const ROUTES = {
   HOME: '/',
   AUTH: '/auth',
   DASHBOARD: '/dashboard',
-  SYSTEM: '/system',
+  
   ACTIVITY_LOGS: '/activity-logs',
   ACCOUNTING: '/accounting',
   ADMIN_SIGNING: '/admin-signing',
@@ -18,12 +18,10 @@ export const ROUTES = {
 export const PROTECTED_ROUTES = [
   ROUTES.HOME,
   ROUTES.DASHBOARD,
-  ROUTES.SYSTEM,
   ROUTES.ACTIVITY_LOGS,
   ROUTES.ACCOUNTING,
   ROUTES.ADMIN_SIGNING,
   ROUTES.TREASURER,
-  
   ROUTES.EVENT_PLANNER
 ] as const;
 

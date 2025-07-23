@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EnhancedUserManagement } from "./admin/user-management/EnhancedUserManagement";
@@ -27,6 +28,7 @@ interface AdminPanelProps {
 
 export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   
   // Fetch users data
   const { users, loading: usersLoading, error: usersError, refetch: refetchUsers } = useUsers();
@@ -63,9 +65,10 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
     );
   }
 
-  // Render content based on active tab from URL or parent
+  // Render content based on active tab from URL params, props, or path
   const currentPath = window.location.pathname;
-  const currentTab = activeTab || 
+  const urlTab = searchParams.get('tab');
+  const currentTab = urlTab || activeTab || 
     (currentPath.includes('users') ? 'users' : 
      currentPath.includes('activity') ? 'activity' : 
      currentPath.includes('receipts') ? 'receipts' : 

@@ -20,7 +20,7 @@ export const DashboardSwitcher = () => {
     return null;
   }
 
-  const isOnAdminDashboard = location.pathname.startsWith('/system');
+  const isOnAdminDashboard = location.pathname.startsWith('/dashboard');
   const isOnUserDashboard = location.pathname === '/dashboard';
 
   const getCurrentContext = () => {
@@ -48,7 +48,7 @@ export const DashboardSwitcher = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-48 sm:w-56">
         <DropdownMenuItem asChild>
-          <Link to="/system" className="flex items-center cursor-pointer">
+          <Link to="/dashboard" className="flex items-center cursor-pointer">
             <Shield className="mr-2 h-4 w-4" />
             Admin Dashboard
             {isOnAdminDashboard && (

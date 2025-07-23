@@ -9,7 +9,7 @@ export const TourContracts = () => {
         <p className="text-sm text-muted-foreground">
           Create and manage tour performance contracts
         </p>
-        <Button size="sm" onClick={() => window.location.href = '/system?tab=contracts'}>
+        <Button size="sm" onClick={() => window.location.href = '/dashboard?tab=contracts'}>
           <FileText className="h-4 w-4 mr-2" />
           Go to Contract Creator
         </Button>
