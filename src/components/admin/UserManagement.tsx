@@ -459,8 +459,13 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
             ) : (
               <div className="space-y-3">
                 {filteredAndSortedUsers.map((user) => (
-                  <div key={user.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div key={user.id} className="border rounded-lg hover:bg-gray-50 transition-colors">
+                    {/* Clickable User Info Section */}
+                    <div 
+                      className="p-4 cursor-pointer"
+                      onClick={() => navigate(`/dashboard/member-view/${user.id}`)}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                        {/* User Info */}
                        <div className="flex items-start gap-3 min-w-0 flex-1">
                          <Avatar className="h-10 w-10 border-2 border-brand-200/50 shadow-sm flex-shrink-0">
@@ -494,11 +499,12 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
                                {new Date(user.created_at).toLocaleDateString()}
                              </span>
                            </div>
-                         </div>
-                       </div>
-                      
-                       {/* Action Buttons */}
-                        <div className="flex gap-2 flex-shrink-0">
+                          </div>
+                        </div>
+                    </div>
+                       
+                    {/* Action Buttons Section - Non-clickable */}
+                    <div className="px-4 pb-4 flex gap-2 flex-shrink-0 border-t pt-3">
                           {/* Payment Status Display */}
                           {userPaidStatus[user.id] ? (
                             <Badge variant="default" className="bg-green-600 text-white">
@@ -545,7 +551,7 @@ export const UserManagement = ({ users, loading, error, onRefetch }: UserManagem
                           <Trash2 className="h-4 w-4 sm:mr-0 mr-2" />
                           <span className="sm:hidden">Delete</span>
                         </Button>
-                      </div>
+                        </div>
                     </div>
                   </div>
                 ))}
