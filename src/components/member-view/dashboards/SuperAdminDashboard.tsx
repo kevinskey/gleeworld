@@ -1,6 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import { 
   Calendar, 
   CheckCircle, 
@@ -22,7 +24,8 @@ import {
   Crown,
   Server,
   Activity,
-  Lock
+  Lock,
+  GraduationCap
 } from "lucide-react";
 
 interface SuperAdminDashboardProps {
@@ -38,6 +41,7 @@ interface SuperAdminDashboardProps {
 }
 
 export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
+  const navigate = useNavigate();
   // Mock data for super admin dashboard
   const superAdminData = {
     systemOverview: {
@@ -262,22 +266,33 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
           <Lock className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span>User Role Management</span>
-              <Badge variant="outline">Full Control</Badge>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span>System Configuration</span>
-              <Badge variant="outline">Admin</Badge>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span>Database Access</span>
-              <Badge variant="outline">Super Admin</Badge>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span>Security Settings</span>
-              <Badge variant="outline">Full Access</Badge>
+          <div className="space-y-3">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full justify-start" 
+              onClick={() => navigate('/admin/alumnae')}
+            >
+              <GraduationCap className="mr-2 h-4 w-4" />
+              Alumnae Portal Admin
+            </Button>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span>User Role Management</span>
+                <Badge variant="outline">Full Control</Badge>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span>System Configuration</span>
+                <Badge variant="outline">Admin</Badge>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span>Database Access</span>
+                <Badge variant="outline">Super Admin</Badge>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span>Security Settings</span>
+                <Badge variant="outline">Full Access</Badge>
+              </div>
             </div>
           </div>
         </CardContent>
