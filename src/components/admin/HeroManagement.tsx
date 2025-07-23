@@ -386,9 +386,9 @@ export const HeroManagement = () => {
         </CardHeader>
       </Card>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         {/* Left Column - Content */}
-        <div className="xl:col-span-2 space-y-6">
+        <div className="xl:col-span-3 space-y-6">
           {/* Basic Content Section */}
           <Card className="shadow-md">
             <CardHeader className="bg-muted/50 border-b">
