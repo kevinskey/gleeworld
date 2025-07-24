@@ -6336,6 +6336,10 @@ export type Database = {
           days_until_expiry: number
         }[]
       }
+      get_user_admin_status: {
+        Args: { user_id_param: string }
+        Returns: Json
+      }
       get_user_username_permissions: {
         Args: { user_email_param: string }
         Returns: {
