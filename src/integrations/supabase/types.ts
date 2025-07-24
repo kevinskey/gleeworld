@@ -6007,6 +6007,15 @@ export type Database = {
         Args: { start_date: string; end_date: string; created_by_id?: string }
         Returns: number
       }
+      create_secure_file_access: {
+        Args: {
+          p_user_id: string
+          p_bucket_id: string
+          p_file_path: string
+          p_access_type?: string
+        }
+        Returns: boolean
+      }
       create_task_notification: {
         Args: {
           task_id_param: string
