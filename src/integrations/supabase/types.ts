@@ -2354,6 +2354,68 @@ export type Database = {
           },
         ]
       }
+      gw_licensing_entries: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_on: string | null
+          id: string
+          is_active: boolean
+          license_number: string | null
+          license_type: string
+          music_id: string
+          performance_fee: number | null
+          proof_url: string | null
+          publisher: string | null
+          rights_holder: string | null
+          territory_restrictions: string | null
+          updated_at: string
+          usage_notes: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_on?: string | null
+          id?: string
+          is_active?: boolean
+          license_number?: string | null
+          license_type: string
+          music_id: string
+          performance_fee?: number | null
+          proof_url?: string | null
+          publisher?: string | null
+          rights_holder?: string | null
+          territory_restrictions?: string | null
+          updated_at?: string
+          usage_notes?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_on?: string | null
+          id?: string
+          is_active?: boolean
+          license_number?: string | null
+          license_type?: string
+          music_id?: string
+          performance_fee?: number | null
+          proof_url?: string | null
+          publisher?: string | null
+          rights_holder?: string | null
+          territory_restrictions?: string | null
+          updated_at?: string
+          usage_notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_licensing_entries_music_id_fkey"
+            columns: ["music_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sheet_music"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_marked_scores: {
         Row: {
           created_at: string
@@ -3524,6 +3586,96 @@ export type Database = {
           },
         ]
       }
+      gw_setlist_items: {
+        Row: {
+          created_at: string
+          id: string
+          music_id: string
+          order_index: number
+          setlist_id: string
+          staging_notes: string | null
+          tempo_notes: string | null
+          voice_part_notes: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          music_id: string
+          order_index: number
+          setlist_id: string
+          staging_notes?: string | null
+          tempo_notes?: string | null
+          voice_part_notes?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          music_id?: string
+          order_index?: number
+          setlist_id?: string
+          staging_notes?: string | null
+          tempo_notes?: string | null
+          voice_part_notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_setlist_items_music_id_fkey"
+            columns: ["music_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sheet_music"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_setlist_items_setlist_id_fkey"
+            columns: ["setlist_id"]
+            isOneToOne: false
+            referencedRelation: "gw_setlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_setlists: {
+        Row: {
+          concert_name: string
+          created_at: string
+          created_by: string
+          description: string | null
+          event_date: string | null
+          id: string
+          is_published: boolean
+          rehearsal_notes: string | null
+          title: string
+          updated_at: string
+          venue: string | null
+        }
+        Insert: {
+          concert_name: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          event_date?: string | null
+          id?: string
+          is_published?: boolean
+          rehearsal_notes?: string | null
+          title: string
+          updated_at?: string
+          venue?: string | null
+        }
+        Update: {
+          concert_name?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          event_date?: string | null
+          id?: string
+          is_published?: boolean
+          rehearsal_notes?: string | null
+          title?: string
+          updated_at?: string
+          venue?: string | null
+        }
+        Relationships: []
+      }
       gw_sheet_music: {
         Row: {
           archive_reason: string | null
@@ -3903,6 +4055,177 @@ export type Database = {
             columns: ["announcement_id"]
             isOneToOne: false
             referencedRelation: "gw_announcements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_tour_events: {
+        Row: {
+          budget_allocated: number | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string | null
+          id: string
+          location: string
+          setlist_id: string | null
+          start_date: string
+          title: string
+          updated_at: string
+          venue_contact: string | null
+          venue_email: string | null
+          venue_phone: string | null
+        }
+        Insert: {
+          budget_allocated?: number | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          location: string
+          setlist_id?: string | null
+          start_date: string
+          title: string
+          updated_at?: string
+          venue_contact?: string | null
+          venue_email?: string | null
+          venue_phone?: string | null
+        }
+        Update: {
+          budget_allocated?: number | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          location?: string
+          setlist_id?: string | null
+          start_date?: string
+          title?: string
+          updated_at?: string
+          venue_contact?: string | null
+          venue_email?: string | null
+          venue_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_tour_events_setlist_id_fkey"
+            columns: ["setlist_id"]
+            isOneToOne: false
+            referencedRelation: "gw_setlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_tour_tasks: {
+        Row: {
+          assignee_id: string | null
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          event_id: string
+          id: string
+          priority: string | null
+          task_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          event_id: string
+          id?: string
+          priority?: string | null
+          task_type: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          event_id?: string
+          id?: string
+          priority?: string | null
+          task_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_tour_tasks_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tour_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_travel_logs: {
+        Row: {
+          arrival_location: string | null
+          arrival_time: string | null
+          booking_reference: string | null
+          confirmed: boolean
+          cost: number | null
+          created_at: string
+          departure_location: string | null
+          departure_time: string | null
+          event_id: string
+          id: string
+          notes: string | null
+          person_id: string
+          travel_mode: string
+          updated_at: string
+        }
+        Insert: {
+          arrival_location?: string | null
+          arrival_time?: string | null
+          booking_reference?: string | null
+          confirmed?: boolean
+          cost?: number | null
+          created_at?: string
+          departure_location?: string | null
+          departure_time?: string | null
+          event_id: string
+          id?: string
+          notes?: string | null
+          person_id: string
+          travel_mode: string
+          updated_at?: string
+        }
+        Update: {
+          arrival_location?: string | null
+          arrival_time?: string | null
+          booking_reference?: string | null
+          confirmed?: boolean
+          cost?: number | null
+          created_at?: string
+          departure_location?: string | null
+          departure_time?: string | null
+          event_id?: string
+          id?: string
+          notes?: string | null
+          person_id?: string
+          travel_mode?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_travel_logs_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tour_events"
             referencedColumns: ["id"]
           },
         ]
@@ -5544,6 +5867,16 @@ export type Database = {
       get_track_like_count: {
         Args: { track_uuid: string }
         Returns: number
+      }
+      get_upcoming_license_expirations: {
+        Args: { days_ahead?: number }
+        Returns: {
+          id: string
+          music_title: string
+          license_type: string
+          expires_on: string
+          days_until_expiry: number
+        }[]
       }
       get_user_username_permissions: {
         Args: { user_email_param: string }
