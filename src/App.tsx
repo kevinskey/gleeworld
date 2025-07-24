@@ -47,6 +47,7 @@ import Budgets from "./pages/Budgets";
 import Treasurer from "./pages/Treasurer";
 import TourManager from "./pages/TourManager";
 import PerformanceSuite from "./pages/PerformanceSuite";
+import WellnessSuite from "./pages/WellnessSuite";
 import AlumnaeLanding from "./pages/AlumnaeLanding";
 import AlumnaeAdmin from "./pages/admin/AlumnaeAdmin";
 
@@ -376,14 +377,22 @@ const App = () => {
                            </ProtectedRoute>
                          } 
                        />
-                       <Route 
-                         path="/performance" 
-                         element={
-                           <ProtectedRoute>
-                             <PerformanceSuite />
-                           </ProtectedRoute>
-                         } 
-                       />
+                        <Route 
+                          path="/performance" 
+                          element={
+                            <ProtectedRoute>
+                              <PerformanceSuite />
+                            </ProtectedRoute>
+                          } 
+                        />
+                        <Route 
+                          path="/wellness" 
+                          element={
+                            <ProtectedRoute>
+                              <WellnessSuite />
+                            </ProtectedRoute>
+                          } 
+                        />
                        <Route 
                          path="/alumnae" 
                          element={

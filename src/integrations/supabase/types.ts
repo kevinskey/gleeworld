@@ -2903,6 +2903,48 @@ export type Database = {
           },
         ]
       }
+      gw_performance_reviews: {
+        Row: {
+          created_at: string
+          id: string
+          is_anonymous: boolean
+          music_id: string | null
+          notes: string | null
+          rating: number
+          rehearsal_date: string | null
+          review_type: Database["public"]["Enums"]["review_type_enum"]
+          reviewer_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          music_id?: string | null
+          notes?: string | null
+          rating: number
+          rehearsal_date?: string | null
+          review_type: Database["public"]["Enums"]["review_type_enum"]
+          reviewer_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          music_id?: string | null
+          notes?: string | null
+          rating?: number
+          rehearsal_date?: string | null
+          review_type?: Database["public"]["Enums"]["review_type_enum"]
+          reviewer_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_permissions: {
         Row: {
           category: string | null
@@ -3488,6 +3530,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gw_rehearsal_feedback: {
+        Row: {
+          category: Database["public"]["Enums"]["feedback_category_enum"]
+          created_at: string
+          event_id: string | null
+          id: string
+          is_anonymous: boolean
+          notes: string | null
+          rating: number
+          reviewer_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["feedback_category_enum"]
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          is_anonymous?: boolean
+          notes?: string | null
+          rating: number
+          reviewer_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["feedback_category_enum"]
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          is_anonymous?: boolean
+          notes?: string | null
+          rating?: number
+          reviewer_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       gw_rehearsal_music_links: {
         Row: {
@@ -4230,6 +4311,48 @@ export type Database = {
           },
         ]
       }
+      gw_uniform_assignments: {
+        Row: {
+          assigned_by: string | null
+          condition_notes: string | null
+          created_at: string
+          id: string
+          issued_date: string
+          item: string
+          return_due: string | null
+          returned: boolean
+          size: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          condition_notes?: string | null
+          created_at?: string
+          id?: string
+          issued_date?: string
+          item: string
+          return_due?: string | null
+          returned?: boolean
+          size?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          condition_notes?: string | null
+          created_at?: string
+          id?: string
+          issued_date?: string
+          item?: string
+          return_due?: string | null
+          returned?: boolean
+          size?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_user_orders: {
         Row: {
           billing_address: Json | null
@@ -4346,6 +4469,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gw_vocal_health_entries: {
+        Row: {
+          created_at: string
+          date: string
+          hours_slept: number | null
+          hydration_level: Database["public"]["Enums"]["hydration_level_enum"]
+          id: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+          vocal_status: Database["public"]["Enums"]["vocal_status_enum"]
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          hours_slept?: number | null
+          hydration_level: Database["public"]["Enums"]["hydration_level_enum"]
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+          vocal_status: Database["public"]["Enums"]["vocal_status_enum"]
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          hours_slept?: number | null
+          hydration_level?: Database["public"]["Enums"]["hydration_level_enum"]
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+          vocal_status?: Database["public"]["Enums"]["vocal_status_enum"]
+        }
+        Relationships: []
       }
       gw_youtube_videos: {
         Row: {
@@ -5779,6 +5938,10 @@ export type Database = {
         Args: { event_id_param: string }
         Returns: undefined
       }
+      check_vocal_health_alerts: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
       cleanup_expired_notifications: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -5971,8 +6134,21 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user" | "super-admin"
+      feedback_category_enum:
+        | "Vocal Blend"
+        | "Rhythmic Precision"
+        | "Diction"
+        | "Posture"
+        | "Energy"
+      hydration_level_enum: "Low" | "Normal" | "High"
       payment_method_enum: "zelle" | "cashapp" | "venmo" | "apple_pay" | "check"
       performer_status: "draft" | "submitted" | "approved"
+      review_type_enum:
+        | "Self Assessment"
+        | "Section Leader Review"
+        | "Admin Review"
+        | "Peer Review"
+      vocal_status_enum: "Healthy" | "Fatigued" | "Sore" | "Injured"
       voice_part_enum: "S1" | "S2" | "A1" | "A2" | "T1" | "T2" | "B1" | "B2"
     }
     CompositeTypes: {
@@ -6102,8 +6278,23 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user", "super-admin"],
+      feedback_category_enum: [
+        "Vocal Blend",
+        "Rhythmic Precision",
+        "Diction",
+        "Posture",
+        "Energy",
+      ],
+      hydration_level_enum: ["Low", "Normal", "High"],
       payment_method_enum: ["zelle", "cashapp", "venmo", "apple_pay", "check"],
       performer_status: ["draft", "submitted", "approved"],
+      review_type_enum: [
+        "Self Assessment",
+        "Section Leader Review",
+        "Admin Review",
+        "Peer Review",
+      ],
+      vocal_status_enum: ["Healthy", "Fatigued", "Sore", "Injured"],
       voice_part_enum: ["S1", "S2", "A1", "A2", "T1", "T2", "B1", "B2"],
     },
   },
