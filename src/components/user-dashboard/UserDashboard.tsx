@@ -45,7 +45,7 @@ import { DashboardSettings } from "@/components/admin/DashboardSettings";
 import { YouTubeManagement } from "@/components/admin/YouTubeManagement";
 import { UsernamePermissionsManager } from "@/components/admin/UsernamePermissionsManager";
 
-import { SetlistManager } from "@/components/setlists/SetlistManager";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useMergedProfile } from "@/hooks/useMergedProfile";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";

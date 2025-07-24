@@ -1,19 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Camera, 
   Upload, 
-  Search, 
-  Filter, 
-  Grid, 
-  List, 
-  Package,
-  BookOpen,
-  DollarSign,
   Scan,
   FileSpreadsheet
 } from 'lucide-react';
@@ -25,6 +15,9 @@ import { UploadDialog } from './UploadDialog';
 import { CameraImportDialog } from './CameraImportDialog';
 import { CSVImportDialog } from './CSVImportDialog';
 import { EditablePhysicalCopyView } from './EditablePhysicalCopyView';
+import { FilterBar, FilterState } from '@/modules/glee-library/filters/FilterBar';
+import { LibraryStats, LibraryStatsData } from '@/modules/glee-library/stats/LibraryStats';
+import { logSheetMusicAction, getDeviceType } from '@/lib/music-library/analytics';
 
 interface ExtendedSheetMusic {
   id: string;
@@ -63,12 +56,17 @@ export const LibraryManagement = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [sortBy, setSortBy] = useState('title');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [activeTab, setActiveTab] = useState('digital');
+  const [filters, setFilters] = useState<FilterState>({
+    searchQuery: '',
+    selectedCategory: 'all',
+    formatFilter: 'all',
+    difficultyFilter: 'all',
+    voicePartFilter: 'all',
+    sortBy: 'title',
+    sortOrder: 'asc',
+    viewMode: 'grid'
+  });
+  const [activeTab, setActiveTab] = useState('all');
   
   const [uploadDialog, setUploadDialog] = useState(false);
   const [cameraDialog, setCameraDialog] = useState(false);
@@ -76,11 +74,14 @@ export const LibraryManagement = () => {
   
   const [sheetMusic, setSheetMusic] = useState<ExtendedSheetMusic[]>([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<LibraryStatsData>({
     totalDigital: 0,
     totalPhysical: 0,
+    bothFormats: 0,
     needsInventory: 0,
     totalValue: 0,
+    recentUploads: 0,
+    popularPieces: 0,
   });
 
   useEffect(() => {
@@ -100,20 +101,39 @@ export const LibraryManagement = () => {
       const musicData = (data || []) as ExtendedSheetMusic[];
       setSheetMusic(musicData);
       
-      // Calculate stats
-      const stats = musicData.reduce(
-        (acc, item) => ({
-          totalDigital: acc.totalDigital + (item.pdf_url ? 1 : 0),
-          totalPhysical: acc.totalPhysical + (item.physical_copies_count || 0),
-          needsInventory: acc.needsInventory + (
-            (item.physical_copies_count || 0) > 0 && !item.last_inventory_date ? 1 : 0
-          ),
-          totalValue: acc.totalValue + (item.purchase_price || 0),
-        }),
-        { totalDigital: 0, totalPhysical: 0, needsInventory: 0, totalValue: 0 }
+      // Calculate stats with new format
+      const calculatedStats = musicData.reduce(
+        (acc, item) => {
+          const hasDigital = !!item.pdf_url;
+          const hasPhysical = (item.physical_copies_count || 0) > 0;
+          const hasBoth = hasDigital && hasPhysical;
+          
+          return {
+            totalDigital: acc.totalDigital + (hasDigital ? 1 : 0),
+            totalPhysical: acc.totalPhysical + (item.physical_copies_count || 0),
+            bothFormats: acc.bothFormats + (hasBoth ? 1 : 0),
+            needsInventory: acc.needsInventory + (
+              hasPhysical && !item.last_inventory_date ? 1 : 0
+            ),
+            totalValue: acc.totalValue + (item.purchase_price || 0),
+            recentUploads: acc.recentUploads + (
+              new Date(item.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) ? 1 : 0
+            ),
+            popularPieces: acc.popularPieces // Will be calculated from analytics later
+          };
+        },
+        { 
+          totalDigital: 0, 
+          totalPhysical: 0, 
+          bothFormats: 0, 
+          needsInventory: 0, 
+          totalValue: 0, 
+          recentUploads: 0, 
+          popularPieces: 0 
+        }
       );
       
-      setStats(stats);
+      setStats(calculatedStats);
     } catch (error) {
       console.error('Error fetching sheet music:', error);
       toast({
@@ -126,22 +146,31 @@ export const LibraryManagement = () => {
     }
   };
 
-  const filteredMusic = sheetMusic.filter((item) => {
-    const matchesSearch = searchQuery === "" || 
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.composer?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.arranger?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+  const handleFiltersChange = (newFilters: Partial<FilterState>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  };
 
-    const matchesCategory = selectedCategory === "all" || 
-      item.tags?.some(tag => tag.toLowerCase() === selectedCategory.toLowerCase());
+  const filteredMusic = sheetMusic.filter((item) => {
+    const matchesSearch = filters.searchQuery === "" || 
+      item.title.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
+      item.composer?.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
+      item.arranger?.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
+      item.tags?.some(tag => tag.toLowerCase().includes(filters.searchQuery.toLowerCase()));
+
+    const matchesCategory = filters.selectedCategory === "all" || 
+      item.tags?.some(tag => tag.toLowerCase() === filters.selectedCategory.toLowerCase());
+
+    const matchesFormat = filters.formatFilter === 'all' || 
+      (filters.formatFilter === 'digital' && item.pdf_url && !((item.physical_copies_count || 0) > 0)) ||
+      (filters.formatFilter === 'physical' && (item.physical_copies_count || 0) > 0 && !item.pdf_url) ||
+      (filters.formatFilter === 'both' && item.pdf_url && (item.physical_copies_count || 0) > 0);
 
     const matchesTab = activeTab === 'all' ||
       (activeTab === 'digital' && item.pdf_url) ||
       (activeTab === 'physical' && (item.physical_copies_count || 0) > 0) ||
       (activeTab === 'inventory' && (item.physical_copies_count || 0) > 0 && !item.last_inventory_date);
 
-    return matchesSearch && matchesCategory && matchesTab;
+    return matchesSearch && matchesCategory && matchesFormat && matchesTab;
   });
 
 
@@ -173,67 +202,15 @@ export const LibraryManagement = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Digital Files</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalDigital}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Physical Copies</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalPhysical}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Needs Inventory</CardTitle>
-            <Scan className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{stats.needsInventory}</div>
-          </CardContent>
-        </Card>
-      </div>
+      <LibraryStats stats={stats} loading={loading} />
 
       {/* Search and Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search sheet music..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        
-        <div className="flex gap-2">
-          <Button
-            variant={viewMode === 'grid' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('grid')}
-          >
-            <Grid className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === 'list' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('list')}
-          >
-            <List className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      <FilterBar 
+        filters={filters} 
+        onFiltersChange={handleFiltersChange}
+        showFormatFilter={true}
+        showVoicePartFilter={true}
+      />
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -246,21 +223,21 @@ export const LibraryManagement = () => {
         
         <TabsContent value="all" className="space-y-4">
           <SheetMusicLibrary
-            searchQuery={searchQuery}
-            selectedCategory={selectedCategory}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            viewMode={viewMode}
+            searchQuery={filters.searchQuery}
+            selectedCategory={filters.selectedCategory}
+            sortBy={filters.sortBy}
+            sortOrder={filters.sortOrder}
+            viewMode={filters.viewMode}
           />
         </TabsContent>
         
         <TabsContent value="digital" className="space-y-4">
           <SheetMusicLibrary
-            searchQuery={searchQuery}
-            selectedCategory={selectedCategory}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            viewMode={viewMode}
+            searchQuery={filters.searchQuery}
+            selectedCategory={filters.selectedCategory}
+            sortBy={filters.sortBy}
+            sortOrder={filters.sortOrder}
+            viewMode={filters.viewMode}
           />
         </TabsContent>
         
