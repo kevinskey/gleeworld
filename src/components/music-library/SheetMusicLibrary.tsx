@@ -244,7 +244,7 @@ export const SheetMusicLibrary = ({
   }
 
   const renderGridView = () => (
-    <div className="grid grid-cols-1 gap-4">
+    <div className="grid grid-cols-1 gap-2">
       {filteredAndSortedMusic.map((item) => {
         const isSelected = selectedItemId === item.id;
         
@@ -256,7 +256,7 @@ export const SheetMusicLibrary = ({
             }`}
             onClick={() => setSelectedItemId(isSelected ? null : item.id)}
           >
-            <CardHeader className="pb-2">
+            <CardHeader className={`${isSelected ? 'pb-2' : 'pb-1'}`}>
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <CardTitle className="text-sm font-medium truncate" title={item.title}>
@@ -275,7 +275,7 @@ export const SheetMusicLibrary = ({
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className={`${isSelected ? 'space-y-3' : 'space-y-1 pb-2'}`}>
               {/* Collapsed/Expanded Thumbnail */}
               {isSelected ? (
                 <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
@@ -293,38 +293,40 @@ export const SheetMusicLibrary = ({
                   )}
                 </div>
               ) : (
-                <div className="h-8 bg-muted/30 rounded-lg flex items-center justify-center">
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground ml-2">Click to preview</span>
+                <div className="h-3 bg-muted/30 rounded flex items-center justify-center">
+                  <FileText className="h-2.5 w-2.5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground ml-1">Click to preview</span>
                 </div>
               )}
 
-              {/* Details */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  {item.key_signature && (
-                    <span>Key: {item.key_signature}</span>
-                  )}
-                  {item.time_signature && (
-                    <span>• {item.time_signature}</span>
-                  )}
-                </div>
-
-                {item.voice_parts && item.voice_parts.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {item.voice_parts.slice(0, 3).map((part, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {part}
-                      </Badge>
-                    ))}
-                    {item.voice_parts.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{item.voice_parts.length - 3} more
-                      </Badge>
+              {/* Details - only show when selected */}
+              {isSelected && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    {item.key_signature && (
+                      <span>Key: {item.key_signature}</span>
+                    )}
+                    {item.time_signature && (
+                      <span>• {item.time_signature}</span>
                     )}
                   </div>
-                )}
-              </div>
+
+                  {item.voice_parts && item.voice_parts.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {item.voice_parts.slice(0, 3).map((part, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {part}
+                        </Badge>
+                      ))}
+                      {item.voice_parts.length > 3 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{item.voice_parts.length - 3} more
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Actions */}
               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -378,7 +380,7 @@ export const SheetMusicLibrary = ({
   );
 
   const renderListView = () => (
-    <div className="space-y-2">
+    <div className="space-y-1">
       {filteredAndSortedMusic.map((item) => {
         const isSelected = selectedItemId === item.id;
         
@@ -390,8 +392,8 @@ export const SheetMusicLibrary = ({
             }`}
             onClick={() => setSelectedItemId(isSelected ? null : item.id)}
           >
-            <CardContent className="p-4">
-              <div className="flex items-center gap-4">
+            <CardContent className={`${isSelected ? 'p-4' : 'p-3'}`}>
+              <div className="flex items-center gap-3">
                 {/* Collapsed/Expanded Thumbnail */}
                 {isSelected ? (
                   <div className="w-16 h-20 bg-muted rounded overflow-hidden flex-shrink-0">
