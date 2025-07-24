@@ -44,6 +44,7 @@ import { HeroManagement } from "@/components/admin/HeroManagement";
 import { DashboardSettings } from "@/components/admin/DashboardSettings";
 import { YouTubeManagement } from "@/components/admin/YouTubeManagement";
 import { UsernamePermissionsManager } from "@/components/admin/UsernamePermissionsManager";
+import { SpotlightManagement } from "@/components/admin/spotlight/SpotlightManagement";
 
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -203,6 +204,8 @@ export const UserDashboard = () => {
             return <YouTubeManagement />;
           case 'manage-permissions':
             return <UsernamePermissionsManager />;
+          case 'spotlight-management':
+            return <SpotlightManagement />;
           default:
             return (
               <Card>

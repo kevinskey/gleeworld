@@ -4176,6 +4176,112 @@ export type Database = {
           },
         ]
       }
+      gw_spotlight_analytics: {
+        Row: {
+          action_type: string
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          referrer: string | null
+          spotlight_id: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          referrer?: string | null
+          spotlight_id: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          referrer?: string | null
+          spotlight_id?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_spotlight_analytics_spotlight_id_fkey"
+            columns: ["spotlight_id"]
+            isOneToOne: false
+            referencedRelation: "gw_spotlight_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_spotlight_content: {
+        Row: {
+          content: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          display_order: number | null
+          external_link: string | null
+          featured_event_id: string | null
+          featured_person_id: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          is_featured: boolean
+          publish_date: string | null
+          spotlight_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          display_order?: number | null
+          external_link?: string | null
+          featured_event_id?: string | null
+          featured_person_id?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          is_featured?: boolean
+          publish_date?: string | null
+          spotlight_type?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          display_order?: number | null
+          external_link?: string | null
+          featured_event_id?: string | null
+          featured_person_id?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          is_featured?: boolean
+          publish_date?: string | null
+          spotlight_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_spotlight_event"
+            columns: ["featured_event_id"]
+            isOneToOne: false
+            referencedRelation: "gw_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_tour_events: {
         Row: {
           budget_allocated: number | null
