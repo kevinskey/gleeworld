@@ -42,7 +42,7 @@ export const CreateBudgetDialog = ({ contractId, eventId, onSuccess }: CreateBud
     description: '',
     total_amount: '',
     allocated_amount: '',
-    budget_type: contractId ? 'contract' : eventId ? 'event' : 'project',
+    budget_type: '',
     start_date: '',
     end_date: ''
   });
@@ -105,7 +105,7 @@ export const CreateBudgetDialog = ({ contractId, eventId, onSuccess }: CreateBud
           description: '',
           total_amount: '',
           allocated_amount: '',
-          budget_type: contractId ? 'contract' : eventId ? 'event' : 'project',
+          budget_type: '',
           start_date: '',
           end_date: ''
         });
@@ -142,6 +142,31 @@ export const CreateBudgetDialog = ({ contractId, eventId, onSuccess }: CreateBud
             </TabsList>
 
             <TabsContent value="details" className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="budget_type">Budget Type *</Label>
+                <Select
+                  value={formData.budget_type}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, budget_type: value }))}
+                  required
+                >
+                  <SelectTrigger className="bg-white border-gray-300 z-50">
+                    <SelectValue placeholder="Select budget type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border shadow-lg z-50 max-h-[200px] overflow-y-auto">
+                    <SelectItem value="nso">NSO</SelectItem>
+                    <SelectItem value="sister-social">Sister Social</SelectItem>
+                    <SelectItem value="food">Food</SelectItem>
+                    <SelectItem value="senior-banquet">Senior Banquet</SelectItem>
+                    <SelectItem value="christmas-carol-party">Christmas Carol Party</SelectItem>
+                    <SelectItem value="glee-outing">Glee Outing</SelectItem>
+                    <SelectItem value="community-service">Community Service</SelectItem>
+                    <SelectItem value="glee-meal">Glee Meal</SelectItem>
+                    <SelectItem value="merchandising">Merchandising</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="title">Title *</Label>
                 <Input
@@ -192,23 +217,6 @@ export const CreateBudgetDialog = ({ contractId, eventId, onSuccess }: CreateBud
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="budget_type">Budget Type</Label>
-                <Select
-                  value={formData.budget_type}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, budget_type: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="project">Project</SelectItem>
-                    <SelectItem value="event">Event</SelectItem>
-                    <SelectItem value="contract">Contract</SelectItem>
-                    <SelectItem value="annual">Annual</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
