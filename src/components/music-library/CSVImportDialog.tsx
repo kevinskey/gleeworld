@@ -67,11 +67,11 @@ export const CSVImportDialog = ({ open, onOpenChange, onSuccess }: CSVImportDial
   const [csvData, setCsvData] = useState<CSVRow[]>([]);
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
   const [columnMapping, setColumnMapping] = useState<ImportMapping>({
-    title: '',
-    composer: '',
-    voicing: '',
-    library_number: '',
-    physical_copies: '',
+    title: 'unmapped',
+    composer: 'unmapped',
+    voicing: 'unmapped',
+    library_number: 'unmapped',
+    physical_copies: 'unmapped',
   });
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -301,11 +301,11 @@ export const CSVImportDialog = ({ open, onOpenChange, onSuccess }: CSVImportDial
     setCsvData([]);
     setCsvHeaders([]);
     setColumnMapping({
-      title: '',
-      composer: '',
-      voicing: '',
-      library_number: '',
-      physical_copies: '',
+      title: 'unmapped',
+      composer: 'unmapped',
+      voicing: 'unmapped',
+      library_number: 'unmapped',
+      physical_copies: 'unmapped',
     });
     setImportResult(null);
     setIsProcessing(false);
