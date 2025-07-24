@@ -155,7 +155,13 @@ export const UserDashboard = () => {
     usernamePermissions,
     permissionsLoading,
     availableModules: availableModules.length,
-    availableModuleKeys: availableModules.map(m => m.key)
+    availableModuleKeys: availableModules.map(m => m.key),
+    profile: profile,
+    allModules: Object.keys(DASHBOARD_MODULES),
+    moduleAccessResults: Object.keys(DASHBOARD_MODULES).map(key => ({
+      module: key,
+      hasAccess: hasModuleAccess(userRole, userEmail, key as DashboardModule, usernamePermissions)
+    }))
   });
 
   if (!user || dashboardLoading) {
