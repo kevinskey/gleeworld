@@ -14,6 +14,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 
 import { GleeWorldLanding } from "./pages/GleeWorldLanding";
+import { SimpleHomePage } from "./components/debug/SimpleHomePage";
 import ContractSigning from "./pages/ContractSigning";
 import AdminSigning from "./pages/AdminSigning";
 import ActivityLogs from "./pages/ActivityLogs";
@@ -105,16 +106,20 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 const RootRoute = () => {
   const { user, loading } = useAuth();
   
+  console.log('RootRoute: Rendering with user:', user?.id || 'none', 'loading:', loading);
+  
   if (loading) {
+    console.log('RootRoute: Still loading auth state');
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading..." />
+        <LoadingSpinner size="lg" text="Initializing..." />
       </div>
     );
   }
   
-  // Show landing page for everyone, authenticated or not
-  return <GleeWorldLanding />;
+  console.log('RootRoute: Auth complete, rendering simple debug page');
+  // Temporarily use simple debug page instead of GleeWorldLanding
+  return <SimpleHomePage />;
 };
 
 const App = () => {
