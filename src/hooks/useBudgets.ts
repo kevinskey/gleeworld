@@ -57,6 +57,26 @@ export interface BudgetTransaction {
   created_at: string;
 }
 
+export interface BudgetUserAssociation {
+  id: string;
+  budget_id: string;
+  user_id: string;
+  permission_type: 'view' | 'edit' | 'manage';
+  added_by: string;
+  added_at: string;
+}
+
+export interface BudgetAttachment {
+  id: string;
+  budget_id?: string;
+  event_id?: string;
+  filename: string;
+  file_url: string;
+  file_type?: string;
+  uploaded_by?: string;
+  created_at: string;
+}
+
 export const useBudgets = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -92,10 +112,14 @@ export const useBudgets = () => {
     }
   };
 
-  const createBudget = async (budgetData: Omit<Budget, 'id' | 'created_at' | 'updated_at' | 'remaining_amount' | 'spent_amount' | 'created_by'> & { created_by?: string }) => {
+  const createBudget = async (
+    budgetData: Omit<Budget, 'id' | 'created_at' | 'updated_at' | 'remaining_amount' | 'spent_amount' | 'created_by'> & { created_by?: string },
+    userAssociations?: Array<{ user: { id: string; email: string; full_name?: string }; permission_type: 'view' | 'edit' | 'manage' }>
+  ) => {
     if (!user) return null;
 
     try {
+      // Create the budget
       const { data, error: createError } = await supabase
         .from('budgets')
         .insert([{
@@ -106,6 +130,25 @@ export const useBudgets = () => {
         .single();
 
       if (createError) throw createError;
+
+      // Create user associations if provided
+      if (userAssociations && userAssociations.length > 0) {
+        const associations = userAssociations.map(assoc => ({
+          budget_id: data.id,
+          user_id: assoc.user.id,
+          permission_type: assoc.permission_type,
+          added_by: user.id
+        }));
+
+        const { error: assocError } = await supabase
+          .from('budget_user_associations')
+          .insert(associations);
+
+        if (assocError) {
+          console.error('Error creating user associations:', assocError);
+          // Don't fail budget creation if associations fail
+        }
+      }
 
       setBudgets(prev => [data as Budget, ...prev]);
       toast({
