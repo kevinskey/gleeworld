@@ -64,6 +64,7 @@ export const SheetMusicLibrary = ({
   const { toast } = useToast();
   const [sheetMusic, setSheetMusic] = useState<SheetMusic[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [editDialog, setEditDialog] = useState<{ open: boolean; item: SheetMusic | null }>({
     open: false,
     item: null,
@@ -244,189 +245,244 @@ export const SheetMusicLibrary = ({
 
   const renderGridView = () => (
     <div className="grid grid-cols-1 gap-4">
-      {filteredAndSortedMusic.map((item) => (
-        <Card key={item.id} className="group hover:shadow-lg transition-shadow">
-          <CardHeader className="pb-2">
-            <div className="flex items-start justify-between">
-              <div className="flex-1 min-w-0">
-                <CardTitle className="text-sm font-medium truncate" title={item.title}>
-                  {item.title}
-                </CardTitle>
-                {item.composer && (
-                  <p className="text-xs text-muted-foreground truncate" title={item.composer}>
-                    by {item.composer}
-                  </p>
-                )}
-                {item.arranger && (
-                  <p className="text-xs text-muted-foreground truncate" title={item.arranger}>
-                    arr. {item.arranger}
-                  </p>
-                )}
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {/* Thumbnail */}
-            <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
-              {item.pdf_url ? (
-                <PDFThumbnail
-                  pdfUrl={item.pdf_url}
-                  alt={`${item.title} thumbnail`}
-                  title={item.title}
-                  className="w-full h-full"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <FileText className="h-12 w-12 text-muted-foreground" />
-                </div>
-              )}
-            </div>
-
-            {/* Details */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                {item.key_signature && (
-                  <span>Key: {item.key_signature}</span>
-                )}
-                {item.time_signature && (
-                  <span>• {item.time_signature}</span>
-                )}
-              </div>
-
-              {item.voice_parts && item.voice_parts.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {item.voice_parts.slice(0, 3).map((part, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
-                      {part}
-                    </Badge>
-                  ))}
-                  {item.voice_parts.length > 3 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{item.voice_parts.length - 3} more
-                    </Badge>
+      {filteredAndSortedMusic.map((item) => {
+        const isSelected = selectedItemId === item.id;
+        
+        return (
+          <Card 
+            key={item.id} 
+            className={`group hover:shadow-lg transition-all cursor-pointer ${
+              isSelected ? 'ring-2 ring-primary shadow-lg' : ''
+            }`}
+            onClick={() => setSelectedItemId(isSelected ? null : item.id)}
+          >
+            <CardHeader className="pb-2">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <CardTitle className="text-sm font-medium truncate" title={item.title}>
+                    {item.title}
+                  </CardTitle>
+                  {item.composer && (
+                    <p className="text-xs text-muted-foreground truncate" title={item.composer}>
+                      by {item.composer}
+                    </p>
+                  )}
+                  {item.arranger && (
+                    <p className="text-xs text-muted-foreground truncate" title={item.arranger}>
+                      arr. {item.arranger}
+                    </p>
                   )}
                 </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {/* Collapsed/Expanded Thumbnail */}
+              {isSelected ? (
+                <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
+                  {item.pdf_url ? (
+                    <PDFThumbnail
+                      pdfUrl={item.pdf_url}
+                      alt={`${item.title} thumbnail`}
+                      title={item.title}
+                      className="w-full h-full"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <FileText className="h-12 w-12 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="h-8 bg-muted/30 rounded-lg flex items-center justify-center">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground ml-2">Click to preview</span>
+                </div>
               )}
-            </div>
 
-            {/* Actions */}
-            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => {
-                  handleView(item);
-                  if (item.pdf_url && onPdfSelect) {
-                    onPdfSelect(item.pdf_url, item.title);
-                  }
-                }}
-              >
-                <Eye className="h-3 w-3" />
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>
-                <Edit className="h-3 w-3" />
-              </Button>
-              {item.pdf_url && (
-                <Button size="sm" variant="outline" asChild>
-                  <a href={item.pdf_url} download target="_blank" rel="noopener noreferrer">
-                    <Download className="h-3 w-3" />
-                  </a>
+              {/* Details */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  {item.key_signature && (
+                    <span>Key: {item.key_signature}</span>
+                  )}
+                  {item.time_signature && (
+                    <span>• {item.time_signature}</span>
+                  )}
+                </div>
+
+                {item.voice_parts && item.voice_parts.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {item.voice_parts.slice(0, 3).map((part, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {part}
+                      </Badge>
+                    ))}
+                    {item.voice_parts.length > 3 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{item.voice_parts.length - 3} more
+                      </Badge>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleView(item);
+                    if (item.pdf_url && onPdfSelect) {
+                      onPdfSelect(item.pdf_url, item.title);
+                    }
+                  }}
+                >
+                  <Eye className="h-3 w-3" />
                 </Button>
-              )}
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => handleDelete(item)}
-                className="text-destructive hover:text-destructive"
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(item);
+                  }}
+                >
+                  <Edit className="h-3 w-3" />
+                </Button>
+                {item.pdf_url && (
+                  <Button size="sm" variant="outline" asChild>
+                    <a href={item.pdf_url} download target="_blank" rel="noopener noreferrer">
+                      <Download className="h-3 w-3" />
+                    </a>
+                  </Button>
+                )}
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(item);
+                  }}
+                  className="text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 
   const renderListView = () => (
     <div className="space-y-2">
-      {filteredAndSortedMusic.map((item) => (
-        <Card key={item.id} className="hover:shadow-md transition-shadow">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-4">
-              {/* Thumbnail */}
-              <div className="w-16 h-20 bg-muted rounded overflow-hidden flex-shrink-0">
-                {item.pdf_url ? (
-                  <PDFThumbnail
-                    pdfUrl={item.pdf_url}
-                    alt={`${item.title} thumbnail`}
-                    title={item.title}
-                    className="w-full h-full"
-                  />
+      {filteredAndSortedMusic.map((item) => {
+        const isSelected = selectedItemId === item.id;
+        
+        return (
+          <Card 
+            key={item.id} 
+            className={`hover:shadow-md transition-all cursor-pointer ${
+              isSelected ? 'ring-2 ring-primary shadow-lg' : ''
+            }`}
+            onClick={() => setSelectedItemId(isSelected ? null : item.id)}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                {/* Collapsed/Expanded Thumbnail */}
+                {isSelected ? (
+                  <div className="w-16 h-20 bg-muted rounded overflow-hidden flex-shrink-0">
+                    {item.pdf_url ? (
+                      <PDFThumbnail
+                        pdfUrl={item.pdf_url}
+                        alt={`${item.title} thumbnail`}
+                        title={item.title}
+                        className="w-full h-full"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <FileText className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <FileText className="h-6 w-6 text-muted-foreground" />
+                  <div className="w-8 h-8 bg-muted/30 rounded flex items-center justify-center flex-shrink-0">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
                   </div>
                 )}
-              </div>
 
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium truncate">{item.title}</h3>
-                    {item.composer && (
-                      <p className="text-sm text-muted-foreground">by {item.composer}</p>
-                    )}
-                    {item.arranger && (
-                      <p className="text-sm text-muted-foreground">arr. {item.arranger}</p>
-                    )}
-                    
-                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                      {item.key_signature && <span>Key: {item.key_signature}</span>}
-                      {item.time_signature && <span>Time: {item.time_signature}</span>}
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium truncate">{item.title}</h3>
+                      {item.composer && (
+                        <p className="text-sm text-muted-foreground">by {item.composer}</p>
+                      )}
+                      {item.arranger && (
+                        <p className="text-sm text-muted-foreground">arr. {item.arranger}</p>
+                      )}
+                      
+                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                        {item.key_signature && <span>Key: {item.key_signature}</span>}
+                        {item.time_signature && <span>Time: {item.time_signature}</span>}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Actions */}
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onClick={() => {
-                        handleView(item);
-                        if (item.pdf_url && onPdfSelect) {
-                          onPdfSelect(item.pdf_url, item.title);
-                        }
-                      }}
-                    >
-                      <Eye className="h-3 w-3" />
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>
-                      <Edit className="h-3 w-3" />
-                    </Button>
-                    {item.pdf_url && (
-                      <Button size="sm" variant="outline" asChild>
-                        <a href={item.pdf_url} download target="_blank" rel="noopener noreferrer">
-                          <Download className="h-3 w-3" />
-                        </a>
+                    {/* Actions */}
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleView(item);
+                          if (item.pdf_url && onPdfSelect) {
+                            onPdfSelect(item.pdf_url, item.title);
+                          }
+                        }}
+                      >
+                        <Eye className="h-3 w-3" />
                       </Button>
-                    )}
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onClick={() => handleDelete(item)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(item);
+                        }}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      {item.pdf_url && (
+                        <Button size="sm" variant="outline" asChild>
+                          <a href={item.pdf_url} download target="_blank" rel="noopener noreferrer">
+                            <Download className="h-3 w-3" />
+                          </a>
+                        </Button>
+                      )}
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(item);
+                        }}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 
