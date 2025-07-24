@@ -300,7 +300,9 @@ export const ContractContentProcessor = ({
       {processContractContent().map((item, index) => (
         <div key={index}>
           {typeof item === 'string' ? (
-            <div dangerouslySetInnerHTML={{ __html: item.replace(/\n/g, '<br>') }} />
+            <div className="whitespace-pre-wrap">
+              {item}
+            </div>
           ) : (
             item
           )}

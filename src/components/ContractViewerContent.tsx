@@ -39,7 +39,9 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
     if (contract?.status === 'draft') {
       console.log('Processing draft contract, displaying content as-is');
       return content.split('\n').map((line, index) => (
-        <div key={index} dangerouslySetInnerHTML={{ __html: line.replace(/\n/g, '<br>') }} />
+        <div key={index} className="whitespace-pre-wrap">
+          {line}
+        </div>
       ));
     }
     
@@ -293,7 +295,9 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
       {processContractContent().map((item, index) => (
         <div key={index}>
           {typeof item === 'string' ? (
-            <div dangerouslySetInnerHTML={{ __html: item.replace(/\n/g, '<br>') }} />
+            <div className="whitespace-pre-wrap">
+              {item}
+            </div>
           ) : (
             item
           )}
