@@ -256,26 +256,35 @@ export const SheetMusicLibrary = ({
             }`}
             onClick={() => setSelectedItemId(isSelected ? null : item.id)}
           >
-            <CardHeader className={`${isSelected ? 'pb-2' : 'pb-1'}`}>
+            <CardHeader className={`${isSelected ? 'pb-2' : 'pb-0 pt-2'}`}>
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-sm font-medium truncate" title={item.title}>
+                  <CardTitle className={`${isSelected ? 'text-sm' : 'text-xs'} font-medium truncate leading-tight`} title={item.title}>
                     {item.title}
                   </CardTitle>
-                  {item.composer && (
-                    <p className="text-xs text-muted-foreground truncate" title={item.composer}>
-                      by {item.composer}
+                  {(item.composer || item.arranger) && !isSelected && (
+                    <p className="text-xs text-muted-foreground truncate leading-none" title={item.composer || item.arranger}>
+                      {item.composer ? `by ${item.composer}` : `arr. ${item.arranger}`}
                     </p>
                   )}
-                  {item.arranger && (
-                    <p className="text-xs text-muted-foreground truncate" title={item.arranger}>
-                      arr. {item.arranger}
-                    </p>
+                  {isSelected && (
+                    <>
+                      {item.composer && (
+                        <p className="text-xs text-muted-foreground truncate" title={item.composer}>
+                          by {item.composer}
+                        </p>
+                      )}
+                      {item.arranger && (
+                        <p className="text-xs text-muted-foreground truncate" title={item.arranger}>
+                          arr. {item.arranger}
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
             </CardHeader>
-            <CardContent className={`${isSelected ? 'space-y-3' : 'space-y-1 pb-2'}`}>
+            <CardContent className={`${isSelected ? 'space-y-3' : 'space-y-0 pt-0 pb-1'}`}>
               {/* Collapsed/Expanded Thumbnail */}
               {isSelected ? (
                 <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
@@ -293,9 +302,8 @@ export const SheetMusicLibrary = ({
                   )}
                 </div>
               ) : (
-                <div className="h-3 bg-muted/30 rounded flex items-center justify-center">
-                  <FileText className="h-2.5 w-2.5 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground ml-1">Click to preview</span>
+                <div className="h-1.5 bg-muted/20 rounded-sm flex items-center justify-center">
+                  <div className="w-2 h-1 bg-muted-foreground/30 rounded-sm"></div>
                 </div>
               )}
 
@@ -392,11 +400,11 @@ export const SheetMusicLibrary = ({
             }`}
             onClick={() => setSelectedItemId(isSelected ? null : item.id)}
           >
-            <CardContent className={`${isSelected ? 'p-4' : 'p-3'}`}>
-              <div className="flex items-center gap-3">
+            <CardContent className={`${isSelected ? 'p-3' : 'py-1 px-3'}`}>
+              <div className="flex items-center gap-2">
                 {/* Collapsed/Expanded Thumbnail */}
                 {isSelected ? (
-                  <div className="w-16 h-20 bg-muted rounded overflow-hidden flex-shrink-0">
+                  <div className="w-12 h-16 bg-muted rounded overflow-hidden flex-shrink-0">
                     {item.pdf_url ? (
                       <PDFThumbnail
                         pdfUrl={item.pdf_url}
@@ -406,32 +414,33 @@ export const SheetMusicLibrary = ({
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <FileText className="h-6 w-6 text-muted-foreground" />
+                        <FileText className="h-4 w-4 text-muted-foreground" />
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="w-8 h-8 bg-muted/30 rounded flex items-center justify-center flex-shrink-0">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
+                  <div className="w-4 h-4 bg-muted/30 rounded flex items-center justify-center flex-shrink-0">
+                    <div className="w-2 h-1 bg-muted-foreground/30 rounded-sm"></div>
                   </div>
                 )}
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium truncate">{item.title}</h3>
-                      {item.composer && (
-                        <p className="text-sm text-muted-foreground">by {item.composer}</p>
-                      )}
-                      {item.arranger && (
-                        <p className="text-sm text-muted-foreground">arr. {item.arranger}</p>
+                      <h3 className={`${isSelected ? 'text-sm' : 'text-xs'} font-medium truncate leading-tight`}>{item.title}</h3>
+                      {(item.composer || item.arranger) && (
+                        <p className="text-xs text-muted-foreground truncate leading-none">
+                          {item.composer ? `by ${item.composer}` : `arr. ${item.arranger}`}
+                        </p>
                       )}
                       
-                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                        {item.key_signature && <span>Key: {item.key_signature}</span>}
-                        {item.time_signature && <span>Time: {item.time_signature}</span>}
-                      </div>
+                      {isSelected && (
+                        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                          {item.key_signature && <span>Key: {item.key_signature}</span>}
+                          {item.time_signature && <span>Time: {item.time_signature}</span>}
+                        </div>
+                      )}
                     </div>
 
                     {/* Actions */}
