@@ -3320,27 +3320,37 @@ export type Database = {
       }
       gw_profiles: {
         Row: {
+          academic_major: string | null
           account_balance: number | null
           address: string | null
+          allergies: string | null
           avatar_url: string | null
           bio: string | null
           calendar_feed_token: string | null
+          can_dance: boolean | null
           class_year: number | null
           created_at: string | null
           current_cart_id: string | null
           default_shipping_address: Json | null
           design_history_ids: string[] | null
+          dietary_restrictions: string[] | null
           disabled: boolean | null
           display_name: string | null
+          dress_size: string | null
           dues_paid: boolean | null
           ecommerce_enabled: boolean | null
           email: string | null
+          emergency_contact: string | null
           exec_board_role: string | null
           first_name: string | null
           full_name: string | null
           graduation_year: number | null
+          hair_color: string | null
+          has_tattoos: boolean | null
           headshot_url: string | null
+          home_address: string | null
           id: string
+          instruments_played: string[] | null
           is_admin: boolean | null
           is_exec_board: boolean | null
           is_section_leader: boolean | null
@@ -3352,40 +3362,61 @@ export type Database = {
           music_role: string | null
           notes: string | null
           org: string | null
+          parent_guardian_contact: string | null
           phone: string | null
+          phone_number: string | null
+          preferred_payment_method: string | null
+          pronouns: string | null
           reunion_rsvp: boolean | null
           role: string | null
           role_tags: string[] | null
+          school_address: string | null
+          shoe_size: string | null
+          social_media_links: Json | null
           special_roles: string[] | null
           status: string | null
+          student_number: string | null
           title: string | null
           updated_at: string | null
           user_id: string | null
           verified: boolean | null
+          visible_piercings: boolean | null
           voice_part: string | null
+          website_url: string | null
+          workplace: string | null
         }
         Insert: {
+          academic_major?: string | null
           account_balance?: number | null
           address?: string | null
+          allergies?: string | null
           avatar_url?: string | null
           bio?: string | null
           calendar_feed_token?: string | null
+          can_dance?: boolean | null
           class_year?: number | null
           created_at?: string | null
           current_cart_id?: string | null
           default_shipping_address?: Json | null
           design_history_ids?: string[] | null
+          dietary_restrictions?: string[] | null
           disabled?: boolean | null
           display_name?: string | null
+          dress_size?: string | null
           dues_paid?: boolean | null
           ecommerce_enabled?: boolean | null
           email?: string | null
+          emergency_contact?: string | null
           exec_board_role?: string | null
           first_name?: string | null
           full_name?: string | null
           graduation_year?: number | null
+          hair_color?: string | null
+          has_tattoos?: boolean | null
           headshot_url?: string | null
+          home_address?: string | null
           id?: string
+          instruments_played?: string[] | null
           is_admin?: boolean | null
           is_exec_board?: boolean | null
           is_section_leader?: boolean | null
@@ -3397,40 +3428,61 @@ export type Database = {
           music_role?: string | null
           notes?: string | null
           org?: string | null
+          parent_guardian_contact?: string | null
           phone?: string | null
+          phone_number?: string | null
+          preferred_payment_method?: string | null
+          pronouns?: string | null
           reunion_rsvp?: boolean | null
           role?: string | null
           role_tags?: string[] | null
+          school_address?: string | null
+          shoe_size?: string | null
+          social_media_links?: Json | null
           special_roles?: string[] | null
           status?: string | null
+          student_number?: string | null
           title?: string | null
           updated_at?: string | null
           user_id?: string | null
           verified?: boolean | null
+          visible_piercings?: boolean | null
           voice_part?: string | null
+          website_url?: string | null
+          workplace?: string | null
         }
         Update: {
+          academic_major?: string | null
           account_balance?: number | null
           address?: string | null
+          allergies?: string | null
           avatar_url?: string | null
           bio?: string | null
           calendar_feed_token?: string | null
+          can_dance?: boolean | null
           class_year?: number | null
           created_at?: string | null
           current_cart_id?: string | null
           default_shipping_address?: Json | null
           design_history_ids?: string[] | null
+          dietary_restrictions?: string[] | null
           disabled?: boolean | null
           display_name?: string | null
+          dress_size?: string | null
           dues_paid?: boolean | null
           ecommerce_enabled?: boolean | null
           email?: string | null
+          emergency_contact?: string | null
           exec_board_role?: string | null
           first_name?: string | null
           full_name?: string | null
           graduation_year?: number | null
+          hair_color?: string | null
+          has_tattoos?: boolean | null
           headshot_url?: string | null
+          home_address?: string | null
           id?: string
+          instruments_played?: string[] | null
           is_admin?: boolean | null
           is_exec_board?: boolean | null
           is_section_leader?: boolean | null
@@ -3442,17 +3494,28 @@ export type Database = {
           music_role?: string | null
           notes?: string | null
           org?: string | null
+          parent_guardian_contact?: string | null
           phone?: string | null
+          phone_number?: string | null
+          preferred_payment_method?: string | null
+          pronouns?: string | null
           reunion_rsvp?: boolean | null
           role?: string | null
           role_tags?: string[] | null
+          school_address?: string | null
+          shoe_size?: string | null
+          social_media_links?: Json | null
           special_roles?: string[] | null
           status?: string | null
+          student_number?: string | null
           title?: string | null
           updated_at?: string | null
           user_id?: string | null
           verified?: boolean | null
+          visible_piercings?: boolean | null
           voice_part?: string | null
+          website_url?: string | null
+          workplace?: string | null
         }
         Relationships: []
       }
