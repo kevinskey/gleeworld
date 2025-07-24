@@ -12,7 +12,9 @@ import {
   Clock,
   Languages,
   Star,
-  Brain
+  Brain,
+  List,
+  FileCheck
 } from "lucide-react";
 import { SheetMusicNotes } from '@/modules/glee-library/notes/SheetMusicNotes';
 import { MarkedScores } from '@/modules/glee-library/marked-scores/MarkedScores';
@@ -54,6 +56,8 @@ export const SheetMusicViewDialog = ({
 }: SheetMusicViewDialogProps) => {
   const { user } = useAuth();
   const [showSmartTools, setShowSmartTools] = useState(false);
+  const [setlistInfo, setSetlistInfo] = useState<any>(null);
+  const [licenseInfo, setLicenseInfo] = useState<any>(null);
   
   if (!item) return null;
 
@@ -134,6 +138,27 @@ export const SheetMusicViewDialog = ({
                         </Button>
                       )}
                     </div>
+
+                    {/* Performance Integration Links */}
+                    {isAdmin && (
+                      <div className="mt-4 p-3 bg-muted/50 rounded-lg space-y-2">
+                        <h4 className="font-medium text-sm">Performance Tools</h4>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" asChild>
+                            <a href="/performance?tab=setlists" target="_blank">
+                              <List className="h-4 w-4 mr-1" />
+                              Add to Setlist
+                            </a>
+                          </Button>
+                          <Button variant="outline" size="sm" asChild>
+                            <a href="/performance?tab=licensing" target="_blank">
+                              <FileCheck className="h-4 w-4 mr-1" />
+                              Manage License
+                            </a>
+                          </Button>
+                        </div>
+                      </div>
+                    )}
 
                     {item.audio_preview_url && (
                       <div className="space-y-2">

@@ -46,6 +46,7 @@ import NotificationCenter from "./pages/NotificationCenter";
 import Budgets from "./pages/Budgets";
 import Treasurer from "./pages/Treasurer";
 import TourManager from "./pages/TourManager";
+import PerformanceSuite from "./pages/PerformanceSuite";
 import AlumnaeLanding from "./pages/AlumnaeLanding";
 import AlumnaeAdmin from "./pages/admin/AlumnaeAdmin";
 
@@ -367,14 +368,22 @@ const App = () => {
                          </ProtectedRoute>
                        } 
                      />
-                      <Route 
-                        path="/tour-manager" 
-                        element={
-                          <ProtectedRoute>
-                            <TourManager />
-                          </ProtectedRoute>
-                        } 
-                      />
+                       <Route 
+                         path="/tour-manager" 
+                         element={
+                           <ProtectedRoute>
+                             <TourManager />
+                           </ProtectedRoute>
+                         } 
+                       />
+                       <Route 
+                         path="/performance" 
+                         element={
+                           <ProtectedRoute>
+                             <PerformanceSuite />
+                           </ProtectedRoute>
+                         } 
+                       />
                        <Route 
                          path="/alumnae" 
                          element={
