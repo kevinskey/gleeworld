@@ -21,8 +21,10 @@ import {
   Plus,
   Edit,
   CheckCircle,
-  Package
+  Package,
+  Printer
 } from 'lucide-react';
+import { UniformCheckoutSlipGenerator } from './slip-generator/UniformCheckoutSlip';
 
 interface UniformAssignment {
   id: string;
@@ -520,44 +522,48 @@ export const UniformTracker = () => {
 
         {isAdmin && (
           <TabsContent value="stats">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3">
-                    <Package className="h-8 w-8 text-blue-600" />
-                    <div>
-                      <div className="text-2xl font-bold">{assignments.length}</div>
-                      <div className="text-sm text-muted-foreground">Total Assignments</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle className="h-8 w-8 text-green-600" />
-                    <div>
-                      <div className="text-2xl font-bold">
-                        {assignments.filter(a => a.returned).length}
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3">
+                      <Package className="h-8 w-8 text-blue-600" />
+                      <div>
+                        <div className="text-2xl font-bold">{assignments.length}</div>
+                        <div className="text-sm text-muted-foreground">Total Assignments</div>
                       </div>
-                      <div className="text-sm text-muted-foreground">Items Returned</div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3">
-                    <Clock className="h-8 w-8 text-red-600" />
-                    <div>
-                      <div className="text-2xl font-bold">{getOverdueAssignments().length}</div>
-                      <div className="text-sm text-muted-foreground">Overdue Returns</div>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle className="h-8 w-8 text-green-600" />
+                      <div>
+                        <div className="text-2xl font-bold">
+                          {assignments.filter(a => a.returned).length}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Items Returned</div>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3">
+                      <Clock className="h-8 w-8 text-red-600" />
+                      <div>
+                        <div className="text-2xl font-bold">{getOverdueAssignments().length}</div>
+                        <div className="text-sm text-muted-foreground">Overdue Returns</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <UniformCheckoutSlipGenerator />
             </div>
           </TabsContent>
         )}

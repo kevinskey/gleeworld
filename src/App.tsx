@@ -48,6 +48,7 @@ import Treasurer from "./pages/Treasurer";
 import TourManager from "./pages/TourManager";
 import PerformanceSuite from "./pages/PerformanceSuite";
 import WellnessSuite from "./pages/WellnessSuite";
+import { FeedbackDashboard } from "./modules/rehearsals/feedback-dashboard/FeedbackDashboard";
 import AlumnaeLanding from "./pages/AlumnaeLanding";
 import AlumnaeAdmin from "./pages/admin/AlumnaeAdmin";
 
@@ -385,14 +386,22 @@ const App = () => {
                             </ProtectedRoute>
                           } 
                         />
-                        <Route 
-                          path="/wellness" 
-                          element={
-                            <ProtectedRoute>
-                              <WellnessSuite />
-                            </ProtectedRoute>
-                          } 
-                        />
+                         <Route 
+                           path="/wellness" 
+                           element={
+                             <ProtectedRoute>
+                               <WellnessSuite />
+                             </ProtectedRoute>
+                           } 
+                         />
+                         <Route 
+                           path="/rehearsals/feedback-dashboard" 
+                           element={
+                             <ProtectedRoute>
+                               <FeedbackDashboard />
+                             </ProtectedRoute>
+                           } 
+                         />
                        <Route 
                          path="/alumnae" 
                          element={

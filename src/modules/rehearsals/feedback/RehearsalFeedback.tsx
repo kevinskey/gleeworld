@@ -343,6 +343,13 @@ export const RehearsalFeedback = () => {
           <p className="text-muted-foreground">Track performance feedback and self-assessments</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.href = '/rehearsals/feedback-dashboard'}
+          >
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Dashboard
+          </Button>
           <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
             <DialogTrigger asChild>
               <Button variant="outline">
