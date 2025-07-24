@@ -2354,6 +2354,44 @@ export type Database = {
           },
         ]
       }
+      gw_marked_scores: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_url: string
+          id: string
+          music_id: string
+          uploader_id: string
+          voice_part: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_url: string
+          id?: string
+          music_id: string
+          uploader_id: string
+          voice_part: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_url?: string
+          id?: string
+          music_id?: string
+          uploader_id?: string
+          voice_part?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_marked_scores_music_id_fkey"
+            columns: ["music_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sheet_music"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_member_communications: {
         Row: {
           communication_type: string
@@ -2826,6 +2864,44 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      gw_personal_notes: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          music_id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          music_id: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          music_id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_personal_notes_music_id_fkey"
+            columns: ["music_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sheet_music"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_playlist_tracks: {
         Row: {
@@ -3351,6 +3427,45 @@ export type Database = {
           },
         ]
       }
+      gw_rehearsal_music_links: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          music_id: string
+          notes: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          music_id: string
+          notes?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          music_id?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_rehearsal_music_links_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "gw_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_rehearsal_music_links_music_id_fkey"
+            columns: ["music_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sheet_music"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_scores: {
         Row: {
           created_at: string | null
@@ -3411,6 +3526,8 @@ export type Database = {
       }
       gw_sheet_music: {
         Row: {
+          archive_reason: string | null
+          archived_date: string | null
           arranger: string | null
           audio_preview_url: string | null
           composer: string | null
@@ -3421,6 +3538,7 @@ export type Database = {
           difficulty_level: string | null
           donor_name: string | null
           id: string
+          is_archived: boolean
           is_public: boolean | null
           isbn_barcode: string | null
           key_signature: string | null
@@ -3441,6 +3559,8 @@ export type Database = {
           voice_parts: string[] | null
         }
         Insert: {
+          archive_reason?: string | null
+          archived_date?: string | null
           arranger?: string | null
           audio_preview_url?: string | null
           composer?: string | null
@@ -3451,6 +3571,7 @@ export type Database = {
           difficulty_level?: string | null
           donor_name?: string | null
           id?: string
+          is_archived?: boolean
           is_public?: boolean | null
           isbn_barcode?: string | null
           key_signature?: string | null
@@ -3471,6 +3592,8 @@ export type Database = {
           voice_parts?: string[] | null
         }
         Update: {
+          archive_reason?: string | null
+          archived_date?: string | null
           arranger?: string | null
           audio_preview_url?: string | null
           composer?: string | null
@@ -3481,6 +3604,7 @@ export type Database = {
           difficulty_level?: string | null
           donor_name?: string | null
           id?: string
+          is_archived?: boolean
           is_public?: boolean | null
           isbn_barcode?: string | null
           key_signature?: string | null
@@ -3589,6 +3713,50 @@ export type Database = {
           {
             foreignKeyName: "gw_sheet_music_annotations_sheet_music_id_fkey"
             columns: ["sheet_music_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sheet_music"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_sheet_music_notes: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          music_id: string
+          note_type: string
+          role: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          music_id: string
+          note_type: string
+          role: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          music_id?: string
+          note_type?: string
+          role?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_sheet_music_notes_music_id_fkey"
+            columns: ["music_id"]
             isOneToOne: false
             referencedRelation: "gw_sheet_music"
             referencedColumns: ["id"]

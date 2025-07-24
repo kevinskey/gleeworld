@@ -50,6 +50,10 @@ interface ExtendedSheetMusic {
   purchase_price: number | null;
   donor_name: string | null;
   notes: string | null;
+  // Archive fields
+  is_archived: boolean;
+  archived_date: string | null;
+  archive_reason: string | null;
 }
 
 export const LibraryManagement = () => {
