@@ -5404,6 +5404,42 @@ export type Database = {
         }
         Relationships: []
       }
+      role_change_audit: {
+        Row: {
+          changed_at: string | null
+          changed_by: string
+          id: string
+          ip_address: unknown | null
+          new_role: string
+          old_role: string | null
+          reason: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by: string
+          id?: string
+          ip_address?: unknown | null
+          new_role: string
+          old_role?: string | null
+          reason?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string
+          id?: string
+          ip_address?: unknown | null
+          new_role?: string
+          old_role?: string | null
+          reason?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       setlist_items: {
         Row: {
           created_at: string
@@ -6316,6 +6352,10 @@ export type Database = {
       }
       mark_notification_read: {
         Args: { p_notification_id: string }
+        Returns: boolean
+      }
+      secure_update_user_role: {
+        Args: { target_user_id: string; new_role: string; reason?: string }
         Returns: boolean
       }
       update_user_role: {
