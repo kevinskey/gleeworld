@@ -11,12 +11,9 @@ import {
   Filter, 
   Grid, 
   List, 
-  Package, 
+  Package,
   BookOpen,
-  MapPin,
-  Calendar,
   DollarSign,
-  User,
   Scan,
   FileSpreadsheet
 } from 'lucide-react';
@@ -27,6 +24,7 @@ import { SheetMusicLibrary } from './SheetMusicLibrary';
 import { UploadDialog } from './UploadDialog';
 import { CameraImportDialog } from './CameraImportDialog';
 import { CSVImportDialog } from './CSVImportDialog';
+import { EditablePhysicalCopyView } from './EditablePhysicalCopyView';
 
 interface ExtendedSheetMusic {
   id: string;
@@ -46,6 +44,7 @@ interface ExtendedSheetMusic {
   is_public: boolean;
   created_by: string;
   created_at: string;
+  voicing: string | null;
   // Physical copy fields
   physical_copies_count: number;
   physical_location: string | null;
@@ -145,93 +144,6 @@ export const LibraryManagement = () => {
     return matchesSearch && matchesCategory && matchesTab;
   });
 
-  const renderPhysicalCopyView = () => (
-    <div className="space-y-4">
-      {filteredMusic.map((item) => (
-        <Card key={item.id} className="hover:shadow-md transition-shadow">
-          <CardContent className="p-4">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h3 className="font-semibold">{item.title}</h3>
-                {item.composer && (
-                  <p className="text-sm text-muted-foreground">by {item.composer}</p>
-                )}
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Package className="h-4 w-4 text-muted-foreground" />
-                    <span>{item.physical_copies_count || 0} copies</span>
-                  </div>
-                  
-                  {item.physical_location && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span>{item.physical_location}</span>
-                    </div>
-                  )}
-                  
-                  {item.last_inventory_date && (
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>Checked {new Date(item.last_inventory_date).toLocaleDateString()}</span>
-                    </div>
-                  )}
-                  
-                  {item.purchase_price && (
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
-                      <span>${item.purchase_price.toFixed(2)}</span>
-                    </div>
-                  )}
-                </div>
-                
-                {item.condition_notes && (
-                  <div className="mt-2">
-                    <p className="text-sm text-muted-foreground">
-                      <strong>Condition:</strong> {item.condition_notes}
-                    </p>
-                  </div>
-                )}
-
-                {item.donor_name && (
-                  <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                    <User className="h-4 w-4" />
-                    <span>Donated by {item.donor_name}</span>
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex flex-col gap-2">
-                {!item.last_inventory_date && (item.physical_copies_count || 0) > 0 && (
-                  <Badge variant="outline" className="text-orange-600 border-orange-200">
-                    Needs Inventory
-                  </Badge>
-                )}
-                
-                {item.physical_copies_count === 0 && (
-                  <Badge variant="outline" className="text-gray-600">
-                    Digital Only
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-      
-      {filteredMusic.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <BookOpen className="h-16 w-16 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No physical copies found</h3>
-            <p className="text-muted-foreground text-center">
-              Try adjusting your search or add physical copy information to existing items.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -363,11 +275,19 @@ export const LibraryManagement = () => {
         </TabsContent>
         
         <TabsContent value="physical" className="space-y-4">
-          {renderPhysicalCopyView()}
+          <EditablePhysicalCopyView 
+            sheetMusic={sheetMusic} 
+            onRefresh={fetchSheetMusic} 
+          />
         </TabsContent>
         
         <TabsContent value="inventory" className="space-y-4">
-          {renderPhysicalCopyView()}
+          <EditablePhysicalCopyView 
+            sheetMusic={sheetMusic.filter(item => 
+              (item.physical_copies_count || 0) > 0 && !item.last_inventory_date
+            )} 
+            onRefresh={fetchSheetMusic} 
+          />
         </TabsContent>
       </Tabs>
 
