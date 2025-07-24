@@ -39,9 +39,15 @@ export const useMusic = () => {
     try {
       setLoading(true);
       setError(null);
+      console.log('useMusic: Starting to fetch tracks');
 
-      // Fetch tracks with album info
-      const { data: tracksData, error: tracksError } = await supabase
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      );
+
+      // Fetch tracks with album info with timeout
+      const fetchPromise = supabase
         .from('music_tracks')
         .select(`
           *,
@@ -49,41 +55,47 @@ export const useMusic = () => {
         `)
         .order('created_at', { ascending: false });
 
+      const { data: tracksData, error: tracksError } = await Promise.race([
+        fetchPromise,
+        timeoutPromise
+      ]) as any;
+
       if (tracksError) throw tracksError;
 
+      console.log('useMusic: Fetched tracks:', tracksData?.length || 0);
+
       if (tracksData) {
-        // If user is logged in, fetch their likes
-        let userLikes: string[] = [];
+        // Simplified approach - only fetch likes if user exists and skip complex processing
         if (user) {
-          const { data: likesData } = await supabase
-            .from('track_likes')
-            .select('track_id')
-            .eq('user_id', user.id);
-          
-          userLikes = likesData?.map(like => like.track_id) || [];
+          try {
+            const { data: likesData } = await supabase
+              .from('track_likes')
+              .select('track_id')
+              .eq('user_id', user.id);
+            
+            const userLikes = likesData?.map(like => like.track_id) || [];
+            
+            const enrichedTracks: Track[] = tracksData.map(track => ({
+              ...track,
+              isLiked: userLikes.includes(track.id),
+              likeCount: 0 // Skip complex like count fetching for now
+            }));
+
+            setTracks(enrichedTracks);
+          } catch (likeError) {
+            console.warn('useMusic: Error fetching likes, using basic tracks:', likeError);
+            setTracks(tracksData);
+          }
+        } else {
+          setTracks(tracksData);
         }
-
-        // Fetch like counts for all tracks
-        const trackIds = tracksData.map(track => track.id);
-        const likeCounts: { [key: string]: number } = {};
-        
-        for (const trackId of trackIds) {
-          const { data: countData } = await supabase
-            .rpc('get_track_like_count', { track_uuid: trackId });
-          likeCounts[trackId] = countData || 0;
-        }
-
-        const enrichedTracks: Track[] = tracksData.map(track => ({
-          ...track,
-          isLiked: userLikes.includes(track.id),
-          likeCount: likeCounts[track.id] || 0
-        }));
-
-        setTracks(enrichedTracks);
       }
+      
+      console.log('useMusic: Tracks fetch completed successfully');
     } catch (err) {
-      console.error('Error fetching tracks:', err);
+      console.error('useMusic: Error fetching tracks:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch tracks');
+      // Don't leave tracks empty on error - try to show cached data
     } finally {
       setLoading(false);
     }

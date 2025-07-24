@@ -117,9 +117,9 @@ const RootRoute = () => {
     );
   }
   
-  console.log('RootRoute: Auth complete, rendering simple debug page');
-  // Temporarily use simple debug page instead of GleeWorldLanding
-  return <SimpleHomePage />;
+  console.log('RootRoute: Auth complete, rendering landing page');
+  // Show landing page for everyone, authenticated or not
+  return <GleeWorldLanding />;
 };
 
 const App = () => {

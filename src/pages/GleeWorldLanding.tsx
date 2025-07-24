@@ -84,26 +84,42 @@ export const GleeWorldLanding = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch hero slides
-        const { data: heroData } = await supabase
-          .from('gw_hero_slides')
-          .select('*')
-          .eq('is_active', true)
-          .order('display_order', { ascending: true });
+        console.log('GleeWorldLanding: Starting data fetch');
+        
+        // Add timeout to prevent hanging
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Data fetch timeout')), 8000)
+        );
 
-        // Fetch upcoming events
-        const { data: eventsData } = await supabase
-          .from('gw_events')
-          .select('*')
-          .gte('start_date', new Date().toISOString())
-          .eq('is_public', true)
-          .order('start_date', { ascending: true })
-          .limit(6);
+        // Fetch hero slides and events in parallel with timeout
+        const fetchPromises = Promise.all([
+          supabase
+            .from('gw_hero_slides')
+            .select('*')
+            .eq('is_active', true)
+            .order('display_order', { ascending: true }),
+          supabase
+            .from('gw_events')
+            .select('*')
+            .gte('start_date', new Date().toISOString())
+            .eq('is_public', true)
+            .order('start_date', { ascending: true })
+            .limit(6)
+        ]);
 
-        if (heroData) setHeroSlides(heroData);
-        if (eventsData) setEvents(eventsData);
+        const results = await Promise.race([fetchPromises, timeoutPromise]) as any;
+        const [heroResult, eventsResult] = results;
+
+        console.log('GleeWorldLanding: Data fetch completed', {
+          heroSlides: heroResult.data?.length || 0,
+          events: eventsResult.data?.length || 0
+        });
+
+        if (heroResult.data) setHeroSlides(heroResult.data);
+        if (eventsResult.data) setEvents(eventsResult.data);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('GleeWorldLanding: Error fetching data:', error);
+        // Don't fail completely - show page with empty data
       } finally {
         setLoading(false);
       }
