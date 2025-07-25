@@ -83,28 +83,40 @@ export const ExcuseRequestManager = () => {
     try {
       setLoading(true);
       
-      let query = supabase
+      // First get excuse requests
+      let requestQuery = supabase
         .from('excuse_requests')
-        .select(`
-          *,
-          user_profile:gw_profiles(
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .order('submitted_at', { ascending: false });
 
       // Filter based on user role
       if (isSecretary && !isAdmin) {
         // Secretaries see pending and forwarded requests
-        query = query.in('status', ['pending', 'forwarded']);
+        requestQuery = requestQuery.in('status', ['pending', 'forwarded']);
       }
 
-      const { data, error } = await query;
+      const { data: requestsData, error: requestsError } = await requestQuery;
 
-      if (error) throw error;
+      if (requestsError) throw requestsError;
 
-      setExcuseRequests((data as any) || []);
+      // Get user profiles for the request users
+      const userIds = requestsData?.map(req => req.user_id) || [];
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', userIds);
+
+      if (profilesError) {
+        console.error('Error loading user profiles:', profilesError);
+      }
+
+      // Combine the data
+      const requestsWithProfiles = requestsData?.map(request => ({
+        ...request,
+        user_profile: profilesData?.find(profile => profile.user_id === request.user_id) || null
+      })) || [];
+
+      setExcuseRequests(requestsWithProfiles);
     } catch (error) {
       console.error('Error loading excuse requests:', error);
       toast({
