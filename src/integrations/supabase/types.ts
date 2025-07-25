@@ -5893,6 +5893,33 @@ export type Database = {
         }
         Relationships: []
       }
+      security_rate_limits: {
+        Row: {
+          action_type: string
+          count: number | null
+          created_at: string | null
+          id: string
+          identifier: string
+          window_start: string | null
+        }
+        Insert: {
+          action_type: string
+          count?: number | null
+          created_at?: string | null
+          id?: string
+          identifier: string
+          window_start?: string | null
+        }
+        Update: {
+          action_type?: string
+          count?: number | null
+          created_at?: string | null
+          id?: string
+          identifier?: string
+          window_start?: string | null
+        }
+        Relationships: []
+      }
       setlist_items: {
         Row: {
           created_at: string
@@ -6613,6 +6640,15 @@ export type Database = {
       calculate_event_budget_totals: {
         Args: { event_id_param: string }
         Returns: undefined
+      }
+      check_rate_limit: {
+        Args: {
+          identifier_param: string
+          action_type_param: string
+          max_attempts?: number
+          window_minutes?: number
+        }
+        Returns: boolean
       }
       check_vocal_health_alerts: {
         Args: { target_user_id: string }
