@@ -101,20 +101,56 @@ export const ExcuseRequestManager = () => {
 
       // Get user profiles for the request users
       const userIds = requestsData?.map(req => req.user_id) || [];
-      const { data: profilesData, error: profilesError } = await supabase
+      
+      if (userIds.length === 0) {
+        setExcuseRequests([]);
+        return;
+      }
+
+      // Try to get profiles from gw_profiles first
+      const { data: gwProfilesData, error: gwProfilesError } = await supabase
         .from('gw_profiles')
         .select('user_id, full_name, email')
         .in('user_id', userIds);
 
-      if (profilesError) {
-        console.error('Error loading user profiles:', profilesError);
+      if (gwProfilesError) {
+        console.error('Error loading gw profiles:', gwProfilesError);
       }
 
+      // For users not found in gw_profiles, get from profiles table
+      const foundUserIds = gwProfilesData?.map(p => p.user_id) || [];
+      const missingUserIds = userIds.filter(id => !foundUserIds.includes(id));
+      
+      let profilesData: any[] = [];
+      if (missingUserIds.length > 0) {
+        const { data: fallbackProfiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, email, full_name')
+          .in('id', missingUserIds);
+
+        if (profilesError) {
+          console.error('Error loading profiles:', profilesError);
+        } else {
+          // Convert profiles format to match gw_profiles
+          profilesData = fallbackProfiles?.map(p => ({
+            user_id: p.id,
+            full_name: p.full_name,
+            email: p.email
+          })) || [];
+        }
+      }
+
+      // Combine both profile sources
+      const allProfiles = [...(gwProfilesData || []), ...profilesData];
+
       // Combine the data
-      const requestsWithProfiles = requestsData?.map(request => ({
-        ...request,
-        user_profile: profilesData?.find(profile => profile.user_id === request.user_id) || null
-      })) || [];
+      const requestsWithProfiles = requestsData?.map(request => {
+        const userProfile = allProfiles.find(profile => profile.user_id === request.user_id);
+        return {
+          ...request,
+          user_profile: userProfile || { full_name: 'Unknown User', email: 'unknown@example.com' }
+        };
+      }) || [];
 
       setExcuseRequests(requestsWithProfiles);
     } catch (error) {
