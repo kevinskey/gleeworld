@@ -22,6 +22,7 @@ import { MyAttendance } from './MyAttendance';
 import { AttendanceReports } from './AttendanceReports';
 import { ExcuseGenerator } from './ExcuseGenerator';
 import { ExcuseRequestManager } from './ExcuseRequestManager';
+import { ExcuseRequestApproval } from './ExcuseRequestApproval';
 import { MyExcuseRequests } from './MyExcuseRequests';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -201,8 +202,13 @@ export const AttendanceDashboard = () => {
         </div>
       )}
 
-      {/* Excuse Request Management - Secretary/Admin Section */}
-      {canTakeAttendance && (
+      {/* Admin Final Approval Module */}
+      {isAdmin && (
+        <ExcuseRequestApproval />
+      )}
+
+      {/* Secretary Workflow Management (separate from admin approval) */}
+      {canTakeAttendance && !isAdmin && (
         <ExcuseRequestManager />
       )}
 
