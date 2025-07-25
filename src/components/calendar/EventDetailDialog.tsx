@@ -18,6 +18,7 @@ import {
 import { format } from "date-fns";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EditEventDialog } from "./EditEventDialog";
+import { EventClassListManager } from "./EventClassListManager";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -201,6 +202,12 @@ export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }:
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               <h4 className="font-semibold">Event Management</h4>
               <div className="flex flex-col sm:flex-row gap-2">
+                {canEdit && (
+                  <EventClassListManager
+                    eventId={event.id}
+                    eventTitle={event.title}
+                  />
+                )}
                 <Button 
                   variant="outline" 
                   size="sm"
