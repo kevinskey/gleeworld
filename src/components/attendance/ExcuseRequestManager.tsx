@@ -412,14 +412,6 @@ export const ExcuseRequestManager = () => {
                       <div className="flex gap-2">
                         <Button
                           size="sm"
-                          onClick={() => forwardRequest(request.id)}
-                          className="flex items-center gap-1"
-                        >
-                          <ArrowRight className="h-3 w-3" />
-                          Forward to Admin
-                        </Button>
-                        <Button
-                          size="sm"
                           variant="outline"
                           onClick={() => {
                             setSelectedRequest(request);
@@ -428,7 +420,15 @@ export const ExcuseRequestManager = () => {
                           className="flex items-center gap-1"
                         >
                           <MessageCircle className="h-3 w-3" />
-                          Send Message
+                          Return with comments
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => forwardRequest(request.id)}
+                          className="flex items-center gap-1"
+                        >
+                          <ArrowRight className="h-3 w-3" />
+                          Forward to Doc for Approval
                         </Button>
                       </div>
                     </CardContent>
@@ -616,9 +616,9 @@ export const ExcuseRequestManager = () => {
       <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Send Message to Student</DialogTitle>
+            <DialogTitle>Return Request with Comments</DialogTitle>
             <DialogDescription>
-              Send a message to {selectedRequest?.user_profile?.full_name || 'the student'} regarding their excuse request.
+              Send comments or questions to {selectedRequest?.user_profile?.full_name || 'the student'} regarding their excuse request.
             </DialogDescription>
           </DialogHeader>
           
@@ -633,11 +633,11 @@ export const ExcuseRequestManager = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-2">Your Message:</label>
+                <label className="block text-sm font-medium mb-2">Your Comments:</label>
                 <Textarea
                   value={messageToUser}
                   onChange={(e) => setMessageToUser(e.target.value)}
-                  placeholder="Type your message, questions, or instructions for the student here..."
+                  placeholder="Type your comments, questions, or instructions for the student here..."
                   rows={4}
                   className="w-full"
                 />
@@ -669,7 +669,7 @@ export const ExcuseRequestManager = () => {
               ) : (
                 <>
                   <Mail className="h-4 w-4" />
-                  Send Message
+                  Send Comments
                 </>
               )}
             </Button>
