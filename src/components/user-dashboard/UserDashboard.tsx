@@ -335,13 +335,23 @@ export const UserDashboard = () => {
                       <span className="text-center leading-tight">Calendar</span>
                     </Button>
                   </EnhancedTooltip>
+                  <EnhancedTooltip content="Send notification to yourself or others">
+                    <Button 
+                      className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
+                      variant="outline"
+                      onClick={() => navigate('/notifications/send')}
+                    >
+                      <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
+                      <span className="text-center leading-tight">Send Notification</span>
+                    </Button>
+                  </EnhancedTooltip>
                   <EnhancedTooltip content="View announcements">
                     <Button 
                       className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
                       variant="outline"
                       onClick={() => navigate('/announcements')}
                     >
-                      <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
+                      <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6" />
                       <span className="text-center leading-tight">Announcements</span>
                     </Button>
                   </EnhancedTooltip>
