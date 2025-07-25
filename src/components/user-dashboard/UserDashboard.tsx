@@ -325,6 +325,9 @@ export const UserDashboard = () => {
               backgroundRepeat: 'no-repeat'
             }}
           >
+            {welcomeCardSetting?.image_url && (
+              <div className="absolute top-2 right-2 bg-green-500 w-2 h-2 rounded-full" title="Background image loaded" />
+            )}
             <div className="relative text-center w-full">
               <h1 className="text-xl font-medium text-white drop-shadow-lg">
                 Welcome back {displayName}!
