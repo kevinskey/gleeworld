@@ -26,6 +26,7 @@ import { ExcuseRequestManager } from './ExcuseRequestManager';
 import { ExcuseRequestApproval } from './ExcuseRequestApproval';
 import { MyExcuseRequests } from './MyExcuseRequests';
 import ClassScheduleManager from './ClassScheduleManager';
+import ScheduleAnalytics from './ScheduleAnalytics';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
@@ -260,6 +261,13 @@ export const AttendanceDashboard = () => {
             </Badge>
           </h2>
           <AttendanceReports />
+        </div>
+      )}
+
+      {/* Schedule Analytics Section - Admin Only */}
+      {isAdmin && (
+        <div className="bg-white/50 backdrop-blur-sm rounded-xl p-3 sm:p-6 border">
+          <ScheduleAnalytics />
         </div>
       )}
     </div>
