@@ -78,7 +78,11 @@ interface ClassConflictRequest {
   updated_at: string;
 }
 
-export const ExcuseGenerator = () => {
+interface ExcuseGeneratorProps {
+  onRequestEdited?: (request: any) => void;
+}
+
+export const ExcuseGenerator = ({ onRequestEdited }: ExcuseGeneratorProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -92,6 +96,7 @@ export const ExcuseGenerator = () => {
   const [excuseFile, setExcuseFile] = useState<File | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingRequest, setEditingRequest] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(true);
 
@@ -240,6 +245,47 @@ export const ExcuseGenerator = () => {
     }
   };
 
+  // Function to handle editing a returned request
+  const editRequest = (request: any) => {
+    setEditingRequest(request);
+    setSelectedEvent(request.event_id || '');
+    
+    // Parse the reason to extract base reason and detailed explanation
+    const reasonParts = request.reason.split('\n\nDetailed Explanation: ');
+    if (reasonParts.length === 2) {
+      const baseReason = reasonParts[0];
+      const detailedExplanation = reasonParts[1];
+      
+      if (reasonOptions.includes(baseReason)) {
+        setSelectedReason(baseReason);
+        setCustomReason('');
+      } else {
+        setSelectedReason('Other');
+        setCustomReason(baseReason);
+      }
+      setDetailedExplanation(detailedExplanation);
+    } else {
+      // No detailed explanation, just set the reason
+      if (reasonOptions.includes(request.reason)) {
+        setSelectedReason(request.reason);
+        setCustomReason('');
+      } else {
+        setSelectedReason('Other');
+        setCustomReason(request.reason);
+      }
+      setDetailedExplanation('');
+    }
+    
+    setIsDialogOpen(true);
+  };
+
+  // Expose the edit function
+  React.useEffect(() => {
+    if (onRequestEdited) {
+      (window as any).editExcuseRequest = editRequest;
+    }
+  }, [onRequestEdited]);
+
   const submitExcuse = async () => {
     if (!selectedEvent || !selectedReason) {
       toast({
@@ -272,8 +318,32 @@ export const ExcuseGenerator = () => {
         ? `${reason}\n\nDetailed Explanation: ${detailedExplanation}`
         : reason;
 
-      if (excuseType === 'pre-event') {
-        // Get event details
+      if (editingRequest) {
+        // Update existing request - get event data first
+        const selectedEventData = upcomingEvents.find(e => e.id === selectedEvent);
+        
+        const { error } = await supabase
+          .from('excuse_requests')
+          .update({
+            event_id: selectedEvent,
+            event_date: selectedEventData?.start_date?.split('T')[0],
+            event_title: selectedEventData?.title || 'Unknown Event',
+            reason: fullReason,
+            status: 'pending', // Reset to pending when resubmitted
+            secretary_message: null, // Clear secretary message
+            secretary_message_sent_at: null,
+            secretary_message_sent_by: null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingRequest.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Excuse request updated and resubmitted successfully",
+        });
+      } else if (excuseType === 'pre-event') {
         const selectedEventData = upcomingEvents.find(e => e.id === selectedEvent);
         
         // Submit to new excuse requests table
@@ -303,7 +373,6 @@ export const ExcuseGenerator = () => {
 
         if (legacyError) console.warn('Legacy table insert failed:', legacyError);
       } else {
-        // Submit post-event excuse (legacy system)
         const { error } = await supabase
           .from('gw_attendance_excuses')
           .insert({
@@ -314,6 +383,11 @@ export const ExcuseGenerator = () => {
           });
 
         if (error) throw error;
+
+        toast({
+          title: "Success",  
+          description: "Excuse request submitted successfully",
+        });
       }
 
       // Get secretary and section leaders for notifications
@@ -343,7 +417,12 @@ export const ExcuseGenerator = () => {
       setCustomReason('');
       setDetailedExplanation('');
       setExcuseFile(null);
+      setEditingRequest(null);
       setIsDialogOpen(false);
+      
+      if (onRequestEdited && editingRequest) {
+        onRequestEdited(editingRequest);
+      }
       
       // Reload data
       loadData();

@@ -11,7 +11,8 @@ import {
   Calendar,
   Eye,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Edit
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,6 +22,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 
 interface MyExcuseRequest {
   id: string;
+  event_id?: string | null;
   event_title: string;
   event_date: string;
   reason: string;
@@ -32,7 +34,11 @@ interface MyExcuseRequest {
   secretary_message_sent_at?: string | null;
 }
 
-export const MyExcuseRequests = () => {
+interface MyExcuseRequestsProps {
+  onEditRequest?: (request: MyExcuseRequest) => void;
+}
+
+export const MyExcuseRequests = ({ onEditRequest }: MyExcuseRequestsProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [myRequests, setMyRequests] = useState<MyExcuseRequest[]>([]);
@@ -175,6 +181,19 @@ export const MyExcuseRequests = () => {
                         <p className="text-sm text-white/80 bg-white/10 p-2 rounded">
                           {request.admin_notes}
                         </p>
+                      </div>
+                    )}
+
+                    {request.status === 'returned' && onEditRequest && (
+                      <div className="mt-3">
+                        <Button
+                          size="sm"
+                          onClick={() => onEditRequest(request)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+                        >
+                          <Edit className="h-3 w-3" />
+                          Edit & Resubmit
+                        </Button>
                       </div>
                     )}
 
