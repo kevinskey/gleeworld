@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
+import { useMemo } from "react";
 
 interface WelcomeCardProps {
   displayName: string;
@@ -27,14 +28,19 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
     }
   };
 
-  const hasBackgroundImage = welcomeCardSetting?.image_url;
-  
-  // Debug logging
-  console.log('WelcomeCard Debug:', {
-    welcomeCardSetting,
-    hasBackgroundImage,
-    imageUrl: welcomeCardSetting?.image_url
-  });
+  // Memoize values to prevent re-renders causing blinking
+  const backgroundStyles = useMemo(() => {
+    if (!welcomeCardSetting?.image_url) return {};
+    
+    return {
+      backgroundImage: `url("${welcomeCardSetting.image_url}")`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat'
+    };
+  }, [welcomeCardSetting?.image_url]);
+
+  const hasBackgroundImage = Boolean(welcomeCardSetting?.image_url);
 
   return (
     <div className="relative overflow-hidden rounded-3xl shadow-lg min-h-[200px] flex items-center">
@@ -42,12 +48,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
       {hasBackgroundImage && (
         <div 
           className="absolute inset-0"
-          style={{ 
-            backgroundImage: `url("${welcomeCardSetting.image_url}")`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
-          }}
+          style={backgroundStyles}
         />
       )}
       
