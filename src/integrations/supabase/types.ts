@@ -1137,6 +1137,136 @@ export type Database = {
         }
         Relationships: []
       }
+      event_class_list_members: {
+        Row: {
+          added_at: string | null
+          added_by: string | null
+          class_list_id: string
+          id: string
+          notes: string | null
+          required_attendance: boolean | null
+          role: string | null
+          section: string | null
+          user_id: string
+          voice_part: string | null
+        }
+        Insert: {
+          added_at?: string | null
+          added_by?: string | null
+          class_list_id: string
+          id?: string
+          notes?: string | null
+          required_attendance?: boolean | null
+          role?: string | null
+          section?: string | null
+          user_id: string
+          voice_part?: string | null
+        }
+        Update: {
+          added_at?: string | null
+          added_by?: string | null
+          class_list_id?: string
+          id?: string
+          notes?: string | null
+          required_attendance?: boolean | null
+          role?: string | null
+          section?: string | null
+          user_id?: string
+          voice_part?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_class_list_members_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_class_list_members_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "event_class_list_members_class_list_id_fkey"
+            columns: ["class_list_id"]
+            isOneToOne: false
+            referencedRelation: "event_class_lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_class_list_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_class_list_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      event_class_lists: {
+        Row: {
+          attendance_required: boolean | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          event_id: string
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          attendance_required?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          event_id: string
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          attendance_required?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          event_id?: string
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_class_lists_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_class_lists_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "event_class_lists_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_contracts: {
         Row: {
           contract_id: string
@@ -1287,22 +1417,37 @@ export type Database = {
           added_at: string
           event_id: string
           id: string
+          notes: string | null
+          required_attendance: boolean | null
+          role: string | null
+          section: string | null
           status: string
           user_id: string
+          voice_part: string | null
         }
         Insert: {
           added_at?: string
           event_id: string
           id?: string
+          notes?: string | null
+          required_attendance?: boolean | null
+          role?: string | null
+          section?: string | null
           status?: string
           user_id: string
+          voice_part?: string | null
         }
         Update: {
           added_at?: string
           event_id?: string
           id?: string
+          notes?: string | null
+          required_attendance?: boolean | null
+          role?: string | null
+          section?: string | null
           status?: string
           user_id?: string
+          voice_part?: string | null
         }
         Relationships: [
           {
@@ -1353,6 +1498,9 @@ export type Database = {
           approval_needed: boolean | null
           approved: boolean | null
           approver_name: string | null
+          attendance_notes: string | null
+          attendance_required: boolean | null
+          attendance_type: string | null
           attendees: number | null
           brief_description: string | null
           budget_status: string | null
@@ -1399,6 +1547,9 @@ export type Database = {
           approval_needed?: boolean | null
           approved?: boolean | null
           approver_name?: string | null
+          attendance_notes?: string | null
+          attendance_required?: boolean | null
+          attendance_type?: string | null
           attendees?: number | null
           brief_description?: string | null
           budget_status?: string | null
@@ -1445,6 +1596,9 @@ export type Database = {
           approval_needed?: boolean | null
           approved?: boolean | null
           approver_name?: string | null
+          attendance_notes?: string | null
+          attendance_required?: boolean | null
+          attendance_type?: string | null
           attendees?: number | null
           brief_description?: string | null
           budget_status?: string | null
@@ -2248,6 +2402,9 @@ export type Database = {
       gw_events: {
         Row: {
           address: string | null
+          attendance_notes: string | null
+          attendance_required: boolean | null
+          attendance_type: string | null
           calendar_id: string
           created_at: string | null
           created_by: string | null
@@ -2271,6 +2428,9 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          attendance_notes?: string | null
+          attendance_required?: boolean | null
+          attendance_type?: string | null
           calendar_id: string
           created_at?: string | null
           created_by?: string | null
@@ -2294,6 +2454,9 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          attendance_notes?: string | null
+          attendance_required?: boolean | null
+          attendance_type?: string | null
           calendar_id?: string
           created_at?: string | null
           created_by?: string | null
