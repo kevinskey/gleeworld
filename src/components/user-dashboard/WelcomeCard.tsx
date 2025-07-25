@@ -34,7 +34,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
         background: welcomeCardSetting?.image_url 
           ? `linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url("${welcomeCardSetting.image_url}")` 
           : 'linear-gradient(135deg, #8b5cf6, #3b82f6, #4f46e5)',
-        backgroundSize: 'cover',
+        backgroundSize: 'contain',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
       }}
