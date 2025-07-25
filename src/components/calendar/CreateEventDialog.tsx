@@ -134,20 +134,25 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
     try {
       const { data, error } = await supabase
         .from('gw_calendars')
-        .select('id, name, color')
+        .select('id, name, color, is_default')
         .eq('is_visible', true)
         .order('is_default', { ascending: false });
 
       if (error) throw error;
 
       setCalendars(data || []);
-      // Set default calendar if available
-      const defaultCal = data?.find(cal => cal.name.toLowerCase().includes('default'));
-      if (defaultCal && !selectedCalendarId) {
+      // Set default calendar if no calendar is selected
+      if (!selectedCalendarId && data && data.length > 0) {
+        const defaultCal = data.find(cal => cal.is_default) || data[0];
         setSelectedCalendarId(defaultCal.id);
       }
     } catch (error) {
       console.error('Error loading calendars:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load calendars",
+        variant: "destructive",
+      });
     }
   };
 
@@ -226,53 +231,65 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
     e.preventDefault();
     if (!user) return;
 
+    // Validate required fields
+    if (!formData.title.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Event title is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.start_date) {
+      toast({
+        title: "Validation Error", 
+        description: "Start date and time is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedCalendarId) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a calendar for this event",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const eventData = {
-        title: formData.title,
-        description: formData.description || null,
+        title: formData.title.trim(),
+        description: formData.description?.trim() || null,
         event_type: formData.event_type,
         start_date: formData.start_date ? new Date(formData.start_date + ':00').toISOString() : null,
         end_date: formData.end_date ? new Date(formData.end_date + ':00').toISOString() : null,
         location: null,
-        venue_name: formData.venue_name || null,
-        address: formData.address || null,
+        venue_name: formData.venue_name?.trim() || null,
+        address: formData.address?.trim() || null,
         max_attendees: formData.max_attendees ? parseInt(formData.max_attendees) : null,
         registration_required: formData.registration_required,
         is_public: formData.is_public,
         created_by: user.id,
-        status: 'scheduled'
+        status: 'scheduled',
+        calendar_id: selectedCalendarId // Ensure calendar_id is always present
       };
 
-      // Use selected calendar or get default calendar
-      let calendarId = selectedCalendarId;
-      
-      if (!calendarId) {
-        const { data: existingCalendar } = await supabase
-          .from('gw_calendars')
-          .select('id')
-          .eq('is_default', true)
-          .single();
-
-        if (existingCalendar) {
-          calendarId = existingCalendar.id;
-        } else {
-          console.warn('No default calendar found');
-        }
-      }
-
-      const eventDataWithCalendar = {
-        ...eventData,
-        ...(calendarId && { calendar_id: calendarId })
-      };
+      console.log('Creating event with data:', eventData);
 
       const { data: newEvent, error } = await supabase
         .from('gw_events')
-        .insert([eventDataWithCalendar])
+        .insert([eventData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
 
       // Upload image if selected
       let imageUrl = null;
