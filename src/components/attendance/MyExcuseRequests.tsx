@@ -12,7 +12,8 @@ import {
   Eye,
   ChevronDown,
   ChevronUp,
-  Edit
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -67,6 +68,31 @@ export const MyExcuseRequests = ({ onEditRequest }: MyExcuseRequestsProps) => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const deleteRequest = async (requestId: string) => {
+    try {
+      const { error } = await supabase
+        .from('excuse_requests')
+        .delete()
+        .eq('id', requestId);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Excuse request deleted successfully",
+      });
+      
+      loadMyRequests();
+    } catch (error) {
+      console.error('Error deleting request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete excuse request",
+        variant: "destructive",
+      });
     }
   };
 
@@ -184,8 +210,8 @@ export const MyExcuseRequests = ({ onEditRequest }: MyExcuseRequestsProps) => {
                       </div>
                     )}
 
-                    {request.status === 'returned' && onEditRequest && (
-                      <div className="mt-3">
+                    <div className="mt-3 flex gap-2">
+                      {request.status === 'returned' && onEditRequest && (
                         <Button
                           size="sm"
                           onClick={() => onEditRequest(request)}
@@ -194,8 +220,17 @@ export const MyExcuseRequests = ({ onEditRequest }: MyExcuseRequestsProps) => {
                           <Edit className="h-3 w-3" />
                           Edit & Resubmit
                         </Button>
-                      </div>
-                    )}
+                      )}
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => deleteRequest(request.id)}
+                        className="flex items-center gap-2"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Delete
+                      </Button>
+                    </div>
 
                     <div className="flex justify-between items-center text-xs text-white/60">
                       <span>Submitted: {format(new Date(request.submitted_at), 'MMM dd, yyyy HH:mm')}</span>

@@ -17,7 +17,8 @@ import {
   Eye,
   Send,
   Mail,
-  MessageCircle
+  MessageCircle,
+  Trash2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -333,6 +334,31 @@ export const ExcuseRequestManager = () => {
     }
   };
 
+  const deleteRequest = async (requestId: string) => {
+    try {
+      const { error } = await supabase
+        .from('excuse_requests')
+        .delete()
+        .eq('id', requestId);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Excuse request deleted successfully",
+      });
+      
+      loadExcuseRequests();
+    } catch (error) {
+      console.error('Error deleting request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete excuse request",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     loadGwProfile();
   }, [user]);
@@ -491,6 +517,15 @@ export const ExcuseRequestManager = () => {
                           <ArrowRight className="h-3 w-3" />
                           Forward to Doc for Approval
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => deleteRequest(request.id)}
+                          className="flex items-center gap-1"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          Delete
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -546,8 +581,19 @@ export const ExcuseRequestManager = () => {
                         <span>Submitted: {format(new Date(request.submitted_at), 'MMM dd, yyyy HH:mm')}</span>
                       </div>
 
-                      <div className="text-sm text-orange-700 bg-orange-50 p-2 rounded">
-                        ℹ️ This request was returned to the student for additional information or clarification.
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm text-orange-700 bg-orange-50 p-2 rounded flex-1">
+                          ℹ️ This request was returned to the student for additional information or clarification.
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => deleteRequest(request.id)}
+                          className="ml-2 flex items-center gap-1"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          Delete
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -604,8 +650,8 @@ export const ExcuseRequestManager = () => {
                         )}
                       </div>
 
-                      {isAdmin && (
-                        <div className="flex gap-2">
+                      <div className="flex gap-2">
+                        {isAdmin && (
                           <Button
                             size="sm"
                             onClick={() => setSelectedRequest(request)}
@@ -613,8 +659,17 @@ export const ExcuseRequestManager = () => {
                           >
                             Review Request
                           </Button>
-                        </div>
-                      )}
+                        )}
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => deleteRequest(request.id)}
+                          className="flex items-center gap-1"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          Delete
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ))
@@ -658,11 +713,23 @@ export const ExcuseRequestManager = () => {
                         </div>
                       )}
 
-                      <div className="flex justify-between items-center text-xs text-gray-500">
+                      <div className="flex justify-between items-center text-xs text-gray-500 mb-3">
                         <span>Submitted: {format(new Date(request.submitted_at), 'MMM dd, yyyy HH:mm')}</span>
                         {request.reviewed_at && (
                           <span>Reviewed: {format(new Date(request.reviewed_at), 'MMM dd, yyyy HH:mm')}</span>
                         )}
+                      </div>
+
+                      <div className="flex justify-end">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => deleteRequest(request.id)}
+                          className="flex items-center gap-1"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          Delete
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
