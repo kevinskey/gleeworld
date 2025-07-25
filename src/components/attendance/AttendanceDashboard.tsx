@@ -13,7 +13,9 @@ import {
   FileText,
   Shield,
   TrendingUp,
-  Award
+  Award,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { TakeAttendance } from './TakeAttendance';
 import { MyAttendance } from './MyAttendance';
@@ -28,6 +30,7 @@ export const AttendanceDashboard = () => {
   const { profile } = useProfile();
   const [activeTab, setActiveTab] = useState('overview');
   const [canTakeAttendance, setCanTakeAttendance] = useState(false);
+  const [userSectionCollapsed, setUserSectionCollapsed] = useState(false);
   const [stats, setStats] = useState({
     myAttendance: 0,
     eventsThisWeek: 0,
@@ -115,18 +118,56 @@ export const AttendanceDashboard = () => {
 
   return (
     <div className="space-y-4 px-2 sm:px-4 lg:px-6">
-      {/* Main User Attendance Section */}
-      <div className="bg-white/50 backdrop-blur-sm rounded-xl p-3 sm:p-6 border">
-        <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
-          <UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />
-          <span className="truncate">My Attendance</span>
-        </h2>
-        <MyAttendance />
-      </div>
+      {/* User Sections with Admin Collapse Toggle */}
+      <div className="bg-white/50 backdrop-blur-sm rounded-xl border">
+        {/* Collapsible Header - Only for Admins */}
+        {isAdmin && (
+          <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200/50">
+            <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+              <UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="truncate">Personal Attendance</span>
+            </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setUserSectionCollapsed(!userSectionCollapsed)}
+              className="flex items-center gap-1"
+            >
+              {userSectionCollapsed ? (
+                <>
+                  <span className="text-sm">Show</span>
+                  <ChevronDown className="h-4 w-4" />
+                </>
+              ) : (
+                <>
+                  <span className="text-sm">Hide</span>
+                  <ChevronUp className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </div>
+        )}
 
-      {/* Excuse Generator */}
-      <div className="mt-4">
-        <ExcuseGenerator />
+        {/* Collapsible Content */}
+        {!userSectionCollapsed && (
+          <div className="p-3 sm:p-6 space-y-4">
+            {/* My Attendance Section */}
+            <div>
+              {!isAdmin && (
+                <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+                  <UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="truncate">My Attendance</span>
+                </h2>
+              )}
+              <MyAttendance />
+            </div>
+
+            {/* Excuse Generator */}
+            <div className="pt-4 border-t border-gray-200/50">
+              <ExcuseGenerator />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Admin/Secretary Attendance Management - Bottom Section */}
