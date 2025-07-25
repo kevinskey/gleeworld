@@ -51,6 +51,7 @@ import WellnessSuite from "./pages/WellnessSuite";
 import { FeedbackDashboard } from "./modules/rehearsals/feedback-dashboard/FeedbackDashboard";
 import AlumnaeLanding from "./pages/AlumnaeLanding";
 import AlumnaeAdmin from "./pages/admin/AlumnaeAdmin";
+import SendNotificationPage from "./pages/SendNotificationPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -249,15 +250,23 @@ const App = () => {
                      <Notifications />
                    </ProtectedRoute>
                  } 
-                />
+                 />
                 <Route
-                  path="/announcements" 
+                  path="/notifications/send" 
                   element={
                     <ProtectedRoute>
-                      <Announcements />
+                      <SendNotificationPage />
                     </ProtectedRoute>
                   } 
-                />
+                 />
+                 <Route
+                   path="/announcements" 
+                   element={
+                     <ProtectedRoute>
+                       <Announcements />
+                     </ProtectedRoute>
+                   } 
+                 />
                 <Route
                   path="/admin/announcements/new" 
                   element={
