@@ -318,7 +318,7 @@ export const UserDashboard = () => {
             className="relative overflow-hidden rounded-3xl shadow-lg py-8 px-6 min-h-[200px] flex items-center"
             style={{
               background: welcomeCardSetting?.image_url 
-                ? `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("${welcomeCardSetting.image_url}")` 
+                ? `url("${welcomeCardSetting.image_url}")` 
                 : 'linear-gradient(135deg, #8b5cf6, #3b82f6, #4f46e5)',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
