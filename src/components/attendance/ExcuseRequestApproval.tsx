@@ -48,7 +48,7 @@ export const ExcuseRequestApproval = () => {
   const [selectedRequest, setSelectedRequest] = useState<ExcuseRequest | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'approved' | 'denied' | null>(null);
+  const [pendingAction, setPendingAction] = useState<'approved' | 'denied' | 'returned' | null>(null);
   const [gwProfile, setGwProfile] = useState<any>(null);
 
   const isAdmin = gwProfile?.is_admin || gwProfile?.is_super_admin;
@@ -150,7 +150,7 @@ export const ExcuseRequestApproval = () => {
     }
   };
 
-  const handleApprovalDecision = (request: ExcuseRequest, action: 'approved' | 'denied') => {
+  const handleApprovalDecision = (request: ExcuseRequest, action: 'approved' | 'denied' | 'returned') => {
     setSelectedRequest(request);
     setPendingAction(action);
     setAdminNotes('');
@@ -317,13 +317,21 @@ export const ExcuseRequestApproval = () => {
                       )}
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="flex gap-2">
                       <Button
                         onClick={() => handleApprovalDecision(request, 'approved')}
                         className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                       >
                         <CheckCircle className="h-4 w-4 mr-2" />
                         Approve
+                      </Button>
+                      <Button
+                        onClick={() => handleApprovalDecision(request, 'returned')}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Return to Secretary
                       </Button>
                       <Button
                         onClick={() => handleApprovalDecision(request, 'denied')}
@@ -349,13 +357,15 @@ export const ExcuseRequestApproval = () => {
             <DialogTitle className="flex items-center gap-2">
               {pendingAction === 'approved' ? (
                 <CheckCircle className="h-5 w-5 text-green-600" />
+              ) : pendingAction === 'returned' ? (
+                <MessageSquare className="h-5 w-5 text-blue-600" />
               ) : (
                 <XCircle className="h-5 w-5 text-red-600" />
               )}
-              {pendingAction === 'approved' ? 'Approve' : 'Deny'} Excuse Request
+              {pendingAction === 'approved' ? 'Approve' : pendingAction === 'returned' ? 'Return to Secretary' : 'Deny'} Excuse Request
             </DialogTitle>
             <DialogDescription>
-              Make your final decision on this excuse request
+              {pendingAction === 'returned' ? 'Return this request to the secretary with questions or feedback' : 'Make your final decision on this excuse request'}
             </DialogDescription>
           </DialogHeader>
 
@@ -381,7 +391,7 @@ export const ExcuseRequestApproval = () => {
 
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Your Decision Notes {pendingAction === 'denied' ? '(Required for denials)' : '(Optional)'}:
+                  Your Decision Notes {pendingAction === 'denied' || pendingAction === 'returned' ? '(Required)' : '(Optional)'}:
                 </label>
                 <Textarea
                   value={adminNotes}
@@ -389,6 +399,8 @@ export const ExcuseRequestApproval = () => {
                   placeholder={
                     pendingAction === 'approved' 
                       ? "Add any notes about your approval decision..."
+                      : pendingAction === 'returned'
+                      ? "Enter questions or feedback for the secretary..."
                       : "Please explain why this request is being denied..."
                   }
                   rows={3}
@@ -406,14 +418,16 @@ export const ExcuseRequestApproval = () => {
             </Button>
             <Button
               onClick={submitApprovalDecision}
-              disabled={pendingAction === 'denied' && !adminNotes.trim()}
+              disabled={(pendingAction === 'denied' || pendingAction === 'returned') && !adminNotes.trim()}
               className={
                 pendingAction === 'approved' 
                   ? "bg-green-600 hover:bg-green-700" 
+                  : pendingAction === 'returned'
+                  ? "bg-blue-600 hover:bg-blue-700"
                   : "bg-red-600 hover:bg-red-700"
               }
             >
-              {pendingAction === 'approved' ? 'Approve Request' : 'Deny Request'}
+              {pendingAction === 'approved' ? 'Approve Request' : pendingAction === 'returned' ? 'Return to Secretary' : 'Deny Request'}
             </Button>
           </DialogFooter>
         </DialogContent>
