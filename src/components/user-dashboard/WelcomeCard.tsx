@@ -41,8 +41,13 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
       {/* Background Image Layer */}
       {hasBackgroundImage && (
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url("${welcomeCardSetting.image_url}")` }}
+          className="absolute inset-0"
+          style={{ 
+            backgroundImage: `url("${welcomeCardSetting.image_url}")`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
         />
       )}
       
