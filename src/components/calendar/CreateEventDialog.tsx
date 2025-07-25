@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Calendar } from "@/components/ui/calendar";
-import { Plus, Sparkles, Send, Upload, X, Users, Trash2, CalendarDays, Clock } from "lucide-react";
+import { Plus, Sparkles, Send, Upload, X, Users, Trash2, CalendarDays, Clock, UserCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -35,7 +35,11 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
     address: '',
     max_attendees: '',
     registration_required: false,
-    is_public: true
+    is_public: true,
+    attendance_required: false,
+    attendance_deadline: '',
+    late_arrival_allowed: true,
+    excuse_required: false
   });
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [notificationMessage, setNotificationMessage] = useState('');
@@ -273,6 +277,10 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
         max_attendees: formData.max_attendees ? parseInt(formData.max_attendees) : null,
         registration_required: formData.registration_required,
         is_public: formData.is_public,
+        attendance_required: formData.attendance_required,
+        attendance_deadline: formData.attendance_deadline ? new Date(formData.attendance_deadline + ':00').toISOString() : null,
+        late_arrival_allowed: formData.late_arrival_allowed,
+        excuse_required: formData.excuse_required,
         created_by: user.id,
         status: 'scheduled',
         calendar_id: selectedCalendarId // Ensure calendar_id is always present
@@ -421,7 +429,11 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
         address: '',
         max_attendees: '',
         registration_required: false,
-        is_public: true
+        is_public: true,
+        attendance_required: false,
+        attendance_deadline: '',
+        late_arrival_allowed: true,
+        excuse_required: false
       });
       setSelectedUserIds([]);
       setNotificationMessage('');
@@ -680,6 +692,76 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
                   onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_public: checked }))}
                 />
               </div>
+            </div>
+
+            {/* Attendance Tracking Section */}
+            <div className="space-y-4 border-t pt-4">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <UserCheck className="h-4 w-4" />
+                  Attendance Tracking
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Configure attendance requirements for this event
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Attendance Required</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Should members be required to mark attendance?
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.attendance_required}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, attendance_required: checked }))}
+                />
+              </div>
+
+              {formData.attendance_required && (
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+                  <div className="space-y-2">
+                    <Label htmlFor="attendance_deadline">Attendance Deadline</Label>
+                    <Input
+                      id="attendance_deadline"
+                      type="datetime-local"
+                      value={formData.attendance_deadline}
+                      onChange={(e) => setFormData(prev => ({ ...prev, attendance_deadline: e.target.value }))}
+                      placeholder="When must attendance be marked?"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Members must mark their attendance before this time
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Allow Late Arrivals</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Can members mark attendance after the start time?
+                      </p>
+                    </div>
+                    <Switch
+                      checked={formData.late_arrival_allowed}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, late_arrival_allowed: checked }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Excuse Required for Absence</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Must members provide an excuse if they can't attend?
+                      </p>
+                    </div>
+                    <Switch
+                      checked={formData.excuse_required}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, excuse_required: checked }))}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Team Member Management Section */}
