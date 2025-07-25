@@ -29,10 +29,33 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
     }
   };
 
+  // Enhanced error handling with logging
+  const handleImageError = (error: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.error('Welcome card image failed to load:', {
+      imageUrl: welcomeCardSetting?.image_url,
+      error: error.currentTarget.src,
+      setting: welcomeCardSetting
+    });
+    setImageError(true);
+  };
+
+  const handleImageLoad = () => {
+    console.log('Welcome card image loaded successfully:', welcomeCardSetting?.image_url);
+    setImageError(false);
+  };
+
   // Memoize values to prevent re-renders causing blinking
   const backgroundStyles = useMemo(() => {
-    if (!welcomeCardSetting?.image_url || imageError) return {};
+    if (!welcomeCardSetting?.image_url || imageError) {
+      console.log('No background image or error:', { 
+        hasImageUrl: !!welcomeCardSetting?.image_url, 
+        imageError,
+        setting: welcomeCardSetting
+      });
+      return {};
+    }
     
+    console.log('Using background image:', welcomeCardSetting.image_url);
     return {
       backgroundImage: `url("${welcomeCardSetting.image_url}")`,
       backgroundSize: 'cover',
@@ -57,8 +80,8 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
             src={welcomeCardSetting?.image_url}
             alt=""
             className="hidden"
-            onError={() => setImageError(true)}
-            onLoad={() => setImageError(false)}
+            onError={handleImageError}
+            onLoad={handleImageLoad}
           />
         </>
       )}
