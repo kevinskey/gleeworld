@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ClipboardCheck, 
@@ -114,15 +115,31 @@ export const AttendanceDashboard = () => {
 
   return (
     <div className="space-y-4 px-2 sm:px-4 lg:px-6">
-      {/* Mobile-optimized Attendance Section */}
+      {/* Take Attendance Section - Only for Admins/Secretary */}
+      {canTakeAttendance && (
+        <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 rounded-xl p-4 sm:p-6 border shadow-lg">
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-white">
+            <ClipboardCheck className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="truncate">Take Attendance</span>
+            <Badge variant="secondary" className="ml-2 bg-white/20 text-white border-white/30">
+              {isAdmin ? 'Admin' : 'Secretary'}
+            </Badge>
+          </h2>
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4">
+            <TakeAttendance />
+          </div>
+        </div>
+      )}
+
+      {/* Attendance Records & Reports Section */}
       <div className="bg-white/50 backdrop-blur-sm rounded-xl p-3 sm:p-6 border">
         <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
           <Users className="h-4 w-4 sm:h-5 sm:w-5" />
-          <span className="truncate">Attendance Management</span>
+          <span className="truncate">Attendance Records</span>
         </h2>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          {/* Mobile-friendly tab list */}
+          {/* Mobile-friendly tab list - only Overview and Reports now */}
           <div className="w-full overflow-x-auto">
             <TabsList className="flex w-max min-w-full h-auto p-1 bg-white/80 backdrop-blur-sm rounded-lg">
               <TabsTrigger 
@@ -132,16 +149,6 @@ export const AttendanceDashboard = () => {
                 <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span>My Attendance</span>
               </TabsTrigger>
-              
-              {canTakeAttendance && (
-                <TabsTrigger 
-                  value="take-attendance" 
-                  className="flex items-center gap-1.5 py-2.5 px-3 sm:py-3 sm:px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 text-xs sm:text-sm whitespace-nowrap"
-                >
-                  <ClipboardCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <span>Take Attendance</span>
-                </TabsTrigger>
-              )}
               
               {isAdmin && (
                 <TabsTrigger 
@@ -155,17 +162,11 @@ export const AttendanceDashboard = () => {
             </TabsList>
           </div>
 
-          {/* Tab content with mobile optimization */}
+          {/* Tab content */}
           <div className="mt-4">
             <TabsContent value="overview" className="space-y-4 m-0 animate-fade-in">
               <MyAttendance />
             </TabsContent>
-
-            {canTakeAttendance && (
-              <TabsContent value="take-attendance" className="space-y-4 m-0 animate-fade-in">
-                <TakeAttendance />
-              </TabsContent>
-            )}
 
             {isAdmin && (
               <TabsContent value="reports" className="space-y-4 m-0 animate-fade-in">
