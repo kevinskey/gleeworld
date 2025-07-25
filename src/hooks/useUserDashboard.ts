@@ -31,9 +31,16 @@ export interface UserNotification {
   title: string;
   message: string;
   type: string;
+  category: string | null;
   is_read: boolean;
-  related_contract_id: string | null;
+  action_url: string | null;
+  action_label: string | null;
+  priority: number;
+  metadata: any;
+  expires_at: string | null;
   created_at: string;
+  updated_at: string;
+  user_id: string;
 }
 
 export const useUserDashboard = () => {
@@ -70,12 +77,13 @@ export const useUserDashboard = () => {
 
       if (paymentsError) throw paymentsError;
 
-      // Fetch notifications
+      // Fetch notifications from gw_notifications table
       const { data: notificationsData, error: notificationsError } = await supabase
-        .from('user_notifications')
+        .from('gw_notifications')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(10);
 
       if (notificationsError) throw notificationsError;
 
@@ -98,7 +106,7 @@ export const useUserDashboard = () => {
   const markNotificationAsRead = async (notificationId: string) => {
     try {
       const { error } = await supabase
-        .from('user_notifications')
+        .from('gw_notifications')
         .update({ is_read: true })
         .eq('id', notificationId);
 
@@ -148,7 +156,7 @@ export const useUserDashboard = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'user_notifications',
+          table: 'gw_notifications',
           filter: `user_id=eq.${user.id}`
         },
         () => {
