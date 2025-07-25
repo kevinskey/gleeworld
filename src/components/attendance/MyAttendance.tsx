@@ -219,17 +219,17 @@ export const MyAttendance = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Period Selection */}
+    <div className="space-y-4 sm:space-y-6">
+      {/* Period Selection - Mobile optimized */}
       <Card className="glass-dashboard-card border-white/20 shadow-lg">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-slate-800">
-              <BarChart3 className="h-5 w-5 text-blue-600" />
+        <CardHeader className="pb-3 sm:pb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+            <CardTitle className="flex items-center gap-2 text-slate-800 text-base sm:text-lg">
+              <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
               Attendance Overview
             </CardTitle>
             <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-              <SelectTrigger className="w-48 bg-white/50 backdrop-blur-sm border-white/30">
+              <SelectTrigger className="w-full sm:w-48 bg-white/50 backdrop-blur-sm border-white/30">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-white/95 backdrop-blur-md border-white/30">
@@ -241,62 +241,62 @@ export const MyAttendance = () => {
             </Select>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           {loading ? (
-            <div className="flex justify-center py-8">
+            <div className="flex justify-center py-6 sm:py-8">
               <LoadingSpinner />
             </div>
           ) : records.length === 0 ? (
-            <div className="text-center py-8">
-              <Calendar className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Records Found</h3>
-              <p className="text-gray-600">No attendance records for the selected period.</p>
+            <div className="text-center py-6 sm:py-8">
+              <Calendar className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-gray-400 mb-3 sm:mb-4" />
+              <h3 className="text-base sm:text-lg font-semibold mb-2">No Records Found</h3>
+              <p className="text-sm sm:text-base text-gray-600">No attendance records for the selected period.</p>
             </div>
           ) : (
-            <div className="space-y-6">
-              {/* Overall Progress */}
+            <div className="space-y-4 sm:space-y-6">
+              {/* Overall Progress - Mobile optimized */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">Overall Attendance Rate</span>
-                  <span className="text-2xl font-bold text-green-600">{stats.percentage}%</span>
+                  <span className="text-xs sm:text-sm font-medium">Overall Attendance Rate</span>
+                  <span className="text-xl sm:text-2xl font-bold text-green-600">{stats.percentage}%</span>
                 </div>
-                <Progress value={stats.percentage} className="h-3" />
+                <Progress value={stats.percentage} className="h-2 sm:h-3" />
                 <p className="text-xs text-muted-foreground mt-1">
                   {stats.present + stats.late} present out of {stats.total} events
                 </p>
               </div>
 
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-white/40 backdrop-blur-sm border border-white/30 rounded-lg shadow-sm">
-                  <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-green-600">{stats.present}</div>
-                  <p className="text-sm text-slate-600">Present</p>
+              {/* Stats Grid - Mobile responsive */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+                <div className="text-center p-2 sm:p-4 bg-white/40 backdrop-blur-sm border border-white/30 rounded-lg shadow-sm">
+                  <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 mx-auto mb-1 sm:mb-2" />
+                  <div className="text-lg sm:text-2xl font-bold text-green-600">{stats.present}</div>
+                  <p className="text-xs sm:text-sm text-slate-600">Present</p>
                 </div>
 
-                <div className="text-center p-4 bg-white/40 backdrop-blur-sm border border-white/30 rounded-lg shadow-sm">
-                  <XCircle className="h-8 w-8 text-red-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-red-600">{stats.absent}</div>
-                  <p className="text-sm text-slate-600">Absent</p>
+                <div className="text-center p-2 sm:p-4 bg-white/40 backdrop-blur-sm border border-white/30 rounded-lg shadow-sm">
+                  <XCircle className="h-6 w-6 sm:h-8 sm:w-8 text-red-600 mx-auto mb-1 sm:mb-2" />
+                  <div className="text-lg sm:text-2xl font-bold text-red-600">{stats.absent}</div>
+                  <p className="text-xs sm:text-sm text-slate-600">Absent</p>
                 </div>
 
-                <div className="text-center p-4 bg-white/40 backdrop-blur-sm border border-white/30 rounded-lg shadow-sm">
-                  <AlertTriangle className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-yellow-600">{stats.excused}</div>
-                  <p className="text-sm text-slate-600">Excused</p>
+                <div className="text-center p-2 sm:p-4 bg-white/40 backdrop-blur-sm border border-white/30 rounded-lg shadow-sm">
+                  <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600 mx-auto mb-1 sm:mb-2" />
+                  <div className="text-lg sm:text-2xl font-bold text-yellow-600">{stats.excused}</div>
+                  <p className="text-xs sm:text-sm text-slate-600">Excused</p>
                 </div>
 
-                <div className="text-center p-4 bg-white/40 backdrop-blur-sm border border-white/30 rounded-lg shadow-sm">
-                  <Clock className="h-8 w-8 text-orange-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-orange-600">{stats.late}</div>
-                  <p className="text-sm text-slate-600">Late</p>
+                <div className="text-center p-2 sm:p-4 bg-white/40 backdrop-blur-sm border border-white/30 rounded-lg shadow-sm">
+                  <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-orange-600 mx-auto mb-1 sm:mb-2" />
+                  <div className="text-lg sm:text-2xl font-bold text-orange-600">{stats.late}</div>
+                  <p className="text-xs sm:text-sm text-slate-600">Late</p>
                 </div>
               </div>
 
               {/* Attendance Records */}
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
+              <div className="border-t pt-4 sm:pt-6">
+                <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
                   Recent Attendance Records
                 </h3>
                 <div className="max-h-96 overflow-y-auto space-y-3">

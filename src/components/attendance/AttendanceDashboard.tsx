@@ -113,57 +113,62 @@ export const AttendanceDashboard = () => {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Attendance Records & Management Section */}
-      <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <Users className="h-5 w-5" />
-          Attendance Records & Management
+    <div className="space-y-4 px-2 sm:px-4 lg:px-6">
+      {/* Mobile-optimized Attendance Section */}
+      <div className="bg-white/50 backdrop-blur-sm rounded-xl p-3 sm:p-6 border">
+        <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+          <Users className="h-4 w-4 sm:h-5 sm:w-5" />
+          <span className="truncate">Attendance Management</span>
         </h2>
-        <Tabs value={activeTab === 'overview' ? 'overview' : activeTab === 'take-attendance' ? 'take-attendance' : activeTab === 'reports' ? 'reports' : 'overview'} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className={`grid w-full ${canTakeAttendance && isAdmin ? 'grid-cols-3' : canTakeAttendance || isAdmin ? 'grid-cols-2' : 'grid-cols-1'} h-auto p-1 bg-white/80 backdrop-blur-sm`}>
-            <TabsTrigger 
-              value="overview" 
-              className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
-            >
-              <Users className="h-4 w-4" />
-              <span>My Attendance</span>
-            </TabsTrigger>
-            
-            {canTakeAttendance && (
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          {/* Mobile-friendly tab list */}
+          <div className="w-full overflow-x-auto">
+            <TabsList className="flex w-max min-w-full h-auto p-1 bg-white/80 backdrop-blur-sm rounded-lg">
               <TabsTrigger 
-                value="take-attendance" 
-                className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
+                value="overview" 
+                className="flex items-center gap-1.5 py-2.5 px-3 sm:py-3 sm:px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 text-xs sm:text-sm whitespace-nowrap"
               >
-                <ClipboardCheck className="h-4 w-4" />
-                <span>Take Attendance</span>
+                <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span>My Attendance</span>
               </TabsTrigger>
-            )}
-            
-            {isAdmin && (
-              <TabsTrigger 
-                value="reports" 
-                className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
-              >
-                <BarChart3 className="h-4 w-4" />
-                <span>Reports</span>
-              </TabsTrigger>
-            )}
-          </TabsList>
+              
+              {canTakeAttendance && (
+                <TabsTrigger 
+                  value="take-attendance" 
+                  className="flex items-center gap-1.5 py-2.5 px-3 sm:py-3 sm:px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 text-xs sm:text-sm whitespace-nowrap"
+                >
+                  <ClipboardCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span>Take Attendance</span>
+                </TabsTrigger>
+              )}
+              
+              {isAdmin && (
+                <TabsTrigger 
+                  value="reports" 
+                  className="flex items-center gap-1.5 py-2.5 px-3 sm:py-3 sm:px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 text-xs sm:text-sm whitespace-nowrap"
+                >
+                  <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span>Reports</span>
+                </TabsTrigger>
+              )}
+            </TabsList>
+          </div>
 
-          <div className="mt-6">
-            <TabsContent value="overview" className="space-y-6 animate-fade-in">
+          {/* Tab content with mobile optimization */}
+          <div className="mt-4">
+            <TabsContent value="overview" className="space-y-4 m-0 animate-fade-in">
               <MyAttendance />
             </TabsContent>
 
             {canTakeAttendance && (
-              <TabsContent value="take-attendance" className="space-y-6 animate-fade-in">
+              <TabsContent value="take-attendance" className="space-y-4 m-0 animate-fade-in">
                 <TakeAttendance />
               </TabsContent>
             )}
 
             {isAdmin && (
-              <TabsContent value="reports" className="space-y-6 animate-fade-in">
+              <TabsContent value="reports" className="space-y-4 m-0 animate-fade-in">
                 <AttendanceReports />
               </TabsContent>
             )}
@@ -171,8 +176,10 @@ export const AttendanceDashboard = () => {
         </Tabs>
       </div>
 
-      {/* Excuse Generator */}
-      <ExcuseGenerator />
+      {/* Mobile-optimized Excuse Generator */}
+      <div className="mt-4">
+        <ExcuseGenerator />
+      </div>
     </div>
   );
 };

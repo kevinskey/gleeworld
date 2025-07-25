@@ -542,31 +542,31 @@ export const ExcuseGenerator = () => {
   return (
     <>
       <Collapsible open={!isCollapsed} onOpenChange={(open) => setIsCollapsed(!open)}>
-        <Card className="mb-6 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 border-0">
+        <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 border-0">
           <CollapsibleTrigger asChild>
-            <CardHeader className="cursor-pointer hover:bg-white/10 transition-colors">
+            <CardHeader className="cursor-pointer hover:bg-white/10 transition-colors p-4 sm:p-6">
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Send className="w-5 h-5" />
-                  Single Excuse Generator
+                <CardTitle className="flex items-center gap-2 text-white text-base sm:text-lg">
+                  <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="truncate">Single Excuse Generator</span>
                 </CardTitle>
                 {isCollapsed ? (
-                  <ChevronDown className="w-5 h-5 text-white/70" />
+                  <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-white/70 flex-shrink-0" />
                 ) : (
-                  <ChevronUp className="w-5 h-5 text-white/70" />
+                  <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 text-white/70 flex-shrink-0" />
                 )}
               </div>
             </CardHeader>
           </CollapsibleTrigger>
           
           <CollapsibleContent className="animate-accordion-down">
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <CardContent className="space-y-4 p-4 sm:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {/* Excuse Type Selector */}
-                <div>
-                  <Label htmlFor="excuse-type">Excuse Type</Label>
+                <div className="sm:col-span-2 lg:col-span-1">
+                  <Label htmlFor="excuse-type" className="text-sm text-white/90">Excuse Type</Label>
                   <Select value={excuseType} onValueChange={(value: 'pre-event' | 'post-event') => setExcuseType(value)}>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
                       <SelectValue placeholder="Select excuse type" />
                     </SelectTrigger>
                     <SelectContent>
