@@ -95,6 +95,7 @@ export const UserDashboard = () => {
   const userRole = profile?.role || 'user';
   const userEmail = user?.email || '';
   const welcomeCardSetting = getSettingByName('welcome_card_background');
+  console.log('Welcome Card Setting:', welcomeCardSetting);
 
   // Get available modules for this user
   const getAvailableModules = () => {
