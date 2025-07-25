@@ -115,7 +115,21 @@ export const AttendanceDashboard = () => {
 
   return (
     <div className="space-y-4 px-2 sm:px-4 lg:px-6">
-      {/* Take Attendance Section - Only for Admins/Secretary */}
+      {/* Main User Attendance Section */}
+      <div className="bg-white/50 backdrop-blur-sm rounded-xl p-3 sm:p-6 border">
+        <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+          <UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />
+          <span className="truncate">My Attendance</span>
+        </h2>
+        <MyAttendance />
+      </div>
+
+      {/* Excuse Generator */}
+      <div className="mt-4">
+        <ExcuseGenerator />
+      </div>
+
+      {/* Admin/Secretary Attendance Management - Bottom Section */}
       {canTakeAttendance && (
         <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 rounded-xl p-4 sm:p-6 border shadow-lg">
           <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-white">
@@ -131,56 +145,19 @@ export const AttendanceDashboard = () => {
         </div>
       )}
 
-      {/* Attendance Records & Reports Section */}
-      <div className="bg-white/50 backdrop-blur-sm rounded-xl p-3 sm:p-6 border">
-        <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
-          <Users className="h-4 w-4 sm:h-5 sm:w-5" />
-          <span className="truncate">Attendance Records</span>
-        </h2>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          {/* Mobile-friendly tab list - only Overview and Reports now */}
-          <div className="w-full overflow-x-auto">
-            <TabsList className="flex w-max min-w-full h-auto p-1 bg-white/80 backdrop-blur-sm rounded-lg">
-              <TabsTrigger 
-                value="overview" 
-                className="flex items-center gap-1.5 py-2.5 px-3 sm:py-3 sm:px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 text-xs sm:text-sm whitespace-nowrap"
-              >
-                <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span>My Attendance</span>
-              </TabsTrigger>
-              
-              {isAdmin && (
-                <TabsTrigger 
-                  value="reports" 
-                  className="flex items-center gap-1.5 py-2.5 px-3 sm:py-3 sm:px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 text-xs sm:text-sm whitespace-nowrap"
-                >
-                  <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <span>Reports</span>
-                </TabsTrigger>
-              )}
-            </TabsList>
-          </div>
-
-          {/* Tab content */}
-          <div className="mt-4">
-            <TabsContent value="overview" className="space-y-4 m-0 animate-fade-in">
-              <MyAttendance />
-            </TabsContent>
-
-            {isAdmin && (
-              <TabsContent value="reports" className="space-y-4 m-0 animate-fade-in">
-                <AttendanceReports />
-              </TabsContent>
-            )}
-          </div>
-        </Tabs>
-      </div>
-
-      {/* Mobile-optimized Excuse Generator */}
-      <div className="mt-4">
-        <ExcuseGenerator />
-      </div>
+      {/* Admin Reports Section */}
+      {isAdmin && (
+        <div className="bg-white/50 backdrop-blur-sm rounded-xl p-3 sm:p-6 border">
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="truncate">Attendance Reports</span>
+            <Badge variant="outline" className="ml-2">
+              Admin Only
+            </Badge>
+          </h2>
+          <AttendanceReports />
+        </div>
+      )}
     </div>
   );
 };
