@@ -322,19 +322,13 @@ export const UserDashboard = () => {
               backgroundRepeat: 'no-repeat'
             } : {}}
           >
-            <div className="relative text-center">
+            <div className="relative text-center w-full">
               <h1 className="text-xl font-medium text-white drop-shadow-lg">
                 Welcome back {displayName}!
               </h1>
               <p className="text-white/90 text-sm mt-1 drop-shadow">
                 {[profile?.exec_board_role, profile?.voice_part].filter(Boolean).join(', ') || getUserTitle()} • Member since {profile?.created_at ? format(new Date(profile.created_at), 'MMMM yyyy') : 'Recently'}
               </p>
-              {/* Debug info - remove this after testing */}
-              {welcomeCardSetting?.image_url && (
-                <p className="text-xs text-white/70 mt-2 font-mono">
-                  Background: {welcomeCardSetting.image_url.split('/').pop()}
-                </p>
-              )}
             </div>
           </div>
 
