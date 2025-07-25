@@ -96,13 +96,20 @@ export const TakeAttendance = () => {
     try {
       const { data, error } = await supabase
         .from('gw_events')
-        .select('id, title, event_type, start_date, end_date')
+        .select('id, title, event_type, start_date, end_date, attendance_required')
         .gte('start_date', new Date().toISOString())
+        .eq('attendance_required', true) // Only events where attendance will be taken
         .order('start_date')
         .limit(10);
 
       if (error) throw error;
-      setEvents(data || []);
+      const filteredEvents = data || [];
+      setEvents(filteredEvents);
+      
+      // Auto-select the closest upcoming event
+      if (filteredEvents.length > 0 && !selectedEvent) {
+        setSelectedEvent(filteredEvents[0].id);
+      }
     } catch (error) {
       console.error('Error loading events:', error);
       toast({
