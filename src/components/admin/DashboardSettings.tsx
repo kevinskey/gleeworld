@@ -167,9 +167,13 @@ export const DashboardSettings = () => {
                 disabled={uploading}
                 className="flex-1"
               />
-              <Button variant="outline" disabled={uploading}>
+              <Button 
+                variant="outline" 
+                disabled={uploading}
+                onClick={() => document.getElementById('background-upload')?.click()}
+              >
                 <Upload className="h-4 w-4 mr-2" />
-                {uploading ? 'Uploading...' : 'Upload'}
+                {uploading ? 'Uploading...' : 'Browse Files'}
               </Button>
             </div>
             {uploading && (
