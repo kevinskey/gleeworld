@@ -28,6 +28,13 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
   };
 
   const hasBackgroundImage = welcomeCardSetting?.image_url;
+  
+  // Debug logging
+  console.log('WelcomeCard Debug:', {
+    welcomeCardSetting,
+    hasBackgroundImage,
+    imageUrl: welcomeCardSetting?.image_url
+  });
 
   return (
     <div className="relative overflow-hidden rounded-3xl shadow-lg min-h-[200px] flex items-center">
