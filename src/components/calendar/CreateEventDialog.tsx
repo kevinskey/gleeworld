@@ -595,6 +595,76 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
               </div>
             </div>
 
+            {/* Attendance Tracking Section - Moved up for visibility */}
+            <div className="space-y-4 border-t pt-4 border-primary/20 bg-muted/20 p-4 rounded-lg">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-base font-semibold">
+                  <UserCheck className="h-5 w-5" />
+                  Attendance Tracking
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Configure attendance requirements for this event
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Attendance Required</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Should members be required to mark attendance?
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.attendance_required}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, attendance_required: checked }))}
+                />
+              </div>
+
+              {formData.attendance_required && (
+                <div className="space-y-4 p-4 border rounded-lg bg-background">
+                  <div className="space-y-2">
+                    <Label htmlFor="attendance_deadline">Attendance Deadline</Label>
+                    <Input
+                      id="attendance_deadline"
+                      type="datetime-local"
+                      value={formData.attendance_deadline}
+                      onChange={(e) => setFormData(prev => ({ ...prev, attendance_deadline: e.target.value }))}
+                      placeholder="When must attendance be marked?"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Members must mark their attendance before this time
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Allow Late Arrivals</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Can members mark attendance after the start time?
+                      </p>
+                    </div>
+                    <Switch
+                      checked={formData.late_arrival_allowed}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, late_arrival_allowed: checked }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Excuse Required for Absence</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Must members provide an excuse if they can't attend?
+                      </p>
+                    </div>
+                    <Switch
+                      checked={formData.excuse_required}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, excuse_required: checked }))}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="venue_name">Venue Name</Label>
               <Input
@@ -694,75 +764,6 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
               </div>
             </div>
 
-            {/* Attendance Tracking Section */}
-            <div className="space-y-4 border-t pt-4">
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <UserCheck className="h-4 w-4" />
-                  Attendance Tracking
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Configure attendance requirements for this event
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Attendance Required</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Should members be required to mark attendance?
-                  </p>
-                </div>
-                <Switch
-                  checked={formData.attendance_required}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, attendance_required: checked }))}
-                />
-              </div>
-
-              {formData.attendance_required && (
-                <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
-                  <div className="space-y-2">
-                    <Label htmlFor="attendance_deadline">Attendance Deadline</Label>
-                    <Input
-                      id="attendance_deadline"
-                      type="datetime-local"
-                      value={formData.attendance_deadline}
-                      onChange={(e) => setFormData(prev => ({ ...prev, attendance_deadline: e.target.value }))}
-                      placeholder="When must attendance be marked?"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Members must mark their attendance before this time
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Allow Late Arrivals</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Can members mark attendance after the start time?
-                      </p>
-                    </div>
-                    <Switch
-                      checked={formData.late_arrival_allowed}
-                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, late_arrival_allowed: checked }))}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Excuse Required for Absence</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Must members provide an excuse if they can't attend?
-                      </p>
-                    </div>
-                    <Switch
-                      checked={formData.excuse_required}
-                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, excuse_required: checked }))}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
 
             {/* Team Member Management Section */}
             <div className="space-y-4 border-t pt-4">
