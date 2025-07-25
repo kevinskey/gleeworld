@@ -36,11 +36,11 @@ export const DashboardSettings = () => {
         return;
       }
 
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
+      // Validate file size (max 50MB)
+      if (file.size > 50 * 1024 * 1024) {
         toast({
           title: "File too large",
-          description: "Please select an image under 5MB.",
+          description: "Please select an image under 50MB.",
           variant: "destructive",
         });
         return;
@@ -188,7 +188,7 @@ export const DashboardSettings = () => {
               </div>
             )}
             <p className="text-sm text-gray-500">
-              Recommended: 1200x400px or larger. Max file size: 5MB. Supported formats: JPG, PNG, GIF
+              Recommended: 1200x400px or larger. Max file size: 50MB. Supported formats: JPG, PNG, GIF
             </p>
           </div>
 
