@@ -6677,6 +6677,10 @@ export type Database = {
         Args: { event_id_param: string }
         Returns: string
       }
+      generate_secure_qr_token: {
+        Args: { event_id_param: string }
+        Returns: string
+      }
       generate_sheet_music_filename: {
         Args: {
           p_title: string

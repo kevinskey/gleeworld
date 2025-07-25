@@ -73,19 +73,70 @@ export const getSecureFileUrl = async ({
   }
 };
 
-// Input sanitization utilities
+// Enhanced input sanitization utilities
 export const sanitizeInput = (input: string): string => {
   if (!input) return '';
   
-  // Remove HTML tags and encode special characters
+  // Remove HTML tags, scripts, and encode special characters
   return input
-    .replace(/<[^>]*>/g, '') // Remove HTML tags
+    .replace(/<script[^>]*>.*?<\/script>/gi, '') // Remove script tags
+    .replace(/<[^>]*>/g, '') // Remove all HTML tags
+    .replace(/javascript:/gi, '') // Remove javascript: protocols
+    .replace(/on\w+\s*=/gi, '') // Remove event handlers
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;');
+    .replace(/\//g, '&#x2F;')
+    .trim();
+};
+
+// Rate limiting helper
+export const createRateLimiter = (maxRequests: number, windowMs: number) => {
+  const requests = new Map<string, number[]>();
+  
+  return (identifier: string): boolean => {
+    const now = Date.now();
+    const windowStart = now - windowMs;
+    
+    // Get or create request history for this identifier
+    const userRequests = requests.get(identifier) || [];
+    
+    // Remove old requests outside the window
+    const recentRequests = userRequests.filter(time => time > windowStart);
+    
+    // Check if user has exceeded the limit
+    if (recentRequests.length >= maxRequests) {
+      return false; // Rate limit exceeded
+    }
+    
+    // Add current request
+    recentRequests.push(now);
+    requests.set(identifier, recentRequests);
+    
+    return true; // Request allowed
+  };
+};
+
+// Input validation utilities
+export const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email.trim());
+};
+
+export const validatePhoneNumber = (phone: string): boolean => {
+  const phoneRegex = /^\+?[\d\s\-\(\)]+$/;
+  return phoneRegex.test(phone.trim()) && phone.replace(/\D/g, '').length >= 10;
+};
+
+export const validateURL = (url: string): boolean => {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 // Safe HTML rendering for user content

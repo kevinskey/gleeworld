@@ -106,7 +106,7 @@ export const QRAttendanceScanner = () => {
         throw new Error('Invalid QR code format');
       }
 
-      // Call the database function to process the scan
+      // Call the database function to process the scan (will be updated to secure version after types refresh)
       const { data, error } = await supabase.rpc('process_qr_attendance_scan', {
         qr_token_param: qrToken,
         user_id_param: user.id,
