@@ -316,21 +316,25 @@ export const UserDashboard = () => {
           <div 
             className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 rounded-3xl shadow-lg py-4 px-6"
             style={welcomeCardSetting?.image_url ? {
-              backgroundImage: `url(${welcomeCardSetting.image_url})`,
+              backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${welcomeCardSetting.image_url})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat'
             } : {}}
           >
-            {welcomeCardSetting?.image_url && (
-              <div className="absolute inset-0 bg-black/40 rounded-3xl" />
-            )}
             <div className="relative text-center">
-              <h1 className="text-xl font-medium text-white">
+              <h1 className="text-xl font-medium text-white drop-shadow-lg">
                 Welcome back {displayName}!
               </h1>
-              <p className="text-white/80 text-sm mt-1">
+              <p className="text-white/90 text-sm mt-1 drop-shadow">
                 {[profile?.exec_board_role, profile?.voice_part].filter(Boolean).join(', ') || getUserTitle()} • Member since {profile?.created_at ? format(new Date(profile.created_at), 'MMMM yyyy') : 'Recently'}
               </p>
+              {/* Debug info - remove this after testing */}
+              {welcomeCardSetting?.image_url && (
+                <p className="text-xs text-white/70 mt-2 font-mono">
+                  Background: {welcomeCardSetting.image_url.split('/').pop()}
+                </p>
+              )}
             </div>
           </div>
 
