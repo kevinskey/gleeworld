@@ -318,16 +318,13 @@ export const UserDashboard = () => {
             className="relative overflow-hidden rounded-3xl shadow-lg py-8 px-6 min-h-[200px] flex items-center"
             style={{
               background: welcomeCardSetting?.image_url 
-                ? `url("${welcomeCardSetting.image_url}")` 
+                ? `linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url("${welcomeCardSetting.image_url}")` 
                 : 'linear-gradient(135deg, #8b5cf6, #3b82f6, #4f46e5)',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat'
             }}
           >
-            {welcomeCardSetting?.image_url && (
-              <div className="absolute top-2 right-2 bg-green-500 w-2 h-2 rounded-full" title="Background image loaded" />
-            )}
             <div className="relative text-center w-full">
               <h1 className="text-xl font-medium text-white drop-shadow-lg">
                 Welcome back {displayName}!
