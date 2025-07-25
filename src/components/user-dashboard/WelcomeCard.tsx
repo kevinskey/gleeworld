@@ -1,6 +1,8 @@
 import { format } from "date-fns";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
 import { useState, useMemo } from "react";
+import { Music } from "lucide-react";
+import { useUserDashboard } from "@/hooks/useUserDashboard";
 
 interface WelcomeCardProps {
   displayName: string;
@@ -16,6 +18,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
   const { getSettingByName } = useDashboardSettings();
   const welcomeCardSetting = getSettingByName('welcome_card_background');
   const [imageError, setImageError] = useState(false);
+  const { dashboardData } = useUserDashboard();
 
   const getUserTitle = () => {
     const role = profile?.role;
@@ -96,13 +99,23 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
       
       {/* Content Layer */}
       <div className="relative z-10 text-center w-full px-6 py-8">
-        <h1 className="text-xl font-medium text-white drop-shadow-lg">
+        <h1 className="text-3xl font-medium text-white drop-shadow-lg">
           Welcome back {displayName}!
         </h1>
-        <p className="text-white/90 text-sm mt-1 drop-shadow">
+        <p className="text-white/90 text-base mt-2 drop-shadow">
           {[profile?.exec_board_role, profile?.voice_part].filter(Boolean).join(', ') || getUserTitle()} • Member since {profile?.created_at ? format(new Date(profile.created_at), 'MMMM yyyy') : 'Recently'}
         </p>
       </div>
+      
+      {/* Notification Music Note */}
+      {dashboardData?.unread_notifications > 0 && (
+        <div className="absolute top-4 right-4 z-20">
+          <Music 
+            className="w-8 h-8 text-white drop-shadow-lg animate-pulse" 
+            fill="currentColor"
+          />
+        </div>
+      )}
     </div>
   );
 };
