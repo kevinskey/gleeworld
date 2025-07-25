@@ -313,8 +313,18 @@ export const UserDashboard = () => {
         <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6 space-y-4 sm:space-y-6">
           
           {/* Compact Welcome Card */}
-          <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 rounded-3xl shadow-lg py-4 px-6">
-            <div className="text-center">
+          <div 
+            className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 rounded-3xl shadow-lg py-4 px-6"
+            style={welcomeCardSetting?.image_url ? {
+              backgroundImage: `url(${welcomeCardSetting.image_url})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            } : {}}
+          >
+            {welcomeCardSetting?.image_url && (
+              <div className="absolute inset-0 bg-black/40 rounded-3xl" />
+            )}
+            <div className="relative text-center">
               <h1 className="text-xl font-medium text-white">
                 Welcome back {displayName}!
               </h1>
