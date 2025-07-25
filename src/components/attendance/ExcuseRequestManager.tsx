@@ -100,8 +100,8 @@ export const ExcuseRequestManager = () => {
 
       // Filter based on user role
       if (isSecretary && !isAdmin) {
-        // Secretaries see pending and forwarded requests
-        requestQuery = requestQuery.in('status', ['pending', 'forwarded']);
+        // Secretaries see pending, returned, and forwarded requests
+        requestQuery = requestQuery.in('status', ['pending', 'returned', 'forwarded']);
       }
 
       const { data: requestsData, error: requestsError } = await requestQuery;
@@ -187,9 +187,25 @@ export const ExcuseRequestManager = () => {
 
       if (error) throw error;
 
+      // Send notification to user
+      const selectedRequestData = excuseRequests.find(req => req.id === requestId);
+      if (selectedRequestData) {
+        try {
+          await supabase.functions.invoke('send-excuse-notification', {
+            body: {
+              requestId: requestId,
+              userId: selectedRequestData.user_id,
+              status: 'forwarded'
+            }
+          });
+        } catch (notificationError) {
+          console.error('Failed to send notification:', notificationError);
+        }
+      }
+
       toast({
         title: "Success",
-        description: "Excuse request forwarded to super admin",
+        description: "Excuse request forwarded to director for approval",
       });
 
       loadExcuseRequests();
@@ -216,6 +232,23 @@ export const ExcuseRequestManager = () => {
         .eq('id', requestId);
 
       if (error) throw error;
+
+      // Send notification to user
+      const selectedRequestData = excuseRequests.find(req => req.id === requestId);
+      if (selectedRequestData) {
+        try {
+          await supabase.functions.invoke('send-excuse-notification', {
+            body: {
+              requestId: requestId,
+              userId: selectedRequestData.user_id,
+              status: status,
+              adminNotes: adminNotes
+            }
+          });
+        } catch (notificationError) {
+          console.error('Failed to send notification:', notificationError);
+        }
+      }
 
       toast({
         title: "Success",
@@ -248,9 +281,11 @@ export const ExcuseRequestManager = () => {
     try {
       setSendingMessage(true);
       
+      // Update the request with secretary message and change status to 'returned'
       const { error } = await supabase
         .from('excuse_requests')
         .update({
+          status: 'returned',
           secretary_message: messageToUser,
           secretary_message_sent_at: new Date().toISOString(),
           secretary_message_sent_by: user?.id
@@ -259,9 +294,27 @@ export const ExcuseRequestManager = () => {
 
       if (error) throw error;
 
+      // Send notification to user
+      const selectedRequestData = excuseRequests.find(req => req.id === requestId);
+      if (selectedRequestData) {
+        try {
+          await supabase.functions.invoke('send-excuse-notification', {
+            body: {
+              requestId: requestId,
+              userId: selectedRequestData.user_id,
+              status: 'returned',
+              message: messageToUser
+            }
+          });
+        } catch (notificationError) {
+          console.error('Failed to send notification:', notificationError);
+          // Don't fail the whole operation if notification fails
+        }
+      }
+
       toast({
         title: "Success",
-        description: "Message sent to student",
+        description: "Request returned to student with comments",
       });
 
       setMessageDialogOpen(false);
@@ -272,7 +325,7 @@ export const ExcuseRequestManager = () => {
       console.error('Error sending message:', error);
       toast({
         title: "Error",
-        description: "Failed to send message",
+        description: "Failed to return request with comments",
         variant: "destructive",
       });
     } finally {
@@ -294,6 +347,8 @@ export const ExcuseRequestManager = () => {
     switch (status) {
       case 'pending':
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
+      case 'returned':
+        return <Badge variant="secondary" className="bg-orange-100 text-orange-800"><MessageCircle className="h-3 w-3 mr-1" />Returned</Badge>;
       case 'forwarded':
         return <Badge variant="secondary" className="bg-blue-100 text-blue-800"><Send className="h-3 w-3 mr-1" />Forwarded</Badge>;
       case 'approved':
@@ -309,6 +364,8 @@ export const ExcuseRequestManager = () => {
     switch (status) {
       case 'pending':
         return excuseRequests.filter(req => req.status === 'pending');
+      case 'returned':
+        return excuseRequests.filter(req => req.status === 'returned');
       case 'forwarded':
         return excuseRequests.filter(req => req.status === 'forwarded');
       case 'reviewed':
@@ -360,10 +417,14 @@ export const ExcuseRequestManager = () => {
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="pending" className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 Pending ({filterRequestsByStatus('pending').length})
+              </TabsTrigger>
+              <TabsTrigger value="returned" className="flex items-center gap-2">
+                <MessageCircle className="h-4 w-4" />
+                Returned ({filterRequestsByStatus('returned').length})
               </TabsTrigger>
               <TabsTrigger value="forwarded" className="flex items-center gap-2">
                 <Send className="h-4 w-4" />
@@ -430,6 +491,63 @@ export const ExcuseRequestManager = () => {
                           <ArrowRight className="h-3 w-3" />
                           Forward to Doc for Approval
                         </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </TabsContent>
+
+            <TabsContent value="returned" className="space-y-4">
+              {loading ? (
+                <div className="text-center py-8">Loading...</div>
+              ) : filterRequestsByStatus('returned').length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No returned excuse requests
+                </div>
+              ) : (
+                filterRequestsByStatus('returned').map((request) => (
+                  <Card key={request.id} className="border-l-4 border-l-orange-400">
+                    <CardContent className="pt-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h4 className="font-semibold flex items-center gap-2">
+                            <User className="h-4 w-4" />
+                            {request.user_profile?.full_name || request.user_profile?.email}
+                          </h4>
+                          <p className="text-sm text-gray-600 flex items-center gap-2 mt-1">
+                            <Calendar className="h-4 w-4" />
+                            {request.event_title} - {format(new Date(request.event_date), 'MMM dd, yyyy')}
+                          </p>
+                        </div>
+                        {getStatusBadge(request.status)}
+                      </div>
+                      
+                      <div className="mb-4">
+                        <p className="text-sm font-medium mb-1">Reason:</p>
+                        <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded">{request.reason}</p>
+                      </div>
+
+                      {request.secretary_message && (
+                        <div className="mb-4">
+                          <p className="text-sm font-medium mb-1">Secretary Comments:</p>
+                          <p className="text-sm text-gray-700 bg-orange-50 p-2 rounded border-l-4 border-orange-400">
+                            {request.secretary_message}
+                          </p>
+                          {request.secretary_message_sent_at && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Sent: {format(new Date(request.secretary_message_sent_at), 'MMM dd, yyyy HH:mm')}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-center text-xs text-gray-500 mb-3">
+                        <span>Submitted: {format(new Date(request.submitted_at), 'MMM dd, yyyy HH:mm')}</span>
+                      </div>
+
+                      <div className="text-sm text-orange-700 bg-orange-50 p-2 rounded">
+                        ℹ️ This request was returned to the student for additional information or clarification.
                       </div>
                     </CardContent>
                   </Card>

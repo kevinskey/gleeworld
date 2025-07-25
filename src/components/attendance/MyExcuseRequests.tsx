@@ -73,15 +73,17 @@ export const MyExcuseRequests = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
+        return <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-300 border-yellow-400/30"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
+      case 'returned':
+        return <Badge variant="secondary" className="bg-orange-500/20 text-orange-300 border-orange-400/30"><MessageSquare className="h-3 w-3 mr-1" />Returned</Badge>;
       case 'forwarded':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800"><Send className="h-3 w-3 mr-1" />Under Review</Badge>;
+        return <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 border-blue-400/30"><Send className="h-3 w-3 mr-1" />Under Review</Badge>;
       case 'approved':
-        return <Badge variant="secondary" className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Approved</Badge>;
+        return <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-400/30"><CheckCircle className="h-3 w-3 mr-1" />Approved</Badge>;
       case 'denied':
-        return <Badge variant="secondary" className="bg-red-100 text-red-800"><XCircle className="h-3 w-3 mr-1" />Denied</Badge>;
+        return <Badge variant="secondary" className="bg-red-500/20 text-red-300 border-red-400/30"><XCircle className="h-3 w-3 mr-1" />Denied</Badge>;
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return <Badge variant="secondary" className="bg-white/20 text-white/80 border-white/30">{status}</Badge>;
     }
   };
 
