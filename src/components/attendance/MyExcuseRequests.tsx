@@ -28,6 +28,8 @@ interface MyExcuseRequest {
   submitted_at: string;
   admin_notes?: string | null;
   reviewed_at?: string | null;
+  secretary_message?: string | null;
+  secretary_message_sent_at?: string | null;
 }
 
 export const MyExcuseRequests = () => {
@@ -150,6 +152,20 @@ export const MyExcuseRequests = () => {
                         {request.reason}
                       </p>
                     </div>
+
+                    {request.secretary_message && (
+                      <div className="mb-3">
+                        <p className="text-sm font-medium text-white/90 mb-1">Secretary Message:</p>
+                        <p className="text-sm text-white/80 bg-blue-500/20 p-2 rounded border border-blue-400/30">
+                          {request.secretary_message}
+                        </p>
+                        {request.secretary_message_sent_at && (
+                          <p className="text-xs text-white/60 mt-1">
+                            Sent: {format(new Date(request.secretary_message_sent_at), 'MMM dd, yyyy HH:mm')}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                     {request.admin_notes && (
                       <div className="mb-3">

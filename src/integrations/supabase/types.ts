@@ -1527,6 +1527,9 @@ export type Database = {
           reason: string
           reviewed_at: string | null
           reviewed_by: string | null
+          secretary_message: string | null
+          secretary_message_sent_at: string | null
+          secretary_message_sent_by: string | null
           status: string
           submitted_at: string
           updated_at: string
@@ -1544,6 +1547,9 @@ export type Database = {
           reason: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          secretary_message?: string | null
+          secretary_message_sent_at?: string | null
+          secretary_message_sent_by?: string | null
           status?: string
           submitted_at?: string
           updated_at?: string
@@ -1561,6 +1567,9 @@ export type Database = {
           reason?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          secretary_message?: string | null
+          secretary_message_sent_at?: string | null
+          secretary_message_sent_by?: string | null
           status?: string
           submitted_at?: string
           updated_at?: string

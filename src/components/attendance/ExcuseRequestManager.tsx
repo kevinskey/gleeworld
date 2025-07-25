@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Clock, 
   CheckCircle, 
@@ -14,7 +15,9 @@ import {
   User,
   AlertCircle,
   Eye,
-  Send
+  Send,
+  Mail,
+  MessageCircle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,6 +39,9 @@ interface ExcuseRequest {
   reviewed_by?: string | null;
   reviewed_at?: string | null;
   admin_notes?: string | null;
+  secretary_message?: string | null;
+  secretary_message_sent_at?: string | null;
+  secretary_message_sent_by?: string | null;
   created_at: string;
   updated_at: string;
   user_profile?: {
@@ -54,6 +60,9 @@ export const ExcuseRequestManager = () => {
   const [adminNotes, setAdminNotes] = useState('');
   const [activeTab, setActiveTab] = useState('pending');
   const [gwProfile, setGwProfile] = useState<any>(null);
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+  const [messageToUser, setMessageToUser] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   const isSecretary = gwProfile?.exec_board_role === 'secretary' || 
                      (gwProfile?.special_roles && gwProfile.special_roles.includes('secretary'));
@@ -226,6 +235,51 @@ export const ExcuseRequestManager = () => {
     }
   };
 
+  const sendMessageToUser = async (requestId: string) => {
+    if (!messageToUser.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a message",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setSendingMessage(true);
+      
+      const { error } = await supabase
+        .from('excuse_requests')
+        .update({
+          secretary_message: messageToUser,
+          secretary_message_sent_at: new Date().toISOString(),
+          secretary_message_sent_by: user?.id
+        })
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Message sent to student",
+      });
+
+      setMessageDialogOpen(false);
+      setMessageToUser('');
+      setSelectedRequest(null);
+      loadExcuseRequests();
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send message",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
   useEffect(() => {
     loadGwProfile();
   }, [user]);
@@ -364,6 +418,18 @@ export const ExcuseRequestManager = () => {
                           <ArrowRight className="h-3 w-3" />
                           Forward to Admin
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedRequest(request);
+                            setMessageDialogOpen(true);
+                          }}
+                          className="flex items-center gap-1"
+                        >
+                          <MessageCircle className="h-3 w-3" />
+                          Send Message
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -400,6 +466,18 @@ export const ExcuseRequestManager = () => {
                         <p className="text-sm font-medium mb-1">Reason:</p>
                         <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded">{request.reason}</p>
                       </div>
+
+                      {request.secretary_message && (
+                        <div className="mb-4">
+                          <p className="text-sm font-medium mb-1">Secretary Message:</p>
+                          <p className="text-sm text-gray-700 bg-blue-50 p-2 rounded">{request.secretary_message}</p>
+                          {request.secretary_message_sent_at && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Sent: {format(new Date(request.secretary_message_sent_at), 'MMM dd, yyyy HH:mm')}
+                            </p>
+                          )}
+                        </div>
+                      )}
 
                       <div className="flex justify-between items-center text-xs text-gray-500 mb-3">
                         <span>Submitted: {format(new Date(request.submitted_at), 'MMM dd, yyyy HH:mm')}</span>
@@ -533,6 +611,71 @@ export const ExcuseRequestManager = () => {
           </div>
         </Card>
       )}
+
+      {/* Send Message Dialog */}
+      <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Send Message to Student</DialogTitle>
+            <DialogDescription>
+              Send a message to {selectedRequest?.user_profile?.full_name || 'the student'} regarding their excuse request.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedRequest && (
+            <div className="space-y-4">
+              <div className="bg-gray-50 p-3 rounded">
+                <p className="text-sm font-medium">Request Details:</p>
+                <p className="text-sm text-gray-700">
+                  {selectedRequest.event_title} - {format(new Date(selectedRequest.event_date), 'MMM dd, yyyy')}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">Reason: {selectedRequest.reason}</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Your Message:</label>
+                <Textarea
+                  value={messageToUser}
+                  onChange={(e) => setMessageToUser(e.target.value)}
+                  placeholder="Type your message, questions, or instructions for the student here..."
+                  rows={4}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setMessageDialogOpen(false);
+                setMessageToUser('');
+                setSelectedRequest(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => selectedRequest && sendMessageToUser(selectedRequest.id)}
+              disabled={sendingMessage || !messageToUser.trim()}
+              className="flex items-center gap-2"
+            >
+              {sendingMessage ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Mail className="h-4 w-4" />
+                  Send Message
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
