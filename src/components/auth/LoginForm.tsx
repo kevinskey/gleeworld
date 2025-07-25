@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Chrome, Apple } from "lucide-react";
+import { useSecurityEnhanced } from "@/hooks/useSecurityEnhanced";
 
 interface LoginFormProps {
   onSwitchToForgot: () => void;
@@ -18,6 +19,7 @@ export const LoginForm = ({ onSwitchToForgot }: LoginFormProps) => {
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const { enhancedSignIn } = useSecurityEnhanced();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,12 +27,7 @@ export const LoginForm = ({ onSwitchToForgot }: LoginFormProps) => {
     setError("");
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
+      await enhancedSignIn(email, password);
       
       // Don't force redirect - let the role-based redirect handle it
       // The AuthContext and useRoleBasedRedirect will handle the appropriate redirect
