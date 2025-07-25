@@ -269,8 +269,25 @@ export const ExcuseGenerator = () => {
       const reason = selectedReason === 'Other' ? customReason : selectedReason;
 
       if (excuseType === 'pre-event') {
-        // Submit pre-event excuse
+        // Get event details
+        const selectedEventData = upcomingEvents.find(e => e.id === selectedEvent);
+        
+        // Submit to new excuse requests table
         const { error } = await supabase
+          .from('excuse_requests')
+          .insert({
+            user_id: user?.id,
+            event_id: selectedEvent,
+            event_date: selectedEventData?.start_date?.split('T')[0],
+            event_title: selectedEventData?.title || 'Unknown Event',
+            reason,
+            status: 'pending'
+          });
+
+        if (error) throw error;
+
+        // Also submit to legacy pre-event excuses table for backward compatibility
+        const { error: legacyError } = await supabase
           .from('gw_pre_event_excuses')
           .insert({
             user_id: user?.id,
@@ -280,9 +297,9 @@ export const ExcuseGenerator = () => {
             status: 'pending'
           });
 
-        if (error) throw error;
+        if (legacyError) console.warn('Legacy table insert failed:', legacyError);
       } else {
-        // Submit post-event excuse
+        // Submit post-event excuse (legacy system)
         const { error } = await supabase
           .from('gw_attendance_excuses')
           .insert({
@@ -311,7 +328,9 @@ export const ExcuseGenerator = () => {
 
       toast({
         title: "Excuse Submitted",
-        description: "Your excuse has been submitted for review",
+        description: excuseType === 'pre-event' 
+          ? "Your excuse request has been submitted to the secretary for review"
+          : "Your excuse has been submitted for review",
       });
 
       // Reset form

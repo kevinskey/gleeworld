@@ -21,6 +21,8 @@ import { TakeAttendance } from './TakeAttendance';
 import { MyAttendance } from './MyAttendance';
 import { AttendanceReports } from './AttendanceReports';
 import { ExcuseGenerator } from './ExcuseGenerator';
+import { ExcuseRequestManager } from './ExcuseRequestManager';
+import { MyExcuseRequests } from './MyExcuseRequests';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
@@ -162,6 +164,11 @@ export const AttendanceDashboard = () => {
               <MyAttendance />
             </div>
 
+            {/* My Excuse Requests */}
+            <div className="pt-4 border-t border-gray-200/50">
+              <MyExcuseRequests />
+            </div>
+
             {/* Excuse Generator */}
             <div className="pt-4 border-t border-gray-200/50">
               <ExcuseGenerator />
@@ -184,6 +191,11 @@ export const AttendanceDashboard = () => {
             <TakeAttendance />
           </div>
         </div>
+      )}
+
+      {/* Excuse Request Management - Secretary/Admin Section */}
+      {canTakeAttendance && (
+        <ExcuseRequestManager />
       )}
 
       {/* Admin Reports Section */}

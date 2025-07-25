@@ -1487,6 +1487,87 @@ export type Database = {
         }
         Relationships: []
       }
+      excuse_request_history: {
+        Row: {
+          changed_by: string
+          created_at: string
+          excuse_request_id: string
+          id: string
+          notes: string | null
+          status: string
+        }
+        Insert: {
+          changed_by: string
+          created_at?: string
+          excuse_request_id: string
+          id?: string
+          notes?: string | null
+          status: string
+        }
+        Update: {
+          changed_by?: string
+          created_at?: string
+          excuse_request_id?: string
+          id?: string
+          notes?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      excuse_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          event_date: string
+          event_id: string | null
+          event_title: string
+          forwarded_at: string | null
+          forwarded_by: string | null
+          id: string
+          reason: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          event_date: string
+          event_id?: string | null
+          event_title: string
+          forwarded_at?: string | null
+          forwarded_by?: string | null
+          id?: string
+          reason: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          event_date?: string
+          event_id?: string | null
+          event_title?: string
+          forwarded_at?: string | null
+          forwarded_by?: string | null
+          id?: string
+          reason?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       finance_records: {
         Row: {
           amount: number
