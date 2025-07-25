@@ -88,6 +88,7 @@ export const ExcuseGenerator = () => {
   const [selectedEvent, setSelectedEvent] = useState<string>('');
   const [selectedReason, setSelectedReason] = useState<string>('');
   const [customReason, setCustomReason] = useState<string>('');
+  const [detailedExplanation, setDetailedExplanation] = useState<string>('');
   const [excuseFile, setExcuseFile] = useState<File | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -267,6 +268,9 @@ export const ExcuseGenerator = () => {
       }
 
       const reason = selectedReason === 'Other' ? customReason : selectedReason;
+      const fullReason = detailedExplanation.trim() 
+        ? `${reason}\n\nDetailed Explanation: ${detailedExplanation}`
+        : reason;
 
       if (excuseType === 'pre-event') {
         // Get event details
@@ -280,7 +284,7 @@ export const ExcuseGenerator = () => {
             event_id: selectedEvent,
             event_date: selectedEventData?.start_date?.split('T')[0],
             event_title: selectedEventData?.title || 'Unknown Event',
-            reason,
+            reason: fullReason,
             status: 'pending'
           });
 
@@ -292,7 +296,7 @@ export const ExcuseGenerator = () => {
           .insert({
             user_id: user?.id,
             event_id: selectedEvent,
-            reason,
+            reason: fullReason,
             documentation_url: documentationUrl,
             status: 'pending'
           });
@@ -304,7 +308,7 @@ export const ExcuseGenerator = () => {
           .from('gw_attendance_excuses')
           .insert({
             attendance_id: selectedEvent,
-            reason,
+            reason: fullReason,
             documentation_url: documentationUrl,
             status: 'pending'
           });
@@ -337,6 +341,7 @@ export const ExcuseGenerator = () => {
       setSelectedEvent('');
       setSelectedReason('');
       setCustomReason('');
+      setDetailedExplanation('');
       setExcuseFile(null);
       setIsDialogOpen(false);
       
@@ -660,6 +665,24 @@ export const ExcuseGenerator = () => {
                             />
                           </div>
                         )}
+
+                        {/* Detailed Explanation - Always shown */}
+                        <div>
+                          <Label htmlFor="detailed-explanation">
+                            Detailed Explanation <span className="text-gray-500">(Optional)</span>
+                          </Label>
+                          <Textarea
+                            id="detailed-explanation"
+                            value={detailedExplanation}
+                            onChange={(e) => setDetailedExplanation(e.target.value)}
+                            placeholder="Please provide any additional details about your request that would help with the approval process..."
+                            rows={4}
+                            className="mt-1"
+                          />
+                          <p className="text-sm text-gray-500 mt-1">
+                            Include any relevant context, dates, documentation references, or other information that supports your request.
+                          </p>
+                        </div>
                         
                         <div>
                           <Label htmlFor="excuse-file">Upload Documentation (Optional)</Label>
