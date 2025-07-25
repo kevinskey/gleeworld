@@ -59,6 +59,12 @@ export const SendNotificationForm = () => {
         recipientId = recipientUser.user_id;
       }
 
+      // Get recipient email for email sending
+      let recipientEmail = user.email;
+      if (!formData.sendToSelf && formData.recipientEmail) {
+        recipientEmail = formData.recipientEmail;
+      }
+
       // Create notification using the stored procedure
       const { error } = await supabase.rpc('create_notification_with_delivery', {
         p_user_id: recipientId,
@@ -72,6 +78,37 @@ export const SendNotificationForm = () => {
       });
 
       if (error) throw error;
+
+      // Send email if requested
+      if (formData.sendEmail && recipientEmail) {
+        const { error: emailError } = await supabase.functions.invoke('gw-send-email', {
+          body: {
+            to: recipientEmail,
+            subject: `GleeWorld Notification: ${formData.title}`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #333; margin-bottom: 20px;">${formData.title}</h2>
+                <p style="margin-bottom: 20px; line-height: 1.6;">${formData.message}</p>
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+                <p style="color: #666; font-size: 12px; text-align: center;">
+                  This notification was sent from GleeWorld.org
+                </p>
+              </div>
+            `,
+            text: `${formData.title}\n\n${formData.message}\n\nThis notification was sent from GleeWorld.org`
+          }
+        });
+
+        if (emailError) {
+          console.error('Email sending error:', emailError);
+          toast({
+            title: "Partial success",
+            description: "Notification created but email failed to send.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
 
       toast({
         title: "Notification sent!",
