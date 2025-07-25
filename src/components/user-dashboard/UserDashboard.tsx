@@ -314,7 +314,7 @@ export const UserDashboard = () => {
           
           {/* Compact Welcome Card */}
           <div 
-            className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 rounded-3xl shadow-lg py-4 px-6"
+            className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 rounded-3xl shadow-lg py-8 px-6 min-h-[200px] flex items-center"
             style={welcomeCardSetting?.image_url ? {
               backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${welcomeCardSetting.image_url})`,
               backgroundSize: 'cover',
