@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 
 interface WelcomeCardProps {
   displayName: string;
@@ -15,6 +15,7 @@ interface WelcomeCardProps {
 export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
   const { getSettingByName } = useDashboardSettings();
   const welcomeCardSetting = getSettingByName('welcome_card_background');
+  const [imageError, setImageError] = useState(false);
 
   const getUserTitle = () => {
     const role = profile?.role;
@@ -30,7 +31,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
 
   // Memoize values to prevent re-renders causing blinking
   const backgroundStyles = useMemo(() => {
-    if (!welcomeCardSetting?.image_url) return {};
+    if (!welcomeCardSetting?.image_url || imageError) return {};
     
     return {
       backgroundImage: `url("${welcomeCardSetting.image_url}")`,
@@ -38,18 +39,28 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat'
     };
-  }, [welcomeCardSetting?.image_url]);
+  }, [welcomeCardSetting?.image_url, imageError]);
 
-  const hasBackgroundImage = Boolean(welcomeCardSetting?.image_url);
+  const hasBackgroundImage = Boolean(welcomeCardSetting?.image_url && !imageError);
 
   return (
     <div className="relative overflow-hidden rounded-3xl shadow-lg min-h-[200px] flex items-center">
       {/* Background Image Layer */}
       {hasBackgroundImage && (
-        <div 
-          className="absolute inset-0"
-          style={backgroundStyles}
-        />
+        <>
+          <div 
+            className="absolute inset-0"
+            style={backgroundStyles}
+          />
+          {/* Hidden img element to detect load errors */}
+          <img
+            src={welcomeCardSetting?.image_url}
+            alt=""
+            className="hidden"
+            onError={() => setImageError(true)}
+            onLoad={() => setImageError(false)}
+          />
+        </>
       )}
       
       {/* Background Gradient Layer (fallback or overlay) */}
