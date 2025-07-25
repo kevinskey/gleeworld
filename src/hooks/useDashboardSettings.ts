@@ -41,12 +41,14 @@ export const useDashboardSettings = () => {
     try {
       const { error } = await supabase
         .from('dashboard_settings')
-        .update({
+        .upsert({
+          setting_name: settingName,
           setting_value: settingValue,
           image_url: imageUrl,
           updated_at: new Date().toISOString()
-        })
-        .eq('setting_name', settingName);
+        }, {
+          onConflict: 'setting_name'
+        });
 
       if (error) throw error;
 
