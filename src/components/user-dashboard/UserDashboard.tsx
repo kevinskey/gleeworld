@@ -45,6 +45,7 @@ import { DashboardSettings } from "@/components/admin/DashboardSettings";
 import { YouTubeManagement } from "@/components/admin/YouTubeManagement";
 import { UsernamePermissionsManager } from "@/components/admin/UsernamePermissionsManager";
 import { SpotlightManagement } from "@/components/admin/spotlight/SpotlightManagement";
+import { WelcomeCard } from "./WelcomeCard";
 
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -94,8 +95,6 @@ export const UserDashboard = () => {
   });
   const userRole = profile?.role || 'user';
   const userEmail = user?.email || '';
-  const welcomeCardSetting = getSettingByName('welcome_card_background');
-  console.log('Welcome Card Setting:', welcomeCardSetting);
 
   // Get available modules for this user
   const getAvailableModules = () => {
@@ -252,19 +251,6 @@ export const UserDashboard = () => {
 
   // Get user's actual name from profile, fallback to email username
   const displayName = profile?.full_name || user.email?.split('@')[0] || 'Member';
-  
-  // Get user's role for title display
-  const getUserTitle = () => {
-    const role = profile?.role;
-    switch (role) {
-      case 'super-admin':
-        return 'Super Admin';
-      case 'admin':
-        return 'Admin';
-      default:
-        return 'Member';
-    }
-  };
 
   // Get real data
   const upcomingEventsList = getUpcomingEvents(6);
@@ -314,26 +300,10 @@ export const UserDashboard = () => {
         <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6 space-y-4 sm:space-y-6">
           
           {/* Compact Welcome Card */}
-          <div 
-            className="relative overflow-hidden rounded-3xl shadow-lg py-8 px-6 min-h-[200px] flex items-center"
-            style={{
-              background: welcomeCardSetting?.image_url 
-                ? `linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url("${welcomeCardSetting.image_url}")` 
-                : 'linear-gradient(135deg, #8b5cf6, #3b82f6, #4f46e5)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat'
-            }}
-          >
-            <div className="relative text-center w-full">
-              <h1 className="text-xl font-medium text-white drop-shadow-lg">
-                Welcome back {displayName}!
-              </h1>
-              <p className="text-white/90 text-sm mt-1 drop-shadow">
-                {[profile?.exec_board_role, profile?.voice_part].filter(Boolean).join(', ') || getUserTitle()} • Member since {profile?.created_at ? format(new Date(profile.created_at), 'MMMM yyyy') : 'Recently'}
-              </p>
-            </div>
-          </div>
+          <WelcomeCard 
+            displayName={displayName}
+            profile={profile}
+          />
 
           {/* Grid Layout: Quick Actions & Admin Controls/Glee Club Spotlight */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
