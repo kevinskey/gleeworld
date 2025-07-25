@@ -24,6 +24,7 @@ import { ExcuseGenerator } from './ExcuseGenerator';
 import { ExcuseRequestManager } from './ExcuseRequestManager';
 import { ExcuseRequestApproval } from './ExcuseRequestApproval';
 import { MyExcuseRequests } from './MyExcuseRequests';
+import ClassScheduleManager from './ClassScheduleManager';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
@@ -181,6 +182,11 @@ export const AttendanceDashboard = () => {
                 // Reload the page or refresh the request list
                 window.location.reload();
               }} />
+            </div>
+
+            {/* Class Schedule Manager */}
+            <div className="pt-4 border-t border-gray-200/50">
+              <ClassScheduleManager />
             </div>
           </div>
         )}

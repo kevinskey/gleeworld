@@ -2296,6 +2296,57 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_class_schedules: {
+        Row: {
+          academic_year: string
+          class_name: string
+          course_number: string
+          created_at: string
+          days_of_week: string[]
+          end_time: string
+          id: string
+          is_active: boolean
+          professor_name: string | null
+          room_location: string | null
+          semester: string
+          start_time: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          academic_year?: string
+          class_name: string
+          course_number: string
+          created_at?: string
+          days_of_week: string[]
+          end_time: string
+          id?: string
+          is_active?: boolean
+          professor_name?: string | null
+          room_location?: string | null
+          semester?: string
+          start_time: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          academic_year?: string
+          class_name?: string
+          course_number?: string
+          created_at?: string
+          days_of_week?: string[]
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          professor_name?: string | null
+          room_location?: string | null
+          semester?: string
+          start_time?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_event_attendance: {
         Row: {
           attendance_status: string
