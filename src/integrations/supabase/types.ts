@@ -2177,6 +2177,92 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_attendance_qr_codes: {
+        Row: {
+          created_at: string
+          event_id: string
+          expires_at: string
+          generated_at: string
+          generated_by: string
+          id: string
+          is_active: boolean
+          location_data: Json | null
+          max_scans: number | null
+          qr_token: string
+          scan_count: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          expires_at: string
+          generated_at?: string
+          generated_by: string
+          id?: string
+          is_active?: boolean
+          location_data?: Json | null
+          max_scans?: number | null
+          qr_token: string
+          scan_count?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          expires_at?: string
+          generated_at?: string
+          generated_by?: string
+          id?: string
+          is_active?: boolean
+          location_data?: Json | null
+          max_scans?: number | null
+          qr_token?: string
+          scan_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gw_attendance_qr_scans: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          qr_code_id: string
+          scan_location: Json | null
+          scanned_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          qr_code_id: string
+          scan_location?: Json | null
+          scanned_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          qr_code_id?: string
+          scan_location?: Json | null
+          scanned_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_attendance_qr_scans_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "gw_attendance_qr_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_audio_files: {
         Row: {
           bitrate: number | null
@@ -6587,6 +6673,10 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: boolean
       }
+      generate_qr_token: {
+        Args: { event_id_param: string }
+        Returns: string
+      }
       generate_sheet_music_filename: {
         Args: {
           p_title: string
@@ -6724,6 +6814,16 @@ export type Database = {
       mark_notification_read: {
         Args: { p_notification_id: string }
         Returns: boolean
+      }
+      process_qr_attendance_scan: {
+        Args: {
+          qr_token_param: string
+          user_id_param: string
+          scan_location_param?: Json
+          user_agent_param?: string
+          ip_address_param?: unknown
+        }
+        Returns: Json
       }
       secure_update_user_role: {
         Args: { target_user_id: string; new_role: string; reason?: string }

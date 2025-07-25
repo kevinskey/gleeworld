@@ -18,8 +18,10 @@ import {
   AlertTriangle, 
   Calendar,
   Save,
-  RefreshCw
+  RefreshCw,
+  QrCode
 } from 'lucide-react';
+import { QRAttendanceDisplay } from './QRAttendanceDisplay';
 
 interface GleeEvent {
   id: string;
@@ -428,6 +430,23 @@ export const TakeAttendance = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* QR Code Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <QrCode className="h-5 w-5" />
+                QR Code Attendance
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <QRAttendanceDisplay
+                eventId={selectedEvent}
+                eventTitle={events.find(e => e.id === selectedEvent)?.title || 'Event'}
+                onScanUpdate={loadEventMembers}
+              />
+            </CardContent>
+          </Card>
 
           {/* Members List */}
           <Card>
