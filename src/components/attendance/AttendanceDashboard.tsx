@@ -15,7 +15,8 @@ import {
   TrendingUp,
   Award,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  BookOpen
 } from 'lucide-react';
 import { TakeAttendance } from './TakeAttendance';
 import { MyAttendance } from './MyAttendance';
@@ -35,6 +36,7 @@ export const AttendanceDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [canTakeAttendance, setCanTakeAttendance] = useState(false);
   const [userSectionCollapsed, setUserSectionCollapsed] = useState(false);
+  const [classScheduleCollapsed, setClassScheduleCollapsed] = useState(false);
   const [stats, setStats] = useState({
     myAttendance: 0,
     eventsThisWeek: 0,
@@ -183,11 +185,40 @@ export const AttendanceDashboard = () => {
                 window.location.reload();
               }} />
             </div>
+          </div>
+        )}
+      </div>
 
-            {/* Class Schedule Manager */}
-            <div className="pt-4 border-t border-gray-200/50">
-              <ClassScheduleManager />
-            </div>
+      {/* Class Schedule Manager - Separate Collapsible Section */}
+      <div className="bg-white/50 backdrop-blur-sm rounded-xl border">
+        <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200/50">
+          <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+            <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="truncate">Class Schedule Manager</span>
+          </h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setClassScheduleCollapsed(!classScheduleCollapsed)}
+            className="flex items-center gap-1"
+          >
+            {classScheduleCollapsed ? (
+              <>
+                <span className="text-sm">Show</span>
+                <ChevronDown className="h-4 w-4" />
+              </>
+            ) : (
+              <>
+                <span className="text-sm">Hide</span>
+                <ChevronUp className="h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </div>
+        
+        {!classScheduleCollapsed && (
+          <div className="p-3 sm:p-6">
+            <ClassScheduleManager />
           </div>
         )}
       </div>
