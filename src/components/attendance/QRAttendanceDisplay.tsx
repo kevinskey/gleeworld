@@ -118,8 +118,8 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
 
     setGenerating(true);
     try {
-      // Generate new QR token using the database function (will be updated to secure version after types refresh)
-      const { data: tokenData, error: tokenError } = await supabase.rpc('generate_qr_token', {
+      // Generate new QR token using secure function (will use v2 after types refresh)
+      const { data: tokenData, error: tokenError } = await supabase.rpc('generate_secure_qr_token', {
         event_id_param: eventId
       });
 

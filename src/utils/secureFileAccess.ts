@@ -77,12 +77,22 @@ export const getSecureFileUrl = async ({
 export const sanitizeInput = (input: string): string => {
   if (!input) return '';
   
-  // Remove HTML tags, scripts, and encode special characters
+  // Enhanced input sanitization with comprehensive XSS protection
   return input
-    .replace(/<script[^>]*>.*?<\/script>/gi, '') // Remove script tags
-    .replace(/<[^>]*>/g, '') // Remove all HTML tags
-    .replace(/javascript:/gi, '') // Remove javascript: protocols
-    .replace(/on\w+\s*=/gi, '') // Remove event handlers
+    // Remove script tags and their content
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    // Remove event handlers like onclick, onload, etc.
+    .replace(/\s*on[a-z]+\s*=\s*["'][^"']*["']/gi, '')
+    .replace(/\s*on[a-z]+\s*=\s*[^>\s]+/gi, '')
+    // Remove javascript: URLs
+    .replace(/javascript:/gi, '')
+    // Remove data: URLs with javascript
+    .replace(/data:[^;]*;[^,]*,.*javascript/gi, '')
+    // Remove style attributes that could contain expressions
+    .replace(/style\s*=\s*["'][^"']*expression[^"']*["']/gi, '')
+    // Remove all HTML tags (more comprehensive)
+    .replace(/<[^>]*>/g, '')
+    // Encode dangerous characters
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
