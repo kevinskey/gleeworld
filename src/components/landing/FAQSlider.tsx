@@ -122,7 +122,7 @@ export const FAQSlider = () => {
                 FAQ
               </span>
             </div>
-            <div className="bg-primary rounded-3xl p-4 md:p-6 max-w-4xl mx-auto">
+            <div className="bg-primary rounded-xl p-4 md:p-6 max-w-4xl mx-auto">
               <div className="flex items-center space-x-2 md:space-x-4 mb-3 md:mb-4">
                 <div className="bg-background rounded-full w-8 h-8 md:w-12 md:h-12 flex items-center justify-center">
                   <span className="text-sm md:text-xl font-bold text-primary">Q</span>
@@ -132,7 +132,7 @@ export const FAQSlider = () => {
                 </h3>
               </div>
             </div>
-            <div className="bg-background border-2 border-primary rounded-3xl p-4 md:p-6 max-w-4xl mx-auto">
+            <div className="bg-background border-2 border-primary rounded-xl p-4 md:p-6 max-w-4xl mx-auto">
               <div className="flex items-start space-x-2 md:space-x-4">
                 <div className="bg-primary rounded-full w-8 h-8 md:w-12 md:h-12 flex items-center justify-center flex-shrink-0">
                   <span className="text-sm md:text-xl font-bold text-white">A</span>
