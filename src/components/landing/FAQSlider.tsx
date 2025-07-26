@@ -116,26 +116,26 @@ export const FAQSlider = () => {
 
       case "qa":
         return (
-          <div className="space-y-8">
+          <div className="space-y-4 md:space-y-8 pt-8 md:pt-4">
             <div className="text-center">
-              <span className="text-6xl md:text-7xl font-bold text-primary opacity-20">
+              <span className="text-4xl md:text-7xl font-bold text-primary opacity-20">
                 FAQ
               </span>
             </div>
-            <div className="bg-primary rounded-xl p-6 max-w-4xl mx-auto">
-              <div className="flex items-center space-x-4 mb-4">
-                <div className="bg-background rounded-full w-12 h-12 flex items-center justify-center">
-                  <span className="text-xl font-bold text-primary">Q</span>
+            <div className="bg-primary rounded-xl p-4 md:p-6 max-w-4xl mx-auto">
+              <div className="flex items-center space-x-2 md:space-x-4 mb-3 md:mb-4">
+                <div className="bg-background rounded-full w-8 h-8 md:w-12 md:h-12 flex items-center justify-center">
+                  <span className="text-sm md:text-xl font-bold text-primary">Q</span>
                 </div>
-                <h3 className="text-xl md:text-2xl font-semibold text-white">
+                <h3 className="text-sm md:text-2xl font-semibold text-white">
                   {currentData.question}
                 </h3>
               </div>
             </div>
-            <div className="bg-background border-2 border-primary rounded-xl p-6 max-w-4xl mx-auto">
-              <div className="flex items-start space-x-4">
-                <div className="bg-primary rounded-full w-12 h-12 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xl font-bold text-white">A</span>
+            <div className="bg-background border-2 border-primary rounded-xl p-4 md:p-6 max-w-4xl mx-auto">
+              <div className="flex items-start space-x-2 md:space-x-4">
+                <div className="bg-primary rounded-full w-8 h-8 md:w-12 md:h-12 flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm md:text-xl font-bold text-white">A</span>
                 </div>
                 <p className="text-xs md:text-lg text-foreground leading-relaxed">
                   {currentData.answer}
