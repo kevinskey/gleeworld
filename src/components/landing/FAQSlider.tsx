@@ -177,7 +177,7 @@ export const FAQSlider = () => {
       <div className="container mx-auto px-4 relative z-10">
         <div className="relative">
           {/* Slide Content */}
-          <div className="h-[200px] md:h-[450px] flex items-center justify-center">
+          <div className="h-[250px] md:h-[500px] flex items-center justify-center">
             {renderSlideContent()}
           </div>
 
