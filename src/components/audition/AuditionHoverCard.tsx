@@ -3,8 +3,10 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { Button } from "@/components/ui/button";
 import { Mic, Calendar, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const AuditionHoverCard = () => {
+  const { user } = useAuth();
   return (
     <div className="fixed top-20 md:top-24 left-1/2 transform -translate-x-1/2 z-40">
       <HoverCard>
@@ -43,7 +45,7 @@ export const AuditionHoverCard = () => {
               </div>
             </div>
             
-            <Link to="/auth?redirect=/auditions" className="block">
+            <Link to={user ? "/auditions" : "/auth?redirect=/auditions"} className="block">
               <Button className="w-full bg-gradient-to-r from-spelman-blue-dark to-spelman-blue-light hover:from-spelman-blue-dark/90 hover:to-spelman-blue-light/90 text-white font-semibold">
                 Get Started Now
               </Button>
