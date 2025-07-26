@@ -52,6 +52,7 @@ import { FeedbackDashboard } from "./modules/rehearsals/feedback-dashboard/Feedb
 import AlumnaeLanding from "./pages/AlumnaeLanding";
 import AlumnaeAdmin from "./pages/admin/AlumnaeAdmin";
 import SendNotificationPage from "./pages/SendNotificationPage";
+import AuditionPage from "./pages/AuditionPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -419,14 +420,22 @@ const App = () => {
                            </ProtectedRoute>
                          } 
                        />
-                       <Route 
-                         path="/admin/alumnae" 
-                         element={
-                           <ProtectedRoute>
-                             <AlumnaeAdmin />
-                           </ProtectedRoute>
-                         } 
-                       />
+                        <Route 
+                          path="/admin/alumnae" 
+                          element={
+                            <ProtectedRoute>
+                              <AlumnaeAdmin />
+                            </ProtectedRoute>
+                          } 
+                        />
+                        <Route 
+                          path="/auditions" 
+                          element={
+                            <ProtectedRoute>
+                              <AuditionPage />
+                            </ProtectedRoute>
+                          } 
+                        />
                    <Route 
                      path="/landing"
                     element={

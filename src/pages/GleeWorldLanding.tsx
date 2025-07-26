@@ -11,6 +11,7 @@ import { AlbumModal } from "@/components/music/AlbumModal";
 import { YoutubeVideoSection } from "@/components/youtube/YoutubeVideoSection";
 import { FAQSlider } from "@/components/landing/FAQSlider";
 import { CountdownTimer } from "@/components/landing/CountdownTimer";
+import { AuditionHoverCard } from "@/components/audition/AuditionHoverCard";
 import { 
   Calendar, 
   MapPin,
@@ -225,6 +226,8 @@ export const GleeWorldLanding = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Audition Hover Card */}
+      <AuditionHoverCard />
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-white/20 shadow-lg sticky top-0 z-50">
         <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-3">

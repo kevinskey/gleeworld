@@ -2248,6 +2248,93 @@ export type Database = {
           },
         ]
       }
+      gw_auditions: {
+        Row: {
+          additional_info: string | null
+          audition_date: string
+          audition_time: string
+          created_at: string
+          email: string
+          first_name: string
+          high_school_section: string | null
+          high_school_years: string | null
+          id: string
+          instrument_details: string | null
+          interested_in_leadership: boolean
+          interested_in_music_fundamentals: boolean
+          interested_in_voice_lessons: boolean
+          is_soloist: boolean
+          last_name: string
+          personality_description: string
+          phone: string
+          plays_instrument: boolean
+          reads_music: boolean
+          sang_in_high_school: boolean
+          sang_in_middle_school: boolean
+          selfie_url: string | null
+          soloist_rating: number | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          additional_info?: string | null
+          audition_date: string
+          audition_time: string
+          created_at?: string
+          email: string
+          first_name: string
+          high_school_section?: string | null
+          high_school_years?: string | null
+          id?: string
+          instrument_details?: string | null
+          interested_in_leadership?: boolean
+          interested_in_music_fundamentals?: boolean
+          interested_in_voice_lessons?: boolean
+          is_soloist?: boolean
+          last_name: string
+          personality_description: string
+          phone: string
+          plays_instrument?: boolean
+          reads_music?: boolean
+          sang_in_high_school?: boolean
+          sang_in_middle_school?: boolean
+          selfie_url?: string | null
+          soloist_rating?: number | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          additional_info?: string | null
+          audition_date?: string
+          audition_time?: string
+          created_at?: string
+          email?: string
+          first_name?: string
+          high_school_section?: string | null
+          high_school_years?: string | null
+          id?: string
+          instrument_details?: string | null
+          interested_in_leadership?: boolean
+          interested_in_music_fundamentals?: boolean
+          interested_in_voice_lessons?: boolean
+          is_soloist?: boolean
+          last_name?: string
+          personality_description?: string
+          phone?: string
+          plays_instrument?: boolean
+          reads_music?: boolean
+          sang_in_high_school?: boolean
+          sang_in_middle_school?: boolean
+          selfie_url?: string | null
+          soloist_rating?: number | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_calendars: {
         Row: {
           color: string
