@@ -51,12 +51,14 @@ serve(async (req) => {
     for (const user of users) {
       // Insert notification record
       const { data: notification, error: notificationError } = await supabase
-        .from('gw_event_rsvps')
+        .from('gw_notifications')
         .insert({
-          event_id: eventId,
           user_id: user.id,
-          status: 'pending',
-          notes: message || `You've been invited to ${eventTitle}`
+          title: `Event Invitation: ${eventTitle}`,
+          message: message || `You've been invited to ${eventTitle}`,
+          type: 'info',
+          category: 'event',
+          metadata: { event_id: eventId }
         })
         .select()
         .single();
