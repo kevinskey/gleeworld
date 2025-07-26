@@ -176,24 +176,6 @@ export const FAQSlider = () => {
             {renderSlideContent()}
           </div>
 
-          {/* Navigation Arrows */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background shadow-lg"
-            onClick={prevSlide}
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background shadow-lg"
-            onClick={nextSlide}
-          >
-            <ChevronRight className="w-6 h-6" />
-          </Button>
         </div>
 
       </div>
