@@ -147,15 +147,15 @@ export const FAQSlider = () => {
 
       case "closing":
         return (
-          <div className="text-center space-y-8">
-            <div className="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-8 max-w-3xl mx-auto">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <div className="text-center space-y-4 md:space-y-8 pt-8 md:pt-4">
+            <div className="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-4 md:p-8 max-w-3xl mx-auto">
+              <h2 className="text-lg md:text-4xl font-bold text-white mb-2 md:mb-4">
                 {currentData.title}
               </h2>
-              <p className="text-xl text-white/90 mb-4">
+              <p className="text-sm md:text-xl text-white/90 mb-2 md:mb-4">
                 {currentData.subtitle}
               </p>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-base md:text-2xl font-bold text-white">
                 {currentData.handle}
               </p>
             </div>
