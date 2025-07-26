@@ -70,13 +70,16 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
   const hasBackgroundImage = Boolean(welcomeCardSetting?.image_url && !imageError);
 
   return (
-    <div className="relative overflow-hidden rounded-3xl shadow-lg min-h-[200px] flex items-center">
+    <div className="relative overflow-hidden rounded-3xl shadow-lg min-h-[200px] sm:min-h-[240px] flex items-center">
       {/* Background Image Layer */}
       {hasBackgroundImage && (
         <>
           <div 
-            className="absolute inset-0"
-            style={backgroundStyles}
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: `url("${welcomeCardSetting?.image_url}")`,
+              backgroundAttachment: 'scroll' // Better for mobile
+            }}
           />
           {/* Hidden img element to detect load errors */}
           <img
@@ -92,8 +95,8 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
       {/* Background Gradient Layer (fallback or overlay) */}
       <div 
         className={`absolute inset-0 ${hasBackgroundImage 
-          ? 'bg-black/30' 
-          : 'bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700'
+          ? 'bg-black/40 sm:bg-black/30' 
+          : 'bg-gradient-to-r from-spelman-blue-dark via-spelman-blue-light to-spelman-blue-dark'
         }`}
       />
       
