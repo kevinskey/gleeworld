@@ -168,7 +168,21 @@ export const FAQSlider = () => {
   };
 
   return (
-    <section className="w-full bg-gradient-to-br from-primary/20 via-primary/10 to-background border-b border-primary/20 shadow-lg py-16">
+    <section className="w-full relative overflow-hidden py-16">
+      {/* Dynamic geometric background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-primary/5"></div>
+      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-primary/5 to-primary/15"></div>
+      
+      {/* Geometric pattern overlay */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-10 left-10 w-32 h-32 bg-primary/20 rounded-full blur-xl"></div>
+        <div className="absolute top-40 right-20 w-24 h-24 bg-primary/15 rounded-full blur-lg"></div>
+        <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-primary/10 rounded-full blur-2xl"></div>
+        <div className="absolute bottom-10 right-10 w-28 h-28 bg-primary/25 rounded-full blur-xl"></div>
+      </div>
+      
+      {/* Border and shadow */}
+      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
       <div className="container mx-auto px-4">
         <div className="relative">
           {/* Slide Content */}
