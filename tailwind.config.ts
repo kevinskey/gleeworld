@@ -32,6 +32,9 @@ export default {
 		extend: {
 			fontFamily: {
 				'dancing': ['Dancing Script', 'cursive'],
+				'bebas': ['Bebas Neue', 'cursive'],
+				'roboto': ['Roboto', 'sans-serif'],
+				'sans': ['Roboto', 'system-ui', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',

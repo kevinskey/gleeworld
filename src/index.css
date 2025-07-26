@@ -7,12 +7,16 @@
 
 @layer base {
   :root {
-    /* Primary Brand Color - #11448B */
-    --primary: 219 78% 31%; /* #11448B converted to HSL */
+    /* Spelman College Official Colors */
+    --spelman-blue-dark: 210 75% 30%; /* #114488 (PMS 7687 C) */
+    --spelman-blue-light: 203 85% 63%; /* #55BBEE (PMS 298 C) */
+    
+    /* Primary Brand Color - Spelman Dark Blue */
+    --primary: var(--spelman-blue-dark);
     --primary-foreground: 0 0% 100%; /* White text */
 
-    /* Secondary Accent - #55BBEE */
-    --secondary: 203 85% 63%; /* #55BBEE converted to HSL */
+    /* Secondary Accent - Spelman Light Blue */
+    --secondary: var(--spelman-blue-light);
     --secondary-foreground: 0 0% 100%; /* White text */
     
     /* Neutrals - Softer backgrounds for better contrast */
@@ -28,7 +32,7 @@
     --muted: 210 20% 94%; /* Light gray background - more contrast */
     --muted-foreground: 0 0% 25%; /* Darker secondary text for better readability */
 
-    --accent: 203 85% 63%; /* #55BBEE accent */
+    --accent: var(--spelman-blue-light); /* Spelman light blue accent */
     --accent-foreground: 0 0% 100%; /* White text */
 
     --destructive: 0 84% 60%;
@@ -36,7 +40,7 @@
 
     --border: 0 0% 85%; /* Slightly darker borders for better definition */
     --input: 0 0% 97%; /* Soft off-white input background */
-    --ring: 203 85% 63%; /* #55BBEE focus ring */
+    --ring: var(--spelman-blue-light); /* Spelman light blue focus ring */
 
     --radius: 0.75rem;
 
@@ -96,16 +100,16 @@
     --popover: 0 0% 98%;
     --popover-foreground: 0 0% 9%;
 
-    --primary: 219 78% 31%;
+    --primary: var(--spelman-blue-dark);
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 203 85% 63%;
+    --secondary: var(--spelman-blue-light);
     --secondary-foreground: 0 0% 100%;
 
     --muted: 210 20% 94%;
     --muted-foreground: 0 0% 25%;
 
-    --accent: 203 85% 63%;
+    --accent: var(--spelman-blue-light);
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -113,7 +117,7 @@
 
     --border: 0 0% 85%;
     --input: 0 0% 97%;
-    --ring: 203 85% 63%;
+    --ring: var(--spelman-blue-light);
   }
 }
 
@@ -124,6 +128,13 @@
 
   body {
     @apply bg-background text-foreground min-h-screen;
+    font-family: 'Roboto', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Bebas Neue', cursive;
+    font-weight: 400;
+    letter-spacing: 0.025em;
   }
 }
 

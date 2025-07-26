@@ -22,7 +22,7 @@ export const ResponsiveContainer = ({
   };
 
   return (
-    <div className={`w-full ${maxWidthClasses[maxWidth]} mx-auto px-1.5 sm:px-4 lg:px-6 ${className}`}>
+    <div className={`w-full ${maxWidthClasses[maxWidth]} mx-auto px-2 sm:px-3 lg:px-4 ${className}`}>
       {children}
     </div>
   );
