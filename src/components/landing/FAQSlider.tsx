@@ -196,32 +196,6 @@ export const FAQSlider = () => {
           </Button>
         </div>
 
-        {/* Slide Indicators */}
-        <div className="flex justify-center space-x-2 mt-8">
-          {faqData.map((_, index) => (
-            <button
-              key={index}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                index === currentSlide
-                  ? "bg-primary scale-125"
-                  : "bg-primary/30 hover:bg-primary/50"
-              }`}
-              onClick={() => goToSlide(index)}
-            />
-          ))}
-        </div>
-
-        {/* Auto-play indicator */}
-        <div className="flex justify-center mt-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-sm text-muted-foreground"
-            onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-          >
-            {isAutoPlaying ? "Pause Auto-play" : "Resume Auto-play"}
-          </Button>
-        </div>
       </div>
     </section>
   );
