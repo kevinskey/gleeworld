@@ -168,13 +168,8 @@ export const FAQSlider = () => {
   };
 
   return (
-    <section className="w-full bg-gradient-to-br from-primary/20 via-primary/10 to-background border-b border-primary/20 shadow-lg py-16 relative overflow-hidden">
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
-        style={{ backgroundImage: "url('/lovable-uploads/a9635c29-a390-4d5c-be2e-682b5d8fe2c0.png')" }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-background/40" />
-      <div className="container mx-auto px-4 relative z-10">
+    <section className="w-full bg-gradient-to-br from-primary/20 via-primary/10 to-background border-b border-primary/20 shadow-lg py-16">
+      <div className="container mx-auto px-4">
         <div className="relative">
           {/* Slide Content */}
           <div className="h-[250px] md:h-[500px] flex items-center justify-center">
