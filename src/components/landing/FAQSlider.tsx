@@ -103,11 +103,11 @@ export const FAQSlider = () => {
                 <Music className="w-8 h-8" />
               </div>
             )}
-            <h1 className="text-4xl md:text-5xl font-bold text-primary">
+            <h1 className="text-2xl md:text-5xl font-bold text-primary">
               {currentData.title}
             </h1>
             <div className="bg-primary/10 rounded-xl p-8 max-w-2xl mx-auto">
-              <h2 className="text-2xl md:text-3xl font-semibold text-primary">
+              <h2 className="text-lg md:text-3xl font-semibold text-primary">
                 {currentData.subtitle}
               </h2>
             </div>
