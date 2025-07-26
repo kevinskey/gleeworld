@@ -168,7 +168,7 @@ export const FAQSlider = () => {
   };
 
   return (
-    <section className="w-full bg-gradient-to-b from-primary/5 to-background py-16">
+    <section className="w-full bg-gradient-to-br from-primary/20 via-primary/10 to-background border-b border-primary/20 shadow-lg py-16">
       <div className="container mx-auto px-4">
         <div className="relative">
           {/* Slide Content */}
