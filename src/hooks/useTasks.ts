@@ -251,8 +251,8 @@ export const useTasks = () => {
       .subscribe();
 
     return () => {
-      tasksSubscription.unsubscribe();
-      notificationsSubscription.unsubscribe();
+      supabase.removeChannel(tasksSubscription);
+      supabase.removeChannel(notificationsSubscription);
     };
   }, []);
 

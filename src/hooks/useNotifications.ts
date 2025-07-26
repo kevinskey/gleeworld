@@ -175,8 +175,9 @@ export const useNotifications = () => {
   useEffect(() => {
     if (!user) return;
 
+    const channelName = `notifications-${user.id}-${Date.now()}`;
     const channel = supabase
-      .channel('notifications')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
