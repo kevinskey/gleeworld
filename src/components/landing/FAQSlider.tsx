@@ -70,7 +70,7 @@ export const FAQSlider = () => {
     
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % faqData.length);
-    }, 5000);
+    }, 7000);
 
     return () => clearInterval(interval);
   }, [isAutoPlaying]);
@@ -172,7 +172,7 @@ export const FAQSlider = () => {
       <div className="container mx-auto px-4">
         <div className="relative">
           {/* Slide Content */}
-          <div className="min-h-[250px] md:min-h-[300px] flex items-center justify-center">
+          <div className="h-[400px] md:h-[450px] flex items-center justify-center">
             {renderSlideContent()}
           </div>
 
