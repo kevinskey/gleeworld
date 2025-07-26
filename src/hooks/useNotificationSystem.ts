@@ -19,15 +19,15 @@ export const useNotificationSystem = () => {
     try {
       // First, create the notification in the database
       const { data: notification, error: notificationError } = await supabase
-        .from('user_notifications')
+        .from('gw_notifications')
         .insert([{
           user_id: params.user_id,
           title: params.title,
           message: params.message,
           type: params.type || 'info',
-          related_contract_id: params.related_contract_id,
-          is_read: false,
-          created_by: (await supabase.auth.getUser()).data.user?.id
+          category: 'general',
+          metadata: params.related_contract_id ? { contract_id: params.related_contract_id } : {},
+          priority: 0
         }])
         .select()
         .single();
@@ -61,6 +61,22 @@ export const useNotificationSystem = () => {
         // Continue without profile - no SMS will be sent
       }
 
+      // Create delivery log for SMS if requested
+      if (params.sendSMS || preferences?.sms_enabled) {
+        const { error: deliveryLogError } = await supabase
+          .from('gw_notification_delivery_log')
+          .insert({
+            notification_id: notification.id,
+            user_id: params.user_id,
+            delivery_method: 'sms',
+            status: 'pending'
+          });
+
+        if (deliveryLogError) {
+          console.error('Error creating SMS delivery log:', deliveryLogError);
+        }
+      }
+
       // Send SMS if enabled and phone number available
       if (
         (params.sendSMS || preferences?.sms_enabled) &&
@@ -81,11 +97,39 @@ export const useNotificationSystem = () => {
 
           if (smsError) {
             console.error('Error sending SMS:', smsError);
+            // Update delivery log with error
+            await supabase
+              .from('gw_notification_delivery_log')
+              .update({
+                status: 'failed',
+                error_message: smsError.message
+              })
+              .eq('notification_id', notification.id)
+              .eq('delivery_method', 'sms');
           } else if (smsData?.success) {
             console.log('SMS sent successfully for notification:', notification.id);
+            // Update delivery log with success
+            await supabase
+              .from('gw_notification_delivery_log')
+              .update({
+                status: 'sent',
+                sent_at: new Date().toISOString(),
+                external_id: smsData.sid
+              })
+              .eq('notification_id', notification.id)
+              .eq('delivery_method', 'sms');
           }
         } catch (smsError) {
           console.error('Error in SMS sending process:', smsError);
+          // Update delivery log with error
+          await supabase
+            .from('gw_notification_delivery_log')
+            .update({
+              status: 'failed',
+              error_message: 'SMS sending failed'
+            })
+            .eq('notification_id', notification.id)
+            .eq('delivery_method', 'sms');
         }
       }
 
@@ -126,7 +170,7 @@ export const useNotificationSystem = () => {
   const markNotificationAsRead = async (notificationId: string) => {
     try {
       const { error } = await supabase
-        .from('user_notifications')
+        .from('gw_notifications')
         .update({ is_read: true })
         .eq('id', notificationId);
 
