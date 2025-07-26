@@ -10,6 +10,7 @@ import { useMusic, Album } from "@/hooks/useMusic";
 import { AlbumModal } from "@/components/music/AlbumModal";
 import { YoutubeVideoSection } from "@/components/youtube/YoutubeVideoSection";
 import { FAQSlider } from "@/components/landing/FAQSlider";
+import { CountdownTimer } from "@/components/landing/CountdownTimer";
 import { 
   Calendar, 
   MapPin,
@@ -444,6 +445,13 @@ export const GleeWorldLanding = () => {
           </>
         )}
       </header>
+
+      {/* Countdown Timer Section */}
+      <section className="bg-white/60 backdrop-blur-md border-b border-white/20 py-4">
+        <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+          <CountdownTimer />
+        </div>
+      </section>
 
       {/* FAQ Slider Section */}
       <FAQSlider />
