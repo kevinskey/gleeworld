@@ -72,7 +72,7 @@ serve(async (req) => {
       // Send email notification if Resend is configured and user has email
       if (resend && user.email) {
         const emailPromise = resend.emails.send({
-          from: "Glee World <events@gleeworld.com>",
+          from: "Glee World <onboarding@resend.dev>",
           to: [user.email],
           subject: `Invitation: ${eventTitle}`,
           html: `
