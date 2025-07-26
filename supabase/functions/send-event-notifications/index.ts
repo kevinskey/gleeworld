@@ -46,6 +46,19 @@ serve(async (req) => {
 
     const notifications = [];
     const emailPromises = [];
+    const smsPromises = [];
+
+    // Get user phone numbers for SMS
+    const { data: userProfiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, phone_number')
+      .in('id', userIds);
+
+    if (profilesError) {
+      console.error('Error fetching user profiles:', profilesError);
+    }
+
+    const phoneMap = new Map(userProfiles?.map(p => [p.id, p.phone_number]) || []);
 
     // Create database notifications for each user
     for (const user of users) {
@@ -99,19 +112,45 @@ serve(async (req) => {
 
         emailPromises.push(emailPromise);
       }
+
+      // Send SMS notification if user has phone number
+      const userPhone = phoneMap.get(user.id);
+      if (userPhone) {
+        const smsMessage = `Event Invitation: ${eventTitle} on ${new Date(eventDate).toLocaleDateString()}. ${message || 'Check GleeWorld for details.'}`;
+        
+        const smsPromise = supabase.functions.invoke('gw-send-sms', {
+          body: {
+            to: userPhone,
+            message: smsMessage
+          }
+        }).catch((smsError) => {
+          console.error('Error sending SMS to', userPhone, ':', smsError);
+          return null;
+        });
+
+        smsPromises.push(smsPromise);
+      }
     }
 
-    // Wait for all emails to be sent
-    const emailResults = await Promise.allSettled(emailPromises);
-    const successfulEmails = emailResults.filter(result => result.status === 'fulfilled' && result.value !== null).length;
+    // Wait for all emails and SMS to be sent
+    const [emailResults, smsResults] = await Promise.allSettled([
+      Promise.allSettled(emailPromises),
+      Promise.allSettled(smsPromises)
+    ]);
+    
+    const successfulEmails = emailResults.status === 'fulfilled' ? 
+      emailResults.value.filter(result => result.status === 'fulfilled' && result.value !== null).length : 0;
+    const successfulSMS = smsResults.status === 'fulfilled' ? 
+      smsResults.value.filter(result => result.status === 'fulfilled' && result.value !== null).length : 0;
 
-    console.log(`Notifications created: ${notifications.length}, Emails sent: ${successfulEmails}`);
+    console.log(`Notifications created: ${notifications.length}, Emails sent: ${successfulEmails}, SMS sent: ${successfulSMS}`);
 
     return new Response(JSON.stringify({
       success: true,
       notificationsCreated: notifications.length,
       emailsSent: successfulEmails,
-      message: `Successfully notified ${notifications.length} users${successfulEmails > 0 ? ` and sent ${successfulEmails} emails` : ''}`
+      smsSent: successfulSMS,
+      message: `Successfully notified ${notifications.length} users${successfulEmails > 0 ? `, sent ${successfulEmails} emails` : ''}${successfulSMS > 0 ? `, sent ${successfulSMS} SMS` : ''}`
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
