@@ -15,7 +15,7 @@ export const AuditionHoverCard = () => {
             className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg border-0 px-3 py-2 md:px-6 md:py-3 rounded-full font-medium text-sm md:text-base group transition-all duration-300"
           >
             <Mic className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
-            <span className="hidden sm:inline">Sign Up for </span>Auditions
+            Sign Up for Auditions
             <span className="ml-1 md:ml-2">🎵</span>
           </Button>
         </HoverCardTrigger>
