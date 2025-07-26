@@ -38,36 +38,17 @@ export const CountdownTimer = () => {
   }, []);
 
   return (
-    <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border border-primary/20 rounded-lg px-4 py-2 mx-auto max-w-md">
-      <div className="text-center">
-        <div className="flex items-center justify-center gap-2 mb-1">
-          <Clock className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-semibold text-primary">Countdown to Christmas Carol</h3>
-        </div>
-        <div className="flex items-center justify-center gap-4 text-xs">
-          <div className="text-center">
-            <div className="text-lg font-bold text-primary">{timeLeft.days}</div>
-            <div className="text-muted-foreground">Days</div>
-          </div>
-          <div className="text-primary opacity-60">:</div>
-          <div className="text-center">
-            <div className="text-lg font-bold text-primary">{timeLeft.hours}</div>
-            <div className="text-muted-foreground">Hours</div>
-          </div>
-          <div className="text-primary opacity-60">:</div>
-          <div className="text-center">
-            <div className="text-lg font-bold text-primary">{timeLeft.minutes}</div>
-            <div className="text-muted-foreground">Minutes</div>
-          </div>
-          <div className="text-primary opacity-60">:</div>
-          <div className="text-center">
-            <div className="text-lg font-bold text-primary">{timeLeft.seconds}</div>
-            <div className="text-muted-foreground">Seconds</div>
-          </div>
-        </div>
-        <div className="text-xs text-muted-foreground mt-1">
-          Dec 5, 2025 • 7:00 PM
-        </div>
+    <div className="hidden lg:flex items-center space-x-2 bg-primary/10 rounded-md px-2 py-1 text-xs">
+      <Clock className="w-3 h-3 text-primary" />
+      <span className="text-primary font-medium">Christmas Carol:</span>
+      <div className="flex items-center space-x-1 text-primary font-bold">
+        <span>{timeLeft.days}d</span>
+        <span>:</span>
+        <span>{timeLeft.hours}h</span>
+        <span>:</span>
+        <span>{timeLeft.minutes}m</span>
+        <span>:</span>
+        <span>{timeLeft.seconds}s</span>
       </div>
     </div>
   );
