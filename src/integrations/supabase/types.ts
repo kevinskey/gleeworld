@@ -132,13 +132,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "admin_notifications_admin_id_fkey"
-            columns: ["admin_id"]
-            isOneToOne: false
-            referencedRelation: "user_dashboard_data"
-            referencedColumns: ["user_id"]
-          },
-          {
             foreignKeyName: "admin_notifications_contract_signature_id_fkey"
             columns: ["contract_signature_id"]
             isOneToOne: false
@@ -789,13 +782,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "contract_recipients_v2_sent_by_fkey"
-            columns: ["sent_by"]
-            isOneToOne: false
-            referencedRelation: "user_dashboard_data"
-            referencedColumns: ["user_id"]
-          },
         ]
       }
       contract_signatures: {
@@ -850,13 +836,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "contract_signatures_admin_id_fkey"
-            columns: ["admin_id"]
-            isOneToOne: false
-            referencedRelation: "user_dashboard_data"
-            referencedColumns: ["user_id"]
-          },
-          {
             foreignKeyName: "contract_signatures_contract_id_fkey"
             columns: ["contract_id"]
             isOneToOne: false
@@ -869,13 +848,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "contract_signatures_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_dashboard_data"
-            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1048,13 +1020,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "contracts_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "user_dashboard_data"
-            referencedColumns: ["user_id"]
-          },
         ]
       }
       contracts_v2: {
@@ -1183,13 +1148,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "event_class_list_members_added_by_fkey"
-            columns: ["added_by"]
-            isOneToOne: false
-            referencedRelation: "user_dashboard_data"
-            referencedColumns: ["user_id"]
-          },
-          {
             foreignKeyName: "event_class_list_members_class_list_id_fkey"
             columns: ["class_list_id"]
             isOneToOne: false
@@ -1202,13 +1160,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "event_class_list_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_dashboard_data"
-            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1250,13 +1201,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "event_class_lists_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "user_dashboard_data"
-            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "event_class_lists_event_id_fkey"
@@ -2486,10 +2430,24 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
           {
+            foreignKeyName: "gw_event_attendance_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "gw_event_attendance_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "gw_event_attendance_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
             referencedColumns: ["user_id"]
           },
         ]
@@ -3588,6 +3546,13 @@ export type Database = {
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "gw_pre_event_excuses_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
             referencedColumns: ["user_id"]
           },
         ]
@@ -5799,13 +5764,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "receipts_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "user_dashboard_data"
-            referencedColumns: ["user_id"]
-          },
-          {
             foreignKeyName: "receipts_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
@@ -6043,13 +6001,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "singer_contract_assignments_singer_id_fkey"
-            columns: ["singer_id"]
-            isOneToOne: false
-            referencedRelation: "user_dashboard_data"
-            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -6602,28 +6553,6 @@ export type Database = {
           unread_notifications: number | null
           user_id: string | null
           w9_forms_count: number | null
-        }
-        Insert: {
-          email?: string | null
-          full_name?: string | null
-          payments_received?: never
-          signed_contracts?: never
-          total_amount_received?: never
-          total_contracts?: never
-          unread_notifications?: never
-          user_id?: string | null
-          w9_forms_count?: never
-        }
-        Update: {
-          email?: string | null
-          full_name?: string | null
-          payments_received?: never
-          signed_contracts?: never
-          total_amount_received?: never
-          total_contracts?: never
-          unread_notifications?: never
-          user_id?: string | null
-          w9_forms_count?: never
         }
         Relationships: []
       }
