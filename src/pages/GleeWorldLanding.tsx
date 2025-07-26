@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMusic, Album } from "@/hooks/useMusic";
 import { AlbumModal } from "@/components/music/AlbumModal";
 import { YoutubeVideoSection } from "@/components/youtube/YoutubeVideoSection";
+import { FAQSlider } from "@/components/landing/FAQSlider";
 import { 
   Calendar, 
   MapPin,
@@ -443,6 +444,9 @@ export const GleeWorldLanding = () => {
           </>
         )}
       </header>
+
+      {/* FAQ Slider Section */}
+      <FAQSlider />
 
       {/* Hero Section */}
       <section className="pt-4 pb-6 px-0.5 sm:px-1 md:px-1.5 lg:px-3.5">
