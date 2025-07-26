@@ -2584,6 +2584,7 @@ export type Database = {
       gw_events: {
         Row: {
           address: string | null
+          attendance_deadline: string | null
           attendance_notes: string | null
           attendance_required: boolean | null
           attendance_type: string | null
@@ -2593,11 +2594,13 @@ export type Database = {
           description: string | null
           end_date: string | null
           event_type: string | null
+          excuse_required: boolean | null
           external_id: string | null
           external_source: string | null
           id: string
           image_url: string | null
           is_public: boolean | null
+          late_arrival_allowed: boolean | null
           location: string | null
           max_attendees: number | null
           registration_required: boolean | null
@@ -2610,6 +2613,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          attendance_deadline?: string | null
           attendance_notes?: string | null
           attendance_required?: boolean | null
           attendance_type?: string | null
@@ -2619,11 +2623,13 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           event_type?: string | null
+          excuse_required?: boolean | null
           external_id?: string | null
           external_source?: string | null
           id?: string
           image_url?: string | null
           is_public?: boolean | null
+          late_arrival_allowed?: boolean | null
           location?: string | null
           max_attendees?: number | null
           registration_required?: boolean | null
@@ -2636,6 +2642,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          attendance_deadline?: string | null
           attendance_notes?: string | null
           attendance_required?: boolean | null
           attendance_type?: string | null
@@ -2645,11 +2652,13 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           event_type?: string | null
+          excuse_required?: boolean | null
           external_id?: string | null
           external_source?: string | null
           id?: string
           image_url?: string | null
           is_public?: boolean | null
+          late_arrival_allowed?: boolean | null
           location?: string | null
           max_attendees?: number | null
           registration_required?: boolean | null
