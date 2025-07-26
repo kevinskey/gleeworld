@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
 import { useState, useMemo } from "react";
-import { Music } from "lucide-react";
+import { BellDot } from "lucide-react";
 import { useUserDashboard } from "@/hooks/useUserDashboard";
 
 interface WelcomeCardProps {
@@ -110,9 +110,8 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
       {/* Notification Music Note */}
       {dashboardData?.unread_notifications > 0 && (
         <div className="absolute top-4 right-4 z-20">
-          <Music 
+          <BellDot 
             className="w-8 h-8 text-white drop-shadow-lg animate-pulse" 
-            fill="currentColor"
           />
         </div>
       )}
