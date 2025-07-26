@@ -43,8 +43,8 @@ export const AuditionHoverCard = () => {
               </div>
             </div>
             
-            <Link to="/auditions" className="block">
-              <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold">
+            <Link to="/auth?redirect=/auditions" className="block">
+              <Button className="w-full bg-gradient-to-r from-spelman-blue-dark to-spelman-blue-light hover:from-spelman-blue-dark/90 hover:to-spelman-blue-light/90 text-white font-semibold">
                 Get Started Now
               </Button>
             </Link>
