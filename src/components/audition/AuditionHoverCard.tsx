@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 
 export const AuditionHoverCard = () => {
   return (
-    <div className="fixed top-16 left-1/2 transform -translate-x-1/2 z-40">
+    <div className="fixed top-20 md:top-24 left-1/2 transform -translate-x-1/2 z-40">
       <HoverCard>
         <HoverCardTrigger asChild>
           <Button 
