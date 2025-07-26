@@ -137,7 +137,7 @@ export const FAQSlider = () => {
                 <div className="bg-primary rounded-full w-12 h-12 flex items-center justify-center flex-shrink-0">
                   <span className="text-xl font-bold text-white">A</span>
                 </div>
-                <p className="text-lg text-foreground leading-relaxed">
+                <p className="text-xs md:text-lg text-foreground leading-relaxed">
                   {currentData.answer}
                 </p>
               </div>
