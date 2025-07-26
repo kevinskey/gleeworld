@@ -13,6 +13,22 @@ serve(async (req) => {
   }
 
   try {
+    // CRITICAL SECURITY FIX: Verify admin authorization
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ 
+          success: 0, 
+          errors: ['Unauthorized: Authentication required'],
+          users: []
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        }
+      )
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -23,6 +39,55 @@ serve(async (req) => {
         }
       }
     )
+
+    // Verify the requesting user is an admin
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
+    
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ 
+          success: 0, 
+          errors: ['Unauthorized: Invalid authentication'],
+          users: []
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        }
+      )
+    }
+
+    // Check if user has admin privileges
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError || !profile || !['admin', 'super-admin'].includes(profile.role)) {
+      return new Response(
+        JSON.stringify({ 
+          success: 0, 
+          errors: ['Unauthorized: Admin privileges required'],
+          users: []
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403,
+        }
+      )
+    }
+
+    // Log the admin operation for audit trail
+    await supabaseClient
+      .from('activity_logs')
+      .insert({
+        user_id: user.id,
+        action_type: 'bulk_user_import',
+        resource_type: 'users',
+        details: { source: req.headers.get('source') || 'unknown', user_count: Array.isArray(req.body?.users) ? req.body.users.length : 0 }
+      })
 
     const { users, source } = await req.json()
     

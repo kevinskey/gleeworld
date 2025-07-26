@@ -19,15 +19,84 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, full_name, contract_id }: AutoEnrollRequest = await req.json();
-
-    console.log("Auto-enrolling user:", email);
+    // CRITICAL SECURITY FIX: Verify admin authorization for auto-enrollment
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Unauthorized: Authentication required",
+          success: false,
+          enrolled: false 
+        }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
 
     // Initialize Supabase client with service role key for admin operations
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
+
+    // Verify the requesting user is an admin
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Unauthorized: Invalid authentication",
+          success: false,
+          enrolled: false 
+        }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Check if user has admin privileges
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile || !["admin", "super-admin"].includes(profile.role)) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Unauthorized: Admin privileges required",
+          success: false,
+          enrolled: false 
+        }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    const { email, full_name, contract_id }: AutoEnrollRequest = await req.json();
+
+    console.log("Admin", user.id, "auto-enrolling user:", email);
+
+    // Log the admin operation for audit trail
+    await supabase
+      .from('activity_logs')
+      .insert({
+        user_id: user.id,
+        action_type: 'admin_auto_enroll_attempt',
+        resource_type: 'user_creation',
+        details: { 
+          target_email: email,
+          full_name: full_name,
+          contract_id: contract_id 
+        }
+      });
 
     // Check if user already exists in profiles table
     const { data: existingProfile, error: profileError } = await supabase
