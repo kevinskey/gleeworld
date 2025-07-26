@@ -6,17 +6,17 @@ import { Link } from "react-router-dom";
 
 export const AuditionHoverCard = () => {
   return (
-    <div className="fixed top-16 left-1/2 transform -translate-x-1/2 z-40 animate-bounce">
+    <div className="fixed top-16 left-1/2 transform -translate-x-1/2 z-40">
       <HoverCard>
         <HoverCardTrigger asChild>
           <Button 
             variant="default" 
-            size="lg"
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-2xl border-0 px-8 py-4 rounded-full font-semibold text-lg group transition-all duration-300 hover:scale-105"
+            size="sm"
+            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg border-0 px-3 py-2 md:px-6 md:py-3 rounded-full font-medium text-sm md:text-base group transition-all duration-300"
           >
-            <Mic className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" />
-            Sign Up for Auditions
-            <span className="ml-2">🎵</span>
+            <Mic className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
+            <span className="hidden sm:inline">Sign Up for </span>Auditions
+            <span className="ml-1 md:ml-2">🎵</span>
           </Button>
         </HoverCardTrigger>
         <HoverCardContent className="w-80 p-6 bg-white/95 backdrop-blur-md border border-white/30 shadow-2xl">
