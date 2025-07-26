@@ -65,24 +65,29 @@ export default function ScheduleAnalytics() {
     try {
       setLoading(true);
       
-      // Fetch all active class schedules with user profiles
+      // Fetch all active class schedules first
       const { data: schedules, error } = await supabase
         .from('gw_class_schedules')
-        .select(`
-          *,
-          gw_profiles!inner(
-            user_id,
-            first_name,
-            last_name,
-            full_name
-          )
-        `)
+        .select('*')
         .eq('is_active', true);
 
       if (error) throw error;
 
-      setScheduleData(schedules || []);
-      analyzeScheduleData(schedules || []);
+      // Fetch user profiles separately and merge data
+      const userIds = schedules?.map(s => s.user_id) || [];
+      const { data: profiles } = await supabase
+        .from('gw_profiles')
+        .select('user_id, first_name, last_name, full_name')
+        .in('user_id', userIds);
+
+      // Merge schedule data with profile data
+      const enrichedSchedules = schedules?.map(schedule => ({
+        ...schedule,
+        gw_profiles: profiles?.find(p => p.user_id === schedule.user_id)
+      })) || [];
+
+      setScheduleData(enrichedSchedules);
+      analyzeScheduleData(enrichedSchedules);
 
     } catch (error) {
       console.error('Error loading schedule analytics:', error);
