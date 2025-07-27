@@ -12,48 +12,6 @@ const faqData = [
     imageUrl: "https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/hero-images/hero-desktop-1753412316490.png"
   },
   {
-    id: "audition-required",
-    type: "qa",
-    question: "Is an audition required to join the Glee Club?",
-    answer: "Yes! In order to join the Glee Club, you must audition and will be notified of your acceptance before the first rehearsal."
-  },
-  {
-    id: "audition-process",
-    type: "qa",
-    question: "What happens at a Glee Club Audition?",
-    answer: "We ask you to prepare thirty seconds to a minute of any song that best showcases your voice. In addition, we'll ask you to attempt a Glee song that will be provided to you in advance. Lastly, we will test your sight-reading ability to gauge your existing musical knowledge. Sight-reading is not required to be a member of the Glee Club."
-  },
-  {
-    id: "music-genre",
-    type: "qa",
-    question: "What genre of music does the glee club sing?",
-    answer: "The Glee Club repertoire consists of sacred and secular choral literature for women's voices, with a particular focus on traditional spirituals, music by African American composers and music from many cultures."
-  },
-  {
-    id: "rehearsal-schedule",
-    type: "qa",
-    question: "How often does the Glee Club rehearse?",
-    answer: "The Glee Club rehearses every Monday, Wednesday, and Friday from 5:00 P.M. to about 6:30 P.M."
-  },
-  {
-    id: "performance-frequency",
-    type: "qa",
-    question: "How often does the Glee Club perform?",
-    answer: "The Glee Club performs on campus and in the Atlanta area throughout the entire year, as well as a tour of multiple states during spring break."
-  },
-  {
-    id: "class-credit",
-    type: "qa",
-    question: "Is the Glee club considered a class?",
-    answer: "Yes. The Glee Club is considered a class and each member must be registered for 1 or 0 credits."
-  },
-  {
-    id: "music-major",
-    type: "qa",
-    question: "Do I have to be a music major to join glee?",
-    answer: "No! The Glee Club accepts members from various of majors and disciplines."
-  },
-  {
     id: "closing",
     type: "closing",
     title: "Good luck on your auditions ladies!",
@@ -146,36 +104,6 @@ export const FAQSlider = () => {
           </div>
         );
 
-      case "qa":
-        return (
-          <div className="space-y-4 md:space-y-8 pt-8 md:pt-4">
-            <div className="text-center">
-              <span className="text-4xl md:text-7xl font-bold text-primary opacity-20">
-                FAQ
-              </span>
-            </div>
-            <div className="bg-primary rounded-xl p-4 md:p-6 max-w-4xl mx-auto backdrop-blur-sm border border-white/20">
-              <div className="flex items-center space-x-2 md:space-x-4 mb-3 md:mb-4">
-                <div className="bg-background rounded-full w-8 h-8 md:w-12 md:h-12 flex items-center justify-center">
-                  <span className="text-sm md:text-xl font-bold text-primary">Q</span>
-                </div>
-                <h3 className="text-sm md:text-2xl font-semibold text-white">
-                  {currentData.question}
-                </h3>
-              </div>
-            </div>
-            <div className="bg-background border-2 border-primary rounded-xl p-4 md:p-6 max-w-4xl mx-auto backdrop-blur-sm border border-white/20">
-              <div className="flex items-start space-x-2 md:space-x-4">
-                <div className="bg-primary rounded-full w-8 h-8 md:w-12 md:h-12 flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm md:text-xl font-bold text-white">A</span>
-                </div>
-                <p className="text-xs md:text-lg text-foreground leading-relaxed">
-                  {currentData.answer}
-                </p>
-              </div>
-            </div>
-          </div>
-        );
 
       case "closing":
         return (
