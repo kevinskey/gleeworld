@@ -114,7 +114,7 @@ export const FAQSlider = () => {
                   <Music className="w-8 h-8" />
                   <Music className="w-8 h-8" />
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent rounded-xl flex items-end">
+                <div className="absolute inset-0 bg-gradient-to-t from-blue-600/60 via-blue-500/20 to-transparent rounded-xl flex items-end">
                   <div className="p-6 w-full">
                     <h1 className="text-2xl md:text-4xl font-bold text-white mb-2">
                       {currentData.title}
