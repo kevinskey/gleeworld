@@ -250,8 +250,8 @@ export const GleeWorldLanding = () => {
             <CountdownTimer />
             
             {/* Desktop Navigation */}
-            <NavigationMenu className="hidden lg:flex">
-              <NavigationMenuList>
+            <NavigationMenu className="hidden md:flex">
+              <NavigationMenuList className="space-x-0.5 md:space-x-1">
                 <NavigationMenuItem>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()} href="#home">
                     Home
@@ -342,7 +342,7 @@ export const GleeWorldLanding = () => {
             </NavigationMenu>
 
             {/* Desktop Auth Actions */}
-            <div className="hidden lg:flex items-center space-x-3">
+            <div className="hidden md:flex items-center space-x-3">
               {user ? (
                 <Link to="/dashboard">
                   <Button size="sm" className="bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground">Dashboard</Button>
@@ -362,7 +362,7 @@ export const GleeWorldLanding = () => {
             {/* Mobile Navigation Button */}
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden flex items-center justify-center w-10 h-10 rounded-md bg-white/20 backdrop-blur-md border border-white/30 text-gray-700 hover:text-gray-900 transition-all duration-200 hover:scale-105"
+              className="md:hidden flex items-center justify-center w-10 h-10 rounded-md bg-white/20 backdrop-blur-md border border-white/30 text-gray-700 hover:text-gray-900 transition-all duration-200 hover:scale-105"
               aria-label="Toggle mobile menu"
               aria-expanded={mobileMenuOpen}
             >
@@ -380,12 +380,12 @@ export const GleeWorldLanding = () => {
           <>
             {/* Backdrop */}
             <div 
-              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
               onClick={() => setMobileMenuOpen(false)}
             />
             
             {/* Mobile Menu */}
-            <div className="absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md border-b border-white/20 shadow-xl z-50 lg:hidden animate-slide-in-right">
+            <div className="absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md border-b border-white/20 shadow-xl z-50 md:hidden animate-slide-in-right">
               <div className="max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
                 <nav className="flex flex-col space-y-1 py-4">
                   <a 
