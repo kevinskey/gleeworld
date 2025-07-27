@@ -2,6 +2,7 @@ import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AIAssist } from "@/components/shared/AIAssist";
 import { Link } from "react-router-dom";
 import { 
   Music, 
@@ -14,246 +15,219 @@ import {
   Mail,
   Phone,
   Globe,
-  ArrowRight
+  ArrowRight,
+  GraduationCap,
+  Mic,
+  BookOpen
 } from "lucide-react";
 
-const About = () => {
-  const achievements = [
-    {
-      year: "1924",
-      title: "Founded",
-      description: "Established as one of the premier collegiate choirs in the nation"
-    },
-    {
-      year: "2000+",
-      title: "Performances",
-      description: "Countless performances across the United States and internationally"
-    },
-    {
-      year: "100+",
-      title: "Active Members",
-      description: "Current membership of talented students from diverse backgrounds"
-    },
-    {
-      year: "15+",
-      title: "Awards",
-      description: "Recognition for excellence in choral performance and community service"
-    }
-  ];
-
-  const values = [
-    {
-      icon: Music,
-      title: "Musical Excellence",
-      description: "We strive for the highest standards in choral performance, constantly pushing the boundaries of vocal artistry."
-    },
-    {
-      icon: Users,
-      title: "Sisterhood",
-      description: "Building lifelong bonds through shared musical experiences and mutual support."
-    },
-    {
-      icon: Heart,
-      title: "Community Service",
-      description: "Using our voices to uplift communities and support meaningful causes."
-    },
-    {
-      icon: Star,
-      title: "Cultural Heritage",
-      description: "Celebrating and preserving African American musical traditions while embracing diverse repertoire."
-    }
-  ];
-
-  const leadership = [
-    {
-      name: "Dr. Kevin Johnson",
-      role: "Director of Choral Activities",
-      bio: "Dr. Johnson brings over 15 years of experience in choral direction and has led the Glee Club to numerous accolades.",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face"
-    },
-    {
-      name: "Prof. Maria Williams",
-      role: "Assistant Director",
-      bio: "Prof. Williams specializes in vocal pedagogy and helps develop each member's individual vocal talents.",
-      image: "https://images.unsplash.com/photo-1494790108755-2616b332-00?w=300&h=300&fit=crop&crop=face"
-    },
-    {
-      name: "Sarah Mitchell",
-      role: "Student President",
-      bio: "Senior Music Education major leading the Glee Club with passion and dedication.",
-      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop&crop=face"
-    }
-  ];
-
+export default function About() {
   return (
     <PublicLayout>
-      <div className="container mx-auto px-4 py-8 space-y-12">
+      <div className="min-h-screen">
         {/* Hero Section */}
-        <div className="text-center space-y-6">
-          <Badge className="bg-primary/20 text-primary-foreground px-4 py-2 text-lg">
-            Est. 1924
-          </Badge>
-          <h1 className="text-4xl md:text-6xl font-bold text-white">
-            About the Spelman College Glee Club
-          </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            For nearly a century, the Spelman College Glee Club has been a beacon of musical 
-            excellence, sisterhood, and cultural pride. We are more than a choir – we are a 
-            family united by our love of music and commitment to excellence.
-          </p>
-        </div>
-
-        {/* Mission Statement */}
-        <Card className="border-primary/20 bg-white/10 backdrop-blur-md">
-          <CardHeader>
-            <CardTitle className="text-2xl text-white text-center">Our Mission</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-300 text-lg text-center leading-relaxed">
-              To cultivate musical excellence while fostering sisterhood, academic achievement, 
-              and community engagement. We strive to preserve and celebrate our rich cultural 
-              heritage while inspiring the next generation of leaders through the transformative 
-              power of music.
+        <section id="about-hero" className="relative h-[80vh] bg-gradient-to-br from-spelman-blue-dark via-spelman-blue-light to-purple-600 flex items-center justify-center overflow-hidden">
+          <div className="absolute inset-0 bg-black/30"></div>
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200')] bg-cover bg-center opacity-20"></div>
+          <div className="relative z-10 text-center text-white px-4 max-w-5xl mx-auto">
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 font-['Bebas_Neue']">Welcome to GleeWorld</h1>
+            <p className="text-xl md:text-3xl opacity-90 mb-8 font-light">
+              The Digital Home of the Spelman College Glee Club and Beyond
             </p>
-          </CardContent>
-        </Card>
-
-        {/* Achievements */}
-        <section className="space-y-8">
-          <h2 className="text-3xl font-bold text-white text-center">Our Legacy</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {achievements.map((achievement, index) => (
-              <Card key={index} className="text-center border-primary/20 bg-white/5 backdrop-blur-md">
-                <CardContent className="pt-6">
-                  <div className="text-3xl font-bold text-primary mb-2">{achievement.year}</div>
-                  <h3 className="text-lg font-semibold text-white mb-2">{achievement.title}</h3>
-                  <p className="text-sm text-gray-300">{achievement.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+            <div className="relative inline-block">
+              <AIAssist 
+                context="About GleeWorld and Spelman College Glee Club"
+                placeholder="What is GleeWorld?"
+                className="mt-4"
+              />
+            </div>
           </div>
         </section>
 
-        {/* Values */}
-        <section className="space-y-8">
-          <h2 className="text-3xl font-bold text-white text-center">Our Values</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            {values.map((value, index) => (
-              <Card key={index} className="border-primary/20 bg-white/5 backdrop-blur-md">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="bg-primary/20 p-3 rounded-lg">
-                      <value.icon className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-white mb-2">{value.title}</h3>
-                      <p className="text-gray-300">{value.description}</p>
-                    </div>
+        {/* Intro Block */}
+        <section id="about-intro" className="py-20 px-4 bg-gradient-to-b from-spelman-blue-light/5 to-white relative">
+          <div className="absolute inset-0 opacity-30"></div>
+          <div className="max-w-6xl mx-auto relative z-10">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8 font-['Bebas_Neue']">More Than Music</h2>
+              <div className="max-w-4xl mx-auto space-y-6 text-lg text-gray-700 leading-relaxed">
+                <p>
+                  GleeWorld represents the digital evolution of one of America's most prestigious collegiate choirs. 
+                  Born from over 100 years of musical excellence at Spelman College, this platform bridges our 
+                  storied past with an innovative future.
+                </p>
+                <p>
+                  Here, current members access rehearsal materials and tour logistics, alumnae reconnect with 
+                  their musical sisterhood, and fans worldwide experience the magic that makes our choir extraordinary. 
+                  GleeWorld is where tradition meets technology, where legacy lives digitally.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Feature Grid */}
+        <section id="about-features" className="py-20 px-4 bg-white">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-4xl md:text-5xl font-bold text-center text-gray-900 mb-16 font-['Bebas_Neue']">Our Community</h2>
+            <div className="grid lg:grid-cols-3 gap-10">
+              {/* Current Members */}
+              <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-spelman-blue-light/10 to-purple-100 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <CardHeader className="text-center pb-6">
+                  <div className="w-20 h-20 bg-spelman-blue-light/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                    <GraduationCap className="w-10 h-10 text-spelman-blue-dark" />
                   </div>
+                  <CardTitle className="text-2xl font-bold mb-4">🎓 Current Members</CardTitle>
+                </CardHeader>
+                <CardContent className="relative z-10">
+                  <p className="text-gray-600 mb-6 leading-relaxed">
+                    Access your musical materials, tour information, recording studio, and connect with your sisters. 
+                    Your digital headquarters for everything Glee Club.
+                  </p>
+                  <Link to="/dashboard">
+                    <Button className="w-full bg-spelman-blue-dark hover:bg-spelman-blue-light">
+                      Member Dashboard
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
-            ))}
+
+              {/* Alumnae */}
+              <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-pink-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <CardHeader className="text-center pb-6">
+                  <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                    <Heart className="w-10 h-10 text-purple-600" />
+                  </div>
+                  <CardTitle className="text-2xl font-bold mb-4">👩🏽‍🎓 Alumnae</CardTitle>
+                </CardHeader>
+                <CardContent className="relative z-10">
+                  <p className="text-gray-600 mb-6 leading-relaxed">
+                    Reconnect with your musical legacy, share memories, mentor current members, and stay connected 
+                    to the sisterhood that shaped your musical journey.
+                  </p>
+                  <Link to="/alumnae">
+                    <Button className="w-full bg-purple-600 hover:bg-purple-700">
+                      Alumnae Portal
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+
+              {/* Fans & Supporters */}
+              <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-pink-50 to-yellow-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <CardHeader className="text-center pb-6">
+                  <div className="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                    <Globe className="w-10 h-10 text-pink-600" />
+                  </div>
+                  <CardTitle className="text-2xl font-bold mb-4">🌍 Fans & Supporters</CardTitle>
+                </CardHeader>
+                <CardContent className="relative z-10">
+                  <p className="text-gray-600 mb-6 leading-relaxed">
+                    Experience exclusive performances, purchase official merchandise, and support the next generation 
+                    of musical excellence at Spelman College.
+                  </p>
+                  <Link to="/shop">
+                    <Button className="w-full bg-pink-600 hover:bg-pink-700">
+                      Shop & Support
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </section>
 
-        {/* Leadership */}
-        <section className="space-y-8">
-          <h2 className="text-3xl font-bold text-white text-center">Leadership</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {leadership.map((leader, index) => (
-              <Card key={index} className="border-primary/20 bg-white/5 backdrop-blur-md">
-                <CardContent className="p-6 text-center">
-                  <img
-                    src={leader.image}
-                    alt={leader.name}
-                    className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
+        {/* Mission Block */}
+        <section id="about-mission" className="py-20 px-4 bg-gradient-to-br from-gray-50 to-spelman-blue-light/10 relative">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+              <blockquote className="text-2xl md:text-3xl font-light text-gray-800 italic leading-relaxed max-w-4xl mx-auto mb-12">
+                "GleeWorld is not just about music. It's about preserving a legacy, building digital community, 
+                enhancing artistic and academic rigor, and ensuring that the sacred tradition of the Spelman 
+                Glee Club continues to amaze and inspire for generations to come."
+              </blockquote>
+              
+              <div className="flex flex-col md:flex-row items-center justify-center gap-8 mt-16">
+                <div className="w-32 h-32 rounded-full overflow-hidden shadow-xl">
+                  <img 
+                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face"
+                    alt="Dr. Kevin Phillip Johnson" 
+                    className="w-full h-full object-cover"
                   />
-                  <h3 className="text-lg font-semibold text-white mb-1">{leader.name}</h3>
-                  <p className="text-primary mb-3">{leader.role}</p>
-                  <p className="text-sm text-gray-300">{leader.bio}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* Contact Information */}
-        <section className="space-y-8">
-          <h2 className="text-3xl font-bold text-white text-center">Connect With Us</h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <Card className="border-primary/20 bg-white/5 backdrop-blur-md">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
-                  Visit Us
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-gray-300">
-                  <strong>Spelman College</strong><br />
-                  350 Spelman Lane SW<br />
-                  Atlanta, GA 30314
-                </p>
-                <p className="text-gray-300">
-                  <strong>Rehearsals:</strong><br />
-                  Mondays, Wednesdays, Fridays<br />
-                  5:00 PM - 6:15 PM
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-primary/20 bg-white/5 backdrop-blur-md">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Mail className="h-5 w-5" />
-                  Get In Touch
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <p className="text-gray-300 flex items-center gap-2">
-                    <Mail className="h-4 w-4" />
-                    gleeclub@spelman.edu
-                  </p>
-                  <p className="text-gray-300 flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    (404) 270-5200
-                  </p>
-                  <p className="text-gray-300 flex items-center gap-2">
-                    <Globe className="h-4 w-4" />
-                    spelman.edu/academics/programs/music
-                  </p>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="text-center md:text-left">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Dr. Kevin Phillip Johnson</h3>
+                  <p className="text-spelman-blue-dark font-medium text-lg">Artistic Director & Visionary Behind GleeWorld</p>
+                  <AIAssist 
+                    context="Dr. Kevin Johnson and the Glee Club's digital mission"
+                    placeholder="More about the Glee Club's digital mission"
+                    className="mt-4"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* Call to Action */}
-        <Card className="border-primary/20 bg-gradient-to-r from-primary/20 to-secondary/20 backdrop-blur-md">
-          <CardContent className="p-8 text-center">
-            <h2 className="text-2xl font-bold text-white mb-4">Join Our Musical Journey</h2>
-            <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
-              Interested in becoming part of our musical family? Explore our upcoming events, 
-              learn about auditions, or support our mission.
+        {/* Why GleeWorld Block */}
+        <section id="about-why" className="py-20 px-4 bg-gray-900 text-white relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200')] bg-cover bg-center opacity-10"></div>
+          <div className="max-w-6xl mx-auto relative z-10">
+            <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 font-['Bebas_Neue']">Why GleeWorld?</h2>
+            <div className="text-center">
+              <p className="text-xl md:text-2xl leading-relaxed max-w-4xl mx-auto font-light">
+                Because the Glee Club is a universe unto itself—a cosmos of voices, dreams, traditions, and 
+                possibilities that deserves a digital home as extraordinary as the music we create. In this 
+                world, every note matters, every voice belongs, and every moment becomes part of our eternal song.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Quote/Motto Section */}
+        <section id="about-quote" className="py-32 px-4 bg-gradient-to-r from-spelman-blue-dark via-purple-600 to-spelman-blue-light text-white text-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-black/20"></div>
+          <div className="max-w-4xl mx-auto relative z-10">
+            <div className="animate-fade-in">
+              <h2 className="text-6xl md:text-8xl font-bold mb-8 font-['Bebas_Neue'] tracking-wider">
+                "To Amaze and Inspire"
+              </h2>
+              <p className="text-2xl md:text-3xl font-light opacity-90">
+                Online and Onstage
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Call to Action Footer Block */}
+        <section id="about-cta" className="py-20 px-4 bg-white text-center">
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8 font-['Bebas_Neue']">Enter Our World</h2>
+            <p className="text-xl text-gray-700 mb-12 leading-relaxed max-w-3xl mx-auto">
+              Whether you're a first-year member, a Centennial alumna, or a supporter who believes in the power 
+              of music, we invite you to enter the world where tradition meets innovation, where voices unite 
+              across generations, and where the magic of the Spelman Glee Club lives forever.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg">
-                <Link to="/public-calendar">
-                  View Events <Calendar className="ml-2 h-4 w-4" />
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <Button asChild size="lg" className="bg-spelman-blue-dark hover:bg-spelman-blue-light text-white px-8 py-4 text-lg">
+                <Link to="/calendar">
+                  <Calendar className="w-5 h-5 mr-2" />
+                  Explore GleeWorld
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link to="/shop">
-                  Support Us <ArrowRight className="ml-2 h-4 w-4" />
+              <Button asChild size="lg" variant="outline" className="border-spelman-blue-dark text-spelman-blue-dark hover:bg-spelman-blue-dark hover:text-white px-8 py-4 text-lg">
+                <Link to="/auth">
+                  <Mic className="w-5 h-5 mr-2" />
+                  Join Our Legacy
                 </Link>
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
     </PublicLayout>
   );
-};
-
-export default About;
+}
