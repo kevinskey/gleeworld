@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
+import { useSecurityEnhanced } from "@/hooks/useSecurityEnhanced";
 import { Loader2, Users, Heart, Chrome, Apple } from "lucide-react";
 
 export const SignupForm = () => {
@@ -20,6 +21,8 @@ export const SignupForm = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isFanSignup, setIsFanSignup] = useState(false);
+  
+  const { enhancedSignUp, checkRateLimit } = useSecurityEnhanced();
 
   useEffect(() => {
     const role = searchParams.get('role');
@@ -32,19 +35,23 @@ export const SignupForm = () => {
     setError("");
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}${isFanSignup ? '/public-calendar' : '/dashboard'}`,
-          data: {
-            full_name: fullName,
-            role: isFanSignup ? 'fan' : 'user',
-          }
-        }
-      });
+      // Check rate limit before proceeding
+      if (!checkRateLimit('signup', email)) {
+        setError("Too many signup attempts. Please try again later.");
+        return;
+      }
 
-      if (error) throw error;
+      // Use enhanced signup with security validation
+      const result = await enhancedSignUp(
+        email, 
+        password, 
+        fullName, 
+        isFanSignup ? 'fan' : 'user'
+      );
+
+      if (!result.user) {
+        throw new Error("Signup failed - please try again");
+      }
       
       setSuccess(true);
     } catch (error: any) {
@@ -209,7 +216,8 @@ export const SignupForm = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            minLength={6}
+            minLength={8}
+            title="Password must be at least 8 characters long and contain uppercase, lowercase, numbers, and special characters"
           />
         </div>
         

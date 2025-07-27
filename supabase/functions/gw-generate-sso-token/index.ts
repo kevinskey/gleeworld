@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
+import { create, verify } from "https://deno.land/x/djwt@v3.0.1/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,6 +15,32 @@ interface SSOTokenRequest {
   metadata?: Record<string, any>;
 }
 
+// Rate limiting for security
+const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
+
+const checkRateLimit = (identifier: string, maxRequests = 10, windowMs = 900000): boolean => {
+  const now = Date.now();
+  const windowStart = now - windowMs;
+  
+  if (!rateLimitMap.has(identifier)) {
+    rateLimitMap.set(identifier, { count: 0, lastReset: now });
+  }
+  
+  const limit = rateLimitMap.get(identifier)!;
+  
+  if (limit.lastReset < windowStart) {
+    limit.count = 0;
+    limit.lastReset = now;
+  }
+  
+  if (limit.count >= maxRequests) {
+    return false;
+  }
+  
+  limit.count++;
+  return true;
+};
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -22,6 +48,17 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Rate limiting
+    const clientIP = req.headers.get('x-forwarded-for') || 'unknown';
+    if (!checkRateLimit(clientIP)) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: "Rate limit exceeded"
+      }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -70,13 +107,24 @@ const handler = async (req: Request): Promise<Response> => {
       issuer: 'gleeworld-sso'
     };
 
-    // For demo purposes, we'll use base64 encoding
-    // In production, you'd use proper JWT signing with a secret key
-    const token = encode(JSON.stringify(tokenPayload));
+    // Create proper JWT token with secret key
+    const jwtSecret = Deno.env.get('JWT_SECRET_KEY');
+    if (!jwtSecret) {
+      throw new Error('JWT_SECRET_KEY not configured');
+    }
+    
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(jwtSecret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign", "verify"]
+    );
+    
+    const token = await create({ alg: "HS256", typ: "JWT" }, tokenPayload, key);
 
-    // Log the token generation (remove in production)
-    console.log("SSO token generated:", {
-      user: user.email,
+    // Secure logging without sensitive data
+    console.log("SSO token generated for user ID:", user.user_id.substring(0, 8) + "...", {
       target_app,
       expires_at: new Date(tokenPayload.expires_at * 1000).toISOString()
     });

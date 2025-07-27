@@ -12,13 +12,92 @@ interface ResetPasswordRequest {
   newPassword: string;
 }
 
+// Password validation function
+const validatePassword = (password: string): { isValid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+  
+  if (password.length < 8) {
+    errors.push("Password must be at least 8 characters long");
+  }
+  
+  if (!/[A-Z]/.test(password)) {
+    errors.push("Password must contain at least one uppercase letter");
+  }
+  
+  if (!/[a-z]/.test(password)) {
+    errors.push("Password must contain at least one lowercase letter");
+  }
+  
+  if (!/\d/.test(password)) {
+    errors.push("Password must contain at least one number");
+  }
+  
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    errors.push("Password must contain at least one special character");
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+
+// Rate limiting for security
+const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
+
+const checkRateLimit = (identifier: string, maxRequests = 5, windowMs = 900000): boolean => {
+  const now = Date.now();
+  const windowStart = now - windowMs;
+  
+  if (!rateLimitMap.has(identifier)) {
+    rateLimitMap.set(identifier, { count: 0, lastReset: now });
+  }
+  
+  const limit = rateLimitMap.get(identifier)!;
+  
+  if (limit.lastReset < windowStart) {
+    limit.count = 0;
+    limit.lastReset = now;
+  }
+  
+  if (limit.count >= maxRequests) {
+    return false;
+  }
+  
+  limit.count++;
+  return true;
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Rate limiting
+    const clientIP = req.headers.get('x-forwarded-for') || 'unknown';
+    if (!checkRateLimit(clientIP)) {
+      return new Response(JSON.stringify({
+        error: "Rate limit exceeded"
+      }), {
+        status: 429,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
     const { userId, newPassword }: ResetPasswordRequest = await req.json();
+
+    // Validate password strength
+    const passwordValidation = validatePassword(newPassword);
+    if (!passwordValidation.isValid) {
+      return new Response(JSON.stringify({
+        error: "Password validation failed",
+        details: passwordValidation.errors
+      }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
 
     // Create admin client with service role key
     const supabaseAdmin = createClient(

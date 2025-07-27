@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { decode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
+import { verify } from "https://deno.land/x/djwt@v3.0.1/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,6 +11,32 @@ interface ValidateTokenRequest {
   required_permissions?: string[];
 }
 
+// Rate limiting for security
+const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
+
+const checkRateLimit = (identifier: string, maxRequests = 100, windowMs = 900000): boolean => {
+  const now = Date.now();
+  const windowStart = now - windowMs;
+  
+  if (!rateLimitMap.has(identifier)) {
+    rateLimitMap.set(identifier, { count: 0, lastReset: now });
+  }
+  
+  const limit = rateLimitMap.get(identifier)!;
+  
+  if (limit.lastReset < windowStart) {
+    limit.count = 0;
+    limit.lastReset = now;
+  }
+  
+  if (limit.count >= maxRequests) {
+    return false;
+  }
+  
+  limit.count++;
+  return true;
+};
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -18,6 +44,17 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Rate limiting
+    const clientIP = req.headers.get('x-forwarded-for') || 'unknown';
+    if (!checkRateLimit(clientIP)) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: "Rate limit exceeded"
+      }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
     const { token, required_permissions = [] }: ValidateTokenRequest = await req.json();
 
     console.log("Validating SSO token");
@@ -32,17 +69,28 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Decode the token (in production, verify JWT signature)
+    // Verify JWT token with secret key
     let tokenPayload;
     try {
-      const decodedBytes = decode(token);
-      const decodedString = new TextDecoder().decode(decodedBytes);
-      tokenPayload = JSON.parse(decodedString);
-    } catch (decodeError) {
-      console.error("Token decode error:", decodeError);
+      const jwtSecret = Deno.env.get('JWT_SECRET_KEY');
+      if (!jwtSecret) {
+        throw new Error('JWT_SECRET_KEY not configured');
+      }
+      
+      const key = await crypto.subtle.importKey(
+        "raw",
+        new TextEncoder().encode(jwtSecret),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign", "verify"]
+      );
+      
+      tokenPayload = await verify(token, key);
+    } catch (verifyError) {
+      console.error("Token verification error:", verifyError.message);
       return new Response(JSON.stringify({
         success: false,
-        error: "Invalid token format"
+        error: "Invalid or tampered token"
       }), {
         status: 401,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
@@ -86,8 +134,8 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Token is valid
-    console.log("Token validated successfully for user:", tokenPayload.email);
+    // Token is valid - secure logging
+    console.log("Token validated successfully for user ID:", tokenPayload.user_id?.substring(0, 8) + "...");
 
     return new Response(JSON.stringify({
       success: true,
