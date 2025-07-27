@@ -231,7 +231,7 @@ export const GleeWorldLanding = () => {
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-white/20 shadow-lg sticky top-0 z-50">
         <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between h-full">
             <div className="flex items-center space-x-2 sm:space-x-4">
               <Link to="/landing" className="flex items-center space-x-2 sm:space-x-3 hover:opacity-80 transition-opacity">
                 <img 
