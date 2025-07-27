@@ -202,11 +202,11 @@ export default function About() {
               across generations, and where the magic of the Spelman Glee Club lives forever.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Button asChild size="lg" className="bg-spelman-blue-dark hover:bg-spelman-blue-light text-white px-8 py-4 text-lg">
-                <Link to="/calendar">
-                  <Calendar className="w-5 h-5 mr-2" />
-                  Explore GleeWorld
-                </Link>
+            <Button asChild size="lg" className="bg-spelman-blue-dark hover:bg-spelman-blue-light text-white px-8 py-4 text-lg">
+              <Link to="/">
+                <Calendar className="w-5 h-5 mr-2" />
+                Explore GleeWorld
+              </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-spelman-blue-dark text-spelman-blue-dark hover:bg-spelman-blue-dark hover:text-white px-8 py-4 text-lg">
                 <Link to="/auth">
