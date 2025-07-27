@@ -12,6 +12,7 @@ import { YoutubeVideoSection } from "@/components/youtube/YoutubeVideoSection";
 import { FAQSlider } from "@/components/landing/FAQSlider";
 import { CountdownTimer } from "@/components/landing/CountdownTimer";
 import { AuditionHoverCard } from "@/components/audition/AuditionHoverCard";
+import { MusicStaffIcon } from "@/components/icons/MusicStaffIcon";
 import { 
   Calendar, 
   MapPin,
@@ -20,7 +21,6 @@ import {
   ChevronRight,
   Sparkles,
   X,
-  Menu,
   Music,
   Album as AlbumIcon,
   Youtube,
@@ -237,7 +237,7 @@ export const GleeWorldLanding = () => {
                 <img 
                   src="/lovable-uploads/a07cfbb7-b3ac-4674-acd9-4a037296a3f7.png" 
                   alt="Spelman College Glee Club"
-                  className="h-8 sm:h-10 md:h-12 w-auto brightness-110"
+                  className="h-10 sm:h-12 md:h-14 w-auto brightness-110"
                 />
                 <div className="hidden sm:block">
                   <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">GleeWorld</h1>
@@ -369,7 +369,7 @@ export const GleeWorldLanding = () => {
               {mobileMenuOpen ? (
                 <X className="w-5 h-5" />
               ) : (
-                <Menu className="w-5 h-5" />
+                <MusicStaffIcon className="w-5 h-5" size={20} />
               )}
             </button>
           </div>

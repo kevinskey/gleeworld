@@ -19,17 +19,17 @@ const ClockFace = ({ currentTime }: { currentTime: Date }) => {
   const hourAngle = (hours * 30) + (minutes * 0.5) - 90; // 30 degrees per hour + smooth minutes
 
   return (
-    <svg width="32" height="32" viewBox="0 0 32 32" className="text-foreground">
+    <svg width="28" height="28" viewBox="0 0 28 28" className="text-foreground">
       {/* Clock face */}
-      <circle cx="16" cy="16" r="15" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+      <circle cx="14" cy="14" r="13" fill="none" stroke="currentColor" strokeWidth="1.5"/>
       
       {/* Hour markers */}
       {[...Array(12)].map((_, i) => {
         const angle = (i * 30) - 90;
-        const x1 = 16 + 12 * Math.cos(angle * Math.PI / 180);
-        const y1 = 16 + 12 * Math.sin(angle * Math.PI / 180);
-        const x2 = 16 + 14 * Math.cos(angle * Math.PI / 180);
-        const y2 = 16 + 14 * Math.sin(angle * Math.PI / 180);
+        const x1 = 14 + 10.5 * Math.cos(angle * Math.PI / 180);
+        const y1 = 14 + 10.5 * Math.sin(angle * Math.PI / 180);
+        const x2 = 14 + 12 * Math.cos(angle * Math.PI / 180);
+        const y2 = 14 + 12 * Math.sin(angle * Math.PI / 180);
         return (
           <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="currentColor" strokeWidth="1.5"/>
         );
@@ -37,9 +37,9 @@ const ClockFace = ({ currentTime }: { currentTime: Date }) => {
       
       {/* Hour hand */}
       <line 
-        x1="16" y1="16" 
-        x2={16 + 8 * Math.cos(hourAngle * Math.PI / 180)} 
-        y2={16 + 8 * Math.sin(hourAngle * Math.PI / 180)} 
+        x1="14" y1="14" 
+        x2={14 + 7 * Math.cos(hourAngle * Math.PI / 180)} 
+        y2={14 + 7 * Math.sin(hourAngle * Math.PI / 180)} 
         stroke="currentColor" 
         strokeWidth="2.5" 
         strokeLinecap="round"
@@ -48,9 +48,9 @@ const ClockFace = ({ currentTime }: { currentTime: Date }) => {
       
       {/* Minute hand */}
       <line 
-        x1="16" y1="16" 
-        x2={16 + 11 * Math.cos(minuteAngle * Math.PI / 180)} 
-        y2={16 + 11 * Math.sin(minuteAngle * Math.PI / 180)} 
+        x1="14" y1="14" 
+        x2={14 + 9.5 * Math.cos(minuteAngle * Math.PI / 180)} 
+        y2={14 + 9.5 * Math.sin(minuteAngle * Math.PI / 180)} 
         stroke="currentColor" 
         strokeWidth="2" 
         strokeLinecap="round"
@@ -59,9 +59,9 @@ const ClockFace = ({ currentTime }: { currentTime: Date }) => {
       
       {/* Second hand */}
       <line 
-        x1="16" y1="16" 
-        x2={16 + 12 * Math.cos(secondAngle * Math.PI / 180)} 
-        y2={16 + 12 * Math.sin(secondAngle * Math.PI / 180)} 
+        x1="14" y1="14" 
+        x2={14 + 10.5 * Math.cos(secondAngle * Math.PI / 180)} 
+        y2={14 + 10.5 * Math.sin(secondAngle * Math.PI / 180)} 
         stroke="currentColor" 
         strokeWidth="1" 
         strokeLinecap="round"
@@ -69,7 +69,7 @@ const ClockFace = ({ currentTime }: { currentTime: Date }) => {
       />
       
       {/* Center dot */}
-      <circle cx="16" cy="16" r="2" fill="currentColor"/>
+      <circle cx="14" cy="14" r="1.5" fill="currentColor"/>
     </svg>
   );
 };
