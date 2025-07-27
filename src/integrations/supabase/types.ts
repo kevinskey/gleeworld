@@ -1468,6 +1468,7 @@ export type Database = {
           honoraria: number | null
           id: string
           image_url: string | null
+          is_private: boolean | null
           is_travel_involved: boolean | null
           location: string | null
           misc_supplies: number | null
@@ -1517,6 +1518,7 @@ export type Database = {
           honoraria?: number | null
           id?: string
           image_url?: string | null
+          is_private?: boolean | null
           is_travel_involved?: boolean | null
           location?: string | null
           misc_supplies?: number | null
@@ -1566,6 +1568,7 @@ export type Database = {
           honoraria?: number | null
           id?: string
           image_url?: string | null
+          is_private?: boolean | null
           is_travel_involved?: boolean | null
           location?: string | null
           misc_supplies?: number | null
@@ -2599,6 +2602,7 @@ export type Database = {
           external_source: string | null
           id: string
           image_url: string | null
+          is_private: boolean | null
           is_public: boolean | null
           late_arrival_allowed: boolean | null
           location: string | null
@@ -2628,6 +2632,7 @@ export type Database = {
           external_source?: string | null
           id?: string
           image_url?: string | null
+          is_private?: boolean | null
           is_public?: boolean | null
           late_arrival_allowed?: boolean | null
           location?: string | null
@@ -2657,6 +2662,7 @@ export type Database = {
           external_source?: string | null
           id?: string
           image_url?: string | null
+          is_private?: boolean | null
           is_public?: boolean | null
           late_arrival_allowed?: boolean | null
           location?: string | null
