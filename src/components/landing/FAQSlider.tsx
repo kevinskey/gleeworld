@@ -148,12 +148,7 @@ export const FAQSlider = () => {
 
       case "qa":
         return (
-          <div className="space-y-4 md:space-y-8 pt-8 md:pt-4">
-            <div className="text-center">
-              <span className="text-4xl md:text-7xl font-bold text-primary opacity-20">
-                FAQ
-              </span>
-            </div>
+          <div className="space-y-4 md:space-y-8 pt-16 md:pt-20">
             <div className="bg-primary rounded-xl p-4 md:p-6 max-w-4xl mx-auto backdrop-blur-sm border border-white/20">
               <div className="flex items-center space-x-2 md:space-x-4 mb-3 md:mb-4">
                 <div className="bg-background rounded-full w-8 h-8 md:w-12 md:h-12 flex items-center justify-center">
@@ -179,7 +174,7 @@ export const FAQSlider = () => {
 
       case "closing":
         return (
-          <div className="text-center space-y-4 md:space-y-8 pt-8 md:pt-4">
+          <div className="text-center space-y-4 md:space-y-8">
             <div className="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-4 md:p-8 max-w-3xl mx-auto backdrop-blur-sm border border-white/20 shadow-glass">
               <h2 className="text-lg md:text-4xl font-bold text-white mb-2 md:mb-4">
                 {currentData.title}
@@ -217,13 +212,20 @@ export const FAQSlider = () => {
       <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
       <div className="container mx-auto px-4">
         <div className="relative">
-          {/* Slide Content */}
-          <div className="h-[250px] md:h-[500px] flex items-center justify-center">
+          {/* Fixed FAQ Letters - Always visible for Q&A slides */}
+          {currentData.type === "qa" && (
+            <div className="absolute top-8 md:top-12 left-1/2 transform -translate-x-1/2 z-10">
+              <span className="text-4xl md:text-7xl font-bold text-primary opacity-20">
+                FAQ
+              </span>
+            </div>
+          )}
+          
+          {/* Slide Content - Fixed height container */}
+          <div className="h-[400px] md:h-[500px] flex items-center justify-center">
             {renderSlideContent()}
           </div>
-
         </div>
-
       </div>
     </section>
   );
