@@ -12,7 +12,7 @@ export const AuditionHoverCard = () => {
   // On mobile, just show a direct link button
   if (isMobile) {
     return (
-      <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40">
+      <div className="fixed top-28 left-1/2 transform -translate-x-1/2 z-40">
         <Link to={user ? "/auditions" : "/auth?redirect=/auditions"}>
           <Button 
             variant="branded" 
@@ -30,7 +30,7 @@ export const AuditionHoverCard = () => {
 
   // Desktop version with hover card
   return (
-    <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-40">
+    <div className="fixed top-32 left-1/2 transform -translate-x-1/2 z-40">
       <Link to={user ? "/auditions" : "/auth?redirect=/auditions"}>
         <Button 
           variant="branded" 
