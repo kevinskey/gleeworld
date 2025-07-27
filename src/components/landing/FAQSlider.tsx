@@ -8,8 +8,7 @@ const faqData = [
     type: "header",
     title: "Frequently Asked Questions",
     subtitle: "Spelman College Glee Club",
-    icon: true,
-    imageUrl: "https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/hero-images/hero-desktop-1753412316490.png"
+    icon: true
   },
   {
     id: "audition-required",
@@ -98,51 +97,20 @@ export const FAQSlider = () => {
       case "header":
         return (
           <div className="text-center space-y-6">
-            {currentData.imageUrl ? (
-              <div className="relative w-full max-w-4xl mx-auto">
-                <img 
-                  src={currentData.imageUrl} 
-                  alt={currentData.title}
-                  className="w-full h-48 md:h-64 object-cover rounded-xl shadow-glass backdrop-blur-sm border border-white/20"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).style.display = 'none';
-                    const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
-                    if (nextElement) nextElement.style.display = 'flex';
-                  }}
-                />
-                <div className="hidden flex-col justify-center space-x-4 text-primary">
-                  <Music className="w-8 h-8" />
-                  <Music className="w-8 h-8" />
+            <div className="bg-gradient-to-br from-primary via-primary/90 to-primary/80 rounded-xl p-6 md:p-8 max-w-4xl mx-auto backdrop-blur-sm border border-white/20 shadow-glass">
+              {currentData.icon && (
+                <div className="flex justify-center space-x-4 text-white mb-4 md:mb-6">
+                  <Music className="w-8 h-8 md:w-12 md:h-12" />
+                  <Music className="w-8 h-8 md:w-12 md:h-12" />
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-blue-600/60 via-blue-500/20 to-transparent rounded-xl flex items-end">
-                  <div className="p-6 w-full">
-                    <h1 className="text-2xl md:text-4xl font-bold text-white mb-2">
-                      {currentData.title}
-                    </h1>
-                    <h2 className="text-lg md:text-2xl text-white/90">
-                      {currentData.subtitle}
-                    </h2>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <>
-                {currentData.icon && (
-                  <div className="flex justify-center space-x-4 text-primary">
-                    <Music className="w-8 h-8" />
-                    <Music className="w-8 h-8" />
-                  </div>
-                )}
-                <h1 className="text-2xl md:text-5xl font-bold text-primary">
-                  {currentData.title}
-                </h1>
-                <div className="bg-primary/10 rounded-xl p-8 max-w-2xl mx-auto backdrop-blur-sm border border-white/20">
-                  <h2 className="text-lg md:text-3xl font-semibold text-primary">
-                    {currentData.subtitle}
-                  </h2>
-                </div>
-              </>
-            )}
+              )}
+              <h1 className="text-2xl md:text-4xl font-bold text-white mb-3 md:mb-4">
+                {currentData.title}
+              </h1>
+              <h2 className="text-lg md:text-2xl text-white/90 font-medium">
+                {currentData.subtitle}
+              </h2>
+            </div>
           </div>
         );
 
