@@ -13,53 +13,33 @@ const faqData = [
   },
   {
     id: "audition-required",
-    type: "image-slide",
-    title: "Audition Requirements",
-    imageUrl: "https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/hero-images/hero-mobile-1753412288330.png",
-    fallback: {
-      question: "Is an audition required to join the Glee Club?",
-      answer: "Yes! In order to join the Glee Club, you must audition and will be notified of your acceptance before the first rehearsal."
-    }
+    type: "qa",
+    question: "Is an audition required to join the Glee Club?",
+    answer: "Yes! In order to join the Glee Club, you must audition and will be notified of your acceptance before the first rehearsal."
   },
   {
     id: "audition-process",
-    type: "image-slide",
-    title: "Audition Process",
-    imageUrl: "https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/hero-images/hero-ipad-1753412280047.png",
-    fallback: {
-      question: "What happens at a Glee Club Audition?",
-      answer: "We ask you to prepare thirty seconds to a minute of any song that best showcases your voice. In addition, we'll ask you to attempt a Glee song that will be provided to you in advance. Lastly, we will test your sight-reading ability to gauge your existing musical knowledge. Sight-reading is not required to be a member of the Glee Club."
-    }
+    type: "qa",
+    question: "What happens at a Glee Club Audition?",
+    answer: "We ask you to prepare thirty seconds to a minute of any song that best showcases your voice. In addition, we'll ask you to attempt a Glee song that will be provided to you in advance. Lastly, we will test your sight-reading ability to gauge your existing musical knowledge. Sight-reading is not required to be a member of the Glee Club."
   },
   {
     id: "music-genre",
-    type: "image-slide",
-    title: "Music Genre",
-    imageUrl: "https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/dashboard-backgrounds/dashboard-welcome-bg-0.28839588888689016.jpeg",
-    fallback: {
-      question: "What genre of music does the glee club sing?",
-      answer: "The Glee Club repertoire consists of sacred and secular choral literature for women's voices, with a particular focus on traditional spirituals, music by African American composers and music from many cultures."
-    }
+    type: "qa",
+    question: "What genre of music does the glee club sing?",
+    answer: "The Glee Club repertoire consists of sacred and secular choral literature for women's voices, with a particular focus on traditional spirituals, music by African American composers and music from many cultures."
   },
   {
     id: "rehearsal-schedule",
-    type: "image-slide",
-    title: "Rehearsal Schedule",
-    imageUrl: "https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/event-images/4e6c2ec0-1f83-449a-a984-8920f6056ab5/252586b6-0031-4d80-a706-2cd14f39026b-1753508580882.jpg",
-    fallback: {
-      question: "How often does the Glee Club rehearse?",
-      answer: "The Glee Club rehearses every Monday, Wednesday, and Friday from 5:00 P.M. to about 6:30 P.M."
-    }
+    type: "qa",
+    question: "How often does the Glee Club rehearse?",
+    answer: "The Glee Club rehearses every Monday, Wednesday, and Friday from 5:00 P.M. to about 6:30 P.M."
   },
   {
     id: "performance-frequency",
-    type: "image-slide",
-    title: "Performance Frequency",
-    imageUrl: "https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/event-images/4e6c2ec0-1f83-449a-a984-8920f6056ab5/24e80727-d984-4ede-8e31-c2581d543d23-1753505781934.jpg",
-    fallback: {
-      question: "How often does the Glee Club perform?",
-      answer: "The Glee Club performs on campus and in the Atlanta area throughout the entire year, as well as a tour of multiple states during spring break."
-    }
+    type: "qa",
+    question: "How often does the Glee Club perform?",
+    answer: "The Glee Club performs on campus and in the Atlanta area throughout the entire year, as well as a tour of multiple states during spring break."
   },
   {
     id: "class-credit",
@@ -163,53 +143,6 @@ export const FAQSlider = () => {
                 </div>
               </>
             )}
-          </div>
-        );
-
-      case "image-slide":
-        return (
-          <div className="w-full max-w-4xl mx-auto">
-            <img 
-              src={currentData.imageUrl} 
-              alt={currentData.title}
-              className="w-full h-64 md:h-96 object-cover rounded-xl shadow-glass backdrop-blur-sm border border-white/20"
-              onError={(e) => {
-                // If image fails to load, show fallback content
-                const container = e.currentTarget.parentElement;
-                if (container && currentData.fallback) {
-                  container.innerHTML = `
-                    <div class="space-y-4 md:space-y-8 pt-8 md:pt-4">
-                      <div class="text-center">
-                        <span class="text-4xl md:text-7xl font-bold text-primary opacity-20">FAQ</span>
-                      </div>
-                      <div class="bg-primary rounded-xl p-4 md:p-6 max-w-4xl mx-auto backdrop-blur-sm border border-white/20">
-                        <div class="flex items-center space-x-2 md:space-x-4 mb-3 md:mb-4">
-                          <div class="bg-background rounded-full w-8 h-8 md:w-12 md:h-12 flex items-center justify-center">
-                            <span class="text-sm md:text-xl font-bold text-primary">Q</span>
-                          </div>
-                          <h3 class="text-sm md:text-2xl font-semibold text-white">${(currentData as any).fallback.question}</h3>
-                        </div>
-                      </div>
-                      <div class="bg-background border-2 border-primary rounded-xl p-4 md:p-6 max-w-4xl mx-auto backdrop-blur-sm">
-                        <div class="flex items-start space-x-2 md:space-x-4">
-                          <div class="bg-primary rounded-full w-8 h-8 md:w-12 md:h-12 flex items-center justify-center flex-shrink-0">
-                            <span class="text-sm md:text-xl font-bold text-white">A</span>
-                          </div>
-                          <p class="text-xs md:text-lg text-foreground leading-relaxed">${(currentData as any).fallback.answer}</p>
-                        </div>
-                      </div>
-                    </div>
-                  `;
-                }
-              }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-primary/60 via-transparent to-transparent rounded-xl flex items-end pointer-events-none">
-              <div className="p-6 w-full">
-                <h3 className="text-xl md:text-3xl font-bold text-white">
-                  {currentData.title}
-                </h3>
-              </div>
-            </div>
           </div>
         );
 
