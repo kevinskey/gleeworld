@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Clock } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface TimeLeft {
   days: number;
@@ -8,8 +9,75 @@ interface TimeLeft {
   seconds: number;
 }
 
+const ClockFace = ({ currentTime }: { currentTime: Date }) => {
+  const hours = currentTime.getHours() % 12;
+  const minutes = currentTime.getMinutes();
+  const seconds = currentTime.getSeconds();
+
+  const secondAngle = (seconds * 6) - 90; // 6 degrees per second
+  const minuteAngle = (minutes * 6) + (seconds * 0.1) - 90; // 6 degrees per minute + smooth seconds
+  const hourAngle = (hours * 30) + (minutes * 0.5) - 90; // 30 degrees per hour + smooth minutes
+
+  return (
+    <svg width="32" height="32" viewBox="0 0 32 32" className="text-primary">
+      {/* Clock face */}
+      <circle cx="16" cy="16" r="15" fill="currentColor" fillOpacity="0.1" stroke="currentColor" strokeWidth="1"/>
+      
+      {/* Hour markers */}
+      {[...Array(12)].map((_, i) => {
+        const angle = (i * 30) - 90;
+        const x1 = 16 + 12 * Math.cos(angle * Math.PI / 180);
+        const y1 = 16 + 12 * Math.sin(angle * Math.PI / 180);
+        const x2 = 16 + 14 * Math.cos(angle * Math.PI / 180);
+        const y2 = 16 + 14 * Math.sin(angle * Math.PI / 180);
+        return (
+          <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="currentColor" strokeWidth="1"/>
+        );
+      })}
+      
+      {/* Hour hand */}
+      <line 
+        x1="16" y1="16" 
+        x2={16 + 8 * Math.cos(hourAngle * Math.PI / 180)} 
+        y2={16 + 8 * Math.sin(hourAngle * Math.PI / 180)} 
+        stroke="currentColor" 
+        strokeWidth="2" 
+        strokeLinecap="round"
+        style={{ transition: 'all 0.5s ease-in-out' }}
+      />
+      
+      {/* Minute hand */}
+      <line 
+        x1="16" y1="16" 
+        x2={16 + 11 * Math.cos(minuteAngle * Math.PI / 180)} 
+        y2={16 + 11 * Math.sin(minuteAngle * Math.PI / 180)} 
+        stroke="currentColor" 
+        strokeWidth="1.5" 
+        strokeLinecap="round"
+        style={{ transition: 'all 0.5s ease-in-out' }}
+      />
+      
+      {/* Second hand */}
+      <line 
+        x1="16" y1="16" 
+        x2={16 + 12 * Math.cos(secondAngle * Math.PI / 180)} 
+        y2={16 + 12 * Math.sin(secondAngle * Math.PI / 180)} 
+        stroke="currentColor" 
+        strokeWidth="0.5" 
+        strokeLinecap="round"
+        style={{ transition: 'all 0.1s ease-in-out' }}
+      />
+      
+      {/* Center dot */}
+      <circle cx="16" cy="16" r="1.5" fill="currentColor"/>
+    </svg>
+  );
+};
+
 export const CountdownTimer = () => {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     // Concert date: December 5, 2025 at 7:00 PM
@@ -17,6 +85,7 @@ export const CountdownTimer = () => {
 
     const calculateTimeLeft = () => {
       const now = new Date();
+      setCurrentTime(now);
       const difference = concertDate.getTime() - now.getTime();
 
       if (difference > 0) {
@@ -37,19 +106,61 @@ export const CountdownTimer = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // Auto-hide popover after 4 seconds
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => setIsOpen(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   return (
-    <div className="hidden lg:flex items-center space-x-2 bg-primary/10 rounded-md px-2 py-1 text-xs">
-      <Clock className="w-3 h-3 text-primary" />
-      <span className="text-primary font-medium">Christmas Carol:</span>
-      <div className="flex items-center space-x-1 text-primary font-bold">
-        <span>{timeLeft.days}d</span>
-        <span>:</span>
-        <span>{timeLeft.hours}h</span>
-        <span>:</span>
-        <span>{timeLeft.minutes}m</span>
-        <span>:</span>
-        <span>{timeLeft.seconds}s</span>
+    <>
+      {/* Desktop countdown */}
+      <div className="hidden lg:flex items-center space-x-2 bg-primary/10 rounded-md px-2 py-1 text-xs">
+        <Clock className="w-3 h-3 text-primary" />
+        <span className="text-primary font-medium">Christmas Carol:</span>
+        <div className="flex items-center space-x-1 text-primary font-bold">
+          <span>{timeLeft.days}d</span>
+          <span>:</span>
+          <span>{timeLeft.hours}h</span>
+          <span>:</span>
+          <span>{timeLeft.minutes}m</span>
+          <span>:</span>
+          <span>{timeLeft.seconds}s</span>
+        </div>
       </div>
-    </div>
+
+      {/* Mobile/Tablet interactive clock */}
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <button 
+            className="lg:hidden flex items-center justify-center p-1 bg-primary/10 rounded-md transition-all duration-200 hover:scale-110 hover:bg-primary/20 active:scale-95"
+            aria-label="Christmas Carol countdown"
+          >
+            <ClockFace currentTime={currentTime} />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent 
+          side="bottom" 
+          align="center" 
+          className="w-auto p-3 animate-fade-in"
+          sideOffset={8}
+        >
+          <div className="text-center">
+            <h4 className="font-semibold text-sm text-primary mb-2">Countdown to Christmas Carol</h4>
+            <div className="flex items-center justify-center space-x-1 text-primary font-bold text-sm">
+              <span>{timeLeft.days}d</span>
+              <span>:</span>
+              <span>{timeLeft.hours}h</span>
+              <span>:</span>
+              <span>{timeLeft.minutes}m</span>
+              <span>:</span>
+              <span>{timeLeft.seconds}s</span>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </>
   );
 };
