@@ -116,25 +116,55 @@ export const FAQSlider = () => {
 
       case "qa":
         return (
-          <div className="space-y-4 md:space-y-8">
-            <div className="bg-primary rounded-xl p-2 md:p-6 lg:p-8 max-w-4xl mx-auto backdrop-blur-sm border border-white/20 min-h-[60px] md:min-h-[100px] lg:min-h-[120px] flex items-center">
-              <div className="flex items-center space-x-2 md:space-x-6 lg:space-x-8 w-full">
-                <div className="bg-background rounded-full w-8 h-8 md:w-16 md:h-16 lg:w-20 lg:h-20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm md:text-2xl lg:text-3xl font-bold text-primary">Q</span>
+          <div className="space-y-4 md:space-y-0">
+            {/* Mobile: Stacked Q&A */}
+            <div className="md:hidden space-y-4">
+              <div className="bg-primary rounded-xl p-2 max-w-4xl mx-auto backdrop-blur-sm border border-white/20 min-h-[60px] flex items-center">
+                <div className="flex items-center space-x-2 w-full">
+                  <div className="bg-background rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
+                    <span className="text-sm font-bold text-primary">Q</span>
+                  </div>
+                  <h3 className="text-sm font-semibold text-white">
+                    {currentData.question}
+                  </h3>
                 </div>
-                <h3 className="text-sm md:text-3xl lg:text-4xl font-semibold text-white">
-                  {currentData.question}
-                </h3>
+              </div>
+              <div className="bg-background border-2 border-primary rounded-xl p-2 max-w-4xl mx-auto backdrop-blur-sm min-h-[100px] flex items-start">
+                <div className="flex items-start space-x-2 w-full">
+                  <div className="bg-primary rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
+                    <span className="text-sm font-bold text-white">A</span>
+                  </div>
+                  <p className="text-xs text-foreground leading-relaxed">
+                    {currentData.answer}
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="bg-background border-2 border-primary rounded-xl p-2 md:p-6 lg:p-8 max-w-4xl mx-auto backdrop-blur-sm border border-white/20 min-h-[100px] md:min-h-[140px] lg:min-h-[160px] flex items-start">
-              <div className="flex items-start space-x-2 md:space-x-6 lg:space-x-8 w-full">
-                <div className="bg-primary rounded-full w-8 h-8 md:w-16 md:h-16 lg:w-20 lg:h-20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm md:text-2xl lg:text-3xl font-bold text-white">A</span>
+
+            {/* Desktop/iPad: Side by side Q&A */}
+            <div className="hidden md:flex md:space-x-6 lg:space-x-8 max-w-6xl mx-auto">
+              {/* Question on the left */}
+              <div className="bg-primary rounded-xl p-4 lg:p-6 backdrop-blur-sm border border-white/20 flex-1 min-h-[120px] lg:min-h-[140px] flex items-center">
+                <div className="flex items-center space-x-4 lg:space-x-6 w-full">
+                  <div className="bg-background rounded-full w-12 h-12 lg:w-16 lg:h-16 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl lg:text-2xl font-bold text-primary">Q</span>
+                  </div>
+                  <h3 className="text-lg lg:text-2xl font-semibold text-white leading-tight">
+                    {currentData.question}
+                  </h3>
                 </div>
-                <p className="text-xs md:text-xl lg:text-2xl text-foreground leading-relaxed">
-                  {currentData.answer}
-                </p>
+              </div>
+
+              {/* Answer on the right */}
+              <div className="bg-background border-2 border-primary rounded-xl p-4 lg:p-6 backdrop-blur-sm flex-1 min-h-[120px] lg:min-h-[140px] flex items-start">
+                <div className="flex items-start space-x-4 lg:space-x-6 w-full">
+                  <div className="bg-primary rounded-full w-12 h-12 lg:w-16 lg:h-16 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl lg:text-2xl font-bold text-white">A</span>
+                  </div>
+                  <p className="text-base lg:text-lg text-foreground leading-relaxed">
+                    {currentData.answer}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -182,15 +212,15 @@ export const FAQSlider = () => {
         <div className="relative">
           {/* Fixed FAQ Letters - Always visible for Q&A slides */}
           {currentData.type === "qa" && (
-            <div className="absolute top-4 md:top-8 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none">
-              <span className="text-4xl md:text-7xl font-bold text-primary opacity-20">
+            <div className="absolute top-0 md:top-2 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none">
+              <span className="text-3xl md:text-5xl lg:text-6xl font-bold text-primary opacity-20">
                 FAQ
               </span>
             </div>
           )}
           
           {/* Slide Content - Fixed height container with consistent top margin */}
-          <div className="h-[300px] md:h-[500px] lg:h-[600px] flex items-start justify-center pt-8 md:pt-16 lg:pt-20">
+          <div className="h-[300px] md:h-[350px] lg:h-[400px] flex items-start justify-center pt-8 md:pt-12 lg:pt-16">
             {renderSlideContent()}
           </div>
         </div>
