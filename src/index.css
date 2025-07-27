@@ -8,8 +8,8 @@
 @layer base {
   :root {
     /* Spelman College Official Colors */
-    --spelman-blue-dark: 210 75% 30%; /* #114488 (PMS 7687 C) */
-    --spelman-blue-light: 203 85% 63%; /* #55BBEE (PMS 298 C) */
+    --spelman-blue-dark: 220 80% 30%; /* Pure blue - dark */
+    --spelman-blue-light: 220 85% 65%; /* Pure blue - light */
     
     /* Primary Brand Color - Spelman Dark Blue */
     --primary: var(--spelman-blue-dark);
