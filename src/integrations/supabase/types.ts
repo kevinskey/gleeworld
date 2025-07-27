@@ -6681,6 +6681,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_rate_limit_secure: {
+        Args: {
+          identifier_param: string
+          action_type_param: string
+          max_attempts?: number
+          window_minutes?: number
+        }
+        Returns: boolean
+      }
       check_vocal_health_alerts: {
         Args: { target_user_id: string }
         Returns: boolean
@@ -6849,6 +6858,14 @@ export type Database = {
         }
         Returns: string
       }
+      log_admin_action: {
+        Args: {
+          p_action_type: string
+          p_target_user_id: string
+          p_details?: Json
+        }
+        Returns: string
+      }
       log_security_event: {
         Args: {
           p_action_type: string
@@ -6919,6 +6936,10 @@ export type Database = {
       user_has_budget_permission: {
         Args: { budget_id_param: string; permission_type_param: string }
         Returns: boolean
+      }
+      validate_password_strength: {
+        Args: { password_text: string }
+        Returns: Json
       }
     }
     Enums: {
