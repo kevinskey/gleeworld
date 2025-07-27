@@ -222,7 +222,7 @@ export const FAQSlider = () => {
           )}
           
           {/* Slide Content - Fixed height container with consistent top margin */}
-          <div className="h-[300px] md:h-[400px] flex items-center justify-center pt-12 md:pt-16">
+          <div className="h-[300px] md:h-[400px] flex items-start justify-center pt-12 md:pt-16">
             {renderSlideContent()}
           </div>
         </div>
