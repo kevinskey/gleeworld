@@ -148,7 +148,7 @@ export const FAQSlider = () => {
 
       case "qa":
         return (
-          <div className="space-y-4 md:space-y-8 pt-16 md:pt-20">
+          <div className="space-y-4 md:space-y-8">
             <div className="bg-primary rounded-xl p-2 md:p-4 max-w-4xl mx-auto backdrop-blur-sm border border-white/20 min-h-[60px] md:min-h-[80px] flex items-center">
               <div className="flex items-center space-x-2 md:space-x-4 w-full">
                 <div className="bg-background rounded-full w-8 h-8 md:w-12 md:h-12 flex items-center justify-center flex-shrink-0">
@@ -214,15 +214,15 @@ export const FAQSlider = () => {
         <div className="relative">
           {/* Fixed FAQ Letters - Always visible for Q&A slides */}
           {currentData.type === "qa" && (
-            <div className="absolute top-8 md:top-12 left-1/2 transform -translate-x-1/2 z-10">
+            <div className="absolute top-4 md:top-8 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none">
               <span className="text-4xl md:text-7xl font-bold text-primary opacity-20">
                 FAQ
               </span>
             </div>
           )}
           
-          {/* Slide Content - Fixed height container */}
-          <div className="h-[300px] md:h-[400px] flex items-center justify-center">
+          {/* Slide Content - Fixed height container with consistent top margin */}
+          <div className="h-[300px] md:h-[400px] flex items-center justify-center pt-12 md:pt-16">
             {renderSlideContent()}
           </div>
         </div>
