@@ -1,227 +1,150 @@
-import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Music } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, Music, MessageCircleQuestion } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const faqData = [
   {
-    id: "header",
-    type: "header",
-    title: "Frequently Asked Questions",
-    subtitle: "Spelman College Glee Club",
-    icon: true
-  },
-  {
     id: "audition-required",
-    type: "qa",
     question: "Is an audition required to join the Glee Club?",
     answer: "Yes! In order to join the Glee Club, you must audition and will be notified of your acceptance before the first rehearsal."
   },
   {
     id: "audition-process",
-    type: "qa",
     question: "What happens at a Glee Club Audition?",
     answer: "We ask you to prepare thirty seconds to a minute of any song that best showcases your voice. In addition, we'll ask you to attempt a Glee song that will be provided to you in advance. Lastly, we will test your sight-reading ability to gauge your existing musical knowledge. Sight-reading is not required to be a member of the Glee Club."
   },
   {
     id: "music-genre",
-    type: "qa",
     question: "What genre of music does the glee club sing?",
     answer: "The Glee Club repertoire consists of sacred and secular choral literature for women's voices, with a particular focus on traditional spirituals, music by African American composers and music from many cultures."
   },
   {
     id: "rehearsal-schedule",
-    type: "qa",
     question: "How often does the Glee Club rehearse?",
     answer: "The Glee Club rehearses every Monday, Wednesday, and Friday from 5:00 P.M. to about 6:30 P.M."
   },
   {
     id: "performance-frequency",
-    type: "qa",
     question: "How often does the Glee Club perform?",
     answer: "The Glee Club performs on campus and in the Atlanta area throughout the entire year, as well as a tour of multiple states during spring break."
   },
   {
     id: "class-credit",
-    type: "qa",
     question: "Is the Glee club considered a class?",
     answer: "Yes. The Glee Club is considered a class and each member must be registered for 1 or 0 credits."
   },
   {
     id: "music-major",
-    type: "qa",
     question: "Do I have to be a music major to join glee?",
     answer: "No! The Glee Club accepts members from various of majors and disciplines."
-  },
-  {
-    id: "closing",
-    type: "closing",
-    title: "Good luck on your auditions ladies!",
-    subtitle: "To stay up to date, follow us on social media at",
-    handle: "@Spelmanglee"
   }
 ];
 
 export const FAQSlider = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [openItems, setOpenItems] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (!isAutoPlaying) return;
-    
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % faqData.length);
-    }, 7000);
-
-    return () => clearInterval(interval);
-  }, [isAutoPlaying]);
-
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % faqData.length);
-    setIsAutoPlaying(false);
+  const toggleItem = (id: string) => {
+    setOpenItems(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id)
+        : [...prev, id]
+    );
   };
 
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + faqData.length) % faqData.length);
-    setIsAutoPlaying(false);
-  };
-
-  const goToSlide = (index: number) => {
-    setCurrentSlide(index);
-    setIsAutoPlaying(false);
-  };
-
-  const currentData = faqData[currentSlide];
-
-  const renderSlideContent = () => {
-    switch (currentData.type) {
-      case "header":
-        return (
-          <div className="text-center space-y-6">
-            <div className="bg-gradient-to-br from-primary via-primary/90 to-primary/80 rounded-xl p-6 md:p-8 max-w-4xl mx-auto backdrop-blur-sm border border-white/20 shadow-glass">
-              {currentData.icon && (
-                <div className="flex justify-center space-x-4 text-white mb-4 md:mb-6">
-                  <Music className="w-8 h-8 md:w-12 md:h-12" />
-                  <Music className="w-8 h-8 md:w-12 md:h-12" />
-                </div>
-              )}
-              <h1 className="text-2xl md:text-5xl lg:text-6xl font-bold text-white mb-3 md:mb-6">
-                {currentData.title}
-              </h1>
-              <h2 className="text-lg md:text-3xl lg:text-4xl text-white/90 font-medium">
-                {currentData.subtitle}
-              </h2>
-            </div>
-          </div>
-        );
-
-      case "qa":
-        return (
-          <div className="space-y-4 md:space-y-0">
-            {/* Mobile: Stacked Q&A */}
-            <div className="md:hidden space-y-4">
-              <div className="bg-primary rounded-xl p-2 max-w-4xl mx-auto backdrop-blur-sm border border-white/20 min-h-[60px] flex items-center">
-                <div className="flex items-center space-x-2 w-full">
-                  <div className="bg-background rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
-                    <span className="text-sm font-bold text-primary">Q</span>
-                  </div>
-                  <h3 className="text-sm font-semibold text-white">
-                    {currentData.question}
-                  </h3>
-                </div>
-              </div>
-              <div className="bg-background border-2 border-primary rounded-xl p-2 max-w-4xl mx-auto backdrop-blur-sm min-h-[100px] flex items-start">
-                <div className="flex items-start space-x-2 w-full">
-                  <div className="bg-primary rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
-                    <span className="text-sm font-bold text-white">A</span>
-                  </div>
-                  <p className="text-xs text-foreground leading-relaxed">
-                    {currentData.answer}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Desktop/iPad: Side by side Q&A */}
-            <div className="hidden md:flex md:space-x-6 lg:space-x-8 max-w-6xl mx-auto">
-              {/* Question on the left */}
-              <div className="bg-primary rounded-xl p-4 lg:p-6 backdrop-blur-sm border border-white/20 flex-1 min-h-[120px] lg:min-h-[140px] flex items-center">
-                <div className="flex items-center space-x-4 lg:space-x-6 w-full">
-                  <div className="bg-background rounded-full w-12 h-12 lg:w-16 lg:h-16 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xl lg:text-2xl font-bold text-primary">Q</span>
-                  </div>
-                  <h3 className="text-lg lg:text-2xl font-semibold text-white leading-tight">
-                    {currentData.question}
-                  </h3>
-                </div>
-              </div>
-
-              {/* Answer on the right */}
-              <div className="bg-background border-2 border-primary rounded-xl p-4 lg:p-6 backdrop-blur-sm flex-1 min-h-[120px] lg:min-h-[140px] flex items-start">
-                <div className="flex items-start space-x-4 lg:space-x-6 w-full">
-                  <div className="bg-primary rounded-full w-12 h-12 lg:w-16 lg:h-16 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xl lg:text-2xl font-bold text-white">A</span>
-                  </div>
-                  <p className="text-base lg:text-lg text-foreground leading-relaxed">
-                    {currentData.answer}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case "closing":
-        return (
-          <div className="text-center space-y-4 md:space-y-8">
-            <div className="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-4 md:p-8 max-w-3xl mx-auto backdrop-blur-sm border border-white/20 shadow-glass">
-              <h2 className="text-lg md:text-5xl lg:text-6xl font-bold text-white mb-2 md:mb-6">
-                {currentData.title}
-              </h2>
-              <p className="text-sm md:text-2xl lg:text-3xl text-white/90 mb-2 md:mb-6">
-                {currentData.subtitle}
-              </p>
-              <p className="text-base md:text-3xl lg:text-4xl font-bold text-white">
-                {currentData.handle}
-              </p>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
+  const isOpen = (id: string) => openItems.includes(id);
 
   return (
-    <section className="w-full relative overflow-hidden pt-24 md:pt-32 lg:pt-40 pb-24">
-      {/* Dynamic geometric background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-primary/5"></div>
-      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-primary/5 to-primary/15"></div>
+    <section className="w-full relative overflow-hidden py-24 md:py-32 lg:py-40">
+      {/* Background gradients */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/10"></div>
+      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-primary/3 to-primary/8"></div>
       
-      {/* Geometric pattern overlay */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-10 left-10 w-32 h-32 bg-primary/20 rounded-full blur-xl"></div>
+      {/* Decorative elements */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-20 left-10 w-32 h-32 bg-primary/20 rounded-full blur-xl"></div>
         <div className="absolute top-40 right-20 w-24 h-24 bg-primary/15 rounded-full blur-lg"></div>
         <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-primary/10 rounded-full blur-2xl"></div>
         <div className="absolute bottom-10 right-10 w-28 h-28 bg-primary/25 rounded-full blur-xl"></div>
       </div>
-      
-      {/* Border and shadow */}
-      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
-      <div className="container mx-auto px-4">
-        <div className="relative">
-          {/* Fixed FAQ Letters - Always visible for Q&A slides */}
-          {currentData.type === "qa" && (
-            <div className="absolute top-0 md:top-2 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none">
-              <span className="text-3xl md:text-5xl lg:text-6xl font-bold text-primary opacity-20">
-                FAQ
-              </span>
+
+      <div className="container mx-auto px-4 max-w-4xl">
+        {/* Header */}
+        <div className="text-center mb-16 md:mb-20">
+          <div className="inline-flex items-center justify-center space-x-3 mb-6">
+            <div className="flex items-center space-x-2 text-primary">
+              <Music className="w-8 h-8 md:w-10 md:h-10" />
+              <MessageCircleQuestion className="w-8 h-8 md:w-10 md:h-10" />
+              <Music className="w-8 h-8 md:w-10 md:h-10" />
             </div>
-          )}
-          
-          {/* Slide Content - Fixed height container with consistent top margin */}
-          <div className="h-[300px] md:h-[350px] lg:h-[400px] flex items-start justify-center pt-8 md:pt-12 lg:pt-16">
-            {renderSlideContent()}
+          </div>
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-lg md:text-xl text-muted-foreground">
+            Spelman College Glee Club
+          </p>
+        </div>
+
+        {/* FAQ Accordion */}
+        <div className="space-y-4">
+          {faqData.map((item, index) => (
+            <div
+              key={item.id}
+              className="bg-background/60 backdrop-blur-sm border border-border rounded-xl overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md"
+            >
+              <button
+                onClick={() => toggleItem(item.id)}
+                className="w-full px-6 py-5 md:px-8 md:py-6 text-left flex items-center justify-between transition-colors duration-200 hover:bg-primary/5"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-sm md:text-base font-bold text-primary-foreground">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                  </div>
+                  <h3 className="text-base md:text-lg lg:text-xl font-semibold text-foreground pr-4">
+                    {item.question}
+                  </h3>
+                </div>
+                <ChevronDown 
+                  className={cn(
+                    "w-5 h-5 md:w-6 md:h-6 text-muted-foreground transition-transform duration-200 flex-shrink-0",
+                    isOpen(item.id) && "rotate-180"
+                  )}
+                />
+              </button>
+              
+              <div
+                className={cn(
+                  "overflow-hidden transition-all duration-300 ease-in-out",
+                  isOpen(item.id) ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                )}
+              >
+                <div className="px-6 pb-6 md:px-8 md:pb-8">
+                  <div className="pl-12 md:pl-14">
+                    <p className="text-sm md:text-base lg:text-lg text-muted-foreground leading-relaxed">
+                      {item.answer}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer CTA */}
+        <div className="text-center mt-16 md:mt-20">
+          <div className="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-6 md:p-8 backdrop-blur-sm border border-white/20 shadow-lg">
+            <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold text-primary-foreground mb-3">
+              Good luck on your auditions ladies!
+            </h3>
+            <p className="text-lg md:text-xl text-primary-foreground/90 mb-2">
+              To stay up to date, follow us on social media at
+            </p>
+            <p className="text-xl md:text-2xl lg:text-3xl font-bold text-primary-foreground">
+              @Spelmanglee
+            </p>
           </div>
         </div>
       </div>
