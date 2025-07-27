@@ -135,8 +135,10 @@ export const CountdownTimer = () => {
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <button 
-            className="lg:hidden flex items-center justify-center p-1 bg-primary/10 rounded-md transition-all duration-200 hover:scale-110 hover:bg-primary/20 active:scale-95"
-            aria-label="Christmas Carol countdown"
+            className="lg:hidden flex items-center justify-center p-2 bg-primary/10 rounded-full transition-all duration-200 hover:scale-110 hover:bg-primary/20 active:scale-95"
+            aria-label="Current time - tap for Christmas Carol countdown"
+            onMouseEnter={() => setIsOpen(true)}
+            onMouseLeave={() => setIsOpen(false)}
           >
             <ClockFace currentTime={currentTime} />
           </button>
