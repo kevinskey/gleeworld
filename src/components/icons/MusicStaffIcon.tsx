@@ -4,9 +4,9 @@ interface MusicStaffIconProps {
 }
 
 export const MusicStaffIcon = ({ className = "", size = 28 }: MusicStaffIconProps) => {
-  const lineSpacing = size * 0.18; // 18% of icon size for more spacing between lines
-  const lineThickness = size * 0.06; // 6% of icon size for slightly thinner lines
-  const startY = size * 0.18; // Start 18% from top for better centering
+  const lineSpacing = size * 0.22; // 22% of icon size for even more spacing between lines
+  const lineThickness = size * 0.09; // 9% of icon size for bolder lines
+  const startY = size * 0.16; // Start 16% from top for better centering with increased spacing
 
   return (
     <svg 
