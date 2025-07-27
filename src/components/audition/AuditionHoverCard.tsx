@@ -15,9 +15,9 @@ export const AuditionHoverCard = () => {
       <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40">
         <Link to={user ? "/auditions" : "/auth?redirect=/auditions"}>
           <Button 
-            variant="default" 
+            variant="branded" 
             size="sm"
-            className="bg-gradient-to-r from-purple-600 to-blue-600 active:from-purple-700 active:to-blue-700 text-white shadow-lg border-0 px-4 py-3 rounded-full font-medium text-sm transition-all duration-300 touch-manipulation"
+            className="px-4 py-3 rounded-full text-sm touch-manipulation"
           >
             <Mic className="w-4 h-4 mr-2" />
             Sign Up for Auditions
@@ -33,9 +33,9 @@ export const AuditionHoverCard = () => {
     <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-40">
       <Link to={user ? "/auditions" : "/auth?redirect=/auditions"}>
         <Button 
-          variant="default" 
+          variant="branded" 
           size="sm"
-          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg border-0 px-6 py-3 rounded-full font-medium text-base transition-all duration-300"
+          className="px-6 py-3 rounded-full text-base"
         >
           <Mic className="w-5 h-5 mr-2" />
           Sign Up for Auditions

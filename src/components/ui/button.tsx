@@ -21,6 +21,7 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 md:hover:underline",
         glass: "glass-upload-zone text-foreground md:hover:border-primary/30 active:border-primary/30",
         "glass-solid": "glass-signature-panel text-foreground shadow-xl",
+        branded: "bg-gradient-to-r from-brand-400 to-brand-600 text-white md:hover:from-brand-500 md:hover:to-brand-700 active:from-brand-500 active:to-brand-700 border-0 shadow-lg font-medium transition-all duration-300",
         disabled: "bg-gray-200 text-gray-400 cursor-not-allowed hover:bg-gray-200 hover:text-gray-400",
       },
       size: {
