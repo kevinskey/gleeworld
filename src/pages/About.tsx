@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AIAssist } from "@/components/shared/AIAssist";
 import { Link } from "react-router-dom";
-import { useCurrentUserAvatar } from "@/hooks/useCurrentUserAvatar";
-import { useAuth } from "@/contexts/AuthContext";
+import { useArtisticDirectorAvatar } from "@/hooks/useArtisticDirectorAvatar";
 import { 
   Music, 
   Users, 
@@ -24,8 +23,7 @@ import {
 } from "lucide-react";
 
 export default function About() {
-  const { user } = useAuth();
-  const { data: userAvatar } = useCurrentUserAvatar();
+  const { data: artisticDirector } = useArtisticDirectorAvatar();
 
   return (
     <PublicLayout>
@@ -158,13 +156,13 @@ export default function About() {
               <div className="flex flex-col md:flex-row items-center justify-center gap-8 mt-16">
                 <div className="w-32 h-32 rounded-full overflow-hidden shadow-xl">
                   <img 
-                    src={userAvatar?.avatar_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face"}
-                    alt={userAvatar?.full_name || "Dr. Kevin Phillip Johnson"} 
+                    src={artisticDirector?.avatar_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face"}
+                    alt={artisticDirector?.full_name || "Dr. Kevin Phillip Johnson"} 
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="text-center md:text-left">
-                  <h3 className="text-2xl font-bold text-foreground mb-2">{userAvatar?.full_name || "Dr. Kevin Phillip Johnson"}</h3>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">{artisticDirector?.full_name || "Dr. Kevin Phillip Johnson"}</h3>
                   <p className="text-spelman-blue-dark font-medium text-lg">Artistic Director & Visionary Behind GleeWorld</p>
                   <AIAssist 
                     context="Dr. Kevin Johnson and the Glee Club's digital mission"
