@@ -13,7 +13,7 @@ import { useEventBudgetWorksheet } from "@/hooks/useEventBudgetWorksheet";
 import { useToast } from "@/hooks/use-toast";
 import { BudgetTableWidget } from "./BudgetTableWidget";
 import { BudgetSummaryCard } from "./BudgetSummaryCard";
-import { BudgetAIHelper } from "./BudgetAIHelper";
+
 import { FileUploadSection } from "./FileUploadSection";
 import { BudgetTaskManagement } from "./BudgetTaskManagement";
 
@@ -89,7 +89,7 @@ export const EventBudgetWorksheet = ({ eventId }: EventBudgetWorksheetProps) => 
     club_support: 0
   });
 
-  const [showAIHelper, setShowAIHelper] = useState(false);
+  
 
   useEffect(() => {
     if (eventBudget) {
@@ -216,10 +216,6 @@ export const EventBudgetWorksheet = ({ eventId }: EventBudgetWorksheetProps) => 
         </div>
         <div className="flex items-center gap-4">
           {eventBudget?.budget_status && getStatusDisplay(eventBudget.budget_status)}
-          <Button onClick={() => setShowAIHelper(true)} variant="outline" size="sm">
-            <Sparkles className="h-4 w-4 mr-2" />
-            Ask AI Helper
-          </Button>
         </div>
       </div>
 
@@ -574,24 +570,11 @@ export const EventBudgetWorksheet = ({ eventId }: EventBudgetWorksheetProps) => 
 
       {/* Action Buttons */}
       <div className="flex gap-4 justify-end">
-        <Button variant="outline" onClick={() => setShowAIHelper(true)}>
-          <Sparkles className="h-4 w-4 mr-2" />
-          Ask AI Helper
-        </Button>
         <Button onClick={handleSubmit}>
           Save Budget
         </Button>
       </div>
 
-      {/* AI Helper Dialog */}
-      {showAIHelper && (
-        <BudgetAIHelper
-          open={showAIHelper}
-          onClose={() => setShowAIHelper(false)}
-          eventData={eventBudget}
-          context="Suggest vendor estimates, cost benchmarks, or missing line-items for this event."
-        />
-      )}
     </div>
   );
 };

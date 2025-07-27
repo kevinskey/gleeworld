@@ -2,7 +2,6 @@ import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AIAssist } from "@/components/shared/AIAssist";
 import { Link } from "react-router-dom";
 import { useArtisticDirectorAvatar } from "@/hooks/useArtisticDirectorAvatar";
 import { 
@@ -37,13 +36,6 @@ export default function About() {
             <p className="text-xl md:text-3xl opacity-90 mb-8 font-light">
               The Digital Home of the Spelman College Glee Club and Beyond
             </p>
-            <div className="relative inline-block">
-              <AIAssist 
-                context="About GleeWorld and Spelman College Glee Club"
-                placeholder="What is GleeWorld?"
-                className="mt-4"
-              />
-            </div>
           </div>
         </section>
 
@@ -164,11 +156,6 @@ export default function About() {
                 <div className="text-center md:text-left">
                   <h3 className="text-2xl font-bold text-foreground mb-2">Dr. Kevin Phillip Johnson</h3>
                   <p className="text-spelman-blue-dark font-medium text-lg">Artistic Director & Visionary Behind GleeWorld</p>
-                  <AIAssist 
-                    context="Dr. Kevin Johnson and the Glee Club's digital mission"
-                    placeholder="More about the Glee Club's digital mission"
-                    className="mt-4"
-                  />
                 </div>
               </div>
             </div>

@@ -12,7 +12,6 @@ import { FinanceManagement } from "@/components/finance/FinanceManagement";
 import { ContractViewer } from "@/components/ContractViewer";
 import { EditTemplateDialog } from "@/components/templates/EditTemplateDialog";
 import { DocumentManager } from "@/components/shared/DocumentManager";
-import { AIAssist } from "@/components/shared/AIAssist";
 import { useContracts } from "@/hooks/useContracts";
 import { useContractTemplates } from "@/hooks/useContractTemplates";
 import { useW9Forms } from "@/hooks/useW9Forms";
