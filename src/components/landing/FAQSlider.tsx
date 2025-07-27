@@ -149,9 +149,9 @@ export const FAQSlider = () => {
       case "qa":
         return (
           <div className="space-y-4 md:space-y-8 pt-16 md:pt-20">
-            <div className="bg-primary rounded-xl p-2 md:p-4 max-w-4xl mx-auto backdrop-blur-sm border border-white/20">
-              <div className="flex items-center space-x-2 md:space-x-4 mb-2 md:mb-3">
-                <div className="bg-background rounded-full w-8 h-8 md:w-12 md:h-12 flex items-center justify-center">
+            <div className="bg-primary rounded-xl p-2 md:p-4 max-w-4xl mx-auto backdrop-blur-sm border border-white/20 min-h-[60px] md:min-h-[80px] flex items-center">
+              <div className="flex items-center space-x-2 md:space-x-4 w-full">
+                <div className="bg-background rounded-full w-8 h-8 md:w-12 md:h-12 flex items-center justify-center flex-shrink-0">
                   <span className="text-sm md:text-xl font-bold text-primary">Q</span>
                 </div>
                 <h3 className="text-sm md:text-2xl font-semibold text-white">
@@ -159,8 +159,8 @@ export const FAQSlider = () => {
                 </h3>
               </div>
             </div>
-            <div className="bg-background border-2 border-primary rounded-xl p-2 md:p-4 max-w-4xl mx-auto backdrop-blur-sm border border-white/20">
-              <div className="flex items-start space-x-2 md:space-x-4">
+            <div className="bg-background border-2 border-primary rounded-xl p-2 md:p-4 max-w-4xl mx-auto backdrop-blur-sm border border-white/20 min-h-[100px] md:min-h-[120px] flex items-start">
+              <div className="flex items-start space-x-2 md:space-x-4 w-full">
                 <div className="bg-primary rounded-full w-8 h-8 md:w-12 md:h-12 flex items-center justify-center flex-shrink-0">
                   <span className="text-sm md:text-xl font-bold text-white">A</span>
                 </div>
