@@ -163,7 +163,7 @@ export const FAQSlider = () => {
   };
 
   return (
-    <section className="w-full relative overflow-hidden pt-16 pb-24">
+    <section className="w-full relative overflow-hidden pt-24 md:pt-32 lg:pt-40 pb-24">
       {/* Dynamic geometric background */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-primary/5"></div>
       <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-primary/5 to-primary/15"></div>
@@ -190,7 +190,7 @@ export const FAQSlider = () => {
           )}
           
           {/* Slide Content - Fixed height container with consistent top margin */}
-          <div className="h-[300px] md:h-[500px] lg:h-[600px] flex items-start justify-center pt-16 md:pt-24">
+          <div className="h-[300px] md:h-[500px] lg:h-[600px] flex items-start justify-center pt-8 md:pt-16 lg:pt-20">
             {renderSlideContent()}
           </div>
         </div>
