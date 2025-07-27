@@ -13,7 +13,7 @@ export const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => {
     <div 
       className="min-h-screen flex items-center justify-center p-4 relative bg-cover bg-no-repeat bg-center md:bg-left-center"
       style={{
-        backgroundImage: `url(/lovable-uploads/d2719d93-5439-4d49-9d9a-0f68a440e7c5.png)`
+        backgroundImage: `url(/lovable-uploads/6a86e8cc-1420-4397-8742-983afe6a293f.png)`
       }}
     >
       <div className="absolute inset-0 bg-black/30" />
