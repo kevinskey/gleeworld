@@ -436,14 +436,14 @@ const App = () => {
                             </ProtectedRoute>
                           } 
                         />
-                   <Route 
-                     path="/landing"
-                    element={
-                      <PublicRoute>
-                        <GleeWorldLanding />
-                      </PublicRoute>
-                    } 
-                  />
+                <Route 
+                  path="/landing"
+                  element={
+                    <PublicRoute>
+                      <GleeWorldLanding />
+                    </PublicRoute>
+                  } 
+                />
                  <Route 
                    path="/" 
                    element={<RootRoute />} 

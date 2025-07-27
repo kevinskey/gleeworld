@@ -258,8 +258,10 @@ export const GleeWorldLanding = () => {
                   </NavigationMenuLink>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()} href="#about">
-                    About
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()} asChild>
+                    <Link to="/about">
+                      About
+                    </Link>
                   </NavigationMenuLink>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
@@ -393,13 +395,13 @@ export const GleeWorldLanding = () => {
                   >
                     Home
                   </a>
-                  <a 
-                    href="#about" 
+                  <Link 
+                    to="/about" 
                     className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/50 hover:scale-105"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     About
-                  </a>
+                  </Link>
                   <Link 
                     to="/public-calendar" 
                     className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/50 hover:scale-105"
