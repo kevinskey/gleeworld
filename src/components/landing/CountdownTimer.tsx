@@ -19,9 +19,9 @@ const ClockFace = ({ currentTime }: { currentTime: Date }) => {
   const hourAngle = (hours * 30) + (minutes * 0.5) - 90; // 30 degrees per hour + smooth minutes
 
   return (
-    <svg width="32" height="32" viewBox="0 0 32 32" className="text-primary">
+    <svg width="32" height="32" viewBox="0 0 32 32" className="text-foreground">
       {/* Clock face */}
-      <circle cx="16" cy="16" r="15" fill="currentColor" fillOpacity="0.1" stroke="currentColor" strokeWidth="1"/>
+      <circle cx="16" cy="16" r="15" fill="none" stroke="currentColor" strokeWidth="1.5"/>
       
       {/* Hour markers */}
       {[...Array(12)].map((_, i) => {
@@ -31,7 +31,7 @@ const ClockFace = ({ currentTime }: { currentTime: Date }) => {
         const x2 = 16 + 14 * Math.cos(angle * Math.PI / 180);
         const y2 = 16 + 14 * Math.sin(angle * Math.PI / 180);
         return (
-          <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="currentColor" strokeWidth="1"/>
+          <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="currentColor" strokeWidth="1.5"/>
         );
       })}
       
@@ -41,7 +41,7 @@ const ClockFace = ({ currentTime }: { currentTime: Date }) => {
         x2={16 + 8 * Math.cos(hourAngle * Math.PI / 180)} 
         y2={16 + 8 * Math.sin(hourAngle * Math.PI / 180)} 
         stroke="currentColor" 
-        strokeWidth="2" 
+        strokeWidth="2.5" 
         strokeLinecap="round"
         style={{ transition: 'all 0.5s ease-in-out' }}
       />
@@ -52,7 +52,7 @@ const ClockFace = ({ currentTime }: { currentTime: Date }) => {
         x2={16 + 11 * Math.cos(minuteAngle * Math.PI / 180)} 
         y2={16 + 11 * Math.sin(minuteAngle * Math.PI / 180)} 
         stroke="currentColor" 
-        strokeWidth="1.5" 
+        strokeWidth="2" 
         strokeLinecap="round"
         style={{ transition: 'all 0.5s ease-in-out' }}
       />
@@ -63,13 +63,13 @@ const ClockFace = ({ currentTime }: { currentTime: Date }) => {
         x2={16 + 12 * Math.cos(secondAngle * Math.PI / 180)} 
         y2={16 + 12 * Math.sin(secondAngle * Math.PI / 180)} 
         stroke="currentColor" 
-        strokeWidth="0.5" 
+        strokeWidth="1" 
         strokeLinecap="round"
         style={{ transition: 'all 0.1s ease-in-out' }}
       />
       
       {/* Center dot */}
-      <circle cx="16" cy="16" r="1.5" fill="currentColor"/>
+      <circle cx="16" cy="16" r="2" fill="currentColor"/>
     </svg>
   );
 };
@@ -135,7 +135,7 @@ export const CountdownTimer = () => {
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <button 
-            className="lg:hidden flex items-center justify-center p-2 bg-primary/10 rounded-full transition-all duration-200 hover:scale-110 hover:bg-primary/20 active:scale-95"
+            className="lg:hidden flex items-center justify-center p-2 transition-all duration-200 hover:scale-110 active:scale-95"
             aria-label="Current time - tap for Christmas Carol countdown"
             onMouseEnter={() => setIsOpen(true)}
             onMouseLeave={() => setIsOpen(false)}
