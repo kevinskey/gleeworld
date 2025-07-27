@@ -81,6 +81,10 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				// Custom brand colors - Updated Design System
+				'spelman-blue': {
+					dark: 'hsl(var(--spelman-blue-dark))',
+					light: 'hsl(var(--spelman-blue-light))',
+				},
 				brand: {
 					50: 'hsl(203, 85%, 97%)',
 					100: 'hsl(203, 85%, 94%)',
