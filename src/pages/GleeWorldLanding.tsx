@@ -606,7 +606,7 @@ export const GleeWorldLanding = () => {
                           
                           <div className="h-64 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
                             <img 
-                              src={event.image_url ? `${window.location.origin}${event.image_url}` : getDefaultEventImage(event.id)}
+                              src={event.image_url || getDefaultEventImage(event.id)}
                               alt={event.title}
                               className="w-full h-full object-cover rounded-t-lg brightness-110 contrast-105"
                               onError={(e) => {
@@ -656,7 +656,7 @@ export const GleeWorldLanding = () => {
                               
                               <div className="h-64 sm:h-80 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
                                 <img 
-                                  src={event.image_url ? `${window.location.origin}${event.image_url}` : getDefaultEventImage(event.id)}
+                                  src={event.image_url || getDefaultEventImage(event.id)}
                                   alt={event.title}
                                   className="w-full h-full object-cover rounded-t-lg brightness-110 contrast-105"
                                   onError={(e) => {
