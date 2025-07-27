@@ -163,7 +163,7 @@ export const FAQSlider = () => {
   };
 
   return (
-    <section className="w-full relative overflow-hidden pt-16 pb-16">
+    <section className="w-full relative overflow-hidden pt-16 pb-24">
       {/* Dynamic geometric background */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-primary/5"></div>
       <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-primary/5 to-primary/15"></div>
