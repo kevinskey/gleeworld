@@ -3,10 +3,10 @@ interface MusicStaffIconProps {
   size?: number;
 }
 
-export const MusicStaffIcon = ({ className = "", size = 24 }: MusicStaffIconProps) => {
-  const lineSpacing = size * 0.15; // 15% of icon size for spacing between lines
-  const lineThickness = size * 0.08; // 8% of icon size for line thickness
-  const startY = size * 0.2; // Start 20% from top
+export const MusicStaffIcon = ({ className = "", size = 28 }: MusicStaffIconProps) => {
+  const lineSpacing = size * 0.18; // 18% of icon size for more spacing between lines
+  const lineThickness = size * 0.06; // 6% of icon size for slightly thinner lines
+  const startY = size * 0.18; // Start 18% from top for better centering
 
   return (
     <svg 
@@ -19,9 +19,9 @@ export const MusicStaffIcon = ({ className = "", size = 24 }: MusicStaffIconProp
       {[...Array(5)].map((_, i) => (
         <rect
           key={i}
-          x={size * 0.1}
+          x={size * 0.08}
           y={startY + (i * lineSpacing)}
-          width={size * 0.8}
+          width={size * 0.84}
           height={lineThickness}
           fill="currentColor"
           rx={lineThickness / 2}

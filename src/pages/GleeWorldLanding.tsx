@@ -369,7 +369,7 @@ export const GleeWorldLanding = () => {
               {mobileMenuOpen ? (
                 <X className="w-5 h-5" />
               ) : (
-                <MusicStaffIcon className="w-5 h-5" size={20} />
+                <MusicStaffIcon className="w-6 h-6" size={24} />
               )}
             </button>
           </div>
