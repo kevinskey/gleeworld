@@ -15,7 +15,6 @@ export interface GleeWorldEvent {
   max_attendees: number | null;
   registration_required: boolean | null;
   is_public: boolean | null;
-  is_private: boolean | null;
   status: string | null;
   image_url?: string | null;
   calendar_id: string;
@@ -39,12 +38,11 @@ export const usePublicGleeWorldEvents = () => {
     try {
       setLoading(true);
       
-      // Filter to only show public events (is_public = true AND is_private = false/null)
+      // Always filter to only show public events for the public calendar
       const { data, error } = await supabase
         .from('gw_events')
         .select('*')
         .eq('is_public', true)
-        .or('is_private.is.null,is_private.eq.false')
         .gte('start_date', new Date().toISOString())
         .order('start_date', { ascending: true });
 

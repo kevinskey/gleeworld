@@ -106,7 +106,6 @@ export const GleeWorldLanding = () => {
             .select('*')
             .gte('start_date', new Date().toISOString())
             .eq('is_public', true)
-            .or('is_private.is.null,is_private.eq.false')
             .order('start_date', { ascending: true })
             .limit(6)
         ]);

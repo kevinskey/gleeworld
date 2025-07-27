@@ -81,7 +81,6 @@ export default function AlumnaeLanding() {
           .select('*')
           .contains('tags', ['reunion'])
           .gte('start_date', new Date().toISOString())
-          .or('is_private.is.null,is_private.eq.false')
           .order('start_date', { ascending: true })
           .limit(3);
 
