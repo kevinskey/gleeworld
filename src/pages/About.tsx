@@ -45,12 +45,12 @@ export default function About() {
         </section>
 
         {/* Intro Block */}
-        <section id="about-intro" className="py-20 px-4 bg-gradient-to-b from-spelman-blue-light/5 to-white relative">
+        <section id="about-intro" className="py-20 px-4 bg-background relative">
           <div className="absolute inset-0 opacity-30"></div>
           <div className="max-w-6xl mx-auto relative z-10">
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-black mb-8 font-['Bebas_Neue']">More Than Music</h2>
-              <div className="max-w-4xl mx-auto space-y-6 text-lg text-black leading-relaxed">
+              <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-8 font-['Bebas_Neue']">More Than Music</h2>
+              <div className="max-w-4xl mx-auto space-y-6 text-lg text-foreground leading-relaxed">
                 <p>
                   GleeWorld represents the digital evolution of one of America's most prestigious collegiate choirs. 
                   Born from over 100 years of musical excellence at Spelman College, this platform bridges our 
@@ -67,9 +67,9 @@ export default function About() {
         </section>
 
         {/* Feature Grid */}
-        <section id="about-features" className="py-20 px-4 bg-white">
+        <section id="about-features" className="py-20 px-4 bg-background">
           <div className="max-w-7xl mx-auto">
-            <h2 className="text-4xl md:text-5xl font-bold text-center text-black mb-16 font-['Bebas_Neue']">Our Community</h2>
+            <h2 className="text-4xl md:text-5xl font-bold text-center text-foreground mb-16 font-['Bebas_Neue']">Our Community</h2>
             <div className="grid lg:grid-cols-3 gap-10">
               {/* Current Members */}
               <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300">
@@ -81,7 +81,7 @@ export default function About() {
                   <CardTitle className="text-2xl font-bold mb-4">🎓 Current Members</CardTitle>
                 </CardHeader>
                 <CardContent className="relative z-10">
-                  <p className="text-black mb-6 leading-relaxed">
+                  <p className="text-foreground mb-6 leading-relaxed">
                     Access your musical materials, tour information, recording studio, and connect with your sisters. 
                     Your digital headquarters for everything Glee Club.
                   </p>
@@ -103,7 +103,7 @@ export default function About() {
                   <CardTitle className="text-2xl font-bold mb-4">👩🏽‍🎓 Alumnae</CardTitle>
                 </CardHeader>
                 <CardContent className="relative z-10">
-                  <p className="text-black mb-6 leading-relaxed">
+                  <p className="text-foreground mb-6 leading-relaxed">
                     Reconnect with your musical legacy, share memories, mentor current members, and stay connected 
                     to the sisterhood that shaped your musical journey.
                   </p>
@@ -125,7 +125,7 @@ export default function About() {
                   <CardTitle className="text-2xl font-bold mb-4">🌍 Fans & Supporters</CardTitle>
                 </CardHeader>
                 <CardContent className="relative z-10">
-                  <p className="text-black mb-6 leading-relaxed">
+                  <p className="text-foreground mb-6 leading-relaxed">
                     Experience exclusive performances, purchase official merchandise, and support the next generation 
                     of musical excellence at Spelman College.
                   </p>
@@ -141,10 +141,10 @@ export default function About() {
         </section>
 
         {/* Mission Block */}
-        <section id="about-mission" className="py-20 px-4 bg-gradient-to-br from-white to-spelman-blue-light/10 relative">
+        <section id="about-mission" className="py-20 px-4 bg-background relative">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
-              <blockquote className="text-2xl md:text-3xl font-light text-black italic leading-relaxed max-w-4xl mx-auto mb-12">
+              <blockquote className="text-2xl md:text-3xl font-light text-foreground italic leading-relaxed max-w-4xl mx-auto mb-12">
                 "GleeWorld is not just about music. It's about preserving a legacy, building digital community, 
                 enhancing artistic and academic rigor, and ensuring that the sacred tradition of the Spelman 
                 Glee Club continues to amaze and inspire for generations to come."
@@ -159,7 +159,7 @@ export default function About() {
                   />
                 </div>
                 <div className="text-center md:text-left">
-                  <h3 className="text-2xl font-bold text-black mb-2">Dr. Kevin Phillip Johnson</h3>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">Dr. Kevin Phillip Johnson</h3>
                   <p className="text-spelman-blue-dark font-medium text-lg">Artistic Director & Visionary Behind GleeWorld</p>
                   <AIAssist 
                     context="Dr. Kevin Johnson and the Glee Club's digital mission"
@@ -203,10 +203,10 @@ export default function About() {
         </section>
 
         {/* Call to Action Footer Block */}
-        <section id="about-cta" className="py-20 px-4 bg-white text-center">
+        <section id="about-cta" className="py-20 px-4 bg-background text-center">
           <div className="max-w-5xl mx-auto">
-            <h2 className="text-4xl md:text-5xl font-bold text-black mb-8 font-['Bebas_Neue']">Enter Our World</h2>
-            <p className="text-xl text-black mb-12 leading-relaxed max-w-3xl mx-auto">
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-8 font-['Bebas_Neue']">Enter Our World</h2>
+            <p className="text-xl text-foreground mb-12 leading-relaxed max-w-3xl mx-auto">
               Whether you're a first-year member, a Centennial alumna, or a supporter who believes in the power 
               of music, we invite you to enter the world where tradition meets innovation, where voices unite 
               across generations, and where the magic of the Spelman Glee Club lives forever.
