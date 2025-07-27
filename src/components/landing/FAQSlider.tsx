@@ -104,10 +104,10 @@ export const FAQSlider = () => {
                   <Music className="w-8 h-8 md:w-12 md:h-12" />
                 </div>
               )}
-              <h1 className="text-2xl md:text-4xl font-bold text-white mb-3 md:mb-4">
+              <h1 className="text-2xl md:text-5xl lg:text-6xl font-bold text-white mb-3 md:mb-6">
                 {currentData.title}
               </h1>
-              <h2 className="text-lg md:text-2xl text-white/90 font-medium">
+              <h2 className="text-lg md:text-3xl lg:text-4xl text-white/90 font-medium">
                 {currentData.subtitle}
               </h2>
             </div>
@@ -117,22 +117,22 @@ export const FAQSlider = () => {
       case "qa":
         return (
           <div className="space-y-4 md:space-y-8">
-            <div className="bg-primary rounded-xl p-2 md:p-4 max-w-4xl mx-auto backdrop-blur-sm border border-white/20 min-h-[60px] md:min-h-[80px] flex items-center">
-              <div className="flex items-center space-x-2 md:space-x-4 w-full">
-                <div className="bg-background rounded-full w-8 h-8 md:w-12 md:h-12 flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm md:text-xl font-bold text-primary">Q</span>
+            <div className="bg-primary rounded-xl p-2 md:p-6 lg:p-8 max-w-4xl mx-auto backdrop-blur-sm border border-white/20 min-h-[60px] md:min-h-[100px] lg:min-h-[120px] flex items-center">
+              <div className="flex items-center space-x-2 md:space-x-6 lg:space-x-8 w-full">
+                <div className="bg-background rounded-full w-8 h-8 md:w-16 md:h-16 lg:w-20 lg:h-20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm md:text-2xl lg:text-3xl font-bold text-primary">Q</span>
                 </div>
-                <h3 className="text-sm md:text-2xl font-semibold text-white">
+                <h3 className="text-sm md:text-3xl lg:text-4xl font-semibold text-white">
                   {currentData.question}
                 </h3>
               </div>
             </div>
-            <div className="bg-background border-2 border-primary rounded-xl p-2 md:p-4 max-w-4xl mx-auto backdrop-blur-sm border border-white/20 min-h-[100px] md:min-h-[120px] flex items-start">
-              <div className="flex items-start space-x-2 md:space-x-4 w-full">
-                <div className="bg-primary rounded-full w-8 h-8 md:w-12 md:h-12 flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm md:text-xl font-bold text-white">A</span>
+            <div className="bg-background border-2 border-primary rounded-xl p-2 md:p-6 lg:p-8 max-w-4xl mx-auto backdrop-blur-sm border border-white/20 min-h-[100px] md:min-h-[140px] lg:min-h-[160px] flex items-start">
+              <div className="flex items-start space-x-2 md:space-x-6 lg:space-x-8 w-full">
+                <div className="bg-primary rounded-full w-8 h-8 md:w-16 md:h-16 lg:w-20 lg:h-20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm md:text-2xl lg:text-3xl font-bold text-white">A</span>
                 </div>
-                <p className="text-xs md:text-lg text-foreground leading-relaxed">
+                <p className="text-xs md:text-xl lg:text-2xl text-foreground leading-relaxed">
                   {currentData.answer}
                 </p>
               </div>
@@ -144,13 +144,13 @@ export const FAQSlider = () => {
         return (
           <div className="text-center space-y-4 md:space-y-8">
             <div className="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-4 md:p-8 max-w-3xl mx-auto backdrop-blur-sm border border-white/20 shadow-glass">
-              <h2 className="text-lg md:text-4xl font-bold text-white mb-2 md:mb-4">
+              <h2 className="text-lg md:text-5xl lg:text-6xl font-bold text-white mb-2 md:mb-6">
                 {currentData.title}
               </h2>
-              <p className="text-sm md:text-xl text-white/90 mb-2 md:mb-4">
+              <p className="text-sm md:text-2xl lg:text-3xl text-white/90 mb-2 md:mb-6">
                 {currentData.subtitle}
               </p>
-              <p className="text-base md:text-2xl font-bold text-white">
+              <p className="text-base md:text-3xl lg:text-4xl font-bold text-white">
                 {currentData.handle}
               </p>
             </div>
@@ -190,7 +190,7 @@ export const FAQSlider = () => {
           )}
           
           {/* Slide Content - Fixed height container with consistent top margin */}
-          <div className="h-[300px] md:h-[400px] flex items-start justify-center pt-16 md:pt-24">
+          <div className="h-[300px] md:h-[500px] lg:h-[600px] flex items-start justify-center pt-16 md:pt-24">
             {renderSlideContent()}
           </div>
         </div>
