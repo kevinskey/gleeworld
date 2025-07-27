@@ -20,17 +20,17 @@
     --secondary-foreground: 0 0% 100%; /* White text */
     
     /* Neutrals - Softer backgrounds for better contrast */
-    --background: 210 20% 98%; /* Soft off-white instead of pure white */
-    --foreground: 0 0% 9%; /* Slightly softer black text */
+    --background: 0 0% 100%; /* Pure white background */
+    --foreground: 0 0% 0%; /* Pure black text */
 
-    --card: 0 0% 97%; /* Softer white for cards */
-    --card-foreground: 0 0% 9%; /* Softer black text */
+    --card: 0 0% 100%; /* Pure white for cards */
+    --card-foreground: 0 0% 0%; /* Pure black text */
 
-    --popover: 0 0% 98%; /* Slightly off-white */
-    --popover-foreground: 0 0% 9%; /* Softer black text */
+    --popover: 0 0% 100%; /* Pure white */
+    --popover-foreground: 0 0% 0%; /* Pure black text */
 
-    --muted: 210 20% 94%; /* Light gray background - more contrast */
-    --muted-foreground: 0 0% 25%; /* Darker secondary text for better readability */
+    --muted: 0 0% 95%; /* Light gray background */
+    --muted-foreground: 0 0% 20%; /* Dark gray text for better readability */
 
     --accent: var(--spelman-blue-light); /* Spelman light blue accent */
     --accent-foreground: 0 0% 100%; /* White text */
@@ -39,7 +39,7 @@
     --destructive-foreground: 0 0% 100%;
 
     --border: 0 0% 85%; /* Slightly darker borders for better definition */
-    --input: 0 0% 97%; /* Soft off-white input background */
+    --input: 0 0% 100%; /* Pure white input background */
     --ring: var(--spelman-blue-light); /* Spelman light blue focus ring */
 
     --radius: 0.75rem;
@@ -90,15 +90,15 @@
   }
 
   .light {
-    /* Softer light theme colors */
-    --background: 210 20% 98%;
-    --foreground: 0 0% 9%;
+    /* Pure light theme colors for maximum contrast */
+    --background: 0 0% 100%; /* Pure white */
+    --foreground: 0 0% 0%; /* Pure black */
 
-    --card: 0 0% 97%;
-    --card-foreground: 0 0% 9%;
+    --card: 0 0% 100%; /* Pure white */
+    --card-foreground: 0 0% 0%; /* Pure black */
 
-    --popover: 0 0% 98%;
-    --popover-foreground: 0 0% 9%;
+    --popover: 0 0% 100%; /* Pure white */
+    --popover-foreground: 0 0% 0%; /* Pure black */
 
     --primary: var(--spelman-blue-dark);
     --primary-foreground: 0 0% 100%;
@@ -106,8 +106,8 @@
     --secondary: var(--spelman-blue-light);
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 20% 94%;
-    --muted-foreground: 0 0% 25%;
+    --muted: 0 0% 95%; /* Light gray */
+    --muted-foreground: 0 0% 20%; /* Dark gray */
 
     --accent: var(--spelman-blue-light);
     --accent-foreground: 0 0% 100%;
@@ -116,7 +116,7 @@
     --destructive-foreground: 0 0% 100%;
 
     --border: 0 0% 85%;
-    --input: 0 0% 97%;
+    --input: 0 0% 100%; /* Pure white */
     --ring: var(--spelman-blue-light);
   }
 }
