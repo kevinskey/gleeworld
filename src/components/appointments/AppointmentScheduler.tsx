@@ -23,7 +23,7 @@ const appointmentSchema = z.object({
   client_email: z.string().email("Valid email is required"),
   client_phone: z.string().min(10, "Valid phone number is required"),
   appointment_type: z.string(),
-  duration_minutes: z.number().min(10).max(120),
+  duration_minutes: z.number().min(5).max(5), // Fixed 5-minute audition slots
 });
 
 type AppointmentForm = z.infer<typeof appointmentSchema>;
@@ -45,31 +45,42 @@ export const AppointmentScheduler = () => {
   const form = useForm<AppointmentForm>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
-      title: "",
+      title: "Glee Club Audition",
       description: "",
       client_name: "",
       client_email: "",
       client_phone: "",
-      appointment_type: "general",
-      duration_minutes: 10,
+      appointment_type: "audition",
+      duration_minutes: 5,
     },
   });
 
-  // Generate time slots for selected date with duration consideration
-  const generateTimeSlots = async (date: Date, durationMinutes: number = 10) => {
+  // Generate time slots for selected date with duration consideration - AUDITION ONLY
+  const generateTimeSlots = async (date: Date, durationMinutes: number = 5) => {
     if (!date) return;
 
-    const dayOfWeek = date.getDay();
-    
-    // Check availability for this day
-    const { data: availability } = await supabase
-      .from('gw_appointment_availability')
-      .select('start_time, end_time')
-      .eq('day_of_week', dayOfWeek)
-      .eq('is_available', true)
-      .single();
+    // Check if this date falls within audition time blocks
+    const { data: auditionBlocks, error: auditionError } = await supabase
+      .from('audition_time_blocks')
+      .select('*')
+      .eq('is_active', true);
 
-    if (!availability) {
+    if (auditionError) {
+      console.error('Error fetching audition blocks:', auditionError);
+      setAvailableSlots([]);
+      return;
+    }
+
+    // Check if the selected date falls within any audition time block
+    const dateString = format(date, 'yyyy-MM-dd');
+    const auditionBlock = auditionBlocks?.find(block => {
+      const blockStart = new Date(block.start_date);
+      const blockDate = format(blockStart, 'yyyy-MM-dd');
+      return blockDate === dateString;
+    });
+
+    if (!auditionBlock) {
+      // No appointments allowed outside of audition dates
       setAvailableSlots([]);
       return;
     }
@@ -83,47 +94,44 @@ export const AppointmentScheduler = () => {
       .neq('status', 'cancelled');
 
     const slots: TimeSlot[] = [];
-    const [startHour, startMinute] = availability.start_time.split(':').map(Number);
-    const [endHour, endMinute] = availability.end_time.split(':').map(Number);
-
-    // Generate 10-minute slots
-    for (let hour = startHour; hour < endHour || (hour === endHour && 0 < endMinute); hour++) {
-      for (let minute = hour === startHour ? startMinute : 0; minute < 60; minute += 10) {
-        if (hour === endHour && minute >= endMinute) break;
-
-        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        const slotDateTime = new Date(date);
-        slotDateTime.setHours(hour, minute, 0, 0);
-
-        // Check if the entire duration fits within availability
-        const slotEndTime = new Date(slotDateTime.getTime() + durationMinutes * 60000);
-        const availabilityEnd = new Date(date);
-        availabilityEnd.setHours(endHour, endMinute, 0, 0);
+    
+    // Generate time slots based on audition time block
+    const blockStart = new Date(auditionBlock.start_date);
+    const blockEnd = new Date(auditionBlock.end_date);
+    const appointmentDuration = auditionBlock.appointment_duration_minutes || 5;
+    
+    let currentTime = new Date(blockStart);
+    
+    while (currentTime < blockEnd) {
+      const slotEndTime = new Date(currentTime.getTime() + appointmentDuration * 60000);
+      
+      if (slotEndTime <= blockEnd) {
+        const timeString = format(currentTime, 'HH:mm');
         
-        if (slotEndTime > availabilityEnd) continue;
-
-        // Check if slot conflicts with existing appointments
+        // Check if this slot conflicts with existing appointments
         const isAvailable = !existingAppointments?.some(apt => {
           const aptStart = new Date(apt.appointment_date);
           const aptEnd = new Date(aptStart.getTime() + apt.duration_minutes * 60000);
-          const newSlotEnd = new Date(slotDateTime.getTime() + durationMinutes * 60000);
+          const newSlotEnd = new Date(currentTime.getTime() + appointmentDuration * 60000);
           
           // Check for any overlap
           return (
-            (slotDateTime < aptEnd && newSlotEnd > aptStart) ||
-            (aptStart < newSlotEnd && aptEnd > slotDateTime)
+            (currentTime < aptEnd && newSlotEnd > aptStart) ||
+            (aptStart < newSlotEnd && aptEnd > currentTime)
           );
         });
 
         // Only show future slots
         const now = new Date();
-        if (slotDateTime > now) {
+        if (currentTime > now) {
           slots.push({
             time: timeString,
             available: isAvailable,
           });
         }
       }
+      
+      currentTime = new Date(currentTime.getTime() + appointmentDuration * 60000);
     }
 
     setAvailableSlots(slots);
@@ -131,10 +139,10 @@ export const AppointmentScheduler = () => {
 
   useEffect(() => {
     if (selectedDate) {
-      const duration = form.watch('duration_minutes') || 10;
+      const duration = 5; // Fixed 5-minute audition slots
       generateTimeSlots(selectedDate, duration);
     }
-  }, [selectedDate, form.watch('duration_minutes')]);
+  }, [selectedDate]);
 
   const onSubmit = async (data: AppointmentForm) => {
     if (!selectedDate || !selectedTime) {
@@ -275,7 +283,15 @@ export const AppointmentScheduler = () => {
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Schedule an Appointment</DialogTitle>
+          <DialogTitle>Schedule Glee Club Audition</DialogTitle>
+          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mt-2">
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              <strong>Audition Appointments Only:</strong> Appointments are only available during scheduled audition dates:
+              <br />• Friday, August 15, 2025: 2:30 PM - 5:30 PM
+              <br />• Saturday, August 16, 2025: 11:00 AM - 1:00 PM
+              <br />Each audition slot is 5 minutes long.
+            </p>
+          </div>
         </DialogHeader>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -283,13 +299,18 @@ export const AppointmentScheduler = () => {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium">Select Date</label>
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                disabled={(date) => date < new Date() || date.getDay() === 0 || date.getDay() === 6}
-                className="rounded-md border"
-              />
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  disabled={(date) => {
+                    // Only allow August 15 and 16, 2025 for auditions
+                    const aug15 = new Date(2025, 7, 15); // Month is 0-indexed
+                    const aug16 = new Date(2025, 7, 16);
+                    return !(format(date, 'yyyy-MM-dd') === '2025-08-15' || format(date, 'yyyy-MM-dd') === '2025-08-16');
+                  }}
+                  className="rounded-md border"
+                />
             </div>
 
             {/* Time Slots Dropdown */}
@@ -381,10 +402,7 @@ export const AppointmentScheduler = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="bg-background border shadow-lg z-50">
-                          <SelectItem value="10">10 minutes</SelectItem>
-                          <SelectItem value="20">20 minutes</SelectItem>
-                          <SelectItem value="30">30 minutes</SelectItem>
-                          <SelectItem value="60">1 hour</SelectItem>
+                          <SelectItem value="5">5 minutes (Audition Slot)</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

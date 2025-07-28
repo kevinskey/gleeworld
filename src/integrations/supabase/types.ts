@@ -308,6 +308,36 @@ export type Database = {
         }
         Relationships: []
       }
+      audition_time_blocks: {
+        Row: {
+          appointment_duration_minutes: number | null
+          created_at: string | null
+          end_date: string
+          id: string
+          is_active: boolean | null
+          start_date: string
+          updated_at: string | null
+        }
+        Insert: {
+          appointment_duration_minutes?: number | null
+          created_at?: string | null
+          end_date: string
+          id?: string
+          is_active?: boolean | null
+          start_date: string
+          updated_at?: string | null
+        }
+        Update: {
+          appointment_duration_minutes?: number | null
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          is_active?: boolean | null
+          start_date?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       budget_attachments: {
         Row: {
           budget_id: string | null
