@@ -124,11 +124,12 @@ const PressKit = () => {
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Director Biography</h2>
             <div className="grid lg:grid-cols-3 gap-8">
               <div className="lg:col-span-1">
-                <div className="aspect-square bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg flex items-center justify-center">
-                  <div className="text-center text-gray-600">
-                    <div className="text-sm">Director Photo</div>
-                    <div className="text-xs mt-1">Available in Press Kit</div>
-                  </div>
+                <div className="aspect-square overflow-hidden rounded-lg">
+                  <img 
+                    src="/lovable-uploads/6f754f14-c85c-482f-ac9f-0e47da23ac52.png" 
+                    alt="Glee Club Director conducting" 
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               </div>
               <div className="lg:col-span-2 space-y-4 text-gray-700">
