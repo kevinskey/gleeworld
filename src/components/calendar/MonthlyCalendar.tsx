@@ -64,7 +64,13 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
   };
 
   const handleEventClick = (event: GleeWorldEvent) => {
-    const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
+    // Super-admins and admins can edit any event
+    // Regular users can only edit events they created
+    const canEdit = user && (
+      user.role === 'super-admin' || 
+      user.role === 'admin' || 
+      user.id === event.created_by
+    );
     
     if (canEdit) {
       setEditingEvent(event);
@@ -168,7 +174,11 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
                 {dayEvents.slice(0, isMobile ? 1 : 2).map(event => {
                   console.log('Rendering event:', event.title, 'for day:', day.toDateString());
                   console.log('Event data:', { id: event.id, created_by: event.created_by, user_id: user?.id, user_role: user?.role });
-                  const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
+                  const canEdit = user && (
+                    user.role === 'super-admin' || 
+                    user.role === 'admin' || 
+                    user.id === event.created_by
+                  );
                   console.log('Can edit?', canEdit, 'User:', user?.id, 'Event creator:', event.created_by, 'User role:', user?.role);
                   const isSelected = (editingEvent?.id === event.id) || (selectedEvent?.id === event.id);
                   return (
