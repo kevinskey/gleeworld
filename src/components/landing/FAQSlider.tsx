@@ -85,29 +85,27 @@ export const FAQSlider = () => {
       </div>
 
       <div className="container mx-auto px-4 max-w-4xl">
-        {/* Header - Compact for mobile */}
-        <div className="text-center mb-8 md:mb-16">
+        {/* Header - Desktop only */}
+        <div className="hidden md:block text-center mb-16 md:mb-20">
           <div className="inline-flex items-center justify-center space-x-2 mb-4">
             <Music className="w-6 h-6 md:w-8 md:h-8 text-primary" />
             <MessageCircleQuestion className="w-6 h-6 md:w-8 md:h-8 text-primary" />
           </div>
-          
-          {/* Mobile: Single line title */}
-          <div className="md:hidden">
-            <h2 className="text-2xl font-bold text-foreground mb-2 leading-tight">
-              FAQ
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Spelman Glee Club
-            </p>
-          </div>
-          
-          {/* Desktop: Full title */}
-          <div className="hidden md:block">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-lg md:text-xl text-muted-foreground">
+            Spelman College Glee Club
+          </p>
+        </div>
+
+        {/* Mobile: Thin stationary header */}
+        <div className="md:hidden text-center mb-4">
+          <div className="bg-background/40 backdrop-blur-sm border border-border/50 rounded-lg py-2 px-4">
+            <h2 className="text-sm font-semibold text-foreground leading-tight">
               Frequently Asked Questions
             </h2>
-            <p className="text-lg md:text-xl text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Spelman College Glee Club
             </p>
           </div>
