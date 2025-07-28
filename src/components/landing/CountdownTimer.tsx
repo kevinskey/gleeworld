@@ -116,26 +116,23 @@ export const CountdownTimer = () => {
 
   return (
     <>
-      {/* Desktop: Show big analog clock AND separate digital countdown */}
-      <div className="hidden lg:flex items-center space-x-4">
-        {/* Big analog clock (same as mobile/tablet) */}
-        <div className="flex items-center justify-center">
-          <ClockFace currentTime={currentTime} />
-        </div>
-        
-        {/* Separate digital countdown display */}
-        <div className="flex items-center space-x-2 bg-primary/10 rounded-md px-2 py-1 text-xs">
-          <Clock className="w-3 h-3 text-primary" />
-          <span className="text-primary font-medium">Christmas Carol:</span>
-          <div className="flex items-center space-x-1 text-primary font-bold">
-            <span>{timeLeft.days}d</span>
-            <span>:</span>
-            <span>{timeLeft.hours}h</span>
-            <span>:</span>
-            <span>{timeLeft.minutes}m</span>
-            <span>:</span>
-            <span>{timeLeft.seconds}s</span>
-          </div>
+      {/* Desktop: Big analog clock separate on header background */}
+      <div className="hidden lg:block">
+        <ClockFace currentTime={currentTime} />
+      </div>
+      
+      {/* Desktop: Separate digital countdown display */}
+      <div className="hidden lg:flex items-center space-x-2 bg-primary/10 rounded-md px-2 py-1 text-xs">
+        <Clock className="w-3 h-3 text-primary" />
+        <span className="text-primary font-medium">Christmas Carol:</span>
+        <div className="flex items-center space-x-1 text-primary font-bold">
+          <span>{timeLeft.days}d</span>
+          <span>:</span>
+          <span>{timeLeft.hours}h</span>
+          <span>:</span>
+          <span>{timeLeft.minutes}m</span>
+          <span>:</span>
+          <span>{timeLeft.seconds}s</span>
         </div>
       </div>
 
