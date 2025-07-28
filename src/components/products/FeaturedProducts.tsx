@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Star, ArrowRight } from 'lucide-react';
+import { ShoppingCart, Star, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Product {
@@ -30,6 +30,7 @@ export const FeaturedProducts = ({
 }: FeaturedProductsProps) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [scrollPosition, setScrollPosition] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -92,6 +93,20 @@ export const FeaturedProducts = ({
     return typeMap[type] || type;
   };
 
+  const scrollLeft = () => {
+    const container = document.getElementById('products-container');
+    if (container) {
+      container.scrollBy({ left: -320, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    const container = document.getElementById('products-container');
+    if (container) {
+      container.scrollBy({ left: 320, behavior: 'smooth' });
+    }
+  };
+
   if (loading) {
     return (
       <div className={`space-y-6 ${className}`}>
@@ -103,17 +118,19 @@ export const FeaturedProducts = ({
             </p>
           </div>
         )}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {Array.from({ length: limit }).map((_, i) => (
-            <Card key={i} className="overflow-hidden animate-pulse">
-              <div className="aspect-square bg-muted"></div>
-              <CardContent className="p-4 space-y-3">
-                <div className="h-4 bg-muted rounded"></div>
-                <div className="h-3 bg-muted rounded w-2/3"></div>
-                <div className="h-6 bg-muted rounded w-1/3"></div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="relative">
+          <div className="flex gap-6 overflow-hidden">
+            {Array.from({ length: limit }).map((_, i) => (
+              <Card key={i} className="overflow-hidden animate-pulse flex-shrink-0 w-80">
+                <div className="aspect-square bg-muted"></div>
+                <CardContent className="p-4 space-y-3">
+                  <div className="h-4 bg-muted rounded"></div>
+                  <div className="h-3 bg-muted rounded w-2/3"></div>
+                  <div className="h-6 bg-muted rounded w-1/3"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -141,81 +158,122 @@ export const FeaturedProducts = ({
         </div>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {products.map((product) => (
-          <Card key={product.id} className="group overflow-hidden hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/20">
-            <div className="relative aspect-square overflow-hidden bg-muted">
-              <img
-                src={getProductImage(product)}
-                alt={product.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = '/placeholder.svg';
-                }}
-              />
-              <div className="absolute top-2 right-2">
-                <Badge variant="secondary" className="bg-white/90 text-primary">
-                  {getProductTypeLabel(product.product_type)}
-                </Badge>
-              </div>
-            </div>
-            
-            <CardContent className="p-4 space-y-3">
-              <div className="space-y-1">
-                <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors">
-                  {product.title}
-                </h3>
-                {product.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {product.description}
-                  </p>
-                )}
+      {/* Horizontal Product Slider */}
+      <div className="relative group">
+        {/* Navigation Arrows */}
+        {products.length > 3 && (
+          <>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={scrollLeft}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm border-white/20 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={scrollRight}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm border-white/20 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </>
+        )}
+
+        {/* Products Container */}
+        <div 
+          id="products-container"
+          className="flex gap-6 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth"
+          style={{ scrollbarWidth: 'thin' }}
+        >
+          {products.map((product) => (
+            <Card 
+              key={product.id} 
+              className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20 flex-shrink-0 w-80 snap-start hover-scale"
+            >
+              <div className="relative aspect-square overflow-hidden bg-muted">
+                <img
+                  src={getProductImage(product)}
+                  alt={product.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder.svg';
+                  }}
+                />
+                <div className="absolute top-2 right-2">
+                  <Badge variant="secondary" className="bg-white/90 text-primary">
+                    {getProductTypeLabel(product.product_type)}
+                  </Badge>
+                </div>
+                
+                {/* Hover overlay with quick view */}
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                  <Button size="sm" className="bg-white text-primary hover:bg-white/90 animate-fade-in">
+                    Quick View
+                  </Button>
+                </div>
               </div>
               
-              <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold text-primary">
-                  {formatPrice(product.price)}
-                </div>
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span>New</span>
-                </div>
-              </div>
-              
-              {product.tags && product.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {product.tags.slice(0, 2).map((tag, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                  {product.tags.length > 2 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{product.tags.length - 2}
-                    </Badge>
+              <CardContent className="p-4 space-y-3">
+                <div className="space-y-1">
+                  <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors">
+                    {product.title}
+                  </h3>
+                  {product.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {product.description}
+                    </p>
                   )}
                 </div>
-              )}
-              
-              <Button className="w-full group/btn" size="sm">
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                Add to Cart
-                <ArrowRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      
-      {products.length >= limit && (
-        <div className="text-center">
-          <Button variant="outline" size="lg" className="group">
-            View All Products
-            <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-          </Button>
+                
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-bold text-primary">
+                    {formatPrice(product.price)}
+                  </div>
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <span>New</span>
+                  </div>
+                </div>
+                
+                {product.tags && product.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {product.tags.slice(0, 2).map((tag, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                    {product.tags.length > 2 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{product.tags.length - 2}
+                      </Badge>
+                    )}
+                  </div>
+                )}
+                
+                <Button className="w-full group/btn hover-scale" size="sm">
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Add to Cart
+                  <ArrowRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      )}
+        
+        {/* View All Products Button */}
+        {products.length >= limit && (
+          <div className="text-center mt-6">
+            <Button variant="outline" size="lg" className="group hover-scale">
+              View All Products
+              <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
