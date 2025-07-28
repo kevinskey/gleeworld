@@ -70,6 +70,26 @@ export const ExecutiveBoardDashboard = () => {
     if (!user) return;
 
     try {
+      // First check if user is super admin
+      const { data: profileData, error: profileError } = await supabase
+        .from('gw_profiles')
+        .select('is_super_admin, is_admin')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileData?.is_super_admin || profileData?.is_admin) {
+        // Super admin/admin gets access with a special "admin" position
+        setExecutiveData({
+          id: 'admin-access',
+          user_id: user.id,
+          position: 'president', // Default to president view for admins
+          academic_year: new Date().getFullYear().toString(),
+          is_active: true
+        });
+        return;
+      }
+
+      // Check if user is an active executive board member
       const { data, error } = await supabase
         .from('gw_executive_board_members')
         .select('*')
