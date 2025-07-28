@@ -314,7 +314,7 @@ const ScholarshipCard = ({ scholarship, onEdit, onDelete, onToggleActive, isAuto
   const isExpired = scholarship.deadline && new Date(scholarship.deadline) < new Date();
 
   return (
-    <Card className={`bg-gray-50 ${!scholarship.is_active ? 'opacity-60' : ''} ${isExpired ? 'border-red-200 bg-red-50/30' : ''}`}>
+    <Card className={`bg-brand-50/30 border-brand-200 ${!scholarship.is_active ? 'opacity-60' : ''} ${isExpired ? 'border-red-200 bg-red-50/30' : ''}`}>
       <CardHeader className="pb-3">
         <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-3 md:gap-4">
           <div className="flex-1 min-w-0">
