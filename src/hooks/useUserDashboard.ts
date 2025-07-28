@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -164,15 +163,7 @@ export const useUserDashboard = () => {
       return;
     }
 
-    console.log('useUserDashboard: SUBSCRIPTIONS TEMPORARILY DISABLED FOR DEBUGGING');
-    subscriptionsRef.current = { isSubscribed: true };
-    return () => {
-      console.log('useUserDashboard: Cleanup called');
-      subscriptionsRef.current = { isSubscribed: false };
-    };
-    
-    /* TEMPORARILY DISABLED - Original code below:
-    console.log('Setting up dashboard subscriptions for user:', user.id);
+    console.log('useUserDashboard: Setting up subscriptions for user:', user.id);
 
     // Create unique channel names
     const paymentsChannelName = `dashboard-payments-${user.id}`;
@@ -228,8 +219,7 @@ export const useUserDashboard = () => {
       isSubscribed: true
     };
 
-     return cleanupSubscriptions;
-     */
+    return cleanupSubscriptions;
   }, [user?.id]); // Only depend on user.id
 
   useEffect(() => {
