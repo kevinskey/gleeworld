@@ -56,7 +56,7 @@ export const PublicHeader = () => {
               </SheetTrigger>
               <SheetContent 
                 side="top" 
-                className="w-full max-w-sm mx-auto mt-16 bg-white/90 backdrop-blur-md border border-white/30 shadow-lg rounded-lg z-[110]"
+                className="w-full max-w-sm mx-auto mt-16 bg-white/90 backdrop-blur-md border border-white/30 shadow-lg rounded-lg z-[110] data-[state=open]:animate-none data-[state=closed]:animate-none"
                 style={{
                   position: 'fixed',
                   top: '4rem',
@@ -64,9 +64,13 @@ export const PublicHeader = () => {
                   transform: 'translateX(-50%)',
                   height: 'auto',
                   maxHeight: '70vh',
+                  transition: 'opacity 0.2s ease-in-out, transform 0.2s ease-in-out',
+                  animation: 'none',
                 }}
+                onOpenAutoFocus={(e) => e.preventDefault()}
+                onCloseAutoFocus={(e) => e.preventDefault()}
               >
-                <div className="flex flex-col gap-4 py-4">
+                <div className="flex flex-col gap-4 py-4 animate-fade-in">
                   <div className="flex items-center justify-center gap-2 pb-2 border-b border-gray-200/50">
                     <Music className="h-5 w-5 text-spelman-blue-dark" />
                     <span className="font-semibold text-base text-gray-800">Menu</span>
