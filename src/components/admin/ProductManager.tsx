@@ -36,10 +36,18 @@ interface Product {
 }
 
 const PRODUCT_TYPES = [
-  { value: "apparel", label: "Apparel" },
-  { value: "digital", label: "Digital" },
-  { value: "accessories", label: "Accessories" },
-  { value: "music", label: "Music" }
+  { value: "tshirts", label: "T-Shirts" },
+  { value: "hoodies", label: "Hoodies" },
+  { value: "sweatshirts", label: "Sweatshirts" },
+  { value: "jackets", label: "Jackets" },
+  { value: "hats", label: "Hats" },
+  { value: "polos", label: "Polos" },
+  { value: "drinkware", label: "Drinkware" },
+  { value: "keepsakes", label: "Keepsakes" },
+  { value: "sheet_music", label: "Sheet Music" },
+  { value: "recordings", label: "Recordings" },
+  { value: "performances", label: "Performances" },
+  { value: "musical_lessons", label: "Musical Lessons" }
 ];
 
 export const ProductManager = () => {
@@ -50,6 +58,10 @@ export const ProductManager = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [sortBy, setSortBy] = useState("title");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -63,6 +75,43 @@ export const ProductManager = () => {
     images: "",
     tags: ""
   });
+
+  // Filter and sort products
+  const filteredAndSortedProducts = products
+    .filter(product => {
+      const matchesSearch = product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (product.description?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                          (product.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
+      const matchesCategory = selectedCategory === "all" || product.product_type === selectedCategory;
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => {
+      let aValue, bValue;
+      switch (sortBy) {
+        case "price":
+          aValue = a.price;
+          bValue = b.price;
+          break;
+        case "inventory":
+          aValue = a.inventory_quantity || 0;
+          bValue = b.inventory_quantity || 0;
+          break;
+        case "created":
+          // Assuming products have created_at, fallback to title if not
+          aValue = a.title;
+          bValue = b.title;
+          break;
+        default: // title
+          aValue = a.title.toLowerCase();
+          bValue = b.title.toLowerCase();
+      }
+      
+      if (sortOrder === "asc") {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+      }
+    });
 
   useEffect(() => {
     loadProducts();
@@ -253,7 +302,54 @@ export const ProductManager = () => {
   }
 
   return (
-    <div className="space-y-6">
+      <div className="space-y-6">
+        {/* Search and Filter Controls */}
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-muted/50 p-4 rounded-lg">
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <div className="flex-1">
+              <Input
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filter by category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {PRODUCT_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="title">Title</SelectItem>
+                  <SelectItem value="price">Price</SelectItem>
+                  <SelectItem value="inventory">Stock</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+              >
+                {sortOrder === "asc" ? "↑" : "↓"}
+              </Button>
+            </div>
+          </div>
+        </div>
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-brand-800">Product Management</h2>
@@ -418,7 +514,7 @@ export const ProductManager = () => {
       <div className="space-y-6">
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map((product) => (
+        {filteredAndSortedProducts.map((product) => (
           <Card key={product.id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -458,8 +554,10 @@ export const ProductManager = () => {
                   <span className="font-semibold text-brand-600">${product.price.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Type:</span>
-                  <Badge variant="outline">{product.product_type}</Badge>
+                  <span className="text-sm text-gray-600">Category:</span>
+                  <Badge variant="outline">
+                    {PRODUCT_TYPES.find(type => type.value === product.product_type)?.label || product.product_type}
+                  </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Stock:</span>
@@ -485,15 +583,24 @@ export const ProductManager = () => {
         ))}
       </div>
 
-      {products.length === 0 && (
+      {filteredAndSortedProducts.length === 0 && !loading && (
         <div className="text-center py-12">
           <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-          <p className="text-gray-600 mb-4">Get started by adding your first product.</p>
-          <Button onClick={() => { resetForm(); setIsDialogOpen(true); }}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Your First Product
-          </Button>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            {products.length === 0 ? "No products found" : "No products match your filters"}
+          </h3>
+          <p className="text-gray-600 mb-4">
+            {products.length === 0 
+              ? "Get started by adding your first product." 
+              : "Try adjusting your search or filter criteria."
+            }
+          </p>
+          {products.length === 0 && (
+            <Button onClick={() => { resetForm(); setIsDialogOpen(true); }}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Your First Product
+            </Button>
+          )}
         </div>
       )}
       </div>
