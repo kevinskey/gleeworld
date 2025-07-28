@@ -61,7 +61,7 @@ export const UserActionBar = ({
   return (
     <Card className="border-b">
       <CardContent className="p-4 space-y-4">
-        {/* Top Row - Title and Actions */}
+        {/* Top Row - Title and Refresh */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Users className="h-5 w-5 text-gray-600" />
@@ -76,41 +76,42 @@ export const UserActionBar = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={onRefresh}
-              disabled={loading}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-            
-            <Button onClick={onCreateUser} size="sm">
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add User
-            </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onRefresh}
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <MoreHorizontal className="h-4 w-4 mr-2" />
-                  Actions
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={onBulkOperations}>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Bulk Operations
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => {}}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Export Users
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+        {/* Actions Row */}
+        <div className="flex items-center justify-end gap-2">
+          <Button onClick={onCreateUser} size="sm">
+            <UserPlus className="h-4 w-4 mr-2" />
+            Add User
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <MoreHorizontal className="h-4 w-4 mr-2" />
+                Actions
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onBulkOperations}>
+                <Upload className="h-4 w-4 mr-2" />
+                Bulk Operations
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {}}>
+                <Download className="h-4 w-4 mr-2" />
+                Export Users
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Search and Filters Row */}
