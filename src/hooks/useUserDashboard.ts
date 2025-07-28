@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -51,6 +51,13 @@ export const useUserDashboard = () => {
   const [notifications, setNotifications] = useState<UserNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Use refs to track subscription state and prevent duplicates
+  const subscriptionsRef = useRef<{
+    paymentsChannel?: any;
+    notificationsChannel?: any;
+    isSubscribed: boolean;
+  }>({ isSubscribed: false });
 
   const fetchDashboardData = async () => {
     if (!user) return;
@@ -125,62 +132,87 @@ export const useUserDashboard = () => {
     }
   };
 
+  // Clean up any existing subscriptions
+  const cleanupSubscriptions = () => {
+    const { paymentsChannel, notificationsChannel } = subscriptionsRef.current;
+    
+    if (paymentsChannel) {
+      console.log('Removing payments channel');
+      supabase.removeChannel(paymentsChannel);
+    }
+    
+    if (notificationsChannel) {
+      console.log('Removing notifications channel');
+      supabase.removeChannel(notificationsChannel);
+    }
+    
+    subscriptionsRef.current = { isSubscribed: false };
+  };
+
   // Set up real-time subscriptions for immediate updates
   useEffect(() => {
-    if (!user) return;
+    if (!user || subscriptionsRef.current.isSubscribed) {
+      return;
+    }
 
-    // Use consistent channel names without timestamps to avoid duplicate subscriptions
-    const paymentsChannelName = `user-payments-${user.id}`;
-    const notificationsChannelName = `user-notifications-${user.id}`;
+    console.log('Setting up dashboard subscriptions for user:', user.id);
 
-    // Create channels with proper cleanup
-    const paymentsChannel = supabase
-      .channel(paymentsChannelName)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_payments',
-          filter: `user_id=eq.${user.id}`
-        },
-        () => {
-          console.log('User payments changed, refreshing dashboard data');
-          fetchDashboardData();
-        }
-      );
+    // Create unique channel names
+    const paymentsChannelName = `dashboard-payments-${user.id}`;
+    const notificationsChannelName = `dashboard-notifications-${user.id}`;
 
-    const notificationsChannel = supabase
-      .channel(notificationsChannelName)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'gw_notifications',
-          filter: `user_id=eq.${user.id}`
-        },
-        () => {
-          console.log('User notifications changed, refreshing dashboard data');
-          fetchDashboardData();
-        }
-      );
+    // Create channels
+    const paymentsChannel = supabase.channel(paymentsChannelName);
+    const notificationsChannel = supabase.channel(notificationsChannelName);
 
-    // Subscribe to both channels
+    // Configure payments channel
+    paymentsChannel.on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'user_payments',
+        filter: `user_id=eq.${user.id}`
+      },
+      (payload) => {
+        console.log('User payments changed:', payload);
+        fetchDashboardData();
+      }
+    );
+
+    // Configure notifications channel
+    notificationsChannel.on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'gw_notifications',
+        filter: `user_id=eq.${user.id}`
+      },
+      (payload) => {
+        console.log('User notifications changed:', payload);
+        fetchDashboardData();
+      }
+    );
+
+    // Subscribe to channels
     paymentsChannel.subscribe((status) => {
-      console.log('Payments channel subscription status:', status);
+      console.log('Payments channel status:', status);
     });
 
     notificationsChannel.subscribe((status) => {
-      console.log('Notifications channel subscription status:', status);
+      console.log('Notifications channel status:', status);
     });
 
-    return () => {
-      console.log('Cleaning up dashboard subscriptions');
-      supabase.removeChannel(paymentsChannel);
-      supabase.removeChannel(notificationsChannel);
+    // Store channels in ref
+    subscriptionsRef.current = {
+      paymentsChannel,
+      notificationsChannel,
+      isSubscribed: true
     };
-  }, [user?.id]); // Only depend on user.id to prevent unnecessary re-subscriptions
+
+    return cleanupSubscriptions;
+  }, [user?.id]); // Only depend on user.id
 
   useEffect(() => {
     fetchDashboardData();
