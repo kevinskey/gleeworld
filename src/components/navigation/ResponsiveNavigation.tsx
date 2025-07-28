@@ -64,7 +64,7 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
         ))}
       </div>
 
-      {/* Medium screens - Short labels */}
+      {/* Medium-Large screens - Short labels */}
       <div className="hidden lg:flex xl:hidden items-center gap-1">
         {publicNavItems.map((item) => (
           <Link
@@ -81,25 +81,8 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
         ))}
       </div>
 
-      {/* Small-medium screens - Short labels */}
-      <div className="hidden md:flex lg:hidden items-center gap-1">
-        {publicNavItems.map((item) => (
-          <Link
-            key={item.href}
-            to={item.href}
-            className={cn(
-              "px-2 py-2 rounded-lg text-xs font-medium transition-all duration-200",
-              "text-gray-700 hover:text-gray-900 hover:bg-white/20 backdrop-blur-sm",
-              isActivePath(item.href) && "text-gray-900 bg-white/30 backdrop-blur-sm"
-            )}
-          >
-            {item.shortLabel}
-          </Link>
-        ))}
-      </div>
-
-      {/* Small screens - Abbreviated text */}
-      <div className="flex sm:hidden md:flex lg:hidden xl:hidden items-center gap-1">
+      {/* Small-Medium screens - Compact labels */}
+      <div className="flex md:flex lg:hidden items-center gap-1">
         {publicNavItems.map((item) => (
           <Link
             key={item.href}
