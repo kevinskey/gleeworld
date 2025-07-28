@@ -48,7 +48,7 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
   return (
     <nav className="hidden sm:flex items-center">
       {/* Large screens - Full labels */}
-      <div className="hidden xl:flex items-center gap-1">
+      <div className="hidden xl:flex items-center gap-3">
         {publicNavItems.map((item) => (
           <Link
             key={item.href}
@@ -65,7 +65,7 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
       </div>
 
       {/* Medium-Large screens - Short labels */}
-      <div className="hidden lg:flex xl:hidden items-center gap-1">
+      <div className="hidden lg:flex xl:hidden items-center gap-2">
         {publicNavItems.map((item) => (
           <Link
             key={item.href}
