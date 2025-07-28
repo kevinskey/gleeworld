@@ -52,7 +52,18 @@
     --text-secondary: 0 0% 33%; /* #555555 */
     --hover-tint: 203 85% 94%; /* #D6F0FB */
     
-    /* Event type colors - using design system */
+    /* Promotional gradients and effects */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--spelman-blue-light)), hsl(var(--spelman-blue-dark)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--spelman-blue-dark)), hsl(var(--spelman-blue-light)), hsl(220 100% 85%));
+    --gradient-card: linear-gradient(145deg, rgba(85, 187, 238, 0.1), rgba(17, 68, 139, 0.05));
+    --shadow-promotional: 0 20px 40px -10px rgba(85, 187, 238, 0.3);
+    --shadow-hover: 0 25px 50px -12px rgba(85, 187, 238, 0.4);
+    
+    /* Animation variables */
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    
+    /* Event type colors */
     --event-performance: 203 85% 83%; /* Light blue */
     --event-performance-fg: 203 85% 30%; /* Dark blue */
     --event-rehearsal: 203 85% 83%; /* Light blue */
