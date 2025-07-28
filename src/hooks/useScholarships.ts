@@ -24,6 +24,7 @@ export const useScholarships = () => {
 
   const fetchScholarships = async () => {
     try {
+      console.log('🔍 Fetching scholarships...');
       setLoading(true);
       setError(null);
 
@@ -33,12 +34,21 @@ export const useScholarships = () => {
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
+      console.log('📋 Scholarships query result:', { 
+        data: data?.length, 
+        error: fetchError,
+        firstFew: data?.slice(0, 3).map(s => ({ id: s.id, title: s.title, is_active: s.is_active }))
+      });
+
       if (fetchError) {
+        console.error('❌ Scholarships fetch error:', fetchError);
         throw fetchError;
       }
 
+      console.log(`✅ Setting ${data?.length || 0} scholarships in state`);
       setScholarships(data || []);
       setFeaturedScholarships(data?.filter(scholarship => scholarship.is_featured) || []);
+      console.log(`⭐ Featured scholarships: ${data?.filter(scholarship => scholarship.is_featured).length || 0}`);
     } catch (err) {
       console.error('Error fetching scholarships:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch scholarships');
