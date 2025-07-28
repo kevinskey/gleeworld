@@ -45,16 +45,17 @@ const PressKit = () => {
     <PublicLayout>
       <div className="space-y-16 animate-fade-in">
         {/* Hero Header */}
-        <div className="relative text-center space-y-8 py-12">
-          <div className="absolute inset-0 bg-[var(--gradient-hero)] opacity-10 rounded-3xl"></div>
+        <div className="relative text-center space-y-8 py-16 overflow-hidden">
+          <div className="absolute inset-0 bg-[url('/lovable-uploads/6a86e8cc-1420-4397-8742-983afe6a293f.png')] bg-cover bg-center opacity-20"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-secondary/20"></div>
           <div className="relative z-10 space-y-6">
             <div className="flex justify-center mb-6">
-              <div className="flex items-center gap-2 px-4 py-2 bg-secondary/20 backdrop-blur-sm rounded-full border border-secondary/30">
-                <Award className="h-5 w-5 text-secondary animate-float" />
-                <span className="text-secondary font-medium">100+ Years of Excellence</span>
+              <div className="flex items-center gap-2 px-4 py-2 bg-background/80 backdrop-blur-sm rounded-full border border-primary/30 shadow-lg">
+                <Award className="h-5 w-5 text-primary animate-float" />
+                <span className="text-primary font-medium">100+ Years of Excellence</span>
               </div>
             </div>
-            <h1 className="text-5xl md:text-7xl font-playfair font-bold bg-[var(--gradient-primary)] bg-clip-text text-transparent leading-tight">
+            <h1 className="text-5xl md:text-7xl font-playfair font-bold text-foreground leading-tight">
               Press Kit
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-4xl mx-auto font-medium">
