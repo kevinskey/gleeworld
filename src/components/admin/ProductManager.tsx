@@ -7,18 +7,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-// Square integration removed - using Stripe instead
 import { 
   Plus, 
   Edit, 
   Trash2, 
   Package, 
-  Square,
   Save,
-  X
+  X,
+  Upload,
+  Image as ImageIcon
 } from "lucide-react";
 
 interface Product {
@@ -49,7 +48,8 @@ export const ProductManager = () => {
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  // Removed Square tab - only products now
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -104,6 +104,7 @@ export const ProductManager = () => {
       tags: ""
     });
     setEditingProduct(null);
+    setSelectedFiles([]);
   };
 
   const handleEdit = (product: Product) => {
@@ -121,11 +122,62 @@ export const ProductManager = () => {
       images: product.images?.join(", ") || "",
       tags: product.tags?.join(", ") || ""
     });
+    setSelectedFiles([]);
     setIsDialogOpen(true);
+
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    setSelectedFiles(files);
+  };
+
+  const uploadImages = async (): Promise<string[]> => {
+    if (selectedFiles.length === 0) return [];
+
+    setUploadingImages(true);
+    const uploadedUrls: string[] = [];
+
+    try {
+      for (const file of selectedFiles) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+        
+        const { data, error } = await supabase.storage
+          .from('product-images')
+          .upload(fileName, file);
+
+        if (error) throw error;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(data.path);
+
+        uploadedUrls.push(publicUrl);
+      }
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload some images",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingImages(false);
+    }
+
+    return uploadedUrls;
   };
 
   const handleSave = async () => {
     try {
+      // Upload new images first
+      const uploadedImageUrls = await uploadImages();
+      
+      // Combine uploaded URLs with manually entered URLs
+      const existingUrls = formData.images ? formData.images.split(",").map(img => img.trim()).filter(Boolean) : [];
+      const allImageUrls = [...existingUrls, ...uploadedImageUrls];
+
       const productData = {
         title: formData.title,
         description: formData.description || null,
@@ -136,7 +188,7 @@ export const ProductManager = () => {
         weight: formData.weight ? parseFloat(formData.weight) : null,
         requires_shipping: formData.requires_shipping,
         is_active: formData.is_active,
-        images: formData.images ? formData.images.split(",").map(img => img.trim()) : [],
+        images: allImageUrls,
         tags: formData.tags ? formData.tags.split(",").map(tag => tag.trim()) : []
       };
 
@@ -295,14 +347,41 @@ export const ProductManager = () => {
                 />
               </div>
               
+              
               <div className="col-span-2">
-                <Label htmlFor="images">Image URLs (comma-separated)</Label>
-                <Input
-                  id="images"
-                  value={formData.images}
-                  onChange={(e) => setFormData({ ...formData, images: e.target.value })}
-                  placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
-                />
+                <Label>Product Images</Label>
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="image_upload" className="text-sm text-muted-foreground">Upload Images</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Input
+                        id="image_upload"
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        className="file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                      />
+                      <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    {selectedFiles.length > 0 && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {selectedFiles.length} file(s) selected
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="images" className="text-sm text-muted-foreground">Or add image URLs (comma-separated)</Label>
+                    <Input
+                      id="images"
+                      value={formData.images}
+                      onChange={(e) => setFormData({ ...formData, images: e.target.value })}
+                      placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
               </div>
               
               <div className="col-span-2">
@@ -316,14 +395,19 @@ export const ProductManager = () => {
               </div>
             </div>
             
+            
             <div className="flex justify-end space-x-2 pt-4">
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                 <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
-              <Button onClick={handleSave}>
-                <Save className="h-4 w-4 mr-2" />
-                {editingProduct ? "Update" : "Create"} Product
+              <Button onClick={handleSave} disabled={uploadingImages}>
+                {uploadingImages ? (
+                  <Upload className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                {uploadingImages ? "Uploading..." : editingProduct ? "Update" : "Create"} Product
               </Button>
             </div>
           </DialogContent>
@@ -357,6 +441,18 @@ export const ProductManager = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
+                {product.images && product.images.length > 0 && (
+                  <div className="mb-3">
+                    <img 
+                      src={product.images[0]} 
+                      alt={product.title}
+                      className="w-full h-32 object-cover rounded-md"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Price:</span>
                   <span className="font-semibold text-brand-600">${product.price.toFixed(2)}</span>
