@@ -126,7 +126,7 @@ const PressKit = () => {
               <div className="lg:col-span-1">
                 <div className="aspect-square rounded-lg overflow-hidden shadow-lg">
                   <img 
-                    src="/lovable-uploads/uploaded_file_1738131100516_image.png"
+                    src="/lovable-uploads/a3a8f702-b1da-4e18-9e7f-a1a3d9c99b11.png"
                     alt="Director playing piano in black suit - professional portrait"
                     className="w-full h-full object-cover"
                   />
