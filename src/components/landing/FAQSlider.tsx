@@ -48,10 +48,17 @@ export const FAQSlider = () => {
   // Total items = FAQ questions + 1 footer card
   const totalItems = faqData.length + 1;
 
-  // Auto-rotate questions every 7 seconds
+  // Auto-rotate questions every 7 seconds, advancing by 2 for mobile (to show 2 new FAQs)
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentQuestionIndex((prev) => (prev + 1) % totalItems);
+      setCurrentQuestionIndex((prev) => {
+        // Advance by 2 for mobile, but ensure we don't skip the footer card
+        const next = prev + 2;
+        if (next >= faqData.length) {
+          return faqData.length; // Show footer card
+        }
+        return next % totalItems;
+      });
     }, 7000);
 
     return () => clearInterval(timer);
@@ -111,50 +118,86 @@ export const FAQSlider = () => {
           </div>
         </div>
 
-        {/* Mobile: Rotating Question/Answer Cards */}
+        {/* Mobile: Rotating Question/Answer Cards - 2 FAQs at a time */}
         <div className="md:hidden">
           {/* Fixed height container for consistent sizing */}
-          <div className="h-[300px] flex flex-col justify-center space-y-3">
+          <div className="h-[280px] flex flex-col justify-center space-y-2">
             {!isFooterCard ? (
               <>
-                {/* Question Card */}
-                <div className="bg-background/60 backdrop-blur-sm border border-border rounded-xl p-4 shadow-sm flex flex-col justify-center">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <div className="flex-shrink-0 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                      <span className="text-xs font-bold text-primary-foreground">
-                        {String(currentQuestionIndex + 1).padStart(2, '0')}
-                      </span>
+                {/* First FAQ Pair */}
+                {currentFAQ && (
+                  <div className="space-y-2">
+                    {/* Question 1 */}
+                    <div className="bg-background/60 backdrop-blur-sm border border-border rounded-lg p-3 shadow-sm">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <div className="flex-shrink-0 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-xs font-bold text-primary-foreground">
+                            {String(currentQuestionIndex + 1).padStart(2, '0')}
+                          </span>
+                        </div>
+                        <span className="text-xs text-primary font-medium">Q</span>
+                      </div>
+                      <p className="text-xs font-semibold text-foreground leading-tight">
+                        {currentFAQ.question}
+                      </p>
                     </div>
-                    <span className="text-xs text-primary font-medium">QUESTION</span>
-                  </div>
-                  <p className="text-sm font-semibold text-foreground leading-snug transition-all duration-500 ease-in-out" key={currentFAQ?.id + '-q'}>
-                    {currentFAQ?.question}
-                  </p>
-                </div>
-                
-                {/* Answer Card */}
-                <div className="bg-primary/5 backdrop-blur-sm border border-primary/20 rounded-xl p-4 shadow-sm flex flex-col justify-center">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <div className="flex-shrink-0 w-6 h-6 bg-primary/80 rounded-full flex items-center justify-center">
-                      <span className="text-xs font-bold text-primary-foreground">A</span>
+                    
+                    {/* Answer 1 */}
+                    <div className="bg-primary/5 backdrop-blur-sm border border-primary/20 rounded-lg p-3 shadow-sm">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <div className="flex-shrink-0 w-5 h-5 bg-primary/80 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-bold text-primary-foreground">A</span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {currentFAQ.answer}
+                      </p>
                     </div>
-                    <span className="text-xs text-primary font-medium">ANSWER</span>
                   </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed transition-all duration-500 ease-in-out" key={currentFAQ?.id + '-a'}>
-                    {currentFAQ?.answer}
-                  </p>
-                </div>
+                )}
+
+                {/* Second FAQ Pair */}
+                {faqData[currentQuestionIndex + 1] && (
+                  <div className="space-y-2">
+                    {/* Question 2 */}
+                    <div className="bg-background/60 backdrop-blur-sm border border-border rounded-lg p-3 shadow-sm">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <div className="flex-shrink-0 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-xs font-bold text-primary-foreground">
+                            {String(currentQuestionIndex + 2).padStart(2, '0')}
+                          </span>
+                        </div>
+                        <span className="text-xs text-primary font-medium">Q</span>
+                      </div>
+                      <p className="text-xs font-semibold text-foreground leading-tight">
+                        {faqData[currentQuestionIndex + 1].question}
+                      </p>
+                    </div>
+                    
+                    {/* Answer 2 */}
+                    <div className="bg-primary/5 backdrop-blur-sm border border-primary/20 rounded-lg p-3 shadow-sm">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <div className="flex-shrink-0 w-5 h-5 bg-primary/80 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-bold text-primary-foreground">A</span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {faqData[currentQuestionIndex + 1].answer}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               /* Footer Card in rotation */
-              <div className="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-6 backdrop-blur-sm border border-white/20 shadow-lg transition-all duration-500 ease-in-out flex flex-col justify-center">
-                <h3 className="text-xl font-bold text-primary-foreground mb-3 text-center">
+              <div className="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-4 backdrop-blur-sm border border-white/20 shadow-lg transition-all duration-500 ease-in-out flex flex-col justify-center">
+                <h3 className="text-lg font-bold text-primary-foreground mb-2 text-center">
                   Good luck on your auditions ladies!
                 </h3>
-                <p className="text-sm text-primary-foreground/90 mb-2 text-center">
+                <p className="text-xs text-primary-foreground/90 mb-1 text-center">
                   To stay up to date, follow us on social media at
                 </p>
-                <p className="text-lg font-bold text-primary-foreground text-center">
+                <p className="text-sm font-bold text-primary-foreground text-center">
                   @Spelmanglee
                 </p>
               </div>
@@ -163,12 +206,12 @@ export const FAQSlider = () => {
           
           {/* Progress indicator */}
           <div className="flex justify-center space-x-1 pt-4">
-            {Array.from({length: totalItems}).map((_, index) => (
+            {Array.from({length: Math.ceil(faqData.length / 2) + 1}).map((_, index) => (
               <div
                 key={index}
                 className={cn(
                   "w-2 h-2 rounded-full transition-all duration-300",
-                  index === currentQuestionIndex ? "bg-primary" : "bg-primary/30"
+                  Math.floor(currentQuestionIndex / 2) === index ? "bg-primary" : "bg-primary/30"
                 )}
               />
             ))}
