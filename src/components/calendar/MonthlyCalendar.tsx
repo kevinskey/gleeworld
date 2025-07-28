@@ -8,6 +8,7 @@ import { EventDetailDialog } from "./EventDetailDialog";
 import { EditEventDialog } from "./EditEventDialog";
 import { EventHoverCard } from "./EventHoverCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MonthlyCalendarProps {
   events: GleeWorldEvent[];
@@ -20,6 +21,7 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
   const [selectedEvent, setSelectedEvent] = useState<GleeWorldEvent | null>(null);
   const [editingEvent, setEditingEvent] = useState<GleeWorldEvent | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [userPermissions, setUserPermissions] = useState<{isAdmin: boolean, isSuperAdmin: boolean} | null>(null);
 
   console.log('MonthlyCalendar received events:', events.length, events.map(e => ({ title: e.title, date: e.start_date })));
   
@@ -29,6 +31,36 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
       console.log('Sample events:', events.slice(0, 3));
     }
   }, [events]);
+
+  // Fetch user permissions when user changes
+  useEffect(() => {
+    const fetchUserPermissions = async () => {
+      if (!user) {
+        setUserPermissions(null);
+        return;
+      }
+
+      try {
+        const { data: userProfile } = await supabase
+          .from('gw_profiles')
+          .select('is_admin, is_super_admin, role')
+          .eq('user_id', user.id)
+          .single();
+
+        if (userProfile) {
+          setUserPermissions({
+            isAdmin: userProfile.is_admin || userProfile.role === 'admin',
+            isSuperAdmin: userProfile.is_super_admin || userProfile.role === 'super-admin'
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching user permissions:', error);
+        setUserPermissions(null);
+      }
+    };
+
+    fetchUserPermissions();
+  }, [user]);
 
   // Handle responsive behavior
   useEffect(() => {
@@ -63,12 +95,24 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
     return dayEvents;
   };
 
-  const handleEventClick = (event: GleeWorldEvent) => {
-    // Super-admins and admins can edit any event
-    // Regular users can only edit events they created
-    const canEdit = user && (
-      user.role === 'super-admin' || 
-      user.role === 'admin' || 
+  const handleEventClick = async (event: GleeWorldEvent) => {
+    if (!user) {
+      setSelectedEvent(event);
+      return;
+    }
+
+    // Check user permissions from gw_profiles
+    const { data: userProfile } = await supabase
+      .from('gw_profiles')
+      .select('is_admin, is_super_admin, role')
+      .eq('user_id', user.id)
+      .single();
+
+    const canEdit = userProfile && (
+      userProfile.is_super_admin || 
+      userProfile.is_admin || 
+      userProfile.role === 'admin' ||
+      userProfile.role === 'super-admin' ||
       user.id === event.created_by
     );
     
@@ -174,12 +218,12 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
                 {dayEvents.slice(0, isMobile ? 1 : 2).map(event => {
                   console.log('Rendering event:', event.title, 'for day:', day.toDateString());
                   console.log('Event data:', { id: event.id, created_by: event.created_by, user_id: user?.id, user_role: user?.role });
-                  const canEdit = user && (
-                    user.role === 'super-admin' || 
-                    user.role === 'admin' || 
-                    user.id === event.created_by
-                  );
-                  console.log('Can edit?', canEdit, 'User:', user?.id, 'Event creator:', event.created_by, 'User role:', user?.role);
+                   const canEdit = user && userPermissions && (
+                     userPermissions.isSuperAdmin || 
+                     userPermissions.isAdmin || 
+                     user.id === event.created_by
+                   );
+                   console.log('Can edit?', canEdit, 'User:', user?.id, 'Event creator:', event.created_by, 'User permissions:', userPermissions);
                   const isSelected = (editingEvent?.id === event.id) || (selectedEvent?.id === event.id);
                   return (
                     <EventHoverCard key={event.id} event={event} canEdit={canEdit}>
