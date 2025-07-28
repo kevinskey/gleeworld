@@ -19,6 +19,7 @@ import {
   Upload,
   Image as ImageIcon
 } from "lucide-react";
+import { ProductMockupGenerator } from './ProductMockupGenerator';
 
 interface Product {
   id: string;
@@ -510,6 +511,9 @@ export const ProductManager = () => {
         </Dialog>
         </div>
       </div>
+
+      {/* Product Mockup Generator */}
+      <ProductMockupGenerator />
 
       <div className="space-y-6">
 
