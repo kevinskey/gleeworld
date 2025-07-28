@@ -71,10 +71,10 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                 </div>
               </Link>
             </EnhancedTooltip>
+            
+            {/* Clock - Next to Glee World text */}
+            <HeaderClock className="ml-2" />
           </div>
-
-          {/* Clock - Always visible */}
-          <HeaderClock className="block" />
 
           {/* Right side actions */}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
