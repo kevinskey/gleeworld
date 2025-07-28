@@ -30,7 +30,7 @@ export const AuditionHoverCard = () => {
 
   // Desktop version with hover card
   return (
-    <div className="fixed top-32 left-1/2 transform -translate-x-1/2 z-40 pt-[10px] h-[812px]">
+    <div className="fixed top-32 left-1/2 transform -translate-x-1/2 z-40 pt-[10px] pb-8 h-[812px]">
       <Link to="/auditions">
         <Button 
           variant="branded" 
