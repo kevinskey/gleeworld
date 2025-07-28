@@ -16,12 +16,12 @@ export const AuditionHoverCard = () => {
         <Link to={user ? "/auditions" : "/auth?redirect=/auditions"}>
           <Button 
             variant="branded" 
-            size="sm"
-            className="px-4 py-3 rounded-full text-sm touch-manipulation"
+            size="lg"
+            className="px-8 py-4 rounded-full text-lg touch-manipulation"
           >
-            <Mic className="w-4 h-4 mr-2" />
+            <Mic className="w-5 h-5 mr-3" />
             Sign Up for Auditions
-            <span className="ml-2">🎵</span>
+            <span className="ml-3">🎵</span>
           </Button>
         </Link>
       </div>
