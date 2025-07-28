@@ -12,7 +12,7 @@ export const AuditionHoverCard = () => {
   // On mobile, show a compact button that fits viewport
   if (isMobile) {
     return (
-      <div className="fixed top-16 left-4 right-4 z-40 max-w-[calc(100vw-2rem)] pt-[10px]">
+      <div className="fixed top-16 left-4 right-4 z-40 max-w-[calc(100vw-2rem)] pt-[10px] h-[812px]">
         <Link to="/auditions">
           <Button 
             variant="branded" 
@@ -30,7 +30,7 @@ export const AuditionHoverCard = () => {
 
   // Desktop version with hover card
   return (
-    <div className="fixed top-32 left-1/2 transform -translate-x-1/2 z-40 pt-[10px]">
+    <div className="fixed top-32 left-1/2 transform -translate-x-1/2 z-40 pt-[10px] h-[812px]">
       <Link to="/auditions">
         <Button 
           variant="branded" 
