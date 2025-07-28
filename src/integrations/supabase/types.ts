@@ -2722,6 +2722,337 @@ export type Database = {
           },
         ]
       }
+      gw_executive_board_checkins: {
+        Row: {
+          action_type: string
+          checked_by: string
+          checked_to_user_id: string | null
+          created_at: string
+          event_id: string | null
+          id: string
+          item_condition: string
+          item_name: string
+          item_type: string
+          notes: string | null
+        }
+        Insert: {
+          action_type: string
+          checked_by: string
+          checked_to_user_id?: string | null
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          item_condition?: string
+          item_name: string
+          item_type: string
+          notes?: string | null
+        }
+        Update: {
+          action_type?: string
+          checked_by?: string
+          checked_to_user_id?: string | null
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          item_condition?: string
+          item_name?: string
+          item_type?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_executive_board_checkins_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_executive_board_files: {
+        Row: {
+          category: string
+          created_at: string
+          event_id: string | null
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          filename: string
+          id: string
+          is_public: boolean
+          position_scope:
+            | Database["public"]["Enums"]["executive_position"]
+            | null
+          task_id: string | null
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          event_id?: string | null
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          filename: string
+          id?: string
+          is_public?: boolean
+          position_scope?:
+            | Database["public"]["Enums"]["executive_position"]
+            | null
+          task_id?: string | null
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          event_id?: string | null
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          filename?: string
+          id?: string
+          is_public?: boolean
+          position_scope?:
+            | Database["public"]["Enums"]["executive_position"]
+            | null
+          task_id?: string | null
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_executive_board_files_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_executive_board_files_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "gw_executive_board_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_executive_board_members: {
+        Row: {
+          academic_year: string
+          appointed_date: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          position: Database["public"]["Enums"]["executive_position"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          academic_year: string
+          appointed_date?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          position: Database["public"]["Enums"]["executive_position"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          academic_year?: string
+          appointed_date?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          position?: Database["public"]["Enums"]["executive_position"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      gw_executive_board_notifications: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_read: boolean
+          message: string
+          notification_type: string
+          priority: string
+          read_at: string | null
+          recipient_position:
+            | Database["public"]["Enums"]["executive_position"]
+            | null
+          recipient_user_id: string
+          related_event_id: string | null
+          related_task_id: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_read?: boolean
+          message: string
+          notification_type?: string
+          priority?: string
+          read_at?: string | null
+          recipient_position?:
+            | Database["public"]["Enums"]["executive_position"]
+            | null
+          recipient_user_id: string
+          related_event_id?: string | null
+          related_task_id?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_read?: boolean
+          message?: string
+          notification_type?: string
+          priority?: string
+          read_at?: string | null
+          recipient_position?:
+            | Database["public"]["Enums"]["executive_position"]
+            | null
+          recipient_user_id?: string
+          related_event_id?: string | null
+          related_task_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_executive_board_notifications_related_event_id_fkey"
+            columns: ["related_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_executive_board_notifications_related_task_id_fkey"
+            columns: ["related_task_id"]
+            isOneToOne: false
+            referencedRelation: "gw_executive_board_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_executive_board_progress_log: {
+        Row: {
+          action_description: string
+          action_type: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          related_entity_id: string | null
+          related_entity_type: string | null
+          user_id: string
+          user_position:
+            | Database["public"]["Enums"]["executive_position"]
+            | null
+        }
+        Insert: {
+          action_description: string
+          action_type: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          user_id: string
+          user_position?:
+            | Database["public"]["Enums"]["executive_position"]
+            | null
+        }
+        Update: {
+          action_description?: string
+          action_type?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          user_id?: string
+          user_position?:
+            | Database["public"]["Enums"]["executive_position"]
+            | null
+        }
+        Relationships: []
+      }
+      gw_executive_board_tasks: {
+        Row: {
+          assigned_to_position:
+            | Database["public"]["Enums"]["executive_position"]
+            | null
+          assigned_to_user_id: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          director_verified_at: string | null
+          director_verified_by: string | null
+          due_date: string | null
+          event_id: string | null
+          id: string
+          priority: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to_position?:
+            | Database["public"]["Enums"]["executive_position"]
+            | null
+          assigned_to_user_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          director_verified_at?: string | null
+          director_verified_by?: string | null
+          due_date?: string | null
+          event_id?: string | null
+          id?: string
+          priority?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to_position?:
+            | Database["public"]["Enums"]["executive_position"]
+            | null
+          assigned_to_user_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          director_verified_at?: string | null
+          director_verified_by?: string | null
+          due_date?: string | null
+          event_id?: string | null
+          id?: string
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_executive_board_tasks_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_fans: {
         Row: {
           created_at: string | null
@@ -2881,6 +3212,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gw_leadership_development: {
+        Row: {
+          approved_by: string | null
+          created_at: string
+          goals_set: string[] | null
+          id: string
+          is_approved: boolean
+          mentor_feedback: string | null
+          position: Database["public"]["Enums"]["executive_position"]
+          reflection_content: string
+          reflection_title: string
+          semester: string
+          skills_developed: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_by?: string | null
+          created_at?: string
+          goals_set?: string[] | null
+          id?: string
+          is_approved?: boolean
+          mentor_feedback?: string | null
+          position: Database["public"]["Enums"]["executive_position"]
+          reflection_content: string
+          reflection_title: string
+          semester: string
+          skills_developed?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_by?: string | null
+          created_at?: string
+          goals_set?: string[] | null
+          id?: string
+          is_approved?: boolean
+          mentor_feedback?: string | null
+          position?: Database["public"]["Enums"]["executive_position"]
+          reflection_content?: string
+          reflection_title?: string
+          semester?: string
+          skills_developed?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       gw_licensing_entries: {
         Row: {
@@ -7155,6 +7534,10 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: Json
       }
+      get_user_executive_position: {
+        Args: { user_id_param: string }
+        Returns: Database["public"]["Enums"]["executive_position"]
+      }
       get_user_username_permissions: {
         Args: { user_email_param: string }
         Returns: {
@@ -7183,6 +7566,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      is_executive_board_member: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
       is_super_admin: {
         Args: { _user_id: string }
         Returns: boolean
@@ -7204,6 +7591,16 @@ export type Database = {
           p_action_type: string
           p_target_user_id: string
           p_details?: Json
+        }
+        Returns: string
+      }
+      log_executive_board_action: {
+        Args: {
+          p_action_type: string
+          p_action_description: string
+          p_related_entity_type?: string
+          p_related_entity_id?: string
+          p_metadata?: Json
         }
         Returns: string
       }
@@ -7289,6 +7686,17 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user" | "super-admin"
+      executive_position:
+        | "president"
+        | "secretary"
+        | "treasurer"
+        | "tour_manager"
+        | "wardrobe_manager"
+        | "librarian"
+        | "historian"
+        | "pr_coordinator"
+        | "chaplain"
+        | "data_analyst"
       feedback_category_enum:
         | "Vocal Blend"
         | "Rhythmic Precision"
@@ -7433,6 +7841,18 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user", "super-admin"],
+      executive_position: [
+        "president",
+        "secretary",
+        "treasurer",
+        "tour_manager",
+        "wardrobe_manager",
+        "librarian",
+        "historian",
+        "pr_coordinator",
+        "chaplain",
+        "data_analyst",
+      ],
       feedback_category_enum: [
         "Vocal Blend",
         "Rhythmic Precision",
