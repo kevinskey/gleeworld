@@ -49,7 +49,7 @@ export const ProductManager = () => {
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"products" | "square">("products");
+  // Removed Square tab - only products now
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -331,19 +331,7 @@ export const ProductManager = () => {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "products" | "square")}>
-        <TabsList>
-          <TabsTrigger value="products">
-            <Package className="h-4 w-4 mr-2" />
-            Products
-          </TabsTrigger>
-          <TabsTrigger value="square">
-            <Square className="h-4 w-4 mr-2" />
-            Square Integration
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="products" className="space-y-6">
+      <div className="space-y-6">
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {products.map((product) => (
@@ -412,16 +400,7 @@ export const ProductManager = () => {
           </Button>
         </div>
       )}
-        </TabsContent>
-
-        <TabsContent value="square">
-          <div className="text-center py-12">
-            <Square className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Square Integration Removed</h3>
-            <p className="text-gray-600">Now using Stripe for payments. Products sync directly with the shop.</p>
-          </div>
-        </TabsContent>
-      </Tabs>
+      </div>
     </div>
   );
 };
