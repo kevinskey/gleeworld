@@ -21,16 +21,16 @@ export const PublicHeader = () => {
               alt="Spelman College Glee Club" 
               className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0 relative z-[111]"
             />
-            <div className="flex flex-col relative z-[111]">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4 relative z-[111]">
+              <div className="flex flex-col">
                 <span className="text-gray-900 font-bold text-lg sm:text-xl lg:text-2xl whitespace-nowrap leading-tight">
                   GleeWorld
                 </span>
-                <HeaderClock />
+                <span className="text-gray-700 text-xs sm:text-sm font-medium whitespace-nowrap leading-tight -mt-1">
+                  Spelman Glee Club
+                </span>
               </div>
-              <span className="text-gray-700 text-xs sm:text-sm font-medium whitespace-nowrap leading-tight -mt-1">
-                Spelman Glee Club
-              </span>
+              <HeaderClock />
             </div>
           </Link>
           
