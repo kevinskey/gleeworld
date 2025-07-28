@@ -15,6 +15,8 @@ const ScholarshipHub = () => {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [deadlineStart, setDeadlineStart] = useState('');
+  const [deadlineEnd, setDeadlineEnd] = useState('');
 
   // Redirect to auth if not logged in
   if (!authLoading && !user) {
@@ -30,22 +32,55 @@ const ScholarshipHub = () => {
     return Array.from(tags).sort();
   }, [scholarships]);
 
-  // Filter scholarships based on search term and selected tags
+  // Filter scholarships based on search term, selected tags, and deadline range
   const filteredScholarships = useMemo(() => {
-    return scholarships.filter(scholarship => {
-      // Search filter
-      const matchesSearch = !searchTerm || 
-        scholarship.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        scholarship.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        scholarship.eligibility?.toLowerCase().includes(searchTerm.toLowerCase());
+    return scholarships
+      .filter(scholarship => {
+        // Search filter
+        const matchesSearch = !searchTerm || 
+          scholarship.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          scholarship.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          scholarship.eligibility?.toLowerCase().includes(searchTerm.toLowerCase());
 
-      // Tag filter
-      const matchesTags = selectedTags.length === 0 || 
-        selectedTags.some(tag => scholarship.tags?.includes(tag));
+        // Tag filter
+        const matchesTags = selectedTags.length === 0 || 
+          selectedTags.some(tag => scholarship.tags?.includes(tag));
 
-      return matchesSearch && matchesTags;
-    });
-  }, [scholarships, searchTerm, selectedTags]);
+        // Deadline filter
+        const matchesDeadline = (() => {
+          if (!deadlineStart && !deadlineEnd) return true;
+          if (!scholarship.deadline) return !deadlineStart && !deadlineEnd;
+          
+          const scholarshipDate = new Date(scholarship.deadline);
+          const startDate = deadlineStart ? new Date(deadlineStart) : null;
+          const endDate = deadlineEnd ? new Date(deadlineEnd) : null;
+          
+          if (startDate && endDate) {
+            return scholarshipDate >= startDate && scholarshipDate <= endDate;
+          } else if (startDate) {
+            return scholarshipDate >= startDate;
+          } else if (endDate) {
+            return scholarshipDate <= endDate;
+          }
+          return true;
+        })();
+
+        return matchesSearch && matchesTags && matchesDeadline;
+      })
+      .sort((a, b) => {
+        // Sort by created_at descending (newest first), then by deadline ascending
+        const dateA = new Date(a.created_at);
+        const dateB = new Date(b.created_at);
+        if (dateB.getTime() !== dateA.getTime()) {
+          return dateB.getTime() - dateA.getTime();
+        }
+        // If created dates are the same, sort by deadline
+        if (a.deadline && b.deadline) {
+          return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+        }
+        return 0;
+      });
+  }, [scholarships, searchTerm, selectedTags, deadlineStart, deadlineEnd]);
 
   const handleTagToggle = (tag: string) => {
     setSelectedTags(prev => 
@@ -58,6 +93,8 @@ const ScholarshipHub = () => {
   const handleClearFilters = () => {
     setSearchTerm('');
     setSelectedTags([]);
+    setDeadlineStart('');
+    setDeadlineEnd('');
   };
 
   if (authLoading || loading) {
@@ -119,6 +156,10 @@ const ScholarshipHub = () => {
           onTagToggle={handleTagToggle}
           availableTags={availableTags}
           onClearFilters={handleClearFilters}
+          deadlineStart={deadlineStart}
+          deadlineEnd={deadlineEnd}
+          onDeadlineStartChange={setDeadlineStart}
+          onDeadlineEndChange={setDeadlineEnd}
         />
 
         {/* All Scholarships */}

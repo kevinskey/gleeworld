@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, X } from "lucide-react";
+import { Search, X, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ScholarshipFiltersProps {
@@ -10,6 +10,10 @@ interface ScholarshipFiltersProps {
   onTagToggle: (tag: string) => void;
   availableTags: string[];
   onClearFilters: () => void;
+  deadlineStart: string;
+  deadlineEnd: string;
+  onDeadlineStartChange: (date: string) => void;
+  onDeadlineEndChange: (date: string) => void;
 }
 
 export const ScholarshipFilters = ({
@@ -18,9 +22,13 @@ export const ScholarshipFilters = ({
   selectedTags,
   onTagToggle,
   availableTags,
-  onClearFilters
+  onClearFilters,
+  deadlineStart,
+  deadlineEnd,
+  onDeadlineStartChange,
+  onDeadlineEndChange
 }: ScholarshipFiltersProps) => {
-  const hasActiveFilters = searchTerm.length > 0 || selectedTags.length > 0;
+  const hasActiveFilters = searchTerm.length > 0 || selectedTags.length > 0 || deadlineStart || deadlineEnd;
 
   return (
     <div className="space-y-4 p-4 bg-gradient-to-r from-brand-50 to-brand-100 rounded-lg border border-brand-200">
@@ -34,6 +42,34 @@ export const ScholarshipFilters = ({
           onChange={(e) => onSearchChange(e.target.value)}
           className="pl-10 border-brand-200 focus:border-brand-400 focus:ring-brand-400"
         />
+      </div>
+
+      {/* Deadline Range Filter */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="text-sm font-medium text-brand-700 mb-2 flex items-center gap-1">
+            <Calendar className="h-4 w-4" />
+            Deadline From:
+          </label>
+          <Input
+            type="date"
+            value={deadlineStart}
+            onChange={(e) => onDeadlineStartChange(e.target.value)}
+            className="border-brand-200 focus:border-brand-400 focus:ring-brand-400"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium text-brand-700 mb-2 flex items-center gap-1">
+            <Calendar className="h-4 w-4" />
+            Deadline To:
+          </label>
+          <Input
+            type="date"
+            value={deadlineEnd}
+            onChange={(e) => onDeadlineEndChange(e.target.value)}
+            className="border-brand-200 focus:border-brand-400 focus:ring-brand-400"
+          />
+        </div>
       </div>
 
       {/* Tags Filter */}
@@ -67,8 +103,10 @@ export const ScholarshipFilters = ({
         <div className="flex justify-between items-center pt-2 border-t border-brand-200">
           <span className="text-sm text-brand-600">
             {selectedTags.length > 0 && `${selectedTags.length} tag${selectedTags.length === 1 ? '' : 's'} selected`}
-            {selectedTags.length > 0 && searchTerm && ' • '}
+            {(selectedTags.length > 0 || deadlineStart || deadlineEnd) && searchTerm && ' • '}
             {searchTerm && `Searching for "${searchTerm}"`}
+            {(selectedTags.length > 0 || searchTerm) && (deadlineStart || deadlineEnd) && ' • '}
+            {(deadlineStart || deadlineEnd) && 'Date range filter active'}
           </span>
           <Button
             variant="ghost"
