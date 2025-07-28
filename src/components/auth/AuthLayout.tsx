@@ -1,6 +1,9 @@
 
 import { ReactNode } from "react";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -9,6 +12,7 @@ interface AuthLayoutProps {
 }
 
 export const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => {
+  const navigate = useNavigate();
   return (
     <div 
       className="min-h-screen flex items-center justify-center p-4 relative bg-cover bg-no-repeat bg-center md:bg-left-center"
@@ -17,6 +21,17 @@ export const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => {
       }}
     >
       <div className="absolute inset-0 bg-black/30" />
+      
+      {/* Back to Home Button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => navigate('/')}
+        className="absolute top-4 left-4 z-20 text-white hover:bg-white/20 border border-white/30"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to Home
+      </Button>
       <Card className="w-full max-w-md relative z-10 bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-white/5 to-transparent pointer-events-none"></div>
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
