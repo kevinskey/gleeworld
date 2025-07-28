@@ -119,10 +119,9 @@ const RootRoute = () => {
 };
 
 const App = () => {
-  
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <TooltipProvider>
             <CustomTooltipProvider>
@@ -479,9 +478,9 @@ const App = () => {
           </CustomTooltipProvider>
         </TooltipProvider>
       </AuthProvider>
+      </QueryClientProvider>
     </BrowserRouter>
-  </QueryClientProvider>
-);
+  );
 };
 
 export default App;
