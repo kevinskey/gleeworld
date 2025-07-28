@@ -65,6 +65,7 @@ import { DASHBOARD_MODULES, hasModuleAccess, hasExecutiveBoardPermissions, Dashb
 import { ChevronUp } from "lucide-react";
 import { AdminPanel } from "@/components/AdminPanel";
 import { AdminPanelCollapsible } from "@/components/AdminPanelCollapsible";
+import { AdminIconsPanel } from "@/components/admin/AdminIconsPanel";
 import { UserDashboardProvider } from "@/contexts/UserDashboardContext";
 
 export const UserDashboard = () => {
@@ -462,10 +463,10 @@ export const UserDashboard = () => {
                   )}
                 </CardContent>
                 
-                {/* Add collapsible admin panel for admins */}
+                {/* Add admin icons panel for admins */}
                 {isAdmin && (
                   <div className="mt-4 px-6 pb-6">
-                    <AdminPanelCollapsible />
+                    <AdminIconsPanel />
                   </div>
                 )}
               </Card>
