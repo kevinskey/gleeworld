@@ -1,8 +1,13 @@
 
 import { UserDashboard } from "@/components/user-dashboard/UserDashboard";
+import { UserDashboardProvider } from "@/contexts/UserDashboardContext";
 
 const UserDashboardPage = () => {
-  return <UserDashboard />;
+  return (
+    <UserDashboardProvider>
+      <UserDashboard />
+    </UserDashboardProvider>
+  );
 };
 
 export default UserDashboardPage;
