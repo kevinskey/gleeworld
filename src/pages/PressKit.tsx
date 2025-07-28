@@ -114,7 +114,7 @@ const PressKit = () => {
 
   return (
     <PublicLayout>
-      <div className="space-y-16 animate-fade-in">
+      <div className="space-y-16 animate-fade-in bg-black text-white min-h-screen">
         {/* Hero Header */}
         <div className="relative text-center space-y-8 py-20 overflow-hidden min-h-[80vh] flex items-center justify-center">
           {/* Slideshow Background */}
