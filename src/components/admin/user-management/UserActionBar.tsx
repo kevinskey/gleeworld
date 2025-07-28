@@ -88,7 +88,7 @@ export const UserActionBar = ({
         </div>
 
         {/* Actions Row */}
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-center gap-2">
           <Button onClick={onCreateUser} size="sm">
             <UserPlus className="h-4 w-4 mr-2" />
             Add User
