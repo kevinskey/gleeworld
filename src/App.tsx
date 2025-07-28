@@ -54,6 +54,7 @@ import AlumnaeAdmin from "./pages/admin/AlumnaeAdmin";
 import SendNotificationPage from "./pages/SendNotificationPage";
 import AuditionPage from "./pages/AuditionPage";
 import ScholarshipHub from "./pages/ScholarshipHub";
+import AdminScholarships from "./pages/AdminScholarships";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -423,7 +424,15 @@ const App = () => {
                                <ScholarshipHub />
                              </ProtectedRoute>
                            } 
-                         />
+                          />
+                          <Route 
+                            path="/admin/scholarships" 
+                            element={
+                              <ProtectedRoute>
+                                <AdminScholarships />
+                              </ProtectedRoute>
+                            } 
+                          />
                 <Route 
                   path="/landing"
                   element={

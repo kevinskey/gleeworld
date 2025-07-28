@@ -88,3 +88,6 @@ otp_exp = 600
 enabled = true
 port = 54328
 inspector_port = 8083
+
+[functions.update-scholarships]
+verify_jwt = false

@@ -16,7 +16,8 @@ export const ROUTES = {
   PERFORMANCE: '/performance',
   TOUR_MANAGER: '/tour-manager',
   ATTENDANCE: '/attendance',
-  SCHOLARSHIPS: '/scholarships'
+  SCHOLARSHIPS: '/scholarships',
+  ADMIN_SCHOLARSHIPS: '/admin/scholarships'
 } as const;
 
 export const PROTECTED_ROUTES = [
@@ -30,7 +31,8 @@ export const PROTECTED_ROUTES = [
   ROUTES.PERFORMANCE,
   ROUTES.TOUR_MANAGER,
   ROUTES.ATTENDANCE,
-  ROUTES.SCHOLARSHIPS
+  ROUTES.SCHOLARSHIPS,
+  ROUTES.ADMIN_SCHOLARSHIPS
 ] as const;
 
 export const PUBLIC_ROUTES = [

@@ -5968,6 +5968,7 @@ export type Database = {
           is_active: boolean | null
           is_featured: boolean | null
           link: string | null
+          source: string | null
           tags: string[] | null
           title: string
           updated_at: string | null
@@ -5983,6 +5984,7 @@ export type Database = {
           is_active?: boolean | null
           is_featured?: boolean | null
           link?: string | null
+          source?: string | null
           tags?: string[] | null
           title: string
           updated_at?: string | null
@@ -5998,6 +6000,7 @@ export type Database = {
           is_active?: boolean | null
           is_featured?: boolean | null
           link?: string | null
+          source?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string | null
