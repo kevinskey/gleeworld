@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
 import { useState, useMemo } from "react";
 import { BellDot } from "lucide-react";
-import { useUserDashboard } from "@/hooks/useUserDashboard";
+import { useUserDashboardContext } from "@/contexts/UserDashboardContext";
 
 interface WelcomeCardProps {
   displayName: string;
@@ -18,7 +18,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
   const { getSettingByName } = useDashboardSettings();
   const welcomeCardSetting = getSettingByName('welcome_card_background');
   const [imageError, setImageError] = useState(false);
-  const { dashboardData } = useUserDashboard();
+  const { dashboardData } = useUserDashboardContext();
 
   const getUserTitle = () => {
     const role = profile?.role;

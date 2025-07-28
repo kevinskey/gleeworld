@@ -3,10 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Bell, Calendar, Check } from "lucide-react";
-import { useUserDashboard } from "@/hooks/useUserDashboard";
+import { useUserDashboardContext } from "@/contexts/UserDashboardContext";
 
 export const UserNotificationsList = () => {
-  const { notifications, loading, error, markNotificationAsRead } = useUserDashboard();
+  const { notifications, loading, error, markNotificationAsRead } = useUserDashboardContext();
 
   const getNotificationColor = (type: string) => {
     switch (type) {

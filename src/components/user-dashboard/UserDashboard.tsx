@@ -51,7 +51,7 @@ import { WelcomeCard } from "./WelcomeCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMergedProfile } from "@/hooks/useMergedProfile";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
-import { useUserDashboard } from "@/hooks/useUserDashboard";
+import { useUserDashboardContext } from "@/contexts/UserDashboardContext";
 import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
 import { useUserContracts } from "@/hooks/useUserContracts";
 import { useUsernamePermissions } from "@/hooks/useUsernamePermissions";
@@ -65,6 +65,7 @@ import { DASHBOARD_MODULES, hasModuleAccess, hasExecutiveBoardPermissions, Dashb
 import { ChevronUp } from "lucide-react";
 import { AdminPanel } from "@/components/AdminPanel";
 import { AdminPanelCollapsible } from "@/components/AdminPanelCollapsible";
+import { UserDashboardProvider } from "@/contexts/UserDashboardContext";
 
 export const UserDashboard = () => {
   const { user } = useAuth();
@@ -72,7 +73,6 @@ export const UserDashboard = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { getSettingByName } = useDashboardSettings();
-  const { dashboardData, payments, notifications, loading: dashboardLoading } = useUserDashboard();
   const { events, loading: eventsLoading, getUpcomingEvents } = useGleeWorldEvents();
   const { contracts, loading: contractsLoading } = useUserContracts();
   const { permissions: usernamePermissions, loading: permissionsLoading } = useUsernamePermissions(user?.email);
@@ -165,7 +165,7 @@ export const UserDashboard = () => {
     }))
   });
 
-  if (!user || dashboardLoading) {
+  if (!user) {
     return (
       <UniversalLayout>
         <div className="flex items-center justify-center min-h-[50vh]">
@@ -229,22 +229,24 @@ export const UserDashboard = () => {
 
       return (
         <UniversalLayout>
-          <div className="container mx-auto px-4 py-6">
-            <div className="mb-4 flex items-center justify-between">
-              <Button variant="outline" onClick={() => navigate('/dashboard')}>
-                ← Back to Dashboard
-              </Button>
-              <div className="flex items-center gap-2">
-                {availableModules.find(m => m.key === moduleKey)?.source === 'username' && (
-                  <Badge variant="secondary" className="text-xs">
-                    <Shield className="h-3 w-3 mr-1" />
-                    Special Access
-                  </Badge>
-                )}
+          <UserDashboardProvider>
+            <div className="container mx-auto px-4 py-6">
+              <div className="mb-4 flex items-center justify-between">
+                <Button variant="outline" onClick={() => navigate('/dashboard')}>
+                  ← Back to Dashboard
+                </Button>
+                <div className="flex items-center gap-2">
+                  {availableModules.find(m => m.key === moduleKey)?.source === 'username' && (
+                    <Badge variant="secondary" className="text-xs">
+                      <Shield className="h-3 w-3 mr-1" />
+                      Special Access
+                    </Badge>
+                  )}
+                </div>
               </div>
+              {renderModuleComponent()}
             </div>
-            {renderModuleComponent()}
-          </div>
+          </UserDashboardProvider>
         </UniversalLayout>
       );
     }
@@ -253,8 +255,8 @@ export const UserDashboard = () => {
   // Get user's actual name from profile, fallback to email username
   const displayName = profile?.full_name || user.email?.split('@')[0] || 'Member';
 
-  // Get real data
-  const upcomingEventsList = getUpcomingEvents(6);
+  // Get user dashboard data from context
+  const { dashboardData, payments, notifications } = useUserDashboardContext();
   
   // Create real recent activity from various sources
   const getRecentActivity = () => {
@@ -293,11 +295,13 @@ export const UserDashboard = () => {
     return activities.slice(0, 4);
   };
 
+  // Get real data
+  const upcomingEventsList = getUpcomingEvents(6);
   const recentActivity = getRecentActivity();
 
   return (
-    <UniversalLayout containerized={false}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <UserDashboardProvider>
+      <UniversalLayout containerized={false}>
         <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6 space-y-4 sm:space-y-6">
           
           {/* Compact Welcome Card */}
@@ -849,7 +853,7 @@ export const UserDashboard = () => {
           </Card>
 
         </div>
-      </div>
-    </UniversalLayout>
+      </UniversalLayout>
+    </UserDashboardProvider>
   );
 };
