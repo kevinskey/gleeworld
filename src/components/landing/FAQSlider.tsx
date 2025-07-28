@@ -99,15 +99,14 @@ export const FAQSlider = () => {
           </p>
         </div>
 
-        {/* Mobile: Thin stationary header */}
-        <div className="md:hidden text-center mb-4">
-          <div className="bg-background/40 backdrop-blur-sm border border-border/50 rounded-lg py-2 px-4">
-            <h2 className="text-sm font-semibold text-foreground leading-tight">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              Spelman College Glee Club
-            </p>
+        {/* Mobile: News ticker header */}
+        <div className="md:hidden mb-4">
+          <div className="bg-background/40 backdrop-blur-sm border border-border/50 rounded-lg py-3 px-4 overflow-hidden">
+            <div className="whitespace-nowrap animate-[marquee_15s_linear_infinite]">
+              <span className="text-base font-semibold text-foreground">
+                Frequently Asked Questions • Spelman Glee Club • Frequently Asked Questions • Spelman Glee Club • 
+              </span>
+            </div>
           </div>
         </div>
 
