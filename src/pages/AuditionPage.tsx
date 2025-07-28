@@ -125,58 +125,103 @@ function AuditionFormContent() {
   // Allow access for both authenticated and non-authenticated users
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <div className="text-center mb-8">
-          <Mic className="w-16 h-16 mx-auto text-purple-600 mb-4" />
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Audition Application</h1>
-          <p className="text-xl text-gray-600">Join the Spelman College Glee Club Family</p>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 pb-24 md:pb-8">
+      <div className="container mx-auto px-2 md:px-4 max-w-4xl">
+        <div className="text-center mb-4 md:mb-8 pt-4 md:pt-8">
+          <Mic className="w-8 h-8 md:w-16 md:h-16 mx-auto text-purple-600 mb-2 md:mb-4" />
+          <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-1 md:mb-2">Audition Application</h1>
+          <p className="text-sm md:text-xl text-gray-600">Join the Spelman College Glee Club Family</p>
         </div>
 
         <AuditionFormProgress />
 
-        <Card className="bg-white/80 backdrop-blur-md border-white/30 shadow-xl">
-          <CardContent className="pt-6">
+        <Card className="bg-white/80 backdrop-blur-md border-white/30 shadow-xl mx-1 md:mx-0">
+          <CardContent className="pt-3 md:pt-6 px-3 md:px-6">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-8">
                 {renderCurrentPage()}
-
-                <div className="flex justify-between pt-6 border-t">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={previousPage}
-                    disabled={currentPage === 1}
-                    className="flex items-center gap-2"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Previous
-                  </Button>
-
-                  {currentPage < totalPages ? (
-                    <Button
-                      type="button"
-                      onClick={nextPage}
-                      disabled={!canProceed()}
-                      className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
-                    >
-                      Next
-                      <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  ) : (
-                    <Button 
-                      type="submit" 
-                      className="bg-purple-600 hover:bg-purple-700 text-white"
-                      disabled={isSubmitting || !canProceed()}
-                    >
-                      {isSubmitting ? "Submitting..." : "Submit Application"}
-                    </Button>
-                  )}
-                </div>
               </form>
             </Form>
           </CardContent>
         </Card>
+
+        {/* Fixed bottom navigation for mobile */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 p-4 md:hidden">
+          <div className="flex justify-between gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={previousPage}
+              disabled={currentPage === 1}
+              className="flex items-center gap-2 flex-1"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Previous
+            </Button>
+
+            {currentPage < totalPages ? (
+              <Button
+                type="button"
+                onClick={nextPage}
+                disabled={!canProceed()}
+                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 flex-1"
+              >
+                Next
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            ) : (
+              <Button 
+                type="button"
+                onClick={form.handleSubmit(onSubmit)}
+                className="bg-purple-600 hover:bg-purple-700 text-white flex-1"
+                disabled={isSubmitting || !canProceed()}
+              >
+                {isSubmitting ? "Submitting..." : "Submit Application"}
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Desktop navigation */}
+        <div className="hidden md:block mt-6">
+          <Card className="bg-white/80 backdrop-blur-md border-white/30 shadow-xl">
+            <CardContent className="pt-6">
+              <div className="flex justify-between">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={previousPage}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Previous
+                </Button>
+
+                {currentPage < totalPages ? (
+                  <Button
+                    type="button"
+                    onClick={nextPage}
+                    disabled={!canProceed()}
+                    className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
+                  >
+                    Next
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                ) : (
+                  <Button 
+                    type="button"
+                    onClick={form.handleSubmit(onSubmit)}
+                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                    disabled={isSubmitting || !canProceed()}
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Application"}
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

@@ -58,23 +58,24 @@ export function RegistrationPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Create Your Account</h2>
-        <p className="text-gray-600 mt-2">Join the Spelman College Glee Club community</p>
+    <div className="space-y-4 md:space-y-6">
+      <div className="text-center mb-4 md:mb-6">
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900">Create Your Account</h2>
+        <p className="text-sm md:text-base text-gray-600 mt-1 md:mt-2">Join the Spelman College Glee Club community</p>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4">
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email Address</FormLabel>
+              <FormLabel className="text-sm">Email Address</FormLabel>
               <FormControl>
                 <Input 
                   type="email" 
                   placeholder="Enter your email address" 
+                  className="h-10"
                   {...field} 
                 />
               </FormControl>
@@ -88,11 +89,12 @@ export function RegistrationPage() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel className="text-sm">Password</FormLabel>
               <FormControl>
                 <Input 
                   type="password" 
                   placeholder="Create a secure password (min 8 characters)" 
+                  className="h-10"
                   {...field} 
                 />
               </FormControl>
@@ -106,11 +108,12 @@ export function RegistrationPage() {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirm Password</FormLabel>
+              <FormLabel className="text-sm">Confirm Password</FormLabel>
               <FormControl>
                 <Input 
                   type="password" 
                   placeholder="Confirm your password" 
+                  className="h-10"
                   {...field} 
                 />
               </FormControl>
@@ -120,9 +123,9 @@ export function RegistrationPage() {
         />
       </div>
 
-      <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-        <h4 className="font-medium text-blue-900 mb-2">Why Create an Account?</h4>
-        <ul className="text-sm text-blue-800 space-y-1">
+      <div className="mt-4 md:mt-8 p-3 md:p-4 bg-blue-50 rounded-lg">
+        <h4 className="font-medium text-blue-900 mb-1 md:mb-2 text-sm md:text-base">Why Create an Account?</h4>
+        <ul className="text-xs md:text-sm text-blue-800 space-y-0.5 md:space-y-1">
           <li>• Submit your audition application</li>
           <li>• Track your application status</li>
           <li>• Access exclusive Glee Club resources</li>
@@ -130,7 +133,28 @@ export function RegistrationPage() {
         </ul>
       </div>
 
-      <div className="pt-4 border-t">
+      <div className="pt-3 md:pt-4 border-t md:hidden">
+        <Button
+          type="button"
+          onClick={handleRegisterAndContinue}
+          disabled={isRegistering || !form.getValues('email') || !form.getValues('password')}
+          className="w-full mb-2 bg-purple-600 hover:bg-purple-700 h-10 text-sm"
+        >
+          {isRegistering ? "Creating Account..." : "Create Account & Continue"}
+        </Button>
+        
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleExistingUserLogin}
+          className="w-full h-10 text-sm"
+        >
+          Already have an account? Sign In
+        </Button>
+      </div>
+
+      {/* Desktop buttons - hidden on mobile since navigation is in fixed bottom bar */}
+      <div className="pt-4 border-t hidden md:block">
         <Button
           type="button"
           onClick={handleRegisterAndContinue}
