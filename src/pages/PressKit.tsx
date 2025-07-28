@@ -3,8 +3,25 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Download, ExternalLink, Mail, Phone, Instagram, Facebook, Twitter, Youtube, Star, Award, Globe } from "lucide-react";
+import { useState, useEffect } from "react";
 
 const PressKit = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  const heroImages = [
+    '/lovable-uploads/6a86e8cc-1420-4397-8742-983afe6a293f.png', // Main Glee Club performance
+    '/lovable-uploads/d2719d93-5439-4d49-9d9a-0f68a440e7c5.png', // Auth background
+    '/lovable-uploads/82759e4e-12b8-47a8-907b-7b6b22294919.png'  // Director image
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+    }, 5000); // Change slide every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
+
   const downloadAssets = [
     {
       name: "High-Resolution Logo",
@@ -45,27 +62,51 @@ const PressKit = () => {
     <PublicLayout>
       <div className="space-y-16 animate-fade-in">
         {/* Hero Header */}
-        <div className="relative text-center space-y-8 py-16 overflow-hidden">
-          <div className="absolute inset-0 bg-[url('/lovable-uploads/6a86e8cc-1420-4397-8742-983afe6a293f.png')] bg-cover bg-center opacity-20"></div>
+        <div className="relative text-center space-y-8 py-20 overflow-hidden min-h-[80vh] flex items-center justify-center">
+          {/* Slideshow Background */}
+          {heroImages.map((image, index) => (
+            <div
+              key={index}
+              className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
+                index === currentSlide ? 'opacity-30' : 'opacity-0'
+              }`}
+              style={{ backgroundImage: `url(${image})` }}
+            />
+          ))}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-secondary/20"></div>
-          <div className="relative z-10 space-y-6">
-            <div className="flex justify-center mb-6">
-              <div className="flex items-center gap-2 px-4 py-2 bg-background/80 backdrop-blur-sm rounded-full border border-primary/30 shadow-lg">
+          
+          {/* Slideshow Indicators */}
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2 z-20">
+            {heroImages.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  index === currentSlide 
+                    ? 'bg-primary scale-125' 
+                    : 'bg-primary/40 hover:bg-primary/60'
+                }`}
+              />
+            ))}
+          </div>
+
+          <div className="relative z-10 space-y-8 px-6">
+            <div className="flex justify-center mb-8">
+              <div className="flex items-center gap-2 px-6 py-3 bg-background/90 backdrop-blur-lg rounded-full border border-primary/30 shadow-xl">
                 <Award className="h-5 w-5 text-primary animate-float" />
                 <span className="text-primary font-medium">100+ Years of Excellence</span>
               </div>
             </div>
-            <h1 className="text-5xl md:text-7xl font-playfair font-bold text-foreground leading-tight">
+            <h1 className="text-6xl md:text-8xl font-playfair font-bold text-foreground leading-tight drop-shadow-lg">
               Press Kit
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-4xl mx-auto font-medium">
-              Media resources for the <span className="text-primary font-semibold">Spelman College Glee Club</span> — 
-              Cultural ambassadors of musical excellence
-            </p>
-            <div className="flex justify-center gap-2 mt-6">
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-              <div className="w-2 h-2 bg-secondary rounded-full animate-pulse delay-75"></div>
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse delay-150"></div>
+            <div className="max-w-5xl mx-auto px-8">
+              <p className="text-2xl md:text-3xl text-muted-foreground font-medium leading-relaxed">
+                Media resources for the <span className="text-primary font-semibold">Spelman College Glee Club</span>
+              </p>
+              <p className="text-2xl md:text-3xl text-muted-foreground font-medium mt-2">
+                Cultural ambassadors of musical excellence
+              </p>
             </div>
           </div>
         </div>
