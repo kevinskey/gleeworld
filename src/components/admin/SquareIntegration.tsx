@@ -106,7 +106,7 @@ export const SquareIntegration = () => {
   const handleConnectSquare = async () => {
     setConnecting(true);
     try {
-      const redirectUri = `${window.location.origin}/admin/products?square_callback=true`;
+      const redirectUri = `${window.location.origin}/dashboard?square_callback=true`;
       
       const { data, error } = await supabase.functions.invoke('square-oauth', {
         body: {
@@ -144,7 +144,7 @@ export const SquareIntegration = () => {
         throw new Error('Invalid OAuth state');
       }
 
-      const redirectUri = `${window.location.origin}/admin/products?square_callback=true`;
+      const redirectUri = `${window.location.origin}/dashboard?square_callback=true`;
 
       const { data, error } = await supabase.functions.invoke('square-oauth', {
         body: {
@@ -290,7 +290,7 @@ export const SquareIntegration = () => {
     if (isCallback && code && state) {
       handleSquareCallback(code, state);
       // Clean up URL
-      window.history.replaceState({}, '', '/admin/products');
+      window.history.replaceState({}, '', '/dashboard');
     }
   }, []);
 
