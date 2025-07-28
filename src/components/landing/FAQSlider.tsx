@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, Music, MessageCircleQuestion } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -43,6 +43,16 @@ const faqData = [
 
 export const FAQSlider = () => {
   const [openItems, setOpenItems] = useState<string[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+  // Auto-rotate questions every 4 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentQuestionIndex((prev) => (prev + 1) % faqData.length);
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   const toggleItem = (id: string) => {
     setOpenItems(prev => 
@@ -53,6 +63,8 @@ export const FAQSlider = () => {
   };
 
   const isOpen = (id: string) => openItems.includes(id);
+
+  const currentFAQ = faqData[currentQuestionIndex];
 
   return (
     <section className="w-full relative overflow-hidden py-24 md:py-32 lg:py-40">
@@ -69,25 +81,80 @@ export const FAQSlider = () => {
       </div>
 
       <div className="container mx-auto px-4 max-w-4xl">
-        {/* Header */}
-        <div className="text-center mb-16 md:mb-20">
-          <div className="inline-flex items-center justify-center space-x-3 mb-6">
-            <div className="flex items-center space-x-2 text-primary">
-              <Music className="w-8 h-8 md:w-10 md:h-10" />
-              <MessageCircleQuestion className="w-8 h-8 md:w-10 md:h-10" />
-              <Music className="w-8 h-8 md:w-10 md:h-10" />
-            </div>
+        {/* Header - Compact for mobile */}
+        <div className="text-center mb-8 md:mb-16">
+          <div className="inline-flex items-center justify-center space-x-2 mb-4">
+            <Music className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+            <MessageCircleQuestion className="w-6 h-6 md:w-8 md:h-8 text-primary" />
           </div>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
-            Frequently Asked Questions
-          </h2>
-          <p className="text-lg md:text-xl text-muted-foreground">
-            Spelman College Glee Club
-          </p>
+          
+          {/* Mobile: Single line title */}
+          <div className="md:hidden">
+            <h2 className="text-2xl font-bold text-foreground mb-2 leading-tight">
+              FAQ
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Spelman Glee Club
+            </p>
+          </div>
+          
+          {/* Desktop: Full title */}
+          <div className="hidden md:block">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-lg md:text-xl text-muted-foreground">
+              Spelman College Glee Club
+            </p>
+          </div>
         </div>
 
-        {/* FAQ Accordion */}
-        <div className="space-y-4">
+        {/* Mobile: Rotating Question/Answer Cards */}
+        <div className="md:hidden space-y-3">
+          {/* Question Card */}
+          <div className="bg-background/60 backdrop-blur-sm border border-border rounded-xl p-4 shadow-sm">
+            <div className="flex items-center space-x-3 mb-2">
+              <div className="flex-shrink-0 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                <span className="text-xs font-bold text-primary-foreground">
+                  {String(currentQuestionIndex + 1).padStart(2, '0')}
+                </span>
+              </div>
+              <span className="text-xs text-primary font-medium">QUESTION</span>
+            </div>
+            <p className="text-sm font-semibold text-foreground leading-snug animate-fade-in" key={currentFAQ.id + '-q'}>
+              {currentFAQ.question}
+            </p>
+          </div>
+          
+          {/* Answer Card */}
+          <div className="bg-primary/5 backdrop-blur-sm border border-primary/20 rounded-xl p-4 shadow-sm">
+            <div className="flex items-center space-x-3 mb-2">
+              <div className="flex-shrink-0 w-6 h-6 bg-primary/80 rounded-full flex items-center justify-center">
+                <span className="text-xs font-bold text-primary-foreground">A</span>
+              </div>
+              <span className="text-xs text-primary font-medium">ANSWER</span>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed animate-fade-in" key={currentFAQ.id + '-a'}>
+              {currentFAQ.answer}
+            </p>
+          </div>
+          
+          {/* Progress indicator */}
+          <div className="flex justify-center space-x-1 pt-2">
+            {faqData.map((_, index) => (
+              <div
+                key={index}
+                className={cn(
+                  "w-2 h-2 rounded-full transition-all duration-300",
+                  index === currentQuestionIndex ? "bg-primary" : "bg-primary/30"
+                )}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop: Original Accordion */}
+        <div className="hidden md:block space-y-4">
           {faqData.map((item, index) => (
             <div
               key={item.id}
