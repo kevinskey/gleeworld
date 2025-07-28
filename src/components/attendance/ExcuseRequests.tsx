@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useProfile } from '@/hooks/useProfile';
+import { useMergedProfile } from '@/hooks/useMergedProfile';
 import { format } from 'date-fns';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { 
@@ -58,7 +58,7 @@ interface AttendanceRecord {
 
 export const ExcuseRequests = () => {
   const { user } = useAuth();
-  const { profile } = useProfile();
+  const { profile } = useMergedProfile(user);
   const { toast } = useToast();
   const [requests, setRequests] = useState<ExcuseRequest[]>([]);
   const [allRequests, setAllRequests] = useState<ExcuseRequest[]>([]);
@@ -71,7 +71,7 @@ export const ExcuseRequests = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
-  const isSectionLeader = false; // TODO: Add is_section_leader to profile
+  const isSectionLeader = profile?.is_section_leader || false;
   const canReviewRequests = isAdmin || isSectionLeader;
 
   useEffect(() => {

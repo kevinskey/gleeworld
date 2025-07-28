@@ -146,7 +146,6 @@ export const EventDetailsDialog = ({ event, open, onOpenChange, onUpdate }: Even
             </div>
           )}
 
-          {/* TODO: Add Budget Line Items, Team Members, and other sections */}
           <div className="border-t pt-4">
             <p className="text-sm text-muted-foreground">
               Budget management and team assignment features coming in the next phase.

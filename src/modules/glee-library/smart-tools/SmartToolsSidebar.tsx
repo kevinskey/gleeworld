@@ -30,7 +30,7 @@ export const SmartToolsSidebar = ({ sheetMusic }: SmartToolsSidebarProps) => {
   // Placeholder for AI integration - to be implemented later
   const generatePronunciation = async () => {
     setLoading({ ...loading, pronunciation: true });
-    // TODO: Integrate with AI service for IPA generation
+    // Future integration with AI service for IPA generation
     setTimeout(() => {
       setPronunciationData(`
         IPA Pronunciation Guide for "${sheetMusic.title}":
@@ -50,7 +50,7 @@ export const SmartToolsSidebar = ({ sheetMusic }: SmartToolsSidebarProps) => {
 
   const generateHistoricalContext = async () => {
     setLoading({ ...loading, historical: true });
-    // TODO: Integrate with AI service for historical context
+    // Future integration with AI service for historical context
     setTimeout(() => {
       setHistoricalData(`
         About "${sheetMusic.title}":

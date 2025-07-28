@@ -70,16 +70,19 @@ enable_confirmations = false
 enable_recovery = true
 enable_email_change_confirmations = true
 enable_phone_change_confirmations = true
+leaked_password_protection = true
 
 [auth.email]
 enable_signup = true
 double_confirm_changes = true
 enable_confirmations = false
+otp_exp = 86400
 
 [auth.sms]
 enable_signup = false
 enable_confirmations = false
 template = "Your code is {{ .Code }}"
+otp_exp = 600
 
 [edge_runtime]
 enabled = true

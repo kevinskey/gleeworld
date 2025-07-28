@@ -77,7 +77,6 @@ export const useProfile = () => {
         social_media_links: (data.social_media_links as any) || {}
       });
     } catch (error) {
-      console.error("Error fetching profile:", error);
       toast({
         title: "Error",
         description: "Failed to load profile",
@@ -113,7 +112,6 @@ export const useProfile = () => {
       
       return true;
     } catch (error) {
-      console.error("Error updating profile:", error);
       toast({
         title: "Error",
         description: "Failed to update profile",
@@ -155,7 +153,6 @@ export const useProfile = () => {
       
       return null;
     } catch (error) {
-      console.error('Error uploading avatar:', error);
       toast({
         title: "Error",
         description: "Failed to upload avatar",
@@ -167,12 +164,9 @@ export const useProfile = () => {
 
   const updateAvatarUrl = async (avatarUrl: string) => {
     if (!user) return false;
-
-    console.log("updateAvatarUrl called with:", avatarUrl);
     
     try {
       setUpdating(true);
-      console.log("Updating avatar in database for user:", user.id);
       
       const { error } = await supabase
         .from("profiles")
@@ -183,7 +177,6 @@ export const useProfile = () => {
         .eq("id", user.id);
 
       if (error) {
-        console.error("Database update error:", error);
         throw error;
       }
 
@@ -197,23 +190,16 @@ export const useProfile = () => {
         .eq("user_id", user.id);
 
       if (gwError) {
-        console.warn("Failed to update gw_profiles avatar:", gwError);
         // Don't throw error since profiles update succeeded
       }
-
-      console.log("Database update successful, updating local state");
       
       // Update local state immediately without full refetch
       if (profile) {
         setProfile({ ...profile, avatar_url: avatarUrl });
-        console.log("Local state updated with new avatar URL");
-      } else {
-        console.warn("Profile is null, cannot update local state");
       }
       
       return true;
     } catch (error) {
-      console.error("Error updating avatar:", error);
       toast({
         title: "Error",
         description: "Failed to update avatar",

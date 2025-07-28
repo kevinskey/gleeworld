@@ -27,6 +27,7 @@ interface MergedProfile {
   // Admin roles
   is_super_admin?: boolean;
   is_admin?: boolean;
+  is_section_leader?: boolean;
   disabled?: boolean;
   role_tags?: string[];
   title?: string;
@@ -115,6 +116,7 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
           notes: gwProfile.notes,
           is_super_admin: gwProfile.is_super_admin,
           is_admin: gwProfile.is_admin,
+          is_section_leader: gwProfile.is_section_leader,
           disabled: gwProfile.disabled,
           role_tags: gwProfile.role_tags,
           title: gwProfile.title,

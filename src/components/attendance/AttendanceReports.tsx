@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useProfile } from '@/hooks/useProfile';
+import { useMergedProfile } from '@/hooks/useMergedProfile';
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { 
@@ -50,7 +50,7 @@ interface EventReport {
 
 export const AttendanceReports = () => {
   const { user } = useAuth();
-  const { profile } = useProfile();
+  const { profile } = useMergedProfile(user);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('current');
   const [sectionReports, setSectionReports] = useState<AttendanceReport[]>([]);
@@ -64,7 +64,7 @@ export const AttendanceReports = () => {
   });
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
-  const isSectionLeader = false; // TODO: Add is_section_leader to profile
+  const isSectionLeader = profile?.is_section_leader || false;
 
   useEffect(() => {
     if (user && (isAdmin || isSectionLeader)) {
