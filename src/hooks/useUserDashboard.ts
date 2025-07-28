@@ -137,12 +137,12 @@ export const useUserDashboard = () => {
     const { paymentsChannel, notificationsChannel } = subscriptionsRef.current;
     
     if (paymentsChannel) {
-      console.log('Removing payments channel');
+      console.log('useUserDashboard: Removing payments channel');
       supabase.removeChannel(paymentsChannel);
     }
     
     if (notificationsChannel) {
-      console.log('Removing notifications channel');
+      console.log('useUserDashboard: Removing notifications channel');
       supabase.removeChannel(notificationsChannel);
     }
     
@@ -151,10 +151,27 @@ export const useUserDashboard = () => {
 
   // Set up real-time subscriptions for immediate updates
   useEffect(() => {
+    console.log('useUserDashboard: Effect running', { 
+      user: user?.id, 
+      isSubscribed: subscriptionsRef.current.isSubscribed 
+    });
+    
     if (!user || subscriptionsRef.current.isSubscribed) {
+      console.log('useUserDashboard: Skipping subscription setup', {
+        noUser: !user,
+        alreadySubscribed: subscriptionsRef.current.isSubscribed
+      });
       return;
     }
 
+    console.log('useUserDashboard: SUBSCRIPTIONS TEMPORARILY DISABLED FOR DEBUGGING');
+    subscriptionsRef.current = { isSubscribed: true };
+    return () => {
+      console.log('useUserDashboard: Cleanup called');
+      subscriptionsRef.current = { isSubscribed: false };
+    };
+    
+    /* TEMPORARILY DISABLED - Original code below:
     console.log('Setting up dashboard subscriptions for user:', user.id);
 
     // Create unique channel names
@@ -211,7 +228,8 @@ export const useUserDashboard = () => {
       isSubscribed: true
     };
 
-    return cleanupSubscriptions;
+     return cleanupSubscriptions;
+     */
   }, [user?.id]); // Only depend on user.id
 
   useEffect(() => {
