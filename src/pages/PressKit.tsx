@@ -158,7 +158,7 @@ const PressKit = () => {
             </h1>
             <div className="max-w-5xl mx-auto px-8">
               <p className="text-2xl md:text-3xl text-white/80 font-medium leading-relaxed">
-                Media resources for the <span className="text-primary font-semibold">Spelman College Glee Club</span>
+                Media resources for the <span className="text-white font-semibold">Spelman College Glee Club</span>
               </p>
               <p className="text-2xl md:text-3xl text-white/80 font-medium mt-2">
                 Cultural ambassadors of musical excellence
@@ -208,13 +208,13 @@ const PressKit = () => {
               </div>
               <div className="space-y-4 text-white/80 leading-relaxed">
                 <p>
-                  The <span className="text-primary font-semibold">Spelman College Glee Club</span>, established in 1924, stands as one of the most prestigious collegiate choral ensembles in the world. For nearly a century, we have been dedicated to the preservation and presentation of the rich musical heritage of African Americans while embracing diverse musical traditions.
+                  The <span className="text-white font-semibold">Spelman College Glee Club</span>, established in 1924, stands as one of the most prestigious collegiate choral ensembles in the world. For nearly a century, we have been dedicated to the preservation and presentation of the rich musical heritage of African Americans while embracing diverse musical traditions.
                 </p>
                 <p>
-                  Our ensemble consists of approximately <span className="text-secondary font-semibold">50 talented young women</span> who represent the finest in vocal artistry and academic excellence. Under expert direction, the Glee Club maintains the highest standards of musical performance while fostering leadership, sisterhood, and cultural awareness.
+                  Our ensemble consists of approximately <span className="text-white font-semibold">50 talented young women</span> who represent the finest in vocal artistry and academic excellence. Under expert direction, the Glee Club maintains the highest standards of musical performance while fostering leadership, sisterhood, and cultural awareness.
                 </p>
                 <p>
-                  From performing at the <span className="text-primary font-semibold">White House</span> to international concert tours, the Spelman College Glee Club continues to be ambassadors of musical excellence, carrying forward a legacy of artistic distinction that spans generations.
+                  From performing at the <span className="text-white font-semibold">White House</span> to international concert tours, the Spelman College Glee Club continues to be ambassadors of musical excellence, carrying forward a legacy of artistic distinction that spans generations.
                 </p>
               </div>
             </CardContent>
@@ -229,10 +229,10 @@ const PressKit = () => {
               </div>
               <div className="space-y-4 text-white/80 leading-relaxed">
                 <p>
-                  <span className="text-secondary font-semibold">Spelman College</span>, a historically Black college established in 1881, is a global leader in the education of women of African descent. Located in Atlanta, Georgia, Spelman is consistently ranked among the top liberal arts colleges in the nation.
+                  <span className="text-white font-semibold">Spelman College</span>, a historically Black college established in 1881, is a global leader in the education of women of African descent. Located in Atlanta, Georgia, Spelman is consistently ranked among the top liberal arts colleges in the nation.
                 </p>
                 <p>
-                  The college is renowned for its rigorous academic programs, distinguished faculty, and commitment to developing ethical leaders who will make significant contributions to their communities and the world. Spelman's <span className="text-primary font-semibold">2,100 students</span> represent 47 states and 20 countries.
+                  The college is renowned for its rigorous academic programs, distinguished faculty, and commitment to developing ethical leaders who will make significant contributions to their communities and the world. Spelman's <span className="text-white font-semibold">2,100 students</span> represent 47 states and 20 countries.
                 </p>
                 <p>
                   As part of the Atlanta University Center, the world's largest consortium of historically Black colleges and universities, Spelman provides an unparalleled educational experience that combines academic excellence with cultural enrichment and social responsibility.
@@ -264,13 +264,13 @@ const PressKit = () => {
               </div>
               <div className="lg:col-span-2 space-y-6 text-white/80 leading-relaxed">
                 <p className="text-lg">
-                  Our distinguished director brings <span className="text-primary font-semibold">decades of experience</span> in choral excellence and musical leadership to the Spelman College Glee Club. With advanced degrees in choral conducting and music education, they have dedicated their career to nurturing young voices and preserving musical traditions.
+                  Our distinguished director brings <span className="text-white font-semibold">decades of experience</span> in choral excellence and musical leadership to the Spelman College Glee Club. With advanced degrees in choral conducting and music education, they have dedicated their career to nurturing young voices and preserving musical traditions.
                 </p>
                 <p className="text-lg">
-                  Under their leadership, the Glee Club has achieved <span className="text-secondary font-semibold">new heights of artistic excellence</span>, performing with renowned orchestras, participating in international festivals, and maintaining the ensemble's reputation as one of the premier collegiate choirs in the world.
+                  Under their leadership, the Glee Club has achieved <span className="text-white font-semibold">new heights of artistic excellence</span>, performing with renowned orchestras, participating in international festivals, and maintaining the ensemble's reputation as one of the premier collegiate choirs in the world.
                 </p>
                 <p className="text-lg">
-                  Their commitment to musical excellence, combined with a deep understanding of the Glee Club's historical significance, ensures that each generation of Spelman women continues to carry forward this <span className="text-primary font-semibold">remarkable legacy</span>.
+                  Their commitment to musical excellence, combined with a deep understanding of the Glee Club's historical significance, ensures that each generation of Spelman women continues to carry forward this <span className="text-white font-semibold">remarkable legacy</span>.
                 </p>
               </div>
             </div>
@@ -457,7 +457,7 @@ const PressKit = () => {
               Ready to Feature Our Story?
             </h2>
             <p className="text-lg text-white/80 mb-8 max-w-3xl mx-auto leading-relaxed">
-              The <span className="text-primary font-semibold">Spelman College Glee Club</span> is available for interviews, performances, and special features. Contact our media relations team to discuss opportunities.
+              The <span className="text-white font-semibold">Spelman College Glee Club</span> is available for interviews, performances, and special features. Contact our media relations team to discuss opportunities.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Button size="lg" className="bg-primary hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
