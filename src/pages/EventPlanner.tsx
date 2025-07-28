@@ -18,12 +18,12 @@ export default function EventPlanner() {
     <UniversalLayout>
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Hero Header Section */}
-        <div className="relative mb-8 rounded-2xl bg-gradient-to-r from-primary/40 via-primary/30 to-accent/40 p-8 backdrop-blur-sm border border-white/20 shadow-2xl">
+        <div className="relative mb-8 rounded-2xl bg-gradient-to-br from-spelman-blue-dark via-spelman-blue-light to-spelman-blue-dark p-8 backdrop-blur-sm border border-white/20 shadow-2xl">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/20 backdrop-blur-sm">
-                  <Calendar className="h-6 w-6 text-primary" />
+                <div className="p-2 rounded-lg bg-spelman-blue-light/20 backdrop-blur-sm">
+                  <Calendar className="h-6 w-6 text-spelman-blue-light" />
                 </div>
                 <h1 className="text-3xl lg:text-4xl font-bold text-white">
                   Event Budget Planner
@@ -86,32 +86,32 @@ export default function EventPlanner() {
 
           <TabsContent value="all-events" className="space-y-6">
             <div className="mb-6">
-              <h2 className="text-xl font-semibold text-white">All Events</h2>
-              <p className="text-white/60">View all events across the organization</p>
+              <h2 className="text-xl font-semibold text-foreground">All Events</h2>
+              <p className="text-muted-foreground">View all events across the organization</p>
             </div>
             <EventsList filter="all-events" />
           </TabsContent>
 
           <TabsContent value="my-events" className="space-y-6">
             <div className="mb-6">
-              <h2 className="text-xl font-semibold text-white">My Events</h2>
-              <p className="text-white/60">Events you've created or are managing</p>
+              <h2 className="text-xl font-semibold text-foreground">My Events</h2>
+              <p className="text-muted-foreground">Events you've created or are managing</p>
             </div>
             <EventsList filter="my-events" />
           </TabsContent>
 
           <TabsContent value="my-budgets" className="space-y-6">
             <div className="mb-6">
-              <h2 className="text-xl font-semibold text-white">My Budgets</h2>
-              <p className="text-white/60">Budget worksheets you're responsible for</p>
+              <h2 className="text-xl font-semibold text-foreground">My Budgets</h2>
+              <p className="text-muted-foreground">Budget worksheets you're responsible for</p>
             </div>
             <BudgetsList />
           </TabsContent>
 
           <TabsContent value="my-teams" className="space-y-6">
             <div className="mb-6">
-              <h2 className="text-xl font-semibold text-white">My Teams</h2>
-              <p className="text-white/60">Teams you're leading or collaborating with</p>
+              <h2 className="text-xl font-semibold text-foreground">My Teams</h2>
+              <p className="text-muted-foreground">Teams you're leading or collaborating with</p>
             </div>
             <TeamsList />
           </TabsContent>

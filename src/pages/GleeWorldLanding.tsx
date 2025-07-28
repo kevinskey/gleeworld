@@ -284,7 +284,7 @@ export const GleeWorldLanding = () => {
                       }
                     }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/60"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-spelman-blue-dark/30 via-black/40 to-spelman-blue-dark/60"></div>
                   
                   {/* Content overlay - positioned elements */}
                   <div className="absolute inset-0">
@@ -349,9 +349,9 @@ export const GleeWorldLanding = () => {
           <Card className="p-6 sm:p-8 bg-white/30 backdrop-blur-md border border-white/20 shadow-2xl">
             <div className="text-center mb-6 sm:mb-8">
               <div className="flex items-center justify-center gap-3 mb-2">
-                <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-blue-400 animate-pulse" />
-                <h2 className="text-2xl sm:text-4xl md:text-6xl font-dancing font-bold text-gray-900">Upcoming Events</h2>
-                <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-blue-600 animate-pulse" />
+                <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-spelman-blue-light animate-pulse" />
+                <h2 className="text-2xl sm:text-4xl md:text-6xl font-dancing font-bold text-foreground">Upcoming Events</h2>
+                <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-spelman-blue-dark animate-pulse" />
               </div>
             </div>
               

@@ -5,7 +5,7 @@ import { BudgetTracking } from "@/components/admin/financial/BudgetTracking";
 export default function Budgets() {
   return (
     <UniversalLayout>
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-4 py-8 max-w-7xl bg-gradient-to-br from-spelman-blue-light/5 to-spelman-blue-dark/5 min-h-screen">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 p-6 bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg border">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Budget Management</h1>
