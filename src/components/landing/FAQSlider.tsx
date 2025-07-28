@@ -121,7 +121,7 @@ export const FAQSlider = () => {
               </div>
               <span className="text-xs text-primary font-medium">QUESTION</span>
             </div>
-            <p className="text-sm font-semibold text-foreground leading-snug animate-fade-in" key={currentFAQ.id + '-q'}>
+            <p className="text-sm font-semibold text-foreground leading-snug transition-all duration-500 ease-in-out" key={currentFAQ.id + '-q'}>
               {currentFAQ.question}
             </p>
           </div>
@@ -134,7 +134,7 @@ export const FAQSlider = () => {
               </div>
               <span className="text-xs text-primary font-medium">ANSWER</span>
             </div>
-            <p className="text-sm text-muted-foreground leading-relaxed animate-fade-in" key={currentFAQ.id + '-a'}>
+            <p className="text-sm text-muted-foreground leading-relaxed transition-all duration-500 ease-in-out" key={currentFAQ.id + '-a'}>
               {currentFAQ.answer}
             </p>
           </div>
