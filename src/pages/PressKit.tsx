@@ -114,7 +114,7 @@ const PressKit = () => {
 
   return (
     <PublicLayout>
-      <div className="space-y-16 animate-fade-in bg-black text-white min-h-screen">
+      <div className="space-y-16 animate-fade-in">
         {/* Hero Header */}
         <div className="relative text-center space-y-8 py-20 overflow-hidden min-h-[80vh] flex items-center justify-center">
           {/* Slideshow Background */}
@@ -153,14 +153,14 @@ const PressKit = () => {
                 <span className="text-primary font-medium">100+ Years of Excellence</span>
               </div>
             </div>
-            <h1 className="text-6xl md:text-8xl font-playfair font-bold text-white leading-tight drop-shadow-lg">
+            <h1 className="text-6xl md:text-8xl font-playfair font-bold text-foreground leading-tight drop-shadow-lg">
               Press Kit
             </h1>
             <div className="max-w-5xl mx-auto px-8">
-              <p className="text-2xl md:text-3xl text-white/70 font-medium leading-relaxed">
-                Media resources for the <span className="text-blue-200 font-semibold">Spelman College Glee Club</span>
+              <p className="text-2xl md:text-3xl text-muted-foreground font-medium leading-relaxed">
+                Media resources for the <span className="text-primary font-semibold">Spelman College Glee Club</span>
               </p>
-              <p className="text-2xl md:text-3xl text-white/70 font-medium mt-2">
+              <p className="text-2xl md:text-3xl text-muted-foreground font-medium mt-2">
                 Cultural ambassadors of musical excellence
               </p>
             </div>
@@ -173,25 +173,25 @@ const PressKit = () => {
           <CardContent className="relative p-10">
             <div className="flex items-center justify-center mb-8">
               <Star className="h-6 w-6 text-secondary mr-3" />
-              <h2 className="text-3xl font-playfair font-bold text-white">Quick Facts</h2>
+              <h2 className="text-3xl font-playfair font-bold text-foreground">Quick Facts</h2>
               <Star className="h-6 w-6 text-secondary ml-3" />
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               <div className="text-center group hover:scale-105 transition-transform duration-300">
                 <div className="text-4xl font-bold text-primary mb-2 group-hover:text-secondary transition-colors">1924</div>
-                <div className="text-white/60 font-medium">Founded</div>
+                <div className="text-muted-foreground font-medium">Founded</div>
               </div>
               <div className="text-center group hover:scale-105 transition-transform duration-300">
                 <div className="text-4xl font-bold text-primary mb-2 group-hover:text-secondary transition-colors">100+</div>
-                <div className="text-white/60 font-medium">Years of Excellence</div>
+                <div className="text-muted-foreground font-medium">Years of Excellence</div>
               </div>
               <div className="text-center group hover:scale-105 transition-transform duration-300">
                 <div className="text-4xl font-bold text-primary mb-2 group-hover:text-secondary transition-colors">50+</div>
-                <div className="text-white/60 font-medium">Talented Voices</div>
+                <div className="text-muted-foreground font-medium">Talented Voices</div>
               </div>
               <div className="text-center group hover:scale-105 transition-transform duration-300">
                 <div className="text-4xl font-bold text-primary mb-2 group-hover:text-secondary transition-colors">Global</div>
-                <div className="text-white/60 font-medium">Global Recognition</div>
+                <div className="text-muted-foreground font-medium">Global Recognition</div>
               </div>
             </div>
           </CardContent>
@@ -204,17 +204,17 @@ const PressKit = () => {
             <CardContent className="relative p-8">
               <div className="flex items-center mb-6">
                 <Globe className="h-6 w-6 text-primary mr-3" />
-                <h2 className="text-2xl font-playfair font-bold text-white">About the Glee Club</h2>
+                <h2 className="text-2xl font-playfair font-bold text-foreground">About the Glee Club</h2>
               </div>
-              <div className="space-y-4 text-white/70 leading-relaxed">
+              <div className="space-y-4 text-muted-foreground leading-relaxed">
                 <p>
-                  The <span className="text-blue-200 font-semibold">Spelman College Glee Club</span>, established in 1924, stands as one of the most prestigious collegiate choral ensembles in the world. For nearly a century, we have been dedicated to the preservation and presentation of the rich musical heritage of African Americans while embracing diverse musical traditions.
+                  The <span className="text-primary font-semibold">Spelman College Glee Club</span>, established in 1924, stands as one of the most prestigious collegiate choral ensembles in the world. For nearly a century, we have been dedicated to the preservation and presentation of the rich musical heritage of African Americans while embracing diverse musical traditions.
                 </p>
                 <p>
-                  Our ensemble consists of approximately <span className="text-yellow-200 font-semibold">50 talented young women</span> who represent the finest in vocal artistry and academic excellence. Under expert direction, the Glee Club maintains the highest standards of musical performance while fostering leadership, sisterhood, and cultural awareness.
+                  Our ensemble consists of approximately <span className="text-secondary font-semibold">50 talented young women</span> who represent the finest in vocal artistry and academic excellence. Under expert direction, the Glee Club maintains the highest standards of musical performance while fostering leadership, sisterhood, and cultural awareness.
                 </p>
                 <p>
-                  From performing at the <span className="text-yellow-200 font-semibold">White House</span> to international concert tours, the Spelman College Glee Club continues to be ambassadors of musical excellence, carrying forward a legacy of artistic distinction that spans generations.
+                  From performing at the <span className="text-primary font-semibold">White House</span> to international concert tours, the Spelman College Glee Club continues to be ambassadors of musical excellence, carrying forward a legacy of artistic distinction that spans generations.
                 </p>
               </div>
             </CardContent>
@@ -225,14 +225,14 @@ const PressKit = () => {
             <CardContent className="relative p-8">
               <div className="flex items-center mb-6">
                 <Award className="h-6 w-6 text-secondary mr-3" />
-                <h2 className="text-2xl font-playfair font-bold text-white">About Spelman College</h2>
+                <h2 className="text-2xl font-playfair font-bold text-foreground">About Spelman College</h2>
               </div>
-              <div className="space-y-4 text-white/70 leading-relaxed">
+              <div className="space-y-4 text-muted-foreground leading-relaxed">
                 <p>
-                  <span className="text-blue-200 font-semibold">Spelman College</span>, a historically Black college established in 1881, is a global leader in the education of women of African descent. Located in Atlanta, Georgia, Spelman is consistently ranked among the top liberal arts colleges in the nation.
+                  <span className="text-secondary font-semibold">Spelman College</span>, a historically Black college established in 1881, is a global leader in the education of women of African descent. Located in Atlanta, Georgia, Spelman is consistently ranked among the top liberal arts colleges in the nation.
                 </p>
                 <p>
-                  The college is renowned for its rigorous academic programs, distinguished faculty, and commitment to developing ethical leaders who will make significant contributions to their communities and the world. Spelman's <span className="text-yellow-200 font-semibold">2,100 students</span> represent 47 states and 20 countries.
+                  The college is renowned for its rigorous academic programs, distinguished faculty, and commitment to developing ethical leaders who will make significant contributions to their communities and the world. Spelman's <span className="text-primary font-semibold">2,100 students</span> represent 47 states and 20 countries.
                 </p>
                 <p>
                   As part of the Atlanta University Center, the world's largest consortium of historically Black colleges and universities, Spelman provides an unparalleled educational experience that combines academic excellence with cultural enrichment and social responsibility.
@@ -248,7 +248,7 @@ const PressKit = () => {
           <CardContent className="relative p-10">
             <div className="flex items-center justify-center mb-8">
               <Award className="h-6 w-6 text-primary mr-3 animate-float" />
-              <h2 className="text-3xl font-playfair font-bold text-white">Director Biography</h2>
+              <h2 className="text-3xl font-playfair font-bold text-foreground">Director Biography</h2>
               <Award className="h-6 w-6 text-primary ml-3 animate-float" />
             </div>
             <div className="grid lg:grid-cols-3 gap-10">
@@ -283,7 +283,7 @@ const PressKit = () => {
           <CardContent className="p-10">
             <div className="flex items-center justify-center mb-8">
               <Download className="h-6 w-6 text-secondary mr-3" />
-              <h2 className="text-3xl font-playfair font-bold text-white">Media Resources</h2>
+              <h2 className="text-3xl font-playfair font-bold text-foreground">Media Resources</h2>
               <Download className="h-6 w-6 text-secondary ml-3" />
             </div>
             <div className="grid md:grid-cols-2 gap-6">
@@ -292,8 +292,8 @@ const PressKit = () => {
                   <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="relative flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="font-semibold text-white group-hover:text-primary transition-colors">{asset.name}</h3>
-                      <Badge variant="secondary" className="mt-2 bg-secondary/20 text-white border-secondary/30">
+                      <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{asset.name}</h3>
+                      <Badge variant="secondary" className="mt-2 bg-secondary/20 text-secondary border-secondary/30">
                         {asset.format}
                       </Badge>
                     </div>
@@ -302,7 +302,7 @@ const PressKit = () => {
                       Download
                     </Button>
                   </div>
-                  <p className="relative text-white/70 text-sm leading-relaxed">{asset.description}</p>
+                  <p className="relative text-muted-foreground text-sm leading-relaxed">{asset.description}</p>
                 </div>
               ))}
             </div>
@@ -316,20 +316,20 @@ const PressKit = () => {
             <CardContent className="relative p-8">
               <div className="flex items-center mb-6">
                 <Mail className="h-6 w-6 text-primary mr-3" />
-                <h2 className="text-2xl font-playfair font-bold text-white">Media Contacts</h2>
+                <h2 className="text-2xl font-playfair font-bold text-foreground">Media Contacts</h2>
               </div>
               <div className="space-y-6">
                 {mediaContacts.map((contact, index) => (
                   <div key={index} className="border-b border-border/50 pb-4 last:border-b-0 last:pb-0">
-                    <h3 className="font-semibold text-white mb-2">{contact.name}</h3>
+                    <h3 className="font-semibold text-foreground mb-2">{contact.name}</h3>
                     <div className="space-y-2">
-                      <div className="flex items-center text-white/70 hover:text-primary transition-colors">
+                      <div className="flex items-center text-muted-foreground hover:text-primary transition-colors">
                         <Mail className="h-4 w-4 mr-3" />
                         <a href={`mailto:${contact.email}`} className="hover:underline">
                           {contact.email}
                         </a>
                       </div>
-                      <div className="flex items-center text-white/70 hover:text-primary transition-colors">
+                      <div className="flex items-center text-muted-foreground hover:text-primary transition-colors">
                         <Phone className="h-4 w-4 mr-3" />
                         <a href={`tel:${contact.phone}`} className="hover:underline">
                           {contact.phone}
@@ -347,10 +347,10 @@ const PressKit = () => {
             <CardContent className="relative p-8">
               <div className="flex items-center mb-6">
                 <Globe className="h-6 w-6 text-secondary mr-3" />
-                <h2 className="text-2xl font-playfair font-bold text-white">Follow Us</h2>
+                <h2 className="text-2xl font-playfair font-bold text-foreground">Follow Us</h2>
               </div>
               <div className="space-y-4">
-                <p className="text-white/80 mb-6 leading-relaxed">
+                <p className="text-muted-foreground mb-6 leading-relaxed">
                   Stay connected with the Spelman College Glee Club through our social media channels for the latest news, performances, and behind-the-scenes content.
                 </p>
                 <div className="grid grid-cols-2 gap-4">
@@ -394,14 +394,14 @@ const PressKit = () => {
           <CardContent className="relative p-10">
             <div className="flex items-center justify-center mb-10">
               <Star className="h-6 w-6 text-secondary mr-3 animate-float" />
-              <h2 className="text-3xl font-playfair font-bold text-white">Notable Performances</h2>
+              <h2 className="text-3xl font-playfair font-bold text-foreground">Notable Performances</h2>
               <Star className="h-6 w-6 text-secondary ml-3 animate-float" />
             </div>
             <div className="grid md:grid-cols-2 gap-10">
               <div className="space-y-6">
                 <div className="group border-t border-primary/30 pt-6 hover:bg-primary/5 p-4 rounded-lg transition-all duration-300">
                   <div className="text-primary font-semibold mb-3 text-lg group-hover:text-secondary transition-colors">The White House</div>
-                  <div className="text-muted-foreground text-sm max-w-md leading-relaxed text-white/70">Performance for President Barack Obama (2016) — A defining national honor, representing Spelman on the global stage and affirming its reputation as a cultural ambassador of excellence and grace.</div>
+                  <div className="text-muted-foreground text-sm max-w-md leading-relaxed">Performance for President Barack Obama (2016) — A defining national honor, representing Spelman on the global stage and affirming its reputation as a cultural ambassador of excellence and grace.</div>
                 </div>
                 <div className="group border-t border-primary/30 pt-6 hover:bg-primary/5 p-4 rounded-lg transition-all duration-300">
                   <div className="text-primary font-semibold mb-3 text-lg group-hover:text-secondary transition-colors">State Farm Arena</div>
@@ -453,18 +453,18 @@ const PressKit = () => {
             <div className="flex justify-center mb-6">
               <Star className="h-8 w-8 text-secondary animate-float" />
             </div>
-            <h2 className="text-4xl font-playfair font-bold text-white mb-6">
+            <h2 className="text-4xl font-playfair font-bold text-foreground mb-6">
               Ready to Feature Our Story?
             </h2>
-            <p className="text-lg text-white/70 mb-8 max-w-3xl mx-auto leading-relaxed">
-              The <span className="text-blue-200 font-semibold">Spelman College Glee Club</span> is available for interviews, performances, and special features. Contact our media relations team to discuss opportunities.
+            <p className="text-lg text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
+              The <span className="text-primary font-semibold">Spelman College Glee Club</span> is available for interviews, performances, and special features. Contact our media relations team to discuss opportunities.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Button size="lg" className="bg-primary hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
                 <Mail className="h-5 w-5 mr-2" />
                 Contact Media Relations
               </Button>
-              <Button size="lg" variant="outline" className="border-secondary/50 text-white hover:bg-secondary hover:text-secondary-foreground hover:border-secondary hover:scale-105 transition-all duration-300">
+              <Button size="lg" variant="outline" className="border-secondary/50 text-foreground hover:bg-secondary hover:text-secondary-foreground hover:border-secondary hover:scale-105 transition-all duration-300">
                 <Download className="h-5 w-5 mr-2" />
                 Download Complete Press Kit
               </Button>
