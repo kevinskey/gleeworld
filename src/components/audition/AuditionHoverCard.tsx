@@ -35,11 +35,11 @@ export const AuditionHoverCard = () => {
         <Button 
           variant="branded" 
           size="lg"
-          className="px-12 py-6 rounded-full text-xl scale-150"
+          className="px-12 py-6 rounded-full text-xl scale-150 md:scale-125 lg:scale-150"
         >
-          <Mic className="w-6 h-6 mr-3" />
+          <Mic className="w-6 h-6 mr-3 md:w-5 md:h-5 lg:w-6 lg:h-6" />
           Sign Up for Auditions
-          <span className="ml-3">🎵</span>
+          <span className="ml-3 md:ml-2 lg:ml-3">🎵</span>
         </Button>
       </Link>
     </div>
