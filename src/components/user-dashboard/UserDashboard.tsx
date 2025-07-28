@@ -30,10 +30,13 @@ import { Badge } from "@/components/ui/badge";
 import { Shield } from "lucide-react";
 
 export const UserDashboard = () => {
+  console.log('UserDashboard component rendering...');
   const { user } = useAuth();
   const { profile } = useMergedProfile(user);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  
+  console.log('UserDashboard state:', { user: !!user, profile, searchParams: searchParams.toString() });
   
   // Temporarily disable events hook
   const events: any[] = [];
@@ -84,6 +87,7 @@ export const UserDashboard = () => {
   const availableModules = getAvailableModules();
 
   if (!user) {
+    console.log('UserDashboard: No user found, showing loading spinner');
     return (
       <UniversalLayout>
         <div className="flex items-center justify-center min-h-[50vh]">
@@ -92,6 +96,8 @@ export const UserDashboard = () => {
       </UniversalLayout>
     );
   }
+  
+  console.log('UserDashboard: User found, proceeding with render');
 
   // Show AdminPanel if admin user has a tab parameter
   if (showAdminPanel) {
@@ -173,6 +179,11 @@ export const UserDashboard = () => {
 
   // Get user dashboard data from context
   const { dashboardData, payments, notifications } = useUserDashboardContext();
+  console.log('UserDashboard: Context data loaded', { 
+    dashboardData: !!dashboardData, 
+    payments: payments?.length, 
+    notifications: notifications?.length 
+  });
   
   // Create real recent activity from various sources
   const getRecentActivity = () => {

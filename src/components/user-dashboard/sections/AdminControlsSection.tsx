@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { AdminIconsPanel } from "@/components/admin/AdminIconsPanel";
 import { useNavigate } from "react-router-dom";
-import { Shield } from "lucide-react";
+import { Shield, Star, Settings, Youtube, Mail } from "lucide-react";
 import { DASHBOARD_MODULES, hasModuleAccess, DashboardModule } from "@/constants/permissions";
 
 interface AdminControlsSectionProps {
@@ -37,16 +37,16 @@ export const AdminControlsSection = ({
         let icon = Shield;
         switch (moduleKey) {
           case 'hero_management':
-            icon = require("lucide-react").Star;
+            icon = Star;
             break;
           case 'dashboard_settings':
-            icon = require("lucide-react").Settings;
+            icon = Settings;
             break;
           case 'youtube_management':
-            icon = require("lucide-react").Youtube;
+            icon = Youtube;
             break;
           case 'send_emails':
-            icon = require("lucide-react").Mail;
+            icon = Mail;
             break;
           case 'manage_permissions':
             icon = Shield;
