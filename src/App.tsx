@@ -409,14 +409,14 @@ const App = () => {
                             </ProtectedRoute>
                           } 
                         />
-                         <Route 
-                           path="/auditions" 
-                           element={
-                             <ProtectedRoute>
-                               <AuditionPage />
-                             </ProtectedRoute>
-                           } 
-                         />
+                          <Route 
+                            path="/auditions" 
+                            element={
+                              <PublicRoute>
+                                <AuditionPage />
+                              </PublicRoute>
+                            } 
+                          />
                          <Route 
                            path="/scholarships" 
                            element={
