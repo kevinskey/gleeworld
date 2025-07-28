@@ -96,14 +96,16 @@ export const FeaturedProducts = ({
   const scrollLeft = () => {
     const container = document.getElementById('products-container');
     if (container) {
-      container.scrollBy({ left: -320, behavior: 'smooth' });
+      const scrollAmount = window.innerWidth < 640 ? -288 : -320; // 72*4 for mobile, 80*4 for desktop
+      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
   };
 
   const scrollRight = () => {
     const container = document.getElementById('products-container');
     if (container) {
-      container.scrollBy({ left: 320, behavior: 'smooth' });
+      const scrollAmount = window.innerWidth < 640 ? 288 : 320; // 72*4 for mobile, 80*4 for desktop
+      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
   };
 
@@ -119,9 +121,9 @@ export const FeaturedProducts = ({
           </div>
         )}
         <div className="relative">
-          <div className="flex gap-6 overflow-hidden">
+          <div className="flex gap-3 sm:gap-6 overflow-hidden">
             {Array.from({ length: limit }).map((_, i) => (
-              <Card key={i} className="overflow-hidden animate-pulse flex-shrink-0 w-80">
+              <Card key={i} className="overflow-hidden animate-pulse flex-shrink-0 w-72 sm:w-80">
                 <div className="aspect-square bg-muted"></div>
                 <CardContent className="p-4 space-y-3">
                   <div className="h-4 bg-muted rounded"></div>
@@ -185,13 +187,13 @@ export const FeaturedProducts = ({
         {/* Products Container */}
         <div 
           id="products-container"
-          className="flex gap-6 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth"
+          className="flex gap-3 sm:gap-6 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth"
           style={{ scrollbarWidth: 'thin' }}
         >
           {products.map((product) => (
             <Card 
               key={product.id} 
-              className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20 flex-shrink-0 w-80 snap-start hover-scale"
+              className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20 flex-shrink-0 w-72 sm:w-80 snap-start hover-scale"
             >
               <div className="relative aspect-square overflow-hidden bg-muted">
                 <img
