@@ -251,7 +251,7 @@ const PressKit = () => {
             <div className="grid md:grid-cols-3 gap-6">
               <div className="text-center space-y-2">
                 <div className="text-primary-light font-semibold">The White House</div>
-                <div className="text-gray-600 text-sm">Presidential performances and special events</div>
+                <div className="text-gray-600 text-sm">Presidential performance for President Barack and Mrs. Obama</div>
               </div>
               <div className="text-center space-y-2">
                 <div className="text-primary-light font-semibold">International Tours</div>
