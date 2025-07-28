@@ -34,6 +34,7 @@ import {
   Home,
   Book
 } from "lucide-react";
+import { ALL_DIETARY_OPTIONS } from "@/constants/dietaryOptions";
 
 // Enhanced schema with all new fields
 const profileSetupSchema = z.object({
@@ -79,10 +80,6 @@ const instruments = [
   "Piano", "Guitar", "Violin", "Cello", "Flute", "Clarinet", "Saxophone", "Trumpet", 
   "Trombone", "French Horn", "Tuba", "Drums", "Bass Guitar", "Harp", "Oboe", "Bassoon",
   "Percussion", "Accordion", "Banjo", "Mandolin", "Ukulele", "Organ", "Synthesizer"
-];
-
-const dietaryRestrictions = [
-  "Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Nut Allergy", "Kosher", "Halal", "Low Sodium"
 ];
 
 const paymentMethods = [
@@ -620,7 +617,7 @@ const ProfileSetup = () => {
                 <div>
                   <Label>Dietary Restrictions</Label>
                   <div className="mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    {dietaryRestrictions.map((restriction) => (
+                    {ALL_DIETARY_OPTIONS.map((restriction) => (
                       <div key={restriction} className="flex items-center space-x-2">
                         <Checkbox
                           id={restriction}

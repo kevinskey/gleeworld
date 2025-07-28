@@ -25,6 +25,7 @@ import {
   Share2,
   Palette
 } from "lucide-react";
+import { ALL_DIETARY_OPTIONS } from "@/constants/dietaryOptions";
 
 interface ComprehensiveUserFormProps {
   user?: User | null;
@@ -92,10 +93,6 @@ export const ComprehensiveUserForm = ({ user, mode, onSuccess, onCancel }: Compr
     "Flute", "Clarinet", "Cello", "Harp", "Organ", "Ukulele", "Other"
   ];
 
-  const dietaryOptions = [
-    "Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Nut Allergy", 
-    "Shellfish Allergy", "Kosher", "Halal", "Other"
-  ];
 
   // Initialize form data for edit mode
   useEffect(() => {
@@ -651,7 +648,7 @@ export const ComprehensiveUserForm = ({ user, mode, onSuccess, onCancel }: Compr
               <div className="space-y-2">
                 <Label>Dietary Restrictions</Label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {dietaryOptions.map((restriction) => (
+                  {ALL_DIETARY_OPTIONS.map((restriction) => (
                     <div key={restriction} className="flex items-center space-x-2">
                       <Checkbox
                         id={`dietary-${restriction}`}

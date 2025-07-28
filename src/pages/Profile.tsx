@@ -44,6 +44,7 @@ import {
   Shield
 } from "lucide-react";
 import { AvatarCropDialog } from "@/components/shared/AvatarCropDialog";
+import { ALL_DIETARY_OPTIONS } from "@/constants/dietaryOptions";
 
 const profileSchema = z.object({
   full_name: z.string().min(1, "Full name is required"),
@@ -88,10 +89,6 @@ const instruments = [
   "Piano", "Guitar", "Violin", "Cello", "Flute", "Clarinet", "Saxophone", "Trumpet", 
   "Trombone", "French Horn", "Tuba", "Drums", "Bass Guitar", "Harp", "Oboe", "Bassoon",
   "Percussion", "Accordion", "Banjo", "Mandolin", "Ukulele", "Organ", "Synthesizer"
-];
-
-const dietaryRestrictions = [
-  "Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Nut Allergy", "Kosher", "Halal", "Low Sodium"
 ];
 
 const dressSizes = ["XS", "S", "M", "L", "XL", "XXL", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20"];
@@ -749,7 +746,7 @@ const Profile = () => {
                 <div>
                   <Label>Dietary Restrictions</Label>
                   <div className="mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    {dietaryRestrictions.map((restriction) => (
+                    {ALL_DIETARY_OPTIONS.map((restriction) => (
                       <div key={restriction} className="flex items-center space-x-2">
                         <Checkbox
                           id={`dietary_${restriction}`}
