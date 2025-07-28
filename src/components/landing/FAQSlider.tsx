@@ -113,7 +113,7 @@ export const FAQSlider = () => {
         {/* Mobile: Rotating Question/Answer Cards - One at a time */}
         <div className="md:hidden">
           {/* Fixed height container for consistent sizing */}
-          <div className="h-[280px] flex flex-col justify-center space-y-3">
+          <div className="h-[280px] flex flex-col justify-start space-y-3">
             {!isFooterCard ? (
               <>
                 {/* Question Card */}
