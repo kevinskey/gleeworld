@@ -9,17 +9,17 @@ export const PublicHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <header className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
+    <header className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-[100] shadow-xl">
       <div className="container mx-auto px-2 sm:px-4 lg:px-6">
         <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Logo - Responsive sizing */}
-          <Link to="/" className="flex items-center gap-1 sm:gap-2 flex-shrink-0 min-w-0">
+          <Link to="/" className="flex items-center gap-1 sm:gap-2 flex-shrink-0 min-w-0 relative z-[110]">
             <img 
               src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
               alt="Spelman College Glee Club" 
-              className="w-6 h-6 sm:w-8 sm:h-8 object-contain filter brightness-0 invert brightness-125 flex-shrink-0"
+              className="w-6 h-6 sm:w-8 sm:h-8 object-contain filter brightness-0 invert brightness-125 flex-shrink-0 relative z-[111]"
             />
-            <span className="text-gray-900 font-bold text-sm sm:text-lg lg:text-xl whitespace-nowrap truncate">
+            <span className="text-gray-900 font-bold text-sm sm:text-lg lg:text-xl whitespace-nowrap truncate relative z-[111]">
               <span className="hidden sm:inline">Spelman Glee Club</span>
               <span className="sm:hidden">Glee Club</span>
             </span>
