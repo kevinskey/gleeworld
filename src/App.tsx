@@ -122,13 +122,13 @@ const App = () => {
   
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <TooltipProvider>
             <CustomTooltipProvider>
               <MusicPlayerProvider>
+                <Toaster />
+                <Sonner />
             <Routes>
               <Route 
                 path="/auth" 
@@ -477,9 +477,9 @@ const App = () => {
               <GlobalMusicPlayer />
             </MusicPlayerProvider>
           </CustomTooltipProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
+        </TooltipProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 };
