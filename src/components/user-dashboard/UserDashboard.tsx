@@ -64,6 +64,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { DASHBOARD_MODULES, hasModuleAccess, hasExecutiveBoardPermissions, DashboardModule } from "@/constants/permissions";
 import { ChevronUp } from "lucide-react";
 import { AdminPanel } from "@/components/AdminPanel";
+import { AdminPanelCollapsible } from "@/components/AdminPanelCollapsible";
 
 export const UserDashboard = () => {
   const { user } = useAuth();
@@ -455,6 +456,13 @@ export const UserDashboard = () => {
                     </div>
                   )}
                 </CardContent>
+                
+                {/* Add collapsible admin panel for admins */}
+                {isAdmin && (
+                  <div className="mt-4 px-6 pb-6">
+                    <AdminPanelCollapsible />
+                  </div>
+                )}
               </Card>
             ) : (
               <Card className="h-fit">
