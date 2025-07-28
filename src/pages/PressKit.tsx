@@ -127,7 +127,7 @@ const PressKit = () => {
               style={{ backgroundImage: `url(${slide.image_url})` }}
             />
           ))}
-          <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-black/20"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/20 to-black/40"></div>
           
           {/* Slideshow Indicators */}
           {heroSlides.length > 0 && (
@@ -138,8 +138,8 @@ const PressKit = () => {
                   onClick={() => setCurrentSlide(index)}
                   className={`w-3 h-3 rounded-full transition-all duration-300 ${
                     index === currentSlide 
-                      ? 'bg-primary scale-125' 
-                      : 'bg-primary/40 hover:bg-primary/60'
+                      ? 'bg-spelman-blue-light scale-125 shadow-lg shadow-spelman-blue-light/50' 
+                      : 'bg-white/40 hover:bg-white/60 backdrop-blur-sm'
                   }`}
                 />
               ))}
@@ -148,19 +148,19 @@ const PressKit = () => {
 
           <div className="relative z-10 space-y-8 px-6">
             <div className="flex justify-center mb-8">
-              <div className="flex items-center gap-2 px-6 py-3 bg-background/90 backdrop-blur-lg rounded-full border border-primary/30 shadow-xl">
-                <Award className="h-5 w-5 text-primary animate-float" />
-                <span className="text-primary font-medium">100+ Years of Excellence</span>
+              <div className="flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 shadow-2xl">
+                <Award className="h-5 w-5 text-spelman-blue-light animate-float" />
+                <span className="text-white font-medium">100+ Years of Excellence</span>
               </div>
             </div>
-            <h1 className="text-6xl md:text-8xl font-playfair font-bold text-foreground leading-tight drop-shadow-lg">
+            <h1 className="text-6xl md:text-8xl font-playfair font-bold text-white leading-tight drop-shadow-lg">
               Press Kit
             </h1>
             <div className="max-w-5xl mx-auto px-8">
-              <p className="text-2xl md:text-3xl text-muted-foreground font-medium leading-relaxed">
-                Media resources for the <span className="text-primary font-semibold">Spelman College Glee Club</span>
+              <p className="text-2xl md:text-3xl text-white/90 font-medium leading-relaxed">
+                Media resources for the <span className="text-spelman-blue-light font-semibold">Spelman College Glee Club</span>
               </p>
-              <p className="text-2xl md:text-3xl text-muted-foreground font-medium mt-2">
+              <p className="text-2xl md:text-3xl text-white/90 font-medium mt-2">
                 Cultural ambassadors of musical excellence
               </p>
             </div>
@@ -168,30 +168,30 @@ const PressKit = () => {
         </div>
 
         {/* Quick Facts */}
-        <Card className="relative overflow-hidden border-0 shadow-[var(--shadow-promotional)] bg-[var(--gradient-card)] backdrop-blur-lg">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5"></div>
+        <Card className="relative overflow-hidden border-0 shadow-2xl bg-white/10 backdrop-blur-xl border border-white/20">
+          <div className="absolute inset-0 bg-gradient-to-br from-spelman-blue-light/20 via-transparent to-spelman-blue-dark/20"></div>
           <CardContent className="relative p-10">
             <div className="flex items-center justify-center mb-8">
-              <Star className="h-6 w-6 text-secondary mr-3" />
-              <h2 className="text-3xl font-playfair font-bold text-foreground">Quick Facts</h2>
-              <Star className="h-6 w-6 text-secondary ml-3" />
+              <Star className="h-6 w-6 text-spelman-blue-light mr-3" />
+              <h2 className="text-3xl font-playfair font-bold text-white">Quick Facts</h2>
+              <Star className="h-6 w-6 text-spelman-blue-light ml-3" />
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               <div className="text-center group hover:scale-105 transition-transform duration-300">
-                <div className="text-4xl font-bold text-primary mb-2 group-hover:text-secondary transition-colors">1924</div>
-                <div className="text-muted-foreground font-medium">Founded</div>
+                <div className="text-4xl font-bold text-spelman-blue-light mb-2 group-hover:text-white transition-colors drop-shadow-lg">1924</div>
+                <div className="text-white/80 font-medium">Founded</div>
               </div>
               <div className="text-center group hover:scale-105 transition-transform duration-300">
-                <div className="text-4xl font-bold text-primary mb-2 group-hover:text-secondary transition-colors">100+</div>
-                <div className="text-muted-foreground font-medium">Years of Excellence</div>
+                <div className="text-4xl font-bold text-spelman-blue-light mb-2 group-hover:text-white transition-colors drop-shadow-lg">100+</div>
+                <div className="text-white/80 font-medium">Years of Excellence</div>
               </div>
               <div className="text-center group hover:scale-105 transition-transform duration-300">
-                <div className="text-4xl font-bold text-primary mb-2 group-hover:text-secondary transition-colors">50+</div>
-                <div className="text-muted-foreground font-medium">Talented Voices</div>
+                <div className="text-4xl font-bold text-spelman-blue-light mb-2 group-hover:text-white transition-colors drop-shadow-lg">50+</div>
+                <div className="text-white/80 font-medium">Talented Voices</div>
               </div>
               <div className="text-center group hover:scale-105 transition-transform duration-300">
-                <div className="text-4xl font-bold text-primary mb-2 group-hover:text-secondary transition-colors">Global</div>
-                <div className="text-muted-foreground font-medium">Global Recognition</div>
+                <div className="text-4xl font-bold text-spelman-blue-light mb-2 group-hover:text-white transition-colors drop-shadow-lg">Global</div>
+                <div className="text-white/80 font-medium">Global Recognition</div>
               </div>
             </div>
           </CardContent>
@@ -199,28 +199,28 @@ const PressKit = () => {
 
         {/* About Section */}
         <div className="grid lg:grid-cols-2 gap-8">
-          <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-[var(--shadow-hover)] transition-all duration-500 bg-gradient-to-br from-primary/5 to-secondary/5 backdrop-blur-lg">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <Card className="group relative overflow-hidden border-0 shadow-2xl hover:shadow-spelman-blue-light/20 transition-all duration-500 bg-white/10 backdrop-blur-xl border border-white/20">
+            <div className="absolute inset-0 bg-gradient-to-br from-spelman-blue-light/20 via-transparent to-spelman-blue-dark/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <CardContent className="relative p-8">
               <div className="flex items-center mb-6">
-                <Globe className="h-6 w-6 text-primary mr-3" />
-                <h2 className="text-2xl font-playfair font-bold text-foreground">About the Glee Club</h2>
+                <Globe className="h-6 w-6 text-spelman-blue-light mr-3" />
+                <h2 className="text-2xl font-playfair font-bold text-white">About the Glee Club</h2>
               </div>
-              <div className="space-y-4 text-muted-foreground leading-relaxed">
+              <div className="space-y-4 text-white/90 leading-relaxed">
                 <p>
-                  The <span className="text-primary font-semibold">Spelman College Glee Club</span>, established in 1924, stands as one of the most prestigious collegiate choral ensembles in the world. For nearly a century, we have been dedicated to the preservation and presentation of the rich musical heritage of African Americans while embracing diverse musical traditions.
+                  The <span className="text-spelman-blue-light font-semibold">Spelman College Glee Club</span>, established in 1924, stands as one of the most prestigious collegiate choral ensembles in the world. For nearly a century, we have been dedicated to the preservation and presentation of the rich musical heritage of African Americans while embracing diverse musical traditions.
                 </p>
                 <p>
-                  Our ensemble consists of approximately <span className="text-secondary font-semibold">50 talented young women</span> who represent the finest in vocal artistry and academic excellence. Under expert direction, the Glee Club maintains the highest standards of musical performance while fostering leadership, sisterhood, and cultural awareness.
+                  Our ensemble consists of approximately <span className="text-white font-semibold">50 talented young women</span> who represent the finest in vocal artistry and academic excellence. Under expert direction, the Glee Club maintains the highest standards of musical performance while fostering leadership, sisterhood, and cultural awareness.
                 </p>
                 <p>
-                  From performing at the <span className="text-primary font-semibold">White House</span> to international concert tours, the Spelman College Glee Club continues to be ambassadors of musical excellence, carrying forward a legacy of artistic distinction that spans generations.
+                  From performing at the <span className="text-spelman-blue-light font-semibold">White House</span> to international concert tours, the Spelman College Glee Club continues to be ambassadors of musical excellence, carrying forward a legacy of artistic distinction that spans generations.
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-[var(--shadow-hover)] transition-all duration-500 bg-gradient-to-br from-secondary/5 to-primary/5 backdrop-blur-lg">
+          <Card className="group relative overflow-hidden border-0 shadow-2xl hover:shadow-spelman-blue-light/20 transition-all duration-500 bg-white/10 backdrop-blur-xl border border-white/20">
             <div className="absolute inset-0 bg-gradient-to-br from-secondary/10 via-transparent to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <CardContent className="relative p-8">
               <div className="flex items-center mb-6">
@@ -297,7 +297,7 @@ const PressKit = () => {
                         {asset.format}
                       </Badge>
                     </div>
-                    <Button size="sm" variant="outline" className="border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 group-hover:scale-105">
+                    <Button size="sm" variant="outline" className="border-spelman-blue-light/50 text-white hover:bg-spelman-blue-light hover:text-white transition-all duration-300 group-hover:scale-105 backdrop-blur-sm">
                       <Download className="h-4 w-4 mr-2" />
                       Download
                     </Button>
