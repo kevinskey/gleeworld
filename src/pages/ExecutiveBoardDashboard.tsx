@@ -303,6 +303,12 @@ export const ExecutiveBoardDashboard = () => {
 
           <TabsContent value="dashboard" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Position-specific content */}
+              <div className="md:col-span-2 lg:col-span-3">
+                <PositionTab position={selectedPosition} />
+              </div>
+              
+              {/* Main dashboard tools */}
               <EventCreator />
               <BudgetTracker />
               <CommunicationHub />
@@ -310,7 +316,9 @@ export const ExecutiveBoardDashboard = () => {
               <TaskChecklist />
               <CheckInOutTool />
               <MusicLibraryViewer />
-              <ProgressLog />
+              <div className="md:col-span-1">
+                <ProgressLog />
+              </div>
             </div>
           </TabsContent>
 
