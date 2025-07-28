@@ -139,7 +139,10 @@ export const FAQSlider = () => {
                     </div>
                     <span className="text-xs text-primary font-medium">ANSWER</span>
                   </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed transition-all duration-500 ease-in-out" key={currentFAQ?.id + '-a'}>
+                  <p className={cn(
+                    "text-muted-foreground leading-relaxed transition-all duration-500 ease-in-out",
+                    currentFAQ?.id === "audition-process" ? "text-xs" : "text-sm"
+                  )} key={currentFAQ?.id + '-a'}>
                     {currentFAQ?.answer}
                   </p>
                 </div>
@@ -211,7 +214,12 @@ export const FAQSlider = () => {
               >
                 <div className="px-6 pb-6 md:px-8 md:pb-8">
                   <div className="pl-12 md:pl-14">
-                    <p className="text-sm md:text-base lg:text-lg text-muted-foreground leading-relaxed">
+                    <p className={cn(
+                      "text-muted-foreground leading-relaxed",
+                      item.id === "audition-process" 
+                        ? "text-xs md:text-sm lg:text-base" 
+                        : "text-sm md:text-base lg:text-lg"
+                    )}>
                       {item.answer}
                     </p>
                   </div>
