@@ -49,24 +49,35 @@ export const PublicHeader = () => {
               </Link>
             </Button>
             
-            {/* Music Staff Menu - Only shows on very small screens */}
+            {/* Friendly Mobile Menu - Non-scary dropdown */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild className="sm:hidden">
                 <MusicStaffMenu onClick={() => setIsOpen(!isOpen)} />
               </SheetTrigger>
-              <SheetContent side="right" className="w-72 z-[120]">
-                <div className="flex flex-col gap-6 mt-6">
-                  <div className="flex items-center gap-2">
-                    <Music className="h-6 w-6" />
-                    <span className="font-bold text-lg">Spelman Glee Club</span>
+              <SheetContent 
+                side="top" 
+                className="w-full max-w-sm mx-auto mt-16 bg-white/90 backdrop-blur-md border border-white/30 shadow-lg rounded-lg z-[110]"
+                style={{
+                  position: 'fixed',
+                  top: '4rem',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  height: 'auto',
+                  maxHeight: '70vh',
+                }}
+              >
+                <div className="flex flex-col gap-4 py-4">
+                  <div className="flex items-center justify-center gap-2 pb-2 border-b border-gray-200/50">
+                    <Music className="h-5 w-5 text-spelman-blue-dark" />
+                    <span className="font-semibold text-base text-gray-800">Menu</span>
                   </div>
                   
-                  <nav className="flex flex-col gap-2">
+                  <nav className="flex flex-col gap-1">
                     <ResponsiveNavigation mobile onItemClick={() => setIsOpen(false)} />
                   </nav>
                   
-                  <div className="pt-4 border-t">
-                    <Button asChild className="w-full" onClick={() => setIsOpen(false)}>
+                  <div className="pt-2 border-t border-gray-200/50">
+                    <Button asChild className="w-full bg-spelman-blue-dark hover:bg-spelman-blue-light" size="sm" onClick={() => setIsOpen(false)}>
                       <Link to="/auth">Sign In</Link>
                     </Button>
                   </div>
