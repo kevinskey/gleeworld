@@ -232,11 +232,6 @@ export const GleeWorldLanding = () => {
 
       {/* FAQ Slider Section */}
       <FAQSlider />
-      
-      {/* Countdown Timer */}
-      <div className="flex justify-center py-4">
-        <CountdownTimer />
-      </div>
 
       {/* Hero Section */}
       <section className="pt-4 pb-6 px-0.5 sm:px-1 md:px-1.5 lg:px-3.5">
