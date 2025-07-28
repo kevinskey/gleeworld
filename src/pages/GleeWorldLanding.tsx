@@ -11,6 +11,7 @@ import { AlbumModal } from "@/components/music/AlbumModal";
 import { YoutubeVideoSection } from "@/components/youtube/YoutubeVideoSection";
 import { FAQSlider } from "@/components/landing/FAQSlider";
 import { CountdownTimer } from "@/components/landing/CountdownTimer";
+import { FeaturedProducts } from "@/components/products/FeaturedProducts";
 import { AuditionHoverCard } from "@/components/audition/AuditionHoverCard";
 import { MusicStaffIcon } from "@/components/icons/MusicStaffIcon";
 import { 
@@ -504,6 +505,15 @@ export const GleeWorldLanding = () => {
                   </CarouselContent>
                 </Carousel>
               )}
+          </Card>
+        </div>
+      </section>
+
+      {/* Featured Products Section */}
+      <section className="pt-7 pb-9 sm:pt-10 sm:pb-12 px-0.5 sm:px-1 md:px-1.5 lg:px-3.5 w-full">
+        <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto">
+          <Card className="p-6 sm:p-8 bg-white/30 backdrop-blur-md border border-white/20 shadow-2xl">
+            <FeaturedProducts limit={8} />
           </Card>
         </div>
       </section>
