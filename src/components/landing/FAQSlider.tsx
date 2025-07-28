@@ -71,7 +71,7 @@ export const FAQSlider = () => {
   const isFooterCard = currentQuestionIndex >= faqData.length;
 
   return (
-    <section className="w-full relative overflow-hidden pt-[86px] pb-12 md:pt-32 md:pb-16 lg:pt-40 lg:pb-20 min-h-[250px] md:min-h-[450px] fixed top-0 left-0 z-30">
+    <section className="w-full relative overflow-hidden pt-[66px] pb-12 md:pt-32 md:pb-16 lg:pt-40 lg:pb-20 min-h-[250px] md:min-h-[450px] fixed top-0 left-0 z-30">
       {/* Background gradients */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/10"></div>
       <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-primary/3 to-primary/8"></div>
