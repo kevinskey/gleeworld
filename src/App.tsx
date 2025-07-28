@@ -67,14 +67,7 @@ const queryClient = new QueryClient({
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
-  console.log('ProtectedRoute: Checking auth state', { 
-    user: user?.id || 'no user', 
-    loading, 
-    pathname: window.location.pathname 
-  });
-  
   if (loading) {
-    console.log('ProtectedRoute: Still loading auth state');
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <LoadingSpinner size="lg" text="Loading..." />
@@ -83,11 +76,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!user) {
-    console.log('ProtectedRoute: No user found, redirecting to auth');
     return <Navigate to="/auth" replace />;
   }
-  
-  console.log('ProtectedRoute: User authenticated, rendering protected content');
   return <>{children}</>;
 };
 
@@ -111,10 +101,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 const RootRoute = () => {
   const { user, loading } = useAuth();
   
-  console.log('RootRoute: Rendering with user:', user?.id || 'none', 'loading:', loading);
-  
   if (loading) {
-    console.log('RootRoute: Still loading auth state');
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <LoadingSpinner size="lg" text="Initializing..." />
@@ -122,19 +109,11 @@ const RootRoute = () => {
     );
   }
   
-  console.log('RootRoute: Auth complete, rendering landing page');
   // Show landing page for everyone, authenticated or not
   return <GleeWorldLanding />;
 };
 
 const App = () => {
-  console.log('=== App Debug Info ===');
-  console.log('App: Component mounted');
-  console.log('App: Current URL:', window.location.href);
-  console.log('App: Current pathname:', window.location.pathname);
-  console.log('App: Current search:', window.location.search);
-  console.log('App: Current hash:', window.location.hash);
-  console.log('=== End App Debug Info ===');
   
   return (
     <QueryClientProvider client={queryClient}>
