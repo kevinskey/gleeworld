@@ -22,6 +22,7 @@ import { Shield, Users, Settings, FileText, Activity, Receipt, Calculator, Mail,
 import { MusicManagement } from "./admin/MusicManagement";
 import { ExecutiveBoardManager } from "./admin/ExecutiveBoardManager";
 import { ProductManager } from "./admin/ProductManager";
+import { SquareIntegration } from "./admin/SquareIntegration";
 
 interface AdminPanelProps {
   activeTab?: string;
@@ -96,7 +97,7 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
               loading={usersLoading}
               activityLogs={activityLogs}
             />
-            <div className="mt-6">
+            <div className="mt-6 space-y-6">
               <div className="glass-card p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
@@ -112,6 +113,8 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
                   </Button>
                 </div>
               </div>
+              
+              <SquareIntegration />
             </div>
           </>
         );
