@@ -255,7 +255,7 @@ const PressKit = () => {
               </div>
               <div className="text-center space-y-2">
                 <div className="text-primary-light font-semibold">International Tours</div>
-                <div className="text-gray-600 text-sm">Cultural ambassadors across continents</div>
+                <div className="text-gray-600 text-sm">Cultural ambassadors across continents, including Italy and Portugal</div>
               </div>
               <div className="text-center space-y-2">
                 <div className="text-primary-light font-semibold">Carnegie Hall</div>
