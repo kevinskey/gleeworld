@@ -562,171 +562,32 @@ export const GleeWorldLanding = () => {
         </div>
       </section>
 
-      {/* Upcoming Events Section */}
+      {/* Calendar Section */}
       <section className="pt-7 pb-9 sm:pt-10 sm:pb-12 px-0.5 sm:px-1 md:px-1.5 lg:px-3.5 w-full">
         <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto">
           <Card className="p-6 sm:p-8 bg-white/30 backdrop-blur-md border border-white/20 shadow-2xl">
             <div className="text-center mb-6 sm:mb-8">
               <div className="flex items-center justify-center gap-3 mb-2">
                 <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-blue-400 animate-pulse" />
-                <h2 className="text-2xl sm:text-4xl md:text-6xl font-dancing font-bold text-gray-900">Upcoming Events</h2>
+                <h2 className="text-2xl sm:text-4xl md:text-6xl font-dancing font-bold text-gray-900">Events Calendar</h2>
                 <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-blue-600 animate-pulse" />
               </div>
             </div>
-              
-              
-              {loading ? (
-                <div className="flex space-x-4 overflow-hidden">
-                  {[...Array(6)].map((_, i) => (
-                    <Card key={i} className="animate-pulse flex-shrink-0 w-80 bg-white/20 backdrop-blur-md border border-white/30">
-                      <div className="h-64 bg-gray-200/50 rounded-t-lg"></div>
-                      <CardContent className="p-6">
-                        <div className="h-4 bg-gray-200/50 rounded mb-4"></div>
-                        <div className="h-3 bg-gray-200/50 rounded mb-2"></div>
-                        <div className="h-3 bg-gray-200/50 rounded w-3/4"></div>
-                      </CardContent>
-                    </Card>
-                  ))}
+            
+            <div className="flex flex-col items-center justify-center py-12">
+              <Link to="/public-calendar" className="group">
+                <div className="flex flex-col items-center space-y-4 p-8 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/40 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                  <Calendar className="w-24 h-24 text-spelman-blue-dark group-hover:text-spelman-blue-light transition-colors duration-300" />
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">View Full Calendar</h3>
+                    <p className="text-gray-700">Click to see all upcoming events and performances</p>
+                  </div>
+                  <Button className="bg-spelman-blue-dark hover:bg-spelman-blue-light text-white px-6 py-2">
+                    Open Calendar <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </div>
-              ) : events.length > 0 ? (
-                <>
-                  {/* Desktop view - Single horizontal scrolling row */}
-                  <div className="hidden md:block">
-                    <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
-                      {events.map((event) => (
-                        <Card key={event.id} className="hover:shadow-2xl transition-all duration-300 h-full relative group bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 flex-shrink-0 w-80">
-                          {/* Hover overlay button */}
-                          <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <Button size="sm" className="bg-primary/90 backdrop-blur-md text-primary-foreground hover:bg-primary shadow-lg border border-white/30" asChild>
-                              <Link to="/public-calendar">
-                                View All <ArrowRight className="ml-1 h-4 w-4" />
-                              </Link>
-                            </Button>
-                          </div>
-                          
-                          <div className="h-64 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
-                            <img 
-                              src={event.image_url || getDefaultEventImage(event.id)}
-                              alt={event.title}
-                              className="w-full h-full object-cover rounded-t-lg brightness-110 contrast-105"
-                              onError={(e) => {
-                                console.log('Image failed to load:', event.image_url, 'for event:', event.title);
-                                e.currentTarget.src = getDefaultEventImage(event.id);
-                              }}
-                            />
-                          </div>
-                          <CardContent className="p-6">
-                            <h3 className="text-xl font-semibold text-gray-900 mb-4 line-clamp-2">{event.title}</h3>
-                            <div className="space-y-2 text-gray-600">
-                              <div className="flex items-center">
-                                <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
-                                <span className="text-sm">{formatDate(event.start_date)}</span>
-                              </div>
-                              {event.location && (
-                                <div className="flex items-center">
-                                  <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                                  <span className="text-sm line-clamp-1">{event.location}</span>
-                                </div>
-                              )}
-                            </div>
-                            {event.description && (
-                              <p className="text-gray-600 mt-3 line-clamp-2 text-sm">{event.description}</p>
-                            )}
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Mobile/Tablet view - Carousel */}
-                  <div className="md:hidden">
-                    <Carousel className="w-full">
-                      <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
-                        {events.map((event) => (
-                          <CarouselItem key={event.id} className="pl-1 sm:pl-2 md:pl-4 basis-full">
-                            <Card className="hover:shadow-2xl transition-all duration-300 h-full w-full relative group bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30">
-                              {/* Hover overlay button */}
-                              <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <Button size="sm" className="bg-primary/90 backdrop-blur-md text-primary-foreground hover:bg-primary shadow-lg border border-white/30" asChild>
-                                  <Link to="/public-calendar">
-                                    View All <ArrowRight className="ml-1 h-4 w-4" />
-                                  </Link>
-                                </Button>
-                              </div>
-                              
-                              <div className="h-64 sm:h-80 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
-                                <img 
-                                  src={event.image_url || getDefaultEventImage(event.id)}
-                                  alt={event.title}
-                                  className="w-full h-full object-cover rounded-t-lg brightness-110 contrast-105"
-                                  onError={(e) => {
-                                    console.log('Image failed to load:', event.image_url, 'for event:', event.title);
-                                    e.currentTarget.src = getDefaultEventImage(event.id);
-                                  }}
-                                />
-                              </div>
-                              <CardContent className="p-6 sm:p-8">
-                                <h3 className="text-2xl sm:text-2xl font-semibold text-gray-900 mb-4 line-clamp-2">{event.title}</h3>
-                                <div className="space-y-2 text-gray-600">
-                                  <div className="flex items-center">
-                                    <Calendar className="h-5 w-5 mr-3 flex-shrink-0" />
-                                    <span className="text-base sm:text-lg">{formatDate(event.start_date)}</span>
-                                  </div>
-                                  {event.location && (
-                                    <div className="flex items-center">
-                                      <MapPin className="h-5 w-5 mr-3 flex-shrink-0" />
-                                      <span className="text-base sm:text-lg line-clamp-1">{event.location}</span>
-                                    </div>
-                                  )}
-                                </div>
-                                {event.description && (
-                                  <p className="text-gray-600 mt-4 line-clamp-3 text-base sm:text-lg">{event.description}</p>
-                                )}
-                              </CardContent>
-                            </Card>
-                          </CarouselItem>
-                        ))}
-                      </CarouselContent>
-                    </Carousel>
-                  </div>
-                </>
-              ) : (
-                <Carousel className="w-full">
-                  <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
-                    {[...Array(6)].map((_, i) => (
-                      <CarouselItem key={i} className="pl-1 sm:pl-2 md:pl-4 basis-full">
-                        <Card className="hover:shadow-2xl transition-all duration-300 h-full w-full relative group bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30">
-                          {/* Hover overlay button */}
-                          <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <Button size="sm" className="bg-primary/90 backdrop-blur-md text-primary-foreground hover:bg-primary shadow-lg border border-white/30" asChild>
-                              <Link to="/public-calendar">
-                                View All <ArrowRight className="ml-1 h-4 w-4" />
-                              </Link>
-                            </Button>
-                          </div>
-                          
-                          <div className="h-64 sm:h-80 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm">
-                            <Calendar className="h-12 w-12 text-blue-600" />
-                          </div>
-                          <CardContent className="p-6 sm:p-8">
-                            <h3 className="text-2xl sm:text-2xl font-semibold text-gray-900 mb-4">Glee Club Rehearsal</h3>
-                            <div className="space-y-2 text-gray-600">
-                              <div className="flex items-center">
-                                <Calendar className="h-5 w-5 mr-3 flex-shrink-0" />
-                                <span className="text-base sm:text-lg">Aug {19 + i * 2}, 2025</span>
-                              </div>
-                              <div className="flex items-center">
-                                <MapPin className="h-5 w-5 mr-3 flex-shrink-0" />
-                                <span className="text-base sm:text-lg line-clamp-1">350 Spelman Lane SW Atlanta GA 30314</span>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                </Carousel>
-              )}
+              </Link>
+            </div>
           </Card>
         </div>
       </section>
