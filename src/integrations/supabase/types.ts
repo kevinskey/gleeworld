@@ -6296,6 +6296,149 @@ export type Database = {
           },
         ]
       }
+      square_integrations: {
+        Row: {
+          access_token: string
+          application_id: string
+          auto_sync_interval_hours: number
+          created_at: string
+          environment: string
+          id: string
+          last_sync_at: string | null
+          location_id: string
+          refresh_token: string | null
+          sync_enabled: boolean
+          updated_at: string
+          user_id: string
+          webhook_signature_key: string | null
+        }
+        Insert: {
+          access_token: string
+          application_id: string
+          auto_sync_interval_hours?: number
+          created_at?: string
+          environment?: string
+          id?: string
+          last_sync_at?: string | null
+          location_id: string
+          refresh_token?: string | null
+          sync_enabled?: boolean
+          updated_at?: string
+          user_id: string
+          webhook_signature_key?: string | null
+        }
+        Update: {
+          access_token?: string
+          application_id?: string
+          auto_sync_interval_hours?: number
+          created_at?: string
+          environment?: string
+          id?: string
+          last_sync_at?: string | null
+          location_id?: string
+          refresh_token?: string | null
+          sync_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+          webhook_signature_key?: string | null
+        }
+        Relationships: []
+      }
+      square_product_mappings: {
+        Row: {
+          created_at: string
+          id: string
+          integration_id: string
+          last_synced_at: string
+          local_product_id: string
+          square_catalog_object_id: string
+          square_item_variation_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          integration_id: string
+          last_synced_at?: string
+          local_product_id: string
+          square_catalog_object_id: string
+          square_item_variation_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          integration_id?: string
+          last_synced_at?: string
+          local_product_id?: string
+          square_catalog_object_id?: string
+          square_item_variation_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "square_product_mappings_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "square_integrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "square_product_mappings_local_product_id_fkey"
+            columns: ["local_product_id"]
+            isOneToOne: false
+            referencedRelation: "gw_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      square_sync_logs: {
+        Row: {
+          completed_at: string | null
+          error_message: string | null
+          id: string
+          integration_id: string
+          items_created: number
+          items_failed: number
+          items_processed: number
+          items_updated: number
+          started_at: string
+          status: string
+          sync_type: string
+        }
+        Insert: {
+          completed_at?: string | null
+          error_message?: string | null
+          id?: string
+          integration_id: string
+          items_created?: number
+          items_failed?: number
+          items_processed?: number
+          items_updated?: number
+          started_at?: string
+          status?: string
+          sync_type: string
+        }
+        Update: {
+          completed_at?: string | null
+          error_message?: string | null
+          id?: string
+          integration_id?: string
+          items_created?: number
+          items_failed?: number
+          items_processed?: number
+          items_updated?: number
+          started_at?: string
+          status?: string
+          sync_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "square_sync_logs_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "square_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       story_images: {
         Row: {
           created_by: string | null
@@ -6935,9 +7078,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      decrypt_square_token: {
+        Args: { encrypted_token: string }
+        Returns: string
+      }
       delete_user_and_data: {
         Args: { target_user_id: string }
         Returns: boolean
+      }
+      encrypt_square_token: {
+        Args: { token: string }
+        Returns: string
       }
       generate_qr_token: {
         Args: { event_id_param: string }
