@@ -678,8 +678,8 @@ export const GleeWorldLanding = () => {
                 <div className="space-y-2 text-sm">
                   <div><a href="#" className="text-gray-400 hover:text-white transition-colors">Facebook</a></div>
                   <div><a href="#" className="text-gray-400 hover:text-white transition-colors">Instagram</a></div>
+                  <div><a href="#" className="text-gray-400 hover:text-white transition-colors">TikTok</a></div>
                   <div><a href="#" className="text-gray-400 hover:text-white transition-colors">YouTube</a></div>
-                  <div><a href="#" className="text-gray-400 hover:text-white transition-colors">Spotify</a></div>
                 </div>
               </div>
               <div className="space-y-4">
