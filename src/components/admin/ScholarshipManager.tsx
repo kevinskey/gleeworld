@@ -127,11 +127,16 @@ export const ScholarshipManager = () => {
     });
   };
 
-  const filteredScholarships = scholarships.filter(scholarship =>
-    scholarship.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    scholarship.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    scholarship.source.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredScholarships = scholarships.filter(scholarship => {
+    // Filter out scholarships with passed deadlines
+    const isExpired = scholarship.deadline && new Date(scholarship.deadline) < new Date();
+    if (isExpired) return false;
+    
+    // Apply search filter
+    return scholarship.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      scholarship.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      scholarship.source.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   const manualScholarships = filteredScholarships.filter(s => s.source === 'manual');
   const autoScholarships = filteredScholarships.filter(s => s.source !== 'manual');
