@@ -123,22 +123,29 @@ export const useScholarshipSources = () => {
 
   const triggerScrape = async () => {
     try {
+      console.log('🚀 triggerScrape called - starting scraping process');
       toast.loading('Starting scholarship scraping...');
       
+      console.log('📡 Invoking scrape-scholarships function');
       const { data, error } = await supabase.functions.invoke('scrape-scholarships');
 
+      console.log('📊 Function response:', { data, error });
+
       if (error) {
+        console.error('❌ Function error:', error);
         throw error;
       }
 
+      console.log('✅ Scraping completed successfully:', data);
       toast.success(`Scraping completed! Found ${data.scholarships_found} scholarships, inserted ${data.inserted}, updated ${data.updated}`);
       
       // Refresh sources to update last_scraped_at timestamps
+      console.log('🔄 Refreshing sources...');
       await fetchSources();
       
       return data;
     } catch (err) {
-      console.error('Error triggering scrape:', err);
+      console.error('💥 Error triggering scrape:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to start scraping');
       throw err;
     }
