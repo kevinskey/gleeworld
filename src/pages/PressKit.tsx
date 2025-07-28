@@ -248,46 +248,50 @@ const PressKit = () => {
         <Card className="bg-white/10 backdrop-blur-md border border-white/20">
           <CardContent className="p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Notable Performances</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="text-center space-y-2">
-                <div className="text-primary-light font-semibold">The White House</div>
-                <div className="text-gray-600 text-sm">Performance for President Barack Obama (2016) — A defining national honor, representing Spelman on the global stage and affirming its reputation as a cultural ambassador of excellence and grace.</div>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <div className="border-t border-gray-300 pt-4">
+                  <div className="text-primary-light font-semibold mb-2">The White House</div>
+                  <div className="text-gray-600 text-sm max-w-md mx-auto">Performance for President Barack Obama (2016) — A defining national honor, representing Spelman on the global stage and affirming its reputation as a cultural ambassador of excellence and grace.</div>
+                </div>
+                <div className="border-t border-gray-300 pt-4">
+                  <div className="text-primary-light font-semibold mb-2">State Farm Arena</div>
+                  <div className="text-gray-600 text-sm max-w-md mx-auto">Tabernacle Choir "Hope" Tour (September 2024) — Performed with the Tabernacle Choir and Morehouse College Glee Club in a landmark musical and cultural exchange celebrating unity, diversity, and faith.</div>
+                </div>
+                <div className="border-t border-gray-300 pt-4">
+                  <div className="text-primary-light font-semibold mb-2">Faneuil Hall, Boston</div>
+                  <div className="text-gray-600 text-sm max-w-md mx-auto">Historic Venue Performance — A performance at one of the oldest public gathering spaces in the U.S., reflecting the Glee Club's role in cultural diplomacy and historically resonant venues.</div>
+                </div>
+                <div className="border-t border-gray-300 pt-4">
+                  <div className="text-primary-light font-semibold mb-2">WABE Studios' Serenbe</div>
+                  <div className="text-gray-600 text-sm max-w-md mx-auto">Wildflower Meadow Concert (2024) — Filmed for the Sounds Like ATL series, this visually stunning outdoor performance earned a Southeast Emmy nomination for excellence in sound and production.</div>
+                </div>
+                <div className="border-t border-gray-300 pt-4">
+                  <div className="text-primary-light font-semibold mb-2">Terras sem Sombra Festival, Portugal</div>
+                  <div className="text-gray-600 text-sm max-w-md mx-auto">(2019) — A prestigious international cultural exchange where the Glee Club represented the African-American choral tradition on European soil, blending diplomacy, artistry, and sisterhood.</div>
+                </div>
               </div>
-              <div className="text-center space-y-2">
-                <div className="text-primary-light font-semibold">State Farm Arena</div>
-                <div className="text-gray-600 text-sm">Tabernacle Choir "Hope" Tour (September 2024) — Performed with the Tabernacle Choir and Morehouse College Glee Club in a landmark musical and cultural exchange celebrating unity, diversity, and faith.</div>
-              </div>
-              <div className="text-center space-y-2">
-                <div className="text-primary-light font-semibold">Faneuil Hall, Boston</div>
-                <div className="text-gray-600 text-sm">Historic Venue Performance — A performance at one of the oldest public gathering spaces in the U.S., reflecting the Glee Club's role in cultural diplomacy and historically resonant venues.</div>
-              </div>
-              <div className="text-center space-y-2">
-                <div className="text-primary-light font-semibold">WABE Studios' Serenbe</div>
-                <div className="text-gray-600 text-sm">Wildflower Meadow Concert (2024) — Filmed for the Sounds Like ATL series, this visually stunning outdoor performance earned a Southeast Emmy nomination for excellence in sound and production.</div>
-              </div>
-              <div className="text-center space-y-2">
-                <div className="text-primary-light font-semibold">Terras sem Sombra Festival, Portugal</div>
-                <div className="text-gray-600 text-sm">(2019) — A prestigious international cultural exchange where the Glee Club represented the African-American choral tradition on European soil, blending diplomacy, artistry, and sisterhood.</div>
-              </div>
-              <div className="text-center space-y-2">
-                <div className="text-primary-light font-semibold">Jessye Norman Memorial Tribute</div>
-                <div className="text-gray-600 text-sm">(2019) — A deeply emotional campus service performance honoring the life of opera legend Jessye Norman, showcasing the Glee Club's ability to meet the moment with beauty, reverence, and power.</div>
-              </div>
-              <div className="text-center space-y-2">
-                <div className="text-primary-light font-semibold">Atlanta Symphony Hall</div>
-                <div className="text-gray-600 text-sm">"Carlos Simon Curates" (2024) — Featured alongside professional soloists and full orchestra, performing works by Moses Hogan, Hale Smith, and others in a program highlighting Black excellence in classical music.</div>
-              </div>
-              <div className="text-center space-y-2">
-                <div className="text-primary-light font-semibold">Mother Emanuel AME Church</div>
-                <div className="text-gray-600 text-sm">Charleston, SC (2017) — A healing and commemorative concert at the site of national tragedy, exemplifying the Glee Club's ministry of hope and justice through music.</div>
-              </div>
-              <div className="text-center space-y-2">
-                <div className="text-primary-light font-semibold">Lincoln Center</div>
-                <div className="text-gray-600 text-sm">Avery Fisher Hall, NYC — Performing in one of the most prestigious concert halls in the world, affirming the Glee Club's stature in the global choral community.</div>
-              </div>
-              <div className="text-center space-y-2">
-                <div className="text-primary-light font-semibold">Spelman-Morehouse Christmas Carol Concert</div>
-                <div className="text-gray-600 text-sm">Annual Tradition (2023, 2024) — Broadcast via NPR and Georgia Public Broadcasting, this holiday concert remains a beloved cultural staple showcasing Black sacred music, sisterhood, and joy.</div>
+              <div className="space-y-4">
+                <div className="border-t border-gray-300 pt-4">
+                  <div className="text-primary-light font-semibold mb-2">Jessye Norman Memorial Tribute</div>
+                  <div className="text-gray-600 text-sm max-w-md mx-auto">(2019) — A deeply emotional campus service performance honoring the life of opera legend Jessye Norman, showcasing the Glee Club's ability to meet the moment with beauty, reverence, and power.</div>
+                </div>
+                <div className="border-t border-gray-300 pt-4">
+                  <div className="text-primary-light font-semibold mb-2">Atlanta Symphony Hall</div>
+                  <div className="text-gray-600 text-sm max-w-md mx-auto">"Carlos Simon Curates" (2024) — Featured alongside professional soloists and full orchestra, performing works by Moses Hogan, Hale Smith, and others in a program highlighting Black excellence in classical music.</div>
+                </div>
+                <div className="border-t border-gray-300 pt-4">
+                  <div className="text-primary-light font-semibold mb-2">Mother Emanuel AME Church</div>
+                  <div className="text-gray-600 text-sm max-w-md mx-auto">Charleston, SC (2017) — A healing and commemorative concert at the site of national tragedy, exemplifying the Glee Club's ministry of hope and justice through music.</div>
+                </div>
+                <div className="border-t border-gray-300 pt-4">
+                  <div className="text-primary-light font-semibold mb-2">Lincoln Center</div>
+                  <div className="text-gray-600 text-sm max-w-md mx-auto">Avery Fisher Hall, NYC — Performing in one of the most prestigious concert halls in the world, affirming the Glee Club's stature in the global choral community.</div>
+                </div>
+                <div className="border-t border-gray-300 pt-4">
+                  <div className="text-primary-light font-semibold mb-2">Spelman-Morehouse Christmas Carol Concert</div>
+                  <div className="text-gray-600 text-sm max-w-md mx-auto">Annual Tradition (2023, 2024) — Broadcast via NPR and Georgia Public Broadcasting, this holiday concert remains a beloved cultural staple showcasing Black sacred music, sisterhood, and joy.</div>
+                </div>
               </div>
             </div>
           </CardContent>
