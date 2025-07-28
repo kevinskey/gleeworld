@@ -14,7 +14,7 @@ import { DashboardSwitcher } from "@/components/navigation/DashboardSwitcher";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TaskNotifications } from "@/components/shared/TaskNotifications";
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
-import { Clock } from "@/components/ui/clock";
+import { HeaderClock } from "@/components/ui/header-clock";
 
 interface UniversalHeaderProps {
 }
@@ -74,7 +74,7 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
           </div>
 
           {/* Clock - Always visible */}
-          <Clock className="block" />
+          <HeaderClock className="block" />
 
           {/* Right side actions */}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
