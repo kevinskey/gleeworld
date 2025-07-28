@@ -189,13 +189,15 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
                         title={`${event.title}${canEdit ? ' (Tap to edit)' : ' (Tap for details)'}`}
                       >
                         <div className="flex items-center gap-1 w-full">
-                          <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-current rounded-full flex-shrink-0 opacity-70" />
-                          <div className="truncate font-medium flex-1 leading-tight">
-                            {event.title}
-                          </div>
-                          {canEdit && (
-                            <div className="w-1 h-1 bg-primary/60 rounded-full flex-shrink-0" />
-                          )}
+                           <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-current rounded-full flex-shrink-0 opacity-70" />
+                           <div className="truncate font-medium flex-1 leading-tight">
+                             {event.title}
+                           </div>
+                           {canEdit && (
+                             <Badge variant="secondary" className="text-[8px] px-1 py-0 h-3 bg-primary/20 text-primary border-primary/30">
+                               EDIT
+                             </Badge>
+                           )}
                         </div>
                         <div className="text-[8px] sm:text-[10px] opacity-70 truncate mt-0.5">
                           {format(parseISO(event.start_date), 'h:mm a')}
