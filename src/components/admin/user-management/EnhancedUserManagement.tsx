@@ -248,7 +248,7 @@ export const EnhancedUserManagement = ({
         onSortByChange={setSortBy}
         sortOrder={sortOrder}
         onSortOrderChange={setSortOrder}
-        onCreateUser={() => setShowCreateForm(true)}
+        onCreateUser={() => setShowCreateForm(!showCreateForm)}
         onBulkOperations={() => setShowBulkPanel(true)}
         onRefresh={onRefetch}
         userCount={users.length}
