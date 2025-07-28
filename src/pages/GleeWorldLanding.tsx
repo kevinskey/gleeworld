@@ -27,6 +27,7 @@ import {
   Play
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { PublicLayout } from "@/components/layout/PublicLayout";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -225,237 +226,17 @@ export const GleeWorldLanding = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <PublicLayout>
       {/* Audition Hover Card */}
       <AuditionHoverCard />
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-white/20 shadow-lg sticky top-0 z-50">
-        <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-3">
-          <div className="flex items-center justify-between h-full">
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <Link to="/landing" className="flex items-center space-x-2 sm:space-x-3 hover:opacity-80 transition-opacity">
-                <img 
-                  src="/lovable-uploads/a07cfbb7-b3ac-4674-acd9-4a037296a3f7.png" 
-                  alt="Spelman College Glee Club"
-                  className="h-10 sm:h-12 md:h-14 w-auto brightness-110"
-                />
-                <div className="hidden sm:block">
-                  <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">GleeWorld</h1>
-                  <p className="text-xs text-gray-600">Spelman College</p>
-                </div>
-              </Link>
-            </div>
-            
-            {/* Countdown Timer */}
-            <CountdownTimer />
-            
-            {/* Desktop Navigation */}
-            <NavigationMenu className="hidden md:flex">
-              <NavigationMenuList className="space-x-0.5 md:space-x-1">
-                <NavigationMenuItem>
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()} href="#home">
-                    Home
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()} asChild>
-                    <Link to="/about">
-                      About
-                    </Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Events</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <div className="grid gap-3 p-4 w-[400px]">
-                      <NavigationMenuLink asChild>
-                        <Link
-                          to="/public-calendar"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                        >
-                          <div className="text-sm font-medium leading-none">Calendar</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            View upcoming performances and events
-                          </p>
-                        </Link>
-                      </NavigationMenuLink>
-                      <NavigationMenuLink asChild>
-                        <a
-                          href="#events"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                        >
-                          <div className="text-sm font-medium leading-none">Upcoming Events</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            See what's happening this season
-                          </p>
-                        </a>
-                      </NavigationMenuLink>
-                    </div>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Media</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <div className="grid gap-3 p-4 w-[400px]">
-                      <NavigationMenuLink asChild>
-                        <a
-                          href="#music"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                        >
-                          <div className="text-sm font-medium leading-none">Music</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            Listen to our latest recordings
-                          </p>
-                        </a>
-                      </NavigationMenuLink>
-                      <NavigationMenuLink asChild>
-                        <a
-                          href="#videos"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                        >
-                          <div className="text-sm font-medium leading-none">Videos</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            Watch our performances
-                          </p>
-                        </a>
-                      </NavigationMenuLink>
-                      <NavigationMenuLink asChild>
-                        <Link
-                          to="/press-kit"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                        >
-                          <div className="text-sm font-medium leading-none">Press Kit</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            Media resources and information
-                          </p>
-                        </Link>
-                      </NavigationMenuLink>
-                    </div>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()} href="#contact">
-                    Contact
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
-
-            {/* Desktop Auth Actions */}
-            <div className="hidden md:flex items-center space-x-3">
-              {user ? (
-                <Link to="/dashboard">
-                  <Button size="sm" className="bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground">Dashboard</Button>
-                </Link>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <Link to="/auth">
-                    <Button variant="outline" size="sm" className="border-primary/50 bg-background/90 backdrop-blur-md hover:bg-primary hover:text-primary-foreground text-primary">Sign Up</Button>
-                  </Link>
-                  <Link to="/auth">
-                    <Button size="sm" className="bg-primary backdrop-blur-md hover:bg-primary/90 text-primary-foreground">Login</Button>
-                  </Link>
-                </div>
-              )}
-            </div>
-            
-            {/* Mobile Navigation Button */}
-            <button 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden flex items-center justify-center w-10 h-10 rounded-md bg-white/20 backdrop-blur-md border border-white/30 text-gray-700 hover:text-gray-900 transition-all duration-200 hover:scale-105"
-              aria-label="Toggle mobile menu"
-              aria-expanded={mobileMenuOpen}
-            >
-              {mobileMenuOpen ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <MusicStaffIcon className="w-6 h-6" size={24} />
-              )}
-            </button>
-          </div>
-        </div>
-        
-        {/* Mobile Navigation Overlay */}
-        {mobileMenuOpen && (
-          <>
-            {/* Backdrop */}
-            <div 
-              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
-              onClick={() => setMobileMenuOpen(false)}
-            />
-            
-            {/* Mobile Menu */}
-            <div className="absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md border-b border-white/20 shadow-xl z-50 md:hidden animate-slide-in-right">
-              <div className="max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
-                <nav className="flex flex-col space-y-1 py-4">
-                  <a 
-                    href="#home" 
-                    className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/50 hover:scale-105"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Home
-                  </a>
-                  <Link 
-                    to="/about" 
-                    className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/50 hover:scale-105"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    About
-                  </Link>
-                  <Link 
-                    to="/public-calendar" 
-                    className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/50 hover:scale-105"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Calendar
-                  </Link>
-                  <Link 
-                    to="/press-kit" 
-                    className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/50 hover:scale-105"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Press Kit
-                  </Link>
-                  <a 
-                    href="#contact" 
-                    className="text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium px-4 py-3 rounded-lg hover:bg-white/50 hover:scale-105"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Contact
-                  </a>
-                  
-                  {/* Mobile Auth Actions */}
-                  <div className="border-t border-white/30 pt-4 mt-2">
-                    {user ? (
-                      <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                        <Button className="w-full bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground transition-all duration-200 hover:scale-105">
-                          Dashboard
-                        </Button>
-                      </Link>
-                    ) : (
-                      <div className="flex flex-col space-y-3">
-                        <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                          <Button variant="outline" className="w-full border-primary/30 text-primary hover:bg-primary/10 transition-all duration-200 hover:scale-105">
-                            Sign In
-                          </Button>
-                        </Link>
-                        <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                          <Button className="w-full bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground transition-all duration-200 hover:scale-105">
-                            Join Us
-                          </Button>
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                </nav>
-              </div>
-            </div>
-          </>
-        )}
-      </header>
 
       {/* FAQ Slider Section */}
       <FAQSlider />
+      
+      {/* Countdown Timer */}
+      <div className="flex justify-center py-4">
+        <CountdownTimer />
+      </div>
 
       {/* Hero Section */}
       <section className="pt-4 pb-6 px-0.5 sm:px-1 md:px-1.5 lg:px-3.5">
@@ -916,6 +697,6 @@ export const GleeWorldLanding = () => {
           </Card>
         </div>
       </section>
-    </div>
+    </PublicLayout>
   );
 };

@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Download, ExternalLink, Mail, Phone, Instagram, Facebook, Twitter, Youtube } from "lucide-react";
 
 const PressKit = () => {
@@ -42,7 +42,7 @@ const PressKit = () => {
   ];
 
   return (
-    <UniversalLayout>
+    <PublicLayout>
       <div className="space-y-12">
         {/* Header */}
         <div className="text-center space-y-6">
@@ -290,7 +290,7 @@ const PressKit = () => {
           </CardContent>
         </Card>
       </div>
-    </UniversalLayout>
+    </PublicLayout>
   );
 };
 

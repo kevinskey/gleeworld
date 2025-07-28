@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { PublicLayout } from "@/components/layout/PublicLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -190,7 +190,7 @@ export const Shop = () => {
   };
 
   return (
-    <UniversalLayout>
+    <PublicLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
@@ -424,6 +424,6 @@ export const Shop = () => {
           </div>
         )}
       </div>
-    </UniversalLayout>
+    </PublicLayout>
   );
 };
