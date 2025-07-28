@@ -9,6 +9,7 @@ import { User } from "@/hooks/useUsers";
 import { UserActionBar } from "./UserActionBar";
 import { UserCard } from "./UserCard";
 import { ComprehensiveUserForm } from "./ComprehensiveUserForm";
+import { MobileUserForm } from "./MobileUserForm";
 import { UserDetailPanel } from "./UserDetailPanel";
 import { BulkOperationsPanel } from "./BulkOperationsPanel";
 import { Users, RefreshCw, UserPlus } from "lucide-react";
@@ -265,11 +266,20 @@ export const EnhancedUserManagement = ({
               <UserPlus className="h-5 w-5" />
               Add New User
             </div>
-            <ComprehensiveUserForm
-              mode="create"
-              onSuccess={handleCreateSuccess}
-              onCancel={() => setShowCreateForm(false)}
-            />
+            <div className="block md:hidden">
+              <MobileUserForm
+                mode="create"
+                onSuccess={handleCreateSuccess}
+                onCancel={() => setShowCreateForm(false)}
+              />
+            </div>
+            <div className="hidden md:block">
+              <ComprehensiveUserForm
+                mode="create"
+                onSuccess={handleCreateSuccess}
+                onCancel={() => setShowCreateForm(false)}
+              />
+            </div>
           </div>
         )}
 
