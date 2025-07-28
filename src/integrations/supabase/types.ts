@@ -6971,6 +6971,10 @@ export type Database = {
         Args: { target_user_id: string; new_role: string; reason?: string }
         Returns: boolean
       }
+      trigger_scholarship_update: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       update_user_role: {
         Args: { user_id: string; new_role: string }
         Returns: boolean
