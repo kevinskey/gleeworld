@@ -22,7 +22,7 @@ import { Shield, Users, Settings, FileText, Activity, Receipt, Calculator, Mail,
 import { MusicManagement } from "./admin/MusicManagement";
 import { ExecutiveBoardManager } from "./admin/ExecutiveBoardManager";
 import { ProductManager } from "./admin/ProductManager";
-import { SquareIntegration } from "./admin/SquareIntegration";
+// Square integration removed - using Stripe instead
 
 interface AdminPanelProps {
   activeTab?: string;
@@ -113,8 +113,6 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
                   </Button>
                 </div>
               </div>
-              
-              <SquareIntegration />
             </div>
           </>
         );

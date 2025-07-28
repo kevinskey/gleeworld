@@ -23,6 +23,9 @@ import AlumnaeLegacyLounge from "@/pages/AlumnaeLegacyLounge";
 import AlumnaeStorySubmission from "@/pages/AlumnaeStorySubmission";
 import AlumnaeMessages from "@/pages/AlumnaeMessages";
 import AlumnaeAdmin from "@/pages/admin/AlumnaeAdmin";
+import { Shop } from "@/pages/Shop";
+import { Checkout } from "@/pages/Checkout";
+import { Success } from "@/pages/shop/Success";
 
 export const router = createBrowserRouter([
   {
@@ -112,6 +115,18 @@ export const router = createBrowserRouter([
   {
     path: "/admin/alumnae",
     element: <AlumnaeAdmin />,
+  },
+  {
+    path: "/shop",
+    element: <Shop />,
+  },
+  {
+    path: "/checkout",
+    element: <Checkout />,
+  },
+  {
+    path: "/shop/success",
+    element: <Success />,
   },
   {
     path: "*",

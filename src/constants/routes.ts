@@ -17,7 +17,11 @@ export const ROUTES = {
   TOUR_MANAGER: '/tour-manager',
   ATTENDANCE: '/attendance',
   SCHOLARSHIPS: '/scholarships',
-  ADMIN_SCHOLARSHIPS: '/admin/scholarships'
+  ADMIN_SCHOLARSHIPS: '/admin/scholarships',
+  
+  SHOP: '/shop',
+  CHECKOUT: '/checkout',
+  SHOP_SUCCESS: '/shop/success'
 } as const;
 
 export const PROTECTED_ROUTES = [
@@ -39,5 +43,8 @@ export const PUBLIC_ROUTES = [
   ROUTES.AUTH,
   ROUTES.CONTRACT_SIGNING,
   ROUTES.W9_FORM,
-  ROUTES.CALENDAR
+  ROUTES.CALENDAR,
+  ROUTES.SHOP,
+  ROUTES.CHECKOUT,
+  ROUTES.SHOP_SUCCESS
 ] as const;
