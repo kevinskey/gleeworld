@@ -8,13 +8,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Globe, Clock, Trash2, Play, Edit3 } from 'lucide-react';
+import { Plus, Globe, Clock, Trash2, Play, Edit3, Upload, CheckCircle, XCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { formatDistanceToNow } from 'date-fns';
+import { Progress } from '@/components/ui/progress';
 
 export const ScholarshipSourceManager = () => {
   const { sources, loading, createSource, updateSource, deleteSource, triggerScrape } = useScholarshipSources();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showBulkAdd, setShowBulkAdd] = useState(false);
   const [editingSource, setEditingSource] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -22,6 +24,12 @@ export const ScholarshipSourceManager = () => {
     description: '',
     scrape_frequency_hours: 24,
   });
+  
+  // Bulk add state
+  const [bulkUrls, setBulkUrls] = useState('');
+  const [bulkProcessing, setBulkProcessing] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState(0);
+  const [bulkResults, setBulkResults] = useState<Array<{url: string, success: boolean, name?: string, error?: string}>>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +76,74 @@ export const ScholarshipSourceManager = () => {
     });
   };
 
+  // Bulk add functionality
+  const extractNameFromUrl = (url: string): string => {
+    try {
+      const domain = new URL(url).hostname.replace('www.', '');
+      return domain.split('.')[0].replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    } catch {
+      return 'Unknown Source';
+    }
+  };
+
+  const handleBulkAdd = async () => {
+    const urls = bulkUrls
+      .split('\n')
+      .map(url => url.trim())
+      .filter(url => url.length > 0)
+      .filter(url => {
+        try {
+          new URL(url);
+          return true;
+        } catch {
+          return false;
+        }
+      });
+
+    if (urls.length === 0) return;
+
+    setBulkProcessing(true);
+    setBulkProgress(0);
+    setBulkResults([]);
+
+    const results: Array<{url: string, success: boolean, name?: string, error?: string}> = [];
+
+    for (let i = 0; i < urls.length; i++) {
+      const url = urls[i];
+      const name = extractNameFromUrl(url);
+      
+      try {
+        await createSource({
+          name,
+          url,
+          description: `Auto-added from bulk import`,
+          scrape_frequency_hours: 24,
+        });
+        
+        results.push({ url, success: true, name });
+      } catch (error: any) {
+        results.push({ 
+          url, 
+          success: false, 
+          name, 
+          error: error.message || 'Failed to add source' 
+        });
+      }
+      
+      setBulkProgress((i + 1) / urls.length * 100);
+      setBulkResults([...results]);
+    }
+
+    setBulkProcessing(false);
+  };
+
+  const handleBulkCancel = () => {
+    setShowBulkAdd(false);
+    setBulkUrls('');
+    setBulkResults([]);
+    setBulkProgress(0);
+  };
+
   const toggleSourceActive = async (sourceId: string, isActive: boolean) => {
     await updateSource(sourceId, { is_active: !isActive });
   };
@@ -102,6 +178,14 @@ export const ScholarshipSourceManager = () => {
             >
               <Plus className="h-4 w-4" />
               Add Source
+            </Button>
+            <Button
+              onClick={() => setShowBulkAdd(true)}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Bulk Add URLs
             </Button>
             <Button
               onClick={triggerScrape}
@@ -178,6 +262,94 @@ export const ScholarshipSourceManager = () => {
                     </Button>
                   </div>
                 </form>
+              </CardContent>
+            </Card>
+          )}
+
+          {showBulkAdd && (
+            <Card className="border-2 border-dashed border-blue-200">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Upload className="h-5 w-5" />
+                  Bulk Add URLs
+                </CardTitle>
+                <CardDescription>
+                  Add multiple scholarship source URLs at once. Paste one URL per line.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="bulkUrls">Scholarship Source URLs</Label>
+                  <Textarea
+                    id="bulkUrls"
+                    value={bulkUrls}
+                    onChange={(e) => setBulkUrls(e.target.value)}
+                    placeholder={`https://www.gatesfoundation.org/scholarships
+https://www.collegeboard.org/pay-for-college/scholarship-search
+https://www.fastweb.com/college-scholarships
+https://www.scholarships.com/financial-aid/college-scholarships`}
+                    rows={8}
+                    disabled={bulkProcessing}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Source names will be automatically generated from URLs
+                  </p>
+                </div>
+
+                {bulkProcessing && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Processing URLs...</span>
+                      <span>{Math.round(bulkProgress)}%</span>
+                    </div>
+                    <Progress value={bulkProgress} className="w-full" />
+                  </div>
+                )}
+
+                {bulkResults.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Results:</h4>
+                    <div className="max-h-40 overflow-y-auto space-y-1">
+                      {bulkResults.map((result, index) => (
+                        <div key={index} className="flex items-center gap-2 text-sm p-2 rounded bg-muted">
+                          {result.success ? (
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-red-500" />
+                          )}
+                          <div className="flex-1">
+                            <span className="font-medium">{result.name}</span>
+                            <div className="text-xs text-muted-foreground truncate">
+                              {result.url}
+                            </div>
+                            {result.error && (
+                              <div className="text-xs text-red-500">
+                                {result.error}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleBulkAdd}
+                    disabled={bulkProcessing || !bulkUrls.trim()}
+                  >
+                    {bulkProcessing ? 'Processing...' : 'Add All URLs'}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={handleBulkCancel}
+                    disabled={bulkProcessing}
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
