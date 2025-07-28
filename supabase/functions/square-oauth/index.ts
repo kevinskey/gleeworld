@@ -34,7 +34,9 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Square OAuth request received:', { action: req.url });
     const { action, redirectUri, code, state }: TokenRequest = await req.json();
+    console.log('Parsed request:', { action, redirectUri, squareEnvironment, squareAppId: squareAppId ? 'SET' : 'NOT SET' });
 
     if (action === 'get_auth_url') {
       // Generate OAuth URL for Square authorization
@@ -60,6 +62,10 @@ serve(async (req) => {
       authUrl.searchParams.set('state', authState);
       authUrl.searchParams.set('response_type', 'code');
       authUrl.searchParams.set('redirect_uri', redirectUri);
+
+      console.log('Generated auth URL:', authUrl.toString());
+      console.log('Using environment:', squareEnvironment);
+      console.log('Using base URL:', baseUrl);
 
       return new Response(JSON.stringify({
         success: true,
