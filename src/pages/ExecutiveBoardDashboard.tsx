@@ -36,6 +36,7 @@ import { ProgressLog } from "@/components/executive-board/ProgressLog";
 import { CommunicationHub } from "@/components/executive-board/CommunicationHub";
 import { MusicLibraryViewer } from "@/components/executive-board/MusicLibraryViewer";
 import { PositionTab } from "@/components/executive-board/PositionTab";
+import { CalendarViews } from "@/components/calendar/CalendarViews";
 
 export type ExecutivePosition = 
   | 'president'
@@ -315,17 +316,7 @@ export const ExecutiveBoardDashboard = () => {
           </TabsContent>
 
           <TabsContent value="calendar">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  Event Calendar
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Calendar integration coming soon...</p>
-              </CardContent>
-            </Card>
+            <CalendarViews />
           </TabsContent>
 
           <TabsContent value="announcements">
