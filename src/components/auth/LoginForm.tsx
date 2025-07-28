@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Chrome, Apple } from "lucide-react";
+import { Loader2, Chrome } from "lucide-react";
 import { useSecurityEnhanced } from "@/hooks/useSecurityEnhanced";
 
 interface LoginFormProps {
@@ -57,24 +57,6 @@ export const LoginForm = ({ onSwitchToForgot }: LoginFormProps) => {
     }
   };
 
-  const handleAppleSignIn = async () => {
-    setSocialLoading('apple');
-    setError("");
-    
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'apple',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`
-        }
-      });
-
-      if (error) throw error;
-    } catch (error: any) {
-      setError(error.message || "Failed to sign in with Apple");
-      setSocialLoading(null);
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -99,21 +81,6 @@ export const LoginForm = ({ onSwitchToForgot }: LoginFormProps) => {
             <Chrome className="mr-2 h-4 w-4" />
           )}
           {socialLoading === 'google' ? 'Connecting...' : 'Continue with Google'}
-        </Button>
-        
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={handleAppleSignIn}
-          disabled={loading || socialLoading !== null}
-        >
-          {socialLoading === 'apple' ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Apple className="mr-2 h-4 w-4" />
-          )}
-          {socialLoading === 'apple' ? 'Connecting...' : 'Continue with Apple'}
         </Button>
       </div>
 

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useSecurityEnhanced } from "@/hooks/useSecurityEnhanced";
-import { Loader2, Users, Heart, Chrome, Apple } from "lucide-react";
+import { Loader2, Users, Heart, Chrome } from "lucide-react";
 
 export const SignupForm = () => {
   const [searchParams] = useSearchParams();
@@ -84,24 +84,6 @@ export const SignupForm = () => {
     }
   };
 
-  const handleAppleSignUp = async () => {
-    setSocialLoading('apple');
-    setError("");
-    
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'apple',
-        options: {
-          redirectTo: `${window.location.origin}${isFanSignup ? '/public-calendar' : '/dashboard'}`
-        }
-      });
-
-      if (error) throw error;
-    } catch (error: any) {
-      setError(error.message || "Failed to sign up with Apple");
-      setSocialLoading(null);
-    }
-  };
 
   if (success) {
     return (
@@ -152,21 +134,6 @@ export const SignupForm = () => {
             <Chrome className="mr-2 h-4 w-4" />
           )}
           {socialLoading === 'google' ? 'Connecting...' : 'Sign up with Google'}
-        </Button>
-        
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={handleAppleSignUp}
-          disabled={loading || socialLoading !== null}
-        >
-          {socialLoading === 'apple' ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Apple className="mr-2 h-4 w-4" />
-          )}
-          {socialLoading === 'apple' ? 'Connecting...' : 'Sign up with Apple'}
         </Button>
       </div>
 
