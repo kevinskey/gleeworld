@@ -65,14 +65,31 @@ Deno.serve(async (req) => {
           onlyMainContent: true
         })
 
+        console.log(`Scrape result for ${source.name}:`, {
+          success: crawlResult.success,
+          hasData: !!crawlResult.data,
+          markdownLength: crawlResult.data?.markdown?.length || 0,
+          htmlLength: crawlResult.data?.html?.length || 0
+        })
+
         if (!crawlResult.success) {
           console.error(`Failed to scrape ${source.url}:`, crawlResult.error)
+          continue
+        }
+
+        if (!crawlResult.data) {
+          console.log(`No data returned for ${source.name}`)
           continue
         }
 
         // Extract scholarship information from the scraped content
         const scholarships = await extractScholarshipData(crawlResult.data, source)
         console.log(`Extracted ${scholarships.length} scholarships from ${source.name}`)
+        
+        if (scholarships.length === 0) {
+          console.log(`No scholarships found in content from ${source.name}. Content preview:`)
+          console.log(crawlResult.data.markdown?.substring(0, 500) || crawlResult.data.html?.substring(0, 500) || 'No content')
+        }
 
         // Process and save scholarships
         for (const scholarship of scholarships) {
