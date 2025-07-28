@@ -9,6 +9,7 @@ import { Mic, ArrowLeft, ArrowRight } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { AuditionFormProvider, useAuditionForm, AuditionFormData } from "@/components/audition/AuditionFormProvider";
 import { AuditionFormProgress } from "@/components/audition/AuditionFormProgress";
+import { RegistrationPage } from "@/components/audition/pages/RegistrationPage";
 import { BasicInfoPage } from "@/components/audition/pages/BasicInfoPage";
 import { MusicalBackgroundPage } from "@/components/audition/pages/MusicalBackgroundPage";
 import { MusicSkillsPage } from "@/components/audition/pages/MusicSkillsPage";
@@ -84,25 +85,44 @@ function AuditionFormContent() {
   };
 
   const renderCurrentPage = () => {
-    switch (currentPage) {
-      case 1:
-        return <BasicInfoPage />;
-      case 2:
-        return <MusicalBackgroundPage />;
-      case 3:
-        return <MusicSkillsPage />;
-      case 4:
-        return <PersonalInfoPage />;
-      case 5:
-        return <SchedulingAndSelfiePage />;
-      default:
-        return <BasicInfoPage />;
+    if (!user) {
+      // Flow for non-authenticated users
+      switch (currentPage) {
+        case 1:
+          return <RegistrationPage />;
+        case 2:
+          return <BasicInfoPage />;
+        case 3:
+          return <MusicalBackgroundPage />;
+        case 4:
+          return <MusicSkillsPage />;
+        case 5:
+          return <PersonalInfoPage />;
+        case 6:
+          return <SchedulingAndSelfiePage />;
+        default:
+          return <RegistrationPage />;
+      }
+    } else {
+      // Flow for authenticated users
+      switch (currentPage) {
+        case 1:
+          return <BasicInfoPage />;
+        case 2:
+          return <MusicalBackgroundPage />;
+        case 3:
+          return <MusicSkillsPage />;
+        case 4:
+          return <PersonalInfoPage />;
+        case 5:
+          return <SchedulingAndSelfiePage />;
+        default:
+          return <BasicInfoPage />;
+      }
     }
   };
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
+  // Allow access for both authenticated and non-authenticated users
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-8">
@@ -163,12 +183,6 @@ function AuditionFormContent() {
 }
 
 export default function AuditionPage() {
-  const { user } = useAuth();
-
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
   return (
     <AuditionFormProvider>
       <AuditionFormContent />

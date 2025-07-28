@@ -1,11 +1,20 @@
 import { useAuditionForm } from "./AuditionFormProvider";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 
 export function AuditionFormProgress() {
   const { currentPage, totalPages } = useAuditionForm();
+  const { user } = useAuth();
 
-  const pageNames = [
+  const pageNames = user ? [
+    "Basic Info",
+    "Musical Background", 
+    "Music Skills",
+    "Personal Info",
+    "Schedule & Photo"
+  ] : [
+    "Create Account",
     "Basic Info",
     "Musical Background", 
     "Music Skills",

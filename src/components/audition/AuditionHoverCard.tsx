@@ -13,7 +13,7 @@ export const AuditionHoverCard = () => {
   if (isMobile) {
     return (
       <div className="fixed top-16 left-4 right-4 z-40 max-w-[calc(100vw-2rem)]">
-        <Link to={user ? "/auditions" : "/auth?redirect=/auditions"}>
+        <Link to="/auditions">
           <Button 
             variant="branded" 
             size="sm"
@@ -31,7 +31,7 @@ export const AuditionHoverCard = () => {
   // Desktop version with hover card
   return (
     <div className="fixed top-32 left-1/2 transform -translate-x-1/2 z-40">
-      <Link to={user ? "/auditions" : "/auth?redirect=/auditions"}>
+      <Link to="/auditions">
         <Button 
           variant="branded" 
           size="lg"

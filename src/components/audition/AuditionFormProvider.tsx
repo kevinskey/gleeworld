@@ -2,12 +2,18 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useForm, UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const auditionSchema = z.object({
+  // Registration info (for new users)
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters").optional(),
+  confirmPassword: z.string().optional(),
+  
   // Basic info
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email address"),
   phone: z.string().min(10, "Please enter a valid phone number"),
   
   // Musical background
@@ -33,6 +39,15 @@ const auditionSchema = z.object({
   // Audition scheduling
   auditionDate: z.date({ required_error: "Please select an audition date" }),
   auditionTime: z.string({ required_error: "Please select an audition time" }),
+}).refine((data) => {
+  // Only require password confirmation for new registrations
+  if (data.password) {
+    return data.password === data.confirmPassword;
+  }
+  return true;
+}, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
 export type AuditionFormData = z.infer<typeof auditionSchema>;
@@ -47,6 +62,8 @@ interface AuditionFormContextType {
   nextPage: () => void;
   previousPage: () => void;
   canProceed: () => boolean;
+  isNewUser: boolean;
+  setIsNewUser: (isNew: boolean) => void;
 }
 
 const AuditionFormContext = createContext<AuditionFormContextType | undefined>(undefined);
@@ -66,11 +83,19 @@ interface AuditionFormProviderProps {
 export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const totalPages = 5;
+  const [isNewUser, setIsNewUser] = useState(false);
+  const { user } = useAuth();
+  const totalPages = user ? 5 : 6; // Add registration page for non-users
 
   const form = useForm<AuditionFormData>({
     resolver: zodResolver(auditionSchema),
     defaultValues: {
+      email: user?.email || "",
+      firstName: "",
+      lastName: "",
+      phone: "",
+      password: "",
+      confirmPassword: "",
       sangInMiddleSchool: false,
       sangInHighSchool: false,
       playsInstrument: false,
@@ -98,15 +123,30 @@ export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
     const values = form.getValues();
     
     switch (currentPage) {
-      case 1: // Basic Information
+      case 1: // Registration (for new users) or Basic Info (for existing users)
+        if (!user && isNewUser) {
+          return !!(values.email && values.password && values.confirmPassword && 
+                   values.password === values.confirmPassword);
+        }
         return !!(values.firstName && values.lastName && values.email && values.phone);
-      case 2: // Musical Background
+      case 2: // Basic Information (for new users) or Musical Background (for existing users)
+        if (!user) {
+          return !!(values.firstName && values.lastName && values.phone);
+        }
+        return true; // Musical background - all optional
+      case 3: // Musical Background or Music Skills
         return true; // All fields are optional or conditional
-      case 3: // Music Skills & Interests
-        return true; // All fields are optional
-      case 4: // Personal Information
+      case 4: // Music Skills or Personal Info
+        if (!user) {
+          return true; // Music skills for new users
+        }
         return !!(values.personalityDescription && values.personalityDescription.length >= 10);
-      case 5: // Selfie & Scheduling
+      case 5: // Personal Info or Selfie & Scheduling
+        if (!user) {
+          return !!(values.personalityDescription && values.personalityDescription.length >= 10);
+        }
+        return !!(values.auditionDate && values.auditionTime && capturedImage);
+      case 6: // Selfie & Scheduling (for new users only)
         return !!(values.auditionDate && values.auditionTime && capturedImage);
       default:
         return false;
@@ -123,6 +163,8 @@ export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
     nextPage,
     previousPage,
     canProceed,
+    isNewUser,
+    setIsNewUser,
   };
 
   return (
