@@ -66,10 +66,38 @@ export const UserCard = ({
 
   return (
     <Card className="hover:bg-slate-50 transition-colors border-2 hover:border-slate-300 shadow-sm">
-      <CardContent className="p-4">
+      <CardContent className="p-4 relative">
+        {/* Action Menu - Top Right */}
+        <div className="absolute top-3 right-3 z-10">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-slate-100">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" side="bottom" sideOffset={4} className="w-48 bg-white shadow-lg border z-50">
+              <DropdownMenuItem onClick={() => onView(user)}>
+                <Eye className="h-4 w-4 mr-2" />
+                View Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(user)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit User
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onDelete(user)}
+                className="text-red-600"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete User
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
         {/* Main User Info - Clickable */}
         <div 
-          className={`flex items-start gap-3 ${onClick ? 'cursor-pointer' : ''}`}
+          className={`flex items-start gap-3 pr-10 ${onClick ? 'cursor-pointer' : ''}`}
           onClick={() => onClick?.(user)}
         >
           <Avatar className="h-14 w-14 border-2 border-slate-300 shadow-md flex-shrink-0 ring-2 ring-slate-100">
@@ -109,59 +137,30 @@ export const UserCard = ({
           </div>
         </div>
 
-        {/* Action Section */}
-        <div className="flex items-center justify-between mt-4 pt-3 border-t">
-          {/* Payment Status */}
-          {showPaymentStatus && (
-            <div className="flex items-center gap-2">
-              {isPaid ? (
-                <Badge variant="default" className="bg-green-600 text-white">
-                  <DollarSign className="h-3 w-3 mr-1" />
-                  PAID
-                </Badge>
-              ) : stipendAmount ? (
-                <Button
-                  size="sm"
-                  variant="default"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onPayout?.(user);
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <DollarSign className="h-3 w-3 mr-1" />
-                  {formatCurrency(stipendAmount)}
-                </Button>
-              ) : null}
-            </div>
-          )}
-
-          {/* Action Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" side="bottom" sideOffset={4} className="w-48">
-              <DropdownMenuItem onClick={() => onView(user)}>
-                <Eye className="h-4 w-4 mr-2" />
-                View Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onEdit(user)}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit User
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => onDelete(user)}
-                className="text-red-600"
+        {/* Payment Status Section */}
+        {showPaymentStatus && (
+          <div className="flex items-center gap-2 mt-4 pt-3 border-t">
+            {isPaid ? (
+              <Badge variant="default" className="bg-green-600 text-white">
+                <DollarSign className="h-3 w-3 mr-1" />
+                PAID
+              </Badge>
+            ) : stipendAmount ? (
+              <Button
+                size="sm"
+                variant="default"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPayout?.(user);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
               >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete User
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+                <DollarSign className="h-3 w-3 mr-1" />
+                {formatCurrency(stipendAmount)}
+              </Button>
+            ) : null}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
