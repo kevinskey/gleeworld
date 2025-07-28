@@ -314,77 +314,77 @@ export const UserDashboard = () => {
                 <CardDescription className="hidden sm:block">Access your most-used features</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                   <EnhancedTooltip content="View your attendance records and manage attendance">
                     <Button 
-                      className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
+                      className="h-14 sm:h-16 md:h-20 flex-col space-y-0.5 sm:space-y-1 md:space-y-2 text-xs sm:text-sm w-full px-1 sm:px-3" 
                       variant="outline"
                       onClick={() => navigate('/attendance')}
                     >
-                      <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6" />
-                      <span className="text-center leading-tight">Attendance</span>
+                      <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                      <span className="text-center leading-tight text-[10px] sm:text-xs md:text-sm">Attendance</span>
                     </Button>
                   </EnhancedTooltip>
                   <EnhancedTooltip content="View calendar and events">
                     <Button 
-                      className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
+                      className="h-14 sm:h-16 md:h-20 flex-col space-y-0.5 sm:space-y-1 md:space-y-2 text-xs sm:text-sm w-full px-1 sm:px-3" 
                       variant="outline"
                       onClick={() => navigate('/calendar')}
                     >
-                      <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
-                      <span className="text-center leading-tight">Calendar</span>
+                      <Calendar className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                      <span className="text-center leading-tight text-[10px] sm:text-xs md:text-sm">Calendar</span>
                     </Button>
                   </EnhancedTooltip>
                   <EnhancedTooltip content="Send notification to yourself or others">
                     <Button 
-                      className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
+                      className="h-14 sm:h-16 md:h-20 flex-col space-y-0.5 sm:space-y-1 md:space-y-2 text-xs sm:text-sm w-full px-1 sm:px-3" 
                       variant="outline"
                       onClick={() => navigate('/notifications/send')}
                     >
-                      <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
-                      <span className="text-center leading-tight">Send Notification</span>
+                      <Bell className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                      <span className="text-center leading-tight text-[10px] sm:text-xs md:text-sm">Send<br className="sm:hidden"/>Notification</span>
                     </Button>
                   </EnhancedTooltip>
                   <EnhancedTooltip content="View announcements">
                     <Button 
-                      className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
+                      className="h-14 sm:h-16 md:h-20 flex-col space-y-0.5 sm:space-y-1 md:space-y-2 text-xs sm:text-sm w-full px-1 sm:px-3" 
                       variant="outline"
                       onClick={() => navigate('/announcements')}
                     >
-                      <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6" />
-                      <span className="text-center leading-tight">Announcements</span>
+                      <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                      <span className="text-center leading-tight text-[10px] sm:text-xs md:text-sm">Announcements</span>
                     </Button>
                   </EnhancedTooltip>
                   {isAdmin && (
                     <EnhancedTooltip content="Manage user accounts and permissions">
                       <Button 
-                        className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
+                        className="h-14 sm:h-16 md:h-20 flex-col space-y-0.5 sm:space-y-1 md:space-y-2 text-xs sm:text-sm w-full px-1 sm:px-3" 
                         variant="outline"
                         onClick={() => navigate('/dashboard?tab=users')}
                       >
-                        <Users className="h-5 w-5 sm:h-6 sm:w-6" />
-                        <span className="text-center leading-tight">Manage Users</span>
+                        <Users className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                        <span className="text-center leading-tight text-[10px] sm:text-xs md:text-sm">Manage<br className="sm:hidden"/>Users</span>
                       </Button>
                     </EnhancedTooltip>
                   )}
                   <EnhancedTooltip content="Manage budgets and financial planning">
                     <Button 
-                      className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
+                      className="h-14 sm:h-16 md:h-20 flex-col space-y-0.5 sm:space-y-1 md:space-y-2 text-xs sm:text-sm w-full px-1 sm:px-3" 
                       variant="outline"
                       onClick={() => navigate('/budgets')}
                     >
-                      <DollarSign className="h-5 w-5 sm:h-6 sm:w-6" />
-                      <span className="text-center leading-tight">Manage Budgets</span>
+                      <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                      <span className="text-center leading-tight text-[10px] sm:text-xs md:text-sm">Manage<br className="sm:hidden"/>Budgets</span>
                     </Button>
                   </EnhancedTooltip>
                   <EnhancedTooltip content="Access music library and sheet music">
                     <Button 
-                      className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full" 
+                      className="h-14 sm:h-16 md:h-20 flex-col space-y-0.5 sm:space-y-1 md:space-y-2 text-xs sm:text-sm w-full px-1 sm:px-3" 
                       variant="outline"
                       onClick={() => navigate('/music-library')}
                     >
-                      <Music className="h-5 w-5 sm:h-6 sm:w-6" />
-                      <span className="text-center leading-tight">Music Library</span>
+                      <Music className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                      <span className="text-center leading-tight text-[10px] sm:text-xs md:text-sm">Music<br className="sm:hidden"/>Library</span>
                     </Button>
                   </EnhancedTooltip>
                 </div>
@@ -427,18 +427,18 @@ export const UserDashboard = () => {
                       </Button>
                     </div>
                   )}
-                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                     {availableModules.slice(0, 8).map((module) => {
                       const IconComponent = module.icon;
                       return (
                         <EnhancedTooltip key={module.key} content={module.module.description}>
                           <Button
-                            className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full relative"
+                            className="h-14 sm:h-16 md:h-20 flex-col space-y-0.5 sm:space-y-1 md:space-y-2 text-xs sm:text-sm w-full relative px-1 sm:px-3"
                             variant="outline"
             onClick={() => navigate(`/dashboard?module=${module.key.replace(/_/g, '-')}`)}
           >
-                            <IconComponent className="h-5 w-5 sm:h-6 sm:w-6" />
-                            <span className="text-center leading-tight">{module.module.name}</span>
+                            <IconComponent className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                            <span className="text-center leading-tight text-[10px] sm:text-xs md:text-sm">{module.module.name}</span>
                             {module.source === 'username' && (
                               <div className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full" />
                             )}
@@ -516,48 +516,48 @@ export const UserDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                   <EnhancedTooltip content="Create events, budgets, and other executive board items">
                     <Button 
-                      className="h-20 flex-col space-y-2 text-sm w-full" 
+                      className="h-16 sm:h-18 md:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full px-1 sm:px-3" 
                       variant="outline"
                       onClick={() => navigate('/exec-board/create')}
                     >
-                      <Plus className="h-6 w-6" />
-                      <span className="text-center leading-tight">Create</span>
+                      <Plus className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                      <span className="text-center leading-tight text-[10px] sm:text-xs md:text-sm">Create</span>
                     </Button>
                   </EnhancedTooltip>
                   <EnhancedTooltip content="Manage ongoing events, budgets, and executive board activities">
                     <Button 
-                      className="h-20 flex-col space-y-2 text-sm w-full" 
+                      className="h-16 sm:h-18 md:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full px-1 sm:px-3" 
                       variant="outline"
                       onClick={() => navigate('/exec-board/manage')}
                     >
-                      <Settings className="h-6 w-6" />
-                      <span className="text-center leading-tight">Manage</span>
+                      <Settings className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                      <span className="text-center leading-tight text-[10px] sm:text-xs md:text-sm">Manage</span>
                     </Button>
                   </EnhancedTooltip>
                   <EnhancedTooltip content="Assess performance, review reports, and analyze executive board metrics">
                     <Button 
-                      className="h-20 flex-col space-y-2 text-sm w-full" 
+                      className="h-16 sm:h-18 md:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full px-1 sm:px-3" 
                       variant="outline"
                       onClick={() => navigate('/exec-board/assess')}
                     >
-                      <FileText className="h-6 w-6" />
-                      <span className="text-center leading-tight">Assess</span>
+                      <FileText className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                      <span className="text-center leading-tight text-[10px] sm:text-xs md:text-sm">Assess</span>
                     </Button>
                   </EnhancedTooltip>
                   <EnhancedTooltip content="View executive board members and access position pages">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button 
-                          className="h-20 flex-col space-y-2 text-sm w-full" 
+                          className="h-16 sm:h-18 md:h-20 flex-col space-y-1 sm:space-y-2 text-xs sm:text-sm w-full px-1 sm:px-3" 
                           variant="outline"
                         >
-                          <Users className="h-6 w-6" />
+                          <Users className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
                           <div className="flex items-center gap-1">
-                            <span className="text-center leading-tight">Members</span>
-                            <ChevronDown className="h-3 w-3" />
+                            <span className="text-center leading-tight text-[10px] sm:text-xs md:text-sm">Members</span>
+                            <ChevronDown className="h-2 w-2 sm:h-3 sm:w-3" />
                           </div>
                         </Button>
                       </DropdownMenuTrigger>
