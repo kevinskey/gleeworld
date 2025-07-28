@@ -167,7 +167,9 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
               <div className="space-y-0.5 md:space-y-1 mt-1">
                 {dayEvents.slice(0, isMobile ? 1 : 2).map(event => {
                   console.log('Rendering event:', event.title, 'for day:', day.toDateString());
+                  console.log('Event data:', { id: event.id, created_by: event.created_by, user_id: user?.id, user_role: user?.role });
                   const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
+                  console.log('Can edit?', canEdit, 'User:', user?.id, 'Event creator:', event.created_by, 'User role:', user?.role);
                   const isSelected = (editingEvent?.id === event.id) || (selectedEvent?.id === event.id);
                   return (
                     <EventHoverCard key={event.id} event={event} canEdit={canEdit}>
