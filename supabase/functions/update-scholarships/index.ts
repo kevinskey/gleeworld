@@ -151,103 +151,21 @@ Deno.serve(async (req) => {
 })
 
 async function fetchCollegeBoardScholarships(scholarships: ScholarshipData[]) {
-  // College Board scholarships (simulated data - replace with real scraping/API)
-  const collegeBoardScholarships = [
-    {
-      title: "College Board Opportunity Scholarships",
-      description: "Need-based scholarships for college planning and application completion.",
-      deadline: "2025-06-30",
-      amount: "$500 - $40,000",
-      eligibility: "High school students from low-income families",
-      tags: ["need-based", "college-prep", "diversity"],
-      link: "https://opportunity.collegeboard.org/",
-      source: "collegeboard"
-    }
-  ]
-
-  scholarships.push(...collegeBoardScholarships)
+  // No mock data - implement real API integration when needed
+  return
 }
 
 async function fetchFederalScholarships(scholarships: ScholarshipData[]) {
-  // Federal scholarships (could integrate with StudentAid.gov APIs)
-  const federalScholarships = [
-    {
-      title: "Federal Pell Grant",
-      description: "Need-based grant for undergraduate students who have not earned a bachelor's degree.",
-      deadline: "2025-06-30",
-      amount: "Up to $7,395",
-      eligibility: "Undergraduate students with exceptional financial need",
-      tags: ["federal", "need-based", "undergraduate"],
-      link: "https://studentaid.gov/understand-aid/types/grants/pell",
-      source: "federal"
-    },
-    {
-      title: "Federal Supplemental Educational Opportunity Grant (FSEOG)",
-      description: "Additional need-based funding for undergraduate students.",
-      deadline: "2025-06-30",
-      amount: "$100 - $4,000",
-      eligibility: "Undergraduate students with exceptional financial need",
-      tags: ["federal", "need-based", "undergraduate"],
-      link: "https://studentaid.gov/understand-aid/types/grants/fseog",
-      source: "federal"
-    }
-  ]
-
-  scholarships.push(...federalScholarships)
+  // No mock data - implement real API integration when needed
+  return
 }
 
 async function fetchFoundationScholarships(scholarships: ScholarshipData[]) {
-  // Foundation and private scholarships
-  const foundationScholarships = [
-    {
-      title: "United Negro College Fund (UNCF) Scholarships",
-      description: "Various merit and need-based scholarships for African American students.",
-      deadline: "2025-05-31",
-      amount: "$1,000 - $25,000",
-      eligibility: "African American students attending UNCF member schools",
-      tags: ["merit-based", "need-based", "african-american", "HBCU"],
-      link: "https://uncf.org/scholarships",
-      source: "uncf"
-    },
-    {
-      title: "Thurgood Marshall College Fund Scholarships",
-      description: "Scholarships for students at Historically Black Colleges and Universities.",
-      deadline: "2025-04-15",
-      amount: "$1,000 - $15,000",
-      eligibility: "Students enrolled at TMCF member HBCUs",
-      tags: ["HBCU", "merit-based", "african-american"],
-      link: "https://tmcf.org/our-scholarships",
-      source: "tmcf"
-    }
-  ]
-
-  scholarships.push(...foundationScholarships)
+  // No mock data - implement real API integration when needed
+  return
 }
 
 async function fetchHBCUScholarships(scholarships: ScholarshipData[]) {
-  // HBCU-specific scholarships
-  const hbcuScholarships = [
-    {
-      title: "HBCU Foundation Academic Excellence Scholarship",
-      description: "Merit-based scholarship for students attending Historically Black Colleges.",
-      deadline: "2025-03-31",
-      amount: "$2,500",
-      eligibility: "Students at HBCUs with 3.0+ GPA",
-      tags: ["HBCU", "merit-based", "academic"],
-      link: "https://hbcufoundation.org/scholarships",
-      source: "hbcu_foundation"
-    },
-    {
-      title: "Spelman College Alumnae Scholarship",
-      description: "Scholarship funded by Spelman College alumnae for current students.",
-      deadline: "2025-05-15",
-      amount: "$3,000",
-      eligibility: "Current Spelman College students with financial need",
-      tags: ["spelman", "alumnae", "need-based"],
-      link: "https://spelman.edu/academics/financial-aid/scholarships",
-      source: "spelman_alumnae"
-    }
-  ]
-
-  scholarships.push(...hbcuScholarships)
+  // No mock data - implement real API integration when needed
+  return
 }
