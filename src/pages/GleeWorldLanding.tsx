@@ -100,6 +100,7 @@ export const GleeWorldLanding = () => {
           supabase
             .from('gw_hero_slides')
             .select('*')
+            .eq('usage_context', 'homepage')
             .eq('is_active', true)
             .order('display_order', { ascending: true }),
           supabase
