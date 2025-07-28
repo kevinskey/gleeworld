@@ -157,10 +157,10 @@ const PressKit = () => {
               Press Kit
             </h1>
             <div className="max-w-5xl mx-auto px-8">
-              <p className="text-2xl md:text-3xl text-white/80 font-medium leading-relaxed">
-                Media resources for the <span className="text-white font-semibold">Spelman College Glee Club</span>
+              <p className="text-2xl md:text-3xl text-white/70 font-medium leading-relaxed">
+                Media resources for the <span className="text-blue-200 font-semibold">Spelman College Glee Club</span>
               </p>
-              <p className="text-2xl md:text-3xl text-white/80 font-medium mt-2">
+              <p className="text-2xl md:text-3xl text-white/70 font-medium mt-2">
                 Cultural ambassadors of musical excellence
               </p>
             </div>
@@ -179,19 +179,19 @@ const PressKit = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               <div className="text-center group hover:scale-105 transition-transform duration-300">
                 <div className="text-4xl font-bold text-primary mb-2 group-hover:text-secondary transition-colors">1924</div>
-                <div className="text-muted-foreground font-medium text-white/70">Founded</div>
+                <div className="text-white/60 font-medium">Founded</div>
               </div>
               <div className="text-center group hover:scale-105 transition-transform duration-300">
                 <div className="text-4xl font-bold text-primary mb-2 group-hover:text-secondary transition-colors">100+</div>
-                <div className="text-muted-foreground font-medium text-white/70">Years of Excellence</div>
+                <div className="text-white/60 font-medium">Years of Excellence</div>
               </div>
               <div className="text-center group hover:scale-105 transition-transform duration-300">
                 <div className="text-4xl font-bold text-primary mb-2 group-hover:text-secondary transition-colors">50+</div>
-                <div className="text-muted-foreground font-medium text-white/70">Talented Voices</div>
+                <div className="text-white/60 font-medium">Talented Voices</div>
               </div>
               <div className="text-center group hover:scale-105 transition-transform duration-300">
                 <div className="text-4xl font-bold text-primary mb-2 group-hover:text-secondary transition-colors">Global</div>
-                <div className="text-muted-foreground font-medium text-white/70">Global Recognition</div>
+                <div className="text-white/60 font-medium">Global Recognition</div>
               </div>
             </div>
           </CardContent>
@@ -206,15 +206,15 @@ const PressKit = () => {
                 <Globe className="h-6 w-6 text-primary mr-3" />
                 <h2 className="text-2xl font-playfair font-bold text-white">About the Glee Club</h2>
               </div>
-              <div className="space-y-4 text-white/80 leading-relaxed">
+              <div className="space-y-4 text-white/70 leading-relaxed">
                 <p>
-                  The <span className="text-white font-semibold">Spelman College Glee Club</span>, established in 1924, stands as one of the most prestigious collegiate choral ensembles in the world. For nearly a century, we have been dedicated to the preservation and presentation of the rich musical heritage of African Americans while embracing diverse musical traditions.
+                  The <span className="text-blue-200 font-semibold">Spelman College Glee Club</span>, established in 1924, stands as one of the most prestigious collegiate choral ensembles in the world. For nearly a century, we have been dedicated to the preservation and presentation of the rich musical heritage of African Americans while embracing diverse musical traditions.
                 </p>
                 <p>
-                  Our ensemble consists of approximately <span className="text-white font-semibold">50 talented young women</span> who represent the finest in vocal artistry and academic excellence. Under expert direction, the Glee Club maintains the highest standards of musical performance while fostering leadership, sisterhood, and cultural awareness.
+                  Our ensemble consists of approximately <span className="text-yellow-200 font-semibold">50 talented young women</span> who represent the finest in vocal artistry and academic excellence. Under expert direction, the Glee Club maintains the highest standards of musical performance while fostering leadership, sisterhood, and cultural awareness.
                 </p>
                 <p>
-                  From performing at the <span className="text-white font-semibold">White House</span> to international concert tours, the Spelman College Glee Club continues to be ambassadors of musical excellence, carrying forward a legacy of artistic distinction that spans generations.
+                  From performing at the <span className="text-yellow-200 font-semibold">White House</span> to international concert tours, the Spelman College Glee Club continues to be ambassadors of musical excellence, carrying forward a legacy of artistic distinction that spans generations.
                 </p>
               </div>
             </CardContent>
@@ -227,12 +227,12 @@ const PressKit = () => {
                 <Award className="h-6 w-6 text-secondary mr-3" />
                 <h2 className="text-2xl font-playfair font-bold text-white">About Spelman College</h2>
               </div>
-              <div className="space-y-4 text-white/80 leading-relaxed">
+              <div className="space-y-4 text-white/70 leading-relaxed">
                 <p>
-                  <span className="text-white font-semibold">Spelman College</span>, a historically Black college established in 1881, is a global leader in the education of women of African descent. Located in Atlanta, Georgia, Spelman is consistently ranked among the top liberal arts colleges in the nation.
+                  <span className="text-blue-200 font-semibold">Spelman College</span>, a historically Black college established in 1881, is a global leader in the education of women of African descent. Located in Atlanta, Georgia, Spelman is consistently ranked among the top liberal arts colleges in the nation.
                 </p>
                 <p>
-                  The college is renowned for its rigorous academic programs, distinguished faculty, and commitment to developing ethical leaders who will make significant contributions to their communities and the world. Spelman's <span className="text-white font-semibold">2,100 students</span> represent 47 states and 20 countries.
+                  The college is renowned for its rigorous academic programs, distinguished faculty, and commitment to developing ethical leaders who will make significant contributions to their communities and the world. Spelman's <span className="text-yellow-200 font-semibold">2,100 students</span> represent 47 states and 20 countries.
                 </p>
                 <p>
                   As part of the Atlanta University Center, the world's largest consortium of historically Black colleges and universities, Spelman provides an unparalleled educational experience that combines academic excellence with cultural enrichment and social responsibility.
@@ -262,7 +262,7 @@ const PressKit = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 </div>
               </div>
-              <div className="lg:col-span-2 space-y-6 text-white/80 leading-relaxed">
+              <div className="lg:col-span-2 space-y-6 text-white/70 leading-relaxed">
                 <p className="text-lg">
                   Our distinguished director brings <span className="text-white font-semibold">decades of experience</span> in choral excellence and musical leadership to the Spelman College Glee Club. With advanced degrees in choral conducting and music education, they have dedicated their career to nurturing young voices and preserving musical traditions.
                 </p>
@@ -456,8 +456,8 @@ const PressKit = () => {
             <h2 className="text-4xl font-playfair font-bold text-white mb-6">
               Ready to Feature Our Story?
             </h2>
-            <p className="text-lg text-white/80 mb-8 max-w-3xl mx-auto leading-relaxed">
-              The <span className="text-white font-semibold">Spelman College Glee Club</span> is available for interviews, performances, and special features. Contact our media relations team to discuss opportunities.
+            <p className="text-lg text-white/70 mb-8 max-w-3xl mx-auto leading-relaxed">
+              The <span className="text-blue-200 font-semibold">Spelman College Glee Club</span> is available for interviews, performances, and special features. Contact our media relations team to discuss opportunities.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Button size="lg" className="bg-primary hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
