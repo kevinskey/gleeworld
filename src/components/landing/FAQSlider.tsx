@@ -112,54 +112,57 @@ export const FAQSlider = () => {
         </div>
 
         {/* Mobile: Rotating Question/Answer Cards */}
-        <div className="md:hidden space-y-3">
-          {!isFooterCard ? (
-            <>
-              {/* Question Card */}
-              <div className="bg-background/60 backdrop-blur-sm border border-border rounded-xl p-4 shadow-sm">
-                <div className="flex items-center space-x-3 mb-2">
-                  <div className="flex-shrink-0 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-xs font-bold text-primary-foreground">
-                      {String(currentQuestionIndex + 1).padStart(2, '0')}
-                    </span>
+        <div className="md:hidden">
+          {/* Fixed height container for consistent sizing */}
+          <div className="h-[300px] flex flex-col justify-center space-y-3">
+            {!isFooterCard ? (
+              <>
+                {/* Question Card */}
+                <div className="bg-background/60 backdrop-blur-sm border border-border rounded-xl p-4 shadow-sm flex flex-col justify-center">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <div className="flex-shrink-0 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                      <span className="text-xs font-bold text-primary-foreground">
+                        {String(currentQuestionIndex + 1).padStart(2, '0')}
+                      </span>
+                    </div>
+                    <span className="text-xs text-primary font-medium">QUESTION</span>
                   </div>
-                  <span className="text-xs text-primary font-medium">QUESTION</span>
+                  <p className="text-sm font-semibold text-foreground leading-snug transition-all duration-500 ease-in-out" key={currentFAQ?.id + '-q'}>
+                    {currentFAQ?.question}
+                  </p>
                 </div>
-                <p className="text-sm font-semibold text-foreground leading-snug transition-all duration-500 ease-in-out" key={currentFAQ?.id + '-q'}>
-                  {currentFAQ?.question}
+                
+                {/* Answer Card */}
+                <div className="bg-primary/5 backdrop-blur-sm border border-primary/20 rounded-xl p-4 shadow-sm flex flex-col justify-center">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <div className="flex-shrink-0 w-6 h-6 bg-primary/80 rounded-full flex items-center justify-center">
+                      <span className="text-xs font-bold text-primary-foreground">A</span>
+                    </div>
+                    <span className="text-xs text-primary font-medium">ANSWER</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed transition-all duration-500 ease-in-out" key={currentFAQ?.id + '-a'}>
+                    {currentFAQ?.answer}
+                  </p>
+                </div>
+              </>
+            ) : (
+              /* Footer Card in rotation */
+              <div className="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-6 backdrop-blur-sm border border-white/20 shadow-lg transition-all duration-500 ease-in-out flex flex-col justify-center">
+                <h3 className="text-xl font-bold text-primary-foreground mb-3 text-center">
+                  Good luck on your auditions ladies!
+                </h3>
+                <p className="text-sm text-primary-foreground/90 mb-2 text-center">
+                  To stay up to date, follow us on social media at
+                </p>
+                <p className="text-lg font-bold text-primary-foreground text-center">
+                  @Spelmanglee
                 </p>
               </div>
-              
-              {/* Answer Card */}
-              <div className="bg-primary/5 backdrop-blur-sm border border-primary/20 rounded-xl p-4 shadow-sm">
-                <div className="flex items-center space-x-3 mb-2">
-                  <div className="flex-shrink-0 w-6 h-6 bg-primary/80 rounded-full flex items-center justify-center">
-                    <span className="text-xs font-bold text-primary-foreground">A</span>
-                  </div>
-                  <span className="text-xs text-primary font-medium">ANSWER</span>
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed transition-all duration-500 ease-in-out" key={currentFAQ?.id + '-a'}>
-                  {currentFAQ?.answer}
-                </p>
-              </div>
-            </>
-          ) : (
-            /* Footer Card in rotation */
-            <div className="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-6 backdrop-blur-sm border border-white/20 shadow-lg transition-all duration-500 ease-in-out">
-              <h3 className="text-xl font-bold text-primary-foreground mb-3 text-center">
-                Good luck on your auditions ladies!
-              </h3>
-              <p className="text-sm text-primary-foreground/90 mb-2 text-center">
-                To stay up to date, follow us on social media at
-              </p>
-              <p className="text-lg font-bold text-primary-foreground text-center">
-                @Spelmanglee
-              </p>
-            </div>
-          )}
+            )}
+          </div>
           
           {/* Progress indicator */}
-          <div className="flex justify-center space-x-1 pt-2">
+          <div className="flex justify-center space-x-1 pt-4">
             {Array.from({length: totalItems}).map((_, index) => (
               <div
                 key={index}
