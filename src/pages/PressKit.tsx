@@ -122,12 +122,12 @@ const PressKit = () => {
             <div
               key={slide.id || index}
               className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
-                index === currentSlide ? 'opacity-30' : 'opacity-0'
+                index === currentSlide ? 'opacity-60' : 'opacity-0'
               }`}
               style={{ backgroundImage: `url(${slide.image_url})` }}
             />
           ))}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-secondary/20"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-black/20"></div>
           
           {/* Slideshow Indicators */}
           {heroSlides.length > 0 && (
