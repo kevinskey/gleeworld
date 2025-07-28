@@ -21,6 +21,7 @@ import { useAccountingFiltering } from "@/hooks/useAccountingFiltering";
 import { Shield, Users, Settings, FileText, Activity, Receipt, Calculator, Mail, Music } from "lucide-react";
 import { MusicManagement } from "./admin/MusicManagement";
 import { ExecutiveBoardManager } from "./admin/ExecutiveBoardManager";
+import { ProductManager } from "./admin/ProductManager";
 
 interface AdminPanelProps {
   activeTab?: string;
@@ -114,6 +115,8 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
             </div>
           </>
         );
+      case 'products':
+        return <ProductManager />;
       case 'users':
         return (
           <EnhancedUserManagement 
