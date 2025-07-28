@@ -73,7 +73,10 @@ export const UserDashboard = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { getSettingByName } = useDashboardSettings();
-  const { events, loading: eventsLoading, getUpcomingEvents } = useGleeWorldEvents();
+  // const { events, loading: eventsLoading, getUpcomingEvents } = useGleeWorldEvents(); // TEMPORARILY DISABLED
+  const events: any[] = [];
+  const eventsLoading = false;
+  const getUpcomingEvents = (limit: number) => [];
   const { contracts, loading: contractsLoading } = useUserContracts();
   const { permissions: usernamePermissions, loading: permissionsLoading } = useUsernamePermissions(user?.email);
   const { users, loading: usersLoading } = useUsers();
