@@ -116,18 +116,36 @@ export const CountdownTimer = () => {
 
   return (
     <>
-      {/* Desktop countdown */}
-      <div className="hidden lg:flex items-center space-x-2 bg-primary/10 rounded-md px-2 py-1 text-xs">
-        <Clock className="w-3 h-3 text-primary" />
-        <span className="text-primary font-medium">Christmas Carol:</span>
-        <div className="flex items-center space-x-1 text-primary font-bold">
-          <span>{timeLeft.days}d</span>
-          <span>:</span>
-          <span>{timeLeft.hours}h</span>
-          <span>:</span>
-          <span>{timeLeft.minutes}m</span>
-          <span>:</span>
-          <span>{timeLeft.seconds}s</span>
+      {/* Desktop: Show both analog clock and digital countdown */}
+      <div className="hidden lg:flex items-center space-x-3 bg-primary/10 rounded-md px-3 py-2 text-xs">
+        {/* Analog clock on the left */}
+        <div className="flex-shrink-0">
+          <ClockFace currentTime={currentTime} />
+        </div>
+        
+        {/* Digital time display */}
+        <div className="flex flex-col items-start">
+          <div className="text-[10px] text-muted-foreground font-medium">
+            {currentTime.toLocaleTimeString([], { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              second: '2-digit',
+              hour12: true 
+            })}
+          </div>
+          <div className="flex items-center space-x-1 mt-0.5">
+            <Clock className="w-3 h-3 text-primary" />
+            <span className="text-primary font-medium">Christmas Carol:</span>
+            <div className="flex items-center space-x-1 text-primary font-bold">
+              <span>{timeLeft.days}d</span>
+              <span>:</span>
+              <span>{timeLeft.hours}h</span>
+              <span>:</span>
+              <span>{timeLeft.minutes}m</span>
+              <span>:</span>
+              <span>{timeLeft.seconds}s</span>
+            </div>
+          </div>
         </div>
       </div>
 
