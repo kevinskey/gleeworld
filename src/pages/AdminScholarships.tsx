@@ -35,9 +35,6 @@ const AdminScholarships = () => {
             <GraduationCap className="h-6 w-6 md:h-8 md:w-8 text-brand-500" />
             <h1 className="text-2xl md:text-3xl font-bebas text-brand-800 tracking-wide">Admin Scholarships</h1>
           </div>
-          <p className="text-sm md:text-base text-brand-600 max-w-2xl mx-auto px-4">
-            Manage scholarship opportunities from external sources and add local scholarships manually.
-          </p>
         </div>
 
         {/* Scholarship Manager Component */}

@@ -158,10 +158,6 @@ export const ScholarshipManager = () => {
     <div className="space-y-4 md:space-y-6">
       {/* Header */}
       <div className="flex flex-col space-y-3 md:space-y-0 md:flex-row md:justify-between md:items-center gap-4">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-foreground">Scholarship Management</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Manage local scholarships and update from external sources</p>
-        </div>
         <div className="flex flex-col space-y-2 md:space-y-0 md:flex-row gap-2">
           <Button 
             onClick={handleUpdateScholarships}
