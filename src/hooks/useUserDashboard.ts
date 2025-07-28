@@ -129,9 +129,11 @@ export const useUserDashboard = () => {
   useEffect(() => {
     if (!user) return;
 
-    const paymentsChannelName = `user-payments-${user.id}-${Date.now()}`;
-    const notificationsChannelName = `user-notifications-${user.id}-${Date.now()}`;
+    // Use consistent channel names without timestamps to avoid duplicate subscriptions
+    const paymentsChannelName = `user-payments-${user.id}`;
+    const notificationsChannelName = `user-notifications-${user.id}`;
 
+    // Create channels with proper cleanup
     const paymentsChannel = supabase
       .channel(paymentsChannelName)
       .on(
@@ -143,11 +145,10 @@ export const useUserDashboard = () => {
           filter: `user_id=eq.${user.id}`
         },
         () => {
-          // Refresh payments when user's payments change
+          console.log('User payments changed, refreshing dashboard data');
           fetchDashboardData();
         }
-      )
-      .subscribe();
+      );
 
     const notificationsChannel = supabase
       .channel(notificationsChannelName)
@@ -160,17 +161,26 @@ export const useUserDashboard = () => {
           filter: `user_id=eq.${user.id}`
         },
         () => {
-          // Refresh notifications when user's notifications change
+          console.log('User notifications changed, refreshing dashboard data');
           fetchDashboardData();
         }
-      )
-      .subscribe();
+      );
+
+    // Subscribe to both channels
+    paymentsChannel.subscribe((status) => {
+      console.log('Payments channel subscription status:', status);
+    });
+
+    notificationsChannel.subscribe((status) => {
+      console.log('Notifications channel subscription status:', status);
+    });
 
     return () => {
+      console.log('Cleaning up dashboard subscriptions');
       supabase.removeChannel(paymentsChannel);
       supabase.removeChannel(notificationsChannel);
     };
-  }, [user]);
+  }, [user?.id]); // Only depend on user.id to prevent unnecessary re-subscriptions
 
   useEffect(() => {
     fetchDashboardData();
