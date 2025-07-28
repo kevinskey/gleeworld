@@ -229,24 +229,22 @@ export const UserDashboard = () => {
 
       return (
         <UniversalLayout>
-          <UserDashboardProvider>
-            <div className="container mx-auto px-4 py-6">
-              <div className="mb-4 flex items-center justify-between">
-                <Button variant="outline" onClick={() => navigate('/dashboard')}>
-                  ← Back to Dashboard
-                </Button>
-                <div className="flex items-center gap-2">
-                  {availableModules.find(m => m.key === moduleKey)?.source === 'username' && (
-                    <Badge variant="secondary" className="text-xs">
-                      <Shield className="h-3 w-3 mr-1" />
-                      Special Access
-                    </Badge>
-                  )}
-                </div>
+          <div className="container mx-auto px-4 py-6">
+            <div className="mb-4 flex items-center justify-between">
+              <Button variant="outline" onClick={() => navigate('/dashboard')}>
+                ← Back to Dashboard
+              </Button>
+              <div className="flex items-center gap-2">
+                {availableModules.find(m => m.key === moduleKey)?.source === 'username' && (
+                  <Badge variant="secondary" className="text-xs">
+                    <Shield className="h-3 w-3 mr-1" />
+                    Special Access
+                  </Badge>
+                )}
               </div>
-              {renderModuleComponent()}
             </div>
-          </UserDashboardProvider>
+            {renderModuleComponent()}
+          </div>
         </UniversalLayout>
       );
     }
