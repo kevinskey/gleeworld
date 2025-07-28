@@ -12,7 +12,7 @@ export const AuditionHoverCard = () => {
   // On mobile, just show a direct link button
   if (isMobile) {
     return (
-      <div className="fixed top-28 left-1/2 transform -translate-x-1/2 z-40">
+      <div className="fixed top-[6.5rem] left-1/2 transform -translate-x-1/2 z-40 pb-4">
         <Link to={user ? "/auditions" : "/auth?redirect=/auditions"}>
           <Button 
             variant="branded" 
