@@ -182,64 +182,177 @@ Deno.serve(async (req) => {
 async function extractScholarshipData(scrapedData: any, source: any): Promise<ScholarshipData[]> {
   const scholarships: ScholarshipData[] = []
   
-  // Basic extraction logic - this would need to be customized per foundation
+  // Get content from scraped data
   const content = scrapedData.markdown || scrapedData.html || ''
+  console.log(`Processing content from ${source.name}, length: ${content.length}`)
+  
+  if (!content || content.length < 50) {
+    console.log(`No meaningful content found for ${source.name}`)
+    return scholarships
+  }
   
   // Look for common scholarship patterns in the content
   const scholarshipSections = extractScholarshipSections(content)
+  console.log(`Found ${scholarshipSections.length} potential scholarship sections for ${source.name}`)
   
   for (const section of scholarshipSections) {
     const scholarship = parseScholarshipSection(section, source)
     if (scholarship) {
       scholarships.push(scholarship)
+      console.log(`Extracted scholarship: ${scholarship.title}`)
     }
   }
   
+  console.log(`Total scholarships extracted from ${source.name}: ${scholarships.length}`)
   return scholarships
 }
 
 function extractScholarshipSections(content: string): string[] {
-  // Split content into potential scholarship sections
-  // This is a basic implementation - would need refinement per foundation
-  const sections = content.split(/(?=.*scholarship)|(?=.*grant)|(?=.*award)/i)
-  return sections.filter(section => 
-    section.length > 100 && 
+  // Multiple strategies to find scholarship content
+  let sections: string[] = []
+  
+  // Strategy 1: Split by common scholarship keywords with better patterns
+  const keywordSections = content.split(/(?=.*(?:scholarship|grant|award|fellowship|bursary).*(?:\$|\d+|amount|value|worth))/i)
+  sections = [...sections, ...keywordSections]
+  
+  // Strategy 2: Look for structured content with headings
+  const headingSections = content.split(/\n#+\s*([^\n]*(?:scholarship|grant|award|fellowship)[^\n]*)/gi)
+  sections = [...sections, ...headingSections]
+  
+  // Strategy 3: Look for list items that mention scholarships
+  const listMatches = content.match(/(?:^|\n)\s*[-*•]\s*[^\n]*(?:scholarship|grant|award)[^\n]*(?:\n(?:\s{2,}[^\n]*)*)/gmi)
+  if (listMatches) {
+    sections = [...sections, ...listMatches]
+  }
+  
+  // Strategy 4: Look for paragraph blocks with scholarship info
+  const paragraphMatches = content.match(/[^\n]*(?:scholarship|grant|award)[^\n]*(?:\n(?:[^\n]*(?:\$|\d+|deadline|apply|eligib)[^\n]*)*)/gmi)
+  if (paragraphMatches) {
+    sections = [...sections, ...paragraphMatches]
+  }
+  
+  // Filter and deduplicate
+  const uniqueSections = [...new Set(sections)]
+  return uniqueSections.filter(section => 
+    section && 
+    section.length > 50 && 
     (section.toLowerCase().includes('scholarship') || 
      section.toLowerCase().includes('grant') || 
-     section.toLowerCase().includes('award'))
+     section.toLowerCase().includes('award') ||
+     section.toLowerCase().includes('fellowship') ||
+     section.toLowerCase().includes('bursary')) &&
+    // Must contain some useful info (money, deadline, or description)
+    (section.includes('$') || 
+     /\b\d+\b/.test(section) ||
+     /deadline|due|apply|eligib|requirement/i.test(section) ||
+     section.length > 200)
   )
 }
 
 function parseScholarshipSection(section: string, source: any): ScholarshipData | null {
   try {
-    // Extract title (usually the first heading)
-    const titleMatch = section.match(/#{1,3}\s*(.+?)(?:\n|$)/i)
-    const title = titleMatch ? titleMatch[1].trim() : null
+    // Clean up the section
+    const cleanSection = section.replace(/\s+/g, ' ').trim()
     
-    if (!title) return null
+    // Extract title - try multiple patterns
+    let title = null
+    const titlePatterns = [
+      /#{1,3}\s*(.+?)(?:\n|$)/i,  // Markdown headers
+      /^([^\n]*(?:scholarship|grant|award|fellowship)[^\n]*)/i,  // First line with keyword
+      /(?:^|\n)\s*[-*•]\s*([^\n]*(?:scholarship|grant|award)[^\n]*)/i,  // List items
+      /^([^.!?]*(?:scholarship|grant|award)[^.!?]*)/i  // First sentence with keyword
+    ]
     
-    // Extract description (first paragraph after title)
-    const descMatch = section.match(/(?:#{1,3}.*?\n)(.*?)(?:\n\n|$)/s)
-    const description = descMatch ? descMatch[1].trim().substring(0, 500) : ''
+    for (const pattern of titlePatterns) {
+      const match = cleanSection.match(pattern)
+      if (match && match[1] && match[1].trim().length > 10) {
+        title = match[1].trim().replace(/^[-*•]\s*/, '')
+        break
+      }
+    }
     
-    // Extract amount (look for dollar amounts)
-    const amountMatch = section.match(/\$[\d,]+(?:\s*-\s*\$[\d,]+)?/i)
-    const amount = amountMatch ? amountMatch[0] : null
+    if (!title || title.length < 5) {
+      console.log('No valid title found in section:', cleanSection.substring(0, 100))
+      return null
+    }
     
-    // Extract deadline (look for dates)
-    const deadlineMatch = section.match(/(?:deadline|due|apply by)[:\s]*(\w+\s+\d{1,2},?\s+\d{4})/i)
-    const deadline = deadlineMatch ? deadlineMatch[1] : null
+    // Extract description - look for meaningful content
+    let description = ''
+    const descPatterns = [
+      new RegExp(`${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[.:]?\\s*([^\\n]{50,500})`, 'i'),
+      /(?:description|about|overview)[:\s]*([^.]{50,500})/i,
+      /^[^$]*?([^$]{50,500}?)(?:\$|deadline|apply)/i
+    ]
     
-    // Extract eligibility
-    const eligibilityMatch = section.match(/(?:eligibility|requirements?|criteria)[:\s]*([^.]+)/i)
-    const eligibility = eligibilityMatch ? eligibilityMatch[1].trim() : null
+    for (const pattern of descPatterns) {
+      const match = cleanSection.match(pattern)
+      if (match && match[1]) {
+        description = match[1].trim().substring(0, 500)
+        break
+      }
+    }
+    
+    if (!description) {
+      // Fallback: take first meaningful chunk of text
+      const sentences = cleanSection.split(/[.!?]/)
+      description = sentences.slice(0, 3).join('. ').trim().substring(0, 500)
+    }
+    
+    // Extract amount with better patterns
+    const amountPatterns = [
+      /\$[\d,]+(?:\s*-\s*\$[\d,]+)?/g,
+      /(?:worth|value|amount)[:\s]*\$?[\d,]+/gi,
+      /(?:up to|maximum|max)[:\s]*\$?[\d,]+/gi
+    ]
+    
+    let amount = null
+    for (const pattern of amountPatterns) {
+      const matches = cleanSection.match(pattern)
+      if (matches) {
+        amount = matches[0]
+        break
+      }
+    }
+    
+    // Extract deadline with better patterns
+    const deadlinePatterns = [
+      /(?:deadline|due|apply by|closes?)[:\s]*(\w+\s+\d{1,2},?\s+\d{4})/gi,
+      /(?:deadline|due|apply by|closes?)[:\s]*(\d{1,2}\/\d{1,2}\/\d{4})/gi,
+      /(?:deadline|due|apply by|closes?)[:\s]*(\d{1,2}-\d{1,2}-\d{4})/gi,
+      /(\w+\s+\d{1,2},?\s+\d{4})(?=.*(?:deadline|due|apply))/gi
+    ]
+    
+    let deadline = null
+    for (const pattern of deadlinePatterns) {
+      const match = cleanSection.match(pattern)
+      if (match) {
+        deadline = match[1]
+        break
+      }
+    }
+    
+    // Extract eligibility with better patterns
+    const eligibilityPatterns = [
+      /(?:eligibility|requirements?|criteria|qualifications?)[:\s]*([^.]{20,300})/gi,
+      /(?:must be|open to|available to)[:\s]*([^.]{20,200})/gi,
+      /(?:students?|applicants?)[:\s]+(?:must|should|who)[:\s]*([^.]{20,200})/gi
+    ]
+    
+    let eligibility = null
+    for (const pattern of eligibilityPatterns) {
+      const match = cleanSection.match(pattern)
+      if (match) {
+        eligibility = match[1].trim()
+        break
+      }
+    }
     
     // Generate tags based on content
-    const tags = generateTags(section, source.name)
+    const tags = generateTags(cleanSection, source.name)
     
-    return {
-      title,
-      description,
+    const scholarship = {
+      title: title.substring(0, 200),
+      description: description || cleanSection.substring(0, 300),
       deadline,
       amount,
       eligibility,
@@ -248,6 +361,9 @@ function parseScholarshipSection(section: string, source: any): ScholarshipData 
       source: source.name.toLowerCase().replace(/\s+/g, '_'),
       scraped_from_url: source.url
     }
+    
+    console.log(`Parsed scholarship: ${scholarship.title} | Amount: ${amount} | Deadline: ${deadline}`)
+    return scholarship
   } catch (error) {
     console.error('Error parsing scholarship section:', error)
     return null
