@@ -45,11 +45,11 @@ export const FAQSlider = () => {
   const [openItems, setOpenItems] = useState<string[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-  // Auto-rotate questions every 4 seconds
+  // Auto-rotate questions every 7 seconds
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentQuestionIndex((prev) => (prev + 1) % faqData.length);
-    }, 4000);
+    }, 7000);
 
     return () => clearInterval(timer);
   }, []);
