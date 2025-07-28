@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Calendar,
@@ -59,6 +60,8 @@ interface ExecutiveMember {
 export const ExecutiveBoardDashboard = () => {
   const { user } = useAuth();
   const [executiveData, setExecutiveData] = useState<ExecutiveMember | null>(null);
+  const [selectedPosition, setSelectedPosition] = useState<ExecutivePosition>('president');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
 
@@ -79,6 +82,7 @@ export const ExecutiveBoardDashboard = () => {
 
       if (profileData?.is_super_admin || profileData?.is_admin) {
         // Super admin/admin gets access with a special "admin" position
+        setIsAdmin(true);
         setExecutiveData({
           id: 'admin-access',
           user_id: user.id,
@@ -86,6 +90,7 @@ export const ExecutiveBoardDashboard = () => {
           academic_year: new Date().getFullYear().toString(),
           is_active: true
         });
+        setSelectedPosition('president');
         return;
       }
 
@@ -103,6 +108,9 @@ export const ExecutiveBoardDashboard = () => {
       }
 
       setExecutiveData(data);
+      if (data) {
+        setSelectedPosition(data.position);
+      }
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -170,7 +178,7 @@ export const ExecutiveBoardDashboard = () => {
     );
   }
 
-  const PositionIcon = getPositionIcon(executiveData.position);
+  const PositionIcon = getPositionIcon(selectedPosition);
 
   return (
     <UniversalLayout>
@@ -181,10 +189,83 @@ export const ExecutiveBoardDashboard = () => {
               Executive Board Hub
             </h1>
             <div className="flex items-center gap-2 mt-2">
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <PositionIcon className="h-3 w-3" />
-                {getPositionName(executiveData.position)}
-              </Badge>
+              {isAdmin ? (
+                <Select value={selectedPosition} onValueChange={(value: ExecutivePosition) => setSelectedPosition(value)}>
+                  <SelectTrigger className="w-[200px]">
+                    <div className="flex items-center gap-2">
+                      <PositionIcon className="h-4 w-4" />
+                      <SelectValue />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="president">
+                      <div className="flex items-center gap-2">
+                        <Crown className="h-4 w-4" />
+                        President
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="secretary">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Secretary
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="treasurer">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4" />
+                        Treasurer
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="tour_manager">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        Tour Manager
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="wardrobe_manager">
+                      <div className="flex items-center gap-2">
+                        <Shirt className="h-4 w-4" />
+                        Wardrobe Manager
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="librarian">
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="h-4 w-4" />
+                        Librarian
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="historian">
+                      <div className="flex items-center gap-2">
+                        <Camera className="h-4 w-4" />
+                        Historian
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="pr_coordinator">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4" />
+                        PR Coordinator
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="chaplain">
+                      <div className="flex items-center gap-2">
+                        <Heart className="h-4 w-4" />
+                        Chaplain
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="data_analyst">
+                      <div className="flex items-center gap-2">
+                        <BarChart3 className="h-4 w-4" />
+                        Data Analyst
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <PositionIcon className="h-3 w-3" />
+                  {getPositionName(selectedPosition)}
+                </Badge>
+              )}
               <Badge variant="outline">
                 {executiveData.academic_year}
               </Badge>
@@ -290,7 +371,7 @@ export const ExecutiveBoardDashboard = () => {
           </TabsContent>
 
           <TabsContent value="position">
-            <PositionTab position={executiveData.position} />
+            <PositionTab position={selectedPosition} />
           </TabsContent>
         </Tabs>
       </div>
