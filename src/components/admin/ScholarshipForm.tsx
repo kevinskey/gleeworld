@@ -99,15 +99,15 @@ export const ScholarshipForm = ({ scholarship, onSubmit, onCancel }: Scholarship
   };
 
   return (
-    <Card className="w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle>{scholarship ? 'Edit Scholarship' : 'Add New Scholarship'}</CardTitle>
-        <CardDescription>
+    <Card className="w-full max-w-2xl mx-4 md:mx-auto">
+      <CardHeader className="px-4 md:px-6">
+        <CardTitle className="text-lg md:text-xl">{scholarship ? 'Edit Scholarship' : 'Add New Scholarship'}</CardTitle>
+        <CardDescription className="text-sm md:text-base">
           {scholarship ? 'Update scholarship information' : 'Create a new scholarship opportunity'}
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+      <CardContent className="px-4 md:px-6">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 md:space-y-6">
           <div className="space-y-2">
             <Label htmlFor="title">Title *</Label>
             <Input
@@ -135,20 +135,22 @@ export const ScholarshipForm = ({ scholarship, onSubmit, onCancel }: Scholarship
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="deadline">Deadline</Label>
+              <Label htmlFor="deadline" className="text-sm font-medium">Deadline</Label>
               <Input
                 id="deadline"
                 type="date"
                 {...register('deadline')}
+                className="w-full"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="amount">Amount</Label>
+              <Label htmlFor="amount" className="text-sm font-medium">Amount</Label>
               <Input
                 id="amount"
                 {...register('amount')}
                 placeholder="e.g., $5,000 or Full Tuition"
+                className="w-full"
               />
             </div>
           </div>
@@ -186,26 +188,28 @@ export const ScholarshipForm = ({ scholarship, onSubmit, onCancel }: Scholarship
                 </Badge>
               ))}
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Input
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
                 placeholder="Add a tag"
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                className="flex-1"
               />
-              <Button type="button" onClick={addTag} variant="outline" size="sm">
-                <Plus className="h-4 w-4" />
+              <Button type="button" onClick={addTag} variant="outline" size="sm" className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2 sm:mr-0" />
+                <span className="sm:hidden">Add Tag</span>
               </Button>
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
             <div className="flex items-center space-x-2">
               <Switch
                 id="is-featured"
                 {...register('is_featured')}
               />
-              <Label htmlFor="is-featured">Featured Scholarship</Label>
+              <Label htmlFor="is-featured" className="text-sm font-medium">Featured Scholarship</Label>
             </div>
 
             <div className="flex items-center space-x-2">
@@ -213,15 +217,15 @@ export const ScholarshipForm = ({ scholarship, onSubmit, onCancel }: Scholarship
                 id="is-active"
                 {...register('is_active')}
               />
-              <Label htmlFor="is-active">Active</Label>
+              <Label htmlFor="is-active" className="text-sm font-medium">Active</Label>
             </div>
           </div>
 
-          <div className="flex gap-2 pt-4">
-            <Button type="submit" disabled={loading}>
+          <div className="flex flex-col sm:flex-row gap-2 pt-4">
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               {loading ? 'Saving...' : (scholarship ? 'Update' : 'Create')} Scholarship
             </Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto">
               Cancel
             </Button>
           </div>

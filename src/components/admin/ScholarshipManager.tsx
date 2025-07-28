@@ -137,23 +137,24 @@ export const ScholarshipManager = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col space-y-3 md:space-y-0 md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Scholarship Management</h1>
-          <p className="text-muted-foreground">Manage local scholarships and update from external sources</p>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Scholarship Management</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Manage local scholarships and update from external sources</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col space-y-2 md:space-y-0 md:flex-row gap-2">
           <Button 
             onClick={handleUpdateScholarships}
             disabled={updating}
             variant="outline"
+            className="w-full md:w-auto"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${updating ? 'animate-spin' : ''}`} />
             {updating ? 'Updating...' : 'Update from Sources'}
           </Button>
-          <Button onClick={() => setShowForm(true)}>
+          <Button onClick={() => setShowForm(true)} className="w-full md:w-auto">
             <Plus className="h-4 w-4 mr-2" />
             Add Scholarship
           </Button>
@@ -161,55 +162,57 @@ export const ScholarshipManager = () => {
       </div>
 
       {/* Search */}
-      <Input
-        placeholder="Search scholarships..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="max-w-md"
-      />
+      <div className="w-full">
+        <Input
+          placeholder="Search scholarships..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full md:max-w-md"
+        />
+      </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-blue-500" />
-              <div>
-                <p className="text-sm text-muted-foreground">Total</p>
-                <p className="text-2xl font-bold">{scholarships.length}</p>
+              <Users className="h-4 w-4 text-blue-500 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm text-muted-foreground">Total</p>
+                <p className="text-lg md:text-2xl font-bold">{scholarships.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center gap-2">
-              <Plus className="h-4 w-4 text-green-500" />
-              <div>
-                <p className="text-sm text-muted-foreground">Manual</p>
-                <p className="text-2xl font-bold">{manualScholarships.length}</p>
+              <Plus className="h-4 w-4 text-green-500 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm text-muted-foreground">Manual</p>
+                <p className="text-lg md:text-2xl font-bold">{manualScholarships.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center gap-2">
-              <RefreshCw className="h-4 w-4 text-purple-500" />
-              <div>
-                <p className="text-sm text-muted-foreground">Auto-Updated</p>
-                <p className="text-2xl font-bold">{autoScholarships.length}</p>
+              <RefreshCw className="h-4 w-4 text-purple-500 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm text-muted-foreground">Auto-Updated</p>
+                <p className="text-lg md:text-2xl font-bold">{autoScholarships.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center gap-2">
-              <Eye className="h-4 w-4 text-orange-500" />
-              <div>
-                <p className="text-sm text-muted-foreground">Active</p>
-                <p className="text-2xl font-bold">{scholarships.filter(s => s.is_active).length}</p>
+              <Eye className="h-4 w-4 text-orange-500 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm text-muted-foreground">Active</p>
+                <p className="text-lg md:text-2xl font-bold">{scholarships.filter(s => s.is_active).length}</p>
               </div>
             </div>
           </CardContent>
@@ -313,43 +316,47 @@ const ScholarshipCard = ({ scholarship, onEdit, onDelete, onToggleActive, isAuto
   return (
     <Card className={`${!scholarship.is_active ? 'opacity-60' : ''} ${isExpired ? 'border-red-200 bg-red-50/30' : ''}`}>
       <CardHeader className="pb-3">
-        <div className="flex justify-between items-start gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <CardTitle className="text-lg">{scholarship.title}</CardTitle>
-              {scholarship.is_featured && (
-                <Badge variant="secondary">Featured</Badge>
-              )}
-              {!scholarship.is_active && (
-                <Badge variant="outline">Inactive</Badge>
-              )}
-              {isExpired && (
-                <Badge variant="destructive">Expired</Badge>
-              )}
+        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-3 md:gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+              <CardTitle className="text-base md:text-lg leading-tight">{scholarship.title}</CardTitle>
+              <div className="flex flex-wrap gap-1">
+                {scholarship.is_featured && (
+                  <Badge variant="secondary" className="text-xs">Featured</Badge>
+                )}
+                {!scholarship.is_active && (
+                  <Badge variant="outline" className="text-xs">Inactive</Badge>
+                )}
+                {isExpired && (
+                  <Badge variant="destructive" className="text-xs">Expired</Badge>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm text-muted-foreground">
               <Badge variant="outline" className="text-xs">
                 {isAutoGenerated ? scholarship.source : 'Manual'}
               </Badge>
               {scholarship.deadline && (
                 <div className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  <span>Due: {format(new Date(scholarship.deadline), 'MMM d, yyyy')}</span>
+                  <Calendar className="h-3 w-3 flex-shrink-0" />
+                  <span className="hidden sm:inline">Due:</span>
+                  <span>{format(new Date(scholarship.deadline), 'MMM d, yyyy')}</span>
                 </div>
               )}
               {scholarship.amount && (
                 <div className="flex items-center gap-1">
-                  <DollarSign className="h-3 w-3" />
+                  <DollarSign className="h-3 w-3 flex-shrink-0" />
                   <span>{scholarship.amount}</span>
                 </div>
               )}
             </div>
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-1 flex-shrink-0">
             <Button
               size="sm"
               variant="outline"
               onClick={onToggleActive}
+              className="p-2"
             >
               {scholarship.is_active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </Button>
@@ -357,25 +364,26 @@ const ScholarshipCard = ({ scholarship, onEdit, onDelete, onToggleActive, isAuto
               size="sm"
               variant="outline"
               onClick={onEdit}
+              className="p-2"
             >
               <Pencil className="h-4 w-4" />
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="outline" className="p-2">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+              <AlertDialogContent className="mx-4 max-w-md">
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete Scholarship</AlertDialogTitle>
                   <AlertDialogDescription>
                     Are you sure you want to delete "{scholarship.title}"? This action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={onDelete}>Delete</AlertDialogAction>
+                <AlertDialogFooter className="flex-col space-y-2 sm:flex-row sm:space-y-0">
+                  <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={onDelete} className="w-full sm:w-auto">Delete</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
