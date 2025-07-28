@@ -127,7 +127,16 @@ export const useScholarshipSources = () => {
       toast.loading('Starting scholarship scraping...');
       
       console.log('📡 Invoking scrape-scholarships function');
-      const { data, error } = await supabase.functions.invoke('scrape-scholarships');
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Function call timed out after 60 seconds')), 60000)
+      );
+      
+      const functionPromise = supabase.functions.invoke('scrape-scholarships');
+      
+      const result = await Promise.race([functionPromise, timeoutPromise]);
+      const { data, error } = result;
 
       console.log('📊 Function response:', { data, error });
 
