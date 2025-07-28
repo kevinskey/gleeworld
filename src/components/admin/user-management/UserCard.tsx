@@ -143,7 +143,7 @@ export const UserCard = ({
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" side="bottom" sideOffset={4} className="w-48">
               <DropdownMenuItem onClick={() => onView(user)}>
                 <Eye className="h-4 w-4 mr-2" />
                 View Profile
