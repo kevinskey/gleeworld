@@ -56,7 +56,7 @@ export const PublicHeader = () => {
               </SheetTrigger>
               <SheetContent 
                 side="top" 
-                className="max-w-xs w-80 mx-auto mt-16 bg-white/90 backdrop-blur-md border border-white/30 shadow-lg rounded-lg z-[110] data-[state=open]:animate-none data-[state=closed]:animate-none [&~div]:hidden"
+                className="max-w-xs w-80 mx-auto mt-16 bg-white/90 backdrop-blur-md border border-white/30 shadow-lg rounded-lg z-[110] data-[state=open]:animate-none data-[state=closed]:animate-none [&_~_[data-radix-dialog-overlay]]:bg-transparent"
                 style={{
                   position: 'fixed',
                   top: '4rem',
