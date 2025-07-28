@@ -676,10 +676,10 @@ export const GleeWorldLanding = () => {
               <div className="space-y-4">
                 <h4 className="font-semibold">Connect</h4>
                 <div className="space-y-2 text-sm">
-                  <div><a href="#" className="text-gray-400 hover:text-white transition-colors">Facebook</a></div>
-                  <div><a href="#" className="text-gray-400 hover:text-white transition-colors">Instagram</a></div>
-                  <div><a href="#" className="text-gray-400 hover:text-white transition-colors">TikTok</a></div>
-                  <div><a href="#" className="text-gray-400 hover:text-white transition-colors">YouTube</a></div>
+                  <div><a href="https://www.facebook.com/SpelmanGlee" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">Facebook</a></div>
+                  <div><a href="https://www.instagram.com/spelmanglee" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">Instagram</a></div>
+                  <div><a href="https://x.com/spelmanglee" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">X</a></div>
+                  <div><a href="https://www.youtube.com/@spelmancollegegleeclub" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">YouTube</a></div>
                 </div>
               </div>
               <div className="space-y-4">
