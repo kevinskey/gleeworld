@@ -91,3 +91,9 @@ inspector_port = 8083
 
 [functions.update-scholarships]
 verify_jwt = false
+
+[functions.square-oauth]
+verify_jwt = true
+
+[functions.square-sync-products]
+verify_jwt = true

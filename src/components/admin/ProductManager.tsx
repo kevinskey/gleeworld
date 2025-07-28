@@ -7,15 +7,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { SquareIntegration } from "./SquareIntegration";
 import { 
   Plus, 
   Edit, 
   Trash2, 
   Package, 
-  DollarSign, 
-  Tag,
+  Square,
   Save,
   X
 } from "lucide-react";
@@ -48,6 +49,7 @@ export const ProductManager = () => {
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"products" | "square">("products");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -203,15 +205,16 @@ export const ProductManager = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-brand-800">Product Management</h2>
-          <p className="text-brand-600">Manage your shop products and inventory</p>
+          <p className="text-brand-600">Manage your shop products and sync with Square</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Product
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Product
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
@@ -325,7 +328,22 @@ export const ProductManager = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
+
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "products" | "square")}>
+        <TabsList>
+          <TabsTrigger value="products">
+            <Package className="h-4 w-4 mr-2" />
+            Products
+          </TabsTrigger>
+          <TabsTrigger value="square">
+            <Square className="h-4 w-4 mr-2" />
+            Square Integration
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="products" className="space-y-6">
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {products.map((product) => (
@@ -394,6 +412,12 @@ export const ProductManager = () => {
           </Button>
         </div>
       )}
+        </TabsContent>
+
+        <TabsContent value="square">
+          <SquareIntegration />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
