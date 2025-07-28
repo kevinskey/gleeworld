@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Music } from "lucide-react";
+import { Music } from "lucide-react";
 import { ResponsiveNavigation } from "@/components/navigation/ResponsiveNavigation";
+import { HeaderClock } from "@/components/ui/header-clock";
+import { MusicStaffMenu } from "@/components/ui/music-staff-menu";
 
 export const PublicHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,26 +14,33 @@ export const PublicHeader = () => {
     <header className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-[100] shadow-xl">
       <div className="container mx-auto px-2 sm:px-4 lg:px-6">
         <div className="flex items-center justify-between h-14 sm:h-16">
-          {/* Logo - Responsive sizing */}
-          <Link to="/" className="flex items-center gap-1 sm:gap-2 flex-shrink-0 min-w-0 relative z-[110]">
+          {/* Logo - Restored beautiful design */}
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 flex-shrink-0 min-w-0 relative z-[110] hover:scale-105 transition-transform duration-200">
             <img 
               src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
               alt="Spelman College Glee Club" 
-              className="w-6 h-6 sm:w-8 sm:h-8 object-contain filter brightness-0 invert brightness-125 flex-shrink-0 relative z-[111]"
+              className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0 relative z-[111]"
             />
-            <span className="text-gray-900 font-bold text-sm sm:text-lg lg:text-xl whitespace-nowrap truncate relative z-[111]">
-              <span className="hidden sm:inline">Spelman Glee Club</span>
-              <span className="sm:hidden">Glee Club</span>
-            </span>
+            <div className="flex flex-col relative z-[111]">
+              <span className="text-gray-900 font-bold text-lg sm:text-xl lg:text-2xl whitespace-nowrap leading-tight">
+                GleeWorld
+              </span>
+              <span className="text-gray-700 text-xs sm:text-sm font-medium whitespace-nowrap leading-tight -mt-1">
+                Spelman Glee Club
+              </span>
+            </div>
           </Link>
           
-          {/* Responsive Navigation - Progressive enhancement */}
+          {/* Center Navigation */}
           <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-center max-w-2xl mx-4">
             <ResponsiveNavigation />
           </div>
 
           {/* Right side actions */}
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            {/* Clock Component */}
+            <HeaderClock className="hidden sm:block" />
+            
             {/* Auth Button - Responsive sizing */}
             <Button asChild variant="secondary" size="sm" className="hidden sm:flex text-xs sm:text-sm px-2 sm:px-3">
               <Link to="/auth">
@@ -40,19 +49,21 @@ export const PublicHeader = () => {
               </Link>
             </Button>
             
-            {/* Mobile Menu - Only shows on very small screens */}
+            {/* Music Staff Menu - Only shows on very small screens */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild className="sm:hidden">
-                <Button variant="ghost" size="sm" className="text-gray-700 hover:bg-gray-100 p-1">
-                  <Menu className="h-4 w-4" />
-                  <span className="sr-only">Toggle menu</span>
-                </Button>
+                <MusicStaffMenu onClick={() => setIsOpen(!isOpen)} />
               </SheetTrigger>
-              <SheetContent side="right" className="w-72">
+              <SheetContent side="right" className="w-72 z-[120]">
                 <div className="flex flex-col gap-6 mt-6">
                   <div className="flex items-center gap-2">
                     <Music className="h-6 w-6" />
                     <span className="font-bold text-lg">Spelman Glee Club</span>
+                  </div>
+                  
+                  {/* Clock in mobile menu */}
+                  <div className="text-center">
+                    <HeaderClock />
                   </div>
                   
                   <nav className="flex flex-col gap-2">
