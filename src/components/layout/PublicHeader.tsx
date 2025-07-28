@@ -10,8 +10,18 @@ import { MusicStaffMenu } from "@/components/ui/music-staff-menu";
 export const PublicHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
 
+  // Add global style to hide sheet overlay
+  const overlayStyle = `
+    [data-radix-dialog-overlay] {
+      background: transparent !important;
+      backdrop-filter: none !important;
+    }
+  `;
+
   return (
-    <header className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-[100] shadow-xl">
+    <>
+      <style dangerouslySetInnerHTML={{ __html: overlayStyle }} />
+      <header className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-[100] shadow-xl">
       <div className="container mx-auto px-2 sm:px-4 lg:px-6">
         <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Logo with Clock - Restored beautiful design */}
@@ -92,5 +102,6 @@ export const PublicHeader = () => {
         </div>
       </div>
     </header>
+    </>
   );
 };
