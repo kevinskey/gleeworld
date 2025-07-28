@@ -17,7 +17,7 @@ export const AuditionHoverCard = () => {
           <Button 
             variant="branded" 
             size="lg"
-            className="px-8 py-4 rounded-full text-lg touch-manipulation"
+            className="px-8 pt-2 pb-6 rounded-full text-lg touch-manipulation"
           >
             <Mic className="w-5 h-5 mr-3" />
             Sign Up for Auditions
