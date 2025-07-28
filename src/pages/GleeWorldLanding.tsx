@@ -513,7 +513,16 @@ export const GleeWorldLanding = () => {
       <section className="pt-7 pb-9 sm:pt-10 sm:pb-12 px-0.5 sm:px-1 md:px-1.5 lg:px-3.5 w-full">
         <div className="w-full max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-7xl mx-auto">
           <Card className="p-6 sm:p-8 bg-white/30 backdrop-blur-md border border-white/20 shadow-2xl">
-            <FeaturedProducts limit={8} />
+            {/* The Glee Store Title */}
+            <div className="text-center mb-6 sm:mb-8">
+              <div className="flex items-center justify-center gap-3 mb-2">
+                <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-spelman-blue-light animate-pulse" />
+                <h2 className="text-2xl sm:text-4xl md:text-6xl font-dancing font-bold text-foreground">The Glee Store</h2>
+                <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-spelman-blue-dark animate-pulse" />
+              </div>
+            </div>
+            
+            <FeaturedProducts limit={8} showTitle={false} />
           </Card>
         </div>
       </section>
