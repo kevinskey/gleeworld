@@ -58,6 +58,7 @@ import AuditionPage from "./pages/AuditionPage";
 import ScholarshipHub from "./pages/ScholarshipHub";
 import AdminScholarships from "./pages/AdminScholarships";
 import AdminProducts from "./pages/AdminProducts";
+import { ExecutiveBoardDashboard } from "./pages/ExecutiveBoardDashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -451,14 +452,22 @@ const App = () => {
                               </ProtectedRoute>
                             } 
                           />
-                          <Route 
-                            path="/admin/products" 
-                            element={
-                              <ProtectedRoute>
-                                <AdminProducts />
-                              </ProtectedRoute>
-                            } 
-                          />
+                           <Route 
+                             path="/admin/products" 
+                             element={
+                               <ProtectedRoute>
+                                 <AdminProducts />
+                               </ProtectedRoute>
+                             } 
+                           />
+                           <Route 
+                             path="/dashboard/executive-board" 
+                             element={
+                               <ProtectedRoute>
+                                 <ExecutiveBoardDashboard />
+                               </ProtectedRoute>
+                             } 
+                           />
                 <Route 
                   path="/landing"
                   element={
