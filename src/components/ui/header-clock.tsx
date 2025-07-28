@@ -71,7 +71,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
   return (
     <div className={`relative ${className}`}>
       <div
-        className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-md border-2 border-spelman-blue-light/30 cursor-pointer hover:bg-white/30 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-lg"
+        className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/20 backdrop-blur-md border border-spelman-blue-light/30 cursor-pointer hover:bg-white/30 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md flex-shrink-0"
         onMouseEnter={() => setShowCountdown(true)}
         onMouseLeave={() => setShowCountdown(false)}
         onClick={() => setShowCountdown(!showCountdown)}
@@ -82,11 +82,11 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
           {[...Array(12)].map((_, i) => (
             <div
               key={i}
-              className="absolute w-0.5 h-2 bg-gray-700 rounded-full"
+              className="absolute w-0.5 h-1 bg-gray-700 rounded-full"
               style={{
-                top: '4px',
+                top: '2px',
                 left: '50%',
-                transformOrigin: '50% 20px',
+                transformOrigin: '50% 14px',
                 transform: `translateX(-50%) rotate(${i * 30}deg)`,
               }}
             />
@@ -96,7 +96,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
           <div
             className="absolute top-1/2 left-1/2 w-0.5 bg-gray-800 rounded-full origin-bottom z-10"
             style={{
-              height: '14px',
+              height: '8px',
               transform: `translate(-50%, -100%) rotate(${getHourAngle()}deg)`,
             }}
           />
@@ -105,24 +105,19 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
           <div
             className="absolute top-1/2 left-1/2 w-0.5 bg-gray-700 rounded-full origin-bottom z-20"
             style={{
-              height: '18px',
+              height: '12px',
               transform: `translate(-50%, -100%) rotate(${getMinuteAngle()}deg)`,
             }}
           />
           
           {/* Center Dot */}
-          <div className="absolute top-1/2 left-1/2 w-1.5 h-1.5 bg-spelman-blue-dark rounded-full transform -translate-x-1/2 -translate-y-1/2 z-30" />
-        </div>
-        
-        {/* Digital Time Display */}
-        <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-spelman-blue-dark text-white px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap shadow-md">
-          {formatTime(currentTime)}
+          <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-spelman-blue-dark rounded-full transform -translate-x-1/2 -translate-y-1/2 z-30" />
         </div>
       </div>
       
       {/* Countdown Tooltip */}
       {showCountdown && (
-        <div className="absolute top-full right-0 mt-8 z-[120]">
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-[120]">
           <Badge 
             variant="secondary" 
             className="bg-spelman-blue-dark text-white px-3 py-2 text-sm font-medium shadow-xl animate-fade-in whitespace-nowrap border border-white/20"
@@ -130,7 +125,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
             🎄 {getCountdownText()}
           </Badge>
           {/* Arrow pointing to clock */}
-          <div className="absolute -top-1 right-6 w-2 h-2 bg-spelman-blue-dark rotate-45 border-l border-t border-white/20"></div>
+          <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-spelman-blue-dark rotate-45 border-l border-t border-white/20"></div>
         </div>
       )}
     </div>
