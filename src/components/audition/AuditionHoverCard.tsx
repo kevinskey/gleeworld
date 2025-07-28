@@ -9,19 +9,19 @@ export const AuditionHoverCard = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
 
-  // On mobile, just show a direct link button
+  // On mobile, show a compact button that fits viewport
   if (isMobile) {
     return (
-      <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 pb-8">
+      <div className="fixed top-16 left-4 right-4 z-40 max-w-[calc(100vw-2rem)]">
         <Link to={user ? "/auditions" : "/auth?redirect=/auditions"}>
           <Button 
             variant="branded" 
-            size="lg"
-            className="px-8 pt-2 pb-[19px] rounded-full text-lg touch-manipulation flex items-center justify-center text-center"
+            size="sm"
+            className="w-full max-w-xs mx-auto px-6 py-3 rounded-xl text-base touch-manipulation flex items-center justify-center shadow-lg"
           >
-            <Mic className="w-5 h-5 mr-3" />
-            Sign Up for Auditions
-            <span className="ml-3">🎵</span>
+            <Mic className="w-4 h-4 mr-2" />
+            <span className="truncate">Audition Sign Up</span>
+            <span className="ml-2">🎵</span>
           </Button>
         </Link>
       </div>
