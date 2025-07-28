@@ -49,6 +49,7 @@ export const HeroManagement = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [usageContext, setUsageContext] = useState<'homepage' | 'press_kit'>('homepage');
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -81,13 +82,14 @@ export const HeroManagement = () => {
 
   useEffect(() => {
     fetchHeroSlides();
-  }, []);
+  }, [usageContext]);
 
   const fetchHeroSlides = async () => {
     try {
       const { data: slidesData, error: slidesError } = await supabase
         .from('gw_hero_slides')
         .select('*')
+        .eq('usage_context', usageContext)
         .order('display_order', { ascending: true });
 
       if (slidesError) throw slidesError;
@@ -230,7 +232,8 @@ export const HeroManagement = () => {
             action_button_text: formData.action_button_text || null,
             action_button_url: formData.action_button_url || null,
             action_button_enabled: formData.action_button_enabled,
-            is_active: formData.is_active
+            is_active: formData.is_active,
+            usage_context: usageContext
           });
 
         if (error) throw error;
@@ -375,6 +378,34 @@ export const HeroManagement = () => {
 
   return (
     <div className="space-y-6">
+      {/* Usage Context Tabs */}
+      <Card className="border-2 border-primary/20">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10">
+          <CardTitle className="text-xl md:text-2xl flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-blue-100 text-blue-700">
+              🎨
+            </div>
+            <span>Hero Slide Management</span>
+          </CardTitle>
+          <div className="flex gap-2 mt-4">
+            <Button
+              variant={usageContext === 'homepage' ? 'default' : 'outline'}
+              onClick={() => setUsageContext('homepage')}
+              className="text-sm"
+            >
+              🏠 Homepage Slides
+            </Button>
+            <Button
+              variant={usageContext === 'press_kit' ? 'default' : 'outline'}
+              onClick={() => setUsageContext('press_kit')}
+              className="text-sm"
+            >
+              📰 Press Kit Slides
+            </Button>
+          </div>
+        </CardHeader>
+      </Card>
+
       {/* Header */}
       <Card className="border-2 border-primary/20">
         <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10">
@@ -382,8 +413,8 @@ export const HeroManagement = () => {
             <div className={`p-2 rounded-lg ${editingId ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
               {editingId ? '✏️' : '➕'}
             </div>
-            <span className="hidden sm:inline">{editingId ? "Edit Hero Slide" : "Create New Hero Slide"}</span>
-            <span className="sm:hidden">{editingId ? "Edit Slide" : "New Slide"}</span>
+            <span className="hidden sm:inline">{editingId ? "Edit" : "Create New"} {usageContext === 'press_kit' ? 'Press Kit' : 'Homepage'} Slide</span>
+            <span className="sm:hidden">{editingId ? "Edit" : "New"} {usageContext === 'press_kit' ? 'Press Kit' : 'Homepage'} Slide</span>
           </CardTitle>
         </CardHeader>
       </Card>

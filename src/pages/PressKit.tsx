@@ -4,23 +4,77 @@ import { Badge } from "@/components/ui/badge";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Download, ExternalLink, Mail, Phone, Instagram, Facebook, Twitter, Youtube, Star, Award, Globe } from "lucide-react";
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const PressKit = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [heroSlides, setHeroSlides] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  const heroImages = [
-    '/lovable-uploads/6a86e8cc-1420-4397-8742-983afe6a293f.png', // Main Glee Club performance
-    '/lovable-uploads/d2719d93-5439-4d49-9d9a-0f68a440e7c5.png', // Auth background
-    '/lovable-uploads/82759e4e-12b8-47a8-907b-7b6b22294919.png'  // Director image
-  ];
+  useEffect(() => {
+    const fetchPressKitSlides = async () => {
+      try {
+        const { data: slides, error } = await supabase
+          .from('gw_hero_slides')
+          .select('*')
+          .eq('usage_context', 'press_kit')
+          .eq('is_active', true)
+          .order('display_order', { ascending: true });
+
+        if (error) {
+          console.error('Error fetching press kit slides:', error);
+          // Fallback to hardcoded images if database fetch fails
+          setHeroSlides([
+            {
+              id: '1',
+              image_url: '/lovable-uploads/6a86e8cc-1420-4397-8742-983afe6a293f.png',
+              title: 'Performance Excellence',
+              description: 'The Spelman College Glee Club performing at prestigious venues worldwide'
+            },
+            {
+              id: '2', 
+              image_url: '/lovable-uploads/d2719d93-5439-4d49-9d9a-0f68a440e7c5.png',
+              title: 'Musical Heritage',
+              description: 'Preserving and celebrating the rich musical traditions of African Americans'
+            },
+            {
+              id: '3',
+              image_url: '/lovable-uploads/82759e4e-12b8-47a8-907b-7b6b22294919.png',
+              title: 'Leadership Excellence',
+              description: 'Developing the next generation of musical and academic leaders'
+            }
+          ]);
+        } else {
+          setHeroSlides(slides || []);
+        }
+      } catch (error) {
+        console.error('Unexpected error fetching slides:', error);
+        // Fallback to hardcoded images
+        setHeroSlides([
+          {
+            id: '1',
+            image_url: '/lovable-uploads/6a86e8cc-1420-4397-8742-983afe6a293f.png',
+            title: 'Performance Excellence',
+            description: 'The Spelman College Glee Club performing at prestigious venues worldwide'
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPressKitSlides();
+  }, []);
 
   useEffect(() => {
+    if (heroSlides.length === 0) return;
+    
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
     }, 5000); // Change slide every 5 seconds
 
     return () => clearInterval(interval);
-  }, [heroImages.length]);
+  }, [heroSlides.length]);
 
   const downloadAssets = [
     {
@@ -64,31 +118,33 @@ const PressKit = () => {
         {/* Hero Header */}
         <div className="relative text-center space-y-8 py-20 overflow-hidden min-h-[80vh] flex items-center justify-center">
           {/* Slideshow Background */}
-          {heroImages.map((image, index) => (
+          {heroSlides.length > 0 && heroSlides.map((slide, index) => (
             <div
-              key={index}
+              key={slide.id || index}
               className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
                 index === currentSlide ? 'opacity-30' : 'opacity-0'
               }`}
-              style={{ backgroundImage: `url(${image})` }}
+              style={{ backgroundImage: `url(${slide.image_url})` }}
             />
           ))}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-secondary/20"></div>
           
           {/* Slideshow Indicators */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2 z-20">
-            {heroImages.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  index === currentSlide 
-                    ? 'bg-primary scale-125' 
-                    : 'bg-primary/40 hover:bg-primary/60'
-                }`}
-              />
-            ))}
-          </div>
+          {heroSlides.length > 0 && (
+            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2 z-20">
+              {heroSlides.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    index === currentSlide 
+                      ? 'bg-primary scale-125' 
+                      : 'bg-primary/40 hover:bg-primary/60'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
 
           <div className="relative z-10 space-y-8 px-6">
             <div className="flex justify-center mb-8">

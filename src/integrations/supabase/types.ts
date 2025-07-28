@@ -2790,6 +2790,7 @@ export type Database = {
           title_position_horizontal: string | null
           title_position_vertical: string | null
           title_size: string | null
+          usage_context: string | null
         }
         Insert: {
           action_button_enabled?: boolean | null
@@ -2814,6 +2815,7 @@ export type Database = {
           title_position_horizontal?: string | null
           title_position_vertical?: string | null
           title_size?: string | null
+          usage_context?: string | null
         }
         Update: {
           action_button_enabled?: boolean | null
@@ -2838,6 +2840,7 @@ export type Database = {
           title_position_horizontal?: string | null
           title_position_vertical?: string | null
           title_size?: string | null
+          usage_context?: string | null
         }
         Relationships: [
           {
