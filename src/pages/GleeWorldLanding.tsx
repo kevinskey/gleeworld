@@ -11,6 +11,7 @@ import { AlbumModal } from "@/components/music/AlbumModal";
 import { YoutubeVideoSection } from "@/components/youtube/YoutubeVideoSection";
 import { FAQSlider } from "@/components/landing/FAQSlider";
 import { CountdownTimer } from "@/components/landing/CountdownTimer";
+import { WelcomeSection } from "@/components/landing/WelcomeSection";
 import { AuditionHoverCard } from "@/components/audition/AuditionHoverCard";
 import { MusicStaffIcon } from "@/components/icons/MusicStaffIcon";
 import { 
@@ -227,6 +228,9 @@ export const GleeWorldLanding = () => {
 
   return (
     <PublicLayout>
+      {/* Welcome Section - First */}
+      <WelcomeSection />
+
       {/* Audition Hover Card */}
       <AuditionHoverCard />
 
