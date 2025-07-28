@@ -3387,6 +3387,67 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_order_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          order_id: string | null
+          product_id: string | null
+          product_title: string
+          quantity: number
+          total_price: number
+          unit_price: number
+          variant_id: string | null
+          variant_title: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          product_id?: string | null
+          product_title: string
+          quantity?: number
+          total_price: number
+          unit_price: number
+          variant_id?: string | null
+          variant_title?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          product_id?: string | null
+          product_title?: string
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+          variant_id?: string | null
+          variant_title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "gw_user_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "gw_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_order_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "gw_product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_payment_records: {
         Row: {
           amount: number
@@ -5098,6 +5159,7 @@ export type Database = {
           billing_address: Json | null
           created_at: string | null
           currency: string | null
+          guest_email: string | null
           id: string
           notes: string | null
           order_number: string
@@ -5117,6 +5179,7 @@ export type Database = {
           billing_address?: Json | null
           created_at?: string | null
           currency?: string | null
+          guest_email?: string | null
           id?: string
           notes?: string | null
           order_number: string
@@ -5136,6 +5199,7 @@ export type Database = {
           billing_address?: Json | null
           created_at?: string | null
           currency?: string | null
+          guest_email?: string | null
           id?: string
           notes?: string | null
           order_number?: string

@@ -27,6 +27,8 @@ import { MemberViewDashboard } from "./components/member-view/MemberViewDashboar
 import EventPlanner from "./pages/EventPlanner";
 import BudgetApprovals from "./pages/BudgetApprovals";
 import { Shop } from "./pages/Shop";
+import { CheckoutPage } from "./pages/CheckoutPage";
+import { OrderConfirmationPage } from "./pages/OrderConfirmationPage";
 import Payments from "./pages/Payments";
 import Profile from "./pages/Profile";
 import ProfileSetup from "./pages/ProfileSetup";
@@ -265,14 +267,30 @@ const App = () => {
                     </ProtectedRoute>
                   } 
                 />
-               <Route 
-                 path="/shop" 
-                 element={
-                   <PublicRoute>
-                     <Shop />
-                   </PublicRoute>
-                 } 
-               />
+                <Route 
+                  path="/shop" 
+                  element={
+                    <PublicRoute>
+                      <Shop />
+                    </PublicRoute>
+                  } 
+                />
+                <Route 
+                  path="/checkout" 
+                  element={
+                    <PublicRoute>
+                      <CheckoutPage />
+                    </PublicRoute>
+                  } 
+                />
+                <Route 
+                  path="/order-confirmation" 
+                  element={
+                    <PublicRoute>
+                      <OrderConfirmationPage />
+                    </PublicRoute>
+                  } 
+                />
                <Route 
                  path="/calendar" 
                  element={
