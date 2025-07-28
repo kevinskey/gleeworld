@@ -3,6 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
+// Global subscription manager to prevent duplicates across all hooks
+const globalSubscriptions = new Map<string, any>();
+
 export interface UserDashboardData {
   user_id: string;
   email: string;
@@ -131,43 +134,57 @@ export const useUserDashboard = () => {
     }
   };
 
-  // Clean up any existing subscriptions
-  const cleanupSubscriptions = () => {
-    const { paymentsChannel, notificationsChannel } = subscriptionsRef.current;
+  // Clean up any existing subscriptions using global manager
+  const cleanupSubscriptions = (userId: string) => {
+    const paymentsKey = `user-dashboard-payments-${userId}`;
+    const notificationsKey = `user-dashboard-notifications-${userId}`;
+    
+    const paymentsChannel = globalSubscriptions.get(paymentsKey);
+    const notificationsChannel = globalSubscriptions.get(notificationsKey);
     
     if (paymentsChannel) {
-      console.log('useUserDashboard: Removing payments channel');
+      console.log('useUserDashboard: Removing global payments channel');
       supabase.removeChannel(paymentsChannel);
+      globalSubscriptions.delete(paymentsKey);
     }
     
     if (notificationsChannel) {
-      console.log('useUserDashboard: Removing notifications channel');
+      console.log('useUserDashboard: Removing global notifications channel');
       supabase.removeChannel(notificationsChannel);
+      globalSubscriptions.delete(notificationsKey);
     }
     
     subscriptionsRef.current = { isSubscribed: false };
   };
 
-  // Set up real-time subscriptions for immediate updates
+  // Set up real-time subscriptions using global manager
   useEffect(() => {
-    console.log('useUserDashboard: Effect running', { 
-      user: user?.id, 
-      isSubscribed: subscriptionsRef.current.isSubscribed 
+    if (!user) return;
+
+    const userId = user.id;
+    const paymentsKey = `user-dashboard-payments-${userId}`;
+    const notificationsKey = `user-dashboard-notifications-${userId}`;
+
+    console.log('useUserDashboard: Checking subscriptions', { 
+      userId,
+      paymentsExists: globalSubscriptions.has(paymentsKey),
+      notificationsExists: globalSubscriptions.has(notificationsKey),
+      localSubscribed: subscriptionsRef.current.isSubscribed
     });
-    
-    if (!user || subscriptionsRef.current.isSubscribed) {
-      console.log('useUserDashboard: Skipping subscription setup', {
-        noUser: !user,
-        alreadySubscribed: subscriptionsRef.current.isSubscribed
-      });
-      return;
+
+    // Check if subscriptions already exist globally
+    if (globalSubscriptions.has(paymentsKey) || globalSubscriptions.has(notificationsKey)) {
+      console.log('useUserDashboard: Subscriptions already exist globally, skipping');
+      subscriptionsRef.current.isSubscribed = true;
+      return () => cleanupSubscriptions(userId);
     }
 
-    console.log('useUserDashboard: Setting up subscriptions for user:', user.id);
+    console.log('useUserDashboard: Creating new subscriptions');
 
-    // Create unique channel names
-    const paymentsChannelName = `dashboard-payments-${user.id}`;
-    const notificationsChannelName = `dashboard-notifications-${user.id}`;
+    // Create unique channel names with timestamps to avoid conflicts
+    const timestamp = Date.now();
+    const paymentsChannelName = `user-dashboard-payments-${userId}-${timestamp}`;
+    const notificationsChannelName = `user-dashboard-notifications-${userId}-${timestamp}`;
 
     // Create channels
     const paymentsChannel = supabase.channel(paymentsChannelName);
@@ -180,7 +197,7 @@ export const useUserDashboard = () => {
         event: '*',
         schema: 'public',
         table: 'user_payments',
-        filter: `user_id=eq.${user.id}`
+        filter: `user_id=eq.${userId}`
       },
       (payload) => {
         console.log('User payments changed:', payload);
@@ -195,7 +212,7 @@ export const useUserDashboard = () => {
         event: '*',
         schema: 'public',
         table: 'gw_notifications',
-        filter: `user_id=eq.${user.id}`
+        filter: `user_id=eq.${userId}`
       },
       (payload) => {
         console.log('User notifications changed:', payload);
@@ -203,23 +220,34 @@ export const useUserDashboard = () => {
       }
     );
 
-    // Subscribe to channels
-    paymentsChannel.subscribe((status) => {
-      console.log('Payments channel status:', status);
-    });
+    // Subscribe to channels and store in global manager
+    try {
+      paymentsChannel.subscribe((status) => {
+        console.log('Payments channel status:', status);
+        if (status === 'SUBSCRIBED') {
+          globalSubscriptions.set(paymentsKey, paymentsChannel);
+        }
+      });
 
-    notificationsChannel.subscribe((status) => {
-      console.log('Notifications channel status:', status);
-    });
+      notificationsChannel.subscribe((status) => {
+        console.log('Notifications channel status:', status);
+        if (status === 'SUBSCRIBED') {
+          globalSubscriptions.set(notificationsKey, notificationsChannel);
+        }
+      });
 
-    // Store channels in ref
-    subscriptionsRef.current = {
-      paymentsChannel,
-      notificationsChannel,
-      isSubscribed: true
-    };
+      subscriptionsRef.current = {
+        paymentsChannel,
+        notificationsChannel,
+        isSubscribed: true
+      };
 
-    return cleanupSubscriptions;
+      console.log('useUserDashboard: Subscriptions set up successfully');
+    } catch (error) {
+      console.error('useUserDashboard: Error setting up subscriptions:', error);
+    }
+
+    return () => cleanupSubscriptions(userId);
   }, [user?.id]); // Only depend on user.id
 
   useEffect(() => {
