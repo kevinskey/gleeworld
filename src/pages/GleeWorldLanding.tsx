@@ -137,7 +137,7 @@ export const GleeWorldLanding = () => {
     if (heroSlides.length <= 1) return;
 
     const currentHeroSlide = heroSlides[currentSlide];
-    const duration = (currentHeroSlide?.slide_duration_seconds || 5) * 1000;
+    const duration = (currentHeroSlide?.slide_duration_seconds || 10) * 1000;
 
     const timer = setTimeout(() => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
