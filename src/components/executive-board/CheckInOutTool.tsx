@@ -196,14 +196,18 @@ export const CheckInOutTool = () => {
                             <SelectValue placeholder="Select item type" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="dress">Dress</SelectItem>
-                          <SelectItem value="folder">Folder</SelectItem>
-                          <SelectItem value="merchandise">Merchandise</SelectItem>
-                          <SelectItem value="gear">Gear</SelectItem>
-                          <SelectItem value="equipment">Equipment</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
+                         <SelectContent>
+                           <SelectItem value="fall_music_packet">Fall Music Packet</SelectItem>
+                           <SelectItem value="spring_music_packet">Spring Music Packet</SelectItem>
+                           <SelectItem value="pearls_dress">Pearls Dress</SelectItem>
+                           <SelectItem value="lipstick">Lipstick</SelectItem>
+                           <SelectItem value="dress">Dress</SelectItem>
+                           <SelectItem value="folder">Folder</SelectItem>
+                           <SelectItem value="merchandise">Merchandise</SelectItem>
+                           <SelectItem value="gear">Gear</SelectItem>
+                           <SelectItem value="equipment">Equipment</SelectItem>
+                           <SelectItem value="other">Other</SelectItem>
+                         </SelectContent>
                       </Select>
                       <FormMessage />
                     </FormItem>

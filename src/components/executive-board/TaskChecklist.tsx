@@ -40,52 +40,7 @@ export const TaskChecklist = () => {
         .limit(5);
 
       if (error) throw error;
-      
-      // Add predefined tasks if no tasks exist
-      const dbTasks = data || [];
-      if (dbTasks.length === 0) {
-        const predefinedTasks = [
-          {
-            id: 'temp-1',
-            title: 'Fall Music Packet',
-            description: 'Prepare and distribute fall semester music packet',
-            status: 'pending',
-            priority: 'high',
-            due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            assigned_to_position: 'music_director'
-          },
-          {
-            id: 'temp-2',
-            title: 'Spring Music Packet',
-            description: 'Prepare and distribute spring semester music packet',
-            status: 'pending',
-            priority: 'medium',
-            due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-            assigned_to_position: 'music_director'
-          },
-          {
-            id: 'temp-3',
-            title: 'Pearls Dress',
-            description: 'Order and organize pearls dress for performances',
-            status: 'pending',
-            priority: 'high',
-            due_date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
-            assigned_to_position: 'president'
-          },
-          {
-            id: 'temp-4',
-            title: 'Lipstick',
-            description: 'Purchase performance lipstick for all members',
-            status: 'pending',
-            priority: 'medium',
-            due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-            assigned_to_position: 'secretary'
-          }
-        ];
-        setTasks(predefinedTasks);
-      } else {
-        setTasks(dbTasks);
-      }
+      setTasks(data || []);
     } catch (error) {
       console.error('Error fetching tasks:', error);
     } finally {
