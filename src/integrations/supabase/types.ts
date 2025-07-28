@@ -5956,6 +5956,45 @@ export type Database = {
         }
         Relationships: []
       }
+      scholarship_sources: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          last_scraped_at: string | null
+          name: string
+          scrape_frequency_hours: number | null
+          selector_config: Json | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          last_scraped_at?: string | null
+          name: string
+          scrape_frequency_hours?: number | null
+          selector_config?: Json | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          last_scraped_at?: string | null
+          name?: string
+          scrape_frequency_hours?: number | null
+          selector_config?: Json | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       scholarships: {
         Row: {
           amount: string | null
@@ -5968,6 +6007,7 @@ export type Database = {
           is_active: boolean | null
           is_featured: boolean | null
           link: string | null
+          scraped_from_url: string | null
           source: string | null
           tags: string[] | null
           title: string
@@ -5984,6 +6024,7 @@ export type Database = {
           is_active?: boolean | null
           is_featured?: boolean | null
           link?: string | null
+          scraped_from_url?: string | null
           source?: string | null
           tags?: string[] | null
           title: string
@@ -6000,6 +6041,7 @@ export type Database = {
           is_active?: boolean | null
           is_featured?: boolean | null
           link?: string | null
+          scraped_from_url?: string | null
           source?: string | null
           tags?: string[] | null
           title?: string

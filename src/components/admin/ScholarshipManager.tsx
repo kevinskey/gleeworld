@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ScholarshipForm } from './ScholarshipForm';
+import { ScholarshipSourceManager } from './ScholarshipSourceManager';
 import { toast } from 'sonner';
 import { Pencil, Trash2, Plus, RefreshCw, ExternalLink, Calendar, DollarSign, Users, Eye, EyeOff } from 'lucide-react';
 import { format } from 'date-fns';
@@ -155,25 +157,32 @@ export const ScholarshipManager = () => {
   }
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col space-y-3 md:space-y-0 md:flex-row md:justify-between md:items-center gap-4">
-        <div className="flex flex-col space-y-2 md:space-y-0 md:flex-row gap-2">
-          <Button 
-            onClick={handleUpdateScholarships}
-            disabled={updating}
-            variant="outline"
-            className="w-full md:w-auto"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${updating ? 'animate-spin' : ''}`} />
-            {updating ? 'Updating...' : 'Update from Sources'}
-          </Button>
-          <Button onClick={() => setShowForm(true)} className="w-full md:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Scholarship
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-6">
+      <Tabs defaultValue="scholarships" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="scholarships">Manage Scholarships</TabsTrigger>
+          <TabsTrigger value="sources">Manage Sources</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="scholarships" className="space-y-4 md:space-y-6">
+          {/* Header */}
+          <div className="flex flex-col space-y-3 md:space-y-0 md:flex-row md:justify-between md:items-center gap-4">
+            <div className="flex flex-col space-y-2 md:space-y-0 md:flex-row gap-2">
+              <Button 
+                onClick={handleUpdateScholarships}
+                disabled={updating}
+                variant="outline"
+                className="w-full md:w-auto"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${updating ? 'animate-spin' : ''}`} />
+                {updating ? 'Updating...' : 'Update from Sources'}
+              </Button>
+              <Button onClick={() => setShowForm(true)} className="w-full md:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Scholarship
+              </Button>
+            </div>
+          </div>
 
       {/* Search */}
       <div className="w-full">
@@ -316,6 +325,12 @@ export const ScholarshipManager = () => {
           </div>
         </>
       )}
+        </TabsContent>
+
+        <TabsContent value="sources">
+          <ScholarshipSourceManager />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
