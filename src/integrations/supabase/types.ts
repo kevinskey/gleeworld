@@ -5956,6 +5956,54 @@ export type Database = {
         }
         Relationships: []
       }
+      scholarships: {
+        Row: {
+          amount: string | null
+          created_at: string | null
+          created_by: string | null
+          deadline: string | null
+          description: string | null
+          eligibility: string | null
+          id: string
+          is_active: boolean | null
+          is_featured: boolean | null
+          link: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deadline?: string | null
+          description?: string | null
+          eligibility?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          link?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deadline?: string | null
+          description?: string | null
+          eligibility?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          link?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       security_rate_limits: {
         Row: {
           action_type: string

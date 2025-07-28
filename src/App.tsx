@@ -53,6 +53,7 @@ import AlumnaeLanding from "./pages/AlumnaeLanding";
 import AlumnaeAdmin from "./pages/admin/AlumnaeAdmin";
 import SendNotificationPage from "./pages/SendNotificationPage";
 import AuditionPage from "./pages/AuditionPage";
+import ScholarshipHub from "./pages/ScholarshipHub";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -407,14 +408,22 @@ const App = () => {
                             </ProtectedRoute>
                           } 
                         />
-                        <Route 
-                          path="/auditions" 
-                          element={
-                            <ProtectedRoute>
-                              <AuditionPage />
-                            </ProtectedRoute>
-                          } 
-                        />
+                         <Route 
+                           path="/auditions" 
+                           element={
+                             <ProtectedRoute>
+                               <AuditionPage />
+                             </ProtectedRoute>
+                           } 
+                         />
+                         <Route 
+                           path="/scholarships" 
+                           element={
+                             <ProtectedRoute>
+                               <ScholarshipHub />
+                             </ProtectedRoute>
+                           } 
+                         />
                 <Route 
                   path="/landing"
                   element={

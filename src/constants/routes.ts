@@ -15,7 +15,8 @@ export const ROUTES = {
   CALENDAR: '/calendar',
   PERFORMANCE: '/performance',
   TOUR_MANAGER: '/tour-manager',
-  ATTENDANCE: '/attendance'
+  ATTENDANCE: '/attendance',
+  SCHOLARSHIPS: '/scholarships'
 } as const;
 
 export const PROTECTED_ROUTES = [
@@ -28,7 +29,8 @@ export const PROTECTED_ROUTES = [
   ROUTES.EVENT_PLANNER,
   ROUTES.PERFORMANCE,
   ROUTES.TOUR_MANAGER,
-  ROUTES.ATTENDANCE
+  ROUTES.ATTENDANCE,
+  ROUTES.SCHOLARSHIPS
 ] as const;
 
 export const PUBLIC_ROUTES = [
