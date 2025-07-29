@@ -20,6 +20,7 @@ export const useSharedSpiritualReflections = () => {
 
   const fetchSharedReflections = async () => {
     try {
+      console.log('useSharedSpiritualReflections: Starting fetch...');
       setLoading(true);
       const { data, error } = await supabase
         .from('gw_spiritual_reflections')
@@ -27,6 +28,7 @@ export const useSharedSpiritualReflections = () => {
         .eq('is_shared_to_members', true)
         .order('shared_at', { ascending: false });
 
+      console.log('useSharedSpiritualReflections: Query result:', { data, error });
       if (error) throw error;
       setSharedReflections(data?.map(item => ({
         id: item.id,

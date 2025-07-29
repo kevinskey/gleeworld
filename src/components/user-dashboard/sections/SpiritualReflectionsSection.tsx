@@ -5,6 +5,8 @@ import { useSharedSpiritualReflections } from "@/hooks/useSharedSpiritualReflect
 
 export const SpiritualReflectionsSection = () => {
   const { sharedReflections, loading } = useSharedSpiritualReflections();
+  
+  console.log('SpiritualReflectionsSection: loading=', loading, 'reflections=', sharedReflections);
 
   const getReflectionTypeColor = (type: string) => {
     switch (type) {
