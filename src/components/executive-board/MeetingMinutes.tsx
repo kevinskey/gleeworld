@@ -21,6 +21,7 @@ import {
   ExternalLink,
   RefreshCw
 } from "lucide-react";
+import { GoogleAuth } from "@/components/google-auth/GoogleAuth";
 
 type MeetingStatus = 'draft' | 'approved' | 'archived';
 
@@ -493,6 +494,9 @@ ${minute.next_meeting_date ? `Next Meeting: ${new Date(minute.next_meeting_date)
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Google Authentication Section */}
+      <GoogleAuth onAuthSuccess={fetchMeetingMinutes} />
 
       <div className="grid gap-4">
         {minutes.length === 0 ? (
