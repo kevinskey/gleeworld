@@ -30,6 +30,7 @@ export const useSharedSpiritualReflections = () => {
 
       console.log('useSharedSpiritualReflections: Query result:', { data, error });
       if (error) throw error;
+      console.log('useSharedSpiritualReflections: Raw data from database:', data);
       setSharedReflections(data?.map(item => ({
         id: item.id,
         title: item.title,
@@ -39,6 +40,7 @@ export const useSharedSpiritualReflections = () => {
         is_featured: item.is_featured,
         shared_at: item.shared_at
       })) || []);
+      console.log('useSharedSpiritualReflections: Final mapped data:', data?.map(item => ({ id: item.id, title: item.title, content: item.content })));
     } catch (err: any) {
       setError(err.message);
       toast({
