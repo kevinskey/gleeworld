@@ -58,6 +58,7 @@ import { TourStipends } from "@/components/tour-manager/TourStipends";
 import { TourOverview } from "@/components/tour-manager/TourOverview";
 import { WardrobeMistressHub } from "@/components/tour-manager/WardrobeMistressHub";
 import { LibraryManagement } from "@/components/music-library/LibraryManagement";
+import { HistorianWorkpage } from "@/components/historian/HistorianWorkpage";
 
 
 export type ExecutivePosition = 
@@ -541,21 +542,7 @@ export const ExecutiveBoardDashboard = () => {
 
           {selectedPosition === 'historian' && (
             <TabsContent value="historian-hub">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Camera className="h-5 w-5" />
-                    Historian Workpage
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center text-muted-foreground">
-                    Historian workpage is being set up. This will include media upload tools, 
-                    event documentation tracker, historian journal, interview toolkit, 
-                    archive management, and reporting panels.
-                  </div>
-                </CardContent>
-              </Card>
+              <HistorianWorkpage />
             </TabsContent>
           )}
 
