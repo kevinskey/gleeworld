@@ -27,6 +27,29 @@ export const TasksSection = () => {
 
   const totalTaskCount = checkedOutItems.length + (duesInfo.totalDue > 0 ? 1 : 0);
 
+  const getItemTypeColor = (type: string) => {
+    switch (type) {
+      case 'uniform': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'music': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'equipment': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getDuesStatusColor = () => {
+    const today = new Date();
+    const dueDate = new Date(duesInfo.dueDate);
+    const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntilDue < 0) {
+      return 'bg-red-50 border-red-200 text-red-900'; // Overdue
+    } else if (daysUntilDue <= 7) {
+      return 'bg-orange-50 border-orange-200 text-orange-900'; // Due soon
+    } else {
+      return 'bg-yellow-50 border-yellow-200 text-yellow-900'; // Due later
+    }
+  };
+
   return (
     <div className="w-full">
       {/* Desktop Layout */}
@@ -54,7 +77,7 @@ export const TasksSection = () => {
                   checkedOutItems.map((item) => (
                     <div 
                       key={item.id} 
-                      className="border border-accent/10 rounded-lg p-2 bg-background/50 backdrop-blur-sm cursor-pointer hover:bg-background/70 transition-colors"
+                      className={`border rounded-lg p-2 backdrop-blur-sm cursor-pointer hover:shadow-md transition-all ${getItemTypeColor(item.type)} bg-opacity-50 hover:bg-opacity-70`}
                       onClick={() => setSelectedItem({
                         id: item.id,
                         title: item.title,
@@ -65,12 +88,12 @@ export const TasksSection = () => {
                       })}
                     >
                       <div className="flex items-start justify-between mb-1">
-                        <h5 className="font-medium text-sm text-foreground line-clamp-1">{item.title}</h5>
-                        <Badge variant="outline" className="text-xs">
+                        <h5 className="font-medium text-sm line-clamp-1">{item.title}</h5>
+                        <Badge variant="secondary" className={`text-xs ${getItemTypeColor(item.type)}`}>
                           {item.type}
                         </Badge>
                       </div>
-                      <div className="text-xs text-muted-foreground flex items-center gap-1">
+                      <div className="text-xs flex items-center gap-1 opacity-80">
                         <Clock className="h-3 w-3" />
                         Due: {new Date(item.dueDate).toLocaleDateString()}
                       </div>
@@ -105,7 +128,7 @@ export const TasksSection = () => {
                 </div>
               ) : (
                 <div 
-                  className="space-y-2 cursor-pointer hover:bg-background/70 p-2 rounded-lg transition-colors"
+                  className={`space-y-2 cursor-pointer hover:shadow-md p-3 rounded-lg transition-all border ${getDuesStatusColor()}`}
                   onClick={() => setSelectedItem({
                     id: 'dues-payment',
                     title: 'Outstanding Dues Payment',
@@ -116,13 +139,13 @@ export const TasksSection = () => {
                   })}
                 >
                   <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold text-foreground">${duesInfo.totalDue.toFixed(2)}</span>
-                    <span className="text-sm text-muted-foreground">Due: {new Date(duesInfo.dueDate).toLocaleDateString()}</span>
+                    <span className="text-lg font-bold">${duesInfo.totalDue.toFixed(2)}</span>
+                    <span className="text-sm opacity-80">Due: {new Date(duesInfo.dueDate).toLocaleDateString()}</span>
                   </div>
                   <div className="space-y-1">
                     {duesInfo.items.map((item, index) => (
                       <div key={index} className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">{item.description}</span>
+                        <span className="opacity-80">{item.description}</span>
                         <span className="font-medium">${item.amount.toFixed(2)}</span>
                       </div>
                     ))}
@@ -170,7 +193,7 @@ export const TasksSection = () => {
                     checkedOutItems.map((item) => (
                       <div 
                         key={item.id} 
-                        className="border border-accent/10 rounded-lg p-2 bg-background/50 cursor-pointer hover:bg-background/70 transition-colors"
+                        className={`border rounded-lg p-2 cursor-pointer hover:shadow-md transition-all ${getItemTypeColor(item.type)} bg-opacity-50 hover:bg-opacity-70`}
                         onClick={() => setSelectedItem({
                           id: item.id,
                           title: item.title,
@@ -181,12 +204,12 @@ export const TasksSection = () => {
                         })}
                       >
                         <div className="flex items-center justify-between">
-                          <h5 className="font-medium text-sm text-foreground line-clamp-1">{item.title}</h5>
-                          <Badge variant="outline" className="text-xs">
+                          <h5 className="font-medium text-sm line-clamp-1">{item.title}</h5>
+                          <Badge variant="secondary" className={`text-xs ${getItemTypeColor(item.type)}`}>
                             {item.type}
                           </Badge>
                         </div>
-                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                        <div className="text-xs flex items-center gap-1 mt-1 opacity-80">
                           <Clock className="h-3 w-3" />
                           Due: {new Date(item.dueDate).toLocaleDateString()}
                         </div>
@@ -215,7 +238,7 @@ export const TasksSection = () => {
                   </div>
                 ) : (
                   <div 
-                    className="border border-primary/10 rounded-lg p-2 bg-background/50 cursor-pointer hover:bg-background/70 transition-colors"
+                    className={`border rounded-lg p-2 cursor-pointer hover:shadow-md transition-all ${getDuesStatusColor()}`}
                     onClick={() => setSelectedItem({
                       id: 'dues-payment',
                       title: 'Outstanding Dues Payment',
@@ -226,13 +249,13 @@ export const TasksSection = () => {
                     })}
                   >
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-lg font-bold text-foreground">${duesInfo.totalDue.toFixed(2)}</span>
-                      <span className="text-xs text-muted-foreground">Due: {new Date(duesInfo.dueDate).toLocaleDateString()}</span>
+                      <span className="text-lg font-bold">${duesInfo.totalDue.toFixed(2)}</span>
+                      <span className="text-xs opacity-80">Due: {new Date(duesInfo.dueDate).toLocaleDateString()}</span>
                     </div>
                     <div className="space-y-1">
                       {duesInfo.items.map((item, index) => (
                         <div key={index} className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">{item.description}</span>
+                          <span className="opacity-80">{item.description}</span>
                           <span className="font-medium">${item.amount.toFixed(2)}</span>
                         </div>
                       ))}
