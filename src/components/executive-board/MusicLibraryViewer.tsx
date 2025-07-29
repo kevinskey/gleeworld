@@ -22,6 +22,8 @@ export const MusicLibraryViewer = () => {
   const [sheetMusic, setSheetMusic] = useState<SheetMusic[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
 
   useEffect(() => {
     fetchSheetMusic();
@@ -59,6 +61,40 @@ export const MusicLibraryViewer = () => {
     }
   };
 
+  const handleTitleClick = (music: SheetMusic) => {
+    setEditingId(music.id);
+    setEditingTitle(music.title);
+  };
+
+  const handleTitleSave = async (musicId: string) => {
+    if (!editingTitle.trim()) return;
+    
+    try {
+      const { error } = await supabase
+        .from('gw_sheet_music')
+        .update({ title: editingTitle })
+        .eq('id', musicId);
+
+      if (error) throw error;
+
+      setSheetMusic(prev => 
+        prev.map(music => 
+          music.id === musicId ? { ...music, title: editingTitle } : music
+        )
+      );
+    } catch (error) {
+      console.error('Error updating title:', error);
+    } finally {
+      setEditingId(null);
+      setEditingTitle("");
+    }
+  };
+
+  const handleTitleCancel = () => {
+    setEditingId(null);
+    setEditingTitle("");
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -87,7 +123,26 @@ export const MusicLibraryViewer = () => {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 text-sm">
-                      <h4 className="font-medium">{music.title}</h4>
+                      {editingId === music.id ? (
+                        <Input
+                          value={editingTitle}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleTitleSave(music.id);
+                            if (e.key === 'Escape') handleTitleCancel();
+                          }}
+                          onBlur={() => handleTitleSave(music.id)}
+                          className="h-6 px-2 text-sm font-medium min-w-0 flex-shrink"
+                          autoFocus
+                        />
+                      ) : (
+                        <h4 
+                          className="font-medium cursor-pointer hover:text-primary" 
+                          onClick={() => handleTitleClick(music)}
+                        >
+                          {music.title}
+                        </h4>
+                      )}
                       <span className="text-muted-foreground">by {music.composer || "Unknown"}</span>
                       {music.voice_parts && music.voice_parts.length > 0 && (
                         <Badge variant="outline" className="text-xs">
