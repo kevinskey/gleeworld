@@ -3,11 +3,22 @@ import { getDefaultEventImage } from "@/constants/images";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Users, DollarSign, Edit } from "lucide-react";
+import { Calendar, MapPin, Users, DollarSign, Edit, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { EditEventDialog } from "./EditEventDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Event {
   id: string;
@@ -40,12 +51,23 @@ export const EventsList = ({ filter = 'all-events' }: EventsListProps) => {
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const fetchEvents = async () => {
     if (!user) return;
 
     try {
       setLoading(true);
+
+      // Check if user is admin first
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      const userIsAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
+      setIsAdmin(userIsAdmin);
 
       if (filter === 'all-events') {
         // For all events: show events user has access to (created, team member, admin)
@@ -61,16 +83,7 @@ export const EventsList = ({ filter = 'all-events' }: EventsListProps) => {
           .select('event_id, events!inner(*)')
           .eq('user_id', user.id);
         
-        // Check if user is admin
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-        
-        const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
-        
-        if (isAdmin) {
+        if (userIsAdmin) {
           // Admins can see all events
           const { data: allEvents, error } = await supabase
             .from('events')
@@ -153,6 +166,32 @@ export const EventsList = ({ filter = 'all-events' }: EventsListProps) => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string, eventName: string) => {
+    try {
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Event Deleted",
+        description: `"${eventName}" has been successfully deleted.`,
+      });
+
+      // Refresh the events list
+      fetchEvents();
+    } catch (err) {
+      console.error('Error deleting event:', err);
+      toast({
+        title: "Error",
+        description: "Failed to delete event. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -299,28 +338,59 @@ export const EventsList = ({ filter = 'all-events' }: EventsListProps) => {
                   {event.brief_description}
                 </p>
               )}
-              
-              <div className="flex gap-2 pt-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => openEventDetails(event)}
-                  className="flex-1"
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Manage
-                </Button>
-                {(filter === 'my-budgets' || filter === 'my-events') && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="flex-1"
-                  >
-                    <DollarSign className="h-4 w-4 mr-1" />
-                    Budget
-                  </Button>
-                )}
-              </div>
+               
+               <div className="flex gap-2 pt-2">
+                 <Button 
+                   variant="outline" 
+                   size="sm" 
+                   onClick={() => openEventDetails(event)}
+                   className="flex-1"
+                 >
+                   <Edit className="h-4 w-4 mr-1" />
+                   Manage
+                 </Button>
+                 {(filter === 'my-budgets' || filter === 'my-events') && (
+                   <Button 
+                     variant="outline" 
+                     size="sm"
+                     className="flex-1"
+                   >
+                     <DollarSign className="h-4 w-4 mr-1" />
+                     Budget
+                   </Button>
+                 )}
+                 {isAdmin && (
+                   <AlertDialog>
+                     <AlertDialogTrigger asChild>
+                       <Button 
+                         variant="outline" 
+                         size="sm"
+                         className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20"
+                       >
+                         <Trash2 className="h-4 w-4" />
+                       </Button>
+                     </AlertDialogTrigger>
+                     <AlertDialogContent>
+                       <AlertDialogHeader>
+                         <AlertDialogTitle>Delete Event</AlertDialogTitle>
+                         <AlertDialogDescription>
+                           Are you sure you want to delete "{event.event_name || event.title}"? 
+                           This action cannot be undone and will permanently remove all event data.
+                         </AlertDialogDescription>
+                       </AlertDialogHeader>
+                       <AlertDialogFooter>
+                         <AlertDialogCancel>Cancel</AlertDialogCancel>
+                         <AlertDialogAction
+                           onClick={() => handleDeleteEvent(event.id, event.event_name || event.title)}
+                           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                         >
+                           Delete Event
+                         </AlertDialogAction>
+                       </AlertDialogFooter>
+                     </AlertDialogContent>
+                   </AlertDialog>
+                 )}
+               </div>
             </CardContent>
           </Card>
         ))}
