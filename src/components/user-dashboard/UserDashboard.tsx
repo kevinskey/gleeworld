@@ -30,7 +30,7 @@ import { DASHBOARD_MODULES, hasModuleAccess, hasExecutiveBoardPermissions, Dashb
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Eye, User } from "lucide-react";
+import { Shield, Eye, User, Home, X } from "lucide-react";
 
 export const UserDashboard = () => {
   console.log('UserDashboard component rendering...');
@@ -137,13 +137,25 @@ export const UserDashboard = () => {
       <UniversalLayout>
         <div className="container mx-auto px-4 py-6">
           <div className="mb-6">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/dashboard')}
-              className="mb-4"
-            >
-              ← Back to Dashboard
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-2"
+              >
+                <Home className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+                Exit Admin Panel
+              </Button>
+            </div>
           </div>
           <AdminPanel activeTab={activeTab} />
         </div>
@@ -187,9 +199,25 @@ export const UserDashboard = () => {
         <UniversalLayout>
           <div className="container mx-auto px-4 py-6">
             <div className="mb-4 flex items-center justify-between">
-              <Button variant="outline" onClick={() => navigate('/dashboard')}>
-                ← Back to Dashboard
-              </Button>
+              <div className="flex items-center gap-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/dashboard')}
+                  className="flex items-center gap-2"
+                >
+                  <Home className="h-4 w-4" />
+                  Back to Dashboard
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => navigate('/dashboard')}
+                  className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                  Exit Module
+                </Button>
+              </div>
               <div className="flex items-center gap-2">
                 {availableModules.find(m => m.key === moduleKey)?.source === 'username' && (
                   <Badge variant="secondary" className="text-xs">
