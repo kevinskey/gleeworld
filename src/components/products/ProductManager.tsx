@@ -140,6 +140,34 @@ export const ProductManager = () => {
     }
   };
 
+  const handleDeleteProduct = async (productId: string, productName: string) => {
+    if (!confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Product deleted successfully",
+      });
+
+      fetchProducts();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -157,12 +185,17 @@ export const ProductManager = () => {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Product Manager</h1>
+        <div>
+          <h1 className="text-3xl font-bold">Product Manager</h1>
+          <p className="text-muted-foreground mt-1">
+            Click "Edit Product" on any item to modify details • Use "Upload Image" to add photos • Delete products with the trash icon
+          </p>
+        </div>
         <Dialog open={isCreateMode} onOpenChange={setIsCreateMode}>
           <DialogTrigger asChild>
             <Button onClick={() => setIsCreateMode(true)}>
               <Plus className="w-4 h-4 mr-2" />
-              Add Product
+              Add New Product
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -256,39 +289,57 @@ export const ProductManager = () => {
                   </div>
                   <Badge variant="outline">{product.category?.name}</Badge>
                 </div>
-                <div className="flex gap-2 pt-2">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" onClick={() => setSelectedProduct(product)}>
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle>Edit Product</DialogTitle>
-                      </DialogHeader>
-                      <ProductForm 
-                        product={selectedProduct}
-                        categories={categories}
-                        onSave={() => {
-                          setSelectedProduct(null);
-                          fetchProducts();
-                        }}
-                        onCancel={() => setSelectedProduct(null)}
-                      />
-                    </DialogContent>
-                  </Dialog>
-                  <div className="relative">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, product.id)}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      disabled={uploading}
-                    />
-                    <Button variant="outline" size="sm" disabled={uploading}>
-                      <Upload className="w-4 h-4" />
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="default" size="sm" onClick={() => setSelectedProduct(product)} className="flex-1">
+                          <Edit className="w-4 h-4 mr-1" />
+                          Edit Product
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Edit Product: {product.name}</DialogTitle>
+                        </DialogHeader>
+                        <ProductForm 
+                          product={selectedProduct}
+                          categories={categories}
+                          onSave={() => {
+                            setSelectedProduct(null);
+                            fetchProducts();
+                          }}
+                          onCancel={() => setSelectedProduct(null)}
+                        />
+                      </DialogContent>
+                    </Dialog>
+                    <Button 
+                      variant="destructive" 
+                      size="sm" 
+                      onClick={() => handleDeleteProduct(product.id, product.name)}
+                      title="Delete Product"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, product.id)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        disabled={uploading}
+                        title="Upload product image"
+                      />
+                      <Button variant="outline" size="sm" disabled={uploading} className="w-full">
+                        <Upload className="w-4 h-4 mr-1" />
+                        {uploading ? 'Uploading...' : 'Upload Image'}
+                      </Button>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      Stock: {product.stock_quantity}
+                    </Badge>
                   </div>
                 </div>
               </div>
