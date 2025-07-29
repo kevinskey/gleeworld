@@ -1,7 +1,7 @@
-import { SendNotificationForm } from "@/components/notifications/SendNotificationForm";
+import { UnifiedCommunicationForm } from "@/components/communication/UnifiedCommunicationForm";
 
 const SendNotificationPage = () => {
-  return <SendNotificationForm />;
+  return <UnifiedCommunicationForm />;
 };
 
 export default SendNotificationPage;

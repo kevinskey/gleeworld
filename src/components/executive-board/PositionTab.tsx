@@ -17,7 +17,12 @@ export type ExecutivePosition =
   | 'pr_coordinator'
   | 'chaplain'
   | 'data_analyst'
-  | 'assistant_chaplain';
+  | 'assistant_chaplain'
+  | 'student_conductor'
+  | 'section_leader_s1'
+  | 'section_leader_s2'
+  | 'section_leader_a1'
+  | 'section_leader_a2';
 
 interface PositionTabProps {
   position: ExecutivePosition;
