@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -72,6 +73,7 @@ interface ExecutiveMember {
 
 export const ExecutiveBoardDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [executiveData, setExecutiveData] = useState<ExecutiveMember | null>(null);
   const [selectedPosition, setSelectedPosition] = useState<ExecutivePosition>('president');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -455,11 +457,11 @@ export const ExecutiveBoardDashboard = () => {
                   <CardContent className="space-y-4">
                     <p className="text-muted-foreground">Access the complete tour management suite.</p>
                     <Button 
-                      onClick={() => window.open('/tour-manager', '_blank')}
+                      onClick={() => navigate('/tour-manager')}
                       className="w-full"
                     >
                       <MapPin className="h-4 w-4 mr-2" />
-                      Open Tour Manager Dashboard
+                      Go to Tour Manager Dashboard
                     </Button>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                       <div className="p-4 border rounded-lg">
