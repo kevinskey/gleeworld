@@ -27,7 +27,9 @@ import {
   Heart,
   BarChart3,
   Shield,
-  Mail
+  Mail,
+  CheckCircle,
+  Route
 } from "lucide-react";
 import { EventCreator } from "@/components/executive-board/EventCreator";
 import { BudgetTracker } from "@/components/executive-board/BudgetTracker";
@@ -50,6 +52,11 @@ import { RunningLedger } from "@/components/treasurer/RunningLedger";
 import { StripeSalesSync } from "@/components/treasurer/StripeSalesSync";
 import { PerformanceRequestsList } from "@/components/tour-manager/PerformanceRequestsList";
 import { TourContracts } from "@/components/tour-manager/TourContracts";
+import { RequestTracker } from "@/components/tour-manager/RequestTracker";
+import { TourPlanner as TourPlannerOld } from "@/components/tour-manager/TourPlanner";
+import TourPlanner from "@/pages/TourPlanner";
+import { TourStipends } from "@/components/tour-manager/TourStipends";
+import { TourOverview } from "@/components/tour-manager/TourOverview";
 
 export type ExecutivePosition = 
   | 'president'
@@ -298,7 +305,9 @@ export const ExecutiveBoardDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 lg:grid-cols-10">
+          <TabsList className="grid w-full grid-cols-6 lg:grid-cols-12"
+            style={{ gridTemplateColumns: selectedPosition === 'tour_manager' ? 'repeat(12, 1fr)' : 'repeat(10, 1fr)' }}
+          >
             <TabsTrigger value="dashboard" className="text-xs">
               <Users className="h-4 w-4 mr-1" />
               Dashboard
@@ -343,17 +352,33 @@ export const ExecutiveBoardDashboard = () => {
             </TabsTrigger>
             {selectedPosition === 'tour_manager' && (
               <>
-                <TabsTrigger value="tour-manager-hub" className="text-xs">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  Tour Hub
+                <TabsTrigger value="tour-overview" className="text-xs">
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  Overview
                 </TabsTrigger>
-                <TabsTrigger value="booking-requests" className="text-xs">
+                <TabsTrigger value="tour-requests" className="text-xs">
                   <Mail className="h-4 w-4 mr-1" />
-                  Bookings
+                  Requests
                 </TabsTrigger>
-                <TabsTrigger value="contracts" className="text-xs">
+                <TabsTrigger value="tour-tracker" className="text-xs">
+                  <Calendar className="h-4 w-4 mr-1" />
+                  Tracker
+                </TabsTrigger>
+                <TabsTrigger value="tour-planner-old" className="text-xs">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  Old Planner
+                </TabsTrigger>
+                <TabsTrigger value="tour-planner-new" className="text-xs">
+                  <Route className="h-4 w-4 mr-1" />
+                  Tour Planner
+                </TabsTrigger>
+                <TabsTrigger value="tour-contracts" className="text-xs">
                   <FileText className="h-4 w-4 mr-1" />
                   Contracts
+                </TabsTrigger>
+                <TabsTrigger value="tour-stipends" className="text-xs">
+                  <DollarSign className="h-4 w-4 mr-1" />
+                  Stipends
                 </TabsTrigger>
               </>
             )}
@@ -446,49 +471,92 @@ export const ExecutiveBoardDashboard = () => {
 
           {selectedPosition === 'tour_manager' && (
             <>
-              <TabsContent value="tour-manager-hub">
+              <TabsContent value="tour-overview">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5" />
+                      Tour Management Overview
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <TourOverview />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="tour-requests">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Mail className="h-5 w-5" />
+                      Performance Email Requests
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <PerformanceRequestsList />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="tour-tracker">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      Request to Completion Tracker
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <RequestTracker />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="tour-planner-old">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <MapPin className="h-5 w-5" />
-                      Tour Manager Hub
+                      Tour Planner (Legacy)
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-muted-foreground">Access the complete tour management suite.</p>
-                    <Button 
-                      onClick={() => navigate('/tour-manager')}
-                      className="w-full"
-                    >
-                      <MapPin className="h-4 w-4 mr-2" />
-                      Go to Tour Manager Dashboard
-                    </Button>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                      <div className="p-4 border rounded-lg">
-                        <h4 className="font-semibold text-sm mb-2">Tour Planning</h4>
-                        <p className="text-xs text-muted-foreground">Plan and organize upcoming tours</p>
-                      </div>
-                      <div className="p-4 border rounded-lg">
-                        <h4 className="font-semibold text-sm mb-2">Travel Logistics</h4>
-                        <p className="text-xs text-muted-foreground">Manage travel arrangements and logistics</p>
-                      </div>
-                      <div className="p-4 border rounded-lg">
-                        <h4 className="font-semibold text-sm mb-2">Venue Management</h4>
-                        <p className="text-xs text-muted-foreground">Coordinate venues and performances</p>
-                      </div>
-                      <div className="p-4 border rounded-lg">
-                        <h4 className="font-semibold text-sm mb-2">Budget Tracking</h4>
-                        <p className="text-xs text-muted-foreground">Track tour expenses and budgets</p>
-                      </div>
-                    </div>
+                  <CardContent>
+                    <TourPlannerOld />
                   </CardContent>
                 </Card>
               </TabsContent>
-              <TabsContent value="booking-requests">
-                <PerformanceRequestsList />
+
+              <TabsContent value="tour-planner-new">
+                <TourPlanner />
               </TabsContent>
-              <TabsContent value="contracts">
-                <TourContracts />
+
+              <TabsContent value="tour-contracts">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Tour Contracts
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <TourContracts />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="tour-stipends">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <DollarSign className="h-5 w-5" />
+                      Tour Stipends
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <TourStipends />
+                  </CardContent>
+                </Card>
               </TabsContent>
             </>
           )}
