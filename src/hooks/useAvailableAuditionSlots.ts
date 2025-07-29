@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { startOfDay, endOfDay, format } from 'date-fns';
+import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
 
 interface TimeSlot {
   time: string;
@@ -11,6 +12,9 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(false);
   const [availableDates, setAvailableDates] = useState<Date[]>([]);
+  
+  // Eastern timezone identifier
+  const EASTERN_TZ = 'America/New_York';
 
   // Fetch available audition dates
   useEffect(() => {
@@ -25,9 +29,8 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
 
         const dates: Date[] = [];
         timeBlocks?.forEach(block => {
-          // Each time block represents a specific time on a specific date
-          // Extract just the date portion from start_date
-          const blockDate = new Date(block.start_date);
+          // Convert UTC time to Eastern timezone to get the correct local date
+          const blockDate = toZonedTime(new Date(block.start_date), EASTERN_TZ);
           
           // Only add the date if it's not already in the array
           const dateExists = dates.some(date => 
@@ -72,9 +75,10 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
           throw blockError;
         }
 
-        // Filter blocks that match the selected date
+        // Filter blocks that match the selected date (compare in Eastern timezone)
         const matchingBlocks = auditionBlocks?.filter(block => {
-          const blockDateString = new Date(block.start_date).toISOString().split('T')[0];
+          const blockDate = toZonedTime(new Date(block.start_date), EASTERN_TZ);
+          const blockDateString = formatInTimeZone(blockDate, EASTERN_TZ, 'yyyy-MM-dd');
           return blockDateString === selectedDateString;
         }) || [];
 
@@ -102,23 +106,29 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
         const appointmentDuration = auditionBlock.appointment_duration_minutes || 30;
         const slots: TimeSlot[] = [];
         
-        // Use the block's start and end times instead of fixed 9 AM to 5 PM
-        const blockStart = new Date(auditionBlock.start_date);
-        const blockEnd = new Date(auditionBlock.end_date);
+        // Convert UTC times to Eastern timezone
+        const blockStartUTC = new Date(auditionBlock.start_date);
+        const blockEndUTC = new Date(auditionBlock.end_date);
         
-        // For the selected date, use the time from the block but the date from selectedDate
+        // Convert to Eastern time
+        const blockStartET = toZonedTime(blockStartUTC, EASTERN_TZ);
+        const blockEndET = toZonedTime(blockEndUTC, EASTERN_TZ);
+        
+        // For the selected date, use the time from the Eastern converted block times
         const startTime = new Date(selectedDate);
-        startTime.setHours(blockStart.getHours(), blockStart.getMinutes(), 0, 0);
+        startTime.setHours(blockStartET.getHours(), blockStartET.getMinutes(), 0, 0);
         
         const endTime = new Date(selectedDate);
-        endTime.setHours(blockEnd.getHours(), blockEnd.getMinutes(), 0, 0);
+        endTime.setHours(blockEndET.getHours(), blockEndET.getMinutes(), 0, 0);
         
+        console.log('UTC times:', blockStartUTC, 'to', blockEndUTC);
+        console.log('Eastern times:', blockStartET, 'to', blockEndET);
         console.log('Generating slots from', startTime, 'to', endTime, 'with duration', appointmentDuration);
         
         const currentTime = new Date(startTime);
         
         while (currentTime < endTime) {
-          const timeString = format(currentTime, 'h:mm a');
+          const timeString = formatInTimeZone(currentTime, EASTERN_TZ, 'h:mm a');
           
           // Check if this slot is already taken
           const isAvailable = !existingAppointments?.some(apt => {
