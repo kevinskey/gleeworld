@@ -39,13 +39,14 @@ import { PositionTab } from "@/components/executive-board/PositionTab";
 import { CalendarViews } from "@/components/calendar/CalendarViews";
 import { MeetingMinutes } from "@/components/executive-board/MeetingMinutes";
 import { AttendanceDashboard } from "@/components/attendance/AttendanceDashboard";
-import { BudgetManager } from "@/components/treasurer/BudgetManager";
-import { DuesManager } from "@/components/treasurer/DuesManager";
-import { GeneralBudgetManager } from "@/components/treasurer/GeneralBudgetManager";
-import { StipendPayer } from "@/components/treasurer/StipendPayer";
-import { ReceiptKeeper } from "@/components/treasurer/ReceiptKeeper";
-import { RunningLedger } from "@/components/treasurer/RunningLedger";
-import { StripeSalesSync } from "@/components/treasurer/StripeSalesSync";
+// Temporarily removed treasurer components to debug loading issues
+// import { BudgetManager } from "@/components/treasurer/BudgetManager";
+// import { DuesManager } from "@/components/treasurer/DuesManager";
+// import { GeneralBudgetManager } from "@/components/treasurer/GeneralBudgetManager";
+// import { StipendPayer } from "@/components/treasurer/StipendPayer";
+// import { ReceiptKeeper } from "@/components/treasurer/ReceiptKeeper";
+// import { RunningLedger } from "@/components/treasurer/RunningLedger";
+// import { StripeSalesSync } from "@/components/treasurer/StripeSalesSync";
 
 export type ExecutivePosition = 
   | 'president'
