@@ -314,27 +314,42 @@ export const UserDashboard = () => {
 
         {/* Member Dashboard Elements Only */}
         
-        {/* Spiritual Gleeflections & Upcoming Events - 50% columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 1. Spiritual Gleeflections */}
+        <div className="grid grid-cols-1 gap-6">
           <SpiritualReflectionsSection />
+        </div>
+
+        {/* 2. Notifications */}
+        <div className="grid grid-cols-1 gap-6">
+          <NotificationsSection />
+        </div>
+
+        {/* 3. Attendance */}
+        <div className="grid grid-cols-1 gap-6">
+          <QuickActionsSection isAdmin={isAdmin} actionFilter="attendance" />
+        </div>
+
+        {/* 4. Music Library */}
+        <div className="grid grid-cols-1 gap-6">
+          <QuickActionsSection isAdmin={isAdmin} actionFilter="music" />
+        </div>
+
+        {/* 5. Tasks and Dues */}
+        <div className="grid grid-cols-1 gap-6">
+          <TasksSection />
+        </div>
+
+        {/* 6. Events Calendar */}
+        <div className="grid grid-cols-1 gap-6">
           <EventsAndActivitySection 
             upcomingEvents={upcomingEventsList}
             recentActivity={recentActivity}
           />
         </div>
 
-        {/* Notifications and Tasks - Separated */}
+        {/* 7. Full Calendar */}
         <div className="grid grid-cols-1 gap-6">
-          <NotificationsSection />
-        </div>
-
-        <div className="grid grid-cols-1 gap-6">
-          <TasksSection />
-        </div>
-
-        {/* Calendar Attendance, Music Library, Budget Creation, Send Notifications, Shop */}
-        <div className="grid grid-cols-1 gap-6">
-          <QuickActionsSection isAdmin={isAdmin} />
+          <QuickActionsSection isAdmin={isAdmin} actionFilter="calendar" />
         </div>
 
         {/* Show Admin/Executive Features Only for Those Roles and in Admin View Mode */}

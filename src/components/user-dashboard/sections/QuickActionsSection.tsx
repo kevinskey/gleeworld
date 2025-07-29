@@ -14,32 +14,48 @@ import {
 
 interface QuickActionsSectionProps {
   isAdmin?: boolean;
+  actionFilter?: 'attendance' | 'music' | 'calendar';
 }
 
-export const QuickActionsSection = ({ isAdmin }: QuickActionsSectionProps) => {
+export const QuickActionsSection = ({ isAdmin, actionFilter }: QuickActionsSectionProps) => {
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(true);
 
-  const quickActions = [
+  const allQuickActions = [
     {
       icon: CheckCircle,
       label: "Attendance",
       description: "View your attendance records and manage attendance",
-      route: "/attendance"
+      route: "/attendance",
+      key: "attendance"
     },
     {
       icon: Calendar,
       label: "Calendar",
       description: "View calendar and events",
-      route: "/calendar"
+      route: "/calendar",
+      key: "calendar"
     },
     {
       icon: Music,
       label: "Music Library",
       description: "Access music library and sheet music",
-      route: "/music-library"
+      route: "/music-library",
+      key: "music"
     }
   ];
+
+  // Filter actions based on actionFilter prop
+  const quickActions = actionFilter 
+    ? allQuickActions.filter(action => action.key === actionFilter)
+    : allQuickActions;
+
+  const getSectionTitle = () => {
+    if (actionFilter === 'attendance') return 'Attendance';
+    if (actionFilter === 'music') return 'Music Library';
+    if (actionFilter === 'calendar') return 'Full Calendar';
+    return 'Quick Actions';
+  };
 
 
   return (
@@ -48,9 +64,9 @@ export const QuickActionsSection = ({ isAdmin }: QuickActionsSectionProps) => {
       <div className="hidden md:block space-y-4">
         <div className="flex items-center gap-2 text-secondary-foreground">
           <Zap className="h-5 w-5" />
-          <h3 className="text-lg font-semibold">Quick Actions</h3>
+          <h3 className="text-lg font-semibold">{getSectionTitle()}</h3>
         </div>
-        <div className="grid grid-cols-3 gap-4">
+        <div className={`grid gap-4 ${actionFilter ? 'grid-cols-1' : 'grid-cols-3'}`}>
           {quickActions.map((action) => {
             const IconComponent = action.icon;
             return (
