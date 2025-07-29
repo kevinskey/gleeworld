@@ -40,10 +40,9 @@ export const UserDashboard = () => {
   
   console.log('UserDashboard state:', { user: !!user, profile, searchParams: searchParams.toString() });
   
-  // Temporarily disable events hook
-  const events: any[] = [];
-  const eventsLoading = false;
-  const getUpcomingEvents = (limit: number) => [];
+  
+  // Get real events data
+  const { events, loading: eventsLoading, getUpcomingEvents } = useGleeWorldEvents();
   
   const { contracts, loading: contractsLoading } = useUserContracts();
   const { permissions: usernamePermissions, loading: permissionsLoading } = useUsernamePermissions(user?.email);
@@ -224,8 +223,14 @@ export const UserDashboard = () => {
     return activities.slice(0, 4);
   };
 
-  // Get real data
-  const upcomingEventsList = getUpcomingEvents(6);
+  // Get real data with proper formatting for AnnouncementsEventsSection
+  const upcomingEventsList = getUpcomingEvents(6).map(event => ({
+    id: event.id,
+    title: event.title,
+    date: event.start_date,
+    location: event.location || event.venue_name || undefined,
+    type: event.event_type || undefined
+  }));
   const recentActivity = getRecentActivity();
 
   return (

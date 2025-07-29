@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { SpiritualReflectionsSection } from "@/components/user-dashboard/sections/SpiritualReflectionsSection";
 import { AnnouncementsEventsSection } from "@/components/user-dashboard/sections/AnnouncementsEventsSection";
+import { usePublicGleeWorldEvents } from "@/hooks/usePublicGleeWorldEvents";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -45,6 +46,17 @@ interface SuperAdminDashboardProps {
 export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
   console.log('SuperAdminDashboard: Component loaded with user:', user);
   const navigate = useNavigate();
+  const { events: upcomingEvents } = usePublicGleeWorldEvents();
+  
+  // Format events for AnnouncementsEventsSection
+  const formattedUpcomingEvents = upcomingEvents.slice(0, 6).map(event => ({
+    id: event.id,
+    title: event.title,
+    date: event.start_date,
+    location: event.location || event.venue_name || undefined,
+    type: event.event_type || undefined
+  }));
+  
   // Mock data for super admin dashboard
   const superAdminData = {
     systemOverview: {
@@ -305,7 +317,7 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
       <div className="md:col-span-2 lg:col-span-3">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <SpiritualReflectionsSection />
-          <AnnouncementsEventsSection upcomingEvents={[]} />
+          <AnnouncementsEventsSection upcomingEvents={formattedUpcomingEvents} />
         </div>
       </div>
     </div>
