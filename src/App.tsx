@@ -111,6 +111,9 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 const RootRoute = () => {
   const { user, loading } = useAuth();
   
+  // Use role-based redirect for authenticated users
+  useRoleBasedRedirect();
+  
   console.log('RootRoute: Executing with loading=', loading, 'user=', !!user);
   
   if (loading) {
