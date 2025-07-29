@@ -18,10 +18,11 @@ import { AccountingSummary } from "./accounting/AccountingSummary";
 import { AccountingTable } from "./accounting/AccountingTable";
 import { AccountingFilters } from "./accounting/AccountingFilters";
 import { useAccountingFiltering } from "@/hooks/useAccountingFiltering";
-import { Shield, Users, Settings, FileText, Activity, Receipt, Calculator, Mail, Music } from "lucide-react";
+import { Shield, Users, Settings, FileText, Activity, Receipt, Calculator, Mail, Music, Megaphone } from "lucide-react";
 import { MusicManagement } from "./admin/MusicManagement";
 import { ExecutiveBoardManager } from "./admin/ExecutiveBoardManager";
 import { ProductManager } from "./admin/ProductManager";
+import { AnnouncementManagement } from "./admin/AnnouncementManagement";
 // Square integration removed - using Stripe instead
 
 interface AdminPanelProps {
@@ -76,6 +77,7 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
      currentPath.includes('receipts') ? 'receipts' : 
      currentPath.includes('accounting') ? 'accounting' : 
      currentPath.includes('music') ? 'music' :
+     currentPath.includes('announcements') ? 'announcements' :
      currentPath.includes('executive-board') ? 'executive-board' :
      currentPath.includes('settings') ? 'settings' : 'overview');
 
@@ -182,6 +184,8 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
         );
       case 'music':
         return <MusicManagement />;
+      case 'announcements':
+        return <AnnouncementManagement />;
       case 'executive-board':
         return (
           <ExecutiveBoardManager 

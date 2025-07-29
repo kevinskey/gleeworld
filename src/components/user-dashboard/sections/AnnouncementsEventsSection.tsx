@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar, Megaphone, Clock, MapPin } from "lucide-react";
+import { useAnnouncements } from "@/hooks/useAnnouncements";
 
 interface AnnouncementsEventsSectionProps {
   upcomingEvents: Array<{
@@ -14,29 +15,15 @@ interface AnnouncementsEventsSectionProps {
 }
 
 export const AnnouncementsEventsSection = ({ upcomingEvents }: AnnouncementsEventsSectionProps) => {
-  // Mock announcements data - this could be replaced with real data from hooks
-  const announcements = [
-    {
-      id: "1",
-      title: "Rehearsal Schedule Update",
-      message: "Tuesday rehearsal moved to 7:30 PM in Morgan Auditorium.",
-      date: new Date().toISOString(),
-      priority: "high"
-    },
-    {
-      id: "2", 
-      title: "Homecoming Performance",
-      message: "Don't forget to pick up your performance attire from the wardrobe coordinator.",
-      date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      priority: "medium"
-    }
-  ];
+  const { announcements, loading } = useAnnouncements();
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'bg-destructive/10 text-destructive border-destructive/20';
-      case 'medium': return 'bg-secondary/10 text-secondary-foreground border-secondary/20';
-      default: return 'bg-muted text-muted-foreground border-muted-foreground/20';
+  const getAnnouncementTypeColor = (type: string) => {
+    switch (type) {
+      case 'urgent': return 'bg-red-100 text-red-800';
+      case 'rehearsal': return 'bg-blue-100 text-blue-800';
+      case 'performance': return 'bg-purple-100 text-purple-800';
+      case 'tour': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -67,16 +54,21 @@ export const AnnouncementsEventsSection = ({ upcomingEvents }: AnnouncementsEven
                   <div key={announcement.id} className="border border-secondary/10 rounded-lg p-2 bg-background/50 backdrop-blur-sm">
                     <div className="flex items-start justify-between mb-1">
                       <h5 className="font-medium text-sm text-foreground line-clamp-1">{announcement.title}</h5>
-                      <Badge className={`${getPriorityColor(announcement.priority)} text-xs`} variant="secondary">
-                        {announcement.priority}
-                      </Badge>
+                      {announcement.announcement_type && (
+                        <Badge className={`${getAnnouncementTypeColor(announcement.announcement_type)} text-xs`} variant="secondary">
+                          {announcement.announcement_type}
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground mb-1">
-                      {announcement.message}
+                      {announcement.content}
                     </p>
                     <div className="text-xs text-muted-foreground flex items-center gap-1">
                       <Clock className="h-2 w-2" />
-                      {new Date(announcement.date).toLocaleDateString()}
+                      {announcement.created_at 
+                        ? new Date(announcement.created_at).toLocaleDateString()
+                        : 'Recently posted'
+                      }
                     </div>
                   </div>
                 ))
