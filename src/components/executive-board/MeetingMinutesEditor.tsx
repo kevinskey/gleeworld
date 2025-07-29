@@ -76,31 +76,77 @@ export const MeetingMinutesEditor = ({ minute, onBack, onSave }: MeetingMinutesE
     try {
       setIsSaving(true);
       
+      // Validate required fields
+      if (!formData.title.trim()) {
+        toast({
+          title: "Validation Error",
+          description: "Meeting title is required.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (!formData.meeting_date) {
+        toast({
+          title: "Validation Error", 
+          description: "Meeting date is required.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      console.log('Attempting to save meeting minutes with data:', formData);
+      
       const payload = {
-        title: formData.title,
+        title: formData.title.trim(),
         meeting_date: new Date(formData.meeting_date).toISOString(),
         meeting_type: formData.meeting_type,
         status: formData.status as MeetingStatus,
         attendees: formData.attendees.split(',').map(a => a.trim()).filter(Boolean),
-        agenda_items: formData.agenda_items.split('\n').filter(Boolean),
-        discussion_points: formData.discussion_points,
-        action_items: formData.action_items.split('\n').filter(Boolean),
+        agenda_items: formData.agenda_items.split('\n').map(item => item.trim()).filter(Boolean),
+        discussion_points: formData.discussion_points.trim(),
+        action_items: formData.action_items.split('\n').map(item => item.trim()).filter(Boolean),
         next_meeting_date: formData.next_meeting_date ? new Date(formData.next_meeting_date).toISOString() : null
       };
 
+      console.log('Payload to be saved:', payload);
+
       if (minute?.id) {
-        const { error } = await supabase
+        console.log('Updating existing minute with ID:', minute.id);
+        const { data, error } = await supabase
           .from('gw_meeting_minutes')
           .update(payload)
-          .eq('id', minute.id);
+          .eq('id', minute.id)
+          .select();
         
-        if (error) throw error;
+        if (error) {
+          console.error('Update error:', error);
+          throw error;
+        }
+        console.log('Update successful:', data);
       } else {
-        const { error } = await supabase
-          .from('gw_meeting_minutes')
-          .insert([{ ...payload, created_by: (await supabase.auth.getUser()).data.user?.id }]);
+        console.log('Creating new meeting minute');
+        const { data: userData, error: userError } = await supabase.auth.getUser();
         
-        if (error) throw error;
+        if (userError) {
+          console.error('User auth error:', userError);
+          throw new Error('Authentication required');
+        }
+        
+        if (!userData.user?.id) {
+          throw new Error('User not authenticated');
+        }
+        
+        const { data, error } = await supabase
+          .from('gw_meeting_minutes')
+          .insert([{ ...payload, created_by: userData.user.id }])
+          .select();
+        
+        if (error) {
+          console.error('Insert error:', error);
+          throw error;
+        }
+        console.log('Insert successful:', data);
       }
 
       setLastSaved(new Date());
@@ -117,7 +163,7 @@ export const MeetingMinutesEditor = ({ minute, onBack, onSave }: MeetingMinutesE
       if (!silent) {
         toast({
           title: "Save Failed",
-          description: "Failed to save meeting minutes. Please try again.",
+          description: `Failed to save meeting minutes: ${error.message || 'Unknown error'}`,
           variant: "destructive"
         });
       }
