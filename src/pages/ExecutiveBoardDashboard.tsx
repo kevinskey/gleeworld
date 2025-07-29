@@ -37,6 +37,7 @@ import { CommunicationHub } from "@/components/executive-board/CommunicationHub"
 import { MusicLibraryViewer } from "@/components/executive-board/MusicLibraryViewer";
 import { PositionTab } from "@/components/executive-board/PositionTab";
 import { CalendarViews } from "@/components/calendar/CalendarViews";
+import { MeetingMinutes } from "@/components/executive-board/MeetingMinutes";
 
 export type ExecutivePosition = 
   | 'president'
@@ -286,7 +287,7 @@ export const ExecutiveBoardDashboard = () => {
             </TabsTrigger>
             <TabsTrigger value="announcements" className="text-xs">
               <Megaphone className="h-4 w-4 mr-1" />
-              Announcements
+              Minutes
             </TabsTrigger>
             <TabsTrigger value="resources" className="text-xs">
               <FolderOpen className="h-4 w-4 mr-1" />
@@ -320,17 +321,7 @@ export const ExecutiveBoardDashboard = () => {
           </TabsContent>
 
           <TabsContent value="announcements">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Megaphone className="h-5 w-5" />
-                  Announcements & Agendas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Announcements system coming soon...</p>
-              </CardContent>
-            </Card>
+            <MeetingMinutes />
           </TabsContent>
 
           <TabsContent value="resources">
