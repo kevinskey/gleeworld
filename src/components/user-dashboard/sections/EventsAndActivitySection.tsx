@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isAfter, isBefore, startOfDay } from "date-fns";
-import { Calendar, MapPin, Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, MapPin, Clock, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
 
 interface EventsAndActivitySectionProps {
@@ -21,6 +22,8 @@ export const EventsAndActivitySection = ({
 }: EventsAndActivitySectionProps) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { events } = useGleeWorldEvents();
 
   // Get all events for any date (not limited)
@@ -81,6 +84,11 @@ export const EventsAndActivitySection = ({
     } catch (error) {
       return '';
     }
+  };
+
+  const handleEventClick = (event: any) => {
+    setSelectedEvent(event);
+    setIsDialogOpen(true);
   };
 
   const eventsForSelectedDate = getEventsForDate(selectedDate);
@@ -214,7 +222,8 @@ export const EventsAndActivitySection = ({
                 {upcomingEventsList.map((event) => (
                   <div 
                     key={event.id} 
-                    className="group flex items-center justify-between p-3 border-l-4 border-primary/30 bg-card hover:bg-accent/50 hover:border-primary transition-all duration-200 rounded-r-md"
+                    className="group flex items-center justify-between p-3 border-l-4 border-primary/30 bg-card hover:bg-accent/50 hover:border-primary transition-all duration-200 rounded-r-md cursor-pointer"
+                    onClick={() => handleEventClick(event)}
                   >
                     <div className="flex-1 min-w-0">
                       <h5 className="font-medium text-foreground group-hover:text-primary transition-colors truncate text-base">
@@ -254,6 +263,80 @@ export const EventsAndActivitySection = ({
           </ScrollArea>
         </div>
       </CardContent>
+
+      {/* Event Details Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">
+              {selectedEvent?.title}
+            </DialogTitle>
+            <DialogClose className="absolute right-4 top-4">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </DialogClose>
+          </DialogHeader>
+          
+          <div className="space-y-4 pt-4">
+            {/* Event Date */}
+            <div className="flex items-center gap-3">
+              <Calendar className="h-5 w-5 text-primary" />
+              <div>
+                <p className="font-medium">Date</p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedEvent && formatEventDate(selectedEvent.start_date)}
+                </p>
+              </div>
+            </div>
+
+            {/* Event Time */}
+            {selectedEvent && formatEventTime(selectedEvent.start_date) && (
+              <div className="flex items-center gap-3">
+                <Clock className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-medium">Time</p>
+                  <p className="text-sm text-muted-foreground">
+                    {formatEventTime(selectedEvent.start_date)}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Event Location */}
+            {selectedEvent?.location && (
+              <div className="flex items-center gap-3">
+                <MapPin className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-medium">Location</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedEvent.location}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Event Description */}
+            {selectedEvent?.description && (
+              <div className="space-y-2">
+                <p className="font-medium">Description</p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedEvent.description}
+                </p>
+              </div>
+            )}
+
+            {/* Event Type */}
+            {selectedEvent?.event_type && (
+              <div className="space-y-2">
+                <p className="font-medium">Event Type</p>
+                <p className="text-sm text-muted-foreground capitalize">
+                  {selectedEvent.event_type}
+                </p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
