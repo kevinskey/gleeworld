@@ -94,7 +94,12 @@ function AuditionFormContent() {
         .insert(submissionData);
 
       if (error) {
-        console.log('❌ Database error:', error);
+        console.log('❌ Database error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         throw error;
       }
 
@@ -102,9 +107,15 @@ function AuditionFormContent() {
       toast.success("Audition application submitted successfully!");
       form.reset();
       // Reset will be handled by the provider
-    } catch (error) {
-      console.error('💥 Error submitting audition:', error);
-      toast.error("Failed to submit audition application");
+    } catch (error: any) {
+      console.error('💥 Detailed error:', {
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+        code: error?.code,
+        stack: error?.stack
+      });
+      toast.error(`Failed to submit: ${error?.message || 'Unknown error'}`);
     } finally {
       console.log('🏁 Setting isSubmitting to false');
       setIsSubmitting(false);
