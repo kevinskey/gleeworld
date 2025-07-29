@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { SpiritualReflectionsCard } from "@/components/member-view/SpiritualReflectionsCard";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
@@ -423,6 +424,7 @@ export const ExecutiveBoardDashboard = () => {
               <CheckInOutTool />
               <MusicLibraryViewer />
               <ProgressLog />
+              <SpiritualReflectionsCard />
             </div>
           </TabsContent>
 
