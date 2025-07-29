@@ -174,6 +174,13 @@ export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
           const wordCount = personalityText ? personalityText.split(/\s+/).filter(word => word.length > 0).length : 0;
           return !!(values.personalityDescription && wordCount >= 50);
         }
+        // Debug logging for final page
+        console.log('Final page validation:', {
+          auditionDate: values.auditionDate,
+          auditionTime: values.auditionTime,
+          capturedImage,
+          canSubmit: !!(values.auditionDate && values.auditionTime && capturedImage)
+        });
         return !!(values.auditionDate && values.auditionTime && capturedImage);
       case 6: // Selfie & Scheduling (for new users only)
         return !!(values.auditionDate && values.auditionTime && capturedImage);
