@@ -126,6 +126,16 @@ export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
 
   const canProceed = (): boolean => {
     const values = form.getValues();
+    const errors = form.formState.errors;
+    
+    // Debug logging
+    if (currentPage === 4 && user) {
+      console.log('Personal Info Page - Form values:', {
+        personalityDescription: values.personalityDescription,
+        interestedInLeadership: values.interestedInLeadership,
+      });
+      console.log('Personal Info Page - Form errors:', errors);
+    }
     
     switch (currentPage) {
       case 1: // Registration (for new users) or Basic Info (for existing users)
@@ -147,7 +157,17 @@ export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
         }
         const personalityText = values.personalityDescription?.trim() || '';
         const wordCount = personalityText ? personalityText.split(/\s+/).filter(word => word.length > 0).length : 0;
-        return !!(values.personalityDescription && wordCount >= 50);
+        const hasValidPersonality = !!(values.personalityDescription && wordCount >= 50);
+        const hasNoErrors = Object.keys(errors).length === 0;
+        
+        console.log('Personal Info validation:', {
+          hasValidPersonality,
+          hasNoErrors,
+          wordCount,
+          errors: Object.keys(errors)
+        });
+        
+        return hasValidPersonality && hasNoErrors;
       case 5: // Personal Info or Selfie & Scheduling
         if (!user) {
           const personalityText = values.personalityDescription?.trim() || '';
