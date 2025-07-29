@@ -65,11 +65,14 @@ export function SchedulingAndSelfiePage() {
   };
 
   const handleTakePhoto = async () => {
-    if (!isCameraReady) {
+    console.log('handleTakePhoto called', { isCameraReady, isCapturing });
+    
+    if (!isCameraReady && !isCapturing) {
+      console.log('Starting camera...');
       await startCamera();
-    } else {
+    } else if (isCameraReady) {
+      console.log('Taking photo...');
       await capturePhoto();
-      stopCamera();
     }
   };
 
@@ -87,13 +90,13 @@ export function SchedulingAndSelfiePage() {
   return (
     <div className="space-y-8">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Audition Scheduling & Photo</h2>
-        <p className="text-gray-600 mt-2">Choose your audition time and take a selfie</p>
+        <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">Audition Scheduling & Photo</h2>
+        <p className="text-base md:text-lg lg:text-xl text-gray-600 mt-2">Choose your audition time and take a selfie</p>
       </div>
 
       {/* Audition Scheduling */}
       <div className="space-y-6">
-        <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Audition Scheduling</h3>
+        <h3 className="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900 border-b pb-2">Audition Scheduling</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
@@ -174,7 +177,7 @@ export function SchedulingAndSelfiePage() {
 
       {/* Selfie Section */}
       <div className="space-y-6">
-        <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Selfie Photo</h3>
+        <h3 className="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900 border-b pb-2">Selfie Photo</h3>
         
         <div className="flex flex-col items-center space-y-4">
           {capturedImage ? (
@@ -217,18 +220,20 @@ export function SchedulingAndSelfiePage() {
               type="button"
               variant="outline"
               onClick={handleTakePhoto}
-              disabled={isCapturing}
+              disabled={false}
+              className="px-6 py-3 text-base md:text-lg"
             >
-              <Camera className="w-4 h-4 mr-2" />
-              {!isCameraReady ? "Start Camera" : "Take Photo"}
+              <Camera className="w-5 h-5 mr-2" />
+              {!isCameraReady && !isCapturing ? "Start Camera" : isCameraReady ? "Take Photo" : "Starting..."}
             </Button>
             
             <Button
               type="button"
               variant="outline"
               onClick={() => fileInputRef.current?.click()}
+              className="px-6 py-3 text-base md:text-lg"
             >
-              <Upload className="w-4 h-4 mr-2" />
+              <Upload className="w-5 h-5 mr-2" />
               Upload Photo
             </Button>
           </div>
@@ -246,7 +251,7 @@ export function SchedulingAndSelfiePage() {
         </div>
 
         {!capturedImage && (
-          <p className="text-sm text-gray-600 text-center">
+          <p className="text-base md:text-lg text-gray-600 text-center">
             Please take a selfie or upload a photo to complete your application
           </p>
         )}
