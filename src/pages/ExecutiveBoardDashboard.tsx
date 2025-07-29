@@ -34,7 +34,16 @@ import {
   Music2,
   UserCheck,
   Home,
-  X
+  X,
+  Music,
+  Settings,
+  Send,
+  PenTool,
+  Eye,
+  Target,
+  Clock,
+  ClipboardList,
+  Play
 } from "lucide-react";
 import { EventCreator } from "@/components/executive-board/EventCreator";
 import { BudgetTracker } from "@/components/executive-board/BudgetTracker";
@@ -484,6 +493,42 @@ export const ExecutiveBoardDashboard = () => {
                 Chaplain Hub
               </TabsTrigger>
             )}
+            {selectedPosition === 'student_conductor' && (
+              <>
+                <TabsTrigger value="conductor-overview" className="text-xs">
+                  <Music className="h-4 w-4 mr-1" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="sections" className="text-xs">
+                  <UserCheck className="h-4 w-4 mr-1" />
+                  Sections
+                </TabsTrigger>
+                <TabsTrigger value="srf" className="text-xs">
+                  <BookOpen className="h-4 w-4 mr-1" />
+                  SRF
+                </TabsTrigger>
+                <TabsTrigger value="auditions" className="text-xs">
+                  <Users className="h-4 w-4 mr-1" />
+                  Auditions
+                </TabsTrigger>
+                <TabsTrigger value="submissions" className="text-xs">
+                  <FileText className="h-4 w-4 mr-1" />
+                  Submissions
+                </TabsTrigger>
+                <TabsTrigger value="setup" className="text-xs">
+                  <Settings className="h-4 w-4 mr-1" />
+                  Setup
+                </TabsTrigger>
+                <TabsTrigger value="communication" className="text-xs">
+                  <Send className="h-4 w-4 mr-1" />
+                  Messages
+                </TabsTrigger>
+                <TabsTrigger value="journal" className="text-xs">
+                  <PenTool className="h-4 w-4 mr-1" />
+                  Journal
+                </TabsTrigger>
+              </>
+            )}
             <TabsTrigger value="position" className="text-xs">
               <PositionIcon className="h-4 w-4 mr-1" />
               My Role
@@ -669,6 +714,423 @@ export const ExecutiveBoardDashboard = () => {
             <TabsContent value="chaplain-hub">
               <ChaplainWorkHub />
             </TabsContent>
+          )}
+
+          {selectedPosition === 'student_conductor' && (
+            <>
+              <TabsContent value="conductor-overview" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <UserCheck className="h-5 w-5" />
+                        Section Leadership
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">3</div>
+                      <p className="text-sm text-muted-foreground">Plans awaiting review</p>
+                      <Button size="sm" className="mt-3" onClick={() => setActiveTab("sections")}>
+                        Review Plans
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <BookOpen className="h-5 w-5" />
+                        Sight Reading
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">68%</div>
+                      <p className="text-sm text-muted-foreground">Average completion rate</p>
+                      <Button size="sm" className="mt-3" onClick={() => setActiveTab("srf")}>
+                        Manage SRF
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Users className="h-5 w-5" />
+                        Upcoming Auditions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">3</div>
+                      <p className="text-sm text-muted-foreground">Scheduled for Feb 5</p>
+                      <Button size="sm" className="mt-3" onClick={() => setActiveTab("auditions")}>
+                        View Schedule
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="sections">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <UserCheck className="h-5 w-5" />
+                      Section Leader Oversight
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {[
+                        { id: 1, sectionLeader: "Sarah Johnson", section: "Soprano 1", week: "Week 3", status: "Pending Review", uploadDate: "2024-01-26", focus: "Breath control, high notes" },
+                        { id: 2, sectionLeader: "Maria Garcia", section: "Alto 2", week: "Week 3", status: "Approved", uploadDate: "2024-01-25", focus: "Rhythm in measures 32-48" },
+                        { id: 3, sectionLeader: "Ashley Brown", section: "Soprano 2", week: "Week 3", status: "Needs Revision", uploadDate: "2024-01-24", focus: "Vowel placement" }
+                      ].map((plan) => (
+                        <Card key={plan.id} className="hover:shadow-md transition-shadow">
+                          <CardContent className="pt-4">
+                            <div className="flex items-start justify-between mb-3">
+                              <div>
+                                <h4 className="font-semibold">{plan.sectionLeader} - {plan.section}</h4>
+                                <p className="text-sm text-muted-foreground">{plan.week} • Uploaded {plan.uploadDate}</p>
+                              </div>
+                              <Badge variant="outline">{plan.status}</Badge>
+                            </div>
+                            <p className="text-sm mb-3">Focus: {plan.focus}</p>
+                            <div className="flex gap-2">
+                              <Button size="sm">
+                                <Eye className="h-4 w-4 mr-2" />
+                                Review Plan
+                              </Button>
+                              <Button size="sm" variant="outline">
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Approve
+                              </Button>
+                              <Button size="sm" variant="outline">
+                                <MessageSquare className="h-4 w-4 mr-2" />
+                                Add Comment
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="srf">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5" />
+                      Sight Reading Manager (SRF Integration)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex gap-3 mb-4">
+                        <Button>
+                          <Play className="h-4 w-4 mr-2" />
+                          Create Assignment
+                        </Button>
+                        <Button variant="outline">
+                          <ClipboardList className="h-4 w-4 mr-2" />
+                          Placement Test
+                        </Button>
+                        <Button variant="outline">
+                          <Settings className="h-4 w-4 mr-2" />
+                          Template Builder
+                        </Button>
+                      </div>
+                      {[
+                        { id: 1, title: "Bach Chorale #47", assigned: "15 students", completed: "12 students", dueDate: "2024-01-30", difficulty: "Intermediate" },
+                        { id: 2, title: "Sight-reading Test #3", assigned: "15 students", completed: "8 students", dueDate: "2024-02-02", difficulty: "Advanced" },
+                        { id: 3, title: "Major Scale Practice", assigned: "15 students", completed: "15 students", dueDate: "2024-01-28", difficulty: "Beginner" }
+                      ].map((assignment) => (
+                        <Card key={assignment.id} className="hover:shadow-md transition-shadow">
+                          <CardContent className="pt-4">
+                            <div className="flex items-start justify-between mb-3">
+                              <div>
+                                <h4 className="font-semibold">{assignment.title}</h4>
+                                <p className="text-sm text-muted-foreground">Due: {assignment.dueDate}</p>
+                              </div>
+                              <Badge variant="outline">{assignment.difficulty}</Badge>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 mb-3">
+                              <div>
+                                <p className="text-sm text-muted-foreground">Assigned</p>
+                                <p className="font-medium">{assignment.assigned}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Completed</p>
+                                <p className="font-medium">{assignment.completed}</p>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button size="sm">
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Results
+                              </Button>
+                              <Button size="sm" variant="outline">
+                                <Send className="h-4 w-4 mr-2" />
+                                Send Reminder
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="auditions">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Auditions & Solos Hub
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {[
+                        { id: 1, name: "Jennifer Wilson", timeSlot: "3:00 PM", date: "2024-02-05", type: "New Member", status: "Scheduled", notes: "Strong sight-reading background" },
+                        { id: 2, name: "Taylor Davis", timeSlot: "3:15 PM", date: "2024-02-05", type: "Solo Audition", status: "Callback", notes: "Excellent tone quality" },
+                        { id: 3, name: "Morgan Lee", timeSlot: "3:30 PM", date: "2024-02-05", type: "New Member", status: "Pending", notes: "Needs vocal technique work" }
+                      ].map((audition) => (
+                        <Card key={audition.id} className="hover:shadow-md transition-shadow">
+                          <CardContent className="pt-4">
+                            <div className="flex items-start justify-between mb-3">
+                              <div>
+                                <h4 className="font-semibold">{audition.name}</h4>
+                                <p className="text-sm text-muted-foreground">{audition.date} at {audition.timeSlot}</p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Badge variant="outline">{audition.type}</Badge>
+                                <Badge variant="outline">{audition.status}</Badge>
+                              </div>
+                            </div>
+                            <p className="text-sm mb-3">Notes: {audition.notes}</p>
+                            <div className="flex gap-2">
+                              <Button size="sm">
+                                <FileText className="h-4 w-4 mr-2" />
+                                Score Sheet
+                              </Button>
+                              <Button size="sm" variant="outline">
+                                <Clock className="h-4 w-4 mr-2" />
+                                Reschedule
+                              </Button>
+                              <Button size="sm" variant="outline">
+                                <MessageSquare className="h-4 w-4 mr-2" />
+                                Add Notes
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="submissions">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Submission Review Panel
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {[
+                        { id: 1, from: "Section Leaders", title: "Weekly Progress Reports", date: "2024-01-26", status: "New", type: "Report" },
+                        { id: 2, from: "Sarah Johnson", title: "Sectional Recording - S1", date: "2024-01-25", status: "Reviewed", type: "Audio" },
+                        { id: 3, from: "Music Committee", title: "Spring Concert Repertoire Suggestions", date: "2024-01-24", status: "Forwarded", type: "Document" }
+                      ].map((submission) => (
+                        <Card key={submission.id} className="hover:shadow-md transition-shadow">
+                          <CardContent className="pt-4">
+                            <div className="flex items-start justify-between mb-3">
+                              <div>
+                                <h4 className="font-semibold">{submission.title}</h4>
+                                <p className="text-sm text-muted-foreground">From: {submission.from} • {submission.date}</p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Badge variant="outline">{submission.type}</Badge>
+                                <Badge variant="outline">{submission.status}</Badge>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button size="sm">
+                                <Eye className="h-4 w-4 mr-2" />
+                                Review
+                              </Button>
+                              <Button size="sm" variant="outline">
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Complete
+                              </Button>
+                              <Button size="sm" variant="outline">
+                                <Send className="h-4 w-4 mr-2" />
+                                Forward to Director
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="setup">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Settings className="h-5 w-5" />
+                      Environment Setup Tools
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">Rehearsal Setup Checklist</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <input type="checkbox" className="rounded" />
+                            <span className="text-sm">Piano tuned and positioned</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input type="checkbox" className="rounded" />
+                            <span className="text-sm">Music stands arranged</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input type="checkbox" className="rounded" />
+                            <span className="text-sm">Sound system tested</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input type="checkbox" className="rounded" />
+                            <span className="text-sm">Scores distributed</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">Warm-up Plans</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            <Button className="w-full justify-start" variant="outline">
+                              <FileText className="h-4 w-4 mr-2" />
+                              Upload Warm-up Plan
+                            </Button>
+                            <Button className="w-full justify-start" variant="outline">
+                              <Calendar className="h-4 w-4 mr-2" />
+                              Link to Calendar Event
+                            </Button>
+                            <Button className="w-full justify-start" variant="outline">
+                              <Play className="h-4 w-4 mr-2" />
+                              View Template Library
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="communication">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Send className="h-5 w-5" />
+                      Communication Panel
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <h3 className="font-semibold">Quick Messages</h3>
+                        <Button className="w-full justify-start">
+                          <Users className="h-4 w-4 mr-2" />
+                          Message All Sections
+                        </Button>
+                        <Button className="w-full justify-start" variant="outline">
+                          <UserCheck className="h-4 w-4 mr-2" />
+                          Message Section Leaders
+                        </Button>
+                        <Button className="w-full justify-start" variant="outline">
+                          <BookOpen className="h-4 w-4 mr-2" />
+                          SRF Reminder
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <h3 className="font-semibold">Message Templates</h3>
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground">• SRF Assignment Reminder</p>
+                          <p className="text-sm text-muted-foreground">• Solo Audition Updates</p>
+                          <p className="text-sm text-muted-foreground">• Sectional Schedule Changes</p>
+                          <p className="text-sm text-muted-foreground">• Rehearsal Preparation</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="journal">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <PenTool className="h-5 w-5" />
+                      Assistant Conductor Journal
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <h3 className="font-semibold mb-3">Private Activity Log</h3>
+                          <textarea 
+                            className="w-full h-32 p-3 border rounded-md resize-none" 
+                            placeholder="Record daily activities, observations, and notes..."
+                          />
+                          <Button size="sm" className="mt-2">Save Entry</Button>
+                        </div>
+                        
+                        <div>
+                          <h3 className="font-semibold mb-3">Notes to Director</h3>
+                          <textarea 
+                            className="w-full h-32 p-3 border rounded-md resize-none" 
+                            placeholder="Internal communication with Doc Johnson..."
+                          />
+                          <Button size="sm" className="mt-2">
+                            <Send className="h-4 w-4 mr-2" />
+                            Send to Director
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="border-t pt-4">
+                        <h3 className="font-semibold mb-3">Recent Entries</h3>
+                        <div className="space-y-2">
+                          <div className="p-3 bg-muted rounded-md">
+                            <p className="text-sm"><strong>Jan 26:</strong> Reviewed S1 sectional plan. Recommended focus on breath support.</p>
+                          </div>
+                          <div className="p-3 bg-muted rounded-md">
+                            <p className="text-sm"><strong>Jan 25:</strong> SRF completion rates improving. Consider advanced assignments for top performers.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </>
           )}
 
           <TabsContent value="position">
