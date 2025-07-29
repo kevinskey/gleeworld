@@ -25,7 +25,8 @@ import {
   MessageSquare,
   Heart,
   BarChart3,
-  Shield
+  Shield,
+  Mail
 } from "lucide-react";
 import { EventCreator } from "@/components/executive-board/EventCreator";
 import { BudgetTracker } from "@/components/executive-board/BudgetTracker";
@@ -46,6 +47,7 @@ import { StipendPayer } from "@/components/treasurer/StipendPayer";
 import { ReceiptKeeper } from "@/components/treasurer/ReceiptKeeper";
 import { RunningLedger } from "@/components/treasurer/RunningLedger";
 import { StripeSalesSync } from "@/components/treasurer/StripeSalesSync";
+import { PerformanceRequestsList } from "@/components/tour-manager/PerformanceRequestsList";
 
 export type ExecutivePosition = 
   | 'president'
@@ -327,6 +329,12 @@ export const ExecutiveBoardDashboard = () => {
               <TrendingUp className="h-4 w-4 mr-1" />
               Development
             </TabsTrigger>
+            {selectedPosition === 'tour_manager' && (
+              <TabsTrigger value="booking-requests" className="text-xs">
+                <Mail className="h-4 w-4 mr-1" />
+                Bookings
+              </TabsTrigger>
+            )}
             <TabsTrigger value="position" className="text-xs">
               <PositionIcon className="h-4 w-4 mr-1" />
               My Role
@@ -413,6 +421,12 @@ export const ExecutiveBoardDashboard = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {selectedPosition === 'tour_manager' && (
+            <TabsContent value="booking-requests">
+              <PerformanceRequestsList />
+            </TabsContent>
+          )}
 
           <TabsContent value="position">
             <PositionTab position={selectedPosition} />
