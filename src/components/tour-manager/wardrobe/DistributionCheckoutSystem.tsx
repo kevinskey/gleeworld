@@ -91,11 +91,7 @@ export const DistributionCheckoutSystem = () => {
       // Fetch checkouts
       const { data: checkoutData, error: checkoutError } = await supabase
         .from('gw_wardrobe_checkouts')
-        .select(`
-          *,
-          inventory_item:gw_wardrobe_inventory(item_name, category),
-          member:gw_profiles(full_name, email)
-        `)
+        .select('*')
         .order('checked_out_at', { ascending: false });
 
       if (checkoutError) throw checkoutError;
@@ -109,7 +105,21 @@ export const DistributionCheckoutSystem = () => {
 
       if (inventoryError) throw inventoryError;
 
-      setCheckouts(checkoutData || []);
+      // Fetch profiles
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('gw_profiles')
+        .select('id, full_name, email');
+
+      if (profilesError) throw profilesError;
+
+      // Manually join the data
+      const checkoutsWithJoins = (checkoutData || []).map(checkout => ({
+        ...checkout,
+        inventory_item: inventoryData?.find(item => item.id === checkout.inventory_item_id) || null,
+        member: profilesData?.find(profile => profile.id === checkout.member_id) || null
+      }));
+
+      setCheckouts(checkoutsWithJoins);
       setInventory(inventoryData || []);
     } catch (error) {
       console.error('Error fetching data:', error);

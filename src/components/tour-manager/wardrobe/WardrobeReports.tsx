@@ -56,16 +56,22 @@ export const WardrobeReports = () => {
       // Fetch member statuses
       const { data: memberData, error: memberError } = await supabase
         .from('gw_member_wardrobe_profiles')
-        .select(`
-          *,
-          profiles:gw_profiles(full_name, email, voice_part)
-        `);
+        .select('*');
 
       if (memberError) throw memberError;
+
+      // Fetch profiles separately
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('gw_profiles')
+        .select('id, full_name, email, voice_part');
+
+      if (profilesError) throw profilesError;
 
       // Process member data with checkout counts
       const memberStatuses = await Promise.all(
         (memberData || []).map(async (member) => {
+          const profile = profilesData?.find(p => p.id === member.user_id);
+          
           const { data: checkouts } = await supabase
             .from('gw_wardrobe_checkouts')
             .select('*')
@@ -83,9 +89,9 @@ export const WardrobeReports = () => {
             : undefined;
 
           return {
-            member_name: member.profiles?.full_name || 'Unknown',
-            email: member.profiles?.email || '',
-            voice_part: member.profiles?.voice_part,
+            member_name: profile?.full_name || 'Unknown',
+            email: profile?.email || '',
+            voice_part: profile?.voice_part,
             formal_dress_size: member.formal_dress_size,
             polo_size: member.polo_size,
             tshirt_size: member.tshirt_size,
@@ -116,11 +122,7 @@ export const WardrobeReports = () => {
       // Fetch missing/overdue items
       const { data: checkoutData, error: checkoutError } = await supabase
         .from('gw_wardrobe_checkouts')
-        .select(`
-          *,
-          inventory_item:gw_wardrobe_inventory(item_name),
-          member:gw_profiles(full_name, email)
-        `)
+        .select('*')
         .in('status', ['checked_out', 'overdue', 'lost']);
 
       if (checkoutError) throw checkoutError;
@@ -128,14 +130,17 @@ export const WardrobeReports = () => {
       const missingItems = (checkoutData || [])
         .filter(checkout => checkout.status !== 'returned')
         .map(checkout => {
+          const profile = profilesData?.find(p => p.id === checkout.member_id);
+          const inventoryItem = inventoryData?.find(item => item.id === checkout.inventory_item_id);
+          
           const daysOverdue = checkout.due_date 
             ? Math.floor((new Date().getTime() - new Date(checkout.due_date).getTime()) / (1000 * 60 * 60 * 24))
             : 0;
 
           return {
-            item_name: checkout.inventory_item?.item_name || 'Unknown',
-            member_name: checkout.member?.full_name || 'Unknown',
-            email: checkout.member?.email || '',
+            item_name: inventoryItem?.item_name || 'Unknown',
+            member_name: profile?.full_name || 'Unknown',
+            email: profile?.email || '',
             size: checkout.size,
             checked_out_date: checkout.checked_out_at,
             days_overdue: Math.max(0, daysOverdue),
