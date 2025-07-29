@@ -112,6 +112,8 @@ const RootRoute = () => {
   const { loading } = useAuth();
   
   console.log('RootRoute: Executing with loading=', loading);
+  console.log('RootRoute: Current URL=', window.location.href);
+  console.log('RootRoute: Current pathname=', window.location.pathname);
   
   if (loading) {
     console.log('RootRoute: Showing loading spinner');
