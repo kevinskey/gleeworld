@@ -220,7 +220,7 @@ export const EventsAndActivitySection = ({
                       <h5 className="font-medium text-foreground group-hover:text-primary transition-colors truncate text-base">
                         {event.title}
                       </h5>
-                      <div className="flex flex-col gap-1 mt-1 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
                           <span>{formatEventDate(event.start_date)}</span>
@@ -234,7 +234,7 @@ export const EventsAndActivitySection = ({
                         {event.location && (
                           <div className="flex items-center gap-1">
                             <MapPin className="h-4 w-4" />
-                            <span className="truncate">{event.location}</span>
+                            <span className="truncate max-w-[80px]">{event.location}</span>
                           </div>
                         )}
                       </div>
