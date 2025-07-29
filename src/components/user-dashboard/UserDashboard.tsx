@@ -16,6 +16,7 @@ import { GleeClubSpotlightSection } from "./sections/GleeClubSpotlightSection";
 import { ExecutiveBoardSection } from "./sections/ExecutiveBoardSection";
 import { EventsAndActivitySection } from "./sections/EventsAndActivitySection";
 import { DashboardModulesSection } from "./sections/DashboardModulesSection";
+import { SpiritualReflectionsSection } from "./sections/SpiritualReflectionsSection";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useMergedProfile } from "@/hooks/useMergedProfile";
@@ -235,6 +236,9 @@ export const UserDashboard = () => {
           displayName={displayName}
           profile={profile}
         />
+
+        {/* Spiritual Reflections Section */}
+        <SpiritualReflectionsSection />
 
         {/* Grid Layout: Quick Actions & Admin Controls/Glee Club Spotlight */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
