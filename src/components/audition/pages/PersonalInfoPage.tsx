@@ -21,7 +21,7 @@ export function PersonalInfoPage() {
             <FormLabel>Describe your personality *</FormLabel>
             <FormControl>
               <Textarea 
-                placeholder="Tell us about yourself, your interests, and what makes you unique... (minimum 10 characters)"
+                placeholder="Tell us about yourself, your interests, and what makes you unique... (minimum 25 words)"
                 className="min-h-[120px]"
                 {...field} 
               />
@@ -29,27 +29,44 @@ export function PersonalInfoPage() {
             <div className="flex justify-between items-center">
               <FormMessage />
               <span className="text-xs text-gray-500">
-                {field.value?.length || 0}/10 minimum
+                {(() => {
+                  const wordCount = field.value?.trim().split(/\s+/).filter(word => word.length > 0).length || 0;
+                  return `${wordCount}/25 words minimum`;
+                })()}
               </span>
             </div>
           </FormItem>
         )}
       />
 
-      <FormField
+        <FormField
         control={form.control}
         name="interestedInLeadership"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-            <FormControl>
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormControl>
-            <FormLabel className="text-sm font-normal">
-              Are you interested in leadership opportunities within the Glee Club?
-            </FormLabel>
+          <FormItem>
+            <FormLabel>Are you interested in leadership opportunities within the Glee Club? (Optional)</FormLabel>
+            <div className="flex gap-4">
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  id="leadership-yes" 
+                  checked={field.value === true}
+                  onChange={() => field.onChange(true)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="leadership-yes" className="text-sm">Yes</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  id="leadership-no" 
+                  checked={field.value === false}
+                  onChange={() => field.onChange(false)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="leadership-no" className="text-sm">No</label>
+              </div>
+            </div>
           </FormItem>
         )}
       />

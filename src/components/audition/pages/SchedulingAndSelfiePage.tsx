@@ -73,6 +73,7 @@ export function SchedulingAndSelfiePage() {
     } else if (isCameraReady) {
       console.log('Taking photo...');
       await capturePhoto();
+      stopCamera(); // Stop camera after taking photo
     }
   };
 
@@ -220,7 +221,7 @@ export function SchedulingAndSelfiePage() {
               type="button"
               variant="outline"
               onClick={handleTakePhoto}
-              disabled={false}
+              disabled={isCapturing && !isCameraReady}
               className="px-6 py-3 text-base md:text-lg"
             >
               <Camera className="w-5 h-5 mr-2" />

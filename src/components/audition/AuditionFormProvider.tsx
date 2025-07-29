@@ -14,7 +14,9 @@ const auditionSchema = z.object({
   // Basic info
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  phone: z.string().min(10, "Please enter a valid phone number"),
+  phone: z.string()
+    .min(10, "Phone number must be at least 10 digits")
+    .regex(/^[\+]?[1-9][\d]{0,2}[\s\-\.]?[\(]?[\d]{1,3}[\)]?[\s\-\.]?[\d]{3,4}[\s\-\.]?[\d]{3,4}$/, "Please enter a valid phone number"),
   
   // Musical background
   sangInMiddleSchool: z.boolean(),
@@ -32,7 +34,10 @@ const auditionSchema = z.object({
   interestedInMusicFundamentals: z.boolean(),
   
   // Leadership and personality
-  personalityDescription: z.string().min(10, "Please describe your personality"),
+  personalityDescription: z.string().min(25, "Please describe your personality (minimum 25 words)").refine((val) => {
+    const wordCount = val.trim().split(/\s+/).filter(word => word.length > 0).length;
+    return wordCount >= 25;
+  }, "Please write at least 25 words"),
   interestedInLeadership: z.boolean(),
   additionalInfo: z.string().optional(),
   
@@ -140,10 +145,12 @@ export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
         if (!user) {
           return true; // Music skills for new users
         }
-        return !!(values.personalityDescription && values.personalityDescription.length >= 10);
+        const wordCount = values.personalityDescription?.trim().split(/\s+/).filter(word => word.length > 0).length || 0;
+        return !!(values.personalityDescription && wordCount >= 25);
       case 5: // Personal Info or Selfie & Scheduling
         if (!user) {
-          return !!(values.personalityDescription && values.personalityDescription.length >= 10);
+        const wordCount = values.personalityDescription?.trim().split(/\s+/).filter(word => word.length > 0).length || 0;
+        return !!(values.personalityDescription && wordCount >= 25);
         }
         return !!(values.auditionDate && values.auditionTime && capturedImage);
       case 6: // Selfie & Scheduling (for new users only)
