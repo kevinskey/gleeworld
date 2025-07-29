@@ -109,8 +109,8 @@ export const EventsAndActivitySection = ({
 
   return (
     <Card className="h-full">
-      <CardHeader className="pb-1 md:pb-3 cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
-        <CardTitle className="flex items-center justify-between text-xl">
+      <CardHeader className="pb-2 cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
+        <CardTitle className="flex items-center justify-between text-lg sm:text-xl">
           <span>Events Calendar</span>
           <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
             {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}

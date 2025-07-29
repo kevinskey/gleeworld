@@ -277,7 +277,7 @@ export const UserDashboard = () => {
 
   return (
     <UniversalLayout containerized={false}>
-      <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-6 space-y-3 sm:space-y-6">
         
         {/* View Mode Toggle for Admins/Executives */}
         {(isAdmin || hasExecBoardPerms) && (

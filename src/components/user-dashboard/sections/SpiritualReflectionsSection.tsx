@@ -45,8 +45,8 @@ export const SpiritualReflectionsSection = () => {
 
   return (
     <Card className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 border-primary/20 shadow-lg">
-      <CardHeader className="pb-1 cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
-        <CardTitle className="flex items-center justify-between text-primary text-xl">
+      <CardHeader className="pb-2 cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
+        <CardTitle className="flex items-center justify-between text-primary text-lg sm:text-xl">
           <div className="flex items-center gap-2">
             <Book className="h-5 w-5" />
             Spiritual Gleeflections
