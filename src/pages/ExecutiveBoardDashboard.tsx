@@ -176,7 +176,12 @@ export const ExecutiveBoardDashboard = () => {
       pr_coordinator: MessageSquare,
       chaplain: Heart,
       data_analyst: BarChart3,
-      assistant_chaplain: Heart
+      assistant_chaplain: Heart,
+      student_conductor: Music2,
+      section_leader_s1: UserCheck,
+      section_leader_s2: UserCheck,
+      section_leader_a1: UserCheck,
+      section_leader_a2: UserCheck
     };
     return icons[position] || Shield;
   };
@@ -193,7 +198,12 @@ export const ExecutiveBoardDashboard = () => {
       pr_coordinator: "PR Coordinator",
       chaplain: "Chaplain",
       data_analyst: "Data Analyst",
-      assistant_chaplain: "Assistant Chaplain"
+      assistant_chaplain: "Assistant Chaplain",
+      student_conductor: "Student Conductor",
+      section_leader_s1: "Section Leader (S1)",
+      section_leader_s2: "Section Leader (S2)",
+      section_leader_a1: "Section Leader (A1)",
+      section_leader_a2: "Section Leader (A2)"
     };
     return names[position] || position;
   };
@@ -355,6 +365,18 @@ export const ExecutiveBoardDashboard = () => {
                       <div className="flex items-center gap-2">
                         <Heart className="h-4 w-4" />
                         Assistant Chaplain
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="section_leader_s1">
+                      <div className="flex items-center gap-2">
+                        <UserCheck className="h-4 w-4" />
+                        Section Leader
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="student_conductor">
+                      <div className="flex items-center gap-2">
+                        <Music2 className="h-4 w-4" />
+                        Student Conductor
                       </div>
                     </SelectItem>
                   </SelectContent>
