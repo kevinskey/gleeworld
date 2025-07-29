@@ -145,12 +145,14 @@ export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
         if (!user) {
           return true; // Music skills for new users
         }
-        const wordCount = values.personalityDescription?.trim().split(/\s+/).filter(word => word.length > 0).length || 0;
+        const personalityText = values.personalityDescription?.trim() || '';
+        const wordCount = personalityText ? personalityText.split(/\s+/).filter(word => word.length > 0).length : 0;
         return !!(values.personalityDescription && wordCount >= 50);
       case 5: // Personal Info or Selfie & Scheduling
         if (!user) {
-        const wordCount = values.personalityDescription?.trim().split(/\s+/).filter(word => word.length > 0).length || 0;
-        return !!(values.personalityDescription && wordCount >= 50);
+          const personalityText = values.personalityDescription?.trim() || '';
+          const wordCount = personalityText ? personalityText.split(/\s+/).filter(word => word.length > 0).length : 0;
+          return !!(values.personalityDescription && wordCount >= 50);
         }
         return !!(values.auditionDate && values.auditionTime && capturedImage);
       case 6: // Selfie & Scheduling (for new users only)
