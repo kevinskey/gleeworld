@@ -2401,6 +2401,162 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_booking_requests: {
+        Row: {
+          assigned_to: string | null
+          av_capabilities: string | null
+          contact_email: string
+          contact_person_name: string
+          contact_phone: string
+          contact_title: string | null
+          created_at: string
+          dietary_restrictions: string | null
+          dressing_rooms_available: boolean | null
+          event_date_end: string | null
+          event_date_start: string
+          event_description: string | null
+          event_name: string
+          event_recorded_livestreamed: boolean | null
+          expected_attendance: number | null
+          formal_contract_required: boolean | null
+          honorarium_amount: number | null
+          honorarium_offered: boolean | null
+          how_heard_about_us: string | null
+          id: string
+          lighting_available: boolean | null
+          lighting_description: string | null
+          load_in_soundcheck_time: string | null
+          lodging_nights: number | null
+          lodging_provided: boolean | null
+          meals_provided: boolean | null
+          notes_for_choir: string | null
+          notes_for_director: string | null
+          organization_name: string
+          performance_duration: string
+          performance_time: string | null
+          photo_video_permission: boolean | null
+          piano_available: boolean | null
+          piano_type: string | null
+          preferred_arrival_point: string | null
+          promotional_assets_requested: string[] | null
+          recording_description: string | null
+          rehearsal_time_provided: string | null
+          sound_system_available: boolean | null
+          sound_system_description: string | null
+          stage_dimensions: string | null
+          status: string
+          theme_occasion: string | null
+          travel_expenses_covered: string[] | null
+          updated_at: string
+          venue_address: string
+          venue_name: string
+          venue_type: string
+          website: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          av_capabilities?: string | null
+          contact_email: string
+          contact_person_name: string
+          contact_phone: string
+          contact_title?: string | null
+          created_at?: string
+          dietary_restrictions?: string | null
+          dressing_rooms_available?: boolean | null
+          event_date_end?: string | null
+          event_date_start: string
+          event_description?: string | null
+          event_name: string
+          event_recorded_livestreamed?: boolean | null
+          expected_attendance?: number | null
+          formal_contract_required?: boolean | null
+          honorarium_amount?: number | null
+          honorarium_offered?: boolean | null
+          how_heard_about_us?: string | null
+          id?: string
+          lighting_available?: boolean | null
+          lighting_description?: string | null
+          load_in_soundcheck_time?: string | null
+          lodging_nights?: number | null
+          lodging_provided?: boolean | null
+          meals_provided?: boolean | null
+          notes_for_choir?: string | null
+          notes_for_director?: string | null
+          organization_name: string
+          performance_duration: string
+          performance_time?: string | null
+          photo_video_permission?: boolean | null
+          piano_available?: boolean | null
+          piano_type?: string | null
+          preferred_arrival_point?: string | null
+          promotional_assets_requested?: string[] | null
+          recording_description?: string | null
+          rehearsal_time_provided?: string | null
+          sound_system_available?: boolean | null
+          sound_system_description?: string | null
+          stage_dimensions?: string | null
+          status?: string
+          theme_occasion?: string | null
+          travel_expenses_covered?: string[] | null
+          updated_at?: string
+          venue_address: string
+          venue_name: string
+          venue_type: string
+          website?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          av_capabilities?: string | null
+          contact_email?: string
+          contact_person_name?: string
+          contact_phone?: string
+          contact_title?: string | null
+          created_at?: string
+          dietary_restrictions?: string | null
+          dressing_rooms_available?: boolean | null
+          event_date_end?: string | null
+          event_date_start?: string
+          event_description?: string | null
+          event_name?: string
+          event_recorded_livestreamed?: boolean | null
+          expected_attendance?: number | null
+          formal_contract_required?: boolean | null
+          honorarium_amount?: number | null
+          honorarium_offered?: boolean | null
+          how_heard_about_us?: string | null
+          id?: string
+          lighting_available?: boolean | null
+          lighting_description?: string | null
+          load_in_soundcheck_time?: string | null
+          lodging_nights?: number | null
+          lodging_provided?: boolean | null
+          meals_provided?: boolean | null
+          notes_for_choir?: string | null
+          notes_for_director?: string | null
+          organization_name?: string
+          performance_duration?: string
+          performance_time?: string | null
+          photo_video_permission?: boolean | null
+          piano_available?: boolean | null
+          piano_type?: string | null
+          preferred_arrival_point?: string | null
+          promotional_assets_requested?: string[] | null
+          recording_description?: string | null
+          rehearsal_time_provided?: string | null
+          sound_system_available?: boolean | null
+          sound_system_description?: string | null
+          stage_dimensions?: string | null
+          status?: string
+          theme_occasion?: string | null
+          travel_expenses_covered?: string[] | null
+          updated_at?: string
+          venue_address?: string
+          venue_name?: string
+          venue_type?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       gw_calendars: {
         Row: {
           color: string
