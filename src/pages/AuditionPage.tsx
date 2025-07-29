@@ -129,16 +129,16 @@ function AuditionFormContent() {
       <div className="container mx-auto px-2 md:px-4 max-w-4xl">
         <div className="text-center mb-4 md:mb-8 pt-4 md:pt-8">
           <Mic className="w-8 h-8 md:w-16 md:h-16 mx-auto text-purple-600 mb-2 md:mb-4" />
-          <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-1 md:mb-2">Audition Application</h1>
-          <p className="text-sm md:text-xl text-gray-600">Join the Spelman College Glee Club Family</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-1 md:mb-2">Audition Application</h1>
+          <p className="text-base md:text-xl text-gray-600">Join the Spelman College Glee Club Family</p>
         </div>
 
         <AuditionFormProgress />
 
         <Card className="bg-white/80 backdrop-blur-md border-white/30 shadow-xl mx-1 md:mx-0">
-          <CardContent className="pt-3 md:pt-6 px-3 md:px-6">
+          <CardContent className="pt-4 md:pt-6 px-4 md:px-6">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-8">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 md:space-y-8 text-base">
                 {renderCurrentPage()}
               </form>
             </Form>
