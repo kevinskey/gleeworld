@@ -222,37 +222,37 @@ export const Shop = () => {
 
   return (
     <PublicLayout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">GleeWorld Shop</h1>
-            <p className="text-gray-600">Official Spelman College Glee Club merchandise and recordings</p>
+      <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="w-full sm:w-auto">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">GleeWorld Shop</h1>
+            <p className="text-sm sm:text-base text-gray-600">Official Spelman College Glee Club merchandise and recordings</p>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+            <div className="relative w-full sm:w-auto">
               <Button 
                 variant="outline" 
-                className="flex items-center space-x-2"
+                className="flex items-center justify-center space-x-2 w-full sm:w-auto min-w-[120px]"
                 onClick={handleCheckout}
               >
-                <ShoppingCart className="h-5 w-5" />
-                <span>Cart ({getTotalItems()})</span>
+                <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-sm sm:text-base">Cart ({getTotalItems()})</span>
               </Button>
               {getTotalItems() > 0 && (
-                <Badge className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 flex items-center justify-center">
+                <Badge className="absolute -top-2 -right-2 h-5 w-5 sm:h-6 sm:w-6 rounded-full p-0 flex items-center justify-center text-xs">
                   {getTotalItems()}
                 </Badge>
               )}
             </div>
-            <div className="text-right">
-              <div className="text-sm text-gray-600">Total:</div>
-              <div className="font-bold text-lg">${getTotalPrice().toFixed(2)}</div>
+            <div className="text-left sm:text-right w-full sm:w-auto">
+              <div className="text-xs sm:text-sm text-gray-600">Total:</div>
+              <div className="font-bold text-base sm:text-lg">${getTotalPrice().toFixed(2)}</div>
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8 p-4 bg-white rounded-lg shadow-sm">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8 p-3 sm:p-4 bg-white rounded-lg shadow-sm">
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -283,9 +283,9 @@ export const Shop = () => {
 
         {/* Featured Products */}
         {selectedCategory === "all" && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Products</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="mb-8 sm:mb-12">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Featured Products</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {products.slice(0, 3).map((product) => (
                 <Card key={product.id} className="hover:shadow-lg transition-shadow group">
                   <CardHeader className="pb-4">
@@ -357,7 +357,7 @@ export const Shop = () => {
 
         {/* All Products */}
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
             {selectedCategory === "all" ? "All Products" : CATEGORIES.find(c => c.value === selectedCategory)?.label}
           </h2>
           
@@ -368,7 +368,7 @@ export const Shop = () => {
               <p className="text-gray-600">Try adjusting your search or filters.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {filteredProducts.map((product) => (
                 <Card key={product.id} className="hover:shadow-lg transition-shadow group">
                   <CardContent className="p-4">
@@ -436,11 +436,11 @@ export const Shop = () => {
 
         {/* Checkout Button */}
         {getTotalItems() > 0 && (
-          <div className="fixed bottom-6 right-6 bg-white rounded-lg shadow-lg p-4 border">
+          <div className="fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-3 sm:p-4 border max-w-[200px]">
             <div className="text-center">
-              <div className="text-lg font-bold">${getTotalPrice().toFixed(2)}</div>
-              <div className="text-sm text-gray-600 mb-3">{getTotalItems()} items</div>
-              <Button className="w-full" onClick={handleCheckout}>
+              <div className="text-base sm:text-lg font-bold">${getTotalPrice().toFixed(2)}</div>
+              <div className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">{getTotalItems()} items</div>
+              <Button className="w-full text-xs sm:text-sm" onClick={handleCheckout}>
                 <CreditCard className="h-4 w-4 mr-2" />
                 Checkout
               </Button>

@@ -42,12 +42,12 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
 
   return (
     <header className="bg-gradient-to-r from-white/10 via-white/5 to-white/10 backdrop-blur-lg border-b border-white/30 sticky top-0 z-[100] shadow-xl">
-      <div className="container mx-auto px-2 sm:px-4">
-        <div className="flex items-center justify-between min-h-16 py-3">
+      <div className="container mx-auto px-2 sm:px-4 lg:px-6">
+        <div className="flex items-center justify-between min-h-14 sm:min-h-16 py-2 sm:py-3">
           {/* Logo and Navigation */}
-          <div className="flex items-center gap-1 sm:gap-4 md:gap-6 min-w-0 flex-1">
+          <div className="flex items-center gap-2 sm:gap-4 md:gap-6 min-w-0 flex-1">
             <EnhancedTooltip content="Go to GleeWorld Home">
-              <Link to="/landing" className="flex items-center gap-2 flex-shrink-0 hover:scale-105 transition-transform duration-200 relative z-[110]">
+              <Link to="/landing" className="flex items-center gap-1 sm:gap-2 flex-shrink-0 hover:scale-105 transition-transform duration-200 relative z-[110]">
                 <div className="relative z-[111]">
                   <img 
                     src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
