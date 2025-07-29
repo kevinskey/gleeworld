@@ -85,13 +85,11 @@ export const SheetMusicLibrary = ({
   const fetchSheetMusic = async () => {
     try {
       setLoading(true);
-      console.log('Fetching all sheet music...');
       const { data, error } = await supabase
         .from('gw_sheet_music')
         .select('*')
         .order('created_at', { ascending: false });
 
-      console.log('Full sheet music query result:', { data, error, count: data?.length });
       if (error) throw error;
       setSheetMusic(data || []);
     } catch (error) {
