@@ -12,11 +12,11 @@ export const TasksSection = () => {
 
   // Mock data for checked out items and dues - replace with real data
   const [checkedOutItems, setCheckedOutItems] = useState([
-    { id: '1', title: 'Black Concert Dress', dueDate: '2024-02-15', type: 'uniform', status: 'checked_out' },
+    { id: '1', title: 'Black Concert Dress', dueDate: '2024-02-15', type: 'uniform', status: 'checked_in' },
     { id: '2', title: 'Music Folder - Spring Concert', dueDate: '2024-02-20', type: 'music', status: 'checked_in' },
-    { id: '3', title: 'Pearl Necklace', dueDate: '2024-02-18', type: 'accessory', status: 'checked_out' },
+    { id: '3', title: 'Pearl Necklace', dueDate: '2024-02-18', type: 'accessory', status: 'checked_in' },
     { id: '4', title: 'Red Lipstick - MAC Ruby Woo', dueDate: '2024-02-25', type: 'cosmetic', status: 'checked_in' },
-    { id: '5', title: 'Black Polo Shirt', dueDate: '2024-03-01', type: 'uniform', status: 'checked_out' },
+    { id: '5', title: 'Black Polo Shirt', dueDate: '2024-03-01', type: 'uniform', status: 'checked_in' },
   ]);
 
   const duesInfo = {
