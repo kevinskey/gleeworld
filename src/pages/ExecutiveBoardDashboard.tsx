@@ -341,6 +341,10 @@ export const ExecutiveBoardDashboard = () => {
             </TabsTrigger>
             {selectedPosition === 'tour_manager' && (
               <>
+                <TabsTrigger value="tour-manager-hub" className="text-xs">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  Tour Hub
+                </TabsTrigger>
                 <TabsTrigger value="booking-requests" className="text-xs">
                   <Mail className="h-4 w-4 mr-1" />
                   Bookings
@@ -440,6 +444,44 @@ export const ExecutiveBoardDashboard = () => {
 
           {selectedPosition === 'tour_manager' && (
             <>
+              <TabsContent value="tour-manager-hub">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MapPin className="h-5 w-5" />
+                      Tour Manager Hub
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-muted-foreground">Access the complete tour management suite.</p>
+                    <Button 
+                      onClick={() => window.open('/tour-manager', '_blank')}
+                      className="w-full"
+                    >
+                      <MapPin className="h-4 w-4 mr-2" />
+                      Open Tour Manager Dashboard
+                    </Button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                      <div className="p-4 border rounded-lg">
+                        <h4 className="font-semibold text-sm mb-2">Tour Planning</h4>
+                        <p className="text-xs text-muted-foreground">Plan and organize upcoming tours</p>
+                      </div>
+                      <div className="p-4 border rounded-lg">
+                        <h4 className="font-semibold text-sm mb-2">Travel Logistics</h4>
+                        <p className="text-xs text-muted-foreground">Manage travel arrangements and logistics</p>
+                      </div>
+                      <div className="p-4 border rounded-lg">
+                        <h4 className="font-semibold text-sm mb-2">Venue Management</h4>
+                        <p className="text-xs text-muted-foreground">Coordinate venues and performances</p>
+                      </div>
+                      <div className="p-4 border rounded-lg">
+                        <h4 className="font-semibold text-sm mb-2">Budget Tracking</h4>
+                        <p className="text-xs text-muted-foreground">Track tour expenses and budgets</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
               <TabsContent value="booking-requests">
                 <PerformanceRequestsList />
               </TabsContent>
