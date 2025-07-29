@@ -17,7 +17,8 @@ import { ExecutiveBoardSection } from "./sections/ExecutiveBoardSection";
 import { EventsAndActivitySection } from "./sections/EventsAndActivitySection";
 import { DashboardModulesSection } from "./sections/DashboardModulesSection";
 import { SpiritualReflectionsSection } from "./sections/SpiritualReflectionsSection";
-import { AnnouncementsEventsSection } from "./sections/AnnouncementsEventsSection";
+import { NotificationsSection } from "./sections/NotificationsSection";
+import { TasksSection } from "./sections/TasksSection";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useMergedProfile } from "@/hooks/useMergedProfile";
@@ -322,9 +323,13 @@ export const UserDashboard = () => {
           />
         </div>
 
-        {/* Notifications, Check In/Out, Dues */}
+        {/* Notifications and Tasks - Separated */}
         <div className="grid grid-cols-1 gap-6">
-          <AnnouncementsEventsSection upcomingEvents={upcomingEventsList} />
+          <NotificationsSection />
+        </div>
+
+        <div className="grid grid-cols-1 gap-6">
+          <TasksSection />
         </div>
 
         {/* Calendar Attendance, Music Library, Budget Creation, Send Notifications, Shop */}
