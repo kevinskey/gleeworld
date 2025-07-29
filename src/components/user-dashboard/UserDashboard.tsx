@@ -254,13 +254,14 @@ export const UserDashboard = () => {
 
   // Get real data with debugging for event filtering
   console.log('Raw events from hook:', getUpcomingEvents(6));
+  console.log('Events loading status:', eventsLoading);
+  console.log('All events from hook:', events);
   
   const upcomingEventsList = getUpcomingEvents(6)
     .filter(event => {
-      // Filter out events with invalid dates and past events
+      // Less strict filtering - just check for valid date, allow all future events
       const eventDate = new Date(event.start_date);
       const isValidDate = event.start_date && !isNaN(eventDate.getTime());
-      const isFutureEvent = eventDate > new Date();
       
       console.log('Event filtering:', {
         eventId: event.id,
@@ -268,7 +269,6 @@ export const UserDashboard = () => {
         start_date: event.start_date,
         eventDate: eventDate.toString(),
         isValidDate,
-        isFutureEvent,
         currentDate: new Date().toString()
       });
       
@@ -277,12 +277,7 @@ export const UserDashboard = () => {
         return false;
       }
       
-      if (!isFutureEvent) {
-        console.log('Past event filtered out:', event.id, event.start_date);
-        return false;
-      }
-      
-      return true;
+      return true; // Show all valid events for now
     })
     .map(event => ({
       id: event.id,
