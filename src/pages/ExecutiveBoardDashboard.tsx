@@ -59,6 +59,7 @@ import { TourOverview } from "@/components/tour-manager/TourOverview";
 import { WardrobeMistressHub } from "@/components/tour-manager/WardrobeMistressHub";
 import { LibraryManagement } from "@/components/music-library/LibraryManagement";
 import { HistorianWorkpage } from "@/components/historian/HistorianWorkpage";
+import { ChaplainWorkHub } from "@/components/chaplain/ChaplainWorkHub";
 
 
 export type ExecutivePosition = 
@@ -71,7 +72,8 @@ export type ExecutivePosition =
   | 'historian'
   | 'pr_coordinator'
   | 'chaplain'
-  | 'data_analyst';
+  | 'data_analyst'
+  | 'assistant_chaplain';
 
 interface ExecutiveMember {
   id: string;
@@ -163,7 +165,8 @@ export const ExecutiveBoardDashboard = () => {
       historian: Camera,
       pr_coordinator: MessageSquare,
       chaplain: Heart,
-      data_analyst: BarChart3
+      data_analyst: BarChart3,
+      assistant_chaplain: Heart
     };
     return icons[position] || Shield;
   };
@@ -179,7 +182,8 @@ export const ExecutiveBoardDashboard = () => {
       historian: "Historian",
       pr_coordinator: "PR Coordinator",
       chaplain: "Chaplain",
-      data_analyst: "Data Analyst"
+      data_analyst: "Data Analyst",
+      assistant_chaplain: "Assistant Chaplain"
     };
     return names[position] || position;
   };
@@ -292,6 +296,12 @@ export const ExecutiveBoardDashboard = () => {
                         Data Analyst
                       </div>
                     </SelectItem>
+                    <SelectItem value="assistant_chaplain">
+                      <div className="flex items-center gap-2">
+                        <Heart className="h-4 w-4" />
+                        Assistant Chaplain
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               ) : (
@@ -389,6 +399,12 @@ export const ExecutiveBoardDashboard = () => {
               <TabsTrigger value="historian-hub" className="text-xs">
                 <Camera className="h-4 w-4 mr-1" />
                 Historian Hub
+              </TabsTrigger>
+            )}
+            {(selectedPosition === 'chaplain' || selectedPosition === 'assistant_chaplain') && (
+              <TabsTrigger value="chaplain-hub" className="text-xs">
+                <Heart className="h-4 w-4 mr-1" />
+                Chaplain Hub
               </TabsTrigger>
             )}
             <TabsTrigger value="position" className="text-xs">
@@ -543,6 +559,12 @@ export const ExecutiveBoardDashboard = () => {
           {selectedPosition === 'historian' && (
             <TabsContent value="historian-hub">
               <HistorianWorkpage />
+            </TabsContent>
+          )}
+
+          {(selectedPosition === 'chaplain' || selectedPosition === 'assistant_chaplain') && (
+            <TabsContent value="chaplain-hub">
+              <ChaplainWorkHub />
             </TabsContent>
           )}
 

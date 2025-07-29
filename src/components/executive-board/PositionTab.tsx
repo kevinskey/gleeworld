@@ -16,7 +16,8 @@ export type ExecutivePosition =
   | 'historian'
   | 'pr_coordinator'
   | 'chaplain'
-  | 'data_analyst';
+  | 'data_analyst'
+  | 'assistant_chaplain';
 
 interface PositionTabProps {
   position: ExecutivePosition;
@@ -222,6 +223,26 @@ const positionData = {
       "Plan data collection strategies"
     ],
     collaborators: ["librarian", "secretary", "treasurer"]
+  },
+  assistant_chaplain: {
+    icon: Heart,
+    mission: "To support the Chaplain in providing spiritual guidance and emotional support to Glee Club members. Assist in fostering community, facilitating personal growth, and maintaining the organization's spiritual foundation.",
+    responsibilities: [
+      "Assist with devotional activities",
+      "Support pastoral care initiatives",
+      "Help facilitate team building",
+      "Support member wellness programs",
+      "Assist with service projects",
+      "Help maintain spiritual traditions"
+    ],
+    tasks: [
+      "Assist with weekly devotionals",
+      "Help organize community service projects",
+      "Support wellness check-in system",
+      "Assist with spiritual retreat activities",
+      "Help develop peer support programs"
+    ],
+    collaborators: ["chaplain", "president", "tour_manager"]
   }
 };
 
