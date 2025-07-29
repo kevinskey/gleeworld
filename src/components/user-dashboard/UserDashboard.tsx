@@ -300,13 +300,17 @@ export const UserDashboard = () => {
           profile={profile}
         />
 
-        {/* Spiritual Gleeflections & Events Section - side by side */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <SpiritualReflectionsSection />
-          <EventsAndActivitySection 
-            upcomingEvents={upcomingEventsList}
-            recentActivity={recentActivity}
-          />
+        {/* Spiritual Gleeflections & Events Section - side by side with equal heights */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:items-stretch">
+          <div className="h-full">
+            <SpiritualReflectionsSection />
+          </div>
+          <div className="h-full">
+            <EventsAndActivitySection 
+              upcomingEvents={upcomingEventsList}
+              recentActivity={recentActivity}
+            />
+          </div>
         </div>
 
         {/* Announcements Section */}

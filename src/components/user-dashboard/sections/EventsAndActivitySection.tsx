@@ -48,14 +48,14 @@ export const EventsAndActivitySection = ({
   };
 
   return (
-    <Card>
+    <Card className="h-48">
       <CardHeader className="pb-3">
         <CardTitle>Upcoming Events</CardTitle>
         <CardDescription>Your next rehearsals and performances</CardDescription>
       </CardHeader>
       <CardContent>
         {sortedEvents.length > 0 ? (
-          <ScrollArea className="h-[180px]">
+          <ScrollArea className="h-[128px]">
             <div className="space-y-2">
               {sortedEvents.map((event, index) => (
                 <div 
