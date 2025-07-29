@@ -22,13 +22,14 @@ export const TasksSection = () => {
   const duesInfo = {
     totalDue: 150.00,
     dueDate: '2024-03-01',
+    paymentStatus: 'unpaid', // Default unpaid until treasurer marks as paid
     items: [
       { description: 'Membership Dues', amount: 100.00 },
       { description: 'Concert Attire Fee', amount: 50.00 },
     ]
   };
 
-  const totalTaskCount = checkedOutItems.length + (duesInfo.totalDue > 0 ? 1 : 0);
+  const totalTaskCount = checkedOutItems.length + (duesInfo.paymentStatus === 'unpaid' ? 1 : 0);
 
   const getItemTypeColor = (type: string) => {
     switch (type) {
@@ -42,6 +43,10 @@ export const TasksSection = () => {
   };
 
   const getDuesStatusColor = () => {
+    if (duesInfo.paymentStatus === 'paid') {
+      return 'bg-green-50 border-green-200 text-green-900'; // Paid
+    }
+    
     const today = new Date();
     const dueDate = new Date(duesInfo.dueDate);
     const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
@@ -65,6 +70,12 @@ export const TasksSection = () => {
     return status === 'checked_out' 
       ? 'bg-red-100 text-red-800 border-red-200' 
       : 'bg-green-100 text-green-800 border-green-200';
+  };
+
+  const getPaymentStatusColor = (status: string) => {
+    return status === 'paid' 
+      ? 'bg-green-100 text-green-800 border-green-200' 
+      : 'bg-red-100 text-red-800 border-red-200';
   };
 
   return (
@@ -131,7 +142,7 @@ export const TasksSection = () => {
             <CardTitle className="flex items-center gap-2 text-secondary-foreground text-base">
               <DollarSign className="h-4 w-4" />
               Outstanding Dues
-              {duesInfo.totalDue > 0 && (
+              {duesInfo.paymentStatus === 'unpaid' && (
                 <Badge variant="destructive" className="text-xs">
                   <AlertCircle className="h-3 w-3 mr-1" />
                   Due
@@ -141,7 +152,7 @@ export const TasksSection = () => {
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-44">
-              {duesInfo.totalDue === 0 ? (
+              {duesInfo.paymentStatus === 'paid' ? (
                 <div className="text-center py-4">
                   <DollarSign className="h-6 w-6 text-green-500 mx-auto mb-1" />
                   <p className="text-sm text-green-600">All dues paid!</p>
@@ -160,7 +171,15 @@ export const TasksSection = () => {
                 >
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-bold">${duesInfo.totalDue.toFixed(2)}</span>
-                    <span className="text-sm opacity-80">Due: {new Date(duesInfo.dueDate).toLocaleDateString()}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm opacity-80">Due: {new Date(duesInfo.dueDate).toLocaleDateString()}</span>
+                      <Badge
+                        variant="outline"
+                        className={`text-xs ${getPaymentStatusColor(duesInfo.paymentStatus)}`}
+                      >
+                        {duesInfo.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}
+                      </Badge>
+                    </div>
                   </div>
                   <div className="space-y-1">
                     {duesInfo.items.map((item, index) => (
@@ -247,14 +266,14 @@ export const TasksSection = () => {
                 <h4 className="font-medium text-sm mb-2 flex items-center gap-2">
                   <DollarSign className="h-4 w-4" />
                   Outstanding Dues
-                  {duesInfo.totalDue > 0 && (
+                  {duesInfo.paymentStatus === 'unpaid' && (
                     <Badge variant="destructive" className="text-xs">
                       <AlertCircle className="h-3 w-3 mr-1" />
                       Due
                     </Badge>
                   )}
                 </h4>
-                {duesInfo.totalDue === 0 ? (
+                {duesInfo.paymentStatus === 'paid' ? (
                   <div className="text-center py-2">
                     <DollarSign className="h-6 w-6 text-green-500 mx-auto mb-1" />
                     <p className="text-sm text-green-600">All dues paid!</p>
@@ -273,7 +292,15 @@ export const TasksSection = () => {
                   >
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-lg font-bold">${duesInfo.totalDue.toFixed(2)}</span>
-                      <span className="text-xs opacity-80">Due: {new Date(duesInfo.dueDate).toLocaleDateString()}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs opacity-80">Due: {new Date(duesInfo.dueDate).toLocaleDateString()}</span>
+                        <Badge
+                          variant="outline"
+                          className={`text-xs ${getPaymentStatusColor(duesInfo.paymentStatus)}`}
+                        >
+                          {duesInfo.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}
+                        </Badge>
+                      </div>
                     </div>
                     <div className="space-y-1">
                       {duesInfo.items.map((item, index) => (
