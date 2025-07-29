@@ -107,14 +107,11 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Root route handler - shows landing page or redirects authenticated users
+// Root route handler - shows landing page for everyone
 const RootRoute = () => {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
   
-  // Use role-based redirect for authenticated users
-  useRoleBasedRedirect();
-  
-  console.log('RootRoute: Executing with loading=', loading, 'user=', !!user);
+  console.log('RootRoute: Executing with loading=', loading);
   
   if (loading) {
     console.log('RootRoute: Showing loading spinner');
