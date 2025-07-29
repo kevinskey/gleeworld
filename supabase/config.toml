@@ -100,3 +100,6 @@ verify_jwt = false
 
 [functions.verify-stripe-payment]
 verify_jwt = false
+
+[functions.google-docs-manager]
+verify_jwt = false
