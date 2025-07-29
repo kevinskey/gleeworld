@@ -64,18 +64,18 @@ export const AnnouncementsEventsSection = ({ upcomingEvents }: AnnouncementsEven
               announcements.map((notification) => (
                 <div key={notification.id} className="border border-secondary/10 rounded-lg p-3 bg-background/50 backdrop-blur-sm hover:bg-background/70 transition-colors">
                   <div className="flex items-start justify-between mb-2">
-                    <h5 className="font-medium text-sm text-foreground line-clamp-1">{notification.title}</h5>
+                    <h5 className="font-medium text-base text-foreground line-clamp-1">{notification.title}</h5>
                     {notification.announcement_type && (
-                      <Badge className={`${getNotificationTypeColor(notification.announcement_type)} text-xs ml-2`} variant="secondary">
+                      <Badge className={`${getNotificationTypeColor(notification.announcement_type)} text-sm ml-2`} variant="secondary">
                         {notification.announcement_type}
                       </Badge>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
                     {notification.content}
                   </p>
-                  <div className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
+                  <div className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Clock className="h-4 w-4" />
                     {notification.created_at 
                       ? new Date(notification.created_at).toLocaleString()
                       : 'Recently posted'
