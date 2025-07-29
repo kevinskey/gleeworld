@@ -388,7 +388,7 @@ export const GleeWorldLanding = () => {
                             <img 
                               src={event.image_url || getDefaultEventImage(event.id)}
                               alt={event.title}
-                              className="w-full h-full object-cover rounded-t-lg brightness-110 contrast-105"
+                              className="w-full h-full object-contain p-4 rounded-t-lg brightness-110 contrast-105"
                               onError={(e) => {
                                 console.log('Image failed to load:', event.image_url, 'for event:', event.title);
                                 e.currentTarget.src = getDefaultEventImage(event.id);
@@ -438,7 +438,7 @@ export const GleeWorldLanding = () => {
                                 <img 
                                   src={event.image_url || getDefaultEventImage(event.id)}
                                   alt={event.title}
-                                  className="w-full h-full object-cover rounded-t-lg brightness-110 contrast-105"
+                                  className="w-full h-full object-contain p-4 rounded-t-lg brightness-110 contrast-105"
                                   onError={(e) => {
                                     console.log('Image failed to load:', event.image_url, 'for event:', event.title);
                                     e.currentTarget.src = getDefaultEventImage(event.id);
