@@ -5,6 +5,33 @@ import App from './App.tsx'
 import './index.css'
 
 console.log('main.tsx: Starting app initialization');
+console.log('main.tsx: Checking for external tracking scripts...');
+
+// Debug: Check for external scripts that might be injecting tracking
+const externalScripts = Array.from(document.scripts).filter(script => 
+  script.src && !script.src.includes(window.location.origin)
+);
+if (externalScripts.length > 0) {
+  console.warn('main.tsx: External scripts detected:', externalScripts.map(s => s.src));
+}
+
+// Debug: Check for tracking pixels and analytics
+const trackingElements = Array.from(document.querySelectorAll('[src*="facebook"], [src*="google-analytics"], [src*="gtag"], [data-*="fb"], [data-*="pixel"]'));
+if (trackingElements.length > 0) {
+  console.warn('main.tsx: Tracking elements detected:', trackingElements);
+}
+
+// Prevent unwanted tracking interference
+if (typeof window !== 'undefined') {
+  // Type-safe window extension
+  const windowWithTracking = window as any;
+  
+  // Disable Facebook pixel if it exists and wasn't intentionally added
+  if (windowWithTracking.fbq && !windowWithTracking.FB_PIXEL_INTENDED) {
+    console.log('main.tsx: Disabling unintended Facebook pixel');
+    windowWithTracking.fbq = () => {}; // No-op function
+  }
+}
 
 try {
   const rootElement = document.getElementById("root");
