@@ -5814,6 +5814,62 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_tour_cities: {
+        Row: {
+          arrival_date: string | null
+          city_name: string
+          city_notes: string | null
+          city_order: number
+          country_code: string | null
+          created_at: string | null
+          departure_date: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          state_code: string | null
+          tour_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          arrival_date?: string | null
+          city_name: string
+          city_notes?: string | null
+          city_order: number
+          country_code?: string | null
+          created_at?: string | null
+          departure_date?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          state_code?: string | null
+          tour_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          arrival_date?: string | null
+          city_name?: string
+          city_notes?: string | null
+          city_order?: number
+          country_code?: string | null
+          created_at?: string | null
+          departure_date?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          state_code?: string | null
+          tour_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_tour_cities_tour_id_fkey"
+            columns: ["tour_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tours"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_tour_events: {
         Row: {
           budget_allocated: number | null
@@ -5869,6 +5925,53 @@ export type Database = {
             columns: ["setlist_id"]
             isOneToOne: false
             referencedRelation: "gw_setlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_tour_participants: {
+        Row: {
+          created_at: string | null
+          dietary_restrictions: string | null
+          emergency_contact: string | null
+          id: string
+          room_assignment: string | null
+          status: string | null
+          tour_id: string
+          updated_at: string | null
+          user_id: string
+          voice_part: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dietary_restrictions?: string | null
+          emergency_contact?: string | null
+          id?: string
+          room_assignment?: string | null
+          status?: string | null
+          tour_id: string
+          updated_at?: string | null
+          user_id: string
+          voice_part?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dietary_restrictions?: string | null
+          emergency_contact?: string | null
+          id?: string
+          room_assignment?: string | null
+          status?: string | null
+          tour_id?: string
+          updated_at?: string | null
+          user_id?: string
+          voice_part?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_tour_participants_tour_id_fkey"
+            columns: ["tour_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tours"
             referencedColumns: ["id"]
           },
         ]
