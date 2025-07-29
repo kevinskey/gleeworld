@@ -369,8 +369,8 @@ export const GleeWorldLanding = () => {
               ) : events.length > 0 ? (
                 <>
                   {/* Desktop view - Single horizontal scrolling row */}
-                  <div className="hidden md:block">
-                    <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+                  <div className="hidden md:block overflow-hidden">
+                    <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent max-w-full">
                       {events.map((event) => (
                         <Card key={event.id} className="hover:shadow-2xl transition-all duration-300 h-full relative group bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 flex-shrink-0 w-80">
                           {/* Hover overlay button */}
