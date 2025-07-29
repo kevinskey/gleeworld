@@ -65,6 +65,7 @@ import { StudentConductorDashboard } from "./pages/StudentConductorDashboard";
 import TourPlanner from "./pages/TourPlanner";
 import BookingRequest from "./pages/BookingRequest";
 import Wardrobe from "./pages/Wardrobe";
+import { ProductManagement } from "./pages/ProductManagement";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -513,16 +514,24 @@ const App = () => {
                                  </ProtectedRoute>
                                } 
                              />
-                             <Route 
-                               path="/wardrobe" 
-                               element={
-                                 <ProtectedRoute>
-                                   <Wardrobe />
-                                 </ProtectedRoute>
-                               } 
-                             />
-                 <Route 
-                   path="/landing"
+                              <Route 
+                                path="/wardrobe" 
+                                element={
+                                  <ProtectedRoute>
+                                    <Wardrobe />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/product-management" 
+                                element={
+                                  <ProtectedRoute>
+                                    <ProductManagement />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                  <Route 
+                    path="/landing"
                    element={
                      <PublicRoute>
                        <GleeWorldLanding />
