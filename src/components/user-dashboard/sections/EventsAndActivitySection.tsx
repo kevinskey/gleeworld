@@ -102,7 +102,6 @@ export const EventsAndActivitySection = ({
     <Card className="h-full">
       <CardHeader className="pb-3">
         <CardTitle className="text-xl">Events Calendar</CardTitle>
-        <CardDescription className="text-base">Browse events by date</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         
@@ -209,7 +208,6 @@ export const EventsAndActivitySection = ({
 
         {/* Mobile Scroll List View - Shown only on Mobile */}
         <div className="md:hidden">
-          <h4 className="font-medium text-sm mb-3">Upcoming Events</h4>
           <ScrollArea className="h-[280px]">
             {upcomingEventsList.length > 0 ? (
               <div className="space-y-3">
