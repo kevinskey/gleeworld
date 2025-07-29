@@ -45,6 +45,7 @@ import { GeneralBudgetManager } from "@/components/treasurer/GeneralBudgetManage
 import { StipendPayer } from "@/components/treasurer/StipendPayer";
 import { ReceiptKeeper } from "@/components/treasurer/ReceiptKeeper";
 import { RunningLedger } from "@/components/treasurer/RunningLedger";
+import { StripeSalesSync } from "@/components/treasurer/StripeSalesSync";
 
 export type ExecutivePosition = 
   | 'president'
@@ -362,7 +363,10 @@ export const ExecutiveBoardDashboard = () => {
           {selectedPosition === 'treasurer' && (
             <>
               <TabsContent value="ledger">
-                <RunningLedger />
+                <div className="space-y-6">
+                  <StripeSalesSync />
+                  <RunningLedger />
+                </div>
               </TabsContent>
               
               <TabsContent value="budget-manager">
