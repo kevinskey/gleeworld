@@ -9,13 +9,15 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('Google Places lookup function called with method:', req.method);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('Google Places lookup function called');
+    console.log('Processing Google Places lookup request');
     
     if (!googleMapsApiKey) {
       console.error('Google Maps API key not found in environment');
