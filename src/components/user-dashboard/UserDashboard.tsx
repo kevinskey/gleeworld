@@ -17,6 +17,7 @@ import { ExecutiveBoardSection } from "./sections/ExecutiveBoardSection";
 import { EventsAndActivitySection } from "./sections/EventsAndActivitySection";
 import { DashboardModulesSection } from "./sections/DashboardModulesSection";
 import { SpiritualReflectionsSection } from "./sections/SpiritualReflectionsSection";
+import { AnnouncementsEventsSection } from "./sections/AnnouncementsEventsSection";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useMergedProfile } from "@/hooks/useMergedProfile";
@@ -237,10 +238,11 @@ export const UserDashboard = () => {
           profile={profile}
         />
 
-        {/* Spiritual Reflections Section */}
-        <SpiritualReflectionsSection />
-
-        {/* Grid Layout: Quick Actions & Admin Controls/Glee Club Spotlight */}
+        {/* Spiritual Reflections & Announcements Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SpiritualReflectionsSection />
+          <AnnouncementsEventsSection upcomingEvents={upcomingEventsList} />
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <QuickActionsSection isAdmin={isAdmin} />
           
