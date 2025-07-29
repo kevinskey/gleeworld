@@ -66,7 +66,7 @@ export const CalendarViews = () => {
                 <AppointmentScheduler />
               </div>
               {user && (
-                <div className="flex-none">
+                <div className="flex-1 min-w-0">
                   <CreateEventDialog onEventCreated={fetchEvents} />
                 </div>
               )}
