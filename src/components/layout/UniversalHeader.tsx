@@ -104,39 +104,39 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                        </Button>
                      </DropdownMenuTrigger>
                    </EnhancedTooltip>
-                   <DropdownMenuContent className="w-56" align="end" forceMount>
-                     <div className="flex flex-col space-y-1 p-2">
-                       <p className="text-sm font-medium leading-none truncate">
-                         {profile?.full_name || user.email}
-                       </p>
-                       <p className="text-xs leading-none text-muted-foreground">
-                         {user.email}
-                       </p>
-                     </div>
+                    <DropdownMenuContent className="w-48 py-1" align="end" forceMount>
+                      <div className="flex flex-col space-y-0.5 p-1.5">
+                        <p className="text-xs font-medium leading-none truncate">
+                          {profile?.full_name || user.email}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
                      <DropdownMenuSeparator />
-                     <DropdownMenuItem asChild>
-                       <Link to="/dashboard" className="flex items-center">
-                         <LayoutDashboard className="mr-2 h-4 w-4" />
-                         Dashboard
-                       </Link>
+                      <DropdownMenuItem asChild className="py-1.5 text-xs">
+                        <Link to="/dashboard" className="flex items-center">
+                          <LayoutDashboard className="mr-1.5 h-3 w-3" />
+                          Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild className="py-1.5 text-xs">
+                        <Link to="/profile" className="flex items-center">
+                          <User className="mr-1.5 h-3 w-3" />
+                          Profile
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild className="py-1.5 text-xs">
+                        <Link to="/dashboard" className="flex items-center">
+                          <Settings className="mr-1.5 h-3 w-3" />
+                          Settings
+                        </Link>
+                      </DropdownMenuItem>
+                     <DropdownMenuSeparator />
+                     <DropdownMenuItem onClick={handleSignOut} className="py-1.5 text-xs">
+                       <LogOut className="mr-1.5 h-3 w-3" />
+                       Sign out
                      </DropdownMenuItem>
-                     <DropdownMenuItem asChild>
-                       <Link to="/profile" className="flex items-center">
-                         <User className="mr-2 h-4 w-4" />
-                         Profile
-                       </Link>
-                     </DropdownMenuItem>
-                     <DropdownMenuItem asChild>
-                       <Link to="/dashboard" className="flex items-center">
-                         <Settings className="mr-2 h-4 w-4" />
-                         Settings
-                       </Link>
-                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sign out
-                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>

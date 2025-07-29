@@ -289,6 +289,15 @@
     border-color: #d1d5db !important;
   }
 
+  /* Override shadcn dropdown and popover spacing for mobile */
+  [data-radix-popper-content-wrapper] {
+    @apply text-sm leading-tight;
+  }
+
+  .dropdown-menu-content {
+    @apply py-0.5 px-1 leading-tight;
+  }
+
   /* Enhanced Tooltip Styling */
   .tippy-box[data-theme~='custom'] {
     background-color: hsl(var(--popover));

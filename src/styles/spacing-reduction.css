@@ -14,44 +14,53 @@
 /* Update page container spacing globally */
 @layer utilities {
   .page-container {
-    @apply py-1 md:py-2 space-y-1 md:space-y-2;
+    @apply py-0.5 md:py-1 space-y-0.5 md:space-y-1;
   }
   
   .page-header {
-    @apply text-lg md:text-xl font-bebas mb-1 md:mb-2 tracking-wide;
+    @apply text-base md:text-lg font-bebas mb-0.5 md:mb-1 tracking-wide;
   }
   
   .page-title-large {
-    @apply text-xl md:text-2xl font-bebas mb-1 md:mb-2 tracking-wide;
+    @apply text-lg md:text-xl font-bebas mb-0.5 md:mb-1 tracking-wide;
   }
   
   .section-spacing {
-    @apply space-y-1 md:space-y-2;
+    @apply space-y-0.5 md:space-y-1;
   }
   
   .card-spacing {
-    @apply gap-1 md:gap-2;
+    @apply gap-0.5 md:gap-1;
   }
 
   /* Responsive grid utilities */
   .responsive-grid-2 {
-    @apply grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4;
+    @apply grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2;
   }
   
   .responsive-grid-3 {
-    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4;
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1 md:gap-2;
   }
   
   .responsive-grid-4 {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4;
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1 md:gap-2;
   }
 
   /* Compact card utilities */
   .card-compact {
-    @apply p-3 md:p-4 space-y-2;
+    @apply p-1.5 md:p-2 space-y-1;
   }
   
   .card-header-compact {
-    @apply pb-1 pt-2;
+    @apply pb-0.5 pt-1;
+  }
+
+  /* Dropdown and popover compact utilities */
+  .dropdown-compact {
+    @apply py-0.5 px-1;
+  }
+  
+  .dropdown-item-compact {
+    @apply py-1 px-2 text-sm leading-tight;
   }
 }
