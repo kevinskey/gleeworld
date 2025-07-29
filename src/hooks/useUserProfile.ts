@@ -87,6 +87,15 @@ export const useUserProfile = (user: User | null) => {
                            user?.email || 
                            'User';
 
+        console.log('useUserProfile: Setting profile data:', {
+          userId: user.id,
+          email: user.email,
+          role: data.role,
+          isAdmin: data.is_admin,
+          isSuperAdmin: data.is_super_admin,
+          displayName
+        });
+
         setUserProfile({
           ...data,
           display_name: displayName
