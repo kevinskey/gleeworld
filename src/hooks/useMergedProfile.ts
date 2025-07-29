@@ -84,9 +84,9 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
         .from('gw_profiles')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (gwError && gwError.code !== 'PGRST116') {
+      if (gwError) {
         throw gwError;
       }
 
@@ -96,7 +96,7 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
           .from('profiles')
           .select('role')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         const mergedProfile: MergedProfile = {
           id: gwProfile.id,
@@ -137,8 +137,16 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
 
         setProfile(mergedProfile);
       } else {
-        // This should be rare after migration, but handle it
-        throw new Error('Profile not found after migration');
+        // No profile found - create a minimal one from auth user
+        console.log('No profile found for user, creating minimal profile');
+        const minimalProfile: MergedProfile = {
+          id: user.id,
+          user_id: user.id,
+          email: user.email || '',
+          full_name: user.user_metadata?.full_name || '',
+          role: 'user',
+        };
+        setProfile(minimalProfile);
       }
     } catch (err) {
       console.error('Error fetching merged profile:', err);
