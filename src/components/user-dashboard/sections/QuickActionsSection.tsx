@@ -56,7 +56,7 @@ export const QuickActionsSection = ({ isAdmin }: QuickActionsSectionProps) => {
               return (
                 <EnhancedTooltip key={action.route} content={action.description}>
                   <Button 
-                    className="h-20 flex-col space-y-2 text-sm w-full bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 border-primary/20 shadow-lg hover:shadow-xl transition-all" 
+                    className="h-20 flex-col space-y-2 text-sm w-full" 
                     variant="outline"
                     onClick={() => navigate(action.route)}
                   >
@@ -74,48 +74,44 @@ export const QuickActionsSection = ({ isAdmin }: QuickActionsSectionProps) => {
 
       {/* Mobile Layout - Collapsible */}
       <div className="md:hidden">
-        <div className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 border border-primary/20 shadow-lg rounded-lg">
-          <div className="p-4 cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
-            <div className="flex items-center justify-between text-secondary-foreground text-lg">
-              <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4" />
-                <h3 className="font-semibold">Quick Actions</h3>
-              </div>
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-              </Button>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
+            <div className="flex items-center gap-2 text-secondary-foreground text-lg">
+              <Zap className="h-4 w-4" />
+              <h3 className="font-semibold">Quick Actions</h3>
             </div>
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+              {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+            </Button>
           </div>
           
           {!isCollapsed && (
-            <div className="p-4 pt-0">
-              <div className="grid grid-cols-2 gap-3">
-                {quickActions.map((action) => {
-                  const IconComponent = action.icon;
-                  return (
-                    <EnhancedTooltip key={action.route} content={action.description}>
-                      <Button 
-                        className="h-16 flex-col space-y-1 text-xs w-full" 
-                        variant="outline"
-                        onClick={() => navigate(action.route)}
-                      >
-                        <IconComponent className="h-5 w-5" />
-                        <span className="text-center leading-tight">
-                          {action.label.includes(' ') ? (
-                            <>
-                              {action.label.split(' ')[0]}
-                              <br />
-                              {action.label.split(' ').slice(1).join(' ')}
-                            </>
-                          ) : (
-                            action.label
-                          )}
-                        </span>
-                      </Button>
-                    </EnhancedTooltip>
-                  );
-                })}
-              </div>
+            <div className="grid grid-cols-2 gap-3">
+              {quickActions.map((action) => {
+                const IconComponent = action.icon;
+                return (
+                  <EnhancedTooltip key={action.route} content={action.description}>
+                    <Button 
+                      className="h-16 flex-col space-y-1 text-xs w-full" 
+                      variant="outline"
+                      onClick={() => navigate(action.route)}
+                    >
+                      <IconComponent className="h-5 w-5" />
+                      <span className="text-center leading-tight">
+                        {action.label.includes(' ') ? (
+                          <>
+                            {action.label.split(' ')[0]}
+                            <br />
+                            {action.label.split(' ').slice(1).join(' ')}
+                          </>
+                        ) : (
+                          action.label
+                        )}
+                      </span>
+                    </Button>
+                  </EnhancedTooltip>
+                );
+              })}
             </div>
           )}
         </div>
