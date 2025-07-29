@@ -22,6 +22,7 @@ export function SchedulingAndSelfiePage() {
     isCapturing,
     isCameraReady,
     videoRef,
+    canvasRef,
     startCamera,
     stopCamera,
     capturePhoto,
@@ -224,6 +225,9 @@ export function SchedulingAndSelfiePage() {
             onChange={handleFileUpload}
             className="hidden"
           />
+          
+          {/* Hidden canvas for photo capture */}
+          <canvas ref={canvasRef} className="hidden" />
         </div>
 
         {!capturedImage && (
