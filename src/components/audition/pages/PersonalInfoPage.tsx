@@ -21,7 +21,7 @@ export function PersonalInfoPage() {
             <FormLabel>Describe your personality *</FormLabel>
             <FormControl>
               <Textarea 
-                placeholder="Tell us about yourself, your interests, and what makes you unique... (minimum 25 words)"
+                placeholder="Tell us about yourself, your interests, and what makes you unique... (minimum 50 words)"
                 className="min-h-[120px]"
                 {...field} 
               />
@@ -32,7 +32,7 @@ export function PersonalInfoPage() {
                 {(() => {
                   const text = field.value || '';
                   const wordCount = text.trim() ? text.trim().split(/\s+/).filter(word => word.length > 0).length : 0;
-                  return `${wordCount}/25 words minimum`;
+                  return `${wordCount}/50 words minimum`;
                 })()}
               </span>
             </div>

@@ -34,10 +34,10 @@ const auditionSchema = z.object({
   interestedInMusicFundamentals: z.boolean(),
   
   // Leadership and personality
-  personalityDescription: z.string().min(25, "Please describe your personality (minimum 25 words)").refine((val) => {
+  personalityDescription: z.string().min(50, "Please describe your personality (minimum 50 words)").refine((val) => {
     const wordCount = val.trim().split(/\s+/).filter(word => word.length > 0).length;
-    return wordCount >= 25;
-  }, "Please write at least 25 words"),
+    return wordCount >= 50;
+  }, "Please write at least 50 words"),
   interestedInLeadership: z.boolean(),
   additionalInfo: z.string().optional(),
   
@@ -146,11 +146,11 @@ export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
           return true; // Music skills for new users
         }
         const wordCount = values.personalityDescription?.trim().split(/\s+/).filter(word => word.length > 0).length || 0;
-        return !!(values.personalityDescription && wordCount >= 25);
+        return !!(values.personalityDescription && wordCount >= 50);
       case 5: // Personal Info or Selfie & Scheduling
         if (!user) {
         const wordCount = values.personalityDescription?.trim().split(/\s+/).filter(word => word.length > 0).length || 0;
-        return !!(values.personalityDescription && wordCount >= 25);
+        return !!(values.personalityDescription && wordCount >= 50);
         }
         return !!(values.auditionDate && values.auditionTime && capturedImage);
       case 6: // Selfie & Scheduling (for new users only)
