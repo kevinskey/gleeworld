@@ -281,7 +281,7 @@ export const UserDashboard = () => {
           profile={profile}
         />
 
-        {/* Spiritual Reflections & Events Section - side by side */}
+        {/* Spiritual Gleeflections & Events Section - side by side */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SpiritualReflectionsSection />
           <EventsAndActivitySection 

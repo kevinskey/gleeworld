@@ -25,7 +25,7 @@ export const SpiritualReflectionsSection = () => {
         <CardHeader className="pb-1">
           <CardTitle className="flex items-center gap-2 text-primary text-base">
             <Book className="h-4 w-4" />
-            Spiritual Reflections
+            Spiritual Gleeflections
             <Sparkles className="h-3 w-3 text-accent animate-pulse" />
           </CardTitle>
         </CardHeader>
@@ -45,7 +45,7 @@ export const SpiritualReflectionsSection = () => {
       <CardHeader className="pb-1">
         <CardTitle className="flex items-center gap-2 text-primary text-base">
           <Book className="h-4 w-4" />
-          Spiritual Reflections
+          Spiritual Gleeflections
           <Sparkles className="h-3 w-3 text-accent" />
         </CardTitle>
       </CardHeader>

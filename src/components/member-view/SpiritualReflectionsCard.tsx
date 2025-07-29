@@ -28,7 +28,7 @@ export const SpiritualReflectionsCard = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Book className="h-5 w-5" />
-            Spiritual Reflections
+            Spiritual Gleeflections
           </CardTitle>
           <CardDescription>Messages from our Chaplain</CardDescription>
         </CardHeader>
@@ -47,7 +47,7 @@ export const SpiritualReflectionsCard = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Book className="h-5 w-5" />
-            Spiritual Reflections
+            Spiritual Gleeflections
           </CardTitle>
           <CardDescription>Messages from our Chaplain</CardDescription>
         </CardHeader>
@@ -71,7 +71,7 @@ export const SpiritualReflectionsCard = () => {
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <Book className="h-5 w-5" />
-                  Spiritual Reflections
+                  Spiritual Gleeflections
                 </CardTitle>
                 <CardDescription>Messages from our Chaplain</CardDescription>
               </div>
