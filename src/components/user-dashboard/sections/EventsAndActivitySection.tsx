@@ -69,7 +69,18 @@ export const EventsAndActivitySection = ({
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium truncate">{event.title}</h4>
                         <p className="text-sm text-gray-600">
-                          {format(new Date(event.start_date), 'PPP')}
+                          {(() => {
+                            try {
+                              const date = new Date(event.start_date);
+                              if (isNaN(date.getTime())) {
+                                return 'Date TBD';
+                              }
+                              return format(date, 'PPP');
+                            } catch (error) {
+                              console.warn('Invalid date for event:', event.title, event.start_date);
+                              return 'Date TBD';
+                            }
+                          })()}
                         </p>
                         {event.location && (
                           <p className="text-sm text-gray-500 truncate">{event.location}</p>
