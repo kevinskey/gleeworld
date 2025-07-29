@@ -85,22 +85,19 @@ export const MusicLibraryViewer = () => {
             {filteredMusic.map((music) => (
               <div key={music.id} className="border rounded-lg p-3 space-y-2">
                 <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <h4 className="font-medium">{music.title}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      by {music.composer}
-                    </p>
-                    <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 text-sm">
+                      <h4 className="font-medium">{music.title}</h4>
+                      <span className="text-muted-foreground">by {music.composer || "Unknown"}</span>
                       {music.voice_parts && music.voice_parts.length > 0 && (
                         <Badge variant="outline" className="text-xs">
                           {music.voice_parts.join(', ')}
                         </Badge>
                       )}
-                      {music.difficulty_level && (
-                        <Badge variant={getDifficultyColor(music.difficulty_level)} className="text-xs">
-                          {music.difficulty_level}
-                        </Badge>
-                      )}
+                      <Badge variant="secondary" className="text-xs">
+                        D
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">5 copies</span>
                     </div>
                   </div>
                   <div className="flex gap-1">
