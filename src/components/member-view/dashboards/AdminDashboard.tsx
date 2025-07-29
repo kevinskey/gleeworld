@@ -270,6 +270,15 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
               variant="outline" 
               size="sm" 
               className="w-full justify-start" 
+              onClick={() => navigate('/executive-board')}
+            >
+              <Shield className="mr-2 h-4 w-4" />
+              Executive Board Dashboard
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full justify-start" 
               onClick={() => navigate('/admin/alumnae')}
             >
               <GraduationCap className="mr-2 h-4 w-4" />
