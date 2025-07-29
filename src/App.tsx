@@ -127,12 +127,7 @@ const RootRoute = () => {
   
   console.log('RootRoute: Rendering GleeWorldLanding');
   // Show landing page for everyone, authenticated or not
-  return (
-    <div>
-      <h1>Debug: GleeWorldLanding should render here</h1>
-      <GleeWorldLanding />
-    </div>
-  );
+  return <GleeWorldLanding />;
 };
 
 const App = () => {

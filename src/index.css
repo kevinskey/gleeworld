@@ -17,7 +17,7 @@
 
     /* Secondary Accent - Spelman Light Blue */
     --secondary: var(--spelman-blue-light);
-    --secondary-foreground: 0 0% 100%; /* White text */
+    --secondary-foreground: 0 0% 0%; /* Black text for better contrast */
     
     /* Neutrals - Softer backgrounds for better contrast */
     --background: 0 0% 100%; /* Pure white background */
@@ -33,7 +33,7 @@
     --muted-foreground: 0 0% 20%; /* Dark gray text for better readability */
 
     --accent: var(--spelman-blue-light); /* Spelman light blue accent */
-    --accent-foreground: 0 0% 100%; /* White text */
+    --accent-foreground: 0 0% 0%; /* Black text for better contrast */
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -115,13 +115,13 @@
     --primary-foreground: 0 0% 100%;
 
     --secondary: var(--spelman-blue-light);
-    --secondary-foreground: 0 0% 100%;
+    --secondary-foreground: 0 0% 0%; /* Black text for better contrast */
 
     --muted: 0 0% 95%; /* Light gray */
     --muted-foreground: 0 0% 20%; /* Dark gray */
 
     --accent: var(--spelman-blue-light);
-    --accent-foreground: 0 0% 100%;
+    --accent-foreground: 0 0% 0%; /* Black text for better contrast */
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
