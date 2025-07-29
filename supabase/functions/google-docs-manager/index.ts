@@ -30,6 +30,8 @@ serve(async (req) => {
     const url = new URL(req.url);
     const oauthCode = url.searchParams.get('code');
     
+    console.log('Request method:', req.method, 'OAuth code present:', !!oauthCode);
+    
     if (req.method === 'GET' && oauthCode) {
       // This is an OAuth callback - handle token exchange
       const googleClientId = Deno.env.get('GOOGLE_CLIENT_ID');
@@ -74,6 +76,8 @@ serve(async (req) => {
 
       const tokenData = await tokenResponse.json();
       const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000);
+      
+      console.log('Token exchange successful, storing tokens...');
 
       // Store the tokens in the database
       const { error: insertError } = await supabase
@@ -83,6 +87,8 @@ serve(async (req) => {
           access_token: tokenData.access_token,
           refresh_token: tokenData.refresh_token,
           expires_at: expiresAt.toISOString(),
+        }, {
+          onConflict: 'user_type'
         });
 
       if (insertError) {
