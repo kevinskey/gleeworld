@@ -9,7 +9,8 @@ import {
   MessageSquare, 
   Users, 
   DollarSign, 
-  Music 
+  Music,
+  Shield
 } from "lucide-react";
 
 interface QuickActionsSectionProps {
@@ -58,13 +59,19 @@ export const QuickActionsSection = ({ isAdmin }: QuickActionsSectionProps) => {
     }
   ];
 
-  // Add admin-specific action
+  // Add admin-specific actions
   if (isAdmin) {
     quickActions.splice(4, 0, {
       icon: Users,
       label: "Manage Users",
       description: "Manage user accounts and permissions",
       route: "/dashboard?tab=users"
+    });
+    quickActions.push({
+      icon: Shield,
+      label: "Executive Board",
+      description: "Access executive board dashboard",
+      route: "/dashboard/executive-board"
     });
   }
 
