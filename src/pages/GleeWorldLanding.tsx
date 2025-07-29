@@ -87,6 +87,7 @@ export const GleeWorldLanding = () => {
   // Remove hardcoded sample tracks - they're now handled by the edge function
 
   useEffect(() => {
+    console.log('GleeWorldLanding: Component mounted, starting useEffect');
     const fetchData = async () => {
       try {
         console.log('GleeWorldLanding: Starting data fetch');
