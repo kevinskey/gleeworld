@@ -8306,6 +8306,14 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      is_user_admin_or_super_admin: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
+      is_user_tour_manager: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
       log_activity: {
         Args: {
           p_user_id: string
