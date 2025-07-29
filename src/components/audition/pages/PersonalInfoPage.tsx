@@ -30,7 +30,8 @@ export function PersonalInfoPage() {
               <FormMessage />
               <span className="text-xs text-gray-500">
                 {(() => {
-                  const wordCount = field.value?.trim().split(/\s+/).filter(word => word.length > 0).length || 0;
+                  const text = field.value || '';
+                  const wordCount = text.trim() ? text.trim().split(/\s+/).filter(word => word.length > 0).length : 0;
                   return `${wordCount}/25 words minimum`;
                 })()}
               </span>
