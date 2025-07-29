@@ -238,8 +238,10 @@ export const UserDashboard = () => {
           profile={profile}
         />
 
-        {/* Quick Actions - Compact Section */}
-        <QuickActionsSection isAdmin={isAdmin} />
+        {/* Quick Actions Section - Moved Up */}
+        <div className="grid grid-cols-1 gap-6">
+          <QuickActionsSection isAdmin={isAdmin} />
+        </div>
 
         {/* Spiritual Reflections & Announcements Section - 50/50 split */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -248,16 +250,18 @@ export const UserDashboard = () => {
         </div>
 
         {/* Admin Controls Section */}
-        {availableModules.length > 0 ? (
-          <AdminControlsSection
-            userRole={userRole}
-            userEmail={userEmail}
-            usernamePermissions={usernamePermissions}
-            profile={profile}
-          />
-        ) : (
-          <GleeClubSpotlightSection />
-        )}
+        <div className="grid grid-cols-1 gap-6">
+          {availableModules.length > 0 ? (
+            <AdminControlsSection
+              userRole={userRole}
+              userEmail={userEmail}
+              usernamePermissions={usernamePermissions}
+              profile={profile}
+            />
+          ) : (
+            <GleeClubSpotlightSection />
+          )}
+        </div>
 
         {/* Executive Board Section */}
         <ExecutiveBoardSection isExecBoardMember={Boolean(isExecBoardMember)} />
