@@ -10,8 +10,6 @@ import {
   MessageSquare,
   CheckSquare,
   Clock,
-  ExternalLink,
-  RefreshCw,
   Printer,
   Download
 } from "lucide-react";
@@ -32,17 +30,12 @@ interface MeetingMinute {
   created_by: string;
   created_at: string;
   updated_at: string;
-  google_doc_id?: string | null;
-  google_doc_url?: string | null;
 }
 
 interface MeetingMinutesDocumentProps {
   minute: MeetingMinute;
   onBack: () => void;
   onEdit: () => void;
-  onOpenGoogleDoc: () => void;
-  onSyncFromGoogleDoc: () => void;
-  onCreateGoogleDoc: () => void;
 }
 
 const getStatusColor = (status: MeetingStatus) => {
@@ -66,10 +59,7 @@ const getStatusStyles = (status: MeetingStatus) => {
 export const MeetingMinutesDocument = ({ 
   minute, 
   onBack, 
-  onEdit, 
-  onOpenGoogleDoc, 
-  onSyncFromGoogleDoc, 
-  onCreateGoogleDoc 
+  onEdit
 }: MeetingMinutesDocumentProps) => {
   
   const handlePrint = () => {
@@ -141,24 +131,6 @@ Last Updated: ${new Date(minute.updated_at).toLocaleString()}
               <Download className="h-4 w-4 mr-2" />
               Download
             </Button>
-            
-            {minute.google_doc_url ? (
-              <>
-                <Button variant="outline" size="sm" onClick={onOpenGoogleDoc}>
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Open in Google Docs
-                </Button>
-                <Button variant="outline" size="sm" onClick={onSyncFromGoogleDoc}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Sync from Google Docs
-                </Button>
-              </>
-            ) : (
-              <Button variant="outline" size="sm" onClick={onCreateGoogleDoc}>
-                <FileText className="h-4 w-4 mr-2" />
-                Create Google Doc
-              </Button>
-            )}
             
             <Button onClick={onEdit}>
               <Edit3 className="h-4 w-4 mr-2" />

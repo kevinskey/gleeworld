@@ -15,9 +15,7 @@ import {
   MessageSquare,
   CheckSquare,
   Clock,
-  ArrowLeft,
-  ExternalLink,
-  RefreshCw
+  ArrowLeft
 } from "lucide-react";
 
 type MeetingStatus = 'draft' | 'approved' | 'archived';
@@ -128,112 +126,6 @@ export const MeetingMinutesEditor = ({ minute, onBack, onSave }: MeetingMinutesE
     }
   };
 
-  const createGoogleDoc = async () => {
-    try {
-      if (!minute?.id) {
-        toast({
-          title: "Save First",
-          description: "Please save the document before creating a Google Doc.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const content = `Meeting Minutes: ${formData.title}
-      
-Date: ${formData.meeting_date}
-Type: ${formData.meeting_type}
-Attendees: ${formData.attendees}
-
-AGENDA ITEMS:
-${formData.agenda_items}
-
-DISCUSSION POINTS:
-${formData.discussion_points}
-
-ACTION ITEMS:
-${formData.action_items}
-
-Next Meeting: ${formData.next_meeting_date || 'TBD'}`;
-
-      const { data, error } = await supabase.functions.invoke('google-docs-manager', {
-        body: {
-          action: 'create',
-          minuteId: minute.id,
-          title: formData.title,
-          content: content
-        }
-      });
-
-      if (error) throw error;
-
-      if (data?.needsAuth) {
-        toast({
-          title: "Authentication Required",
-          description: "Please authenticate with Google first.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      toast({
-        title: "Google Doc Created",
-        description: "Meeting minutes have been synced to Google Docs."
-      });
-    } catch (error) {
-      console.error('Error creating Google Doc:', error);
-      toast({
-        title: "Sync Failed",
-        description: "Failed to create Google Doc. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const openGoogleDoc = () => {
-    if (minute?.google_doc_url) {
-      window.open(minute.google_doc_url, '_blank');
-    }
-  };
-
-  const syncFromGoogleDoc = async () => {
-    if (!minute?.id) return;
-
-    try {
-      const { data, error } = await supabase.functions.invoke('google-docs-manager', {
-        body: {
-          action: 'sync',
-          minuteId: minute.id
-        }
-      });
-
-      if (error) throw error;
-
-      if (data?.needsAuth) {
-        toast({
-          title: "Authentication Required",
-          description: "Please authenticate with Google first.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Refresh the data
-      onSave();
-      
-      toast({
-        title: "Synced from Google Docs",
-        description: "Meeting minutes have been updated from Google Docs."
-      });
-    } catch (error) {
-      console.error('Error syncing from Google Doc:', error);
-      toast({
-        title: "Sync Failed",
-        description: "Failed to sync from Google Docs. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -256,24 +148,6 @@ Next Meeting: ${formData.next_meeting_date || 'TBD'}`;
               <span className="text-xs text-muted-foreground">
                 Last saved: {lastSaved.toLocaleTimeString()}
               </span>
-            )}
-            
-            {minute?.google_doc_url ? (
-              <>
-                <Button variant="outline" size="sm" onClick={openGoogleDoc}>
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Open in Google Docs
-                </Button>
-                <Button variant="outline" size="sm" onClick={syncFromGoogleDoc}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Sync from Google Docs
-                </Button>
-              </>
-            ) : (
-              <Button variant="outline" size="sm" onClick={createGoogleDoc}>
-                <FileText className="h-4 w-4 mr-2" />
-                Create Google Doc
-              </Button>
             )}
             
             <Button onClick={() => handleSave()} disabled={isSaving}>

@@ -13,11 +13,8 @@ import {
   Clock,
   Edit3,
   Trash2,
-  ExternalLink,
-  RefreshCw,
   Eye
 } from "lucide-react";
-import { GoogleAuth } from "@/components/google-auth/GoogleAuth";
 import { MeetingMinutesEditor } from "./MeetingMinutesEditor";
 import { MeetingMinutesDocument } from "./MeetingMinutesDocument";
 
@@ -38,8 +35,6 @@ interface MeetingMinute {
   created_by: string;
   created_at: string;
   updated_at: string;
-  google_doc_id?: string | null;
-  google_doc_url?: string | null;
 }
 
 export const MeetingMinutes = () => {
@@ -124,103 +119,6 @@ export const MeetingMinutes = () => {
     fetchMeetingMinutes(); // Refresh the list
   };
 
-  const createGoogleDoc = async (minute: MeetingMinute) => {
-    try {
-      const content = `Meeting Minutes: ${minute.title}
-      
-Date: ${minute.meeting_date}
-Type: ${minute.meeting_type}
-Attendees: ${minute.attendees.join(', ')}
-
-AGENDA ITEMS:
-${minute.agenda_items.join('\n')}
-
-DISCUSSION POINTS:
-${minute.discussion_points}
-
-ACTION ITEMS:
-${minute.action_items.join('\n')}
-
-Next Meeting: ${minute.next_meeting_date || 'TBD'}`;
-
-      const { data, error } = await supabase.functions.invoke('google-docs-manager', {
-        body: {
-          action: 'create',
-          minuteId: minute.id,
-          title: minute.title,
-          content: content
-        }
-      });
-
-      if (error) throw error;
-
-      if (data?.needsAuth) {
-        toast({
-          title: "Authentication Required",
-          description: "Please authenticate with Google first.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      toast({
-        title: "Google Doc Created",
-        description: "Meeting minutes have been synced to Google Docs."
-      });
-      
-      fetchMeetingMinutes(); // Refresh to get updated Google Doc info
-    } catch (error) {
-      console.error('Error creating Google Doc:', error);
-      toast({
-        title: "Sync Failed",
-        description: "Failed to create Google Doc. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const openGoogleDoc = (minute: MeetingMinute) => {
-    if (minute.google_doc_url) {
-      window.open(minute.google_doc_url, '_blank');
-    }
-  };
-
-  const syncFromGoogleDoc = async (minute: MeetingMinute) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('google-docs-manager', {
-        body: {
-          action: 'sync',
-          minuteId: minute.id
-        }
-      });
-
-      if (error) throw error;
-
-      if (data?.needsAuth) {
-        toast({
-          title: "Authentication Required",
-          description: "Please authenticate with Google first.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      fetchMeetingMinutes(); // Refresh to get updated content
-      
-      toast({
-        title: "Synced from Google Docs",
-        description: "Meeting minutes have been updated from Google Docs."
-      });
-    } catch (error) {
-      console.error('Error syncing from Google Doc:', error);
-      toast({
-        title: "Sync Failed",
-        description: "Failed to sync from Google Docs. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
   const getStatusColor = (status: MeetingStatus) => {
     switch (status) {
       case 'draft': return 'secondary';
@@ -248,9 +146,6 @@ Next Meeting: ${minute.next_meeting_date || 'TBD'}`;
         minute={selectedMinute}
         onBack={handleBackToList}
         onEdit={() => setViewMode('editor')}
-        onOpenGoogleDoc={() => openGoogleDoc(selectedMinute)}
-        onSyncFromGoogleDoc={() => syncFromGoogleDoc(selectedMinute)}
-        onCreateGoogleDoc={() => createGoogleDoc(selectedMinute)}
       />
     );
   }
@@ -282,9 +177,6 @@ Next Meeting: ${minute.next_meeting_date || 'TBD'}`;
           New Meeting Minutes
         </Button>
       </div>
-
-      {/* Google Authentication Section */}
-      <GoogleAuth onAuthSuccess={fetchMeetingMinutes} />
 
       {/* Meeting Minutes List */}
       <div className="grid gap-4">
@@ -355,40 +247,6 @@ Next Meeting: ${minute.next_meeting_date || 'TBD'}`;
                       <Eye className="h-4 w-4" />
                       View
                     </Button>
-                    
-                    {minute.google_doc_url ? (
-                      <>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => openGoogleDoc(minute)}
-                          title="Open in Google Docs"
-                          className="gap-2"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => syncFromGoogleDoc(minute)}
-                          title="Sync from Google Docs"
-                          className="gap-2"
-                        >
-                          <RefreshCw className="h-4 w-4" />
-                        </Button>
-                      </>
-                    ) : (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => createGoogleDoc(minute)}
-                        title="Create Google Doc"
-                        className="gap-2"
-                      >
-                        <FileText className="h-4 w-4" />
-                        <ExternalLink className="h-3 w-3" />
-                      </Button>
-                    )}
                     
                     <Button 
                       variant="outline" 
