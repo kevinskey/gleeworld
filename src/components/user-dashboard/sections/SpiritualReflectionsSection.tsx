@@ -58,10 +58,10 @@ export const SpiritualReflectionsSection = () => {
               <Heart className="h-8 w-8 text-primary" />
             </div>
             <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">
+              <p className="text-base font-medium text-foreground">
                 A moment of reflection awaits
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Our Chaplain will soon share words of inspiration and spiritual guidance with the Glee Club family.
               </p>
             </div>
@@ -71,7 +71,7 @@ export const SpiritualReflectionsSection = () => {
             {/* Latest reflection preview */}
             <div className="border border-primary/10 rounded-lg p-4 bg-background/50 backdrop-blur-sm">
               <div className="flex items-start justify-between mb-2">
-                <h4 className="font-medium text-sm text-foreground">{latestReflection.title}</h4>
+                <h4 className="font-medium text-base text-foreground">{latestReflection.title}</h4>
                 {latestReflection.is_featured && (
                   <Badge variant="outline" className="text-xs border-accent text-accent">Featured</Badge>
                 )}
@@ -89,7 +89,7 @@ export const SpiritualReflectionsSection = () => {
                 )}
               </div>
               
-              <p className="text-sm text-muted-foreground line-clamp-3 mb-2">
+              <p className="text-base text-muted-foreground line-clamp-3 mb-2">
                 {latestReflection.content}
               </p>
               
@@ -104,7 +104,7 @@ export const SpiritualReflectionsSection = () => {
             {/* Additional reflections count */}
             {sharedReflections.length > 1 && (
               <div className="text-center">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-base text-muted-foreground">
                   +{sharedReflections.length - 1} more spiritual reflection{sharedReflections.length > 2 ? 's' : ''}
                 </p>
               </div>

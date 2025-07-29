@@ -52,24 +52,24 @@ export const AnnouncementsEventsSection = ({ upcomingEvents }: AnnouncementsEven
       <CardContent className="space-y-4">
         {/* Announcements */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+          <h4 className="text-base font-medium text-foreground flex items-center gap-2">
             <Megaphone className="h-4 w-4" />
             Recent Announcements
           </h4>
           {announcements.length === 0 ? (
             <div className="text-center py-4">
-              <p className="text-sm text-muted-foreground">No recent announcements</p>
+              <p className="text-base text-muted-foreground">No recent announcements</p>
             </div>
           ) : (
             announcements.slice(0, 2).map((announcement) => (
               <div key={announcement.id} className="border border-secondary/10 rounded-lg p-3 bg-background/50 backdrop-blur-sm">
                 <div className="flex items-start justify-between mb-2">
-                  <h5 className="font-medium text-sm text-foreground">{announcement.title}</h5>
+                  <h5 className="font-medium text-base text-foreground">{announcement.title}</h5>
                   <Badge className={getPriorityColor(announcement.priority)} variant="secondary">
                     {announcement.priority}
                   </Badge>
                 </div>
-                <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
                   {announcement.message}
                 </p>
                 <div className="text-xs text-muted-foreground flex items-center gap-1">
@@ -83,7 +83,7 @@ export const AnnouncementsEventsSection = ({ upcomingEvents }: AnnouncementsEven
 
         {/* Upcoming Events */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+          <h4 className="text-base font-medium text-foreground flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             Upcoming Events
           </h4>
@@ -92,13 +92,13 @@ export const AnnouncementsEventsSection = ({ upcomingEvents }: AnnouncementsEven
               <div className="w-12 h-12 mx-auto bg-gradient-to-br from-secondary/20 to-accent/20 rounded-full flex items-center justify-center mb-2">
                 <Calendar className="h-6 w-6 text-secondary" />
               </div>
-              <p className="text-sm text-muted-foreground">No upcoming events scheduled</p>
+              <p className="text-base text-muted-foreground">No upcoming events scheduled</p>
             </div>
           ) : (
             upcomingEvents.slice(0, 3).map((event) => (
               <div key={event.id} className="border border-secondary/10 rounded-lg p-3 bg-background/50 backdrop-blur-sm">
                 <div className="flex items-start justify-between mb-2">
-                  <h5 className="font-medium text-sm text-foreground">{event.title}</h5>
+                  <h5 className="font-medium text-base text-foreground">{event.title}</h5>
                   {event.type && (
                     <Badge variant="outline" className="text-xs border-accent text-accent">
                       {event.type}
