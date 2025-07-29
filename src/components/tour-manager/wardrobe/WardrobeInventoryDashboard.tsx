@@ -188,7 +188,14 @@ export const WardrobeInventoryDashboard = () => {
             <div className="space-y-4">
               <div>
                 <Label>Category</Label>
-                <Select value={newItem.category} onValueChange={(value) => setNewItem({...newItem, category: value})}>
+                <Select value={newItem.category} onValueChange={(value) => {
+                  const updates: Partial<typeof newItem> = { category: value };
+                  // Auto-populate item name for specific categories
+                  if (value === 'lipstick') {
+                    updates.item_name = 'Revlon Super Lustrous Lipstick';
+                  }
+                  setNewItem({...newItem, ...updates});
+                }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
