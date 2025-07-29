@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useAuditionForm } from "../AuditionFormProvider";
 import { useCameraImport } from "@/hooks/useCameraImport";
+import { useAvailableAuditionSlots } from "@/hooks/useAvailableAuditionSlots";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -17,6 +18,10 @@ export function SchedulingAndSelfiePage() {
   const { form, capturedImage, setCapturedImage } = useAuditionForm();
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Get the currently selected date for fetching available slots
+  const selectedDate = form.watch('auditionDate');
+  const { timeSlots, loading: slotsLoading, availableDates } = useAvailableAuditionSlots(selectedDate);
 
   const {
     isCapturing,
@@ -72,11 +77,12 @@ export function SchedulingAndSelfiePage() {
     handleFileSelect(event);
   };
 
-  const timeSlots = [
-    "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
-    "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "2:00 PM", "2:30 PM",
-    "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM"
-  ];
+  // Function to check if a date is available for auditions
+  const isDateAvailable = (date: Date) => {
+    return availableDates.some(availableDate => 
+      availableDate.toDateString() === date.toDateString()
+    );
+  };
 
   return (
     <div className="space-y-8">
@@ -121,7 +127,7 @@ export function SchedulingAndSelfiePage() {
                       selected={field.value}
                       onSelect={field.onChange}
                       disabled={(date) =>
-                        date < new Date() || date < new Date("1900-01-01")
+                        date < new Date() || !isDateAvailable(date)
                       }
                       initialFocus
                       className="p-3 pointer-events-auto"
@@ -139,10 +145,18 @@ export function SchedulingAndSelfiePage() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Preferred Time</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDate || slotsLoading}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select time" />
+                      <SelectValue placeholder={
+                        !selectedDate 
+                          ? "Select date first" 
+                          : slotsLoading 
+                            ? "Loading times..." 
+                            : timeSlots.length === 0 
+                              ? "No times available" 
+                              : "Select time"
+                      } />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
