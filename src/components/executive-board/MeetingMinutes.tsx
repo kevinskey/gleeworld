@@ -77,18 +77,26 @@ export const MeetingMinutes = () => {
 
   const fetchMeetingMinutes = async () => {
     try {
+      console.log('Attempting to fetch meeting minutes...');
       const { data, error } = await supabase
         .from('gw_meeting_minutes')
         .select('*')
         .order('meeting_date', { ascending: false });
 
-      if (error) throw error;
+      console.log('Supabase response:', { data, error });
+
+      if (error) {
+        console.error('Supabase error details:', error);
+        throw error;
+      }
+      
+      console.log('Setting minutes data:', data);
       setMinutes((data as MeetingMinute[]) || []);
     } catch (error) {
       console.error('Error fetching meeting minutes:', error);
       toast({
         title: "Error",
-        description: "Failed to load meeting minutes",
+        description: `Failed to load meeting minutes: ${error.message || 'Unknown error'}`,
         variant: "destructive"
       });
     } finally {
