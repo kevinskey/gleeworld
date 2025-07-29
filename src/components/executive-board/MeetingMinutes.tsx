@@ -17,7 +17,9 @@ import {
   Clock,
   Edit3,
   Trash2,
-  Download
+  Download,
+  ExternalLink,
+  RefreshCw
 } from "lucide-react";
 
 type MeetingStatus = 'draft' | 'approved' | 'archived';
@@ -36,6 +38,8 @@ interface MeetingMinute {
   created_by: string;
   created_at: string;
   updated_at: string;
+  google_doc_id?: string | null;
+  google_doc_url?: string | null;
 }
 
 export const MeetingMinutes = () => {
@@ -186,6 +190,114 @@ export const MeetingMinutes = () => {
       toast({
         title: "Error",
         description: "Failed to delete meeting minutes",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const createGoogleDoc = async (minute: MeetingMinute) => {
+    try {
+      const content = `Meeting: ${minute.title}
+Date: ${new Date(minute.meeting_date).toLocaleDateString()}
+Type: ${minute.meeting_type}
+Attendees: ${minute.attendees.join(', ')}
+
+Agenda Items:
+${minute.agenda_items.map(item => `• ${item}`).join('\n')}
+
+Discussion Points:
+${minute.discussion_points}
+
+Action Items:
+${minute.action_items.map(item => `• ${item}`).join('\n')}
+
+${minute.next_meeting_date ? `Next Meeting: ${new Date(minute.next_meeting_date).toLocaleDateString()}` : ''}`;
+
+      const { data, error } = await supabase.functions.invoke('google-docs-manager', {
+        body: {
+          action: 'create',
+          minuteId: minute.id,
+          title: minute.title,
+          content: content
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Google Doc created successfully"
+      });
+
+      // Refresh the minutes to show the new Google Doc link
+      fetchMeetingMinutes();
+    } catch (error) {
+      console.error('Error creating Google Doc:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create Google Doc",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const openGoogleDoc = async (minute: MeetingMinute) => {
+    if (minute.google_doc_url) {
+      window.open(minute.google_doc_url, '_blank');
+    } else {
+      try {
+        const { data, error } = await supabase.functions.invoke('google-docs-manager', {
+          body: {
+            action: 'get_url',
+            minuteId: minute.id
+          }
+        });
+
+        if (error) throw error;
+
+        if (data.documentUrl) {
+          window.open(data.documentUrl, '_blank');
+        } else {
+          toast({
+            title: "Info",
+            description: "No Google Doc found for this meeting minute",
+            variant: "default"
+          });
+        }
+      } catch (error) {
+        console.error('Error opening Google Doc:', error);
+        toast({
+          title: "Error",
+          description: "Failed to open Google Doc",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
+  const syncFromGoogleDoc = async (minute: MeetingMinute) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('google-docs-manager', {
+        body: {
+          action: 'sync',
+          minuteId: minute.id
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Content synced from Google Doc"
+      });
+
+      // Refresh the minutes to show updated content
+      fetchMeetingMinutes();
+    } catch (error) {
+      console.error('Error syncing from Google Doc:', error);
+      toast({
+        title: "Error",
+        description: "Failed to sync from Google Doc",
         variant: "destructive"
       });
     }
@@ -383,6 +495,21 @@ export const MeetingMinutes = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    {minute.google_doc_url ? (
+                      <>
+                        <Button variant="outline" size="sm" onClick={() => openGoogleDoc(minute)} title="Open in Google Docs">
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => syncFromGoogleDoc(minute)} title="Sync from Google Docs">
+                          <RefreshCw className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <Button variant="outline" size="sm" onClick={() => createGoogleDoc(minute)} title="Create Google Doc">
+                        <FileText className="h-4 w-4" />
+                        <ExternalLink className="h-3 w-3" />
+                      </Button>
+                    )}
                     <Button variant="outline" size="sm" onClick={() => handleEdit(minute)}>
                       <Edit3 className="h-4 w-4" />
                     </Button>

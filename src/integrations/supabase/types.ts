@@ -3459,6 +3459,8 @@ export type Database = {
           created_at: string
           created_by: string
           discussion_points: string | null
+          google_doc_id: string | null
+          google_doc_url: string | null
           id: string
           meeting_date: string
           meeting_type: string
@@ -3474,6 +3476,8 @@ export type Database = {
           created_at?: string
           created_by: string
           discussion_points?: string | null
+          google_doc_id?: string | null
+          google_doc_url?: string | null
           id?: string
           meeting_date: string
           meeting_type?: string
@@ -3489,6 +3493,8 @@ export type Database = {
           created_at?: string
           created_by?: string
           discussion_points?: string | null
+          google_doc_id?: string | null
+          google_doc_url?: string | null
           id?: string
           meeting_date?: string
           meeting_type?: string
