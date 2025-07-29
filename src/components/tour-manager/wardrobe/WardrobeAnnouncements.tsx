@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, MessageSquare, Send, Calendar, AlertCircle, Users } from 'lucide-react';
+import { Plus, MessageSquare, Send, Calendar, AlertCircle, Users, Image as ImageIcon, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -25,6 +25,7 @@ interface Announcement {
   is_urgent: boolean;
   auto_remind: boolean;
   created_at: string;
+  image_url?: string;
 }
 
 const announcementTypes = {
@@ -58,6 +59,10 @@ export const WardrobeAnnouncements = () => {
     auto_remind: false
   });
 
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
   useEffect(() => {
     fetchAnnouncements();
   }, []);
@@ -79,10 +84,40 @@ export const WardrobeAnnouncements = () => {
     }
   };
 
+  const uploadImage = async (file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = fileName;
+
+      const { error: uploadError } = await supabase.storage
+        .from('wardrobe-announcements')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('wardrobe-announcements')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
+  };
+
   const handleCreateAnnouncement = async () => {
     try {
+      setUploading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      // Upload image if selected
+      let imageUrl = null;
+      if (selectedImage) {
+        imageUrl = await uploadImage(selectedImage);
+      }
 
       // Convert target emails to user IDs if needed
       let targetUserIds = null;
@@ -108,7 +143,8 @@ export const WardrobeAnnouncements = () => {
           scheduled_send_date: announcementForm.scheduled_send_date || null,
           is_urgent: announcementForm.is_urgent,
           auto_remind: announcementForm.auto_remind,
-          created_by: user.id
+          created_by: user.id,
+          image_url: imageUrl
         });
 
       if (error) throw error;
@@ -120,6 +156,8 @@ export const WardrobeAnnouncements = () => {
     } catch (error) {
       console.error('Error creating announcement:', error);
       toast.error('Failed to create announcement');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -154,6 +192,37 @@ export const WardrobeAnnouncements = () => {
       is_urgent: false,
       auto_remind: false
     });
+    setSelectedImage(null);
+    setImagePreview(null);
+  };
+
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast.error('Image size must be less than 5MB');
+        return;
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+      }
+
+      setSelectedImage(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
   };
 
   const handleVoiceSectionChange = (section: string, checked: boolean) => {
@@ -214,6 +283,52 @@ export const WardrobeAnnouncements = () => {
                   placeholder="Your announcement message..."
                   rows={4}
                 />
+              </div>
+
+              <div>
+                <Label>Image (optional)</Label>
+                <div className="space-y-2">
+                  {imagePreview ? (
+                    <div className="relative">
+                      <img 
+                        src={imagePreview} 
+                        alt="Preview" 
+                        className="w-full h-32 object-cover rounded-md border"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={removeImage}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-muted-foreground/25 rounded-md p-4">
+                      <div className="text-center">
+                        <ImageIcon className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                        <Label 
+                          htmlFor="image-upload" 
+                          className="cursor-pointer text-sm text-primary hover:underline"
+                        >
+                          Click to upload an image
+                        </Label>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          PNG, JPG up to 5MB
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  <Input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -314,8 +429,8 @@ export const WardrobeAnnouncements = () => {
                 </div>
               </div>
 
-              <Button onClick={handleCreateAnnouncement} className="w-full">
-                Create Announcement
+              <Button onClick={handleCreateAnnouncement} className="w-full" disabled={uploading}>
+                {uploading ? "Creating..." : "Create Announcement"}
               </Button>
             </div>
           </DialogContent>
@@ -369,6 +484,16 @@ export const WardrobeAnnouncements = () => {
             <CardContent>
               <div className="space-y-3">
                 <p className="text-sm">{announcement.message}</p>
+                
+                {announcement.image_url && (
+                  <div className="mt-3">
+                    <img 
+                      src={announcement.image_url} 
+                      alt="Announcement" 
+                      className="w-full max-w-md h-48 object-cover rounded-md border"
+                    />
+                  </div>
+                )}
                 
                 <div className="text-xs text-muted-foreground space-y-1">
                   <div className="flex items-center gap-2">

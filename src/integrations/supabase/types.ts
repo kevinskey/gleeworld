@@ -6469,6 +6469,7 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          image_url: string | null
           is_urgent: boolean | null
           message: string
           scheduled_send_date: string | null
@@ -6485,6 +6486,7 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          image_url?: string | null
           is_urgent?: boolean | null
           message: string
           scheduled_send_date?: string | null
@@ -6501,6 +6503,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          image_url?: string | null
           is_urgent?: boolean | null
           message?: string
           scheduled_send_date?: string | null
