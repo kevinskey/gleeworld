@@ -16,16 +16,30 @@ export function MusicSkillsPage() {
         control={form.control}
         name="readsMusic"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-            <FormControl>
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormControl>
-            <FormLabel className="text-sm font-normal">
-              Do you read music?
-            </FormLabel>
+          <FormItem>
+            <FormLabel>Do you read music?</FormLabel>
+            <div className="flex gap-4">
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  id="reads-music-yes" 
+                  checked={field.value === true}
+                  onChange={() => field.onChange(true)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="reads-music-yes" className="text-sm">Yes</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  id="reads-music-no" 
+                  checked={field.value === false}
+                  onChange={() => field.onChange(false)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="reads-music-no" className="text-sm">No</label>
+              </div>
+            </div>
           </FormItem>
         )}
       />
@@ -34,16 +48,30 @@ export function MusicSkillsPage() {
         control={form.control}
         name="interestedInVoiceLessons"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-            <FormControl>
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormControl>
-            <FormLabel className="text-sm font-normal">
-              Are you interested in voice lessons?
-            </FormLabel>
+          <FormItem>
+            <FormLabel>Are you interested in voice lessons?</FormLabel>
+            <div className="flex gap-4">
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  id="voice-lessons-yes" 
+                  checked={field.value === true}
+                  onChange={() => field.onChange(true)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="voice-lessons-yes" className="text-sm">Yes</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  id="voice-lessons-no" 
+                  checked={field.value === false}
+                  onChange={() => field.onChange(false)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="voice-lessons-no" className="text-sm">No</label>
+              </div>
+            </div>
           </FormItem>
         )}
       />
@@ -52,16 +80,30 @@ export function MusicSkillsPage() {
         control={form.control}
         name="interestedInMusicFundamentals"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-            <FormControl>
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormControl>
-            <FormLabel className="text-sm font-normal">
-              Are you interested in music fundamentals classes?
-            </FormLabel>
+          <FormItem>
+            <FormLabel>Are you interested in music fundamentals classes?</FormLabel>
+            <div className="flex gap-4">
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  id="music-fundamentals-yes" 
+                  checked={field.value === true}
+                  onChange={() => field.onChange(true)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="music-fundamentals-yes" className="text-sm">Yes</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  id="music-fundamentals-no" 
+                  checked={field.value === false}
+                  onChange={() => field.onChange(false)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="music-fundamentals-no" className="text-sm">No</label>
+              </div>
+            </div>
           </FormItem>
         )}
       />

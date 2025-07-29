@@ -19,26 +19,26 @@ const auditionSchema = z.object({
     .regex(/^[\+]?[1-9][\d]{0,2}[\s\-\.]?[\(]?[\d]{1,3}[\)]?[\s\-\.]?[\d]{3,4}[\s\-\.]?[\d]{3,4}$/, "Please enter a valid phone number"),
   
   // Musical background
-  sangInMiddleSchool: z.boolean(),
-  sangInHighSchool: z.boolean(),
+  sangInMiddleSchool: z.boolean().nullable().default(null),
+  sangInHighSchool: z.boolean().nullable().default(null),
   highSchoolYears: z.string().optional(),
-  playsInstrument: z.boolean(),
+  playsInstrument: z.boolean().nullable().default(null),
   instrumentDetails: z.string().optional(),
-  isSoloist: z.boolean(),
+  isSoloist: z.boolean().nullable().default(null),
   soloistRating: z.string().optional(),
   highSchoolSection: z.string().optional(),
   
   // Music skills
-  readsMusic: z.boolean(),
-  interestedInVoiceLessons: z.boolean(),
-  interestedInMusicFundamentals: z.boolean(),
+  readsMusic: z.boolean().nullable().default(null),
+  interestedInVoiceLessons: z.boolean().nullable().default(null),
+  interestedInMusicFundamentals: z.boolean().nullable().default(null),
   
   // Leadership and personality
   personalityDescription: z.string().min(50, "Please describe your personality (minimum 50 words)").refine((val) => {
     const wordCount = val.trim().split(/\s+/).filter(word => word.length > 0).length;
     return wordCount >= 50;
   }, "Please write at least 50 words"),
-  interestedInLeadership: z.boolean(),
+  interestedInLeadership: z.boolean().nullable().default(null),
   additionalInfo: z.string().optional(),
   
   // Audition scheduling
@@ -101,14 +101,14 @@ export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
       phone: "",
       password: "",
       confirmPassword: "",
-      sangInMiddleSchool: false,
-      sangInHighSchool: false,
-      playsInstrument: false,
-      isSoloist: false,
-      readsMusic: false,
-      interestedInVoiceLessons: false,
-      interestedInMusicFundamentals: false,
-      interestedInLeadership: false,
+      sangInMiddleSchool: null,
+      sangInHighSchool: null,
+      playsInstrument: null,
+      isSoloist: null,
+      readsMusic: null,
+      interestedInVoiceLessons: null,
+      interestedInMusicFundamentals: null,
+      interestedInLeadership: null,
     },
   });
 

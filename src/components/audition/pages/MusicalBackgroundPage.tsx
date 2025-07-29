@@ -18,16 +18,30 @@ export function MusicalBackgroundPage() {
         control={form.control}
         name="sangInMiddleSchool"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-            <FormControl>
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormControl>
-            <FormLabel className="text-sm font-normal">
-              Did you sing in middle school?
-            </FormLabel>
+          <FormItem>
+            <FormLabel>Did you sing in middle school?</FormLabel>
+            <div className="flex gap-4">
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  id="middle-school-yes" 
+                  checked={field.value === true}
+                  onChange={() => field.onChange(true)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="middle-school-yes" className="text-sm">Yes</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  id="middle-school-no" 
+                  checked={field.value === false}
+                  onChange={() => field.onChange(false)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="middle-school-no" className="text-sm">No</label>
+              </div>
+            </div>
           </FormItem>
         )}
       />
@@ -36,16 +50,30 @@ export function MusicalBackgroundPage() {
         control={form.control}
         name="sangInHighSchool"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-            <FormControl>
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormControl>
-            <FormLabel className="text-sm font-normal">
-              Did you sing in high school?
-            </FormLabel>
+          <FormItem>
+            <FormLabel>Did you sing in high school?</FormLabel>
+            <div className="flex gap-4">
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  id="high-school-yes" 
+                  checked={field.value === true}
+                  onChange={() => field.onChange(true)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="high-school-yes" className="text-sm">Yes</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  id="high-school-no" 
+                  checked={field.value === false}
+                  onChange={() => field.onChange(false)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="high-school-no" className="text-sm">No</label>
+              </div>
+            </div>
           </FormItem>
         )}
       />
@@ -96,16 +124,30 @@ export function MusicalBackgroundPage() {
         control={form.control}
         name="playsInstrument"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-            <FormControl>
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormControl>
-            <FormLabel className="text-sm font-normal">
-              Do you play an instrument well enough to perform with it?
-            </FormLabel>
+          <FormItem>
+            <FormLabel>Do you play an instrument well enough to perform with it?</FormLabel>
+            <div className="flex gap-4">
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  id="instrument-yes" 
+                  checked={field.value === true}
+                  onChange={() => field.onChange(true)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="instrument-yes" className="text-sm">Yes</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  id="instrument-no" 
+                  checked={field.value === false}
+                  onChange={() => field.onChange(false)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="instrument-no" className="text-sm">No</label>
+              </div>
+            </div>
           </FormItem>
         )}
       />
@@ -130,16 +172,30 @@ export function MusicalBackgroundPage() {
         control={form.control}
         name="isSoloist"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-            <FormControl>
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormControl>
-            <FormLabel className="text-sm font-normal">
-              Are you a soloist?
-            </FormLabel>
+          <FormItem>
+            <FormLabel>Are you a soloist?</FormLabel>
+            <div className="flex gap-4">
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  id="soloist-yes" 
+                  checked={field.value === true}
+                  onChange={() => field.onChange(true)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="soloist-yes" className="text-sm">Yes</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  id="soloist-no" 
+                  checked={field.value === false}
+                  onChange={() => field.onChange(false)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="soloist-no" className="text-sm">No</label>
+              </div>
+            </div>
           </FormItem>
         )}
       />
