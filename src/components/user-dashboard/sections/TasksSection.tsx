@@ -106,17 +106,12 @@ export const TasksSection = () => {
                     >
                       <div className="flex items-start justify-between mb-1">
                         <h5 className="font-medium text-sm line-clamp-1 flex-1 mr-2">{item.title}</h5>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className={`text-xs ${getItemTypeColor(item.type)}`}>
-                            {item.type}
-                          </Badge>
-                          <Badge
-                            variant="outline"
-                            className={`text-xs ${getStatusColor(item.status)}`}
-                          >
-                            {item.status === 'checked_out' ? 'Out' : 'In'}
-                          </Badge>
-                        </div>
+                        <Badge
+                          variant="outline"
+                          className={`text-xs ${getStatusColor(item.status)}`}
+                        >
+                          {item.status === 'checked_out' ? 'Out' : 'In'}
+                        </Badge>
                       </div>
                       <div className="text-xs flex items-center gap-1 opacity-80">
                         <Clock className="h-3 w-3" />
@@ -230,17 +225,12 @@ export const TasksSection = () => {
                       >
                         <div className="flex items-center justify-between">
                           <h5 className="font-medium text-sm line-clamp-1 flex-1 mr-2">{item.title}</h5>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className={`text-xs ${getItemTypeColor(item.type)}`}>
-                              {item.type}
-                            </Badge>
-                            <Badge
-                              variant="outline"
-                              className={`text-xs ${getStatusColor(item.status)}`}
-                            >
-                              {item.status === 'checked_out' ? 'Out' : 'In'}
-                            </Badge>
-                          </div>
+                          <Badge
+                            variant="outline"
+                            className={`text-xs ${getStatusColor(item.status)}`}
+                          >
+                            {item.status === 'checked_out' ? 'Out' : 'In'}
+                          </Badge>
                         </div>
                         <div className="text-xs flex items-center gap-1 mt-1 opacity-80">
                           <Clock className="h-3 w-3" />
