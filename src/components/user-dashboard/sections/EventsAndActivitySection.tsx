@@ -100,7 +100,7 @@ export const EventsAndActivitySection = ({
 
   return (
     <Card className="h-full">
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-1 md:pb-3">
         <CardTitle className="text-xl">Events Calendar</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
