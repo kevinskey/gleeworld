@@ -5926,6 +5926,48 @@ export type Database = {
           },
         ]
       }
+      gw_tours: {
+        Row: {
+          budget: number | null
+          created_at: string | null
+          created_by: string
+          end_date: string
+          id: string
+          name: string
+          notes: string | null
+          number_of_singers: number | null
+          start_date: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          budget?: number | null
+          created_at?: string | null
+          created_by: string
+          end_date: string
+          id?: string
+          name: string
+          notes?: string | null
+          number_of_singers?: number | null
+          start_date: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          budget?: number | null
+          created_at?: string | null
+          created_by?: string
+          end_date?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          number_of_singers?: number | null
+          start_date?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       gw_travel_logs: {
         Row: {
           arrival_location: string | null
