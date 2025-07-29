@@ -5929,6 +5929,83 @@ export type Database = {
           },
         ]
       }
+      gw_tour_logistics: {
+        Row: {
+          check_in_time: string | null
+          check_out_time: string | null
+          created_at: string | null
+          estimated_audience_size: number | null
+          hospitality_notes: string | null
+          id: string
+          lodging_address: string | null
+          lodging_contact: string | null
+          lodging_name: string | null
+          meal_arrangements: string | null
+          rehearsal_time: string | null
+          show_time: string | null
+          tour_city_id: string
+          transport_notes: string | null
+          updated_at: string | null
+          venue_address: string | null
+          venue_contact: string | null
+          venue_email: string | null
+          venue_name: string | null
+          venue_phone: string | null
+        }
+        Insert: {
+          check_in_time?: string | null
+          check_out_time?: string | null
+          created_at?: string | null
+          estimated_audience_size?: number | null
+          hospitality_notes?: string | null
+          id?: string
+          lodging_address?: string | null
+          lodging_contact?: string | null
+          lodging_name?: string | null
+          meal_arrangements?: string | null
+          rehearsal_time?: string | null
+          show_time?: string | null
+          tour_city_id: string
+          transport_notes?: string | null
+          updated_at?: string | null
+          venue_address?: string | null
+          venue_contact?: string | null
+          venue_email?: string | null
+          venue_name?: string | null
+          venue_phone?: string | null
+        }
+        Update: {
+          check_in_time?: string | null
+          check_out_time?: string | null
+          created_at?: string | null
+          estimated_audience_size?: number | null
+          hospitality_notes?: string | null
+          id?: string
+          lodging_address?: string | null
+          lodging_contact?: string | null
+          lodging_name?: string | null
+          meal_arrangements?: string | null
+          rehearsal_time?: string | null
+          show_time?: string | null
+          tour_city_id?: string
+          transport_notes?: string | null
+          updated_at?: string | null
+          venue_address?: string | null
+          venue_contact?: string | null
+          venue_email?: string | null
+          venue_name?: string | null
+          venue_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_tour_logistics_tour_city_id_fkey"
+            columns: ["tour_city_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tour_cities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_tour_participants: {
         Row: {
           created_at: string | null

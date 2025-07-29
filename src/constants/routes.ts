@@ -21,7 +21,9 @@ export const ROUTES = {
   
   SHOP: '/shop',
   CHECKOUT: '/checkout',
-  SHOP_SUCCESS: '/shop/success'
+  SHOP_SUCCESS: '/shop/success',
+  
+  TOUR_PLANNER: '/tour-planner'
 } as const;
 
 export const PROTECTED_ROUTES = [
@@ -36,7 +38,8 @@ export const PROTECTED_ROUTES = [
   ROUTES.TOUR_MANAGER,
   ROUTES.ATTENDANCE,
   ROUTES.SCHOLARSHIPS,
-  ROUTES.ADMIN_SCHOLARSHIPS
+  ROUTES.ADMIN_SCHOLARSHIPS,
+  ROUTES.TOUR_PLANNER
 ] as const;
 
 export const PUBLIC_ROUTES = [

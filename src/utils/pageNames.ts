@@ -32,7 +32,8 @@ export const PAGE_NAMES: Record<string, string> = {
   '/budget-approvals': 'Budget Approvals',
   '/budgets': 'Budget Management',
   '/tour-manager': 'Tour Manager',
-  '/treasurer': 'Treasurer Dashboard'
+  '/treasurer': 'Treasurer Dashboard',
+  '/tour-planner': 'Tour Planner'
 };
 
 export const getPageName = (pathname: string): string => {
