@@ -313,13 +313,9 @@ export const UserDashboard = () => {
 
         {/* Member Dashboard Elements Only */}
         
-        {/* Spiritual Gleeflections */}
-        <div className="grid grid-cols-1 gap-6">
+        {/* Spiritual Gleeflections & Upcoming Events - 50% columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SpiritualReflectionsSection />
-        </div>
-
-        {/* Upcoming Events */}
-        <div className="grid grid-cols-1 gap-6">
           <EventsAndActivitySection 
             upcomingEvents={upcomingEventsList}
             recentActivity={recentActivity}
