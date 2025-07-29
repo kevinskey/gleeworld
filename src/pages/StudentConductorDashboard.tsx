@@ -23,76 +23,53 @@ import {
   Target,
   BookOpen,
   Award,
-  TrendingUp
+  TrendingUp,
+  Eye,
+  CheckCircle,
+  MessageSquare,
+  UserCheck,
+  ClipboardList,
+  Settings,
+  Send,
+  PenTool
 } from "lucide-react";
 
 export const StudentConductorDashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("repertoire");
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
 
-  // Mock data for repertoire
-  const repertoire = [
-    { 
-      id: 1, 
-      title: "Amazing Grace", 
-      composer: "Traditional", 
-      difficulty: "Intermediate",
-      status: "In Progress",
-      lastRehearsed: "2024-01-25",
-      notes: "Work on dynamics in measures 16-24"
-    },
-    { 
-      id: 2, 
-      title: "Ave Maria", 
-      composer: "Schubert", 
-      difficulty: "Advanced",
-      status: "Mastered",
-      lastRehearsed: "2024-01-23",
-      notes: "Performance ready"
-    },
-    { 
-      id: 3, 
-      title: "Swing Low, Sweet Chariot", 
-      composer: "Traditional Spiritual", 
-      difficulty: "Beginner",
-      status: "Learning",
-      lastRehearsed: "2024-01-26",
-      notes: "Focus on rhythm in chorus"
-    },
+  // Mock data for Assistant Conductor features
+  const sectionalPlans = [
+    { id: 1, sectionLeader: "Sarah Johnson", section: "Soprano 1", week: "Week 3", status: "Pending Review", uploadDate: "2024-01-26", focus: "Breath control, high notes" },
+    { id: 2, sectionLeader: "Maria Garcia", section: "Alto 2", week: "Week 3", status: "Approved", uploadDate: "2024-01-25", focus: "Rhythm in measures 32-48" },
+    { id: 3, sectionLeader: "Ashley Brown", section: "Soprano 2", week: "Week 3", status: "Needs Revision", uploadDate: "2024-01-24", focus: "Vowel placement" }
   ];
 
-  // Mock data for rehearsal schedule
-  const rehearsalSchedule = [
-    { id: 1, date: "2024-01-29", time: "3:00 PM - 5:00 PM", focus: "Amazing Grace - Dynamics", type: "Full Choir" },
-    { id: 2, date: "2024-01-30", time: "4:00 PM - 5:00 PM", focus: "Sectionals - Alto/Soprano", type: "Sectional" },
-    { id: 3, date: "2024-02-01", time: "3:00 PM - 5:00 PM", focus: "New Repertoire Introduction", type: "Full Choir" },
-    { id: 4, date: "2024-02-03", time: "2:00 PM - 4:00 PM", focus: "Performance Preparation", type: "Full Choir" },
+  const srfAssignments = [
+    { id: 1, title: "Bach Chorale #47", assigned: "15 students", completed: "12 students", dueDate: "2024-01-30", difficulty: "Intermediate" },
+    { id: 2, title: "Sight-reading Test #3", assigned: "15 students", completed: "8 students", dueDate: "2024-02-02", difficulty: "Advanced" },
+    { id: 3, title: "Major Scale Practice", assigned: "15 students", completed: "15 students", dueDate: "2024-01-28", difficulty: "Beginner" }
   ];
 
-  // Mock conducting resources
-  const conductingResources = [
-    { id: 1, title: "Basic Conducting Patterns", type: "Video", duration: "12 min", completed: true },
-    { id: 2, title: "Tempo and Dynamics", type: "Article", duration: "8 min read", completed: true },
-    { id: 3, title: "Choir Warm-up Techniques", type: "Video", duration: "15 min", completed: false },
-    { id: 4, title: "Score Analysis Methods", type: "PDF", duration: "20 pages", completed: false },
+  const auditions = [
+    { id: 1, name: "Jennifer Wilson", timeSlot: "3:00 PM", date: "2024-02-05", type: "New Member", status: "Scheduled", notes: "Strong sight-reading background" },
+    { id: 2, name: "Taylor Davis", timeSlot: "3:15 PM", date: "2024-02-05", type: "Solo Audition", status: "Callback", notes: "Excellent tone quality" },
+    { id: 3, name: "Morgan Lee", timeSlot: "3:30 PM", date: "2024-02-05", type: "New Member", status: "Pending", notes: "Needs vocal technique work" }
+  ];
+
+  const submissions = [
+    { id: 1, from: "Section Leaders", title: "Weekly Progress Reports", date: "2024-01-26", status: "New", type: "Report" },
+    { id: 2, from: "Sarah Johnson", title: "Sectional Recording - S1", date: "2024-01-25", status: "Reviewed", type: "Audio" },
+    { id: 3, from: "Music Committee", title: "Spring Concert Repertoire Suggestions", date: "2024-01-24", status: "Forwarded", type: "Document" }
   ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Mastered': return 'bg-green-100 text-green-800 border-green-200';
-      case 'In Progress': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'Learning': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'Approved': case 'Completed': case 'Scheduled': return 'bg-green-100 text-green-800 border-green-200';
+      case 'Pending Review': case 'Pending': case 'New': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'Needs Revision': case 'Callback': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'Reviewed': case 'Forwarded': return 'bg-blue-100 text-blue-800 border-blue-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Beginner': return 'bg-green-100 text-green-800';
-      case 'Intermediate': return 'bg-yellow-100 text-yellow-800';
-      case 'Advanced': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -117,268 +94,434 @@ export const StudentConductorDashboard = () => {
               className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
             >
               <X className="h-4 w-4" />
-              Exit Student Conductor Dashboard
+              Exit Assistant Conductor Hub
             </Button>
           </div>
           
           <div className="flex items-center gap-3">
             <Music className="h-8 w-8 text-primary" />
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Student Conductor Dashboard</h1>
-              <p className="text-muted-foreground">Lead rehearsals and develop your conducting skills</p>
+              <h1 className="text-3xl font-bold text-foreground">Assistant Conductor Hub</h1>
+              <p className="text-muted-foreground">Manage sections, auditions, and rehearsal coordination</p>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="repertoire">Repertoire</TabsTrigger>
-                <TabsTrigger value="rehearsals">Rehearsals</TabsTrigger>
-                <TabsTrigger value="resources">Resources</TabsTrigger>
-              </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="sections">Sections</TabsTrigger>
+            <TabsTrigger value="srf">SRF</TabsTrigger>
+            <TabsTrigger value="auditions">Auditions</TabsTrigger>
+            <TabsTrigger value="submissions">Submissions</TabsTrigger>
+            <TabsTrigger value="setup">Setup</TabsTrigger>
+            <TabsTrigger value="communication">Messages</TabsTrigger>
+            <TabsTrigger value="journal">Journal</TabsTrigger>
+          </TabsList>
 
-              <TabsContent value="repertoire" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BookOpen className="h-5 w-5" />
-                      Current Repertoire
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {repertoire.map((piece) => (
-                        <Card key={piece.id} className="hover:shadow-md transition-shadow">
-                          <CardContent className="pt-4">
-                            <div className="flex items-start justify-between mb-3">
-                              <div>
-                                <h4 className="font-semibold text-lg">{piece.title}</h4>
-                                <p className="text-muted-foreground">{piece.composer}</p>
-                              </div>
-                              <div className="flex gap-2">
-                                <Badge className={getDifficultyColor(piece.difficulty)}>
-                                  {piece.difficulty}
-                                </Badge>
-                                <Badge className={`border ${getStatusColor(piece.status)}`}>
-                                  {piece.status}
-                                </Badge>
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                              <div>
-                                <p className="text-sm text-muted-foreground">Last Rehearsed</p>
-                                <p className="font-medium">{new Date(piece.lastRehearsed).toLocaleDateString()}</p>
-                              </div>
-                              <div>
-                                <p className="text-sm text-muted-foreground">Conductor Notes</p>
-                                <p className="font-medium text-sm">{piece.notes}</p>
-                              </div>
-                            </div>
-                            
-                            <div className="flex gap-2">
-                              <Button size="sm" variant="outline">
-                                <FileText className="h-4 w-4 mr-2" />
-                                View Score
-                              </Button>
-                              <Button size="sm" variant="outline">
-                                <Play className="h-4 w-4 mr-2" />
-                                Practice Track
-                              </Button>
-                              <Button size="sm" variant="outline">
-                                Edit Notes
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+          <TabsContent value="overview" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <UserCheck className="h-5 w-5" />
+                    Section Leadership
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">3</div>
+                  <p className="text-sm text-muted-foreground">Plans awaiting review</p>
+                  <Button size="sm" className="mt-3" onClick={() => setActiveTab("sections")}>
+                    Review Plans
+                  </Button>
+                </CardContent>
+              </Card>
 
-              <TabsContent value="rehearsals" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5" />
-                      Rehearsal Schedule
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {rehearsalSchedule.map((rehearsal) => (
-                        <Card key={rehearsal.id} className="hover:shadow-md transition-shadow">
-                          <CardContent className="pt-4">
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center gap-3">
-                                <Clock className="h-5 w-5 text-blue-600" />
-                                <div>
-                                  <p className="font-semibold">{new Date(rehearsal.date).toLocaleDateString()}</p>
-                                  <p className="text-sm text-muted-foreground">{rehearsal.time}</p>
-                                </div>
-                              </div>
-                              <Badge variant="outline">{rehearsal.type}</Badge>
-                            </div>
-                            <p className="text-sm mb-3">{rehearsal.focus}</p>
-                            <div className="flex gap-2">
-                              <Button size="sm">
-                                <Play className="h-4 w-4 mr-2" />
-                                Start Rehearsal
-                              </Button>
-                              <Button size="sm" variant="outline">
-                                Edit Plan
-                              </Button>
-                              <Button size="sm" variant="outline">
-                                View Attendance
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    Sight Reading
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">68%</div>
+                  <p className="text-sm text-muted-foreground">Average completion rate</p>
+                  <Button size="sm" className="mt-3" onClick={() => setActiveTab("srf")}>
+                    Manage SRF
+                  </Button>
+                </CardContent>
+              </Card>
 
-              <TabsContent value="resources" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Award className="h-5 w-5" />
-                      Conducting Development Resources
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="mb-6">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">Progress</span>
-                        <span className="text-sm text-muted-foreground">2 of 4 completed</span>
-                      </div>
-                      <Progress value={50} className="h-2" />
-                    </div>
-                    
-                    <div className="space-y-4">
-                      {conductingResources.map((resource) => (
-                        <Card key={resource.id} className="hover:shadow-md transition-shadow">
-                          <CardContent className="pt-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className={`w-3 h-3 rounded-full ${resource.completed ? 'bg-green-500' : 'bg-gray-300'}`} />
-                                <div>
-                                  <p className="font-medium">{resource.title}</p>
-                                  <p className="text-sm text-muted-foreground">{resource.type} • {resource.duration}</p>
-                                </div>
-                              </div>
-                              <Button size="sm" variant={resource.completed ? "outline" : "default"}>
-                                {resource.completed ? "Review" : "Start"}
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Upcoming Auditions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">3</div>
+                  <p className="text-sm text-muted-foreground">Scheduled for Feb 5</p>
+                  <Button size="sm" className="mt-3" onClick={() => setActiveTab("auditions")}>
+                    View Schedule
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Conducting Progress */}
+          <TabsContent value="sections" className="mt-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  Your Progress
+                  <UserCheck className="h-5 w-5" />
+                  Section Leader Oversight
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Conducting Skills</span>
-                      <span>75%</span>
-                    </div>
-                    <Progress value={75} className="h-2" />
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Score Analysis</span>
-                      <span>60%</span>
-                    </div>
-                    <Progress value={60} className="h-2" />
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Rehearsal Leadership</span>
-                      <span>85%</span>
-                    </div>
-                    <Progress value={85} className="h-2" />
-                  </div>
+                  {sectionalPlans.map((plan) => (
+                    <Card key={plan.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="pt-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h4 className="font-semibold">{plan.sectionLeader} - {plan.section}</h4>
+                            <p className="text-sm text-muted-foreground">{plan.week} • Uploaded {plan.uploadDate}</p>
+                          </div>
+                          <Badge className={`border ${getStatusColor(plan.status)}`}>
+                            {plan.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm mb-3">Focus: {plan.focus}</p>
+                        <div className="flex gap-2">
+                          <Button size="sm">
+                            <Eye className="h-4 w-4 mr-2" />
+                            Review Plan
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Approve
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <MessageSquare className="h-4 w-4 mr-2" />
+                            Add Comment
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
 
-            {/* Quick Actions */}
+          <TabsContent value="srf" className="mt-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5" />
-                  Quick Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button className="w-full justify-start" variant="outline">
-                  <Play className="h-4 w-4 mr-2" />
-                  Start Practice Session
-                </Button>
-                <Button className="w-full justify-start" variant="outline">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Schedule Rehearsal
-                </Button>
-                <Button className="w-full justify-start" variant="outline">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Add Repertoire
-                </Button>
-                <Button className="w-full justify-start" variant="outline">
-                  <Users className="h-4 w-4 mr-2" />
-                  Contact Choir Members
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Practice Timer */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Practice Timer
+                  <BookOpen className="h-5 w-5" />
+                  Sight Reading Manager (SRF Integration)
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-center space-y-4">
-                  <div className="text-3xl font-mono font-bold">25:00</div>
-                  <div className="flex justify-center gap-2">
-                    <Button size="sm" onClick={() => setIsPlaying(!isPlaying)}>
-                      {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                <div className="space-y-4">
+                  <div className="flex gap-3 mb-4">
+                    <Button>
+                      <Play className="h-4 w-4 mr-2" />
+                      Create Assignment
                     </Button>
-                    <Button size="sm" variant="outline">
-                      <SkipForward className="h-4 w-4" />
+                    <Button variant="outline">
+                      <ClipboardList className="h-4 w-4 mr-2" />
+                      Placement Test
+                    </Button>
+                    <Button variant="outline">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Template Builder
                     </Button>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Focus: Tempo Consistency
-                  </p>
+                  {srfAssignments.map((assignment) => (
+                    <Card key={assignment.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="pt-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h4 className="font-semibold">{assignment.title}</h4>
+                            <p className="text-sm text-muted-foreground">Due: {assignment.dueDate}</p>
+                          </div>
+                          <Badge variant="outline">{assignment.difficulty}</Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 mb-3">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Assigned</p>
+                            <p className="font-medium">{assignment.assigned}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Completed</p>
+                            <p className="font-medium">{assignment.completed}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm">
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Results
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Send className="h-4 w-4 mr-2" />
+                            Send Reminder
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="auditions" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Auditions & Solos Hub
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {auditions.map((audition) => (
+                    <Card key={audition.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="pt-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h4 className="font-semibold">{audition.name}</h4>
+                            <p className="text-sm text-muted-foreground">{audition.date} at {audition.timeSlot}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Badge variant="outline">{audition.type}</Badge>
+                            <Badge className={`border ${getStatusColor(audition.status)}`}>
+                              {audition.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        <p className="text-sm mb-3">Notes: {audition.notes}</p>
+                        <div className="flex gap-2">
+                          <Button size="sm">
+                            <FileText className="h-4 w-4 mr-2" />
+                            Score Sheet
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Clock className="h-4 w-4 mr-2" />
+                            Reschedule
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <MessageSquare className="h-4 w-4 mr-2" />
+                            Add Notes
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="submissions" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Submission Review Panel
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {submissions.map((submission) => (
+                    <Card key={submission.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="pt-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h4 className="font-semibold">{submission.title}</h4>
+                            <p className="text-sm text-muted-foreground">From: {submission.from} • {submission.date}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Badge variant="outline">{submission.type}</Badge>
+                            <Badge className={`border ${getStatusColor(submission.status)}`}>
+                              {submission.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm">
+                            <Eye className="h-4 w-4 mr-2" />
+                            Review
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Complete
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Send className="h-4 w-4 mr-2" />
+                            Forward to Director
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="setup" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Environment Setup Tools
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Rehearsal Setup Checklist</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" className="rounded" />
+                        <span className="text-sm">Piano tuned and positioned</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" className="rounded" />
+                        <span className="text-sm">Music stands arranged</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" className="rounded" />
+                        <span className="text-sm">Sound system tested</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" className="rounded" />
+                        <span className="text-sm">Scores distributed</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Warm-up Plans</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <Button className="w-full justify-start" variant="outline">
+                          <FileText className="h-4 w-4 mr-2" />
+                          Upload Warm-up Plan
+                        </Button>
+                        <Button className="w-full justify-start" variant="outline">
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Link to Calendar Event
+                        </Button>
+                        <Button className="w-full justify-start" variant="outline">
+                          <Play className="h-4 w-4 mr-2" />
+                          View Template Library
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="communication" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Send className="h-5 w-5" />
+                  Communication Panel
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h3 className="font-semibold">Quick Messages</h3>
+                    <Button className="w-full justify-start">
+                      <Users className="h-4 w-4 mr-2" />
+                      Message All Sections
+                    </Button>
+                    <Button className="w-full justify-start" variant="outline">
+                      <UserCheck className="h-4 w-4 mr-2" />
+                      Message Section Leaders
+                    </Button>
+                    <Button className="w-full justify-start" variant="outline">
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      SRF Reminder
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h3 className="font-semibold">Message Templates</h3>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">• SRF Assignment Reminder</p>
+                      <p className="text-sm text-muted-foreground">• Solo Audition Updates</p>
+                      <p className="text-sm text-muted-foreground">• Sectional Schedule Changes</p>
+                      <p className="text-sm text-muted-foreground">• Rehearsal Preparation</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="journal" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <PenTool className="h-5 w-5" />
+                  Assistant Conductor Journal
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="font-semibold mb-3">Private Activity Log</h3>
+                      <textarea 
+                        className="w-full h-32 p-3 border rounded-md resize-none" 
+                        placeholder="Record daily activities, observations, and notes..."
+                      />
+                      <Button size="sm" className="mt-2">Save Entry</Button>
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-semibold mb-3">Notes to Director</h3>
+                      <textarea 
+                        className="w-full h-32 p-3 border rounded-md resize-none" 
+                        placeholder="Internal communication with Doc Johnson..."
+                      />
+                      <Button size="sm" className="mt-2">
+                        <Send className="h-4 w-4 mr-2" />
+                        Send to Director
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <h3 className="font-semibold mb-3">Recent Entries</h3>
+                    <div className="space-y-2">
+                      <div className="p-3 bg-muted rounded-md">
+                        <p className="text-sm"><strong>Jan 26:</strong> Reviewed S1 sectional plan. Recommended focus on breath support.</p>
+                      </div>
+                      <div className="p-3 bg-muted rounded-md">
+                        <p className="text-sm"><strong>Jan 25:</strong> SRF completion rates improving. Consider advanced assignments for top performers.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </UniversalLayout>
   );
