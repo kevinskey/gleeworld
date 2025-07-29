@@ -59,6 +59,7 @@ import ScholarshipHub from "./pages/ScholarshipHub";
 import AdminScholarships from "./pages/AdminScholarships";
 import AdminProducts from "./pages/AdminProducts";
 import { ExecutiveBoardDashboard } from "./pages/ExecutiveBoardDashboard";
+import BookingRequest from "./pages/BookingRequest";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -467,15 +468,23 @@ const App = () => {
                                  <ExecutiveBoardDashboard />
                                </ProtectedRoute>
                              } 
+                            />
+                           <Route 
+                             path="/booking-request" 
+                             element={
+                               <PublicRoute>
+                                 <BookingRequest />
+                               </PublicRoute>
+                             } 
                            />
-                <Route 
-                  path="/landing"
-                  element={
-                    <PublicRoute>
-                      <GleeWorldLanding />
-                    </PublicRoute>
-                  } 
-                />
+                 <Route 
+                   path="/landing"
+                   element={
+                     <PublicRoute>
+                       <GleeWorldLanding />
+                     </PublicRoute>
+                   } 
+                 />
                  <Route 
                    path="/" 
                    element={<RootRoute />} 
