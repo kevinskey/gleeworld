@@ -4,6 +4,7 @@ import { Mic } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { MusicStaffIcon } from "@/components/icons/MusicStaffIcon";
 
 export const AuditionHoverCard = () => {
   const { user } = useAuth();
@@ -21,7 +22,7 @@ export const AuditionHoverCard = () => {
           >
             <Mic className="w-3 h-3 mr-2 transition-transform duration-300 group-hover:rotate-12" />
             <span className="truncate">AUDITION SIGN UP</span>
-            <span className="ml-2">🎵</span>
+            <MusicStaffIcon className="ml-2 text-white" size={16} />
           </Button>
         </Link>
       </div>
@@ -39,7 +40,7 @@ export const AuditionHoverCard = () => {
         >
           <Mic className="w-5 h-5 mr-3 md:w-4 md:h-4 lg:w-5 lg:h-5 transition-transform duration-300 group-hover:rotate-12" />
           SIGN UP FOR AUDITIONS
-          <span className="ml-3 md:ml-2 lg:ml-3">🎵</span>
+          <MusicStaffIcon className="ml-3 md:ml-2 lg:ml-3 text-white" size={20} />
         </Button>
       </Link>
     </div>
