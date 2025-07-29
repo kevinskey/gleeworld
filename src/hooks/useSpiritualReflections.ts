@@ -6,13 +6,18 @@ export interface SpiritualReflection {
   id: string;
   title: string;
   content: string;
-  scripture_reference?: string;
-  reflection_type: string;
-  is_featured: boolean;
-  is_shared_to_members: boolean;
+  reflection_date: string;
+  event_id?: string;
+  tags?: string[];
+  visibility: string;
+  is_published?: boolean;
   created_by: string;
   created_at: string;
   updated_at: string;
+  scripture_reference?: string;
+  reflection_type?: string;
+  is_featured?: boolean;
+  is_shared_to_members?: boolean;
   shared_at?: string;
 }
 
@@ -44,11 +49,24 @@ export const useSpiritualReflections = () => {
     }
   };
 
-  const createReflection = async (reflectionData: Omit<SpiritualReflection, 'id' | 'created_at' | 'updated_at' | 'shared_at'>) => {
+  const createReflection = async (reflectionData: {
+    title: string;
+    content: string;
+    scripture_reference?: string;
+    reflection_type?: string;
+    is_featured?: boolean;
+    created_by: string;
+    is_shared_to_members?: boolean;
+  }) => {
     try {
       const { data, error } = await supabase
         .from('gw_spiritual_reflections')
-        .insert([reflectionData])
+        .insert([{
+          ...reflectionData,
+          reflection_date: new Date().toISOString().split('T')[0],
+          visibility: 'internal',
+          is_published: true
+        }])
         .select()
         .single();
 
@@ -100,7 +118,10 @@ export const useSpiritualReflections = () => {
   };
 
   const toggleShare = async (id: string, currentShareStatus: boolean) => {
-    return updateReflection(id, { is_shared_to_members: !currentShareStatus });
+    return updateReflection(id, { 
+      is_shared_to_members: !currentShareStatus,
+      ...(currentShareStatus ? {} : { shared_at: new Date().toISOString() })
+    });
   };
 
   const deleteReflection = async (id: string) => {

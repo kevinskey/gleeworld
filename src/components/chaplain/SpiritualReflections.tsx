@@ -39,7 +39,8 @@ export const SpiritualReflections = () => {
       await createReflection({
         ...formData,
         created_by: user.id,
-        is_shared_to_members: false
+        is_shared_to_members: false,
+        is_featured: formData.is_featured
       });
       
       setFormData({
@@ -55,16 +56,16 @@ export const SpiritualReflections = () => {
     }
   };
 
-  const handleToggleShare = async (id: string, currentStatus: boolean) => {
+  const handleToggleShare = async (id: string, currentStatus?: boolean) => {
     try {
-      await toggleShare(id, currentStatus);
+      await toggleShare(id, currentStatus || false);
       toast.success(currentStatus ? 'Reflection removed from member dashboard' : 'Reflection shared to member dashboard');
     } catch (error) {
       // Error is handled in the hook
     }
   };
 
-  const handleToggleFeatured = async (id: string, currentStatus: boolean) => {
+  const handleToggleFeatured = async (id: string, currentStatus?: boolean) => {
     try {
       await updateReflection(id, { is_featured: !currentStatus });
     } catch (error) {
@@ -193,8 +194,8 @@ export const SpiritualReflections = () => {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge className={getReflectionTypeColor(reflection.reflection_type)}>
-                        {reflection.reflection_type.replace('_', ' ')}
+                      <Badge className={getReflectionTypeColor(reflection.reflection_type || 'daily_devotional')}>
+                        {(reflection.reflection_type || 'daily_devotional').replace('_', ' ')}
                       </Badge>
                       {reflection.scripture_reference && (
                         <Badge variant="outline">

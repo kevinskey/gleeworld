@@ -77,8 +77,8 @@ export const SpiritualReflectionsCard = () => {
             </div>
             
             <div className="flex items-center gap-2 mb-3">
-              <Badge className={getReflectionTypeColor(latestReflection.reflection_type)} variant="secondary">
-                {latestReflection.reflection_type.replace('_', ' ')}
+              <Badge className={getReflectionTypeColor(latestReflection.reflection_type || 'daily_devotional')} variant="secondary">
+                {(latestReflection.reflection_type || 'daily_devotional').replace('_', ' ')}
               </Badge>
               {latestReflection.scripture_reference && (
                 <Badge variant="outline">
@@ -93,7 +93,10 @@ export const SpiritualReflectionsCard = () => {
             </p>
             
             <div className="text-xs text-muted-foreground">
-              Shared on {new Date(latestReflection.shared_at).toLocaleDateString()}
+              {latestReflection.shared_at 
+                ? `Shared on ${new Date(latestReflection.shared_at).toLocaleDateString()}`
+                : 'Recently shared'
+              }
             </div>
           </div>
 

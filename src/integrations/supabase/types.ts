@@ -5963,8 +5963,13 @@ export type Database = {
           created_by: string
           event_id: string | null
           id: string
+          is_featured: boolean | null
           is_published: boolean | null
+          is_shared_to_members: boolean | null
           reflection_date: string
+          reflection_type: string | null
+          scripture_reference: string | null
+          shared_at: string | null
           tags: string[] | null
           title: string
           updated_at: string
@@ -5976,8 +5981,13 @@ export type Database = {
           created_by: string
           event_id?: string | null
           id?: string
+          is_featured?: boolean | null
           is_published?: boolean | null
+          is_shared_to_members?: boolean | null
           reflection_date?: string
+          reflection_type?: string | null
+          scripture_reference?: string | null
+          shared_at?: string | null
           tags?: string[] | null
           title: string
           updated_at?: string
@@ -5989,8 +5999,13 @@ export type Database = {
           created_by?: string
           event_id?: string | null
           id?: string
+          is_featured?: boolean | null
           is_published?: boolean | null
+          is_shared_to_members?: boolean | null
           reflection_date?: string
+          reflection_type?: string | null
+          scripture_reference?: string | null
+          shared_at?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string

@@ -7,9 +7,9 @@ export interface SharedSpiritualReflection {
   title: string;
   content: string;
   scripture_reference?: string;
-  reflection_type: string;
-  is_featured: boolean;
-  shared_at: string;
+  reflection_type?: string;
+  is_featured?: boolean;
+  shared_at?: string;
 }
 
 export const useSharedSpiritualReflections = () => {
@@ -28,7 +28,15 @@ export const useSharedSpiritualReflections = () => {
         .order('shared_at', { ascending: false });
 
       if (error) throw error;
-      setSharedReflections(data || []);
+      setSharedReflections(data?.map(item => ({
+        id: item.id,
+        title: item.title,
+        content: item.content,
+        scripture_reference: item.scripture_reference,
+        reflection_type: item.reflection_type,
+        is_featured: item.is_featured,
+        shared_at: item.shared_at
+      })) || []);
     } catch (err: any) {
       setError(err.message);
       toast({
