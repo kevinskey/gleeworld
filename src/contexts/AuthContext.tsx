@@ -21,6 +21,27 @@ export const useAuth = () => {
   return context;
 };
 
+// Auth state cleanup utility
+const cleanupAuthState = () => {
+  console.log('AuthContext: Cleaning up auth state...');
+  try {
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        console.log('AuthContext: Removing localStorage key:', key);
+        localStorage.removeItem(key);
+      }
+    });
+    Object.keys(sessionStorage || {}).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        console.log('AuthContext: Removing sessionStorage key:', key);
+        sessionStorage.removeItem(key);
+      }
+    });
+  } catch (error) {
+    console.warn('AuthContext: Error during auth cleanup:', error);
+  }
+};
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -39,7 +60,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         console.log('AuthContext: Initializing auth state...');
         
-        // Get existing session FIRST
+        // Clean up any conflicting auth state first
+        cleanupAuthState();
+        
+        // Attempt global sign out to clear any existing sessions
+        try {
+          await supabase.auth.signOut({ scope: 'global' });
+          console.log('AuthContext: Initial global signout completed');
+        } catch (err) {
+          console.log('AuthContext: Initial global signout failed (expected):', err);
+        }
+        
+        // Get existing session AFTER cleanup
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
