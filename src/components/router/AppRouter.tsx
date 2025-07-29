@@ -26,6 +26,7 @@ import AlumnaeAdmin from "@/pages/admin/AlumnaeAdmin";
 import { Shop } from "@/pages/Shop";
 import { Checkout } from "@/pages/Checkout";
 import { Success } from "@/pages/shop/Success";
+import BookingRequest from "@/pages/BookingRequest";
 
 export const router = createBrowserRouter([
   {
@@ -127,6 +128,10 @@ export const router = createBrowserRouter([
   {
     path: "/shop/success",
     element: <Success />,
+  },
+  {
+    path: "/booking-request",
+    element: <BookingRequest />,
   },
   {
     path: "*",
