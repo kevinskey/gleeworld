@@ -49,13 +49,23 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
   const { events: upcomingEvents } = usePublicGleeWorldEvents();
   
   // Format events for AnnouncementsEventsSection
-  const formattedUpcomingEvents = upcomingEvents.slice(0, 6).map(event => ({
-    id: event.id,
-    title: event.title,
-    date: event.start_date,
-    location: event.location || event.venue_name || undefined,
-    type: event.event_type || undefined
-  }));
+  const formattedUpcomingEvents = upcomingEvents
+    .filter(event => {
+      // Filter out events with invalid dates
+      const isValidDate = event.start_date && !isNaN(new Date(event.start_date).getTime());
+      if (!isValidDate) {
+        console.warn('Invalid date found in event:', event.id, event.start_date);
+      }
+      return isValidDate;
+    })
+    .slice(0, 6)
+    .map(event => ({
+      id: event.id,
+      title: event.title,
+      date: event.start_date,
+      location: event.location || event.venue_name || undefined,
+      type: event.event_type || undefined
+    }));
   
   // Mock data for super admin dashboard
   const superAdminData = {

@@ -224,13 +224,22 @@ export const UserDashboard = () => {
   };
 
   // Get real data with proper formatting for AnnouncementsEventsSection
-  const upcomingEventsList = getUpcomingEvents(6).map(event => ({
-    id: event.id,
-    title: event.title,
-    date: event.start_date,
-    location: event.location || event.venue_name || undefined,
-    type: event.event_type || undefined
-  }));
+  const upcomingEventsList = getUpcomingEvents(6)
+    .filter(event => {
+      // Filter out events with invalid dates
+      const isValidDate = event.start_date && !isNaN(new Date(event.start_date).getTime());
+      if (!isValidDate) {
+        console.warn('Invalid date found in event:', event.id, event.start_date);
+      }
+      return isValidDate;
+    })
+    .map(event => ({
+      id: event.id,
+      title: event.title,
+      date: event.start_date,
+      location: event.location || event.venue_name || undefined,
+      type: event.event_type || undefined
+    }));
   const recentActivity = getRecentActivity();
 
   return (

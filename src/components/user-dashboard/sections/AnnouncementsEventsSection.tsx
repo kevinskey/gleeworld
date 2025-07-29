@@ -99,7 +99,15 @@ export const AnnouncementsEventsSection = ({ upcomingEvents }: AnnouncementsEven
                     <div className="space-y-1">
                       <div className="text-xs text-muted-foreground flex items-center gap-1">
                         <Calendar className="h-2 w-2" />
-                        {new Date(event.date).toLocaleDateString()}
+                        {(() => {
+                          try {
+                            const date = new Date(event.date);
+                            return isNaN(date.getTime()) ? 'Invalid date' : date.toLocaleDateString();
+                          } catch (error) {
+                            console.warn('Date parsing error:', event.date, error);
+                            return 'Invalid date';
+                          }
+                        })()}
                       </div>
                       {event.location && (
                         <div className="text-xs text-muted-foreground flex items-center gap-1">
