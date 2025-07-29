@@ -53,7 +53,6 @@ import { StripeSalesSync } from "@/components/treasurer/StripeSalesSync";
 import { PerformanceRequestsList } from "@/components/tour-manager/PerformanceRequestsList";
 import { TourContracts } from "@/components/tour-manager/TourContracts";
 import { RequestTracker } from "@/components/tour-manager/RequestTracker";
-import { TourPlanner as TourPlannerOld } from "@/components/tour-manager/TourPlanner";
 import TourPlanner from "@/pages/TourPlanner";
 import { TourStipends } from "@/components/tour-manager/TourStipends";
 import { TourOverview } from "@/components/tour-manager/TourOverview";
@@ -305,8 +304,8 @@ export const ExecutiveBoardDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 lg:grid-cols-12"
-            style={{ gridTemplateColumns: selectedPosition === 'tour_manager' ? 'repeat(12, 1fr)' : 'repeat(10, 1fr)' }}
+          <TabsList className="grid w-full grid-cols-6 lg:grid-cols-11"
+            style={{ gridTemplateColumns: selectedPosition === 'tour_manager' ? 'repeat(11, 1fr)' : 'repeat(10, 1fr)' }}
           >
             <TabsTrigger value="dashboard" className="text-xs">
               <Users className="h-4 w-4 mr-1" />
@@ -363,10 +362,6 @@ export const ExecutiveBoardDashboard = () => {
                 <TabsTrigger value="tour-tracker" className="text-xs">
                   <Calendar className="h-4 w-4 mr-1" />
                   Tracker
-                </TabsTrigger>
-                <TabsTrigger value="tour-planner-old" className="text-xs">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  Old Planner
                 </TabsTrigger>
                 <TabsTrigger value="tour-planner-new" className="text-xs">
                   <Route className="h-4 w-4 mr-1" />
@@ -509,20 +504,6 @@ export const ExecutiveBoardDashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <RequestTracker />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="tour-planner-old">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <MapPin className="h-5 w-5" />
-                      Tour Planner (Legacy)
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <TourPlannerOld />
                   </CardContent>
                 </Card>
               </TabsContent>
