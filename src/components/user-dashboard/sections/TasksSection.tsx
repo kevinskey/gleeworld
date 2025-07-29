@@ -4,9 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Package, DollarSign, AlertCircle, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { ItemDetailModal } from "../modals/ItemDetailModal";
 
 export const TasksSection = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
 
   // Mock data for checked out items and dues - replace with real data
   const checkedOutItems = [
@@ -50,7 +52,18 @@ export const TasksSection = () => {
                   </div>
                 ) : (
                   checkedOutItems.map((item) => (
-                    <div key={item.id} className="border border-accent/10 rounded-lg p-2 bg-background/50 backdrop-blur-sm">
+                    <div 
+                      key={item.id} 
+                      className="border border-accent/10 rounded-lg p-2 bg-background/50 backdrop-blur-sm cursor-pointer hover:bg-background/70 transition-colors"
+                      onClick={() => setSelectedItem({
+                        id: item.id,
+                        title: item.title,
+                        type: 'checkout' as const,
+                        subType: item.type,
+                        dueDate: item.dueDate,
+                        content: `Return this ${item.type} by the due date to avoid late fees.`
+                      })}
+                    >
                       <div className="flex items-start justify-between mb-1">
                         <h5 className="font-medium text-sm text-foreground line-clamp-1">{item.title}</h5>
                         <Badge variant="outline" className="text-xs">
@@ -91,7 +104,17 @@ export const TasksSection = () => {
                   <p className="text-sm text-green-600">All dues paid!</p>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div 
+                  className="space-y-2 cursor-pointer hover:bg-background/70 p-2 rounded-lg transition-colors"
+                  onClick={() => setSelectedItem({
+                    id: 'dues-payment',
+                    title: 'Outstanding Dues Payment',
+                    type: 'dues' as const,
+                    amount: duesInfo.totalDue,
+                    dueDate: duesInfo.dueDate,
+                    content: `Payment required for: ${duesInfo.items.map(item => item.description).join(', ')}`
+                  })}
+                >
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-bold text-foreground">${duesInfo.totalDue.toFixed(2)}</span>
                     <span className="text-sm text-muted-foreground">Due: {new Date(duesInfo.dueDate).toLocaleDateString()}</span>
@@ -145,7 +168,18 @@ export const TasksSection = () => {
                     </div>
                   ) : (
                     checkedOutItems.map((item) => (
-                      <div key={item.id} className="border border-accent/10 rounded-lg p-2 bg-background/50">
+                      <div 
+                        key={item.id} 
+                        className="border border-accent/10 rounded-lg p-2 bg-background/50 cursor-pointer hover:bg-background/70 transition-colors"
+                        onClick={() => setSelectedItem({
+                          id: item.id,
+                          title: item.title,
+                          type: 'checkout' as const,
+                          subType: item.type,
+                          dueDate: item.dueDate,
+                          content: `Return this ${item.type} by the due date to avoid late fees.`
+                        })}
+                      >
                         <div className="flex items-center justify-between">
                           <h5 className="font-medium text-sm text-foreground line-clamp-1">{item.title}</h5>
                           <Badge variant="outline" className="text-xs">
@@ -180,7 +214,17 @@ export const TasksSection = () => {
                     <p className="text-sm text-green-600">All dues paid!</p>
                   </div>
                 ) : (
-                  <div className="border border-primary/10 rounded-lg p-2 bg-background/50">
+                  <div 
+                    className="border border-primary/10 rounded-lg p-2 bg-background/50 cursor-pointer hover:bg-background/70 transition-colors"
+                    onClick={() => setSelectedItem({
+                      id: 'dues-payment',
+                      title: 'Outstanding Dues Payment',
+                      type: 'dues' as const,
+                      amount: duesInfo.totalDue,
+                      dueDate: duesInfo.dueDate,
+                      content: `Payment required for: ${duesInfo.items.map(item => item.description).join(', ')}`
+                    })}
+                  >
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-lg font-bold text-foreground">${duesInfo.totalDue.toFixed(2)}</span>
                       <span className="text-xs text-muted-foreground">Due: {new Date(duesInfo.dueDate).toLocaleDateString()}</span>
@@ -200,6 +244,12 @@ export const TasksSection = () => {
           )}
         </Card>
       </div>
+
+      <ItemDetailModal
+        isOpen={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+        item={selectedItem || { id: '', title: '', type: 'notification' as const }}
+      />
     </div>
   );
 };

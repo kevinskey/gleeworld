@@ -6,10 +6,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bell, Clock, ChevronDown, ChevronUp } from "lucide-react";
 import { useAnnouncements } from "@/hooks/useAnnouncements";
 import { useEffect } from "react";
+import { ItemDetailModal } from "../modals/ItemDetailModal";
 
 export const NotificationsSection = () => {
   const { announcements, loading, refetch } = useAnnouncements();
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
 
   // Auto-refresh notifications every 30 seconds
   useEffect(() => {
@@ -58,7 +60,18 @@ export const NotificationsSection = () => {
                   </div>
                 ) : (
                   announcements.map((notification) => (
-                    <div key={notification.id} className="border border-secondary/10 rounded-lg p-3 bg-background/50 backdrop-blur-sm hover:bg-background/70 transition-colors">
+                    <div 
+                      key={notification.id} 
+                      className="border border-secondary/10 rounded-lg p-3 bg-background/50 backdrop-blur-sm hover:bg-background/70 transition-colors cursor-pointer"
+                      onClick={() => setSelectedItem({
+                        id: notification.id,
+                        title: notification.title,
+                        content: notification.content,
+                        type: 'notification' as const,
+                        subType: notification.announcement_type,
+                        actionRequired: ['urgent', 'rehearsal', 'performance'].includes(notification.announcement_type)
+                      })}
+                    >
                       <div className="flex items-start justify-between mb-2">
                         <h5 className="font-medium text-base text-foreground line-clamp-1">{notification.title}</h5>
                         {notification.announcement_type && (
@@ -119,7 +132,18 @@ export const NotificationsSection = () => {
                     </div>
                   ) : (
                     announcements.slice(0, 3).map((notification) => (
-                      <div key={notification.id} className="border border-secondary/10 rounded-lg p-2 bg-background/50">
+                      <div 
+                        key={notification.id} 
+                        className="border border-secondary/10 rounded-lg p-2 bg-background/50 cursor-pointer hover:bg-background/70 transition-colors"
+                        onClick={() => setSelectedItem({
+                          id: notification.id,
+                          title: notification.title,
+                          content: notification.content,
+                          type: 'notification' as const,
+                          subType: notification.announcement_type,
+                          actionRequired: ['urgent', 'rehearsal', 'performance'].includes(notification.announcement_type)
+                        })}
+                      >
                         <h5 className="font-medium text-sm text-foreground line-clamp-1 mb-1">{notification.title}</h5>
                         <p className="text-xs text-muted-foreground line-clamp-1">
                           {notification.content}
@@ -133,6 +157,12 @@ export const NotificationsSection = () => {
           )}
         </Card>
       </div>
+
+      <ItemDetailModal
+        isOpen={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+        item={selectedItem || { id: '', title: '', type: 'notification' as const }}
+      />
     </div>
   );
 };
