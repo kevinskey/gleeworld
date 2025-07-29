@@ -14,6 +14,7 @@ const Auth = () => {
 
   useEffect(() => {
     if (!loading && user) {
+      console.log('Auth: User detected, redirecting to dashboard');
       navigate('/dashboard', { replace: true });
     }
   }, [user, loading, navigate]);

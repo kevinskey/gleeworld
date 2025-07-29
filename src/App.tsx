@@ -9,7 +9,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { GlobalMusicPlayer } from "@/components/music/GlobalMusicPlayer";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { useRoleBasedRedirect } from "@/hooks/useRoleBasedRedirect";
+
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 
