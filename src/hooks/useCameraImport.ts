@@ -100,9 +100,7 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       // Convert canvas to blob
-      console.log('Converting canvas to blob...');
       canvas.toBlob(async (blob) => {
-        console.log('Blob created:', !!blob);
         if (!blob) {
           throw new Error('Failed to capture image');
         }

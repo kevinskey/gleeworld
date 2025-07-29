@@ -2593,6 +2593,99 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_chaplain_announcements: {
+        Row: {
+          announcement_type: string | null
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+          is_published: boolean | null
+          is_recurring: boolean | null
+          media_urls: string[] | null
+          recurrence_pattern: string | null
+          scheduled_date: string | null
+          target_audience: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          announcement_type?: string | null
+          content: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_published?: boolean | null
+          is_recurring?: boolean | null
+          media_urls?: string[] | null
+          recurrence_pattern?: string | null
+          scheduled_date?: string | null
+          target_audience?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          announcement_type?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_published?: boolean | null
+          is_recurring?: boolean | null
+          media_urls?: string[] | null
+          recurrence_pattern?: string | null
+          scheduled_date?: string | null
+          target_audience?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gw_chaplain_resources: {
+        Row: {
+          category: string
+          content: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          file_url: string | null
+          id: string
+          is_editable: boolean | null
+          resource_type: string
+          title: string
+          updated_at: string
+          version: number | null
+        }
+        Insert: {
+          category: string
+          content?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          is_editable?: boolean | null
+          resource_type: string
+          title: string
+          updated_at?: string
+          version?: number | null
+        }
+        Update: {
+          category?: string
+          content?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          is_editable?: boolean | null
+          resource_type?: string
+          title?: string
+          updated_at?: string
+          version?: number | null
+        }
+        Relationships: []
+      }
       gw_class_conflict_requests: {
         Row: {
           conflict_analysis: Json
@@ -3602,6 +3695,57 @@ export type Database = {
           },
         ]
       }
+      gw_liturgical_events: {
+        Row: {
+          created_at: string
+          created_by: string
+          event_date: string
+          event_name: string
+          id: string
+          music_selection_ids: string[] | null
+          notes: string | null
+          prayer_outline_url: string | null
+          program_pdf_url: string | null
+          reflection_leader_id: string | null
+          scripture_reading: string | null
+          synced_to_calendar: boolean | null
+          updated_at: string
+          worship_type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          event_date: string
+          event_name: string
+          id?: string
+          music_selection_ids?: string[] | null
+          notes?: string | null
+          prayer_outline_url?: string | null
+          program_pdf_url?: string | null
+          reflection_leader_id?: string | null
+          scripture_reading?: string | null
+          synced_to_calendar?: boolean | null
+          updated_at?: string
+          worship_type: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          event_date?: string
+          event_name?: string
+          id?: string
+          music_selection_ids?: string[] | null
+          notes?: string | null
+          prayer_outline_url?: string | null
+          program_pdf_url?: string | null
+          reflection_leader_id?: string | null
+          scripture_reading?: string | null
+          synced_to_calendar?: boolean | null
+          updated_at?: string
+          worship_type?: string
+        }
+        Relationships: []
+      }
       gw_marked_scores: {
         Row: {
           created_at: string
@@ -3689,6 +3833,54 @@ export type Database = {
           meeting_type?: string
           next_meeting_date?: string | null
           status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gw_member_care_records: {
+        Row: {
+          action_items: string[] | null
+          care_date: string
+          care_type: string
+          completed_actions: string[] | null
+          confidential_notes: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          member_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          action_items?: string[] | null
+          care_date: string
+          care_type: string
+          completed_actions?: string[] | null
+          confidential_notes?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          member_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          action_items?: string[] | null
+          care_date?: string
+          care_type?: string
+          completed_actions?: string[] | null
+          confidential_notes?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          member_id?: string
           title?: string
           updated_at?: string
         }
@@ -4457,6 +4649,53 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_prayer_rotations: {
+        Row: {
+          assigned_date: string | null
+          assigned_event_id: string | null
+          completed: boolean | null
+          created_at: string
+          created_by: string
+          id: string
+          member_id: string
+          notes: string | null
+          role_type: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_date?: string | null
+          assigned_event_id?: string | null
+          completed?: boolean | null
+          created_at?: string
+          created_by: string
+          id?: string
+          member_id: string
+          notes?: string | null
+          role_type: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_date?: string | null
+          assigned_event_id?: string | null
+          completed?: boolean | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          member_id?: string
+          notes?: string | null
+          role_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_prayer_rotations_assigned_event_id_fkey"
+            columns: ["assigned_event_id"]
+            isOneToOne: false
+            referencedRelation: "gw_events"
             referencedColumns: ["id"]
           },
         ]
@@ -5717,6 +5956,56 @@ export type Database = {
           },
         ]
       }
+      gw_spiritual_reflections: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string
+          event_id: string | null
+          id: string
+          is_published: boolean | null
+          reflection_date: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by: string
+          event_id?: string | null
+          id?: string
+          is_published?: boolean | null
+          reflection_date?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string
+          event_id?: string | null
+          id?: string
+          is_published?: boolean | null
+          reflection_date?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_spiritual_reflections_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "gw_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_spotlight_analytics: {
         Row: {
           action_type: string
@@ -6725,6 +7014,42 @@ export type Database = {
           status?: string
           updated_at?: string
           vendor_name?: string | null
+        }
+        Relationships: []
+      }
+      gw_wellness_checkins: {
+        Row: {
+          created_at: string
+          follow_up_needed: boolean | null
+          id: string
+          is_anonymous: boolean | null
+          private_notes: string | null
+          spiritual_reflection: string | null
+          submitted_date: string
+          user_id: string | null
+          wellness_status: string
+        }
+        Insert: {
+          created_at?: string
+          follow_up_needed?: boolean | null
+          id?: string
+          is_anonymous?: boolean | null
+          private_notes?: string | null
+          spiritual_reflection?: string | null
+          submitted_date?: string
+          user_id?: string | null
+          wellness_status: string
+        }
+        Update: {
+          created_at?: string
+          follow_up_needed?: boolean | null
+          id?: string
+          is_anonymous?: boolean | null
+          private_notes?: string | null
+          spiritual_reflection?: string | null
+          submitted_date?: string
+          user_id?: string | null
+          wellness_status?: string
         }
         Relationships: []
       }
