@@ -43,8 +43,8 @@ export const SpiritualReflectionsSection = () => {
   return (
     <Card className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 border-primary/20 shadow-lg h-full flex flex-col">
       <CardHeader className="pb-1">
-        <CardTitle className="flex items-center gap-2 text-primary text-base">
-          <Book className="h-4 w-4" />
+        <CardTitle className="flex items-center gap-2 text-primary text-xl">
+          <Book className="h-5 w-5" />
           Spiritual Gleeflections
           <Sparkles className="h-3 w-3 text-accent" />
         </CardTitle>
@@ -56,10 +56,10 @@ export const SpiritualReflectionsSection = () => {
               <Heart className="h-4 w-4 text-primary" />
             </div>
             <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">
+              <p className="text-base font-medium text-foreground">
                 A moment of reflection awaits
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm md:text-base text-muted-foreground">
                 Our Chaplain will soon share words of inspiration.
               </p>
             </div>
@@ -69,29 +69,29 @@ export const SpiritualReflectionsSection = () => {
             {/* Latest reflection preview */}
             <div className="border border-primary/10 rounded-lg p-2 bg-background/50 backdrop-blur-sm h-full overflow-hidden">
               <div className="flex items-start justify-between mb-1">
-                <h4 className="font-medium text-sm text-foreground line-clamp-1">{latestReflection.title}</h4>
+                <h4 className="font-medium text-base text-foreground line-clamp-1">{latestReflection.title}</h4>
                 {latestReflection.is_featured && (
-                  <Badge variant="outline" className="text-xs border-accent text-accent ml-1">Featured</Badge>
+                  <Badge variant="outline" className="text-sm border-accent text-accent ml-1">Featured</Badge>
                 )}
               </div>
               
               <div className="flex items-center gap-1 mb-1">
-                <Badge className={`${getReflectionTypeColor(latestReflection.reflection_type || 'daily_devotional')} text-xs`} variant="secondary">
+                <Badge className={`${getReflectionTypeColor(latestReflection.reflection_type || 'daily_devotional')} text-sm`} variant="secondary">
                   {(latestReflection.reflection_type || 'daily_devotional').replace('_', ' ')}
                 </Badge>
                 {latestReflection.scripture_reference && (
-                  <Badge variant="outline" className="border-primary/20 text-primary text-xs">
+                  <Badge variant="outline" className="border-primary/20 text-primary text-sm">
                     <Heart className="h-2 w-2 mr-1" />
                     {latestReflection.scripture_reference}
                   </Badge>
                 )}
               </div>
               
-              <p className="text-xs text-muted-foreground line-clamp-2 mb-1">
+              <p className="text-sm md:text-base text-muted-foreground line-clamp-2 mb-1">
                 {latestReflection.content}
               </p>
               
-              <div className="text-xs text-muted-foreground">
+              <div className="text-sm text-muted-foreground">
                 {latestReflection.shared_at 
                   ? `Shared on ${new Date(latestReflection.shared_at).toLocaleDateString()}`
                   : 'Recently shared'
@@ -102,7 +102,7 @@ export const SpiritualReflectionsSection = () => {
             {/* Additional reflections count */}
             {sharedReflections.length > 1 && (
               <div className="text-center">
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   +{sharedReflections.length - 1} more spiritual reflection{sharedReflections.length > 2 ? 's' : ''}
                 </p>
               </div>
