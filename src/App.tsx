@@ -60,6 +60,8 @@ import ScholarshipHub from "./pages/ScholarshipHub";
 import AdminScholarships from "./pages/AdminScholarships";
 import AdminProducts from "./pages/AdminProducts";
 import { ExecutiveBoardDashboard } from "./pages/ExecutiveBoardDashboard";
+import { SectionLeaderDashboard } from "./pages/SectionLeaderDashboard";
+import { StudentConductorDashboard } from "./pages/StudentConductorDashboard";
 import TourPlanner from "./pages/TourPlanner";
 import BookingRequest from "./pages/BookingRequest";
 import Wardrobe from "./pages/Wardrobe";
@@ -478,7 +480,23 @@ const App = () => {
                                  <ExecutiveBoardDashboard />
                                </ProtectedRoute>
                              } 
-                            />
+                             />
+                            <Route 
+                              path="/dashboard/section-leader" 
+                              element={
+                                <ProtectedRoute>
+                                  <SectionLeaderDashboard />
+                                </ProtectedRoute>
+                              } 
+                             />
+                            <Route 
+                              path="/dashboard/student-conductor" 
+                              element={
+                                <ProtectedRoute>
+                                  <StudentConductorDashboard />
+                                </ProtectedRoute>
+                              } 
+                             />
                            <Route 
                              path="/booking-request" 
                              element={

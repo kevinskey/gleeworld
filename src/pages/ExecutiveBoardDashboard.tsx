@@ -30,7 +30,9 @@ import {
   Shield,
   Mail,
   CheckCircle,
-  Route
+  Route,
+  Music2,
+  UserCheck
 } from "lucide-react";
 import { EventCreator } from "@/components/executive-board/EventCreator";
 import { BudgetTracker } from "@/components/executive-board/BudgetTracker";
@@ -420,6 +422,44 @@ export const ExecutiveBoardDashboard = () => {
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
+            {/* Special Role Access Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/dashboard/section-leader')}>
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-blue-100 rounded-lg">
+                      <UserCheck className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg">Section Leader Dashboard</h3>
+                      <p className="text-sm text-muted-foreground">Manage voice sections and member development</p>
+                    </div>
+                  </div>
+                  <Button className="w-full mt-4" variant="outline">
+                    Access Section Leader Tools
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/dashboard/student-conductor')}>
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-purple-100 rounded-lg">
+                      <Music2 className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg">Student Conductor Dashboard</h3>
+                      <p className="text-sm text-muted-foreground">Lead rehearsals and develop conducting skills</p>
+                    </div>
+                  </div>
+                  <Button className="w-full mt-4" variant="outline">
+                    Access Conductor Tools
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Main Dashboard Widgets */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <EventCreator />
               <BudgetTracker />
