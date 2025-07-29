@@ -236,11 +236,11 @@ export const EventsList = ({ filter = 'all-events' }: EventsListProps) => {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {events.map((event) => (
           <Card key={event.id} className="hover:shadow-md transition-shadow overflow-hidden">
             {/* Event Image */}
-            <div className="relative w-full aspect-[4/3] overflow-hidden">
+            <div className="relative w-full aspect-[16/9] overflow-hidden">
               <img
                 src={event.image_url || getDefaultEventImage(event.id)}
                 alt={event.event_name || event.title}
