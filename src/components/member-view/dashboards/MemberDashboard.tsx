@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { SpiritualReflectionsCard } from "../SpiritualReflectionsCard";
 import { 
   Calendar, 
   CheckCircle, 
@@ -208,6 +209,9 @@ export const MemberDashboard = ({ user }: MemberDashboardProps) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Spiritual Reflections Card */}
+      <SpiritualReflectionsCard />
     </div>
   );
 };
