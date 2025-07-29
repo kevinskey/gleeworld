@@ -14,6 +14,9 @@ export const TasksSection = () => {
   const [checkedOutItems, setCheckedOutItems] = useState([
     { id: '1', title: 'Black Concert Dress', dueDate: '2024-02-15', type: 'uniform', status: 'checked_out' },
     { id: '2', title: 'Music Folder - Spring Concert', dueDate: '2024-02-20', type: 'music', status: 'checked_in' },
+    { id: '3', title: 'Pearl Necklace', dueDate: '2024-02-18', type: 'accessory', status: 'checked_out' },
+    { id: '4', title: 'Red Lipstick - MAC Ruby Woo', dueDate: '2024-02-25', type: 'cosmetic', status: 'checked_in' },
+    { id: '5', title: 'Black Polo Shirt', dueDate: '2024-03-01', type: 'uniform', status: 'checked_out' },
   ]);
 
   const duesInfo = {
@@ -32,6 +35,8 @@ export const TasksSection = () => {
       case 'uniform': return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'music': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'equipment': return 'bg-green-100 text-green-800 border-green-200';
+      case 'accessory': return 'bg-pink-100 text-pink-800 border-pink-200';
+      case 'cosmetic': return 'bg-rose-100 text-rose-800 border-rose-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
