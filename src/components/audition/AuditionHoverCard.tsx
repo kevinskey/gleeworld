@@ -17,11 +17,11 @@ export const AuditionHoverCard = () => {
           <Button 
             variant="branded" 
             size="sm"
-            className="w-full max-w-xs mx-auto px-8 py-6 rounded-xl text-base font-semibold touch-manipulation flex items-center justify-center shadow-2xl bg-white/10 hover:bg-white/20 text-white border-2 border-white/20 backdrop-blur-xl transition-all duration-500 ease-out hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:border-white/40 animate-fade-in"
+            className="w-full max-w-xs mx-auto px-6 py-4 rounded-xl text-sm font-semibold touch-manipulation flex items-center justify-center shadow-2xl bg-gradient-to-r from-purple-600/20 via-purple-500/30 to-pink-500/20 hover:from-purple-500/30 hover:via-purple-400/40 hover:to-pink-400/30 text-white border border-white/30 backdrop-blur-xl transition-all duration-500 ease-out hover:scale-105 hover:shadow-[0_0_30px_rgba(147,51,234,0.4)] hover:border-purple-300/50 animate-fade-in"
           >
-            <Mic className="w-4 h-4 mr-3 transition-transform duration-300 group-hover:rotate-12" />
+            <Mic className="w-3 h-3 mr-2 transition-transform duration-300 group-hover:rotate-12" />
             <span className="truncate">Audition Sign Up</span>
-            <span className="ml-3 animate-pulse">🎵</span>
+            <span className="ml-2 animate-pulse">🎵</span>
           </Button>
         </Link>
       </div>
@@ -35,11 +35,11 @@ export const AuditionHoverCard = () => {
         <Button 
           variant="branded" 
           size="lg"
-          className="px-16 py-10 rounded-full text-xl font-bold scale-150 md:scale-125 lg:scale-150 bg-white/10 hover:bg-white/20 text-white shadow-2xl border-2 border-white/20 backdrop-blur-xl transition-all duration-500 ease-out hover:scale-[1.6] md:hover:scale-[1.35] lg:hover:scale-[1.6] hover:shadow-[0_0_40px_rgba(255,255,255,0.5)] hover:border-white/50 animate-fade-in group"
+          className="px-12 py-8 rounded-full text-lg font-bold scale-125 md:scale-100 lg:scale-125 bg-gradient-to-r from-purple-600/20 via-purple-500/30 to-pink-500/20 hover:from-purple-500/30 hover:via-purple-400/40 hover:to-pink-400/30 text-white shadow-2xl border border-purple-300/30 backdrop-blur-xl transition-all duration-500 ease-out hover:scale-[1.35] md:hover:scale-[1.1] lg:hover:scale-[1.35] hover:shadow-[0_0_40px_rgba(147,51,234,0.5)] hover:border-purple-300/50 animate-fade-in group"
         >
-          <Mic className="w-6 h-6 mr-4 md:w-5 md:h-5 lg:w-6 lg:h-6 transition-transform duration-300 group-hover:rotate-12" />
+          <Mic className="w-5 h-5 mr-3 md:w-4 md:h-4 lg:w-5 lg:h-5 transition-transform duration-300 group-hover:rotate-12" />
           Sign Up for Auditions
-          <span className="ml-4 md:ml-3 lg:ml-4 animate-pulse">🎵</span>
+          <span className="ml-3 md:ml-2 lg:ml-3 animate-pulse">🎵</span>
         </Button>
       </Link>
     </div>
