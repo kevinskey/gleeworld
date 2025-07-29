@@ -9,8 +9,8 @@ export const SpiritualReflectionsSection = () => {
   const getReflectionTypeColor = (type: string) => {
     switch (type) {
       case 'daily_devotional': return 'bg-primary/10 text-primary border-primary/20';
-      case 'weekly_message': return 'bg-secondary/10 text-secondary-foreground border-secondary/20';
-      case 'prayer': return 'bg-accent/10 text-accent-foreground border-accent/20';
+      case 'weekly_message': return 'bg-secondary/10 text-foreground border-secondary/20';
+      case 'prayer': return 'bg-accent/10 text-foreground border-accent/20';
       case 'scripture_study': return 'bg-muted text-muted-foreground border-muted-foreground/20';
       default: return 'bg-muted text-muted-foreground border-muted-foreground/20';
     }

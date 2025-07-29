@@ -34,7 +34,7 @@ export const AnnouncementsEventsSection = ({ upcomingEvents }: AnnouncementsEven
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high': return 'bg-destructive/10 text-destructive border-destructive/20';
-      case 'medium': return 'bg-warning/10 text-warning border-warning/20';
+      case 'medium': return 'bg-secondary/10 text-secondary-foreground border-secondary/20';
       default: return 'bg-muted text-muted-foreground border-muted-foreground/20';
     }
   };
