@@ -43,13 +43,22 @@ function AuditionFormContent() {
     setIsSubmitting(true);
 
     try {
+      // Capitalize names before submission
+      const capitalizeNames = (name: string) => {
+        return name
+          .toLowerCase()
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      };
+
       // Save audition data to database - using any type to bypass type check temporarily
       const { error } = await (supabase as any)
         .from('gw_auditions')
         .insert({
           user_id: user.id,
-          first_name: data.firstName,
-          last_name: data.lastName,
+          first_name: capitalizeNames(data.firstName),
+          last_name: capitalizeNames(data.lastName),
           email: data.email,
           phone: data.phone,
           sang_in_middle_school: data.sangInMiddleSchool,
