@@ -107,11 +107,11 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Root route handler - shows landing page for everyone
+// Root route handler - redirects authenticated users to dashboard
 const RootRoute = () => {
-  const { loading } = useAuth();
+  const { user, loading } = useAuth();
   
-  console.log('RootRoute: Executing with loading=', loading);
+  console.log('RootRoute: Executing with loading=', loading, 'user=', !!user);
   console.log('RootRoute: Current URL=', window.location.href);
   console.log('RootRoute: Current pathname=', window.location.pathname);
   
@@ -124,9 +124,15 @@ const RootRoute = () => {
     );
   }
   
-  console.log('RootRoute: Rendering GleeWorldLanding');
-  // Show landing page for everyone, authenticated or not
-  return <GleeWorldLanding />;
+  // If user is authenticated, redirect to dashboard
+  if (user) {
+    console.log('RootRoute: User authenticated, redirecting to dashboard');
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  console.log('RootRoute: No user, showing landing page');
+  // Show landing page for unauthenticated users
+  return <Navigate to="/landing" replace />;
 };
 
 const App = () => {
