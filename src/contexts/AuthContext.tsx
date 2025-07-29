@@ -151,14 +151,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       setLoading(false);
       
-      // Force redirect with replace to prevent back navigation
-      window.location.replace('/auth');
+      // Force redirect to home page instead of auth page
+      window.location.replace('/');
     } catch (error) {
       console.error('AuthContext: Sign out failed:', error);
       setUser(null);
       setSession(null);
       setLoading(false);
-      window.location.replace('/auth');
+      window.location.replace('/');
     }
   };
 
