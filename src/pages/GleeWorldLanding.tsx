@@ -88,14 +88,21 @@ export const GleeWorldLanding = () => {
 
   useEffect(() => {
     console.log('GleeWorldLanding: Component mounted, starting useEffect');
+    
+    // Set a maximum loading time to prevent infinite stuck state
+    const maxLoadingTimer = setTimeout(() => {
+      console.log('GleeWorldLanding: Maximum loading time reached, forcing completion');
+      setLoading(false);
+    }, 5000); // 5 second max loading time
+    
     const fetchData = async () => {
       console.log('GleeWorldLanding: Inside fetchData function');
       try {
         console.log('GleeWorldLanding: Starting data fetch');
         
-        // Add timeout to prevent hanging
+        // Add shorter timeout to prevent hanging
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Data fetch timeout')), 8000)
+          setTimeout(() => reject(new Error('Data fetch timeout')), 3000)
         );
 
         // Fetch hero slides and events in parallel with timeout
@@ -129,11 +136,17 @@ export const GleeWorldLanding = () => {
         console.error('GleeWorldLanding: Error fetching data:', error);
         // Don't fail completely - show page with empty data
       } finally {
+        clearTimeout(maxLoadingTimer);
         setLoading(false);
       }
     };
 
     fetchData();
+    
+    // Cleanup function
+    return () => {
+      clearTimeout(maxLoadingTimer);
+    };
   }, []);
 
   // Auto-advance slides based on individual slide duration
