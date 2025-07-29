@@ -44,6 +44,7 @@ import { DuesManager } from "@/components/treasurer/DuesManager";
 import { GeneralBudgetManager } from "@/components/treasurer/GeneralBudgetManager";
 import { StipendPayer } from "@/components/treasurer/StipendPayer";
 import { ReceiptKeeper } from "@/components/treasurer/ReceiptKeeper";
+import { RunningLedger } from "@/components/treasurer/RunningLedger";
 
 export type ExecutivePosition = 
   | 'president'
@@ -303,6 +304,10 @@ export const ExecutiveBoardDashboard = () => {
             )}
             {selectedPosition === 'treasurer' && (
               <>
+                <TabsTrigger value="ledger" className="text-xs">
+                  <BookOpen className="h-4 w-4 mr-1" />
+                  Ledger
+                </TabsTrigger>
                 <TabsTrigger value="budget-manager" className="text-xs">
                   <DollarSign className="h-4 w-4 mr-1" />
                   Budget
@@ -356,6 +361,10 @@ export const ExecutiveBoardDashboard = () => {
 
           {selectedPosition === 'treasurer' && (
             <>
+              <TabsContent value="ledger">
+                <RunningLedger />
+              </TabsContent>
+              
               <TabsContent value="budget-manager">
                 <div className="space-y-6">
                   <BudgetManager />

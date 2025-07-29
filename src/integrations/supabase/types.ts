@@ -4859,6 +4859,51 @@ export type Database = {
           },
         ]
       }
+      gw_running_ledger: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string
+          created_by: string
+          description: string
+          entry_date: string
+          id: string
+          notes: string | null
+          reference_number: string | null
+          running_balance: number
+          transaction_type: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category?: string | null
+          created_at?: string
+          created_by: string
+          description: string
+          entry_date?: string
+          id?: string
+          notes?: string | null
+          reference_number?: string | null
+          running_balance: number
+          transaction_type: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          entry_date?: string
+          id?: string
+          notes?: string | null
+          reference_number?: string | null
+          running_balance?: number
+          transaction_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_scores: {
         Row: {
           created_at: string | null
