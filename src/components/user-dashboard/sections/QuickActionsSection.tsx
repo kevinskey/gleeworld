@@ -5,12 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { 
   CheckCircle, 
   Calendar, 
-  Bell, 
-  MessageSquare, 
-  Users, 
-  DollarSign, 
-  Music,
-  Shield
+  Music
 } from "lucide-react";
 
 interface QuickActionsSectionProps {
@@ -34,24 +29,6 @@ export const QuickActionsSection = ({ isAdmin }: QuickActionsSectionProps) => {
       route: "/calendar"
     },
     {
-      icon: Bell,
-      label: "Send Notification",
-      description: "Send notification to yourself or others",
-      route: "/notifications/send"
-    },
-    {
-      icon: MessageSquare,
-      label: "Announcements",
-      description: "View announcements",
-      route: "/announcements"
-    },
-    {
-      icon: DollarSign,
-      label: "Manage Budgets",
-      description: "Manage budgets and financial planning",
-      route: "/budgets"
-    },
-    {
       icon: Music,
       label: "Music Library",
       description: "Access music library and sheet music",
@@ -59,21 +36,6 @@ export const QuickActionsSection = ({ isAdmin }: QuickActionsSectionProps) => {
     }
   ];
 
-  // Add admin-specific actions
-  if (isAdmin) {
-    quickActions.splice(4, 0, {
-      icon: Users,
-      label: "Manage Users",
-      description: "Manage user accounts and permissions",
-      route: "/dashboard?tab=users"
-    });
-    quickActions.push({
-      icon: Shield,
-      label: "Executive Board",
-      description: "Access executive board dashboard",
-      route: "/dashboard/executive-board"
-    });
-  }
 
   return (
     <Card className="h-fit">
