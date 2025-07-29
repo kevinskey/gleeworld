@@ -4,6 +4,7 @@ import { Book, Heart, Sparkles } from "lucide-react";
 import { useSharedSpiritualReflections } from "@/hooks/useSharedSpiritualReflections";
 
 export const SpiritualReflectionsSection = () => {
+  console.log('SpiritualReflectionsSection: Component called/mounted');
   const { sharedReflections, loading } = useSharedSpiritualReflections();
   
   console.log('SpiritualReflectionsSection: loading=', loading, 'reflections=', sharedReflections);
