@@ -267,14 +267,18 @@ export const EventsAndActivitySection = ({
       {/* Event Details Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-md mx-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
+          <DialogHeader className="relative">
+            <DialogTitle className="text-xl font-semibold pr-8">
               {selectedEvent?.title}
             </DialogTitle>
-            <DialogClose className="absolute right-4 top-4">
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </DialogClose>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-8 w-8 p-0 hover:bg-transparent"
+              onClick={() => setIsDialogOpen(false)}
+            >
+              <X className="h-6 w-6 font-bold text-white" />
+            </Button>
           </DialogHeader>
           
           <div className="space-y-4 pt-4">
