@@ -36,6 +36,7 @@ export const usePublicGleeWorldEvents = () => {
 
   const fetchEvents = async () => {
     try {
+      console.log('usePublicGleeWorldEvents: Starting fetch...');
       setLoading(true);
       
       // Always filter to only show public events for the public calendar
@@ -45,6 +46,12 @@ export const usePublicGleeWorldEvents = () => {
         .eq('is_public', true)
         .gte('start_date', new Date().toISOString())
         .order('start_date', { ascending: true });
+
+      console.log('usePublicGleeWorldEvents: Query result', { 
+        data: data?.length || 0, 
+        error, 
+        firstEvent: data?.[0]?.title 
+      });
 
       if (error) throw error;
       setEvents(data || []);
@@ -56,6 +63,7 @@ export const usePublicGleeWorldEvents = () => {
         variant: "destructive"
       });
     } finally {
+      console.log('usePublicGleeWorldEvents: Fetch complete, setting loading to false');
       setLoading(false);
     }
   };
