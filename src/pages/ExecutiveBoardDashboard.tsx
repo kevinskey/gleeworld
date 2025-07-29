@@ -56,6 +56,7 @@ import { RequestTracker } from "@/components/tour-manager/RequestTracker";
 import TourPlanner from "@/pages/TourPlanner";
 import { TourStipends } from "@/components/tour-manager/TourStipends";
 import { TourOverview } from "@/components/tour-manager/TourOverview";
+import { WardrobeMistressHub } from "@/components/tour-manager/WardrobeMistressHub";
 
 export type ExecutivePosition = 
   | 'president'
@@ -369,6 +370,12 @@ export const ExecutiveBoardDashboard = () => {
                 </TabsTrigger>
               </>
             )}
+            {selectedPosition === 'wardrobe_manager' && (
+              <TabsTrigger value="wardrobe" className="text-xs">
+                <Shirt className="h-4 w-4 mr-1" />
+                Wardrobe Hub
+              </TabsTrigger>
+            )}
             <TabsTrigger value="position" className="text-xs">
               <PositionIcon className="h-4 w-4 mr-1" />
               My Role
@@ -504,6 +511,12 @@ export const ExecutiveBoardDashboard = () => {
                 </Card>
               </TabsContent>
             </>
+          )}
+
+          {selectedPosition === 'wardrobe_manager' && (
+            <TabsContent value="wardrobe">
+              <WardrobeMistressHub />
+            </TabsContent>
           )}
 
           <TabsContent value="position">
