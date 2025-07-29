@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useDashboardSettings } from "@/hooks/useDashboardSettings";
 import { 
   Calendar,
   Megaphone,
@@ -105,6 +106,7 @@ interface ExecutiveMember {
 export const ExecutiveBoardDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { getSettingByName } = useDashboardSettings();
   const [executiveData, setExecutiveData] = useState<ExecutiveMember | null>(null);
   const [selectedPosition, setSelectedPosition] = useState<ExecutivePosition>('president');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -246,10 +248,25 @@ export const ExecutiveBoardDashboard = () => {
   }
 
   const PositionIcon = getPositionIcon(selectedPosition);
+  
+  // Get background image from dashboard settings
+  const welcomeCardSetting = getSettingByName('welcome_card_background');
+  const backgroundImage = welcomeCardSetting?.image_url;
 
   return (
-    <UniversalLayout>
-      <div className="space-y-6">
+    <div className="min-h-screen relative">
+      {/* Background Image */}
+      {backgroundImage && (
+        <div 
+          className="fixed inset-0 bg-cover bg-center opacity-20 z-0"
+          style={{ backgroundImage: `url(${backgroundImage})` }}
+        />
+      )}
+      
+      {/* Content overlay */}
+      <div className="relative z-10">
+        <UniversalLayout>
+          <div className="space-y-6">
         {/* Navigation Controls */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -1061,7 +1078,9 @@ export const ExecutiveBoardDashboard = () => {
             <PositionTab position={selectedPosition} />
           </TabsContent>
         </Tabs>
+          </div>
+        </UniversalLayout>
       </div>
-    </UniversalLayout>
+    </div>
   );
 };
