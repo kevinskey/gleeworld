@@ -26,28 +26,25 @@ interface TourListProps {
 }
 
 export const TourList: React.FC<TourListProps> = ({ onSelectTour }) => {
-  const { data: tours = [], isLoading } = useQuery({
+  const { data: tours = [], isLoading, error } = useQuery({
     queryKey: ['tours'],
     queryFn: async () => {
+      console.log('Fetching tours...');
       const { data, error } = await supabase
         .from('gw_tours')
-        .select(`
-          *,
-          gw_tour_cities!inner(id)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
+
+      console.log('Tours data:', data);
+      console.log('Tours error:', error);
 
       if (error) throw error;
 
-      // Transform data to include city count
-      return data.map(tour => ({
-        ...tour,
-        _count: {
-          cities: tour.gw_tour_cities?.length || 0
-        }
-      }));
+      return data || [];
     },
   });
+
+  console.log('Tours query result:', { tours, isLoading, error });
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -121,7 +118,7 @@ export const TourList: React.FC<TourListProps> = ({ onSelectTour }) => {
 
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <MapPin className="h-4 w-4" />
-                  <span>{tour._count?.cities || 0} cities</span>
+                  <span>Cities planning</span>
                 </div>
 
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
