@@ -239,13 +239,13 @@ export const UserDashboard = () => {
         />
 
         {/* Spiritual Reflections & Announcements Section - 50/50 split */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <SpiritualReflectionsSection />
           <AnnouncementsEventsSection upcomingEvents={upcomingEventsList} />
         </div>
 
         {/* Quick Actions & Admin Controls Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <QuickActionsSection isAdmin={isAdmin} />
           
           {/* Show Admin Controls if user has modules, otherwise show Glee Club Spotlight */}
