@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Book, Heart } from "lucide-react";
 import { useSharedSpiritualReflections } from "@/hooks/useSharedSpiritualReflections";
 
@@ -88,9 +89,11 @@ export const SpiritualReflectionsCard = () => {
               )}
             </div>
             
-            <p className="text-sm text-muted-foreground line-clamp-3 mb-2">
-              {latestReflection.content}
-            </p>
+            <ScrollArea className="h-20 sm:h-24 mb-2">
+              <p className="text-sm text-muted-foreground pr-4">
+                {latestReflection.content}
+              </p>
+            </ScrollArea>
             
             <div className="text-xs text-muted-foreground">
               {latestReflection.shared_at 
