@@ -25,17 +25,21 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
 
         const dates: Date[] = [];
         timeBlocks?.forEach(block => {
-          const start = new Date(block.start_date);
-          const end = new Date(block.end_date);
+          // Each time block represents a specific time on a specific date
+          // Extract just the date portion from start_date
+          const blockDate = new Date(block.start_date);
           
-          // Add all dates between start and end
-          const currentDate = new Date(start);
-          while (currentDate <= end) {
-            dates.push(new Date(currentDate));
-            currentDate.setDate(currentDate.getDate() + 1);
+          // Only add the date if it's not already in the array
+          const dateExists = dates.some(date => 
+            date.toDateString() === blockDate.toDateString()
+          );
+          
+          if (!dateExists) {
+            dates.push(new Date(blockDate.getFullYear(), blockDate.getMonth(), blockDate.getDate()));
           }
         });
 
+        console.log('Available audition dates:', dates);
         setAvailableDates(dates);
       } catch (error) {
         console.error('Error fetching audition dates:', error);
@@ -55,22 +59,35 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
     const fetchAvailableSlots = async () => {
       setLoading(true);
       try {
-        // Check if this date falls within audition time blocks
+        // Find audition blocks for the selected date
+        const selectedDateString = selectedDate.toISOString().split('T')[0]; // Get just the date part
+        
         const { data: auditionBlocks, error: blockError } = await supabase
           .from('audition_time_blocks')
           .select('*')
-          .eq('is_active', true)
-          .lte('start_date', selectedDate.toISOString())
-          .gte('end_date', selectedDate.toISOString());
+          .eq('is_active', true);
 
-        if (blockError) throw blockError;
+        if (blockError) {
+          console.error('Error fetching audition blocks:', blockError);
+          throw blockError;
+        }
 
-        if (!auditionBlocks?.length) {
+        // Filter blocks that match the selected date
+        const matchingBlocks = auditionBlocks?.filter(block => {
+          const blockDateString = new Date(block.start_date).toISOString().split('T')[0];
+          return blockDateString === selectedDateString;
+        }) || [];
+
+        console.log('Checking audition blocks for date:', selectedDateString);
+        console.log('Found matching audition blocks:', matchingBlocks);
+
+        if (!matchingBlocks.length) {
+          console.log('No audition blocks found for this date');
           setTimeSlots([]);
           return;
         }
 
-        const auditionBlock = auditionBlocks[0];
+        const auditionBlock = matchingBlocks[0];
         
         // Get existing audition appointments for this date
         const { data: existingAppointments, error: appointmentError } = await supabase
@@ -81,17 +98,22 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
 
         if (appointmentError) throw appointmentError;
 
-        // Generate time slots from 9 AM to 5 PM with the specified duration
+        // Generate time slots based on the audition block's time range
         const appointmentDuration = auditionBlock.appointment_duration_minutes || 30;
         const slots: TimeSlot[] = [];
         
-        // Start at 9 AM
-        const startTime = new Date(selectedDate);
-        startTime.setHours(9, 0, 0, 0);
+        // Use the block's start and end times instead of fixed 9 AM to 5 PM
+        const blockStart = new Date(auditionBlock.start_date);
+        const blockEnd = new Date(auditionBlock.end_date);
         
-        // End at 5 PM
+        // For the selected date, use the time from the block but the date from selectedDate
+        const startTime = new Date(selectedDate);
+        startTime.setHours(blockStart.getHours(), blockStart.getMinutes(), 0, 0);
+        
         const endTime = new Date(selectedDate);
-        endTime.setHours(17, 0, 0, 0);
+        endTime.setHours(blockEnd.getHours(), blockEnd.getMinutes(), 0, 0);
+        
+        console.log('Generating slots from', startTime, 'to', endTime, 'with duration', appointmentDuration);
         
         const currentTime = new Date(startTime);
         
