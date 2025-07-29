@@ -2779,6 +2779,119 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_communication_deliveries: {
+        Row: {
+          channel: string
+          clicked_at: string | null
+          communication_id: string
+          created_at: string
+          delivered_at: string | null
+          error_message: string | null
+          external_id: string | null
+          id: string
+          opened_at: string | null
+          recipient_email: string
+          recipient_id: string | null
+          recipient_name: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          channel: string
+          clicked_at?: string | null
+          communication_id: string
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          external_id?: string | null
+          id?: string
+          opened_at?: string | null
+          recipient_email: string
+          recipient_id?: string | null
+          recipient_name?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          clicked_at?: string | null
+          communication_id?: string
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          external_id?: string | null
+          id?: string
+          opened_at?: string | null
+          recipient_email?: string
+          recipient_id?: string | null
+          recipient_name?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_communication_deliveries_communication_id_fkey"
+            columns: ["communication_id"]
+            isOneToOne: false
+            referencedRelation: "gw_communications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_communications: {
+        Row: {
+          channels: string[]
+          content: string
+          created_at: string
+          delivery_summary: Json | null
+          id: string
+          recipient_groups: Json
+          scheduled_for: string | null
+          sender_id: string | null
+          sent_at: string | null
+          status: string
+          template_id: string | null
+          title: string
+          total_recipients: number
+          updated_at: string
+        }
+        Insert: {
+          channels?: string[]
+          content: string
+          created_at?: string
+          delivery_summary?: Json | null
+          id?: string
+          recipient_groups?: Json
+          scheduled_for?: string | null
+          sender_id?: string | null
+          sent_at?: string | null
+          status?: string
+          template_id?: string | null
+          title: string
+          total_recipients?: number
+          updated_at?: string
+        }
+        Update: {
+          channels?: string[]
+          content?: string
+          created_at?: string
+          delivery_summary?: Json | null
+          id?: string
+          recipient_groups?: Json
+          scheduled_for?: string | null
+          sender_id?: string | null
+          sent_at?: string | null
+          status?: string
+          template_id?: string | null
+          title?: string
+          total_recipients?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_dues_records: {
         Row: {
           academic_year: string
@@ -3979,6 +4092,45 @@ export type Database = {
           updated_at?: string
           user_id?: string
           waist_measurement?: number | null
+        }
+        Relationships: []
+      }
+      gw_message_templates: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name: string
+          subject: string
+          updated_at: string
+          variables: string[]
+        }
+        Insert: {
+          category?: string
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          subject: string
+          updated_at?: string
+          variables?: string[]
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          subject?: string
+          updated_at?: string
+          variables?: string[]
         }
         Relationships: []
       }
@@ -9101,6 +9253,11 @@ export type Database = {
         | "chaplain"
         | "data_analyst"
         | "assistant_chaplain"
+        | "student_conductor"
+        | "section_leader_s1"
+        | "section_leader_s2"
+        | "section_leader_a1"
+        | "section_leader_a2"
       feedback_category_enum:
         | "Vocal Blend"
         | "Rhythmic Precision"
@@ -9257,6 +9414,11 @@ export const Constants = {
         "chaplain",
         "data_analyst",
         "assistant_chaplain",
+        "student_conductor",
+        "section_leader_s1",
+        "section_leader_s2",
+        "section_leader_a1",
+        "section_leader_a2",
       ],
       feedback_category_enum: [
         "Vocal Blend",
