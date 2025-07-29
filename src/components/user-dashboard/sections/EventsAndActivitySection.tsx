@@ -48,61 +48,56 @@ export const EventsAndActivitySection = ({
   };
 
   return (
-    <Card className="h-[400px] flex flex-col">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-xl">Upcoming Events</CardTitle>
-        <CardDescription>Your next rehearsals and performances</CardDescription>
-      </CardHeader>
-      <CardContent className="flex-1 p-0">
-        {sortedEvents.length > 0 ? (
-          <ScrollArea className="h-full px-6 pb-6">
-            <div className="space-y-3">
-              {sortedEvents.map((event, index) => (
-                <div 
-                  key={event.id} 
-                  className="group relative border border-border rounded-lg p-4 hover:bg-accent/50 transition-colors cursor-pointer"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0 pr-4">
-                      <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                        {event.title}
-                      </h4>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          <span>{formatEventDate(event.start_date)}</span>
-                        </div>
-                        {formatEventTime(event.start_date) && (
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            <span>{formatEventTime(event.start_date)}</span>
-                          </div>
-                        )}
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-xl font-bebas tracking-wide text-foreground mb-1">Upcoming Events</h3>
+        <p className="text-sm text-muted-foreground">Your next rehearsals and performances</p>
+      </div>
+      
+      {sortedEvents.length > 0 ? (
+        <ScrollArea className="h-[350px]">
+          <div className="space-y-2">
+            {sortedEvents.map((event, index) => (
+              <div 
+                key={event.id} 
+                className="group flex items-center justify-between p-3 border-l-4 border-primary/30 bg-card hover:bg-accent/50 hover:border-primary transition-all duration-200 rounded-r-md"
+              >
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-foreground group-hover:text-primary transition-colors truncate">
+                    {event.title}
+                  </h4>
+                  <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      <span>{formatEventDate(event.start_date)}</span>
+                    </div>
+                    {formatEventTime(event.start_date) && (
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        <span>{formatEventTime(event.start_date)}</span>
                       </div>
-                      {event.location && (
-                        <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
-                          <MapPin className="h-4 w-4" />
-                          <span className="truncate">{event.location}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-shrink-0">
-                      <div className="w-3 h-3 rounded-full bg-primary opacity-60 group-hover:opacity-100 transition-opacity" />
-                    </div>
+                    )}
+                    {event.location && (
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        <span className="truncate max-w-[120px]">{event.location}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
-          </ScrollArea>
-        ) : (
-          <div className="flex items-center justify-center h-full text-muted-foreground">
-            <div className="text-center">
-              <Calendar className="h-12 w-12 mx-auto mb-3 opacity-40" />
-              <p>No upcoming events scheduled</p>
-            </div>
+                <div className="flex-shrink-0 ml-3">
+                  <div className="w-2 h-2 rounded-full bg-primary/60 group-hover:bg-primary transition-colors" />
+                </div>
+              </div>
+            ))}
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </ScrollArea>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+          <Calendar className="h-12 w-12 mb-3 opacity-40" />
+          <p className="text-center">No upcoming events scheduled</p>
+        </div>
+      )}
+    </div>
   );
 };
