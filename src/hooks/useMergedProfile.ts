@@ -68,8 +68,20 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  console.log('useMergedProfile: Hook initialized with user:', {
+    hasUser: !!user,
+    userId: user?.id,
+    userEmail: user?.email
+  });
+
   const fetchProfile = async () => {
+    console.log('useMergedProfile: fetchProfile called with user:', {
+      hasUser: !!user,
+      userId: user?.id
+    });
+    
     if (!user?.id) {
+      console.log('useMergedProfile: No user ID, setting profile to null');
       setProfile(null);
       setLoading(false);
       return;
@@ -186,6 +198,7 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
   };
 
   useEffect(() => {
+    console.log('useMergedProfile: useEffect triggered, calling fetchProfile');
     fetchProfile();
   }, [user?.id]);
 

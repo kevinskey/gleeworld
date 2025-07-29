@@ -36,6 +36,11 @@ export const UserDashboard = () => {
   console.log('UserDashboard component rendering...');
   const [viewMode, setViewMode] = useState<'admin' | 'member'>('admin');
   const { user } = useAuth();
+  console.log('UserDashboard: User from useAuth:', {
+    hasUser: !!user,
+    userId: user?.id,
+    userEmail: user?.email
+  });
   const { profile, loading: profileLoading, error: profileError } = useMergedProfile(user);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
