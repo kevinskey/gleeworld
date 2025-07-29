@@ -55,7 +55,7 @@ export const EventsAndActivitySection = ({
       </div>
       
       {sortedEvents.length > 0 ? (
-        <ScrollArea className="h-[350px]">
+        <ScrollArea className="h-[180px]">
           <div className="space-y-2">
             {sortedEvents.map((event, index) => (
               <div 
