@@ -58,11 +58,7 @@ export const WardrobeReports = () => {
         .from('gw_member_wardrobe_profiles')
         .select(`
           *,
-          profiles:user_id (
-            full_name,
-            email,
-            voice_part
-          )
+          profiles:gw_profiles(full_name, email, voice_part)
         `);
 
       if (memberError) throw memberError;
@@ -122,8 +118,8 @@ export const WardrobeReports = () => {
         .from('gw_wardrobe_checkouts')
         .select(`
           *,
-          inventory_item:inventory_item_id (item_name),
-          member:member_id (full_name, email)
+          inventory_item:gw_wardrobe_inventory(item_name),
+          member:gw_profiles(full_name, email)
         `)
         .in('status', ['checked_out', 'overdue', 'lost']);
 

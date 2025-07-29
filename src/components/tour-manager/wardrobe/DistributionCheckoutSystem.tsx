@@ -93,14 +93,8 @@ export const DistributionCheckoutSystem = () => {
         .from('gw_wardrobe_checkouts')
         .select(`
           *,
-          inventory_item:inventory_item_id (
-            item_name,
-            category
-          ),
-          member:member_id (
-            full_name,
-            email
-          )
+          inventory_item:gw_wardrobe_inventory(item_name, category),
+          member:gw_profiles(full_name, email)
         `)
         .order('checked_out_at', { ascending: false });
 
