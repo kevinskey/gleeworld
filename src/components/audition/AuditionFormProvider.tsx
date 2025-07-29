@@ -128,14 +128,12 @@ export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
     const values = form.getValues();
     const errors = form.formState.errors;
     
-    // Debug logging
-    if (currentPage === 4 && user) {
-      console.log('Personal Info Page - Form values:', {
-        personalityDescription: values.personalityDescription,
-        interestedInLeadership: values.interestedInLeadership,
-      });
-      console.log('Personal Info Page - Form errors:', errors);
-    }
+    // Debug logging for all pages
+    console.log(`🔍 Page ${currentPage} validation:`, {
+      values,
+      errors,
+      user: !!user
+    });
     
     switch (currentPage) {
       case 1: // Registration (for new users) or Basic Info (for existing users)
