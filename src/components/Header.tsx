@@ -319,7 +319,7 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-white shadow-lg border border-gray-200 z-50" align="end" forceMount>
+              <DropdownMenuContent className="w-56 bg-background shadow-lg border border-border z-[60]" align="end" forceMount>
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
                     <p className="font-medium">{displayName}</p>
