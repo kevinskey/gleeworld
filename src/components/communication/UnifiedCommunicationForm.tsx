@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,7 @@ import {
 import { Send, Save, Clock, Users, MessageSquare } from 'lucide-react';
 
 export const UnifiedCommunicationForm = () => {
+  const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [selectedGroups, setSelectedGroups] = useState<RecipientGroup[]>([]);
@@ -99,14 +101,21 @@ export const UnifiedCommunicationForm = () => {
     setSelectedChannels(['email']);
     setScheduledFor(undefined);
     setSelectedTemplate('');
+    
+    // Navigate back to dashboard after successful send
+    navigate('/dashboard');
   };
 
   const handleSaveDraft = async () => {
     if (!title || !content) {
+      console.log('Cannot save draft - missing title or content');
       return;
     }
 
     await saveDraft(title, content, selectedGroups, selectedChannels, selectedTemplate || undefined);
+    
+    // Navigate back to dashboard after saving draft
+    navigate('/dashboard');
   };
 
   const groupedRecipients = RECIPIENT_GROUPS.reduce((acc, group) => {
