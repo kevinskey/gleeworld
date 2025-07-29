@@ -32,14 +32,42 @@ export const useAnnouncements = () => {
   const fetchAnnouncements = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('gw_announcements')
-        .select('*')
-        .not('publish_date', 'is', null)
-        .order('created_at', { ascending: false });
+      
+      // Fetch both announcements and recent communications
+      const [announcementsResult, communicationsResult] = await Promise.all([
+        supabase
+          .from('gw_announcements')
+          .select('*')
+          .not('publish_date', 'is', null)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('gw_communications')
+          .select('*')
+          .eq('status', 'sent')
+          .order('sent_at', { ascending: false })
+          .limit(10)
+      ]);
 
-      if (error) throw error;
-      setAnnouncements(data || []);
+      if (announcementsResult.error) throw announcementsResult.error;
+
+      // Combine announcements and communications, converting communications to announcement format
+      const announcements = announcementsResult.data || [];
+      const communications = (communicationsResult.data || []).map(comm => ({
+        id: comm.id,
+        title: comm.title,
+        content: comm.content,
+        announcement_type: 'communication',
+        is_featured: false,
+        created_at: comm.sent_at || comm.created_at,
+        publish_date: comm.sent_at,
+        created_by: comm.sender_id
+      }));
+
+      // Merge and sort by date
+      const allAnnouncements = [...announcements, ...communications]
+        .sort((a, b) => new Date(b.created_at || b.publish_date).getTime() - new Date(a.created_at || a.publish_date).getTime());
+
+      setAnnouncements(allAnnouncements);
     } catch (error) {
       console.error('Error fetching announcements:', error);
       toast({
