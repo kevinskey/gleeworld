@@ -64,8 +64,12 @@ export const useUserProfile = (user: User | null) => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchUserProfile = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('useUserProfile: No user provided');
+      return;
+    }
     
+    console.log('useUserProfile: Fetching profile for user:', user.id);
     setLoading(true);
     setError(null);
     
@@ -93,7 +97,8 @@ export const useUserProfile = (user: User | null) => {
           role: data.role,
           isAdmin: data.is_admin,
           isSuperAdmin: data.is_super_admin,
-          displayName
+          displayName,
+          rawData: data
         });
 
         setUserProfile({
@@ -130,8 +135,13 @@ export const useUserProfile = (user: User | null) => {
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error fetching profile');
-      console.error('Error fetching user profile:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Error fetching profile';
+      setError(errorMessage);
+      console.error('Error fetching user profile:', {
+        error: err,
+        userId: user?.id,
+        errorMessage
+      });
     } finally {
       setLoading(false);
     }
