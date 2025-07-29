@@ -22,7 +22,7 @@ export const UniversalLayout = ({
   containerized = true,
 }: UniversalLayoutProps) => {
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className={`min-h-screen ${className.includes('bg-transparent') ? 'bg-transparent' : 'bg-background'} flex flex-col`}>
       {showHeader && (
         <UniversalHeader 
         />

@@ -258,14 +258,14 @@ export const ExecutiveBoardDashboard = () => {
       {/* Background Image */}
       {backgroundImage && (
         <div 
-          className="fixed inset-0 bg-cover bg-center opacity-20 z-0"
+          className="fixed inset-0 bg-cover bg-center opacity-30 z-0"
           style={{ backgroundImage: `url(${backgroundImage})` }}
         />
       )}
       
       {/* Content overlay */}
       <div className="relative z-10">
-        <UniversalLayout>
+        <UniversalLayout className="bg-transparent">
           <div className="space-y-6">
         {/* Navigation Controls */}
         <div className="flex items-center justify-between">
