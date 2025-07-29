@@ -3733,6 +3733,63 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_member_wardrobe_profiles: {
+        Row: {
+          bust_measurement: number | null
+          created_at: string
+          formal_dress_size: string | null
+          height_measurement: number | null
+          hips_measurement: number | null
+          id: string
+          inseam_measurement: number | null
+          lipstick_shade: string | null
+          measurements_taken_by: string | null
+          measurements_taken_date: string | null
+          pearl_status: string | null
+          polo_size: string | null
+          tshirt_size: string | null
+          updated_at: string
+          user_id: string
+          waist_measurement: number | null
+        }
+        Insert: {
+          bust_measurement?: number | null
+          created_at?: string
+          formal_dress_size?: string | null
+          height_measurement?: number | null
+          hips_measurement?: number | null
+          id?: string
+          inseam_measurement?: number | null
+          lipstick_shade?: string | null
+          measurements_taken_by?: string | null
+          measurements_taken_date?: string | null
+          pearl_status?: string | null
+          polo_size?: string | null
+          tshirt_size?: string | null
+          updated_at?: string
+          user_id: string
+          waist_measurement?: number | null
+        }
+        Update: {
+          bust_measurement?: number | null
+          created_at?: string
+          formal_dress_size?: string | null
+          height_measurement?: number | null
+          hips_measurement?: number | null
+          id?: string
+          inseam_measurement?: number | null
+          lipstick_shade?: string | null
+          measurements_taken_by?: string | null
+          measurements_taken_date?: string | null
+          pearl_status?: string | null
+          polo_size?: string | null
+          tshirt_size?: string | null
+          updated_at?: string
+          user_id?: string
+          waist_measurement?: number | null
+        }
+        Relationships: []
+      }
       gw_music_analytics: {
         Row: {
           device_info: Json | null
@@ -6402,6 +6459,269 @@ export type Database = {
           updated_at?: string
           user_id?: string
           vocal_status?: Database["public"]["Enums"]["vocal_status_enum"]
+        }
+        Relationships: []
+      }
+      gw_wardrobe_announcements: {
+        Row: {
+          announcement_type: string | null
+          auto_remind: boolean | null
+          created_at: string
+          created_by: string
+          id: string
+          is_urgent: boolean | null
+          message: string
+          scheduled_send_date: string | null
+          sent_at: string | null
+          target_audience: string | null
+          target_user_ids: string[] | null
+          title: string
+          updated_at: string
+          voice_sections: string[] | null
+        }
+        Insert: {
+          announcement_type?: string | null
+          auto_remind?: boolean | null
+          created_at?: string
+          created_by: string
+          id?: string
+          is_urgent?: boolean | null
+          message: string
+          scheduled_send_date?: string | null
+          sent_at?: string | null
+          target_audience?: string | null
+          target_user_ids?: string[] | null
+          title: string
+          updated_at?: string
+          voice_sections?: string[] | null
+        }
+        Update: {
+          announcement_type?: string | null
+          auto_remind?: boolean | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_urgent?: boolean | null
+          message?: string
+          scheduled_send_date?: string | null
+          sent_at?: string | null
+          target_audience?: string | null
+          target_user_ids?: string[] | null
+          title?: string
+          updated_at?: string
+          voice_sections?: string[] | null
+        }
+        Relationships: []
+      }
+      gw_wardrobe_checkouts: {
+        Row: {
+          checked_in_at: string | null
+          checked_in_by: string | null
+          checked_out_at: string
+          checked_out_by: string
+          checkout_condition: string | null
+          color: string | null
+          created_at: string
+          due_date: string | null
+          id: string
+          inventory_item_id: string
+          member_id: string
+          notes: string | null
+          quantity: number
+          receipt_generated: boolean | null
+          return_condition: string | null
+          size: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          checked_in_at?: string | null
+          checked_in_by?: string | null
+          checked_out_at?: string
+          checked_out_by: string
+          checkout_condition?: string | null
+          color?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          inventory_item_id: string
+          member_id: string
+          notes?: string | null
+          quantity?: number
+          receipt_generated?: boolean | null
+          return_condition?: string | null
+          size: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          checked_in_at?: string | null
+          checked_in_by?: string | null
+          checked_out_at?: string
+          checked_out_by?: string
+          checkout_condition?: string | null
+          color?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          inventory_item_id?: string
+          member_id?: string
+          notes?: string | null
+          quantity?: number
+          receipt_generated?: boolean | null
+          return_condition?: string | null
+          size?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_wardrobe_checkouts_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "gw_wardrobe_inventory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_wardrobe_files: {
+        Row: {
+          created_at: string
+          file_category: string | null
+          file_name: string
+          file_type: string
+          file_url: string
+          id: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_category?: string | null
+          file_name: string
+          file_type: string
+          file_url: string
+          id?: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_category?: string | null
+          file_name?: string
+          file_type?: string
+          file_url?: string
+          id?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
+      gw_wardrobe_inventory: {
+        Row: {
+          category: string
+          color_available: string[] | null
+          condition: string
+          created_at: string
+          created_by: string | null
+          id: string
+          item_name: string
+          low_stock_threshold: number | null
+          notes: string | null
+          quantity_available: number
+          quantity_checked_out: number
+          quantity_total: number
+          size_available: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          color_available?: string[] | null
+          condition?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_name: string
+          low_stock_threshold?: number | null
+          notes?: string | null
+          quantity_available?: number
+          quantity_checked_out?: number
+          quantity_total?: number
+          size_available?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          color_available?: string[] | null
+          condition?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_name?: string
+          low_stock_threshold?: number | null
+          notes?: string | null
+          quantity_available?: number
+          quantity_checked_out?: number
+          quantity_total?: number
+          size_available?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gw_wardrobe_orders: {
+        Row: {
+          actual_delivery_date: string | null
+          budget_notes: string | null
+          created_at: string
+          estimated_cost: number | null
+          expected_delivery_date: string | null
+          id: string
+          item_description: string
+          notes: string | null
+          order_date: string | null
+          order_type: string
+          ordered_by: string
+          quantities: Json | null
+          received_by: string | null
+          status: string
+          updated_at: string
+          vendor_name: string | null
+        }
+        Insert: {
+          actual_delivery_date?: string | null
+          budget_notes?: string | null
+          created_at?: string
+          estimated_cost?: number | null
+          expected_delivery_date?: string | null
+          id?: string
+          item_description: string
+          notes?: string | null
+          order_date?: string | null
+          order_type: string
+          ordered_by: string
+          quantities?: Json | null
+          received_by?: string | null
+          status?: string
+          updated_at?: string
+          vendor_name?: string | null
+        }
+        Update: {
+          actual_delivery_date?: string | null
+          budget_notes?: string | null
+          created_at?: string
+          estimated_cost?: number | null
+          expected_delivery_date?: string | null
+          id?: string
+          item_description?: string
+          notes?: string | null
+          order_date?: string | null
+          order_type?: string
+          ordered_by?: string
+          quantities?: Json | null
+          received_by?: string | null
+          status?: string
+          updated_at?: string
+          vendor_name?: string | null
         }
         Relationships: []
       }

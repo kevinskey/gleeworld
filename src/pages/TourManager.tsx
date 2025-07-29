@@ -15,7 +15,8 @@ import {
   ArrowLeft,
   Settings,
   Home,
-  LayoutDashboard
+  LayoutDashboard,
+  Shirt
 } from 'lucide-react';
 import { PerformanceRequestsList } from '@/components/tour-manager/PerformanceRequestsList';
 import { RequestTracker } from '@/components/tour-manager/RequestTracker';
@@ -24,6 +25,7 @@ import TourPlanner from '@/pages/TourPlanner';
 import { TourContracts } from '@/components/tour-manager/TourContracts';
 import { TourStipends } from '@/components/tour-manager/TourStipends';
 import { TourOverview } from '@/components/tour-manager/TourOverview';
+import { WardrobeMistressHub } from '@/components/tour-manager/WardrobeMistressHub';
 
 const TourManager = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -71,7 +73,7 @@ const TourManager = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7">
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4" />
             Overview
@@ -99,6 +101,10 @@ const TourManager = () => {
           <TabsTrigger value="stipends" className="flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
             Stipends
+          </TabsTrigger>
+          <TabsTrigger value="wardrobe" className="flex items-center gap-2">
+            <Shirt className="h-4 w-4" />
+            Wardrobe
           </TabsTrigger>
         </TabsList>
 
@@ -186,6 +192,20 @@ const TourManager = () => {
             </CardHeader>
             <CardContent>
               <TourStipends />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="wardrobe">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shirt className="h-5 w-5" />
+                Wardrobe Mistress Hub
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <WardrobeMistressHub />
             </CardContent>
           </Card>
         </TabsContent>
