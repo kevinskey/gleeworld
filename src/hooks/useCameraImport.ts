@@ -67,7 +67,14 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
   }, []);
 
   const capturePhoto = useCallback(async () => {
+    console.log('capturePhoto called', { 
+      videoRef: !!videoRef.current, 
+      canvasRef: !!canvasRef.current, 
+      isCameraReady 
+    });
+    
     if (!videoRef.current || !canvasRef.current || !isCameraReady) {
+      console.log('Missing requirements for photo capture');
       return;
     }
 
@@ -75,6 +82,11 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
+      
+      console.log('Video dimensions:', { 
+        videoWidth: video.videoWidth, 
+        videoHeight: video.videoHeight 
+      });
       
       if (!context) {
         throw new Error('Unable to get canvas context');
@@ -88,7 +100,9 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       // Convert canvas to blob
+      console.log('Converting canvas to blob...');
       canvas.toBlob(async (blob) => {
+        console.log('Blob created:', !!blob);
         if (!blob) {
           throw new Error('Failed to capture image');
         }
