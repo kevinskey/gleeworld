@@ -21,7 +21,7 @@ export const SpiritualReflectionsSection = () => {
 
   if (loading) {
     return (
-      <Card className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 border-primary/20 h-48">
+      <Card className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 border-primary/20 h-full">
         <CardHeader className="pb-1">
           <CardTitle className="flex items-center gap-2 text-primary text-base">
             <Book className="h-4 w-4" />
@@ -29,7 +29,7 @@ export const SpiritualReflectionsSection = () => {
             <Sparkles className="h-3 w-3 text-accent animate-pulse" />
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-0 h-32 overflow-hidden">
+        <CardContent className="pt-0 flex-1 overflow-hidden">
           <div className="flex justify-center p-1">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
           </div>
@@ -41,7 +41,7 @@ export const SpiritualReflectionsSection = () => {
   const latestReflection = sharedReflections[0];
 
   return (
-    <Card className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 border-primary/20 shadow-lg h-48">
+    <Card className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 border-primary/20 shadow-lg h-full flex flex-col">
       <CardHeader className="pb-1">
         <CardTitle className="flex items-center gap-2 text-primary text-base">
           <Book className="h-4 w-4" />
@@ -49,7 +49,7 @@ export const SpiritualReflectionsSection = () => {
           <Sparkles className="h-3 w-3 text-accent" />
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-0 h-32 overflow-hidden">
+      <CardContent className="pt-0 flex-1 overflow-hidden">
         {!latestReflection ? (
           <div className="text-center py-2 space-y-1">
             <div className="w-8 h-8 mx-auto bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center">
