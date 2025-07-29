@@ -113,40 +113,40 @@ export const FAQSlider = () => {
         {/* Mobile: Rotating Question/Answer Cards - One at a time */}
         <div className="md:hidden">
           {/* Fixed height container for consistent sizing */}
-          <div className="h-[280px] flex flex-col justify-start space-y-3">
-            {!isFooterCard ? (
-              <>
-                {/* Question Card */}
-                <div className="bg-background/60 backdrop-blur-sm border border-border rounded-lg p-3 shadow-sm flex flex-col justify-center">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div className="flex-shrink-0 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                      <span className="text-xs font-bold text-primary-foreground">
-                        {String(currentQuestionIndex + 1).padStart(2, '0')}
-                      </span>
-                    </div>
-                    <span className="text-xs text-primary font-medium">QUESTION</span>
-                  </div>
-                  <p className="text-sm font-semibold text-foreground leading-snug transition-all duration-500 ease-in-out" key={currentFAQ?.id + '-q'}>
-                    {currentFAQ?.question}
-                  </p>
-                </div>
-                
-                {/* Answer Card */}
-                <div className="bg-primary/5 backdrop-blur-sm border border-primary/20 rounded-lg p-3 shadow-sm flex flex-col justify-center">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div className="flex-shrink-0 w-5 h-5 bg-primary/80 rounded-full flex items-center justify-center">
-                      <span className="text-xs font-bold text-primary-foreground">A</span>
-                    </div>
-                    <span className="text-xs text-primary font-medium">ANSWER</span>
-                  </div>
-                  <p className={cn(
-                    "text-muted-foreground leading-relaxed transition-all duration-500 ease-in-out",
-                    currentFAQ?.id === "audition-process" ? "text-xs" : "text-sm"
-                  )} key={currentFAQ?.id + '-a'}>
-                    {currentFAQ?.answer}
-                  </p>
-                </div>
-              </>
+           <div className="h-[280px] md:h-[320px] flex flex-col justify-start space-y-4">
+             {!isFooterCard ? (
+               <>
+                 {/* Question Card */}
+                 <div className="bg-background/60 backdrop-blur-sm border border-border rounded-lg p-4 md:p-6 shadow-sm flex flex-col justify-center min-h-[120px] md:min-h-[140px] flex-1">
+                   <div className="flex items-center space-x-2 mb-3">
+                     <div className="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 bg-primary rounded-full flex items-center justify-center">
+                       <span className="text-sm md:text-base font-bold text-primary-foreground">
+                         {String(currentQuestionIndex + 1).padStart(2, '0')}
+                       </span>
+                     </div>
+                     <span className="text-sm md:text-base text-primary font-medium">QUESTION</span>
+                   </div>
+                   <p className="text-base md:text-lg lg:text-xl font-semibold text-foreground leading-snug transition-all duration-500 ease-in-out" key={currentFAQ?.id + '-q'}>
+                     {currentFAQ?.question}
+                   </p>
+                 </div>
+                 
+                 {/* Answer Card */}
+                 <div className="bg-primary/5 backdrop-blur-sm border border-primary/20 rounded-lg p-4 md:p-6 shadow-sm flex flex-col justify-center min-h-[120px] md:min-h-[140px] flex-1">
+                   <div className="flex items-center space-x-2 mb-3">
+                     <div className="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 bg-primary/80 rounded-full flex items-center justify-center">
+                       <span className="text-sm md:text-base font-bold text-primary-foreground">A</span>
+                     </div>
+                     <span className="text-sm md:text-base text-primary font-medium">ANSWER</span>
+                   </div>
+                   <p className={cn(
+                     "text-muted-foreground leading-relaxed transition-all duration-500 ease-in-out",
+                     currentFAQ?.id === "audition-process" ? "text-sm md:text-base" : "text-base md:text-lg"
+                   )} key={currentFAQ?.id + '-a'}>
+                     {currentFAQ?.answer}
+                   </p>
+                 </div>
+               </>
             ) : (
               /* Footer Card in rotation */
               <div className="bg-gradient-to-r from-primary to-primary/80 rounded-lg p-6 md:p-8 backdrop-blur-sm border border-white/20 shadow-lg transition-all duration-500 ease-in-out flex flex-col justify-center min-h-full">
