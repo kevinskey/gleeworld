@@ -14,6 +14,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 
 import { GleeWorldLanding } from "./pages/GleeWorldLanding";
+import { TestLandingPage } from "./components/debug/TestLandingPage";
 import { SimpleHomePage } from "./components/debug/SimpleHomePage";
 import ContractSigning from "./pages/ContractSigning";
 import AdminSigning from "./pages/AdminSigning";
@@ -110,7 +111,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 const RootRoute = () => {
   const { user, loading } = useAuth();
   
-  console.log('RootRoute: loading=', loading, 'user=', user);
+  console.log('RootRoute: Executing with loading=', loading, 'user=', !!user);
   
   if (loading) {
     console.log('RootRoute: Showing loading spinner');
@@ -121,9 +122,21 @@ const RootRoute = () => {
     );
   }
   
-  console.log('RootRoute: Rendering GleeWorldLanding');
-  // Show landing page for everyone, authenticated or not
-  return <GleeWorldLanding />;
+  console.log('RootRoute: Rendering TestLandingPage instead of GleeWorldLanding');
+  // Temporarily use test page to debug
+  try {
+    return <TestLandingPage />;
+  } catch (error) {
+    console.error('Error rendering GleeWorldLanding:', error);
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600">Page Loading Error</h1>
+          <p className="text-gray-600">Please check the console for details</p>
+        </div>
+      </div>
+    );
+  }
 };
 
 const App = () => {

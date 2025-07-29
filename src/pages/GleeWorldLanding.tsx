@@ -89,6 +89,7 @@ export const GleeWorldLanding = () => {
   useEffect(() => {
     console.log('GleeWorldLanding: Component mounted, starting useEffect');
     const fetchData = async () => {
+      console.log('GleeWorldLanding: Inside fetchData function');
       try {
         console.log('GleeWorldLanding: Starting data fetch');
         
