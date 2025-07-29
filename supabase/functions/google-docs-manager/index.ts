@@ -26,7 +26,107 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { action, minuteId, title, content, code }: RequestBody = await req.json();
+    // Handle OAuth callback (GET request with code parameter)
+    const url = new URL(req.url);
+    const oauthCode = url.searchParams.get('code');
+    
+    if (req.method === 'GET' && oauthCode) {
+      // This is an OAuth callback - handle token exchange
+      const googleClientId = Deno.env.get('GOOGLE_CLIENT_ID');
+      const googleClientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
+      
+      if (!googleClientId || !googleClientSecret) {
+        return new Response(
+          JSON.stringify({ error: 'Google API credentials not configured' }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/google-docs-manager`;
+      
+      // Exchange authorization code for access token
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: googleClientId,
+          client_secret: googleClientSecret,
+          code: oauthCode,
+          grant_type: 'authorization_code',
+          redirect_uri: redirectUri,
+        }),
+      });
+
+      if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text();
+        console.error('Failed to exchange code for token:', errorText);
+        return new Response(
+          'Authentication failed. Please close this window and try again.',
+          { 
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'text/html' }
+          }
+        );
+      }
+
+      const tokenData = await tokenResponse.json();
+      const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000);
+
+      // Store the tokens in the database
+      const { error: insertError } = await supabase
+        .from('google_auth_tokens')
+        .upsert({
+          user_type: 'system',
+          access_token: tokenData.access_token,
+          refresh_token: tokenData.refresh_token,
+          expires_at: expiresAt.toISOString(),
+        });
+
+      if (insertError) {
+        console.error('Failed to store tokens:', insertError);
+        return new Response(
+          'Failed to save authentication. Please try again.',
+          { 
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'text/html' }
+          }
+        );
+      }
+
+      // Return success page
+      return new Response(
+        `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Authentication Successful</title>
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+            .success { color: #4CAF50; }
+          </style>
+        </head>
+        <body>
+          <h1 class="success">✓ Authentication Successful!</h1>
+          <p>Google Docs integration has been enabled.</p>
+          <p>You can now close this window and return to the app.</p>
+          <script>
+            setTimeout(() => window.close(), 3000);
+          </script>
+        </body>
+        </html>
+        `,
+        { 
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'text/html' }
+        }
+      );
+    }
+
+    // Handle POST requests with JSON body
+    const { action, minuteId, title, content }: RequestBody = await req.json();
     
     // Get Google API credentials from Supabase secrets
     const googleClientId = Deno.env.get('GOOGLE_CLIENT_ID');
