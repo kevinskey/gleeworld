@@ -38,22 +38,25 @@ export const TourTasks: React.FC<TourTasksProps> = ({ tourId }) => {
   });
   const queryClient = useQueryClient();
 
-  const { data: tasks = [], isLoading } = useQuery({
+  const queryResult = useQuery({
     queryKey: ['tour-tasks', tourId],
     queryFn: async () => {
-      if (!tourId) return [];
+      if (!tourId) return [] as any[];
       
-      const { data, error } = await supabase
+      const result = await (supabase as any)
         .from('gw_tour_tasks')
         .select('*')
         .eq('tour_id', tourId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data || [];
+      if (result.error) throw result.error;
+      return (result.data || []) as any[];
     },
     enabled: !!tourId,
   });
+  
+  const tasks = queryResult.data || [];
+  const isLoading = queryResult.isLoading;
 
   const addTaskMutation = useMutation({
     mutationFn: async (taskData: typeof newTask) => {
@@ -67,7 +70,7 @@ export const TourTasks: React.FC<TourTasksProps> = ({ tourId }) => {
           description: taskData.description || null,
           priority: taskData.priority,
           due_date: taskData.dueDate || null,
-        })
+        } as any)
         .select()
         .single();
 
@@ -92,8 +95,7 @@ export const TourTasks: React.FC<TourTasksProps> = ({ tourId }) => {
         .from('gw_tour_tasks')
         .update({ 
           is_completed: completed,
-          completed_at: completed ? new Date().toISOString() : null 
-        })
+        } as any)
         .eq('id', taskId);
 
       if (error) throw error;
@@ -259,15 +261,15 @@ export const TourTasks: React.FC<TourTasksProps> = ({ tourId }) => {
             </div>
           ) : (
             <div className="space-y-2">
-              {tasks.map((task) => (
+              {tasks.map((task: any) => (
                 <div
                   key={task.id}
                   className={`flex items-start gap-3 p-4 border rounded-lg transition-colors ${
-                     (task as any).is_completed ? 'bg-muted/30' : 'hover:bg-muted/50'
-                   }`}
-                 >
-                   <Checkbox
-                     checked={(task as any).is_completed}
+                    task.is_completed ? 'bg-muted/30' : 'hover:bg-muted/50'
+                  }`}
+                >
+                  <Checkbox
+                    checked={task.is_completed}
                     onCheckedChange={(checked) =>
                       toggleTaskMutation.mutate({ taskId: task.id, completed: !!checked })
                     }
@@ -275,11 +277,11 @@ export const TourTasks: React.FC<TourTasksProps> = ({ tourId }) => {
                   />
                   
                   <div className="flex-1 min-w-0">
-                     <div className={`font-medium ${(task as any).is_completed ? 'line-through text-muted-foreground' : ''}`}>
-                       {(task as any).task_name}
+                    <div className={`font-medium ${task.is_completed ? 'line-through text-muted-foreground' : ''}`}>
+                      {task.task_name}
                     </div>
                     {task.description && (
-                      <div className={`text-sm mt-1 ${(task as any).is_completed ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
+                      <div className={`text-sm mt-1 text-muted-foreground`}>
                         {task.description}
                       </div>
                     )}
