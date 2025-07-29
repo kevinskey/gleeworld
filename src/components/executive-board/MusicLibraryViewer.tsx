@@ -42,6 +42,7 @@ export const MusicLibraryViewer = () => {
 
   const fetchSheetMusic = async () => {
     try {
+      console.log('Fetching sheet music...');
       const { data, error } = await supabase
         .from('gw_sheet_music')
         .select('*')
@@ -49,6 +50,7 @@ export const MusicLibraryViewer = () => {
         .order('created_at', { ascending: false })
         .limit(5);
 
+      console.log('Sheet music query result:', { data, error });
       if (error) throw error;
       setSheetMusic(data || []);
     } catch (error) {
