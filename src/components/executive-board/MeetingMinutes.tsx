@@ -3,11 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, 
@@ -17,13 +13,16 @@ import {
   Clock,
   Edit3,
   Trash2,
-  Download,
   ExternalLink,
-  RefreshCw
+  RefreshCw,
+  Eye
 } from "lucide-react";
 import { GoogleAuth } from "@/components/google-auth/GoogleAuth";
+import { MeetingMinutesEditor } from "./MeetingMinutesEditor";
+import { MeetingMinutesDocument } from "./MeetingMinutesDocument";
 
 type MeetingStatus = 'draft' | 'approved' | 'archived';
+type ViewMode = 'list' | 'editor' | 'document';
 
 interface MeetingMinute {
   id: string;
@@ -48,33 +47,14 @@ export const MeetingMinutes = () => {
   const { toast } = useToast();
   const [minutes, setMinutes] = useState<MeetingMinute[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingMinute, setEditingMinute] = useState<MeetingMinute | null>(null);
-  const [formData, setFormData] = useState<{
-    title: string;
-    meeting_date: string;
-    meeting_type: string;
-    attendees: string;
-    agenda_items: string;
-    discussion_points: string;
-    action_items: string;
-    next_meeting_date: string;
-    status: MeetingStatus;
-  }>({
-    title: '',
-    meeting_date: '',
-    meeting_type: 'executive_board',
-    attendees: '',
-    agenda_items: '',
-    discussion_points: '',
-    action_items: '',
-    next_meeting_date: '',
-    status: 'draft' as MeetingStatus
-  });
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [selectedMinute, setSelectedMinute] = useState<MeetingMinute | null>(null);
 
   useEffect(() => {
-    fetchMeetingMinutes();
-  }, []);
+    if (user) {
+      fetchMeetingMinutes();
+    }
+  }, [user]);
 
   const fetchMeetingMinutes = async () => {
     try {
@@ -97,86 +77,9 @@ export const MeetingMinutes = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-
-    try {
-      const minuteData = {
-        title: formData.title,
-        meeting_date: formData.meeting_date,
-        meeting_type: formData.meeting_type,
-        attendees: formData.attendees.split(',').map(a => a.trim()).filter(a => a),
-        agenda_items: formData.agenda_items.split('\n').filter(item => item.trim()),
-        discussion_points: formData.discussion_points,
-        action_items: formData.action_items.split('\n').filter(item => item.trim()),
-        next_meeting_date: formData.next_meeting_date || null,
-        status: formData.status,
-        created_by: user.id
-      };
-
-      if (editingMinute) {
-        const { error } = await supabase
-          .from('gw_meeting_minutes')
-          .update(minuteData)
-          .eq('id', editingMinute.id);
-
-        if (error) throw error;
-        toast({ title: "Success", description: "Meeting minutes updated successfully" });
-      } else {
-        const { error } = await supabase
-          .from('gw_meeting_minutes')
-          .insert([minuteData]);
-
-        if (error) throw error;
-        toast({ title: "Success", description: "Meeting minutes created successfully" });
-      }
-
-      setDialogOpen(false);
-      resetForm();
-      fetchMeetingMinutes();
-    } catch (error) {
-      console.error('Error saving meeting minutes:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save meeting minutes",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      meeting_date: '',
-      meeting_type: 'executive_board',
-      attendees: '',
-      agenda_items: '',
-      discussion_points: '',
-      action_items: '',
-      next_meeting_date: '',
-      status: 'draft' as MeetingStatus
-    });
-    setEditingMinute(null);
-  };
-
-  const handleEdit = (minute: MeetingMinute) => {
-    setEditingMinute(minute);
-    setFormData({
-      title: minute.title,
-      meeting_date: minute.meeting_date.split('T')[0],
-      meeting_type: minute.meeting_type,
-      attendees: minute.attendees.join(', '),
-      agenda_items: minute.agenda_items.join('\n'),
-      discussion_points: minute.discussion_points,
-      action_items: minute.action_items.join('\n'),
-      next_meeting_date: minute.next_meeting_date?.split('T')[0] || '',
-      status: minute.status
-    });
-    setDialogOpen(true);
-  };
-
   const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this meeting minute?')) return;
+
     try {
       const { error } = await supabase
         .from('gw_meeting_minutes')
@@ -184,8 +87,12 @@ export const MeetingMinutes = () => {
         .eq('id', id);
 
       if (error) throw error;
-      toast({ title: "Success", description: "Meeting minutes deleted" });
-      fetchMeetingMinutes();
+
+      setMinutes(prev => prev.filter(m => m.id !== id));
+      toast({
+        title: "Success",
+        description: "Meeting minutes deleted successfully"
+      });
     } catch (error) {
       console.error('Error deleting meeting minutes:', error);
       toast({
@@ -196,50 +103,45 @@ export const MeetingMinutes = () => {
     }
   };
 
-  const authenticateWithGoogle = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('google-docs-manager', {
-        body: { action: 'get_auth_url' }
-      });
+  const handleView = (minute: MeetingMinute) => {
+    setSelectedMinute(minute);
+    setViewMode('document');
+  };
 
-      if (error) throw error;
+  const handleEdit = (minute: MeetingMinute) => {
+    setSelectedMinute(minute);
+    setViewMode('editor');
+  };
 
-      if (data.authUrl) {
-        // Open Google auth in a new window
-        window.open(data.authUrl, '_blank', 'width=500,height=600');
-        
-        toast({
-          title: "Authentication Required",
-          description: "Please complete Google authentication in the popup window."
-        });
-      }
-    } catch (error) {
-      console.error('Error getting auth URL:', error);
-      toast({
-        title: "Error",
-        description: "Failed to initiate Google authentication",
-        variant: "destructive"
-      });
-    }
+  const handleCreateNew = () => {
+    setSelectedMinute(null);
+    setViewMode('editor');
+  };
+
+  const handleBackToList = () => {
+    setViewMode('list');
+    setSelectedMinute(null);
+    fetchMeetingMinutes(); // Refresh the list
   };
 
   const createGoogleDoc = async (minute: MeetingMinute) => {
     try {
-      const content = `Meeting: ${minute.title}
-Date: ${new Date(minute.meeting_date).toLocaleDateString()}
+      const content = `Meeting Minutes: ${minute.title}
+      
+Date: ${minute.meeting_date}
 Type: ${minute.meeting_type}
 Attendees: ${minute.attendees.join(', ')}
 
-Agenda Items:
-${minute.agenda_items.map(item => `• ${item}`).join('\n')}
+AGENDA ITEMS:
+${minute.agenda_items.join('\n')}
 
-Discussion Points:
+DISCUSSION POINTS:
 ${minute.discussion_points}
 
-Action Items:
-${minute.action_items.map(item => `• ${item}`).join('\n')}
+ACTION ITEMS:
+${minute.action_items.join('\n')}
 
-${minute.next_meeting_date ? `Next Meeting: ${new Date(minute.next_meeting_date).toLocaleDateString()}` : ''}`;
+Next Meeting: ${minute.next_meeting_date || 'TBD'}`;
 
       const { data, error } = await supabase.functions.invoke('google-docs-manager', {
         body: {
@@ -250,68 +152,36 @@ ${minute.next_meeting_date ? `Next Meeting: ${new Date(minute.next_meeting_date)
         }
       });
 
-      if (error) {
-        // Check if authentication is needed
-        if (error.message?.includes('authentication required') || data?.needsAuth) {
-          toast({
-            title: "Authentication Required",
-            description: "Please authenticate with Google first",
-            variant: "default"
-          });
-          await authenticateWithGoogle();
-          return;
-        }
-        throw error;
+      if (error) throw error;
+
+      if (data?.needsAuth) {
+        toast({
+          title: "Authentication Required",
+          description: "Please authenticate with Google first.",
+          variant: "destructive"
+        });
+        return;
       }
 
       toast({
-        title: "Success",
-        description: "Google Doc created successfully"
+        title: "Google Doc Created",
+        description: "Meeting minutes have been synced to Google Docs."
       });
-
-      // Refresh the minutes to show the new Google Doc link
-      fetchMeetingMinutes();
+      
+      fetchMeetingMinutes(); // Refresh to get updated Google Doc info
     } catch (error) {
       console.error('Error creating Google Doc:', error);
       toast({
-        title: "Error",
-        description: "Failed to create Google Doc. Try authenticating with Google first.",
+        title: "Sync Failed",
+        description: "Failed to create Google Doc. Please try again.",
         variant: "destructive"
       });
     }
   };
 
-  const openGoogleDoc = async (minute: MeetingMinute) => {
+  const openGoogleDoc = (minute: MeetingMinute) => {
     if (minute.google_doc_url) {
       window.open(minute.google_doc_url, '_blank');
-    } else {
-      try {
-        const { data, error } = await supabase.functions.invoke('google-docs-manager', {
-          body: {
-            action: 'get_url',
-            minuteId: minute.id
-          }
-        });
-
-        if (error) throw error;
-
-        if (data.documentUrl) {
-          window.open(data.documentUrl, '_blank');
-        } else {
-          toast({
-            title: "Info",
-            description: "No Google Doc found for this meeting minute",
-            variant: "default"
-          });
-        }
-      } catch (error) {
-        console.error('Error opening Google Doc:', error);
-        toast({
-          title: "Error",
-          description: "Failed to open Google Doc",
-          variant: "destructive"
-        });
-      }
     }
   };
 
@@ -326,278 +196,220 @@ ${minute.next_meeting_date ? `Next Meeting: ${new Date(minute.next_meeting_date)
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Content synced from Google Doc"
-      });
+      if (data?.needsAuth) {
+        toast({
+          title: "Authentication Required",
+          description: "Please authenticate with Google first.",
+          variant: "destructive"
+        });
+        return;
+      }
 
-      // Refresh the minutes to show updated content
-      fetchMeetingMinutes();
+      fetchMeetingMinutes(); // Refresh to get updated content
+      
+      toast({
+        title: "Synced from Google Docs",
+        description: "Meeting minutes have been updated from Google Docs."
+      });
     } catch (error) {
       console.error('Error syncing from Google Doc:', error);
       toast({
-        title: "Error",
-        description: "Failed to sync from Google Doc",
+        title: "Sync Failed",
+        description: "Failed to sync from Google Docs. Please try again.",
         variant: "destructive"
       });
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: MeetingStatus) => {
     switch (status) {
-      case 'approved': return 'default';
       case 'draft': return 'secondary';
+      case 'approved': return 'default';
       case 'archived': return 'outline';
       default: return 'secondary';
     }
   };
 
+  // Show Editor View
+  if (viewMode === 'editor') {
+    return (
+      <MeetingMinutesEditor
+        minute={selectedMinute || undefined}
+        onBack={handleBackToList}
+        onSave={handleBackToList}
+      />
+    );
+  }
+
+  // Show Document View
+  if (viewMode === 'document' && selectedMinute) {
+    return (
+      <MeetingMinutesDocument
+        minute={selectedMinute}
+        onBack={handleBackToList}
+        onEdit={() => setViewMode('editor')}
+        onOpenGoogleDoc={() => openGoogleDoc(selectedMinute)}
+        onSyncFromGoogleDoc={() => syncFromGoogleDoc(selectedMinute)}
+        onCreateGoogleDoc={() => createGoogleDoc(selectedMinute)}
+      />
+    );
+  }
+
+  // Show List View (Default)
   if (loading) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="animate-pulse text-center">Loading meeting minutes...</div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading meeting minutes...</p>
+        </div>
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bebas tracking-wide">Meeting Minutes</h2>
-          <p className="text-muted-foreground">Executive board meeting records and minutes</p>
+          <h1 className="text-2xl font-bold">Meeting Minutes</h1>
+          <p className="text-muted-foreground">
+            Document and manage executive board meeting minutes
+          </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Meeting Minutes
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingMinute ? 'Edit Meeting Minutes' : 'Create Meeting Minutes'}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Meeting Title</label>
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Executive Board Meeting"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Meeting Date</label>
-                  <Input
-                    type="date"
-                    value={formData.meeting_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, meeting_date: e.target.value }))}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Meeting Type</label>
-                  <Select value={formData.meeting_type} onValueChange={(value) => setFormData(prev => ({ ...prev, meeting_type: value }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="executive_board">Executive Board</SelectItem>
-                      <SelectItem value="general_meeting">General Meeting</SelectItem>
-                      <SelectItem value="committee">Committee Meeting</SelectItem>
-                      <SelectItem value="emergency">Emergency Meeting</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Status</label>
-                  <Select value={formData.status} onValueChange={(value: MeetingStatus) => setFormData(prev => ({ ...prev, status: value }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="approved">Approved</SelectItem>
-                      <SelectItem value="archived">Archived</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Attendees (comma-separated)</label>
-                <Input
-                  value={formData.attendees}
-                  onChange={(e) => setFormData(prev => ({ ...prev, attendees: e.target.value }))}
-                  placeholder="President, Secretary, Treasurer, ..."
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Agenda Items (one per line)</label>
-                <Textarea
-                  value={formData.agenda_items}
-                  onChange={(e) => setFormData(prev => ({ ...prev, agenda_items: e.target.value }))}
-                  placeholder="Review budget&#10;Plan upcoming events&#10;Discuss new initiatives"
-                  rows={4}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Discussion Points</label>
-                <Textarea
-                  value={formData.discussion_points}
-                  onChange={(e) => setFormData(prev => ({ ...prev, discussion_points: e.target.value }))}
-                  placeholder="Detailed discussion notes and key points covered..."
-                  rows={6}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Action Items (one per line)</label>
-                <Textarea
-                  value={formData.action_items}
-                  onChange={(e) => setFormData(prev => ({ ...prev, action_items: e.target.value }))}
-                  placeholder="Secretary to send follow-up email&#10;Treasurer to prepare budget report&#10;President to schedule next meeting"
-                  rows={4}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Next Meeting Date (optional)</label>
-                <Input
-                  type="date"
-                  value={formData.next_meeting_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, next_meeting_date: e.target.value }))}
-                />
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {editingMinute ? 'Update' : 'Create'} Minutes
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={handleCreateNew} className="self-start sm:self-auto">
+          <Plus className="h-4 w-4 mr-2" />
+          New Meeting Minutes
+        </Button>
       </div>
 
       {/* Google Authentication Section */}
       <GoogleAuth onAuthSuccess={fetchMeetingMinutes} />
 
+      {/* Meeting Minutes List */}
       <div className="grid gap-4">
         {minutes.length === 0 ? (
           <Card>
-            <CardContent className="p-6 text-center">
-              <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-medium mb-2">No Meeting Minutes</h3>
-              <p className="text-muted-foreground mb-4">
+            <CardContent className="p-12 text-center">
+              <FileText className="h-16 w-16 mx-auto mb-6 text-muted-foreground" />
+              <h3 className="text-xl font-semibold mb-3">No Meeting Minutes</h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 Start documenting your executive board meetings by creating your first meeting minutes.
+                Use our word processor-like interface for a professional experience.
               </p>
-              <Button onClick={() => setDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
+              <Button onClick={handleCreateNew} size="lg">
+                <Plus className="h-5 w-5 mr-2" />
                 Create First Minutes
               </Button>
             </CardContent>
           </Card>
         ) : (
           minutes.map((minute) => (
-            <Card key={minute.id}>
+            <Card key={minute.id} className="hover:shadow-md transition-shadow cursor-pointer">
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <FileText className="h-5 w-5" />
-                      {minute.title}
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <CardTitle className="flex items-center gap-3 mb-3">
+                      <FileText className="h-6 w-6 text-primary" />
+                      <span className="text-xl">{minute.title}</span>
+                      <Badge variant={getStatusColor(minute.status)} className="ml-auto">
+                        {minute.status}
+                      </Badge>
                     </CardTitle>
-                    <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
-                        {new Date(minute.meeting_date).toLocaleDateString()}
+                        {new Date(minute.meeting_date).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2">
                         <User className="h-4 w-4" />
                         {minute.attendees.length} attendees
                       </div>
-                      <Badge variant={getStatusColor(minute.status)}>
-                        {minute.status}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        {minute.meeting_type.replace('_', ' ')}
+                      </div>
                     </div>
                   </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground">
+                    Last updated: {new Date(minute.updated_at).toLocaleDateString()}
+                  </div>
+                  
                   <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleView(minute)}
+                      className="gap-2"
+                    >
+                      <Eye className="h-4 w-4" />
+                      View
+                    </Button>
+                    
                     {minute.google_doc_url ? (
                       <>
-                        <Button variant="outline" size="sm" onClick={() => openGoogleDoc(minute)} title="Open in Google Docs">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => openGoogleDoc(minute)}
+                          title="Open in Google Docs"
+                          className="gap-2"
+                        >
                           <ExternalLink className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => syncFromGoogleDoc(minute)} title="Sync from Google Docs">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => syncFromGoogleDoc(minute)}
+                          title="Sync from Google Docs"
+                          className="gap-2"
+                        >
                           <RefreshCw className="h-4 w-4" />
                         </Button>
                       </>
                     ) : (
-                      <Button variant="outline" size="sm" onClick={() => createGoogleDoc(minute)} title="Create Google Doc">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => createGoogleDoc(minute)}
+                        title="Create Google Doc"
+                        className="gap-2"
+                      >
                         <FileText className="h-4 w-4" />
                         <ExternalLink className="h-3 w-3" />
                       </Button>
                     )}
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(minute)}>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleEdit(minute)}
+                      className="gap-2"
+                    >
                       <Edit3 className="h-4 w-4" />
+                      Edit
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleDelete(minute.id)}>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleDelete(minute.id)}
+                      className="gap-2 text-destructive hover:text-destructive"
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {minute.agenda_items.length > 0 && (
-                  <div>
-                    <h4 className="font-medium mb-2">Agenda Items</h4>
-                    <ul className="list-disc list-inside space-y-1 text-sm">
-                      {minute.agenda_items.map((item, index) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {minute.discussion_points && (
-                  <div>
-                    <h4 className="font-medium mb-2">Discussion Points</h4>
-                    <p className="text-sm text-muted-foreground">{minute.discussion_points}</p>
-                  </div>
-                )}
-
-                {minute.action_items.length > 0 && (
-                  <div>
-                    <h4 className="font-medium mb-2">Action Items</h4>
-                    <ul className="list-disc list-inside space-y-1 text-sm">
-                      {minute.action_items.map((item, index) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {minute.next_meeting_date && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    Next meeting: {new Date(minute.next_meeting_date).toLocaleDateString()}
-                  </div>
-                )}
               </CardContent>
             </Card>
           ))
