@@ -57,6 +57,7 @@ import TourPlanner from "@/pages/TourPlanner";
 import { TourStipends } from "@/components/tour-manager/TourStipends";
 import { TourOverview } from "@/components/tour-manager/TourOverview";
 import { WardrobeMistressHub } from "@/components/tour-manager/WardrobeMistressHub";
+import { LibraryManagement } from "@/components/music-library/LibraryManagement";
 
 export type ExecutivePosition = 
   | 'president'
@@ -376,6 +377,12 @@ export const ExecutiveBoardDashboard = () => {
                 Wardrobe Hub
               </TabsTrigger>
             )}
+            {selectedPosition === 'librarian' && (
+              <TabsTrigger value="music-library" className="text-xs">
+                <BookOpen className="h-4 w-4 mr-1" />
+                Music Library
+              </TabsTrigger>
+            )}
             <TabsTrigger value="position" className="text-xs">
               <PositionIcon className="h-4 w-4 mr-1" />
               My Role
@@ -516,6 +523,12 @@ export const ExecutiveBoardDashboard = () => {
           {selectedPosition === 'wardrobe_manager' && (
             <TabsContent value="wardrobe">
               <WardrobeMistressHub />
+            </TabsContent>
+          )}
+
+          {selectedPosition === 'librarian' && (
+            <TabsContent value="music-library">
+              <LibraryManagement />
             </TabsContent>
           )}
 
