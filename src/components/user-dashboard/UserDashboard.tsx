@@ -252,13 +252,25 @@ export const UserDashboard = () => {
     return activities.slice(0, 4);
   };
 
-  // Get real data with proper filtering for valid upcoming events
+  // Get real data with debugging for event filtering
+  console.log('Raw events from hook:', getUpcomingEvents(6));
+  
   const upcomingEventsList = getUpcomingEvents(6)
     .filter(event => {
       // Filter out events with invalid dates and past events
       const eventDate = new Date(event.start_date);
       const isValidDate = event.start_date && !isNaN(eventDate.getTime());
       const isFutureEvent = eventDate > new Date();
+      
+      console.log('Event filtering:', {
+        eventId: event.id,
+        title: event.title,
+        start_date: event.start_date,
+        eventDate: eventDate.toString(),
+        isValidDate,
+        isFutureEvent,
+        currentDate: new Date().toString()
+      });
       
       if (!isValidDate) {
         console.warn('Invalid date found in event:', event.id, event.start_date);
@@ -279,6 +291,8 @@ export const UserDashboard = () => {
       location: event.location || event.venue_name || undefined,
       type: event.event_type || undefined
     }));
+    
+  console.log('Filtered events for display:', upcomingEventsList);
   const recentActivity = getRecentActivity();
 
   return (
