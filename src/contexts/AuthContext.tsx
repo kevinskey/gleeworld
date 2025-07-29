@@ -60,18 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         console.log('AuthContext: Initializing auth state...');
         
-        // Clean up any conflicting auth state first
-        cleanupAuthState();
-        
-        // Attempt global sign out to clear any existing sessions
-        try {
-          await supabase.auth.signOut({ scope: 'global' });
-          console.log('AuthContext: Initial global signout completed');
-        } catch (err) {
-          console.log('AuthContext: Initial global signout failed (expected):', err);
-        }
-        
-        // Get existing session AFTER cleanup
+        // Get existing session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
