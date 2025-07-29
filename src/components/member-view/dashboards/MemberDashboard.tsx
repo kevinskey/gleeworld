@@ -81,12 +81,12 @@ export const MemberDashboard = ({ user }: MemberDashboardProps) => {
       {/* Attendance Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Attendance</CardTitle>
-          <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-base md:text-lg font-semibold">Attendance</CardTitle>
+          <CheckCircle className="h-5 w-5 md:h-6 md:w-6 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{memberData.attendance.percentage}%</div>
-          <p className="text-xs text-muted-foreground">
+          <div className="text-3xl md:text-4xl font-bold">{memberData.attendance.percentage}%</div>
+          <p className="text-sm md:text-base text-muted-foreground">
             {memberData.attendance.present} of {memberData.attendance.total} rehearsals
           </p>
           <Progress value={memberData.attendance.percentage} className="mt-2" />
@@ -96,16 +96,16 @@ export const MemberDashboard = ({ user }: MemberDashboardProps) => {
       {/* Upcoming Events Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
-          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-base md:text-lg font-semibold">Upcoming Events</CardTitle>
+          <Calendar className="h-5 w-5 md:h-6 md:w-6 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{memberData.upcomingEvents.length}</div>
-          <p className="text-xs text-muted-foreground">Next 7 days</p>
-          <div className="mt-2 space-y-1">
+          <div className="text-3xl md:text-4xl font-bold">{memberData.upcomingEvents.length}</div>
+          <p className="text-sm md:text-base text-muted-foreground">Next 7 days</p>
+          <div className="mt-3 space-y-2">
             {memberData.upcomingEvents.slice(0, 2).map((event) => (
-              <div key={event.id} className="text-xs">
-                <div className="font-medium">{event.title}</div>
+              <div key={event.id} className="text-sm md:text-base">
+                <div className="font-semibold">{event.title}</div>
                 <div className="text-muted-foreground">{event.date} at {event.time}</div>
               </div>
             ))}
@@ -190,23 +190,38 @@ export const MemberDashboard = ({ user }: MemberDashboardProps) => {
         </CardContent>
       </Card>
 
-      {/* Announcements Card */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Announcements</CardTitle>
-          <Bell className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{memberData.announcements.length}</div>
-          <p className="text-xs text-muted-foreground">Unread notifications</p>
-          <div className="mt-2 space-y-2">
-            {memberData.announcements.map((announcement) => (
-              <div key={announcement.id} className="text-xs">
-                <div className="font-medium">{announcement.title}</div>
-                <div className="text-muted-foreground line-clamp-2">{announcement.content}</div>
-              </div>
-            ))}
+      {/* Announcements Card - Redesigned */}
+      <Card className="relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/5 rounded-bl-full"></div>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+          <div>
+            <CardTitle className="text-lg font-bold text-primary">Latest News</CardTitle>
+            <p className="text-sm text-muted-foreground">Club announcements</p>
           </div>
+          <div className="relative">
+            <Bell className="h-6 w-6 text-primary" />
+            {memberData.announcements.length > 0 && (
+              <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white text-[10px]">
+                {memberData.announcements.length}
+              </span>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {memberData.announcements.length > 0 ? (
+            memberData.announcements.map((announcement) => (
+              <div key={announcement.id} className="p-3 bg-gradient-to-r from-primary/5 to-transparent rounded-lg border-l-3 border-primary">
+                <div className="font-semibold text-foreground mb-1">{announcement.title}</div>
+                <div className="text-sm text-muted-foreground line-clamp-2 mb-2">{announcement.content}</div>
+                <div className="text-xs text-primary font-medium">{announcement.date}</div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-4 text-muted-foreground">
+              <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">No announcements yet</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
