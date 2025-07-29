@@ -18,15 +18,20 @@ export function PersonalInfoPage() {
         name="personalityDescription"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Describe your personality</FormLabel>
+            <FormLabel>Describe your personality *</FormLabel>
             <FormControl>
               <Textarea 
-                placeholder="Tell us about yourself, your interests, and what makes you unique..."
+                placeholder="Tell us about yourself, your interests, and what makes you unique... (minimum 10 characters)"
                 className="min-h-[120px]"
                 {...field} 
               />
             </FormControl>
-            <FormMessage />
+            <div className="flex justify-between items-center">
+              <FormMessage />
+              <span className="text-xs text-gray-500">
+                {field.value?.length || 0}/10 minimum
+              </span>
+            </div>
           </FormItem>
         )}
       />
