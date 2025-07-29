@@ -8064,6 +8064,14 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      is_current_user_admin_or_super_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_current_user_tour_manager: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_executive_board_member: {
         Args: { user_id_param: string }
         Returns: boolean
