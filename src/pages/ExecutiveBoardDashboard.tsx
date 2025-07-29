@@ -39,14 +39,13 @@ import { PositionTab } from "@/components/executive-board/PositionTab";
 import { CalendarViews } from "@/components/calendar/CalendarViews";
 import { MeetingMinutes } from "@/components/executive-board/MeetingMinutes";
 import { AttendanceDashboard } from "@/components/attendance/AttendanceDashboard";
-// Temporarily removed treasurer components to debug loading issues
-// import { BudgetManager } from "@/components/treasurer/BudgetManager";
-// import { DuesManager } from "@/components/treasurer/DuesManager";
-// import { GeneralBudgetManager } from "@/components/treasurer/GeneralBudgetManager";
-// import { StipendPayer } from "@/components/treasurer/StipendPayer";
-// import { ReceiptKeeper } from "@/components/treasurer/ReceiptKeeper";
-// import { RunningLedger } from "@/components/treasurer/RunningLedger";
-// import { StripeSalesSync } from "@/components/treasurer/StripeSalesSync";
+import { BudgetManager } from "@/components/treasurer/BudgetManager";
+import { DuesManager } from "@/components/treasurer/DuesManager";
+import { GeneralBudgetManager } from "@/components/treasurer/GeneralBudgetManager";
+import { StipendPayer } from "@/components/treasurer/StipendPayer";
+import { ReceiptKeeper } from "@/components/treasurer/ReceiptKeeper";
+import { RunningLedger } from "@/components/treasurer/RunningLedger";
+import { StripeSalesSync } from "@/components/treasurer/StripeSalesSync";
 
 export type ExecutivePosition = 
   | 'president'
@@ -365,44 +364,23 @@ export const ExecutiveBoardDashboard = () => {
             <>
               <TabsContent value="ledger">
                 <div className="space-y-6">
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="text-center">
-                        <p>Loading Stripe Sales Sync...</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="text-center">
-                        <p>Loading Running Ledger...</p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <StripeSalesSync />
+                  <RunningLedger />
                 </div>
               </TabsContent>
               
               <TabsContent value="budget-manager">
                 <div className="space-y-6">
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="text-center">
-                        <p>Loading Budget Manager...</p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <BudgetManager />
                 </div>
               </TabsContent>
               
               <TabsContent value="finances">
                 <div className="space-y-8">
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="text-center">
-                        <p>Loading Financial Tools...</p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <DuesManager />
+                  <GeneralBudgetManager />
+                  <StipendPayer />
+                  <ReceiptKeeper />
                 </div>
               </TabsContent>
             </>
