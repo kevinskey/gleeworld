@@ -281,9 +281,17 @@ export const UserDashboard = () => {
           profile={profile}
         />
 
-        {/* Spiritual Reflections & Announcements Section - 50/50 split, same height */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Spiritual Reflections & Events Section - side by side */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SpiritualReflectionsSection />
+          <EventsAndActivitySection 
+            upcomingEvents={upcomingEventsList}
+            recentActivity={recentActivity}
+          />
+        </div>
+
+        {/* Announcements Section */}
+        <div className="grid grid-cols-1 gap-6">
           <AnnouncementsEventsSection upcomingEvents={upcomingEventsList} />
         </div>
 
@@ -308,12 +316,6 @@ export const UserDashboard = () => {
 
         {/* Executive Board Section */}
         <ExecutiveBoardSection isExecBoardMember={Boolean(isExecBoardMember)} />
-
-        {/* Events and Activity Section */}
-        <EventsAndActivitySection 
-          upcomingEvents={upcomingEventsList}
-          recentActivity={recentActivity}
-        />
 
         {/* Dashboard Modules Section */}
         <DashboardModulesSection />
