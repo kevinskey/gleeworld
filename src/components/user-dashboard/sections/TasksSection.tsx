@@ -56,19 +56,15 @@ export const TasksSection = () => {
   };
 
   const toggleItemStatus = (itemId: string) => {
-    setCheckedOutItems(items => 
-      items.map(item => 
-        item.id === itemId 
-          ? { ...item, status: item.status === 'checked_out' ? 'checked_in' : 'checked_out' }
-          : item
-      )
-    );
+    // Only executive board members can change status through their dashboard
+    // This function is kept for potential future use but disabled for regular users
+    return;
   };
 
   const getStatusColor = (status: string) => {
     return status === 'checked_out' 
-      ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200' 
-      : 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200';
+      ? 'bg-red-100 text-red-800 border-red-200' 
+      : 'bg-green-100 text-green-800 border-green-200';
   };
 
   return (
@@ -114,17 +110,12 @@ export const TasksSection = () => {
                           <Badge variant="secondary" className={`text-xs ${getItemTypeColor(item.type)}`}>
                             {item.type}
                           </Badge>
-                          <Button
-                            size="sm"
+                          <Badge
                             variant="outline"
-                            className={`h-6 px-2 text-xs border transition-colors ${getStatusColor(item.status)}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleItemStatus(item.id);
-                            }}
+                            className={`text-xs ${getStatusColor(item.status)}`}
                           >
                             {item.status === 'checked_out' ? 'Out' : 'In'}
-                          </Button>
+                          </Badge>
                         </div>
                       </div>
                       <div className="text-xs flex items-center gap-1 opacity-80">
@@ -243,17 +234,12 @@ export const TasksSection = () => {
                             <Badge variant="secondary" className={`text-xs ${getItemTypeColor(item.type)}`}>
                               {item.type}
                             </Badge>
-                            <Button
-                              size="sm"
+                            <Badge
                               variant="outline"
-                              className={`h-6 px-2 text-xs border transition-colors ${getStatusColor(item.status)}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleItemStatus(item.id);
-                              }}
+                              className={`text-xs ${getStatusColor(item.status)}`}
                             >
                               {item.status === 'checked_out' ? 'Out' : 'In'}
-                            </Button>
+                            </Badge>
                           </div>
                         </div>
                         <div className="text-xs flex items-center gap-1 mt-1 opacity-80">
