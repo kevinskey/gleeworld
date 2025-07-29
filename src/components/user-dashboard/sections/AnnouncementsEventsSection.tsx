@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Megaphone, Clock, MapPin } from "lucide-react";
 
@@ -40,40 +40,39 @@ export const AnnouncementsEventsSection = ({ upcomingEvents }: AnnouncementsEven
   };
 
   return (
-    <Card className="bg-gradient-to-r from-secondary/5 via-accent/5 to-primary/5 border-secondary/20 shadow-lg">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-secondary-foreground">
-          <Megaphone className="h-5 w-5" />
+    <Card className="bg-gradient-to-r from-secondary/5 via-accent/5 to-primary/5 border-secondary/20 shadow-lg h-48">
+      <CardHeader className="pb-1">
+        <CardTitle className="flex items-center gap-2 text-secondary-foreground text-base">
+          <Megaphone className="h-4 w-4" />
           Latest Updates
-          <Calendar className="h-4 w-4 text-accent" />
+          <Calendar className="h-3 w-3 text-accent" />
         </CardTitle>
-        <CardDescription>Announcements and upcoming events</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-1 h-32 overflow-hidden">
         {/* Announcements */}
-        <div className="space-y-3">
-          <h4 className="text-base font-medium text-foreground flex items-center gap-2">
-            <Megaphone className="h-4 w-4" />
+        <div className="space-y-1">
+          <h4 className="text-sm font-medium text-foreground flex items-center gap-1">
+            <Megaphone className="h-3 w-3" />
             Recent Announcements
           </h4>
           {announcements.length === 0 ? (
-            <div className="text-center py-4">
-              <p className="text-base text-muted-foreground">No recent announcements</p>
+            <div className="text-center py-1">
+              <p className="text-sm text-muted-foreground">No recent announcements</p>
             </div>
           ) : (
-            announcements.slice(0, 2).map((announcement) => (
-              <div key={announcement.id} className="border border-secondary/10 rounded-lg p-3 bg-background/50 backdrop-blur-sm">
-                <div className="flex items-start justify-between mb-2">
-                  <h5 className="font-medium text-base text-foreground">{announcement.title}</h5>
-                  <Badge className={getPriorityColor(announcement.priority)} variant="secondary">
+            announcements.slice(0, 1).map((announcement) => (
+              <div key={announcement.id} className="border border-secondary/10 rounded-lg p-2 bg-background/50 backdrop-blur-sm">
+                <div className="flex items-start justify-between mb-1">
+                  <h5 className="font-medium text-sm text-foreground line-clamp-1">{announcement.title}</h5>
+                  <Badge className={`${getPriorityColor(announcement.priority)} text-xs`} variant="secondary">
                     {announcement.priority}
                   </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                <p className="text-xs text-muted-foreground mb-1 line-clamp-2">
                   {announcement.message}
                 </p>
                 <div className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
+                  <Clock className="h-2 w-2" />
                   {new Date(announcement.date).toLocaleDateString()}
                 </div>
               </div>
@@ -82,37 +81,34 @@ export const AnnouncementsEventsSection = ({ upcomingEvents }: AnnouncementsEven
         </div>
 
         {/* Upcoming Events */}
-        <div className="space-y-3">
-          <h4 className="text-base font-medium text-foreground flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
+        <div className="space-y-1">
+          <h4 className="text-sm font-medium text-foreground flex items-center gap-1">
+            <Calendar className="h-3 w-3" />
             Upcoming Events
           </h4>
-          {upcomingEvents.length === 0 ? (
-            <div className="text-center py-4">
-              <div className="w-12 h-12 mx-auto bg-gradient-to-br from-secondary/20 to-accent/20 rounded-full flex items-center justify-center mb-2">
-                <Calendar className="h-6 w-6 text-secondary" />
-              </div>
-              <p className="text-base text-muted-foreground">No upcoming events scheduled</p>
+          {(!upcomingEvents || upcomingEvents.length === 0) ? (
+            <div className="text-center py-1">
+              <p className="text-sm text-muted-foreground">No upcoming events scheduled</p>
             </div>
           ) : (
-            upcomingEvents.slice(0, 3).map((event) => (
-              <div key={event.id} className="border border-secondary/10 rounded-lg p-3 bg-background/50 backdrop-blur-sm">
-                <div className="flex items-start justify-between mb-2">
-                  <h5 className="font-medium text-base text-foreground">{event.title}</h5>
+            upcomingEvents.slice(0, 1).map((event) => (
+              <div key={event.id} className="border border-secondary/10 rounded-lg p-2 bg-background/50 backdrop-blur-sm">
+                <div className="flex items-start justify-between mb-1">
+                  <h5 className="font-medium text-sm text-foreground line-clamp-1">{event.title}</h5>
                   {event.type && (
-                    <Badge variant="outline" className="text-xs border-accent text-accent">
+                    <Badge variant="outline" className="text-xs">
                       {event.type}
                     </Badge>
                   )}
                 </div>
                 <div className="space-y-1">
                   <div className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
+                    <Calendar className="h-2 w-2" />
                     {new Date(event.date).toLocaleDateString()}
                   </div>
                   {event.location && (
                     <div className="text-xs text-muted-foreground flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
+                      <MapPin className="h-2 w-2" />
                       {event.location}
                     </div>
                   )}

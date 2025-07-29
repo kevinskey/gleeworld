@@ -238,15 +238,15 @@ export const UserDashboard = () => {
           profile={profile}
         />
 
-        {/* Quick Actions Section - Moved Up */}
-        <div className="grid grid-cols-1 gap-6">
-          <QuickActionsSection isAdmin={isAdmin} />
-        </div>
-
-        {/* Spiritual Reflections & Announcements Section - 50/50 split */}
+        {/* Spiritual Reflections & Announcements Section - 50/50 split, same height */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <SpiritualReflectionsSection />
           <AnnouncementsEventsSection upcomingEvents={upcomingEventsList} />
+        </div>
+
+        {/* Quick Actions Section */}
+        <div className="grid grid-cols-1 gap-6">
+          <QuickActionsSection isAdmin={isAdmin} />
         </div>
 
         {/* Admin Controls Section */}
