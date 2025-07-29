@@ -11,10 +11,10 @@ export const TasksSection = () => {
   const [selectedItem, setSelectedItem] = useState<any>(null);
 
   // Mock data for checked out items and dues - replace with real data
-  const checkedOutItems = [
-    { id: '1', title: 'Black Concert Dress', dueDate: '2024-02-15', type: 'uniform' },
-    { id: '2', title: 'Music Folder - Spring Concert', dueDate: '2024-02-20', type: 'music' },
-  ];
+  const [checkedOutItems, setCheckedOutItems] = useState([
+    { id: '1', title: 'Black Concert Dress', dueDate: '2024-02-15', type: 'uniform', status: 'checked_out' },
+    { id: '2', title: 'Music Folder - Spring Concert', dueDate: '2024-02-20', type: 'music', status: 'checked_in' },
+  ]);
 
   const duesInfo = {
     totalDue: 150.00,
@@ -48,6 +48,22 @@ export const TasksSection = () => {
     } else {
       return 'bg-yellow-50 border-yellow-200 text-yellow-900'; // Due later
     }
+  };
+
+  const toggleItemStatus = (itemId: string) => {
+    setCheckedOutItems(items => 
+      items.map(item => 
+        item.id === itemId 
+          ? { ...item, status: item.status === 'checked_out' ? 'checked_in' : 'checked_out' }
+          : item
+      )
+    );
+  };
+
+  const getStatusColor = (status: string) => {
+    return status === 'checked_out' 
+      ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200' 
+      : 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200';
   };
 
   return (
@@ -88,10 +104,23 @@ export const TasksSection = () => {
                       })}
                     >
                       <div className="flex items-start justify-between mb-1">
-                        <h5 className="font-medium text-sm line-clamp-1">{item.title}</h5>
-                        <Badge variant="secondary" className={`text-xs ${getItemTypeColor(item.type)}`}>
-                          {item.type}
-                        </Badge>
+                        <h5 className="font-medium text-sm line-clamp-1 flex-1 mr-2">{item.title}</h5>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className={`text-xs ${getItemTypeColor(item.type)}`}>
+                            {item.type}
+                          </Badge>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className={`h-6 px-2 text-xs border transition-colors ${getStatusColor(item.status)}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleItemStatus(item.id);
+                            }}
+                          >
+                            {item.status === 'checked_out' ? 'Out' : 'In'}
+                          </Button>
+                        </div>
                       </div>
                       <div className="text-xs flex items-center gap-1 opacity-80">
                         <Clock className="h-3 w-3" />
@@ -204,10 +233,23 @@ export const TasksSection = () => {
                         })}
                       >
                         <div className="flex items-center justify-between">
-                          <h5 className="font-medium text-sm line-clamp-1">{item.title}</h5>
-                          <Badge variant="secondary" className={`text-xs ${getItemTypeColor(item.type)}`}>
-                            {item.type}
-                          </Badge>
+                          <h5 className="font-medium text-sm line-clamp-1 flex-1 mr-2">{item.title}</h5>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className={`text-xs ${getItemTypeColor(item.type)}`}>
+                              {item.type}
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className={`h-6 px-2 text-xs border transition-colors ${getStatusColor(item.status)}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleItemStatus(item.id);
+                              }}
+                            >
+                              {item.status === 'checked_out' ? 'Out' : 'In'}
+                            </Button>
+                          </div>
                         </div>
                         <div className="text-xs flex items-center gap-1 mt-1 opacity-80">
                           <Clock className="h-3 w-3" />
