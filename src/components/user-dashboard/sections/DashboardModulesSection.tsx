@@ -13,7 +13,9 @@ import {
   Volume2,
   Download,
   ShoppingBag,
-  DollarSign
+  DollarSign,
+  Route,
+  MapPin
 } from "lucide-react";
 
 export const DashboardModulesSection = () => {
@@ -124,6 +126,25 @@ export const DashboardModulesSection = () => {
           description: "Browse merchandise",
           icon: ShoppingBag,
           route: "/shop"
+        }
+      ]
+    },
+    {
+      title: "Tours",
+      icon: Route,
+      iconColor: "text-indigo-600",
+      modules: [
+        {
+          name: "Tour Planner",
+          description: "Plan and manage tours",
+          icon: Route,
+          route: "/tour-planner"
+        },
+        {
+          name: "Tour Manager",
+          description: "Manage tour logistics",
+          icon: MapPin,
+          route: "/tour-manager"
         }
       ]
     }

@@ -19,7 +19,8 @@ import {
 } from 'lucide-react';
 import { PerformanceRequestsList } from '@/components/tour-manager/PerformanceRequestsList';
 import { RequestTracker } from '@/components/tour-manager/RequestTracker';
-import { TourPlanner } from '@/components/tour-manager/TourPlanner';
+import { TourPlanner as TourPlannerOld } from '@/components/tour-manager/TourPlanner';
+import TourPlanner from '@/pages/TourPlanner';
 import { TourContracts } from '@/components/tour-manager/TourContracts';
 import { TourStipends } from '@/components/tour-manager/TourStipends';
 import { TourOverview } from '@/components/tour-manager/TourOverview';
@@ -70,7 +71,7 @@ const TourManager = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4" />
             Overview
@@ -85,7 +86,11 @@ const TourManager = () => {
           </TabsTrigger>
           <TabsTrigger value="planner" className="flex items-center gap-2">
             <MapPin className="h-4 w-4" />
-            Planner
+            Old Planner
+          </TabsTrigger>
+          <TabsTrigger value="tour-planner" className="flex items-center gap-2">
+            <Route className="h-4 w-4" />
+            Tour Planner
           </TabsTrigger>
           <TabsTrigger value="contracts" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -148,9 +153,13 @@ const TourManager = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <TourPlanner />
+              <TourPlannerOld />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="tour-planner">
+          <TourPlanner />
         </TabsContent>
 
         <TabsContent value="contracts">

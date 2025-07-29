@@ -25,7 +25,8 @@ import {
   Star,
   Settings,
   Youtube,
-  Bell
+  Bell,
+  Route
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -145,6 +146,8 @@ export const UsernamePermissionsManager = () => {
         return Mail;
       case 'manage_permissions':
         return Shield;
+      case 'tour_planner':
+        return Route;
       default:
         return Settings;
     }
@@ -164,6 +167,8 @@ export const UsernamePermissionsManager = () => {
         return 'bg-green-100 text-green-800';
       case 'manage_permissions':
         return 'bg-orange-100 text-orange-800';
+      case 'tour_planner':
+        return 'bg-indigo-100 text-indigo-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }

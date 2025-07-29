@@ -30,6 +30,7 @@ export const PERMISSIONS = [
   'access_youtube_management',
   'access_budget_creation',
   'access_contracts',
+  'access_tour_planner',
   'send_emails',
   'manage_username_permissions',
   'approve_budgets_treasurer',
@@ -58,6 +59,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     'access_youtube_management',
     'send_emails',
     'manage_username_permissions',
+    'access_tour_planner',
   ],
   [USER_ROLES.TREASURER]: [
     'approve_budgets_treasurer',
@@ -109,6 +111,11 @@ export const DASHBOARD_MODULES = {
     name: 'Manage Permissions',
     description: 'Manage username-based module permissions',
     permission: 'manage_username_permissions' as Permission,
+  },
+  tour_planner: {
+    name: 'Tour Planner',
+    description: 'Plan and manage tours, cities, and tasks',
+    permission: 'access_tour_planner' as Permission,
   },
 } as const;
 
@@ -222,21 +229,22 @@ export const hasEnhancedModuleAccess = (
 const getExecutiveBoardPermissions = (execBoardRole: string): string[] => {
   // This will be populated from executiveBoardRoles.ts
   const rolePermissionMap: Record<string, string[]> = {
-    'president': ['hero_management', 'dashboard_settings', 'youtube_management', 'budget_creation', 'contracts', 'send_emails', 'manage_permissions'],
-    'vice-president': ['budget_creation', 'contracts', 'send_emails', 'youtube_management'],
-    'treasurer': ['budget_creation', 'contracts', 'send_emails'],
-    'secretary': ['send_emails', 'contracts'],
-    'music-director': ['youtube_management', 'send_emails'],
-    'assistant-music-director': ['youtube_management'],
-    'social-chair': ['send_emails', 'budget_creation'],
-    'publicity-chair': ['hero_management', 'send_emails', 'youtube_management'],
-    'events-coordinator': ['budget_creation', 'contracts', 'send_emails'],
-    'historian': ['youtube_management'],
+    'president': ['access_hero_management', 'access_dashboard_settings', 'access_youtube_management', 'access_budget_creation', 'access_contracts', 'send_emails', 'manage_username_permissions', 'access_tour_planner'],
+    'vice-president': ['access_budget_creation', 'access_contracts', 'send_emails', 'access_youtube_management', 'access_tour_planner'],
+    'treasurer': ['access_budget_creation', 'access_contracts', 'send_emails'],
+    'secretary': ['send_emails', 'access_contracts'],
+    'music-director': ['access_youtube_management', 'send_emails'],
+    'assistant-music-director': ['access_youtube_management'],
+    'social-chair': ['send_emails', 'access_budget_creation'],
+    'publicity-chair': ['access_hero_management', 'send_emails', 'access_youtube_management'],
+    'events-coordinator': ['access_budget_creation', 'access_contracts', 'send_emails', 'access_tour_planner'],
+    'historian': ['access_youtube_management'],
     'librarian': [],
-    'technical-director': ['dashboard_settings', 'youtube_management'],
-    'fundraising-chair': ['budget_creation', 'send_emails'],
+    'technical-director': ['access_dashboard_settings', 'access_youtube_management'],
+    'fundraising-chair': ['access_budget_creation', 'send_emails'],
     'alumni-relations': ['send_emails'],
     'membership-chair': ['send_emails'],
+    'tour-manager': ['access_tour_planner', 'access_contracts', 'access_budget_creation', 'send_emails'],
   };
   
   return rolePermissionMap[execBoardRole] || [];
