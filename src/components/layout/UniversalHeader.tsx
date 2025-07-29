@@ -43,27 +43,27 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
   return (
     <header className="bg-gradient-to-r from-white/10 via-white/5 to-white/10 backdrop-blur-lg border-b border-white/30 sticky top-0 z-[100] shadow-xl">
       <div className="container mx-auto px-2 sm:px-4 lg:px-6">
-        <div className="flex items-center justify-between min-h-14 sm:min-h-16 py-2 sm:py-3">
+        <div className="flex items-center justify-between min-h-10 sm:min-h-14 py-1 sm:py-2">
           {/* Logo and Navigation */}
-          <div className="flex items-center gap-2 sm:gap-4 md:gap-6 min-w-0 flex-1">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 flex-1">
             <EnhancedTooltip content="Go to GleeWorld Home">
-              <Link to="/landing" className="flex items-center gap-1 sm:gap-2 flex-shrink-0 hover:scale-105 transition-transform duration-200 relative z-[110]">
+              <Link to="/landing" className="flex items-center gap-1 flex-shrink-0 hover:scale-105 transition-transform duration-200 relative z-[110]">
                 <div className="relative z-[111]">
                   <img 
                     src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
                     alt="Spelman College Glee Club" 
-                    className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 object-contain flex-shrink-0 drop-shadow-md relative z-[112]"
+                    className="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14 object-contain flex-shrink-0 drop-shadow-md relative z-[112]"
                   />
                   <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur opacity-50 z-[111]"></div>
                 </div>
-                <div className="flex items-center gap-2 relative z-[111]">
-                  <span className="text-gray-900 font-bold text-xl sm:text-2xl md:text-3xl whitespace-nowrap drop-shadow-sm relative z-[112]">
+                <div className="flex items-center gap-1 relative z-[111]">
+                  <span className="text-gray-900 font-bold text-lg sm:text-xl md:text-2xl whitespace-nowrap drop-shadow-sm relative z-[112]">
                     GleeWorld
                   </span>
                   {pageName !== 'GleeWorld' && (
                     <>
-                      <span className="text-gray-500 text-lg sm:text-xl md:text-2xl hidden sm:inline opacity-60">|</span>
-                      <span className="text-white font-medium text-sm sm:text-base md:text-lg truncate max-w-32 sm:max-w-48 md:max-w-64 bg-gradient-to-r from-slate-800 to-slate-900 pl-[5px] pr-2 py-0.5 rounded-md ml-2.5 shadow-md border border-white/10">
+                      <span className="text-gray-500 text-sm sm:text-lg md:text-xl hidden sm:inline opacity-60">|</span>
+                      <span className="text-white font-medium text-xs sm:text-sm md:text-base truncate max-w-20 sm:max-w-32 md:max-w-48 bg-gradient-to-r from-slate-800 to-slate-900 pl-1 pr-1.5 py-0.5 rounded-md ml-1 sm:ml-2 shadow-md border border-white/10">
                         {pageName}
                       </span>
                     </>
@@ -72,8 +72,8 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
               </Link>
             </EnhancedTooltip>
             
-            {/* Clock - Next to Glee World text */}
-            <HeaderClock className="ml-2" />
+            {/* Clock - Next to Glee World text - hidden on mobile */}
+            <HeaderClock className="hidden sm:block ml-1 sm:ml-2" />
           </div>
 
           {/* Right side actions */}
@@ -87,8 +87,8 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                  <DropdownMenu>
                    <EnhancedTooltip content="Profile menu">
                      <DropdownMenuTrigger asChild>
-                       <Button variant="ghost" className="relative h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 rounded-full p-0">
-                         <Avatar className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8">
+                        <Button variant="ghost" className="relative h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 rounded-full p-0">
+                          <Avatar className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9">
                            <AvatarImage 
                              src={profile?.avatar_url || undefined} 
                              alt={profile?.full_name || user.email || "Profile"} 
@@ -144,7 +144,7 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
 
             {!user && (
               <EnhancedTooltip content="Sign in to access your dashboard">
-                <Button asChild variant="secondary" size="sm">
+                <Button asChild variant="secondary" size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
                   <Link to="/auth">Sign In</Link>
                 </Button>
               </EnhancedTooltip>
