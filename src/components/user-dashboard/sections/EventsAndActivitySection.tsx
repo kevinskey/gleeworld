@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isAfter, isBefore, startOfDay } from "date-fns";
-import { Calendar, MapPin, Clock, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Calendar, MapPin, Clock, ChevronLeft, ChevronRight, X, ChevronDown, ChevronUp } from "lucide-react";
 import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
 
 interface EventsAndActivitySectionProps {
@@ -24,6 +24,7 @@ export const EventsAndActivitySection = ({
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const { events } = useGleeWorldEvents();
 
   // Get all events for any date (not limited)
@@ -108,10 +109,17 @@ export const EventsAndActivitySection = ({
 
   return (
     <Card className="h-full">
-      <CardHeader className="pb-1 md:pb-3">
-        <CardTitle className="text-xl">Events Calendar</CardTitle>
+      <CardHeader className="pb-1 md:pb-3 cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
+        <CardTitle className="flex items-center justify-between text-xl">
+          <span>Events Calendar</span>
+          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+            {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+          </Button>
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      
+      {!isCollapsed && (
+        <CardContent className="space-y-4">
         
         {/* Desktop Calendar View - Hidden on Mobile */}
         <div className="hidden md:block space-y-4">
@@ -262,7 +270,8 @@ export const EventsAndActivitySection = ({
             )}
           </ScrollArea>
         </div>
-      </CardContent>
+        </CardContent>
+      )}
 
       {/* Event Details Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
