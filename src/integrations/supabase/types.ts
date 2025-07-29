@@ -7722,6 +7722,10 @@ export type Database = {
         Args: { event_id_param: string }
         Returns: undefined
       }
+      check_executive_board_access: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       check_rate_limit: {
         Args: {
           identifier_param: string
