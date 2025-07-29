@@ -30,7 +30,7 @@ import { DASHBOARD_MODULES, hasModuleAccess, hasExecutiveBoardPermissions, Dashb
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Eye, User, Home, X } from "lucide-react";
+import { Shield, Eye, User, Home, X, Crown } from "lucide-react";
 
 export const UserDashboard = () => {
   console.log('UserDashboard component rendering...');
@@ -330,6 +330,17 @@ export const UserDashboard = () => {
                 <User className="h-4 w-4" />
                 Member View
               </Button>
+              {(isExecBoardMember || hasExecBoardPerms) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/dashboard/executive-board')}
+                  className="flex items-center gap-2"
+                >
+                  <Crown className="h-4 w-4" />
+                  Exec Board View
+                </Button>
+              )}
             </div>
           </div>
         )}
