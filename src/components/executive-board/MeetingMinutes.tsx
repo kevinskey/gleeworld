@@ -195,6 +195,33 @@ export const MeetingMinutes = () => {
     }
   };
 
+  const authenticateWithGoogle = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('google-docs-manager', {
+        body: { action: 'get_auth_url' }
+      });
+
+      if (error) throw error;
+
+      if (data.authUrl) {
+        // Open Google auth in a new window
+        window.open(data.authUrl, '_blank', 'width=500,height=600');
+        
+        toast({
+          title: "Authentication Required",
+          description: "Please complete Google authentication in the popup window."
+        });
+      }
+    } catch (error) {
+      console.error('Error getting auth URL:', error);
+      toast({
+        title: "Error",
+        description: "Failed to initiate Google authentication",
+        variant: "destructive"
+      });
+    }
+  };
+
   const createGoogleDoc = async (minute: MeetingMinute) => {
     try {
       const content = `Meeting: ${minute.title}
@@ -222,7 +249,19 @@ ${minute.next_meeting_date ? `Next Meeting: ${new Date(minute.next_meeting_date)
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check if authentication is needed
+        if (error.message?.includes('authentication required') || data?.needsAuth) {
+          toast({
+            title: "Authentication Required",
+            description: "Please authenticate with Google first",
+            variant: "default"
+          });
+          await authenticateWithGoogle();
+          return;
+        }
+        throw error;
+      }
 
       toast({
         title: "Success",
@@ -235,7 +274,7 @@ ${minute.next_meeting_date ? `Next Meeting: ${new Date(minute.next_meeting_date)
       console.error('Error creating Google Doc:', error);
       toast({
         title: "Error",
-        description: "Failed to create Google Doc",
+        description: "Failed to create Google Doc. Try authenticating with Google first.",
         variant: "destructive"
       });
     }
