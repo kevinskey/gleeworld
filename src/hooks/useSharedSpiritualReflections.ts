@@ -40,7 +40,12 @@ export const useSharedSpiritualReflections = () => {
         is_featured: item.is_featured,
         shared_at: item.shared_at
       })) || []);
-      console.log('useSharedSpiritualReflections: Final mapped data:', data?.map(item => ({ id: item.id, title: item.title, content: item.content })));
+      console.log('useSharedSpiritualReflections: Final mapped data with content:', data?.map(item => ({ 
+        id: item.id, 
+        title: item.title, 
+        content: item.content,
+        scripture_reference: item.scripture_reference 
+      })));
     } catch (err: any) {
       setError(err.message);
       toast({
