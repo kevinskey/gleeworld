@@ -422,17 +422,41 @@ export const ExecutiveBoardDashboard = () => {
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
-            {/* Main Dashboard Widgets */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <EventCreator />
-              <BudgetTracker />
-              <CommunicationHub />
-              <NotificationsPanel />
-              <TaskChecklist />
-              <CheckInOutTool />
-              <MusicLibraryViewer />
-              <ProgressLog />
+            {/* Member Dashboard Layout - Same as regular dashboard */}
+            
+            {/* 1. Spiritual Gleeflections */}
+            <div className="grid grid-cols-1 gap-6">
               <SpiritualReflectionsCard />
+            </div>
+
+            {/* 2. Notifications */}
+            <div className="grid grid-cols-1 gap-6">
+              <NotificationsPanel />
+            </div>
+
+            {/* 3. Attendance */}
+            <div className="grid grid-cols-1 gap-6">
+              <CheckInOutTool />
+            </div>
+
+            {/* 4. Music Library */}
+            <div className="grid grid-cols-1 gap-6">
+              <MusicLibraryViewer />
+            </div>
+
+            {/* 5. Tasks and Dues */}
+            <div className="grid grid-cols-1 gap-6">
+              <TaskChecklist />
+            </div>
+
+            {/* 6. Events Calendar */}
+            <div className="grid grid-cols-1 gap-6">
+              <EventCreator />
+            </div>
+
+            {/* 7. Full Calendar */}
+            <div className="grid grid-cols-1 gap-6">
+              <CalendarViews />
             </div>
           </TabsContent>
 
