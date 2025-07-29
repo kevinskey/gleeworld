@@ -61,7 +61,7 @@ export const CalendarViews = () => {
             <div className="flex items-center justify-between gap-2 p-2">
               <h3 className="text-sm font-medium text-muted-foreground">Member Controls</h3>
             </div>
-            <div className="flex flex-nowrap gap-1 w-full p-2">
+            <div className="flex flex-nowrap gap-2 md:gap-4 w-full p-2">
               <div className="flex-1 min-w-0">
                 <AppointmentScheduler />
               </div>
