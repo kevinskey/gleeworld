@@ -34,11 +34,22 @@ import { Shield } from "lucide-react";
 export const UserDashboard = () => {
   console.log('UserDashboard component rendering...');
   const { user } = useAuth();
-  const { profile } = useMergedProfile(user);
+  const { profile, loading: profileLoading, error: profileError } = useMergedProfile(user);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
-  console.log('UserDashboard state:', { user: !!user, profile, searchParams: searchParams.toString() });
+  console.log('UserDashboard state:', { 
+    user: !!user, 
+    profile, 
+    profileLoading,
+    profileError,
+    searchParams: searchParams.toString() 
+  });
+  
+  // Add error logging for profile loading
+  if (profileError) {
+    console.error('UserDashboard: Profile loading error:', profileError);
+  }
   
   
   // Get real events data
@@ -87,12 +98,30 @@ export const UserDashboard = () => {
 
   const availableModules = getAvailableModules();
 
-  if (!user) {
-    console.log('UserDashboard: No user found, showing loading spinner');
+  if (!user || profileLoading) {
+    console.log('UserDashboard: No user found or profile loading, showing loading spinner');
     return (
       <UniversalLayout>
         <div className="flex items-center justify-center min-h-[50vh]">
-          <LoadingSpinner size="lg" text="Loading dashboard..." />
+          <LoadingSpinner size="lg" text={profileLoading ? "Loading profile..." : "Loading dashboard..."} />
+        </div>
+      </UniversalLayout>
+    );
+  }
+  
+  // Show error state if profile failed to load
+  if (profileError) {
+    console.error('UserDashboard: Profile error, showing error state');
+    return (
+      <UniversalLayout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-2">Profile Loading Error</h2>
+            <p className="text-gray-600 mb-4">{profileError}</p>
+            <Button onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </div>
         </div>
       </UniversalLayout>
     );
