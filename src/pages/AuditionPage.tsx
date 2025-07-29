@@ -201,7 +201,16 @@ function AuditionFormContent() {
             ) : (
               <Button 
                 type="button"
-                onClick={form.handleSubmit(onSubmit)}
+                onClick={async () => {
+                  console.log('🔘 MOBILE Submit button clicked directly!');
+                  console.log('🔘 isSubmitting:', isSubmitting);
+                  console.log('🔘 canProceed():', canProceed());
+                  
+                  const formData = form.getValues();
+                  console.log('🔘 Form data:', formData);
+                  
+                  await onSubmit(formData);
+                }}
                 className="bg-purple-600 hover:bg-purple-700 text-white flex-1"
                 disabled={isSubmitting || !canProceed()}
               >
@@ -240,12 +249,15 @@ function AuditionFormContent() {
                 ) : (
                   <Button 
                     type="button"
-                    onClick={() => {
-                      console.log('🔘 Submit button clicked!');
+                    onClick={async () => {
+                      console.log('🔘 Submit button clicked directly!');
                       console.log('🔘 isSubmitting:', isSubmitting);
                       console.log('🔘 canProceed():', canProceed());
-                      console.log('🔘 Button disabled?', isSubmitting || !canProceed());
-                      form.handleSubmit(onSubmit)();
+                      
+                      const formData = form.getValues();
+                      console.log('🔘 Form data:', formData);
+                      
+                      await onSubmit(formData);
                     }}
                     className="bg-purple-600 hover:bg-purple-700 text-white"
                     disabled={isSubmitting || !canProceed()}
