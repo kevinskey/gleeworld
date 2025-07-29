@@ -284,48 +284,55 @@ export const UserDashboard = () => {
           profile={profile}
         />
 
-        {/* Spiritual Gleeflections & Events Section - side by side with equal heights */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:items-stretch">
-          <div className="h-full">
-            <SpiritualReflectionsSection />
-          </div>
-          <div className="h-full">
-            <EventsAndActivitySection 
-              upcomingEvents={upcomingEventsList}
-              recentActivity={recentActivity}
-            />
-          </div>
+        {/* Member Dashboard Elements Only */}
+        
+        {/* Spiritual Gleeflections */}
+        <div className="grid grid-cols-1 gap-6">
+          <SpiritualReflectionsSection />
         </div>
 
-        {/* Announcements Section */}
+        {/* Upcoming Events */}
+        <div className="grid grid-cols-1 gap-6">
+          <EventsAndActivitySection 
+            upcomingEvents={upcomingEventsList}
+            recentActivity={recentActivity}
+          />
+        </div>
+
+        {/* Notifications, Check In/Out, Dues */}
         <div className="grid grid-cols-1 gap-6">
           <AnnouncementsEventsSection upcomingEvents={upcomingEventsList} />
         </div>
 
-        {/* Quick Actions Section */}
+        {/* Calendar Attendance, Music Library, Budget Creation, Send Notifications, Shop */}
         <div className="grid grid-cols-1 gap-6">
           <QuickActionsSection isAdmin={isAdmin} />
         </div>
 
-        {/* Admin Controls Section */}
-        <div className="grid grid-cols-1 gap-6">
-          {availableModules.length > 0 ? (
-            <AdminControlsSection
-              userRole={userRole}
-              userEmail={userEmail}
-              usernamePermissions={usernamePermissions}
-              profile={profile}
-            />
-          ) : (
-            <GleeClubSpotlightSection />
-          )}
-        </div>
+        {/* Show Admin/Executive Features Only for Those Roles */}
+        {(isAdmin || hasExecBoardPerms) && (
+          <>
+            {/* Admin Controls Section */}
+            <div className="grid grid-cols-1 gap-6">
+              {availableModules.length > 0 ? (
+                <AdminControlsSection
+                  userRole={userRole}
+                  userEmail={userEmail}
+                  usernamePermissions={usernamePermissions}
+                  profile={profile}
+                />
+              ) : (
+                <GleeClubSpotlightSection />
+              )}
+            </div>
 
-        {/* Executive Board Section */}
-        <ExecutiveBoardSection isExecBoardMember={Boolean(isExecBoardMember)} />
+            {/* Executive Board Section */}
+            <ExecutiveBoardSection isExecBoardMember={Boolean(isExecBoardMember)} />
 
-        {/* Dashboard Modules Section */}
-        <DashboardModulesSection />
+            {/* Dashboard Modules Section */}
+            <DashboardModulesSection />
+          </>
+        )}
       </div>
     </UniversalLayout>
   );
