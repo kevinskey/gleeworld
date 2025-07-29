@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   Crown, FileText, DollarSign, MapPin, Shirt, BookOpen, 
-  Camera, MessageSquare, Heart, BarChart3 
+  Camera, MessageSquare, Heart, BarChart3, Music2, UserCheck 
 } from "lucide-react";
 
 export type ExecutivePosition = 
@@ -248,6 +248,107 @@ const positionData = {
       "Help develop peer support programs"
     ],
     collaborators: ["chaplain", "president", "tour_manager"]
+  },
+  student_conductor: {
+    icon: Music2,
+    mission: "To serve as the Glee Club's Assistant Conductor, supporting musical leadership and development. Guide rehearsals, manage sectional oversight, and assist in developing the choir's musical excellence.",
+    responsibilities: [
+      "Lead sectional rehearsals",
+      "Oversee section leader coordination",
+      "Manage SightReadingFactory assignments",
+      "Coordinate audition processes",
+      "Support vocal technique development",
+      "Assist with concert preparation"
+    ],
+    tasks: [
+      "Review weekly sectional plans",
+      "Schedule SRF assignments",
+      "Manage audition logistics",
+      "Review submission materials",
+      "Coordinate rehearsal setup",
+      "Communicate with sections"
+    ],
+    collaborators: ["president", "librarian", "chaplain"]
+  },
+  section_leader_s1: {
+    icon: UserCheck,
+    mission: "To lead and support the Soprano 1 section through vocal development, team building, and musical excellence. Foster growth, maintain morale, and ensure section cohesion.",
+    responsibilities: [
+      "Lead sectional rehearsals",
+      "Support vocal development",
+      "Monitor attendance and engagement",
+      "Facilitate peer learning",
+      "Coordinate with other sections",
+      "Maintain section communication"
+    ],
+    tasks: [
+      "Plan weekly sectional sessions",
+      "Upload progress reports",
+      "Organize section bonding activities",
+      "Track individual vocal growth",
+      "Coordinate practice schedules"
+    ],
+    collaborators: ["student_conductor", "section_leader_s2", "librarian"]
+  },
+  section_leader_s2: {
+    icon: UserCheck,
+    mission: "To lead and support the Soprano 2 section through vocal development, team building, and musical excellence. Foster growth, maintain morale, and ensure section cohesion.",
+    responsibilities: [
+      "Lead sectional rehearsals",
+      "Support vocal development", 
+      "Monitor attendance and engagement",
+      "Facilitate peer learning",
+      "Coordinate with other sections",
+      "Maintain section communication"
+    ],
+    tasks: [
+      "Plan weekly sectional sessions",
+      "Upload progress reports",
+      "Organize section bonding activities", 
+      "Track individual vocal growth",
+      "Coordinate practice schedules"
+    ],
+    collaborators: ["student_conductor", "section_leader_s1", "librarian"]
+  },
+  section_leader_a1: {
+    icon: UserCheck,
+    mission: "To lead and support the Alto 1 section through vocal development, team building, and musical excellence. Foster growth, maintain morale, and ensure section cohesion.",
+    responsibilities: [
+      "Lead sectional rehearsals",
+      "Support vocal development",
+      "Monitor attendance and engagement", 
+      "Facilitate peer learning",
+      "Coordinate with other sections",
+      "Maintain section communication"
+    ],
+    tasks: [
+      "Plan weekly sectional sessions",
+      "Upload progress reports",
+      "Organize section bonding activities",
+      "Track individual vocal growth", 
+      "Coordinate practice schedules"
+    ],
+    collaborators: ["student_conductor", "section_leader_a2", "librarian"]
+  },
+  section_leader_a2: {
+    icon: UserCheck,
+    mission: "To lead and support the Alto 2 section through vocal development, team building, and musical excellence. Foster growth, maintain morale, and ensure section cohesion.",
+    responsibilities: [
+      "Lead sectional rehearsals",
+      "Support vocal development",
+      "Monitor attendance and engagement",
+      "Facilitate peer learning", 
+      "Coordinate with other sections",
+      "Maintain section communication"
+    ],
+    tasks: [
+      "Plan weekly sectional sessions",
+      "Upload progress reports",
+      "Organize section bonding activities",
+      "Track individual vocal growth",
+      "Coordinate practice schedules" 
+    ],
+    collaborators: ["student_conductor", "section_leader_a1", "librarian"]
   }
 };
 
