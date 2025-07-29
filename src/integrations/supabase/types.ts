@@ -8760,6 +8760,7 @@ export type Database = {
         | "pr_coordinator"
         | "chaplain"
         | "data_analyst"
+        | "assistant_chaplain"
       feedback_category_enum:
         | "Vocal Blend"
         | "Rhythmic Precision"
@@ -8915,6 +8916,7 @@ export const Constants = {
         "pr_coordinator",
         "chaplain",
         "data_analyst",
+        "assistant_chaplain",
       ],
       feedback_category_enum: [
         "Vocal Blend",
