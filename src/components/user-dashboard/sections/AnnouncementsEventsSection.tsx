@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bell, Clock } from "lucide-react";
+import { Bell, Clock, Package, DollarSign, AlertCircle } from "lucide-react";
 import { useAnnouncements } from "@/hooks/useAnnouncements";
 import { useEffect } from "react";
 
@@ -37,56 +37,154 @@ export const AnnouncementsEventsSection = ({ upcomingEvents }: AnnouncementsEven
     }
   };
 
+  // Mock data for checked out items and dues - replace with real data
+  const checkedOutItems = [
+    { id: '1', title: 'Black Concert Dress', dueDate: '2024-02-15', type: 'uniform' },
+    { id: '2', title: 'Music Folder - Spring Concert', dueDate: '2024-02-20', type: 'music' },
+  ];
+
+  const duesInfo = {
+    totalDue: 150.00,
+    dueDate: '2024-03-01',
+    items: [
+      { description: 'Membership Dues', amount: 100.00 },
+      { description: 'Concert Attire Fee', amount: 50.00 },
+    ]
+  };
+
   return (
-    <Card className="bg-gradient-to-r from-secondary/5 via-accent/5 to-primary/5 border-secondary/20 shadow-lg h-64">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-secondary-foreground text-base">
-          <Bell className="h-4 w-4" />
-          Notifications
-          <Badge variant="secondary" className="text-xs">
-            {announcements.length}
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-44">
-          <div className="space-y-2 pr-4">
-            {loading ? (
-              <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground">Loading notifications...</p>
-              </div>
-            ) : announcements.length === 0 ? (
-              <div className="text-center py-4">
-                <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">No new notifications</p>
+    <div className="flex gap-4 w-full">
+      {/* Notifications Column - 50% width */}
+      <Card className="bg-gradient-to-r from-secondary/5 via-accent/5 to-primary/5 border-secondary/20 shadow-lg h-64 w-1/2">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-secondary-foreground text-base">
+            <Bell className="h-4 w-4" />
+            Notifications
+            <Badge variant="secondary" className="text-xs">
+              {announcements.length}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-44">
+            <div className="space-y-2 pr-4">
+              {loading ? (
+                <div className="text-center py-4">
+                  <p className="text-sm text-muted-foreground">Loading notifications...</p>
+                </div>
+              ) : announcements.length === 0 ? (
+                <div className="text-center py-4">
+                  <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">No new notifications</p>
+                </div>
+              ) : (
+                announcements.map((notification) => (
+                  <div key={notification.id} className="border border-secondary/10 rounded-lg p-3 bg-background/50 backdrop-blur-sm hover:bg-background/70 transition-colors">
+                    <div className="flex items-start justify-between mb-2">
+                      <h5 className="font-medium text-base text-foreground line-clamp-1">{notification.title}</h5>
+                      {notification.announcement_type && (
+                        <Badge className={`${getNotificationTypeColor(notification.announcement_type)} text-sm ml-2`} variant="secondary">
+                          {notification.announcement_type}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                      {notification.content}
+                    </p>
+                    <div className="text-sm text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      {notification.created_at 
+                        ? new Date(notification.created_at).toLocaleString()
+                        : 'Recently posted'
+                      }
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+
+      {/* Checked Out Items & Dues Column - 50% width */}
+      <div className="w-1/2 space-y-4">
+        {/* Checked Out Items */}
+        <Card className="bg-gradient-to-r from-accent/5 via-secondary/5 to-primary/5 border-accent/20 shadow-lg">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-secondary-foreground text-base">
+              <Package className="h-4 w-4" />
+              Checked Out Items
+              <Badge variant="secondary" className="text-xs">
+                {checkedOutItems.length}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {checkedOutItems.length === 0 ? (
+                <div className="text-center py-2">
+                  <Package className="h-6 w-6 text-muted-foreground mx-auto mb-1" />
+                  <p className="text-sm text-muted-foreground">No items checked out</p>
+                </div>
+              ) : (
+                checkedOutItems.map((item) => (
+                  <div key={item.id} className="border border-accent/10 rounded-lg p-2 bg-background/50 backdrop-blur-sm">
+                    <div className="flex items-start justify-between mb-1">
+                      <h5 className="font-medium text-sm text-foreground line-clamp-1">{item.title}</h5>
+                      <Badge variant="outline" className="text-xs">
+                        {item.type}
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      Due: {new Date(item.dueDate).toLocaleDateString()}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Dues Indicator */}
+        <Card className="bg-gradient-to-r from-primary/5 via-accent/5 to-secondary/5 border-primary/20 shadow-lg">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-secondary-foreground text-base">
+              <DollarSign className="h-4 w-4" />
+              Outstanding Dues
+              {duesInfo.totalDue > 0 && (
+                <Badge variant="destructive" className="text-xs">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  Due
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {duesInfo.totalDue === 0 ? (
+              <div className="text-center py-2">
+                <DollarSign className="h-6 w-6 text-green-500 mx-auto mb-1" />
+                <p className="text-sm text-green-600">All dues paid!</p>
               </div>
             ) : (
-              announcements.map((notification) => (
-                <div key={notification.id} className="border border-secondary/10 rounded-lg p-3 bg-background/50 backdrop-blur-sm hover:bg-background/70 transition-colors">
-                  <div className="flex items-start justify-between mb-2">
-                    <h5 className="font-medium text-base text-foreground line-clamp-1">{notification.title}</h5>
-                    {notification.announcement_type && (
-                      <Badge className={`${getNotificationTypeColor(notification.announcement_type)} text-sm ml-2`} variant="secondary">
-                        {notification.announcement_type}
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                    {notification.content}
-                  </p>
-                  <div className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    {notification.created_at 
-                      ? new Date(notification.created_at).toLocaleString()
-                      : 'Recently posted'
-                    }
-                  </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-bold text-foreground">${duesInfo.totalDue.toFixed(2)}</span>
+                  <span className="text-sm text-muted-foreground">Due: {new Date(duesInfo.dueDate).toLocaleDateString()}</span>
                 </div>
-              ))
+                <div className="space-y-1">
+                  {duesInfo.items.map((item, index) => (
+                    <div key={index} className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{item.description}</span>
+                      <span className="font-medium">${item.amount.toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
-          </div>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };
