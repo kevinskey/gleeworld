@@ -43,6 +43,7 @@ interface SuperAdminDashboardProps {
 }
 
 export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
+  console.log('SuperAdminDashboard: Component loaded with user:', user);
   const navigate = useNavigate();
   // Mock data for super admin dashboard
   const superAdminData = {

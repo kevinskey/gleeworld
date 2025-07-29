@@ -65,19 +65,28 @@ export const MemberViewDashboard = () => {
   const backgroundImage = welcomeCardSetting?.image_url;
 
   const renderDashboardContent = () => {
+    console.log('MemberViewDashboard: rendering dashboard for user:', user);
+    console.log('MemberViewDashboard: user role is:', user.role);
+    
     switch (user.role) {
       case 'super-admin':
+        console.log('MemberViewDashboard: Loading SuperAdminDashboard');
         return <SuperAdminDashboard user={user} />;
       case 'admin':
+        console.log('MemberViewDashboard: Loading AdminDashboard');
         return <AdminDashboard user={user} />;
       case 'alumnae':
+        console.log('MemberViewDashboard: Loading AlumnaeDashboard');
         return <AlumnaeDashboard user={user} />;
       case 'user':
         if (user.is_exec_board) {
+          console.log('MemberViewDashboard: Loading ExecutiveBoardDashboard');
           return <ExecutiveBoardDashboard user={user} />;
         }
+        console.log('MemberViewDashboard: Loading MemberDashboard for user');
         return <MemberDashboard user={user} />;
       default:
+        console.log('MemberViewDashboard: Loading default MemberDashboard, role was:', user.role);
         return <MemberDashboard user={user} />;
     }
   };
