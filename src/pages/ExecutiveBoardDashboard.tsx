@@ -38,6 +38,7 @@ import { MusicLibraryViewer } from "@/components/executive-board/MusicLibraryVie
 import { PositionTab } from "@/components/executive-board/PositionTab";
 import { CalendarViews } from "@/components/calendar/CalendarViews";
 import { MeetingMinutes } from "@/components/executive-board/MeetingMinutes";
+import { AttendanceDashboard } from "@/components/attendance/AttendanceDashboard";
 
 export type ExecutivePosition = 
   | 'president'
@@ -289,6 +290,12 @@ export const ExecutiveBoardDashboard = () => {
               <Megaphone className="h-4 w-4 mr-1" />
               Minutes
             </TabsTrigger>
+            {selectedPosition === 'secretary' && (
+              <TabsTrigger value="attendance" className="text-xs">
+                <Users className="h-4 w-4 mr-1" />
+                Attendance
+              </TabsTrigger>
+            )}
             <TabsTrigger value="resources" className="text-xs">
               <FolderOpen className="h-4 w-4 mr-1" />
               Resources
@@ -323,6 +330,12 @@ export const ExecutiveBoardDashboard = () => {
           <TabsContent value="announcements">
             <MeetingMinutes />
           </TabsContent>
+
+          {selectedPosition === 'secretary' && (
+            <TabsContent value="attendance">
+              <AttendanceDashboard />
+            </TabsContent>
+          )}
 
           <TabsContent value="resources">
             <Card>
