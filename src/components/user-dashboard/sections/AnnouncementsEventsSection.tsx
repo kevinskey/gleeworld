@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar, Megaphone, Clock, MapPin } from "lucide-react";
 import { useAnnouncements } from "@/hooks/useAnnouncements";
+import { useEffect } from "react";
 
 interface AnnouncementsEventsSectionProps {
   upcomingEvents: Array<{
@@ -15,7 +16,15 @@ interface AnnouncementsEventsSectionProps {
 }
 
 export const AnnouncementsEventsSection = ({ upcomingEvents }: AnnouncementsEventsSectionProps) => {
-  const { announcements, loading } = useAnnouncements();
+  const { announcements, loading, refetch } = useAnnouncements();
+
+  // Auto-refresh announcements every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [refetch]);
 
   const getAnnouncementTypeColor = (type: string) => {
     switch (type) {
