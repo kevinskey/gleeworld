@@ -29,6 +29,7 @@ import { Success } from "@/pages/shop/Success";
 import BookingRequest from "@/pages/BookingRequest";
 import TourPlanner from "@/pages/TourPlanner";
 
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -133,10 +134,6 @@ export const router = createBrowserRouter([
   {
     path: "/booking-request",
     element: <BookingRequest />,
-  },
-  {
-    path: "/tour-planner",
-    element: <TourPlanner />,
   },
   {
     path: "*",

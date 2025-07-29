@@ -59,6 +59,7 @@ import ScholarshipHub from "./pages/ScholarshipHub";
 import AdminScholarships from "./pages/AdminScholarships";
 import AdminProducts from "./pages/AdminProducts";
 import { ExecutiveBoardDashboard } from "./pages/ExecutiveBoardDashboard";
+import TourPlanner from "./pages/TourPlanner";
 import BookingRequest from "./pages/BookingRequest";
 
 const queryClient = new QueryClient({
@@ -476,7 +477,15 @@ const App = () => {
                                  <BookingRequest />
                                </PublicRoute>
                              } 
-                           />
+                            />
+                            <Route 
+                              path="/tour-planner" 
+                              element={
+                                <ProtectedRoute>
+                                  <TourPlanner />
+                                </ProtectedRoute>
+                              } 
+                            />
                  <Route 
                    path="/landing"
                    element={
