@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { SpiritualReflectionsCard } from "../SpiritualReflectionsCard";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -297,6 +298,9 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Spiritual Reflections Card */}
+      <SpiritualReflectionsCard />
     </div>
   );
 };
