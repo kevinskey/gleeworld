@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ interface SheetMusic {
 }
 
 export const MusicLibraryViewer = () => {
+  const navigate = useNavigate();
   const [sheetMusic, setSheetMusic] = useState<SheetMusic[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -119,7 +121,12 @@ export const MusicLibraryViewer = () => {
           </div>
         )}
 
-        <Button variant="outline" size="sm" className="w-full">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="w-full"
+          onClick={() => navigate('/music-library')}
+        >
           View Full Library
         </Button>
       </CardContent>
