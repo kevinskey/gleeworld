@@ -32,7 +32,9 @@ import {
   CheckCircle,
   Route,
   Music2,
-  UserCheck
+  UserCheck,
+  Home,
+  X
 } from "lucide-react";
 import { EventCreator } from "@/components/executive-board/EventCreator";
 import { BudgetTracker } from "@/components/executive-board/BudgetTracker";
@@ -229,6 +231,30 @@ export const ExecutiveBoardDashboard = () => {
   return (
     <UniversalLayout>
       <div className="space-y-6">
+        {/* Navigation Controls */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center gap-2"
+            >
+              <Home className="h-4 w-4" />
+              Back to Dashboard
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center gap-2"
+            >
+              <X className="h-4 w-4" />
+              Exit Executive Panel
+            </Button>
+          </div>
+        </div>
+
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bebas tracking-wide text-foreground">
