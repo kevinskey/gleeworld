@@ -364,23 +364,44 @@ export const ExecutiveBoardDashboard = () => {
             <>
               <TabsContent value="ledger">
                 <div className="space-y-6">
-                  <StripeSalesSync />
-                  <RunningLedger />
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="text-center">
+                        <p>Loading Stripe Sales Sync...</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="text-center">
+                        <p>Loading Running Ledger...</p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </TabsContent>
               
               <TabsContent value="budget-manager">
                 <div className="space-y-6">
-                  <BudgetManager />
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="text-center">
+                        <p>Loading Budget Manager...</p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </TabsContent>
               
               <TabsContent value="finances">
                 <div className="space-y-8">
-                  <DuesManager />
-                  <GeneralBudgetManager />
-                  <StipendPayer />
-                  <ReceiptKeeper />
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="text-center">
+                        <p>Loading Financial Tools...</p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </TabsContent>
             </>
