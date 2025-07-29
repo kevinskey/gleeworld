@@ -13,7 +13,7 @@ import { WelcomeCard } from "./WelcomeCard";
 import { QuickActionsSection } from "./sections/QuickActionsSection";
 import { AdminControlsSection } from "./sections/AdminControlsSection";
 import { GleeClubSpotlightSection } from "./sections/GleeClubSpotlightSection";
-import { ExecutiveBoardSection } from "./sections/ExecutiveBoardSection";
+
 import { EventsAndActivitySection } from "./sections/EventsAndActivitySection";
 import { DashboardModulesSection } from "./sections/DashboardModulesSection";
 import { SpiritualReflectionsSection } from "./sections/SpiritualReflectionsSection";
@@ -354,8 +354,6 @@ export const UserDashboard = () => {
               )}
             </div>
 
-            {/* Executive Board Section */}
-            <ExecutiveBoardSection isExecBoardMember={Boolean(isExecBoardMember)} />
 
             {/* Dashboard Modules Section */}
             <DashboardModulesSection />
