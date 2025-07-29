@@ -5,6 +5,14 @@ import { useAuditionForm } from "../AuditionFormProvider";
 export function BasicInfoPage() {
   const { form } = useAuditionForm();
 
+  const capitalizeInput = (value: string) => {
+    return value
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
@@ -20,7 +28,11 @@ export function BasicInfoPage() {
             <FormItem>
               <FormLabel>First Name</FormLabel>
               <FormControl>
-                <Input placeholder="Enter your first name" {...field} />
+                <Input 
+                  placeholder="Enter your first name" 
+                  {...field}
+                  onChange={(e) => field.onChange(capitalizeInput(e.target.value))}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -33,7 +45,11 @@ export function BasicInfoPage() {
             <FormItem>
               <FormLabel>Last Name</FormLabel>
               <FormControl>
-                <Input placeholder="Enter your last name" {...field} />
+                <Input 
+                  placeholder="Enter your last name" 
+                  {...field}
+                  onChange={(e) => field.onChange(capitalizeInput(e.target.value))}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
