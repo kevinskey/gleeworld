@@ -253,6 +253,27 @@ export const ExecutiveBoardDashboard = () => {
               Exit Executive Panel
             </Button>
           </div>
+          
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-2 p-1 bg-secondary/10 rounded-lg border">
+            <Button
+              variant="default"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Crown className="h-4 w-4" />
+              Exec Board View
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Member View
+            </Button>
+          </div>
         </div>
 
         <div className="flex items-center justify-between">
