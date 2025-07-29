@@ -21,7 +21,9 @@ import {
   ShoppingBag,
   BookOpen,
   Star,
-  Calendar
+  Calendar,
+  UserCheck,
+  Music2
 } from "lucide-react";
 
 interface ExecutiveBoardSectionProps {
@@ -64,8 +66,8 @@ export const ExecutiveBoardSection = ({ isExecBoardMember }: ExecutiveBoardSecti
     { name: "Chaplain", icon: Star, route: "/exec-board/chaplain" },
     { name: "Historian", icon: Calendar, route: "/exec-board/historian" },
     { name: "Social Chair", icon: Users, route: "/exec-board/social-chair" },
-    { name: "Section Leader", icon: Users, route: "/dashboard/section-leader" },
-    { name: "Student Conductor", icon: Users, route: "/dashboard/student-conductor" }
+    { name: "Section Leader", icon: UserCheck, route: "/dashboard/section-leader" },
+    { name: "Student Conductor", icon: Music2, route: "/dashboard/student-conductor" }
   ];
 
   return (
