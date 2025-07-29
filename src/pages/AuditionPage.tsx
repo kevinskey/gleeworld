@@ -240,7 +240,13 @@ function AuditionFormContent() {
                 ) : (
                   <Button 
                     type="button"
-                    onClick={form.handleSubmit(onSubmit)}
+                    onClick={() => {
+                      console.log('🔘 Submit button clicked!');
+                      console.log('🔘 isSubmitting:', isSubmitting);
+                      console.log('🔘 canProceed():', canProceed());
+                      console.log('🔘 Button disabled?', isSubmitting || !canProceed());
+                      form.handleSubmit(onSubmit)();
+                    }}
                     className="bg-purple-600 hover:bg-purple-700 text-white"
                     disabled={isSubmitting || !canProceed()}
                   >
