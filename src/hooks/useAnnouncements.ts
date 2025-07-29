@@ -39,7 +39,8 @@ export const useAnnouncements = () => {
           .from('gw_announcements')
           .select('*')
           .not('publish_date', 'is', null)
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false })
+          .limit(5),
         supabase
           .from('gw_communications')
           .select('*')
