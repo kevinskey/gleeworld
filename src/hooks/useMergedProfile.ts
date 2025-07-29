@@ -80,30 +80,28 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
 
     try {
       // Fetch from gw_profiles which is now the source of truth
+      console.log('useMergedProfile: Fetching profile for user:', user.id);
       const { data: gwProfile, error: gwError } = await supabase
         .from('gw_profiles')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
 
+      console.log('useMergedProfile: gw_profiles query result:', { gwProfile, gwError });
+
       if (gwError) {
+        console.error('useMergedProfile: Error fetching gw_profiles:', gwError);
         throw gwError;
       }
 
       if (gwProfile) {
-        // Also get the role from profiles table for completeness
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .maybeSingle();
-
+        // Use role from gw_profiles instead of profiles table to avoid complexity
         const mergedProfile: MergedProfile = {
           id: gwProfile.id,
           user_id: gwProfile.user_id,
           email: gwProfile.email,
           full_name: gwProfile.full_name || '',
-          role: profileData?.role || 'user',
+          role: gwProfile.role || 'user', // Use role from gw_profiles directly
           first_name: gwProfile.first_name,
           last_name: gwProfile.last_name,
           phone: gwProfile.phone,
