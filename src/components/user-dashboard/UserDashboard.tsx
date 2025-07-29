@@ -238,6 +238,12 @@ export const UserDashboard = () => {
           profile={profile}
         />
 
+        {/* Spiritual Reflections & Announcements Section - 50/50 split */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <SpiritualReflectionsSection />
+          <AnnouncementsEventsSection upcomingEvents={upcomingEventsList} />
+        </div>
+
         {/* Quick Actions & Admin Controls Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <QuickActionsSection isAdmin={isAdmin} />
@@ -253,12 +259,6 @@ export const UserDashboard = () => {
           ) : (
             <GleeClubSpotlightSection />
           )}
-        </div>
-
-        {/* Spiritual Reflections & Announcements Section - 50/50 split */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <SpiritualReflectionsSection />
-          <AnnouncementsEventsSection upcomingEvents={upcomingEventsList} />
         </div>
 
         {/* Executive Board Section */}
