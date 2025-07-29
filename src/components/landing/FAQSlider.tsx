@@ -116,8 +116,8 @@ export const FAQSlider = () => {
            <div className="h-[280px] md:h-[320px] flex flex-col justify-start space-y-4">
              {!isFooterCard ? (
                <>
-                 {/* Question Card */}
-                 <div className="bg-background/60 backdrop-blur-sm border border-border rounded-lg p-4 md:p-6 shadow-sm flex flex-col justify-start min-h-[120px] md:min-h-[140px] flex-1">
+                 {/* Question Card - Smaller */}
+                 <div className="bg-background/60 backdrop-blur-sm border border-border rounded-lg p-4 md:p-6 shadow-sm flex flex-col justify-start">
                    <div className="flex items-center space-x-2 mb-3">
                      <div className="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 bg-primary rounded-full flex items-center justify-center">
                        <span className="text-sm md:text-base font-bold text-primary-foreground">
@@ -131,8 +131,8 @@ export const FAQSlider = () => {
                    </p>
                  </div>
                  
-                 {/* Answer Card */}
-                 <div className="bg-primary/5 backdrop-blur-sm border border-primary/20 rounded-lg p-4 md:p-6 shadow-sm flex flex-col justify-start min-h-[120px] md:min-h-[140px] flex-1">
+                 {/* Answer Card - Takes remaining space */}
+                 <div className="bg-primary/5 backdrop-blur-sm border border-primary/20 rounded-lg p-4 md:p-6 shadow-sm flex flex-col justify-start flex-1">
                    <div className="flex items-center space-x-2 mb-3">
                      <div className="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 bg-primary/80 rounded-full flex items-center justify-center">
                        <span className="text-sm md:text-base font-bold text-primary-foreground">A</span>
