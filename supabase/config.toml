@@ -103,3 +103,6 @@ verify_jwt = false
 
 [functions.google-docs-manager]
 verify_jwt = false
+
+[functions.google-places-lookup]
+verify_jwt = false

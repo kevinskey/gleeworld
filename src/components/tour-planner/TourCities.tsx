@@ -3,9 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Plus, MapPin, GripVertical, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { CityAutocomplete } from '@/components/ui/city-autocomplete';
+import { PlacePrediction } from '@/hooks/useGooglePlaces';
 import { toast } from 'sonner';
 
 interface TourCity {
@@ -26,6 +27,7 @@ interface TourCitiesProps {
 
 export const TourCities: React.FC<TourCitiesProps> = ({ tourId, tour }) => {
   const [newCityName, setNewCityName] = useState('');
+  const [selectedCityData, setSelectedCityData] = useState<PlacePrediction | null>(null);
   const [isAddingCity, setIsAddingCity] = useState(false);
   const queryClient = useQueryClient();
 
@@ -47,13 +49,24 @@ export const TourCities: React.FC<TourCitiesProps> = ({ tourId, tour }) => {
   });
 
   const addCityMutation = useMutation({
-    mutationFn: async (cityName: string) => {
+    mutationFn: async ({ cityName, cityData }: { cityName: string, cityData?: PlacePrediction }) => {
       if (!tourId) throw new Error('No tour selected');
 
-      // Simple city parsing - in a real app, you'd use Google Places API
-      const parts = cityName.split(',').map(p => p.trim());
-      const city = parts[0];
-      const state = parts[1] || '';
+      let city = cityName;
+      let state = '';
+      let country = '';
+
+      // Use Google Places data if available
+      if (cityData) {
+        city = cityData.city_name || cityData.structured_formatting.main_text;
+        state = cityData.state || '';
+        country = cityData.country || '';
+      } else {
+        // Fallback to simple parsing
+        const parts = cityName.split(',').map(p => p.trim());
+        city = parts[0];
+        state = parts[1] || '';
+      }
 
       const { data, error } = await supabase
         .from('gw_tour_cities')
@@ -61,6 +74,7 @@ export const TourCities: React.FC<TourCitiesProps> = ({ tourId, tour }) => {
           tour_id: tourId,
           city_name: city,
           state_code: state,
+          country_code: country,
           city_order: cities.length + 1,
         })
         .select()
@@ -72,6 +86,7 @@ export const TourCities: React.FC<TourCitiesProps> = ({ tourId, tour }) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tour-cities', tourId] });
       setNewCityName('');
+      setSelectedCityData(null);
       setIsAddingCity(false);
       toast.success('City added successfully!');
     },
@@ -102,14 +117,16 @@ export const TourCities: React.FC<TourCitiesProps> = ({ tourId, tour }) => {
 
   const handleAddCity = () => {
     if (newCityName.trim()) {
-      addCityMutation.mutate(newCityName.trim());
+      addCityMutation.mutate({ 
+        cityName: newCityName.trim(), 
+        cityData: selectedCityData || undefined 
+      });
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && newCityName.trim()) {
-      handleAddCity();
-    }
+  const handleCityChange = (value: string, cityData?: PlacePrediction) => {
+    setNewCityName(value);
+    setSelectedCityData(cityData || null);
   };
 
   if (!tourId) {
@@ -143,13 +160,13 @@ export const TourCities: React.FC<TourCitiesProps> = ({ tourId, tour }) => {
         <CardContent className="space-y-4">
           {isAddingCity && (
             <div className="flex gap-2 p-4 border border-dashed rounded-lg">
-              <Input
-                placeholder="Enter city, state (e.g. Atlanta, GA)"
-                value={newCityName}
-                onChange={(e) => setNewCityName(e.target.value)}
-                onKeyPress={handleKeyPress}
-                autoFocus
-              />
+              <div className="flex-1">
+                <CityAutocomplete
+                  value={newCityName}
+                  onChange={handleCityChange}
+                  placeholder="Search for a city..."
+                />
+              </div>
               <Button 
                 onClick={handleAddCity} 
                 disabled={!newCityName.trim() || addCityMutation.isPending}
@@ -161,6 +178,7 @@ export const TourCities: React.FC<TourCitiesProps> = ({ tourId, tour }) => {
                 onClick={() => {
                   setIsAddingCity(false);
                   setNewCityName('');
+                  setSelectedCityData(null);
                 }} 
                 variant="outline"
                 size="sm"
