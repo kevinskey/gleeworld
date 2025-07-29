@@ -1,7 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { SpiritualReflectionsCard } from "../SpiritualReflectionsCard";
+import { SpiritualReflectionsSection } from "@/components/user-dashboard/sections/SpiritualReflectionsSection";
+import { AnnouncementsEventsSection } from "@/components/user-dashboard/sections/AnnouncementsEventsSection";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -299,8 +300,13 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
         </CardContent>
       </Card>
 
-      {/* Spiritual Reflections Card */}
-      <SpiritualReflectionsCard />
+      {/* Spiritual Reflections & Announcements Section */}
+      <div className="md:col-span-2 lg:col-span-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SpiritualReflectionsSection />
+          <AnnouncementsEventsSection upcomingEvents={[]} />
+        </div>
+      </div>
     </div>
   );
 };
