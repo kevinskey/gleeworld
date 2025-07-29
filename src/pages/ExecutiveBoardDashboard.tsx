@@ -59,6 +59,7 @@ import { TourOverview } from "@/components/tour-manager/TourOverview";
 import { WardrobeMistressHub } from "@/components/tour-manager/WardrobeMistressHub";
 import { LibraryManagement } from "@/components/music-library/LibraryManagement";
 
+
 export type ExecutivePosition = 
   | 'president'
   | 'secretary' 
@@ -383,6 +384,12 @@ export const ExecutiveBoardDashboard = () => {
                 Music Library
               </TabsTrigger>
             )}
+            {selectedPosition === 'historian' && (
+              <TabsTrigger value="historian-hub" className="text-xs">
+                <Camera className="h-4 w-4 mr-1" />
+                Historian Hub
+              </TabsTrigger>
+            )}
             <TabsTrigger value="position" className="text-xs">
               <PositionIcon className="h-4 w-4 mr-1" />
               My Role
@@ -529,6 +536,26 @@ export const ExecutiveBoardDashboard = () => {
           {selectedPosition === 'librarian' && (
             <TabsContent value="music-library">
               <LibraryManagement />
+            </TabsContent>
+          )}
+
+          {selectedPosition === 'historian' && (
+            <TabsContent value="historian-hub">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Camera className="h-5 w-5" />
+                    Historian Workpage
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center text-muted-foreground">
+                    Historian workpage is being set up. This will include media upload tools, 
+                    event documentation tracker, historian journal, interview toolkit, 
+                    archive management, and reporting panels.
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
           )}
 
