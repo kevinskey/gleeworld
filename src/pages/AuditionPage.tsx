@@ -30,16 +30,23 @@ function AuditionFormContent() {
   } = useAuditionForm();
 
   const onSubmit = async (data: AuditionFormData) => {
+    console.log('🚀 Submit function called with data:', data);
+    console.log('👤 Current user:', user);
+    console.log('📸 Captured image:', capturedImage);
+    
     if (!user) {
+      console.log('❌ No user found');
       toast.error("Please log in to submit your audition form");
       return;
     }
 
     if (!capturedImage) {
+      console.log('❌ No captured image');
       toast.error("Please take a selfie before submitting");
       return;
     }
 
+    console.log('✅ Starting submission process...');
     setIsSubmitting(true);
 
     try {
@@ -53,42 +60,53 @@ function AuditionFormContent() {
       };
 
       // Save audition data to database - using any type to bypass type check temporarily
+      console.log('💾 Attempting to save to database...');
+      
+      const submissionData = {
+        user_id: user.id,
+        first_name: capitalizeNames(data.firstName),
+        last_name: capitalizeNames(data.lastName),
+        email: data.email,
+        phone: data.phone,
+        sang_in_middle_school: data.sangInMiddleSchool,
+        sang_in_high_school: data.sangInHighSchool,
+        high_school_years: data.highSchoolYears,
+        plays_instrument: data.playsInstrument,
+        instrument_details: data.instrumentDetails,
+        is_soloist: data.isSoloist,
+        soloist_rating: data.soloistRating ? parseInt(data.soloistRating) : null,
+        high_school_section: data.highSchoolSection,
+        reads_music: data.readsMusic,
+        interested_in_voice_lessons: data.interestedInVoiceLessons,
+        interested_in_music_fundamentals: data.interestedInMusicFundamentals,
+        personality_description: data.personalityDescription,
+        interested_in_leadership: data.interestedInLeadership,
+        additional_info: data.additionalInfo,
+        audition_date: data.auditionDate.toISOString(),
+        audition_time: data.auditionTime,
+        selfie_url: capturedImage,
+      };
+      
+      console.log('📋 Submission data prepared:', submissionData);
+      
       const { error } = await (supabase as any)
         .from('gw_auditions')
-        .insert({
-          user_id: user.id,
-          first_name: capitalizeNames(data.firstName),
-          last_name: capitalizeNames(data.lastName),
-          email: data.email,
-          phone: data.phone,
-          sang_in_middle_school: data.sangInMiddleSchool,
-          sang_in_high_school: data.sangInHighSchool,
-          high_school_years: data.highSchoolYears,
-          plays_instrument: data.playsInstrument,
-          instrument_details: data.instrumentDetails,
-          is_soloist: data.isSoloist,
-          soloist_rating: data.soloistRating ? parseInt(data.soloistRating) : null,
-          high_school_section: data.highSchoolSection,
-          reads_music: data.readsMusic,
-          interested_in_voice_lessons: data.interestedInVoiceLessons,
-          interested_in_music_fundamentals: data.interestedInMusicFundamentals,
-          personality_description: data.personalityDescription,
-          interested_in_leadership: data.interestedInLeadership,
-          additional_info: data.additionalInfo,
-          audition_date: data.auditionDate.toISOString(),
-          audition_time: data.auditionTime,
-          selfie_url: capturedImage,
-        });
+        .insert(submissionData);
 
-      if (error) throw error;
+      if (error) {
+        console.log('❌ Database error:', error);
+        throw error;
+      }
 
+      console.log('✅ Successfully saved to database!');
       toast.success("Audition application submitted successfully!");
       form.reset();
       // Reset will be handled by the provider
     } catch (error) {
-      console.error('Error submitting audition:', error);
+      console.error('💥 Error submitting audition:', error);
       toast.error("Failed to submit audition application");
     } finally {
+      console.log('🏁 Setting isSubmitting to false');
       setIsSubmitting(false);
     }
   };
