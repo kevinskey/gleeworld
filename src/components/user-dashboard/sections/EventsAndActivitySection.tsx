@@ -16,11 +16,11 @@ interface EventsAndActivitySectionProps {
 export const EventsAndActivitySection = ({ 
   upcomingEvents
 }: EventsAndActivitySectionProps) => {
-  // Sort events by date (most recent first)
+  // Sort events by date (most recent first) - but actually show chronological order for upcoming events
   const sortedEvents = [...upcomingEvents].sort((a, b) => {
-    const dateA = new Date(a.start_date);
-    const dateB = new Date(b.start_date);
-    return dateB.getTime() - dateA.getTime();
+    const dateA = new Date(a.date || a.start_date);
+    const dateB = new Date(b.date || b.start_date);
+    return dateA.getTime() - dateB.getTime(); // Ascending order for upcoming events
   });
 
   const formatEventDate = (dateString: string) => {
@@ -67,16 +67,16 @@ export const EventsAndActivitySection = ({
                       {event.title}
                     </h4>
                     <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        <span>{formatEventDate(event.start_date)}</span>
-                      </div>
-                      {formatEventTime(event.start_date) && (
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          <span>{formatEventTime(event.start_date)}</span>
-                        </div>
-                      )}
+                       <div className="flex items-center gap-1">
+                         <Calendar className="h-3 w-3" />
+                         <span>{formatEventDate(event.date || event.start_date)}</span>
+                       </div>
+                       {formatEventTime(event.date || event.start_date) && (
+                         <div className="flex items-center gap-1">
+                           <Clock className="h-3 w-3" />
+                           <span>{formatEventTime(event.date || event.start_date)}</span>
+                         </div>
+                       )}
                       {event.location && (
                         <div className="flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
