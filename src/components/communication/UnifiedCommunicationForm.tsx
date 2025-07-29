@@ -76,7 +76,17 @@ export const UnifiedCommunicationForm = () => {
   };
 
   const handleSend = async () => {
+    console.log('Schedule message button clicked:', {
+      title,
+      content: content ? 'has content' : 'empty',
+      selectedGroups: selectedGroups.length,
+      selectedChannels: selectedChannels.length,
+      scheduledFor,
+      isLoading
+    });
+    
     if (!title || !content || selectedGroups.length === 0 || selectedChannels.length === 0) {
+      console.log('Form validation failed - missing required fields');
       return;
     }
 
@@ -276,6 +286,13 @@ export const UnifiedCommunicationForm = () => {
                 </>
               )}
             </Button>
+            
+            {/* Debug info */}
+            <div className="text-xs text-muted-foreground">
+              Debug: Title: {title ? '✓' : '✗'}, Content: {content ? '✓' : '✗'}, 
+              Groups: {selectedGroups.length}, Channels: {selectedChannels.length},
+              Scheduled: {scheduledFor ? scheduledFor.toString() : 'No'}
+            </div>
 
             <Button
               variant="outline"
