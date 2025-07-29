@@ -81,26 +81,26 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
 
         if (appointmentError) throw appointmentError;
 
-        // Generate time slots based on audition time block
-        const blockStart = new Date(auditionBlock.start_date);
-        const blockEnd = new Date(auditionBlock.end_date);
+        // Generate time slots from 9 AM to 5 PM with the specified duration
         const appointmentDuration = auditionBlock.appointment_duration_minutes || 30;
-
         const slots: TimeSlot[] = [];
-        const currentTime = new Date(blockStart);
         
-        // Set to same date as selected date but use block start time
-        currentTime.setFullYear(selectedDate.getFullYear());
-        currentTime.setMonth(selectedDate.getMonth());
-        currentTime.setDate(selectedDate.getDate());
-
-        while (currentTime < blockEnd) {
+        // Start at 9 AM
+        const startTime = new Date(selectedDate);
+        startTime.setHours(9, 0, 0, 0);
+        
+        // End at 5 PM
+        const endTime = new Date(selectedDate);
+        endTime.setHours(17, 0, 0, 0);
+        
+        const currentTime = new Date(startTime);
+        
+        while (currentTime < endTime) {
           const timeString = format(currentTime, 'h:mm a');
           
           // Check if this slot is already taken
           const isAvailable = !existingAppointments?.some(apt => {
-            const aptDate = new Date(apt.audition_date);
-            return format(aptDate, 'h:mm a') === timeString;
+            return apt.audition_time === timeString;
           });
 
           slots.push({
