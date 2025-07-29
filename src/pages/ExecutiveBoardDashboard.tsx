@@ -304,8 +304,8 @@ export const ExecutiveBoardDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 lg:grid-cols-11"
-            style={{ gridTemplateColumns: selectedPosition === 'tour_manager' ? 'repeat(11, 1fr)' : 'repeat(10, 1fr)' }}
+          <TabsList className="grid w-full grid-cols-6 lg:grid-cols-9"
+            style={{ gridTemplateColumns: selectedPosition === 'tour_manager' ? 'repeat(9, 1fr)' : 'repeat(8, 1fr)' }}
           >
             <TabsTrigger value="dashboard" className="text-xs">
               <Users className="h-4 w-4 mr-1" />
@@ -341,14 +341,6 @@ export const ExecutiveBoardDashboard = () => {
                 </TabsTrigger>
               </>
             )}
-            <TabsTrigger value="resources" className="text-xs">
-              <FolderOpen className="h-4 w-4 mr-1" />
-              Resources
-            </TabsTrigger>
-            <TabsTrigger value="development" className="text-xs">
-              <TrendingUp className="h-4 w-4 mr-1" />
-              Development
-            </TabsTrigger>
             {selectedPosition === 'tour_manager' && (
               <>
                 <TabsTrigger value="tour-overview" className="text-xs">
@@ -435,34 +427,6 @@ export const ExecutiveBoardDashboard = () => {
               </TabsContent>
             </>
           )}
-
-          <TabsContent value="resources">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FolderOpen className="h-5 w-5" />
-                  Resource Library
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Resource library coming soon...</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="development">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  Leadership Development
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Leadership development tools coming soon...</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           {selectedPosition === 'tour_manager' && (
             <>
