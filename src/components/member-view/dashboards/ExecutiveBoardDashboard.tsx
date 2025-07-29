@@ -30,59 +30,24 @@ interface ExecutiveBoardDashboardProps {
 }
 
 export const ExecutiveBoardDashboard = ({ user }: ExecutiveBoardDashboardProps) => {
-  // Mock data for executive board dashboard
+  // Real data - to be connected to actual data sources
   const execData = {
     attendance: {
-      total: 24,
-      present: 23,
-      percentage: 96
+      total: 0,
+      present: 0,
+      percentage: 0
     },
     teamMetrics: {
-      totalMembers: 45,
-      activeMembers: 42,
-      attendanceRate: 89
+      totalMembers: 0,
+      activeMembers: 0,
+      attendanceRate: 0
     },
-    upcomingEvents: [
-      {
-        id: '1',
-        title: 'Executive Board Meeting',
-        date: '2024-01-19',
-        time: '4:00 PM',
-        location: 'Conference Room'
-      },
-      {
-        id: '2',
-        title: 'Weekly Rehearsal',
-        date: '2024-01-20',
-        time: '5:00 PM',
-        location: 'Music Hall'
-      },
-      {
-        id: '3',
-        title: 'Spring Concert',
-        date: '2024-01-25',
-        time: '7:00 PM',
-        location: 'Auditorium'
-      }
-    ],
-    managementTasks: [
-      {
-        id: '1',
-        title: 'Review Concert Program',
-        priority: 'high',
-        dueDate: '2024-01-22'
-      },
-      {
-        id: '2',
-        title: 'Approve Budget Request',
-        priority: 'medium',
-        dueDate: '2024-01-24'
-      }
-    ],
+    upcomingEvents: [],
+    managementTasks: [],
     budgetOverview: {
-      allocated: 5000,
-      spent: 3200,
-      remaining: 1800
+      allocated: 0,
+      spent: 0,
+      remaining: 0
     }
   };
 

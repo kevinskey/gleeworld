@@ -252,15 +252,25 @@ export const UserDashboard = () => {
     return activities.slice(0, 4);
   };
 
-  // Get real data with proper formatting for AnnouncementsEventsSection
+  // Get real data with proper filtering for valid upcoming events
   const upcomingEventsList = getUpcomingEvents(6)
     .filter(event => {
-      // Filter out events with invalid dates
-      const isValidDate = event.start_date && !isNaN(new Date(event.start_date).getTime());
+      // Filter out events with invalid dates and past events
+      const eventDate = new Date(event.start_date);
+      const isValidDate = event.start_date && !isNaN(eventDate.getTime());
+      const isFutureEvent = eventDate > new Date();
+      
       if (!isValidDate) {
         console.warn('Invalid date found in event:', event.id, event.start_date);
+        return false;
       }
-      return isValidDate;
+      
+      if (!isFutureEvent) {
+        console.log('Past event filtered out:', event.id, event.start_date);
+        return false;
+      }
+      
+      return true;
     })
     .map(event => ({
       id: event.id,

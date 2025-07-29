@@ -35,54 +35,16 @@ export const MemberDashboard = ({ user }: MemberDashboardProps) => {
   const navigate = useNavigate();
   const { events: upcomingEvents, loading: eventsLoading } = usePublicGleeWorldEvents();
   
-  // Mock data for member dashboard
+  // Real data - to be connected to actual data sources
   const memberData = {
     attendance: {
-      total: 24,
-      present: 22,
-      percentage: 92
+      total: 0,
+      present: 0,
+      percentage: 0
     },
-    upcomingEvents: [
-      {
-        id: '1',
-        title: 'Weekly Rehearsal',
-        date: '2024-01-20',
-        time: '5:00 PM',
-        location: 'Music Hall'
-      },
-      {
-        id: '2',
-        title: 'Spring Concert',
-        date: '2024-01-25',
-        time: '7:00 PM',
-        location: 'Auditorium'
-      }
-    ],
-    contracts: [
-      {
-        id: '1',
-        title: 'Spring 2024 Performance Contract',
-        status: 'signed',
-        date: '2024-01-15'
-      }
-    ],
-    payments: [
-      {
-        id: '1',
-        description: 'Spring Concert Stipend',
-        amount: 150,
-        status: 'pending',
-        date: '2024-01-20'
-      }
-    ],
-    announcements: [
-      {
-        id: '1',
-        title: 'Spring Concert Rehearsal Schedule',
-        content: 'Please review the updated rehearsal schedule for the Spring Concert.',
-        date: '2024-01-18'
-      }
-    ]
+    contracts: [],
+    payments: [],
+    announcements: []
   };
 
   return (
