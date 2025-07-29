@@ -135,9 +135,10 @@ const App = () => {
           <TooltipProvider>
             <CustomTooltipProvider>
               <MusicPlayerProvider>
-                <Toaster />
-                <Sonner />
-            <Routes>
+                <div>
+                  <Toaster />
+                  <Sonner />
+                  <Routes>
               <Route 
                 path="/auth" 
                 element={
@@ -512,13 +513,14 @@ const App = () => {
                    path="/" 
                    element={<RootRoute />} 
                  />
-                <Route path="*" element={<NotFound />} />
-            </Routes>
-              <GlobalMusicPlayer />
-            </MusicPlayerProvider>
-          </CustomTooltipProvider>
-        </TooltipProvider>
-      </AuthProvider>
+                  <Route path="*" element={<NotFound />} />
+                  </Routes>
+                  <GlobalMusicPlayer />
+                </div>
+              </MusicPlayerProvider>
+            </CustomTooltipProvider>
+          </TooltipProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>
   );
