@@ -86,6 +86,8 @@ export const ExecutiveBoardDashboard = () => {
     if (!user) return;
 
     try {
+      console.log('Checking executive membership for user:', user.id);
+      
       // First check if user is super admin
       const { data: profileData, error: profileError } = await supabase
         .from('gw_profiles')
@@ -93,7 +95,11 @@ export const ExecutiveBoardDashboard = () => {
         .eq('user_id', user.id)
         .single();
 
+      console.log('Profile data:', profileData);
+      console.log('Profile error:', profileError);
+
       if (profileData?.is_super_admin || profileData?.is_admin) {
+        console.log('User has admin access');
         // Super admin/admin gets access with a special "admin" position
         setIsAdmin(true);
         setExecutiveData({
@@ -114,6 +120,9 @@ export const ExecutiveBoardDashboard = () => {
         .eq('user_id', user.id)
         .eq('is_active', true)
         .single();
+
+      console.log('Executive board data:', data);
+      console.log('Executive board error:', error);
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error checking executive membership:', error);
