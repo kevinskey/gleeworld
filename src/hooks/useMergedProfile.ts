@@ -91,63 +91,58 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
     setError(null);
 
     try {
-      // Fetch from gw_profiles which is now the source of truth
-      console.log('useMergedProfile: Fetching profile for user:', user.id);
-      const { data: gwProfile, error: gwError } = await supabase
+      console.log('useMergedProfile: About to query gw_profiles for user:', user.id);
+      
+      // Test if we can even connect to Supabase
+      const { data: testConnection, error: testError } = await supabase
         .from('gw_profiles')
-        .select('*')
+        .select('count')
+        .limit(1);
+      
+      console.log('Test connection result:', { testConnection, testError });
+      
+      if (testError) {
+        console.error('Database connection test failed:', testError);
+        throw new Error(`Database connection failed: ${testError.message}`);
+      }
+
+      // Test specific user query
+      const { data: gwProfile, error: gwError, status, statusText } = await supabase
+        .from('gw_profiles')
+        .select('user_id, email, full_name, role, is_admin, is_super_admin')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      console.log('useMergedProfile: gw_profiles query result:', { gwProfile, gwError });
+      console.log('Profile query details:', { 
+        gwProfile, 
+        gwError, 
+        status, 
+        statusText,
+        userId: user.id 
+      });
 
       if (gwError) {
-        console.error('useMergedProfile: Error fetching gw_profiles:', gwError);
-        throw gwError;
+        console.error('Error fetching gw_profiles:', gwError);
+        throw new Error(`Profile query failed: ${gwError.message} (Code: ${gwError.code})`);
       }
 
       if (gwProfile) {
-        // Use role from gw_profiles instead of profiles table to avoid complexity
+        console.log('Profile found, creating merged profile...');
+        
+        // Create a basic profile first
         const mergedProfile: MergedProfile = {
-          id: gwProfile.id,
-          user_id: gwProfile.user_id,
-          email: gwProfile.email,
+          id: gwProfile.user_id || user.id,
+          user_id: user.id,
+          email: gwProfile.email || user.email || '',
           full_name: gwProfile.full_name || '',
-          role: gwProfile.role || 'user', // Use role from gw_profiles directly
-          first_name: gwProfile.first_name,
-          last_name: gwProfile.last_name,
-          phone: gwProfile.phone,
-          avatar_url: gwProfile.avatar_url,
-          voice_part: gwProfile.voice_part,
-          class_year: gwProfile.class_year,
-          join_date: gwProfile.join_date,
-          status: gwProfile.status,
-          dues_paid: gwProfile.dues_paid,
-          notes: gwProfile.notes,
-          is_super_admin: gwProfile.is_super_admin,
-          is_admin: gwProfile.is_admin,
-          is_section_leader: gwProfile.is_section_leader,
-          disabled: gwProfile.disabled,
-          role_tags: gwProfile.role_tags,
-          title: gwProfile.title,
-          special_roles: gwProfile.special_roles,
-          is_exec_board: gwProfile.is_exec_board,
-          exec_board_role: gwProfile.exec_board_role,
-          music_role: gwProfile.music_role,
-          org: gwProfile.org,
-          ecommerce_enabled: gwProfile.ecommerce_enabled,
-          account_balance: gwProfile.account_balance,
-          current_cart_id: gwProfile.current_cart_id,
-          default_shipping_address: gwProfile.default_shipping_address,
-          design_history_ids: gwProfile.design_history_ids,
-          last_sign_in_at: gwProfile.last_sign_in_at,
-          created_at: gwProfile.created_at,
-          updated_at: gwProfile.updated_at,
+          role: gwProfile.role || 'user',
+          is_admin: gwProfile.is_admin || false,
+          is_super_admin: gwProfile.is_super_admin || false,
         };
 
+        console.log('Basic profile created:', mergedProfile);
         setProfile(mergedProfile);
       } else {
-        // No profile found - create a minimal one from auth user
         console.log('No profile found for user, creating minimal profile');
         const minimalProfile: MergedProfile = {
           id: user.id,
@@ -159,8 +154,11 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
         setProfile(minimalProfile);
       }
     } catch (err) {
-      console.error('Error fetching merged profile:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch profile');
+      console.error('Error in fetchProfile:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch profile';
+      console.error('Setting error:', errorMessage);
+      setError(errorMessage);
+      setProfile(null);
     } finally {
       setLoading(false);
     }
