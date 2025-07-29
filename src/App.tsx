@@ -122,21 +122,9 @@ const RootRoute = () => {
     );
   }
   
-  console.log('RootRoute: Rendering TestLandingPage instead of GleeWorldLanding');
-  // Temporarily use test page to debug
-  try {
-    return <TestLandingPage />;
-  } catch (error) {
-    console.error('Error rendering GleeWorldLanding:', error);
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600">Page Loading Error</h1>
-          <p className="text-gray-600">Please check the console for details</p>
-        </div>
-      </div>
-    );
-  }
+  console.log('RootRoute: Rendering GleeWorldLanding');
+  // Show landing page for everyone, authenticated or not
+  return <GleeWorldLanding />;
 };
 
 const App = () => {
