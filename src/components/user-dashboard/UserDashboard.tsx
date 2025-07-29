@@ -29,10 +29,11 @@ import { DASHBOARD_MODULES, hasModuleAccess, hasExecutiveBoardPermissions, Dashb
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield } from "lucide-react";
+import { Shield, Eye, User } from "lucide-react";
 
 export const UserDashboard = () => {
   console.log('UserDashboard component rendering...');
+  const [viewMode, setViewMode] = useState<'admin' | 'member'>('admin');
   const { user } = useAuth();
   const { profile, loading: profileLoading, error: profileError } = useMergedProfile(user);
   const navigate = useNavigate();
@@ -278,6 +279,32 @@ export const UserDashboard = () => {
     <UniversalLayout containerized={false}>
       <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6 space-y-4 sm:space-y-6">
         
+        {/* View Mode Toggle for Admins/Executives */}
+        {(isAdmin || hasExecBoardPerms) && (
+          <div className="flex justify-end mb-4">
+            <div className="flex items-center gap-2 p-1 bg-secondary/10 rounded-lg border">
+              <Button
+                variant={viewMode === 'admin' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('admin')}
+                className="flex items-center gap-2"
+              >
+                <Shield className="h-4 w-4" />
+                Admin View
+              </Button>
+              <Button
+                variant={viewMode === 'member' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('member')}
+                className="flex items-center gap-2"
+              >
+                <User className="h-4 w-4" />
+                Member View
+              </Button>
+            </div>
+          </div>
+        )}
+        
         {/* Welcome Card */}
         <WelcomeCard 
           displayName={displayName}
@@ -309,8 +336,8 @@ export const UserDashboard = () => {
           <QuickActionsSection isAdmin={isAdmin} />
         </div>
 
-        {/* Show Admin/Executive Features Only for Those Roles */}
-        {(isAdmin || hasExecBoardPerms) && (
+        {/* Show Admin/Executive Features Only for Those Roles and in Admin View Mode */}
+        {(isAdmin || hasExecBoardPerms) && viewMode === 'admin' && (
           <>
             {/* Admin Controls Section */}
             <div className="grid grid-cols-1 gap-6">
