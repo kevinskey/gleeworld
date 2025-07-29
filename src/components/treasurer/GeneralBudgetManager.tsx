@@ -25,7 +25,7 @@ interface Transaction {
   id: string;
   amount: number;
   description: string;
-  transaction_type: 'income' | 'expense';
+  transaction_type: string;
   category: string;
   transaction_date: string;
   payment_method: string;
@@ -46,7 +46,7 @@ export const GeneralBudgetManager = () => {
   const [formData, setFormData] = useState({
     amount: '',
     description: '',
-    transaction_type: 'expense' as const,
+    transaction_type: 'expense' as string,
     category: '',
     transaction_date: new Date().toISOString().split('T')[0],
     payment_method: 'cash',
@@ -256,7 +256,7 @@ export const GeneralBudgetManager = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Type</label>
-                  <Select value={formData.transaction_type} onValueChange={(value: 'income' | 'expense') => setFormData(prev => ({ ...prev, transaction_type: value }))}>
+                  <Select value={formData.transaction_type} onValueChange={(value: string) => setFormData(prev => ({ ...prev, transaction_type: value }))}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

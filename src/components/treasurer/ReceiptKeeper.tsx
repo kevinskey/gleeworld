@@ -37,7 +37,7 @@ interface ReceiptRecord {
   payment_method: string;
   tax_deductible: boolean;
   reimbursable: boolean;
-  status: 'pending' | 'approved' | 'rejected';
+  status: string;
   notes: string | null;
   created_by: string;
   created_at: string;

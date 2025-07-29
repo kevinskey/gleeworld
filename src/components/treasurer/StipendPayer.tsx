@@ -24,11 +24,11 @@ interface StipendPayment {
   id: string;
   recipient_id: string;
   amount: number;
-  payment_type: 'performance' | 'monthly' | 'bonus' | 'travel' | 'other';
+  payment_type: string;
   description: string;
   payment_date: string;
   payment_method: string;
-  status: 'pending' | 'paid' | 'cancelled';
+  status: string;
   reference_number: string | null;
   notes: string | null;
   created_by: string;
@@ -38,7 +38,7 @@ interface StipendPayment {
   gw_profiles?: {
     full_name: string;
     email: string;
-  };
+  } | null;
 }
 
 export const StipendPayer = () => {
@@ -51,7 +51,7 @@ export const StipendPayer = () => {
   const [formData, setFormData] = useState({
     recipient_id: '',
     amount: '',
-    payment_type: 'performance' as const,
+    payment_type: 'performance' as string,
     description: '',
     payment_date: new Date().toISOString().split('T')[0],
     payment_method: 'check',
@@ -77,7 +77,7 @@ export const StipendPayer = () => {
         .order('payment_date', { ascending: false });
 
       if (error) throw error;
-      setPayments(data || []);
+      setPayments((data as any) || []);
     } catch (error) {
       console.error('Error fetching stipend payments:', error);
       toast({
@@ -278,7 +278,7 @@ export const StipendPayer = () => {
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Payment Type</label>
-                  <Select value={formData.payment_type} onValueChange={(value: any) => setFormData(prev => ({ ...prev, payment_type: value }))}>
+                  <Select value={formData.payment_type} onValueChange={(value: string) => setFormData(prev => ({ ...prev, payment_type: value }))}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

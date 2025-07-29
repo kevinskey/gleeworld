@@ -39,6 +39,11 @@ import { PositionTab } from "@/components/executive-board/PositionTab";
 import { CalendarViews } from "@/components/calendar/CalendarViews";
 import { MeetingMinutes } from "@/components/executive-board/MeetingMinutes";
 import { AttendanceDashboard } from "@/components/attendance/AttendanceDashboard";
+import { BudgetManager } from "@/components/treasurer/BudgetManager";
+import { DuesManager } from "@/components/treasurer/DuesManager";
+import { GeneralBudgetManager } from "@/components/treasurer/GeneralBudgetManager";
+import { StipendPayer } from "@/components/treasurer/StipendPayer";
+import { ReceiptKeeper } from "@/components/treasurer/ReceiptKeeper";
 
 export type ExecutivePosition = 
   | 'president'
@@ -296,6 +301,18 @@ export const ExecutiveBoardDashboard = () => {
                 Attendance
               </TabsTrigger>
             )}
+            {selectedPosition === 'treasurer' && (
+              <>
+                <TabsTrigger value="budget-manager" className="text-xs">
+                  <DollarSign className="h-4 w-4 mr-1" />
+                  Budget
+                </TabsTrigger>
+                <TabsTrigger value="finances" className="text-xs">
+                  <FileText className="h-4 w-4 mr-1" />
+                  Finances
+                </TabsTrigger>
+              </>
+            )}
             <TabsTrigger value="resources" className="text-xs">
               <FolderOpen className="h-4 w-4 mr-1" />
               Resources
@@ -335,6 +352,25 @@ export const ExecutiveBoardDashboard = () => {
             <TabsContent value="attendance">
               <AttendanceDashboard />
             </TabsContent>
+          )}
+
+          {selectedPosition === 'treasurer' && (
+            <>
+              <TabsContent value="budget-manager">
+                <div className="space-y-6">
+                  <BudgetManager />
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="finances">
+                <div className="space-y-8">
+                  <DuesManager />
+                  <GeneralBudgetManager />
+                  <StipendPayer />
+                  <ReceiptKeeper />
+                </div>
+              </TabsContent>
+            </>
           )}
 
           <TabsContent value="resources">

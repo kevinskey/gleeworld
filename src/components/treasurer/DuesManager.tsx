@@ -26,7 +26,7 @@ interface DuesRecord {
   amount: number;
   due_date: string;
   paid_date: string | null;
-  status: 'pending' | 'paid' | 'overdue' | 'waived';
+  status: string;
   semester: string;
   academic_year: string;
   payment_method: string | null;
@@ -37,7 +37,7 @@ interface DuesRecord {
   gw_profiles?: {
     full_name: string;
     email: string;
-  };
+  } | null;
 }
 
 export const DuesManager = () => {
@@ -74,7 +74,7 @@ export const DuesManager = () => {
         .order('due_date', { ascending: false });
 
       if (error) throw error;
-      setDuesRecords(data || []);
+      setDuesRecords((data as any) || []);
     } catch (error) {
       console.error('Error fetching dues records:', error);
       toast({

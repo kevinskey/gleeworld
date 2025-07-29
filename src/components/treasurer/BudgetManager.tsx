@@ -30,7 +30,7 @@ interface Budget {
   allocated_amount: number;
   spent_amount: number;
   remaining_amount: number;
-  status: 'draft' | 'pending_approval' | 'approved' | 'active' | 'completed' | 'cancelled';
+  status: string;
   budget_type: string;
   start_date: string;
   end_date: string;
@@ -53,7 +53,7 @@ export const BudgetManager = () => {
     budget_type: 'project',
     start_date: '',
     end_date: '',
-    status: 'draft' as const
+    status: 'draft' as string
   });
 
   useEffect(() => {

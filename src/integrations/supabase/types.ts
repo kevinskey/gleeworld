@@ -2497,6 +2497,51 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_dues_records: {
+        Row: {
+          academic_year: string
+          amount: number
+          created_at: string
+          due_date: string
+          id: string
+          notes: string | null
+          paid_date: string | null
+          payment_method: string | null
+          semester: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          academic_year: string
+          amount: number
+          created_at?: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          paid_date?: string | null
+          payment_method?: string | null
+          semester: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          academic_year?: string
+          amount?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          paid_date?: string | null
+          payment_method?: string | null
+          semester?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_event_attendance: {
         Row: {
           attendance_status: string
@@ -3087,6 +3132,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gw_general_transactions: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          notes: string | null
+          payment_method: string
+          receipt_url: string | null
+          transaction_date: string
+          transaction_type: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          notes?: string | null
+          payment_method: string
+          receipt_url?: string | null
+          transaction_date: string
+          transaction_type: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          receipt_url?: string | null
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       gw_hero_settings: {
         Row: {
@@ -4548,6 +4638,74 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_receipts: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          notes: string | null
+          payment_method: string
+          receipt_image_url: string | null
+          receipt_pdf_url: string | null
+          reimbursable: boolean
+          status: string
+          tax_deductible: boolean
+          transaction_date: string
+          transaction_id: string | null
+          updated_at: string
+          vendor_name: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          notes?: string | null
+          payment_method: string
+          receipt_image_url?: string | null
+          receipt_pdf_url?: string | null
+          reimbursable?: boolean
+          status?: string
+          tax_deductible?: boolean
+          transaction_date: string
+          transaction_id?: string | null
+          updated_at?: string
+          vendor_name: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          receipt_image_url?: string | null
+          receipt_pdf_url?: string | null
+          reimbursable?: boolean
+          status?: string
+          tax_deductible?: boolean
+          transaction_date?: string
+          transaction_id?: string | null
+          updated_at?: string
+          vendor_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_receipts_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "gw_general_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_recordings: {
         Row: {
           associated_sheet_music_id: string | null
@@ -5367,6 +5525,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gw_stipend_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          notes: string | null
+          payment_date: string
+          payment_method: string
+          payment_type: string
+          recipient_id: string
+          reference_number: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          notes?: string | null
+          payment_date: string
+          payment_method: string
+          payment_type: string
+          recipient_id: string
+          reference_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string
+          payment_type?: string
+          recipient_id?: string
+          reference_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       gw_tour_events: {
         Row: {
