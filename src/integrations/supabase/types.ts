@@ -2035,6 +2035,7 @@ export type Database = {
           is_available: boolean
           start_time: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -2044,6 +2045,7 @@ export type Database = {
           is_available?: boolean
           start_time: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -2052,6 +2054,125 @@ export type Database = {
           id?: string
           is_available?: boolean
           start_time?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      gw_appointment_calendar_sync: {
+        Row: {
+          appointment_id: string | null
+          calendar_type: string
+          created_at: string
+          external_event_id: string | null
+          id: string
+          last_sync_at: string | null
+          sync_error: string | null
+          sync_status: string | null
+          updated_at: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          calendar_type: string
+          created_at?: string
+          external_event_id?: string | null
+          id?: string
+          last_sync_at?: string | null
+          sync_error?: string | null
+          sync_status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          calendar_type?: string
+          created_at?: string
+          external_event_id?: string | null
+          id?: string
+          last_sync_at?: string | null
+          sync_error?: string | null
+          sync_status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_appointment_calendar_sync_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "gw_appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_appointment_history: {
+        Row: {
+          action_type: string
+          appointment_id: string | null
+          created_at: string
+          id: string
+          new_values: Json | null
+          notes: string | null
+          old_values: Json | null
+          performed_by: string | null
+        }
+        Insert: {
+          action_type: string
+          appointment_id?: string | null
+          created_at?: string
+          id?: string
+          new_values?: Json | null
+          notes?: string | null
+          old_values?: Json | null
+          performed_by?: string | null
+        }
+        Update: {
+          action_type?: string
+          appointment_id?: string | null
+          created_at?: string
+          id?: string
+          new_values?: Json | null
+          notes?: string | null
+          old_values?: Json | null
+          performed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_appointment_history_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "gw_appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_appointment_types: {
+        Row: {
+          color: string | null
+          created_at: string
+          default_duration_minutes: number
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          default_duration_minutes?: number
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          default_duration_minutes?: number
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
           updated_at?: string
         }
         Relationships: []
@@ -6762,6 +6883,56 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_user_appointment_preferences: {
+        Row: {
+          advance_booking_days: number | null
+          allow_same_day_booking: boolean | null
+          apple_calendar_sync: boolean | null
+          appointment_type_id: string | null
+          buffer_time_minutes: number | null
+          created_at: string
+          google_calendar_sync: boolean | null
+          id: string
+          max_daily_appointments: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          advance_booking_days?: number | null
+          allow_same_day_booking?: boolean | null
+          apple_calendar_sync?: boolean | null
+          appointment_type_id?: string | null
+          buffer_time_minutes?: number | null
+          created_at?: string
+          google_calendar_sync?: boolean | null
+          id?: string
+          max_daily_appointments?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          advance_booking_days?: number | null
+          allow_same_day_booking?: boolean | null
+          apple_calendar_sync?: boolean | null
+          appointment_type_id?: string | null
+          buffer_time_minutes?: number | null
+          created_at?: string
+          google_calendar_sync?: boolean | null
+          id?: string
+          max_daily_appointments?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_user_appointment_preferences_appointment_type_id_fkey"
+            columns: ["appointment_type_id"]
+            isOneToOne: false
+            referencedRelation: "gw_appointment_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_user_orders: {
         Row: {
           billing_address: Json | null
@@ -9146,6 +9317,17 @@ export type Database = {
           p_action_type: string
           p_target_user_id: string
           p_details?: Json
+        }
+        Returns: string
+      }
+      log_appointment_action: {
+        Args: {
+          p_appointment_id: string
+          p_action_type: string
+          p_performed_by?: string
+          p_old_values?: Json
+          p_new_values?: Json
+          p_notes?: string
         }
         Returns: string
       }
