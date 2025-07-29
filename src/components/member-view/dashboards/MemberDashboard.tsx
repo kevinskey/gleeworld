@@ -1,7 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { SpiritualReflectionsCard } from "../SpiritualReflectionsCard";
+import { usePublicGleeWorldEvents } from "@/hooks/usePublicGleeWorldEvents";
+import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
 import { 
   Calendar, 
   CheckCircle, 
@@ -10,7 +14,9 @@ import {
   Music, 
   BookOpen,
   Clock,
-  Award
+  Award,
+  ArrowRight,
+  MapPin
 } from "lucide-react";
 
 interface MemberDashboardProps {
@@ -26,6 +32,9 @@ interface MemberDashboardProps {
 }
 
 export const MemberDashboard = ({ user }: MemberDashboardProps) => {
+  const navigate = useNavigate();
+  const { events: upcomingEvents, loading: eventsLoading } = usePublicGleeWorldEvents();
+  
   // Mock data for member dashboard
   const memberData = {
     attendance: {
@@ -94,22 +103,55 @@ export const MemberDashboard = ({ user }: MemberDashboardProps) => {
       </Card>
 
       {/* Upcoming Events Card */}
-      <Card>
+      <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/calendar')}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-base md:text-lg font-semibold">Upcoming Events</CardTitle>
-          <Calendar className="h-5 w-5 md:h-6 md:w-6 text-muted-foreground" />
+          <div className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 md:h-6 md:w-6 text-muted-foreground" />
+            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl md:text-4xl font-bold">{memberData.upcomingEvents.length}</div>
-          <p className="text-sm md:text-base text-muted-foreground">Next 7 days</p>
-          <div className="mt-3 space-y-2">
-            {memberData.upcomingEvents.slice(0, 2).map((event) => (
-              <div key={event.id} className="text-sm md:text-base">
-                <div className="font-semibold">{event.title}</div>
-                <div className="text-muted-foreground">{event.date} at {event.time}</div>
+          {eventsLoading ? (
+            <div className="animate-pulse">
+              <div className="h-8 bg-muted rounded mb-2"></div>
+              <div className="h-4 bg-muted rounded mb-4"></div>
+              <div className="space-y-2">
+                <div className="h-3 bg-muted rounded"></div>
+                <div className="h-3 bg-muted rounded"></div>
               </div>
-            ))}
-          </div>
+            </div>
+          ) : (
+            <>
+              <div className="text-3xl md:text-4xl font-bold">{upcomingEvents.length}</div>
+              <p className="text-sm md:text-base text-muted-foreground">Public events</p>
+              <ScrollArea className="mt-3 h-20">
+                <div className="space-y-2 pr-4">
+                  {upcomingEvents.slice(0, 3).map((event) => (
+                    <div key={event.id} className="text-sm md:text-base border-l-2 border-primary/30 pl-3">
+                      <div className="font-semibold line-clamp-1">{event.title}</div>
+                      <div className="text-muted-foreground flex items-center gap-2 text-xs">
+                        <Clock className="h-3 w-3" />
+                        {format(new Date(event.start_date), 'MMM dd, h:mm a')}
+                        {event.location && (
+                          <>
+                            <MapPin className="h-3 w-3 ml-1" />
+                            <span className="line-clamp-1">{event.location}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {upcomingEvents.length === 0 && (
+                    <div className="text-center py-2 text-muted-foreground">
+                      <Calendar className="h-6 w-6 mx-auto mb-1 opacity-50" />
+                      <p className="text-xs">No upcoming events</p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </>
+          )}
         </CardContent>
       </Card>
 
