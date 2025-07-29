@@ -11,6 +11,7 @@ export interface Contract {
   created_at: string;
   updated_at: string;
   created_by: string;
+  stipend_amount?: number;
   creator_name?: string;
   creator_email?: string;
 }

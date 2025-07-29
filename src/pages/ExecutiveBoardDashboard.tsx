@@ -48,6 +48,7 @@ import { ReceiptKeeper } from "@/components/treasurer/ReceiptKeeper";
 import { RunningLedger } from "@/components/treasurer/RunningLedger";
 import { StripeSalesSync } from "@/components/treasurer/StripeSalesSync";
 import { PerformanceRequestsList } from "@/components/tour-manager/PerformanceRequestsList";
+import { TourContracts } from "@/components/tour-manager/TourContracts";
 
 export type ExecutivePosition = 
   | 'president'
@@ -330,10 +331,16 @@ export const ExecutiveBoardDashboard = () => {
               Development
             </TabsTrigger>
             {selectedPosition === 'tour_manager' && (
-              <TabsTrigger value="booking-requests" className="text-xs">
-                <Mail className="h-4 w-4 mr-1" />
-                Bookings
-              </TabsTrigger>
+              <>
+                <TabsTrigger value="booking-requests" className="text-xs">
+                  <Mail className="h-4 w-4 mr-1" />
+                  Bookings
+                </TabsTrigger>
+                <TabsTrigger value="contracts" className="text-xs">
+                  <FileText className="h-4 w-4 mr-1" />
+                  Contracts
+                </TabsTrigger>
+              </>
             )}
             <TabsTrigger value="position" className="text-xs">
               <PositionIcon className="h-4 w-4 mr-1" />
@@ -423,9 +430,14 @@ export const ExecutiveBoardDashboard = () => {
           </TabsContent>
 
           {selectedPosition === 'tour_manager' && (
-            <TabsContent value="booking-requests">
-              <PerformanceRequestsList />
-            </TabsContent>
+            <>
+              <TabsContent value="booking-requests">
+                <PerformanceRequestsList />
+              </TabsContent>
+              <TabsContent value="contracts">
+                <TourContracts />
+              </TabsContent>
+            </>
           )}
 
           <TabsContent value="position">
