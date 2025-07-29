@@ -3361,6 +3361,54 @@ export type Database = {
           },
         ]
       }
+      gw_meeting_minutes: {
+        Row: {
+          action_items: string[]
+          agenda_items: string[]
+          attendees: string[]
+          created_at: string
+          created_by: string
+          discussion_points: string | null
+          id: string
+          meeting_date: string
+          meeting_type: string
+          next_meeting_date: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          action_items?: string[]
+          agenda_items?: string[]
+          attendees?: string[]
+          created_at?: string
+          created_by: string
+          discussion_points?: string | null
+          id?: string
+          meeting_date: string
+          meeting_type?: string
+          next_meeting_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          action_items?: string[]
+          agenda_items?: string[]
+          attendees?: string[]
+          created_at?: string
+          created_by?: string
+          discussion_points?: string | null
+          id?: string
+          meeting_date?: string
+          meeting_type?: string
+          next_meeting_date?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_member_communications: {
         Row: {
           communication_type: string

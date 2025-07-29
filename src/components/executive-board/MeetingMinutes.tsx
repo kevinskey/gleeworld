@@ -20,6 +20,8 @@ import {
   Download
 } from "lucide-react";
 
+type MeetingStatus = 'draft' | 'approved' | 'archived';
+
 interface MeetingMinute {
   id: string;
   title: string;
@@ -30,7 +32,7 @@ interface MeetingMinute {
   discussion_points: string;
   action_items: string[];
   next_meeting_date: string | null;
-  status: 'draft' | 'approved' | 'archived';
+  status: MeetingStatus;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -43,7 +45,17 @@ export const MeetingMinutes = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMinute, setEditingMinute] = useState<MeetingMinute | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    meeting_date: string;
+    meeting_type: string;
+    attendees: string;
+    agenda_items: string;
+    discussion_points: string;
+    action_items: string;
+    next_meeting_date: string;
+    status: MeetingStatus;
+  }>({
     title: '',
     meeting_date: '',
     meeting_type: 'executive_board',
@@ -52,7 +64,7 @@ export const MeetingMinutes = () => {
     discussion_points: '',
     action_items: '',
     next_meeting_date: '',
-    status: 'draft' as const
+    status: 'draft' as MeetingStatus
   });
 
   useEffect(() => {
@@ -67,7 +79,7 @@ export const MeetingMinutes = () => {
         .order('meeting_date', { ascending: false });
 
       if (error) throw error;
-      setMinutes(data || []);
+      setMinutes((data as MeetingMinute[]) || []);
     } catch (error) {
       console.error('Error fetching meeting minutes:', error);
       toast({
@@ -138,7 +150,7 @@ export const MeetingMinutes = () => {
       discussion_points: '',
       action_items: '',
       next_meeting_date: '',
-      status: 'draft'
+      status: 'draft' as MeetingStatus
     });
     setEditingMinute(null);
   };
@@ -257,7 +269,7 @@ export const MeetingMinutes = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Status</label>
-                  <Select value={formData.status} onValueChange={(value: 'draft' | 'approved' | 'archived') => setFormData(prev => ({ ...prev, status: value }))}>
+                  <Select value={formData.status} onValueChange={(value: MeetingStatus) => setFormData(prev => ({ ...prev, status: value }))}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
