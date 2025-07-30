@@ -307,7 +307,22 @@ Failure to meet rehearsal expectations may result in **dismissal from rehearsal*
     {
       id: "tour-overview",
       title: "Tour Overview",
-      content: "Tour overview content will be added here from the PDF handbook..."
+      content: `During **Spring Break**, selected members of the Spelman College Glee Club participate in the **annual Spring Tour**. If selected for tour, the Glee Club will travel from state to state, performing a series of concerts.
+
+Transportation (by **bus** and/or **airplane**) will be provided for all participants, along with meals and/or stipend.
+
+**Note:** Touring members are selected at the discretion of the Director, Student Conductor, and Section Leaders.
+
+---
+
+### 📝 Tour Selection Criteria
+
+- **Musical Skill**
+- **Attendance**
+- **Knowledge of Repertoire**
+- **Attitude**
+- **Flexibility**
+- **Evaluation by Section Leaders**`
     },
     {
       id: "anti-hazing-financial",
