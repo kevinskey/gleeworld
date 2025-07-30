@@ -249,9 +249,8 @@ export const ExecutiveBoardDashboard = () => {
 
   const PositionIcon = getPositionIcon(selectedPosition);
   
-  // Get background image from dashboard settings
-  const welcomeCardSetting = getSettingByName('welcome_card_background');
-  const backgroundImage = welcomeCardSetting?.image_url;
+  // Use the uploaded historic campus image as background
+  const backgroundImage = "/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png";
 
   return (
     <div className="min-h-screen relative">
