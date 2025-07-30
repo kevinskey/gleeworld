@@ -23,21 +23,42 @@ export const QuickCameraCapture = ({ onClose, onCapture }: QuickCameraCapturePro
 
   const startCamera = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'environment', // Use back camera on mobile
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
-        }
-      });
+      console.log('QuickCameraCapture: Starting camera...');
+      
+      // Try different camera configurations for better desktop compatibility
+      let stream;
+      
+      try {
+        // First try with environment camera (mobile back camera)
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'environment',
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          }
+        });
+        console.log('QuickCameraCapture: Environment camera started');
+      } catch (envError) {
+        console.log('QuickCameraCapture: Environment camera failed, trying default camera:', envError);
+        
+        // Fallback to any available camera (desktop friendly)
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          }
+        });
+        console.log('QuickCameraCapture: Default camera started');
+      }
       
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        console.log('QuickCameraCapture: Video element connected to stream');
       }
     } catch (error) {
-      console.error('Error accessing camera:', error);
-      toast.error('Camera access denied or not available');
+      console.error('QuickCameraCapture: Error accessing camera:', error);
+      toast.error(`Camera access denied or not available: ${error.message}`);
       onClose();
     }
   }, [onClose]);
