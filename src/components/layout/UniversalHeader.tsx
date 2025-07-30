@@ -31,6 +31,13 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
   const isPRCoordinator = userProfile?.exec_board_role === 'pr_coordinator';
   const canAccessPR = isAdmin || isPRCoordinator;
+  
+  console.log('UniversalHeader: PR Access Debug', { 
+    userProfile, 
+    isAdmin, 
+    isPRCoordinator, 
+    canAccessPR 
+  });
 
   const handleSignOut = async () => {
     try {
@@ -94,9 +101,11 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                       variant="ghost" 
                       size="sm" 
                       onClick={() => {
+                        console.log('Camera button clicked - navigating to PR Hub');
                         navigate('/dashboard/pr-hub');
                         // Trigger quick capture after navigation
                         setTimeout(() => {
+                          console.log('Dispatching trigger-pr-quick-capture event');
                           window.dispatchEvent(new CustomEvent('trigger-pr-quick-capture'));
                         }, 100);
                       }}
