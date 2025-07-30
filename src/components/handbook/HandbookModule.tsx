@@ -189,7 +189,58 @@ He is a member of the American Society of Composers and Publishers as well as an
     {
       id: "membership-commitment",
       title: "Membership Commitment",
-      content: "Membership commitment content will be added here from the PDF handbook..."
+      content: `A Spelman College Glee Club member must:
+
+- Attend **ALL rehearsals**
+- Attend **Glee Club Retreat**
+- Attend **ALL performances**
+- Use **Microsoft Teams** for all announcements and attendance information
+- Attend required weekly sectionals (at the discretion of the section leader)
+- Use and return all music scores
+- Return garment bag after each semester
+- Return formal attire at the end of the school year or semester
+- Respect Glee Club Director and all other Glee Club members
+- Pay required dues to the Treasurer *
+- Pass all quizzes pertaining to SCGC History
+- Display appropriate behavior during Glee Club rehearsal
+- Complete all **sightreadingfactory.com** assignments
+- Adhere to the attendance policy (see below)
+
+**\\* Failure to pay dues will result in revocation of Christmas Carol participation and other Glee Club events/venues as prescribed by the Director.**
+
+**Note:**
+Any blatant disrespect toward the Glee Club Director, Student Director, or President will result in **immediate dismissal** from the classroom. Any disruptive behavior occurring among members will result in the same.
+
+---
+
+## Attendance Policy
+
+- Each student is allowed to miss **3 classes** with no penalty.
+- Any absence **beyond three** lowers the grade by **one letter grade**.
+- Students who miss **6 classes** will be **dropped from the class**.
+- Exceptions will be made for **extenuating circumstances** (chronic illness or family emergencies), at the professor's discretion.
+- It is the student's responsibility to **communicate with the professor** about attendance issues.
+
+### Tardiness:
+
+- Each student is allowed **3 tardies** without penalty.
+- A tardy will be issued when a student is not in the classroom when class begins.
+- **Every 2 tardies beyond the first 3** will result in **1 unexcused absence**.
+- **Missing a performance** = **2 unexcused absences**
+
+---
+
+### Additional Attendance Notes:
+
+- Students with classes beginning at **5:05 PM** are excused until **5:15 PM**.
+- Students must **fill out an absence form** with the Secretary at least **one day before** any missed rehearsal or performance.
+- Students must **register for Glee Club** through **Banner Web** (0 or 1 credit).
+
+---
+
+### Rehearsal Expectations:
+
+Failure to meet rehearsal expectations may result in **dismissal from rehearsal** and an **unexcused absence**.`
     },
     {
       id: "dress-code",
