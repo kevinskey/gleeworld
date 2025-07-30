@@ -99,9 +99,17 @@ export const QuickCameraCapture = ({ onClose, onCapture }: QuickCameraCapturePro
 
   const savePhoto = async () => {
     if (!user || !capturedBlob) {
+      console.error('QuickCameraCapture: Missing user or capturedBlob', { user: !!user, capturedBlob: !!capturedBlob });
       toast.error('User not authenticated or no image captured');
       return;
     }
+
+    console.log('QuickCameraCapture: Starting save process', {
+      title,
+      selectedTags,
+      blobSize: capturedBlob.size,
+      blobType: capturedBlob.type
+    });
 
     setIsSaving(true);
     try {
@@ -110,7 +118,20 @@ export const QuickCameraCapture = ({ onClose, onCapture }: QuickCameraCapturePro
         type: 'image/jpeg'
       });
 
+      console.log('QuickCameraCapture: Created file object', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
+
       // Use the PR upload system
+      console.log('QuickCameraCapture: Calling uploadImage with metadata:', {
+        caption: title,
+        taken_at: new Date().toISOString(),
+        photographer_id: user.id,
+        tags: selectedTags.length > 0 ? selectedTags : undefined,
+      });
+
       await uploadImage(file, {
         caption: title,
         taken_at: new Date().toISOString(),
@@ -118,6 +139,7 @@ export const QuickCameraCapture = ({ onClose, onCapture }: QuickCameraCapturePro
         tags: selectedTags.length > 0 ? selectedTags : undefined,
       });
 
+      console.log('QuickCameraCapture: Upload successful');
       toast.success('Photo captured and saved successfully!');
       
       if (onCapture) {
@@ -131,8 +153,9 @@ export const QuickCameraCapture = ({ onClose, onCapture }: QuickCameraCapturePro
       }, 1500);
 
     } catch (error) {
-      console.error('Error saving photo:', error);
-      toast.error('Failed to save photo');
+      console.error('QuickCameraCapture: Error saving photo:', error);
+      console.error('QuickCameraCapture: Error details:', error.message, error.stack);
+      toast.error(`Failed to save photo: ${error.message}`);
     } finally {
       setIsSaving(false);
     }

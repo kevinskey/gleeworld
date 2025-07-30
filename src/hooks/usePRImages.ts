@@ -99,22 +99,31 @@ export const usePRImages = () => {
     tags?: string[];
   }) => {
     try {
+      console.log('usePRImages: Starting upload for file:', file.name, file.size, file.type);
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `${fileName}`;
+      
+      console.log('usePRImages: Generated file path:', filePath);
 
       // Upload to storage
       const { error: uploadError } = await supabase.storage
         .from('pr-images')
         .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+      console.log('usePRImages: Storage upload result:', { uploadError });
+      if (uploadError) {
+        console.error('usePRImages: Storage upload error:', uploadError);
+        throw uploadError;
+      }
 
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('usePRImages: Current user:', user?.id);
       if (!user) throw new Error('User not authenticated');
 
       // Save to database
+      console.log('usePRImages: Inserting to database with metadata:', metadata);
       const { data, error } = await supabase
         .from('pr_images')
         .insert({
@@ -132,7 +141,11 @@ export const usePRImages = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      console.log('usePRImages: Database insert result:', { data, error });
+      if (error) {
+        console.error('usePRImages: Database insert error:', error);
+        throw error;
+      }
 
       // Add tags if provided
       if (metadata.tags && metadata.tags.length > 0) {
@@ -158,10 +171,12 @@ export const usePRImages = () => {
       fetchImages(); // Refresh the images list
       return data;
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error('usePRImages: Upload error details:', error);
+      console.error('usePRImages: Error message:', error.message);
+      console.error('usePRImages: Error stack:', error.stack);
       toast({
         title: "Error",
-        description: "Failed to upload image",
+        description: `Failed to upload image: ${error.message}`,
         variant: "destructive",
       });
       throw error;
