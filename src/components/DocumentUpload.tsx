@@ -76,7 +76,7 @@ export const DocumentUpload = ({
     if (!user) {
       toast({
         title: "Authentication Required",
-        description: "Please sign in to save contracts.",
+        description: "Please sing in to save contracts.",
         variant: "destructive",
       });
       return;
@@ -147,7 +147,7 @@ export const DocumentUpload = ({
     if (!user) {
       toast({
         title: "Authentication Required",
-        description: "Please sign in to send contracts.",
+        description: "Please sing in to send contracts.",
         variant: "destructive",
       });
       return;
