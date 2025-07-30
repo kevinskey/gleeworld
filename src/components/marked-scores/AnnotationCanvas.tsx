@@ -50,7 +50,12 @@ export const AnnotationCanvas = ({
 
   // Initialize canvas and load PDF/image
   useEffect(() => {
-    if (!canvasRef.current || !drawingCanvasRef.current) return;
+    console.log('AnnotationCanvas: Effect triggered', { backgroundImageUrl });
+    
+    if (!canvasRef.current || !drawingCanvasRef.current) {
+      console.log('AnnotationCanvas: Canvas refs not ready');
+      return;
+    }
 
     const canvas = canvasRef.current;
     const drawingCanvas = drawingCanvasRef.current;
@@ -60,12 +65,18 @@ export const AnnotationCanvas = ({
     drawingCanvas.width = CANVAS_WIDTH;
     drawingCanvas.height = CANVAS_HEIGHT;
 
+    console.log('AnnotationCanvas: Canvas dimensions set to', CANVAS_WIDTH, 'x', CANVAS_HEIGHT);
+
     if (backgroundImageUrl) {
+      console.log('AnnotationCanvas: Loading background:', backgroundImageUrl);
       loadBackground();
+    } else {
+      console.log('AnnotationCanvas: No background URL provided');
     }
 
     // Load initial annotations
     if (initialAnnotations) {
+      console.log('AnnotationCanvas: Loading initial annotations');
       try {
         const savedPaths = JSON.parse(initialAnnotations);
         setPaths(savedPaths);
