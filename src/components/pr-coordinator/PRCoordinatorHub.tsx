@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,6 +68,16 @@ export const PRCoordinatorHub = () => {
       setSelectedImages(filteredImages.map(img => img.id));
     }
   };
+
+  // Listen for header camera trigger
+  useEffect(() => {
+    const handleQuickCapture = () => {
+      setShowQuickCapture(true);
+    };
+
+    window.addEventListener('trigger-pr-quick-capture', handleQuickCapture);
+    return () => window.removeEventListener('trigger-pr-quick-capture', handleQuickCapture);
+  }, []);
 
   const handleTagFilter = (tagId: string) => {
     setSelectedTags(prev => 

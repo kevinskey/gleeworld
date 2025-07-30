@@ -89,11 +89,17 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                 
                 {/* PR Camera Quick Capture */}
                 {canAccessPR && (
-                  <EnhancedTooltip content="PR Quick Capture">
+                  <EnhancedTooltip content="PR Quick Capture - Take photo instantly">
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      onClick={() => navigate('/dashboard/pr-hub')}
+                      onClick={() => {
+                        navigate('/dashboard/pr-hub');
+                        // Trigger quick capture after navigation
+                        setTimeout(() => {
+                          window.dispatchEvent(new CustomEvent('trigger-pr-quick-capture'));
+                        }, 100);
+                      }}
                       className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 rounded-full hover:bg-white/20"
                     >
                       <img 
