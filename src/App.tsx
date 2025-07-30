@@ -61,6 +61,8 @@ import AdminScholarships from "./pages/AdminScholarships";
 import AdminProducts from "./pages/AdminProducts";
 import { ExecutiveBoardDashboard } from "./pages/ExecutiveBoardDashboard";
 import { SectionLeaderDashboard } from "./pages/SectionLeaderDashboard";
+import { SectionalManagement } from "./pages/SectionalManagement";
+import { SRFManagement } from "./pages/SRFManagement";
 import { StudentConductorDashboard } from "./pages/StudentConductorDashboard";
 import TourPlanner from "./pages/TourPlanner";
 import BookingRequest from "./pages/BookingRequest";
@@ -497,7 +499,23 @@ const App = () => {
                                   <StudentConductorDashboard />
                                 </ProtectedRoute>
                               } 
-                             />
+                              />
+                             <Route 
+                               path="/sectional-management" 
+                               element={
+                                 <ProtectedRoute>
+                                   <SectionalManagement />
+                                 </ProtectedRoute>
+                               } 
+                              />
+                             <Route 
+                               path="/srf-management" 
+                               element={
+                                 <ProtectedRoute>
+                                   <SRFManagement />
+                                 </ProtectedRoute>
+                               } 
+                              />
                            <Route 
                              path="/booking-request" 
                              element={
