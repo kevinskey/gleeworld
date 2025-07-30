@@ -43,6 +43,7 @@ interface HeaderProps {
 
 export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { userProfile, displayName } = useUserProfile(user);
   const navigate = useNavigate();
   const location = useLocation();

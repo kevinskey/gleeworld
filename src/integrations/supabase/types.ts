@@ -7837,6 +7837,125 @@ export type Database = {
         }
         Relationships: []
       }
+      pr_image_tag_associations: {
+        Row: {
+          created_at: string
+          id: string
+          image_id: string | null
+          tag_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_id?: string | null
+          tag_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_id?: string | null
+          tag_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pr_image_tag_associations_image_id_fkey"
+            columns: ["image_id"]
+            isOneToOne: false
+            referencedRelation: "pr_images"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pr_image_tag_associations_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "pr_image_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pr_image_tags: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      pr_images: {
+        Row: {
+          caption: string | null
+          created_at: string
+          event_id: string | null
+          file_path: string
+          file_size: number | null
+          filename: string
+          id: string
+          is_featured: boolean | null
+          mime_type: string | null
+          original_filename: string | null
+          photographer_id: string | null
+          taken_at: string | null
+          updated_at: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          event_id?: string | null
+          file_path: string
+          file_size?: number | null
+          filename: string
+          id?: string
+          is_featured?: boolean | null
+          mime_type?: string | null
+          original_filename?: string | null
+          photographer_id?: string | null
+          taken_at?: string | null
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          event_id?: string | null
+          file_path?: string
+          file_size?: number | null
+          filename?: string
+          id?: string
+          is_featured?: boolean | null
+          mime_type?: string | null
+          original_filename?: string | null
+          photographer_id?: string | null
+          taken_at?: string | null
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pr_images_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "gw_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_categories: {
         Row: {
           created_at: string
