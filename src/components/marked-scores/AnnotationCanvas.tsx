@@ -152,7 +152,9 @@ export const AnnotationCanvas = ({
       }
     } catch (error) {
       console.error('Error loading background:', error);
-      toast.error('Failed to load background');
+      console.error('Background URL was:', backgroundImageUrl);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      toast.error(`Failed to load background: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setPdfLoading(false);
     }
