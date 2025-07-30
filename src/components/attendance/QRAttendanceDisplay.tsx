@@ -49,6 +49,7 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
   const [liveScans, setLiveScans] = useState<any[]>([]);
   const [showLiveUpdates, setShowLiveUpdates] = useState(false);
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [debugInfo, setDebugInfo] = useState<string>('Component loaded');
 
   // Debug logging
   console.log('QRAttendanceDisplay mounted with:', { 
@@ -58,8 +59,17 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
     userRole: user?.role 
   });
 
+  // Show debug info immediately
+  useEffect(() => {
+    toast({
+      title: "Debug Info",
+      description: `User: ${user?.id || 'No user'}, Event: ${eventId || 'No event'}`,
+    });
+  }, []);
+
   useEffect(() => {
     console.log('Loading existing QR code on mount...');
+    setDebugInfo('Loading existing QR code...');
     loadExistingQRCode();
   }, [eventId]);
 
@@ -135,28 +145,52 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
 
   const generateNewQRCode = async () => {
     console.log('Starting QR code generation...', { user: user?.id, eventId });
+    setDebugInfo('Starting QR generation...');
+    
+    toast({
+      title: "QR Generation Started",
+      description: `User: ${user?.id}, Event: ${eventId}`,
+    });
     
     if (!user || !eventId) {
-      console.log('Missing user or eventId:', { user: !!user, eventId });
+      const error = `Missing user or eventId: user=${!!user}, eventId=${eventId}`;
+      console.log(error);
+      setDebugInfo(error);
+      toast({
+        title: "Generation Failed",
+        description: error,
+        variant: "destructive",
+      });
       return;
     }
 
     setGenerating(true);
     try {
       console.log('Calling generate_secure_qr_token function...');
+      setDebugInfo('Calling database function...');
+      
       // Generate new QR token using secure function (will use v2 after types refresh)
       const { data: tokenData, error: tokenError } = await supabase.rpc('generate_secure_qr_token', {
         event_id_param: eventId
       });
 
       console.log('Token generation result:', { tokenData, tokenError });
+      setDebugInfo(`Token result: ${tokenData ? 'success' : 'failed'}`);
 
-      if (tokenError) throw tokenError;
+      if (tokenError) {
+        toast({
+          title: "Token Generation Failed",
+          description: `Database error: ${tokenError.message}`,
+          variant: "destructive",
+        });
+        throw tokenError;
+      }
 
       const token = tokenData as string;
       const expiresAt = new Date(Date.now() + expiryMinutes * 60 * 1000).toISOString();
 
       console.log('Inserting QR code record...', { eventId, token: token?.substring(0, 10) + '...', expiresAt });
+      setDebugInfo('Inserting QR record...');
 
       // Create QR code record
       const { data: qrData, error: qrError } = await supabase
@@ -171,12 +205,21 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
         .single();
 
       console.log('QR code insert result:', { qrData, qrError });
+      setDebugInfo(`Insert result: ${qrData ? 'success' : 'failed'}`);
 
-      if (qrError) throw qrError;
+      if (qrError) {
+        toast({
+          title: "Database Insert Failed",
+          description: `Insert error: ${qrError.message}`,
+          variant: "destructive",
+        });
+        throw qrError;
+      }
 
       setQrCode(qrData);
       
       console.log('Generating QR image...');
+      setDebugInfo('Generating QR image...');
       await generateQRImage(token);
 
       toast({
@@ -192,9 +235,10 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
         details: error?.details,
         hint: error?.hint
       });
+      setDebugInfo(`Error: ${error?.message || 'Unknown error'}`);
       toast({
         title: "Generation Failed",
-        description: "Failed to generate QR code",
+        description: `Error: ${error?.message || 'Unknown error'}`,
         variant: "destructive",
       });
     } finally {
@@ -299,6 +343,7 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
             <QrCode className="h-5 w-5" />
             QR Code for {eventTitle}
           </CardTitle>
+          <p className="text-sm text-muted-foreground">Debug: {debugInfo}</p>
         </CardHeader>
         <CardContent className="space-y-4">
           {!qrCode || isExpired ? (
