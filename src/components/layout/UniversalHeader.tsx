@@ -33,10 +33,12 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
   const canAccessPR = isAdmin || isPRCoordinator;
   
   console.log('UniversalHeader: PR Access Debug', { 
-    userProfile, 
-    isAdmin, 
-    isPRCoordinator, 
-    canAccessPR 
+    userProfile: userProfile, 
+    isAdmin: isAdmin, 
+    isPRCoordinator: isPRCoordinator, 
+    canAccessPR: canAccessPR,
+    userRole: userProfile?.role,
+    execBoardRole: userProfile?.exec_board_role
   });
 
   const handleSignOut = async () => {
