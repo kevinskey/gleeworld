@@ -94,7 +94,45 @@ He is a member of the American Society of Composers and Publishers as well as an
     {
       id: "leadership-roles",
       title: "Leadership & Roles",
-      content: "Leadership and roles content will be added here from the PDF handbook..."
+      content: `### Artistic Leadership
+
+- **Dr. Kevin P. Johnson** – Director
+- **Elycia Woodham** – Student Conductor
+- **Elycia Woodham** – Soprano 1 Section Leader
+- **Gabby Campbell** – Soprano 2 Section Leader
+- **Dizni DeBerry** – Alto 1 Section Leader
+- **Arianna Swindell** – Alto 2 Section Leader
+- **Vacant** – Band Leader
+
+---
+
+### Managing Leadership
+
+- **Dr. Kevin P. Johnson** – Director
+- **Clarke Brown** – Alumnae Board Representative / Administrator
+- **Gabrielle Campbell** – President
+- **Simone Moales** – Vice President
+- **Skylar Mobley** – Secretary
+- **Taylor Boldoe** – Treasurer
+- **Kathryn Tucker** – Tour Manager
+- **Madison Brown** – Road Manager
+- **Vacant** – Merchandise Manager
+- **Ava Challenger** – PR Coordinator
+- **Dizni DeBerry** – Co-PR Manager
+- **Ariana Swindell** – Historian
+- **Bianca Moore** – Alumnae Liaison
+- **Trennedy Wade** – Co-Librarian
+- **Princess Roper** – Co-Librarian
+- **Krystine Glover** – Co-Wardrobe Mistress
+- **Jamaya Grant** – Co-Wardrobe Mistress
+- **Vacant** – Set-Up Crew Manager
+- **Ryan Bates** – Chaplain
+- **Nia Legrand** – Data Analyst
+- **Nyomi Munson** – Chief of Staff
+
+---
+
+**Note:** The full duties of each Executive Board position are detailed in the next section: *Executive Board Requirements*.`
     },
     {
       id: "executive-requirements",
