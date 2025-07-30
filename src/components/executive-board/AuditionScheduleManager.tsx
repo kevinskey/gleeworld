@@ -322,8 +322,8 @@ export const AuditionScheduleManager = () => {
                             <div className="flex items-center gap-3 mb-2">
                               <Clock className="h-4 w-4 text-gray-400" />
                               <span className="font-medium">
-                                {format(new Date(block.start_date), 'MMM d, yyyy h:mm a')} - 
-                                {format(new Date(block.end_date), 'MMM d, yyyy h:mm a')}
+                                {format(new Date(block.start_date), 'MMM d, yyyy')} {format(new Date(block.start_date), 'h:mm a')} - 
+                                {format(new Date(block.end_date), 'MMM d, yyyy')} {format(new Date(block.end_date), 'h:mm a')}
                               </span>
                               <Badge variant="default">Active</Badge>
                             </div>
@@ -380,8 +380,8 @@ export const AuditionScheduleManager = () => {
                             <div className="flex items-center gap-3 mb-2">
                               <Clock className="h-4 w-4 text-gray-400" />
                               <span className="font-medium">
-                                {format(new Date(block.start_date), 'MMM d, yyyy h:mm a')} - 
-                                {format(new Date(block.end_date), 'MMM d, yyyy h:mm a')}
+                                {format(new Date(block.start_date), 'MMM d, yyyy')} {format(new Date(block.start_date), 'h:mm a')} - 
+                                {format(new Date(block.end_date), 'MMM d, yyyy')} {format(new Date(block.end_date), 'h:mm a')}
                               </span>
                               <Badge variant="secondary">Inactive</Badge>
                             </div>
