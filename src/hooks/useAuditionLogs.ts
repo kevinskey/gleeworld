@@ -96,36 +96,32 @@ export const useAuditionLogs = () => {
         }
       }
 
-      // If no logs exist in the new table, try to migrate from existing gw_auditions
-      if (existingLogs.length === 0) {
-        await migrateExistingAuditions();
+      // Always check for new auditions to migrate
+      await migrateExistingAuditions();
         
-        // Fetch again after migration and update slots
-        const { data: newLogs, error: newLogsError } = await supabase
-          .from('gw_audition_logs')
-          .select('*')
-          .order('audition_date', { ascending: false });
+      // Fetch again after migration and update slots
+      const { data: newLogs, error: newLogsError } = await supabase
+        .from('gw_audition_logs')
+        .select('*')
+        .order('audition_date', { ascending: false });
 
-        if (newLogsError) throw newLogsError;
-        
-        // Update slots with migrated data
-        allSlots.forEach(slot => {
-          const migratedLog = newLogs?.find(log => {
-            const logDate = format(new Date(log.audition_date), 'yyyy-MM-dd');
-            return logDate === slot.date && log.audition_time === slot.time;
-          });
-          
-          if (migratedLog) {
-            slot.isScheduled = true;
-            slot.auditionLog = migratedLog;
-            slot.id = migratedLog.id;
-          }
+      if (newLogsError) throw newLogsError;
+      
+      // Update slots with migrated data
+      allSlots.forEach(slot => {
+        const migratedLog = newLogs?.find(log => {
+          const logDate = format(new Date(log.audition_date), 'yyyy-MM-dd');
+          return logDate === slot.date && log.audition_time === slot.time;
         });
+        
+        if (migratedLog) {
+          slot.isScheduled = true;
+          slot.auditionLog = migratedLog;
+          slot.id = migratedLog.id;
+        }
+      });
 
-        setLogs((newLogs || []) as AuditionLog[]);
-      } else {
-        setLogs(existingLogs as AuditionLog[]);
-      }
+      setLogs((newLogs || []) as AuditionLog[]);
 
       setAllTimeSlots(allSlots);
     } catch (error) {
@@ -152,8 +148,23 @@ export const useAuditionLogs = () => {
       }
 
       if (existingAuditions && existingAuditions.length > 0) {
+        // Get existing logs to avoid duplicates
+        const { data: existingLogs } = await supabase
+          .from('gw_audition_logs')
+          .select('audition_id');
+        
+        const existingAuditionIds = new Set(existingLogs?.map(log => log.audition_id).filter(Boolean) || []);
+        
+        // Filter out auditions that have already been migrated
+        const auditionsToMigrate = existingAuditions.filter(audition => !existingAuditionIds.has(audition.id));
+        
+        if (auditionsToMigrate.length === 0) {
+          console.log('All auditions already migrated');
+          return;
+        }
+        
         // Transform the existing audition data to match our new structure
-        const logsToInsert = existingAuditions.map((audition: any) => ({
+        const logsToInsert = auditionsToMigrate.map((audition: any) => ({
           audition_id: audition.id,
           applicant_name: `${audition.first_name} ${audition.last_name}`,
           applicant_email: audition.email,
