@@ -96,7 +96,12 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                       onClick={() => navigate('/dashboard/pr-hub')}
                       className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 rounded-full hover:bg-white/20"
                     >
-                      <Camera className="h-8 w-8" />
+                      <img 
+                        src="/lovable-uploads/a9348c2b-145b-4530-a755-80ee32c5bf6f.png" 
+                        alt="Camera" 
+                        className="h-8 w-8 filter brightness-0 saturate-100"
+                        style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%)' }}
+                      />
                     </Button>
                   </EnhancedTooltip>
                 )}
