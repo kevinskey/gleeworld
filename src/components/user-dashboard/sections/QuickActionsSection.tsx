@@ -88,13 +88,13 @@ export const QuickActionsSection = ({ isAdmin, actionFilter }: QuickActionsSecti
       </div>
 
       {/* Mobile Layout - Individual Collapsible Cards */}
-      <div className="md:hidden space-y-3">
+      <div className="md:hidden space-y-2 px-1">
         {quickActions.map((action) => {
           const IconComponent = action.icon;
-          const [isActionCollapsed, setIsActionCollapsed] = useState(true);
+          const [isActionCollapsed, setIsActionCollapsed] = useState(actionFilter === 'music' ? false : true);
           
           return (
-            <Card key={action.route} className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 border-primary/20 shadow-lg">
+            <Card key={action.route} className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 border-primary/20 shadow-sm">
               <CardHeader className="pb-2 cursor-pointer" onClick={() => setIsActionCollapsed(!isActionCollapsed)}>
                 <CardTitle className="flex items-center justify-between text-secondary-foreground text-base">
                   <div className="flex items-center gap-2">
