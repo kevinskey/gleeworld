@@ -144,6 +144,47 @@ export const useUserDashboard = () => {
     }
   };
 
+  const deleteNotification = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('gw_notifications')
+        .delete()
+        .eq('id', notificationId)
+        .eq('user_id', user?.id); // Extra security check
+
+      if (error) throw error;
+
+      // Remove from local state
+      setNotifications(prev => 
+        prev.filter(n => n.id !== notificationId)
+      );
+
+      // Update unread count in dashboard data if notification was unread
+      const notification = notifications.find(n => n.id === notificationId);
+      if (notification && !notification.is_read) {
+        setDashboardData(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            unread_notifications: Math.max(0, prev.unread_notifications - 1)
+          };
+        });
+      }
+
+      toast({
+        title: "Success",
+        description: "Notification deleted",
+      });
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete notification",
+        variant: "destructive",
+      });
+    }
+  };
+
   // COMPLETELY DISABLE ALL SUBSCRIPTIONS TO TEST
   useEffect(() => {
     console.log('useUserDashboard: ALL SUBSCRIPTIONS DISABLED FOR TESTING');
@@ -164,5 +205,6 @@ export const useUserDashboard = () => {
     error,
     refetch: fetchDashboardData,
     markNotificationAsRead,
+    deleteNotification,
   };
 };

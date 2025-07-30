@@ -2,11 +2,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Bell, Calendar, Check } from "lucide-react";
+import { Bell, Calendar, Check, Trash2 } from "lucide-react";
 import { useUserDashboardContext } from "@/contexts/UserDashboardContext";
 
 export const UserNotificationsList = () => {
-  const { notifications, loading, error, markNotificationAsRead } = useUserDashboardContext();
+  const { notifications, loading, error, markNotificationAsRead, deleteNotification } = useUserDashboardContext();
 
   const getNotificationColor = (type: string) => {
     switch (type) {
@@ -81,17 +81,28 @@ export const UserNotificationsList = () => {
                 <Badge className={`${getNotificationColor(notification.type)} text-xs`}>
                   {notification.type}
                 </Badge>
-                {!notification.is_read && (
+                <div className="flex items-center gap-1">
+                  {!notification.is_read && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => markNotificationAsRead(notification.id)}
+                      className="border-primary/30 text-primary hover:bg-primary/10 text-xs px-2 py-1 h-6"
+                    >
+                      <Check className="h-3 w-3" />
+                      <span className="sr-only">Mark as read</span>
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => markNotificationAsRead(notification.id)}
-                    className="border-brand-300 text-brand-700 hover:bg-brand-50 text-xs px-2 py-1"
+                    onClick={() => deleteNotification(notification.id)}
+                    className="border-destructive/30 text-destructive hover:bg-destructive/10 text-xs px-2 py-1 h-6"
                   >
-                    <Check className="h-3 w-3" />
-                    <span className="sr-only">Mark as read</span>
+                    <Trash2 className="h-3 w-3" />
+                    <span className="sr-only">Delete notification</span>
                   </Button>
-                )}
+                </div>
               </div>
             </div>
           </CardHeader>

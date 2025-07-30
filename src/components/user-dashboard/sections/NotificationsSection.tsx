@@ -3,13 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bell, Clock, ChevronDown, ChevronUp, Check } from "lucide-react";
+import { Bell, Clock, ChevronDown, ChevronUp, Check, X, Trash2 } from "lucide-react";
 import { useUserDashboardContext } from "@/contexts/UserDashboardContext";
 import { useEffect } from "react";
 import { ItemDetailModal } from "../modals/ItemDetailModal";
 
 export const NotificationsSection = () => {
-  const { notifications, dashboardData, loading, refetch, markNotificationAsRead } = useUserDashboardContext();
+  const { notifications, dashboardData, loading, refetch, markNotificationAsRead, deleteNotification } = useUserDashboardContext();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [selectedItem, setSelectedItem] = useState<any>(null);
 
@@ -82,25 +82,40 @@ export const NotificationsSection = () => {
                         <h5 className={`font-medium text-base line-clamp-1 ${!notification.is_read ? 'text-foreground' : 'text-muted-foreground'}`}>
                           {notification.title}
                         </h5>
-                        <div className="flex items-center gap-2 ml-2">
+                        <div className="flex items-center gap-1 ml-2">
                           {notification.type && (
                             <Badge className={`${getNotificationTypeColor(notification.type)} text-xs`} variant="secondary">
                               {notification.type}
                             </Badge>
                           )}
-                          {!notification.is_read && (
+                          <div className="flex items-center gap-1">
+                            {!notification.is_read && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  markNotificationAsRead(notification.id);
+                                }}
+                                className="h-6 w-6 p-0 hover:bg-primary/10"
+                                title="Mark as read"
+                              >
+                                <Check className="h-3 w-3" />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                markNotificationAsRead(notification.id);
+                                deleteNotification(notification.id);
                               }}
-                              className="h-6 w-6 p-0 hover:bg-primary/10"
+                              className="h-6 w-6 p-0 hover:bg-destructive/10 text-destructive"
+                              title="Delete notification"
                             >
-                              <Check className="h-3 w-3" />
+                              <Trash2 className="h-3 w-3" />
                             </Button>
-                          )}
+                          </div>
                         </div>
                       </div>
                       <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
@@ -178,19 +193,34 @@ export const NotificationsSection = () => {
                             <h5 className={`font-medium text-sm line-clamp-1 ${!notification.is_read ? 'text-foreground' : 'text-muted-foreground'}`}>
                               {notification.title}
                             </h5>
-                            {!notification.is_read && (
+                            <div className="flex items-center gap-1 ml-1">
+                              {!notification.is_read && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    markNotificationAsRead(notification.id);
+                                  }}
+                                  className="h-4 w-4 p-0"
+                                  title="Mark as read"
+                                >
+                                  <Check className="h-3 w-3" />
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  markNotificationAsRead(notification.id);
+                                  deleteNotification(notification.id);
                                 }}
-                                className="h-4 w-4 p-0 ml-1"
+                                className="h-4 w-4 p-0 text-destructive hover:bg-destructive/10"
+                                title="Delete notification"
                               >
-                                <Check className="h-3 w-3" />
+                                <X className="h-3 w-3" />
                               </Button>
-                            )}
+                            </div>
                           </div>
                           <p className="text-xs text-muted-foreground line-clamp-1">
                             {notification.message}
