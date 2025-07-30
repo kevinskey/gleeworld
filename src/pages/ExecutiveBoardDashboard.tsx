@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { SpiritualReflectionsCard } from "@/components/member-view/SpiritualReflectionsCard";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -108,6 +109,7 @@ export const ExecutiveBoardDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { getSettingByName } = useDashboardSettings();
+  const isMobile = useIsMobile();
   const [executiveData, setExecutiveData] = useState<ExecutiveMember | null>(null);
   const [selectedPosition, setSelectedPosition] = useState<ExecutivePosition>('president');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -267,52 +269,100 @@ export const ExecutiveBoardDashboard = () => {
       <div className="relative z-10">
         <UniversalLayout className="bg-transparent">
           <div className="space-y-6 md:px-8 lg:px-12 xl:px-16">
-        {/* Navigation Controls */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2 bg-white/90 text-black border-white/20 hover:bg-white"
-            >
-              <Home className="h-4 w-4" />
-              Back to Dashboard
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2 text-white hover:bg-white/20 hover:text-white"
-            >
-              <X className="h-4 w-4" />
-              Exit Executive Panel
-            </Button>
+        {/* Mobile-First Navigation Layout */}
+        {isMobile ? (
+          <div className="space-y-4">
+            {/* View Mode Toggle - Full Width on Mobile */}
+            <div className="w-full">
+              <div className="flex items-center gap-2 p-2 bg-white/90 rounded-lg border shadow-sm">
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="flex-1 flex items-center justify-center gap-2 text-sm px-4 h-10 bg-primary text-primary-foreground"
+                >
+                  <Crown className="h-4 w-4" />
+                  Exec Board View
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/dashboard')}
+                  className="flex-1 flex items-center justify-center gap-2 text-sm px-4 h-10 text-primary hover:bg-primary/10"
+                >
+                  <Users className="h-4 w-4" />
+                  Member View
+                </Button>
+              </div>
+            </div>
+            
+            {/* Navigation Buttons */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-2 bg-white/90 text-black border-white/20 hover:bg-white flex-1"
+              >
+                <Home className="h-4 w-4" />
+                Dashboard
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-2 text-white hover:bg-white/20 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+                Exit
+              </Button>
+            </div>
           </div>
-          
-          {/* View Mode Toggle */}
-          <div className="flex items-center gap-1 sm:gap-2 p-1 bg-secondary/10 rounded-lg border">
-            <Button
-              variant="default"
-              size="sm"
-              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9"
-            >
-              <Crown className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline">Exec Board View</span>
-              <span className="xs:hidden">Exec</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9"
-            >
-              <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline">Member View</span>
-              <span className="xs:hidden">Member</span>
-            </Button>
+        ) : (
+          /* Desktop Navigation Layout */
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-2 bg-white/90 text-black border-white/20 hover:bg-white"
+              >
+                <Home className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-2 text-white hover:bg-white/20 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+                Exit Executive Panel
+              </Button>
+            </div>
+            
+            {/* View Mode Toggle - Desktop */}
+            <div className="flex items-center gap-2 p-1 bg-white/10 rounded-lg border border-white/20">
+              <Button
+                variant="default"
+                size="sm"
+                className="flex items-center gap-2 text-sm px-3 h-9 bg-white text-black hover:bg-white/90"
+              >
+                <Crown className="h-4 w-4" />
+                Exec Board View
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-2 text-sm px-3 h-9 text-white hover:bg-white/20"
+              >
+                <Users className="h-4 w-4" />
+                Member View
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
