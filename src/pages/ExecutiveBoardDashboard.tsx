@@ -265,7 +265,7 @@ export const ExecutiveBoardDashboard = () => {
       {/* Content overlay */}
       <div className="relative z-10">
         <UniversalLayout className="bg-transparent">
-          <div className="space-y-6 px-4 md:px-8 lg:px-12 xl:px-16">
+          <div className="space-y-6 md:px-8 lg:px-12 xl:px-16">
         {/* Navigation Controls */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
