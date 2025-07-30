@@ -77,6 +77,7 @@ import { WardrobeMistressHub } from "@/components/tour-manager/WardrobeMistressH
 import { LibraryManagement } from "@/components/music-library/LibraryManagement";
 import { HistorianWorkpage } from "@/components/historian/HistorianWorkpage";
 import { ChaplainWorkHub } from "@/components/chaplain/ChaplainWorkHub";
+import { PRCoordinatorHub } from "@/components/pr-coordinator/PRCoordinatorHub";
 
 
 export type ExecutivePosition = 
@@ -535,6 +536,12 @@ export const ExecutiveBoardDashboard = () => {
                 Historian Hub
               </TabsTrigger>
             )}
+            {selectedPosition === 'pr_coordinator' && (
+              <TabsTrigger value="pr-hub" className="text-xs">
+                <MessageSquare className="h-4 w-4 mr-1" />
+                PR Hub
+              </TabsTrigger>
+            )}
             {(selectedPosition === 'chaplain' || selectedPosition === 'assistant_chaplain') && (
               <TabsTrigger value="chaplain-hub" className="text-xs">
                 <Heart className="h-4 w-4 mr-1" />
@@ -795,6 +802,12 @@ export const ExecutiveBoardDashboard = () => {
           {selectedPosition === 'historian' && (
             <TabsContent value="historian-hub">
               <HistorianWorkpage />
+            </TabsContent>
+          )}
+
+          {selectedPosition === 'pr_coordinator' && (
+            <TabsContent value="pr-hub">
+              <PRCoordinatorHub />
             </TabsContent>
           )}
 
