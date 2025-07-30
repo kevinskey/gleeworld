@@ -204,13 +204,15 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
               size="sm" 
               onClick={() => {
                 console.log('Header camera button clicked - navigating to PR Hub');
+                console.log('Current user:', user);
+                console.log('Navigation function available:', typeof navigate);
                 navigate('/dashboard/pr-hub');
               }}
-              className="gap-2 text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30"
-              title="PR Quick Capture"
+              className="gap-2 text-primary hover:bg-primary/10 border-2 border-primary/50 bg-primary/5"
+              title="PR Quick Capture - Click to access camera"
             >
               <Camera className="h-4 w-4" />
-              <span className="hidden sm:inline">PR</span>
+              <span className="sm:inline">📸 Camera</span>
             </Button>
             
             {/* Dashboard Views Dropdown - Only for admins */}
