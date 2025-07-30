@@ -3,13 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bell, Clock, ChevronDown, ChevronUp } from "lucide-react";
-import { useAnnouncements } from "@/hooks/useAnnouncements";
+import { Bell, Clock, ChevronDown, ChevronUp, Check } from "lucide-react";
+import { useUserDashboardContext } from "@/contexts/UserDashboardContext";
 import { useEffect } from "react";
 import { ItemDetailModal } from "../modals/ItemDetailModal";
 
 export const NotificationsSection = () => {
-  const { announcements, loading, refetch } = useAnnouncements();
+  const { notifications, dashboardData, loading, refetch, markNotificationAsRead } = useUserDashboardContext();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [selectedItem, setSelectedItem] = useState<any>(null);
 
@@ -24,13 +24,15 @@ export const NotificationsSection = () => {
   const getNotificationTypeColor = (type: string) => {
     switch (type) {
       case 'urgent': return 'bg-red-100 text-red-800';
-      case 'rehearsal': return 'bg-blue-100 text-blue-800';
-      case 'performance': return 'bg-purple-100 text-purple-800';
-      case 'tour': return 'bg-green-100 text-green-800';
-      case 'communication': return 'bg-orange-100 text-orange-800';
+      case 'success': return 'bg-green-100 text-green-800';
+      case 'warning': return 'bg-yellow-100 text-yellow-800';
+      case 'info': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const unreadCount = dashboardData?.unread_notifications || 0;
+  const displayNotifications = notifications.slice(0, 10); // Show latest 10
 
   return (
     <div className="w-full">
@@ -42,7 +44,7 @@ export const NotificationsSection = () => {
               <Bell className="h-4 w-4" />
               Notifications
               <Badge variant="secondary" className="text-xs">
-                {announcements.length}
+                {unreadCount > 0 ? `${unreadCount} unread` : notifications.length}
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -53,35 +55,56 @@ export const NotificationsSection = () => {
                   <div className="text-center py-4">
                     <p className="text-sm text-muted-foreground">Loading notifications...</p>
                   </div>
-                ) : announcements.length === 0 ? (
+                ) : displayNotifications.length === 0 ? (
                   <div className="text-center py-4">
                     <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">No new notifications</p>
+                    <p className="text-sm text-muted-foreground">No notifications</p>
                   </div>
                 ) : (
-                  announcements.map((notification) => (
+                  displayNotifications.map((notification) => (
                     <div 
                       key={notification.id} 
-                      className="border border-secondary/10 rounded-lg p-3 bg-background/50 backdrop-blur-sm hover:bg-background/70 transition-colors cursor-pointer"
+                      className={`border rounded-lg p-3 backdrop-blur-sm hover:bg-background/70 transition-colors cursor-pointer relative ${
+                        !notification.is_read 
+                          ? 'border-secondary/20 bg-background/60 ring-1 ring-primary/20' 
+                          : 'border-secondary/10 bg-background/50'
+                      }`}
                       onClick={() => setSelectedItem({
                         id: notification.id,
                         title: notification.title,
-                        content: notification.content,
+                        content: notification.message,
                         type: 'notification' as const,
-                        subType: notification.announcement_type,
-                        actionRequired: ['urgent', 'rehearsal', 'performance'].includes(notification.announcement_type)
+                        subType: notification.type,
+                        actionRequired: !notification.is_read
                       })}
                     >
                       <div className="flex items-start justify-between mb-2">
-                        <h5 className="font-medium text-base text-foreground line-clamp-1">{notification.title}</h5>
-                        {notification.announcement_type && (
-                          <Badge className={`${getNotificationTypeColor(notification.announcement_type)} text-sm ml-2`} variant="secondary">
-                            {notification.announcement_type}
-                          </Badge>
-                        )}
+                        <h5 className={`font-medium text-base line-clamp-1 ${!notification.is_read ? 'text-foreground' : 'text-muted-foreground'}`}>
+                          {notification.title}
+                        </h5>
+                        <div className="flex items-center gap-2 ml-2">
+                          {notification.type && (
+                            <Badge className={`${getNotificationTypeColor(notification.type)} text-xs`} variant="secondary">
+                              {notification.type}
+                            </Badge>
+                          )}
+                          {!notification.is_read && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                markNotificationAsRead(notification.id);
+                              }}
+                              className="h-6 w-6 p-0 hover:bg-primary/10"
+                            >
+                              <Check className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                       <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                        {notification.content}
+                        {notification.message}
                       </p>
                       <div className="text-sm text-muted-foreground flex items-center gap-1">
                         <Clock className="h-4 w-4" />
@@ -90,6 +113,9 @@ export const NotificationsSection = () => {
                           : 'Recently posted'
                         }
                       </div>
+                      {!notification.is_read && (
+                        <div className="absolute top-2 left-2 w-2 h-2 bg-primary rounded-full"></div>
+                      )}
                     </div>
                   ))
                 )}
@@ -108,7 +134,7 @@ export const NotificationsSection = () => {
                 <Bell className="h-4 w-4" />
                 Notifications
                 <Badge variant="secondary" className="text-xs">
-                  {announcements.length}
+                  {unreadCount > 0 ? `${unreadCount} unread` : notifications.length}
                 </Badge>
               </div>
               <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
@@ -125,30 +151,54 @@ export const NotificationsSection = () => {
                     <div className="text-center py-2">
                       <p className="text-sm text-muted-foreground">Loading notifications...</p>
                     </div>
-                  ) : announcements.length === 0 ? (
-                    <div className="text-center py-2">
-                      <Bell className="h-6 w-6 text-muted-foreground mx-auto mb-1" />
-                      <p className="text-sm text-muted-foreground">No new notifications</p>
-                    </div>
-                  ) : (
-                    announcements.slice(0, 3).map((notification) => (
-                      <div 
-                        key={notification.id} 
-                        className="border border-secondary/10 rounded-lg p-2 bg-background/50 cursor-pointer hover:bg-background/70 transition-colors"
-                        onClick={() => setSelectedItem({
-                          id: notification.id,
-                          title: notification.title,
-                          content: notification.content,
-                          type: 'notification' as const,
-                          subType: notification.announcement_type,
-                          actionRequired: ['urgent', 'rehearsal', 'performance'].includes(notification.announcement_type)
-                        })}
-                      >
-                        <h5 className="font-medium text-sm text-foreground line-clamp-1 mb-1">{notification.title}</h5>
-                        <p className="text-xs text-muted-foreground line-clamp-1">
-                          {notification.content}
-                        </p>
+                    ) : displayNotifications.length === 0 ? (
+                      <div className="text-center py-2">
+                        <Bell className="h-6 w-6 text-muted-foreground mx-auto mb-1" />
+                        <p className="text-sm text-muted-foreground">No notifications</p>
                       </div>
+                    ) : (
+                      displayNotifications.slice(0, 3).map((notification) => (
+                        <div 
+                          key={notification.id} 
+                          className={`border rounded-lg p-2 cursor-pointer hover:bg-background/70 transition-colors relative ${
+                            !notification.is_read 
+                              ? 'border-secondary/20 bg-background/60 ring-1 ring-primary/20' 
+                              : 'border-secondary/10 bg-background/50'
+                          }`}
+                          onClick={() => setSelectedItem({
+                            id: notification.id,
+                            title: notification.title,
+                            content: notification.message,
+                            type: 'notification' as const,
+                            subType: notification.type,
+                            actionRequired: !notification.is_read
+                          })}
+                        >
+                          <div className="flex items-start justify-between mb-1">
+                            <h5 className={`font-medium text-sm line-clamp-1 ${!notification.is_read ? 'text-foreground' : 'text-muted-foreground'}`}>
+                              {notification.title}
+                            </h5>
+                            {!notification.is_read && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  markNotificationAsRead(notification.id);
+                                }}
+                                className="h-4 w-4 p-0 ml-1"
+                              >
+                                <Check className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-1">
+                            {notification.message}
+                          </p>
+                          {!notification.is_read && (
+                            <div className="absolute top-1 left-1 w-1.5 h-1.5 bg-primary rounded-full"></div>
+                          )}
+                        </div>
                     ))
                   )}
                 </div>

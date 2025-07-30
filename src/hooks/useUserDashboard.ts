@@ -121,9 +121,19 @@ export const useUserDashboard = () => {
 
       if (error) throw error;
 
+      // Update notifications list
       setNotifications(prev =>
         prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
       );
+
+      // Update unread count in dashboard data
+      setDashboardData(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          unread_notifications: Math.max(0, prev.unread_notifications - 1)
+        };
+      });
     } catch (error) {
       console.error('Error marking notification as read:', error);
       toast({
