@@ -1,6 +1,7 @@
 export const EXECUTIVE_BOARD_ROLES = {
   PRESIDENT: 'president',
   VICE_PRESIDENT: 'vice-president',
+  CHIEF_OF_STAFF: 'chief-of-staff',
   TREASURER: 'treasurer',
   SECRETARY: 'secretary',
   MUSIC_DIRECTOR: 'music-director',
@@ -10,6 +11,7 @@ export const EXECUTIVE_BOARD_ROLES = {
   EVENTS_COORDINATOR: 'events-coordinator',
   HISTORIAN: 'historian',
   LIBRARIAN: 'librarian',
+  CHAPLAIN: 'chaplain',
   TECHNICAL_DIRECTOR: 'technical-director',
   FUNDRAISING_CHAIR: 'fundraising-chair',
   ALUMNI_RELATIONS: 'alumni-relations',
@@ -21,6 +23,7 @@ export type ExecutiveBoardRole = typeof EXECUTIVE_BOARD_ROLES[keyof typeof EXECU
 export const ROLE_DISPLAY_NAMES: Record<ExecutiveBoardRole, string> = {
   [EXECUTIVE_BOARD_ROLES.PRESIDENT]: 'President',
   [EXECUTIVE_BOARD_ROLES.VICE_PRESIDENT]: 'Vice President',
+  [EXECUTIVE_BOARD_ROLES.CHIEF_OF_STAFF]: 'Chief of Staff',
   [EXECUTIVE_BOARD_ROLES.TREASURER]: 'Treasurer',
   [EXECUTIVE_BOARD_ROLES.SECRETARY]: 'Secretary',
   [EXECUTIVE_BOARD_ROLES.MUSIC_DIRECTOR]: 'Music Director',
@@ -30,6 +33,7 @@ export const ROLE_DISPLAY_NAMES: Record<ExecutiveBoardRole, string> = {
   [EXECUTIVE_BOARD_ROLES.EVENTS_COORDINATOR]: 'Events Coordinator',
   [EXECUTIVE_BOARD_ROLES.HISTORIAN]: 'Historian',
   [EXECUTIVE_BOARD_ROLES.LIBRARIAN]: 'Librarian',
+  [EXECUTIVE_BOARD_ROLES.CHAPLAIN]: 'Chaplain',
   [EXECUTIVE_BOARD_ROLES.TECHNICAL_DIRECTOR]: 'Technical Director',
   [EXECUTIVE_BOARD_ROLES.FUNDRAISING_CHAIR]: 'Fundraising Chair',
   [EXECUTIVE_BOARD_ROLES.ALUMNI_RELATIONS]: 'Alumni Relations',
@@ -39,6 +43,7 @@ export const ROLE_DISPLAY_NAMES: Record<ExecutiveBoardRole, string> = {
 export const ROLE_RESPONSIBILITIES: Record<ExecutiveBoardRole, string> = {
   [EXECUTIVE_BOARD_ROLES.PRESIDENT]: 'Overall leadership, strategic direction, and system oversight',
   [EXECUTIVE_BOARD_ROLES.VICE_PRESIDENT]: 'Support president, backup leadership, special projects',
+  [EXECUTIVE_BOARD_ROLES.CHIEF_OF_STAFF]: 'Administrative operations, system management, and executive support - has admin-level access to all systems',
   [EXECUTIVE_BOARD_ROLES.TREASURER]: 'Financial management, budgets, payments, and financial reporting',
   [EXECUTIVE_BOARD_ROLES.SECRETARY]: 'Meeting minutes, communications, and record keeping',
   [EXECUTIVE_BOARD_ROLES.MUSIC_DIRECTOR]: 'Musical content, sheet music, and performance management',
@@ -48,6 +53,7 @@ export const ROLE_RESPONSIBILITIES: Record<ExecutiveBoardRole, string> = {
   [EXECUTIVE_BOARD_ROLES.EVENTS_COORDINATOR]: 'Event planning, logistics, and execution',
   [EXECUTIVE_BOARD_ROLES.HISTORIAN]: 'Club history, documentation, and archival management',
   [EXECUTIVE_BOARD_ROLES.LIBRARIAN]: 'Sheet music library, music organization, and access',
+  [EXECUTIVE_BOARD_ROLES.CHAPLAIN]: 'Spiritual guidance, reflection, and member support',
   [EXECUTIVE_BOARD_ROLES.TECHNICAL_DIRECTOR]: 'Technical setup, audio/visual, and equipment',
   [EXECUTIVE_BOARD_ROLES.FUNDRAISING_CHAIR]: 'Fundraising campaigns, donor relations, and revenue',
   [EXECUTIVE_BOARD_ROLES.ALUMNI_RELATIONS]: 'Alumni engagement, networking, and communication',
@@ -70,6 +76,18 @@ export const EXEC_BOARD_MODULE_PERMISSIONS: Record<ExecutiveBoardRole, string[]>
     'contracts',
     'send_emails',
     'youtube_management',
+  ],
+  [EXECUTIVE_BOARD_ROLES.CHIEF_OF_STAFF]: [
+    'hero_management',
+    'dashboard_settings',
+    'youtube_management',
+    'budget_creation',
+    'contracts',
+    'send_emails',
+    'manage_permissions',
+    'admin_panel',
+    'user_management',
+    'system_settings',
   ],
   [EXECUTIVE_BOARD_ROLES.TREASURER]: [
     'budget_creation',
@@ -106,6 +124,9 @@ export const EXEC_BOARD_MODULE_PERMISSIONS: Record<ExecutiveBoardRole, string[]>
   ],
   [EXECUTIVE_BOARD_ROLES.LIBRARIAN]: [
   ],
+  [EXECUTIVE_BOARD_ROLES.CHAPLAIN]: [
+    'send_emails',
+  ],
   [EXECUTIVE_BOARD_ROLES.TECHNICAL_DIRECTOR]: [
     'dashboard_settings',
     'youtube_management',
@@ -126,10 +147,15 @@ export const EXEC_BOARD_MODULE_PERMISSIONS: Record<ExecutiveBoardRole, string[]>
 export const ROLE_HIERARCHY: Record<ExecutiveBoardRole, ExecutiveBoardRole[]> = {
   [EXECUTIVE_BOARD_ROLES.PRESIDENT]: [
     EXECUTIVE_BOARD_ROLES.VICE_PRESIDENT,
+    EXECUTIVE_BOARD_ROLES.CHIEF_OF_STAFF,
     EXECUTIVE_BOARD_ROLES.TREASURER,
     EXECUTIVE_BOARD_ROLES.SECRETARY,
   ],
   [EXECUTIVE_BOARD_ROLES.VICE_PRESIDENT]: [
+    EXECUTIVE_BOARD_ROLES.SECRETARY,
+  ],
+  [EXECUTIVE_BOARD_ROLES.CHIEF_OF_STAFF]: [
+    EXECUTIVE_BOARD_ROLES.TREASURER,
     EXECUTIVE_BOARD_ROLES.SECRETARY,
   ],
   [EXECUTIVE_BOARD_ROLES.MUSIC_DIRECTOR]: [
@@ -144,6 +170,7 @@ export const ROLE_HIERARCHY: Record<ExecutiveBoardRole, ExecutiveBoardRole[]> = 
   [EXECUTIVE_BOARD_ROLES.EVENTS_COORDINATOR]: [],
   [EXECUTIVE_BOARD_ROLES.HISTORIAN]: [],
   [EXECUTIVE_BOARD_ROLES.LIBRARIAN]: [],
+  [EXECUTIVE_BOARD_ROLES.CHAPLAIN]: [],
   [EXECUTIVE_BOARD_ROLES.TECHNICAL_DIRECTOR]: [],
   [EXECUTIVE_BOARD_ROLES.FUNDRAISING_CHAIR]: [],
   [EXECUTIVE_BOARD_ROLES.ALUMNI_RELATIONS]: [],
@@ -170,6 +197,14 @@ export const ROLE_QUICK_ACTIONS: Record<ExecutiveBoardRole, Array<{
     { action: 'create_event_with_budget', label: 'Create Event with Budget', description: 'Create event and budget together' },
     { action: 'schedule_event', label: 'Schedule Event', description: 'Plan upcoming events' },
     
+  ],
+  [EXECUTIVE_BOARD_ROLES.CHIEF_OF_STAFF]: [
+    { action: 'admin_panel', label: 'Admin Panel', description: 'Access full admin functionality' },
+    { action: 'manage_users', label: 'Manage Users', description: 'Manage all user accounts' },
+    { action: 'system_settings', label: 'System Settings', description: 'Configure system-wide settings' },
+    { action: 'create_budget', label: 'Create Budget', description: 'Create new budgets' },
+    { action: 'create_event', label: 'Create Event', description: 'Create new events' },
+    { action: 'manage_permissions', label: 'Manage Permissions', description: 'Assign and manage all permissions' },
   ],
   [EXECUTIVE_BOARD_ROLES.TREASURER]: [
     { action: 'create_budget', label: 'Create Budget', description: 'Set up financial budgets' },
@@ -218,6 +253,10 @@ export const ROLE_QUICK_ACTIONS: Record<ExecutiveBoardRole, Array<{
   ],
   [EXECUTIVE_BOARD_ROLES.LIBRARIAN]: [
     { action: 'manage_resources', label: 'Manage Resources', description: 'Organize materials' },
+  ],
+  [EXECUTIVE_BOARD_ROLES.CHAPLAIN]: [
+    { action: 'spiritual_guidance', label: 'Spiritual Guidance', description: 'Provide spiritual support' },
+    { action: 'send_reflections', label: 'Send Reflections', description: 'Share spiritual messages' },
   ],
   [EXECUTIVE_BOARD_ROLES.TECHNICAL_DIRECTOR]: [
     { action: 'system_settings', label: 'System Settings', description: 'Configure technical settings' },

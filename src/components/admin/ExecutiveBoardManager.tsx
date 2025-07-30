@@ -70,14 +70,28 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
 
   const fetchBoardMembers = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch from both gw_profiles and gw_executive_board_members for complete data
+      const { data: profileData, error: profileError } = await supabase
         .from('gw_profiles')
         .select('user_id, email, full_name, exec_board_role')
         .not('exec_board_role', 'is', null)
         .neq('exec_board_role', '');
 
-      if (error) throw error;
-      setBoardMembers(data || []);
+      if (profileError) throw profileError;
+
+      const { data: boardData, error: boardError } = await supabase
+        .from('gw_executive_board_members')
+        .select('user_id, position, is_active')
+        .eq('is_active', true);
+
+      if (boardError) {
+        console.warn('Could not fetch from gw_executive_board_members:', boardError);
+      }
+
+      console.log('Profile data:', profileData);
+      console.log('Board data:', boardData);
+      
+      setBoardMembers(profileData || []);
     } catch (err) {
       console.error('Error fetching board members:', err);
     }
@@ -99,21 +113,57 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
 
     setUpdating(true);
     try {
+      console.log('Assigning role:', selectedRole, 'to user:', selectedUser.id);
+      
       const updates: any = {
         exec_board_role: selectedRole,
         is_exec_board: true,
       };
 
-      const { error } = await supabase
+      // Chief of Staff gets admin privileges
+      if (selectedRole === 'chief-of-staff') {
+        updates.is_admin = true;
+      }
+
+      // Update gw_profiles table
+      const { error: gwProfileError } = await supabase
+        .from('gw_profiles')
+        .update(updates)
+        .eq('user_id', selectedUser.id);
+
+      if (gwProfileError) throw gwProfileError;
+
+      // Also update profiles table for backward compatibility
+      const { error: profileError } = await supabase
         .from('profiles')
-        .update(updates as any) // Temporary type assertion until Supabase types are regenerated
+        .update({
+          exec_board_role: selectedRole,
+          is_exec_board: true,
+        } as any)
         .eq('id', selectedUser.id);
 
-      if (error) throw error;
+      if (profileError) {
+        console.warn('Profile table update failed (may not exist):', profileError);
+      }
+
+      // Add/update in gw_executive_board_members table
+      const { error: boardMemberError } = await supabase
+        .from('gw_executive_board_members')
+        .upsert({
+          user_id: selectedUser.id,
+          position: selectedRole as any,
+          is_active: true,
+          academic_year: new Date().getFullYear().toString(),
+          appointed_date: new Date().toISOString().split('T')[0],
+        });
+
+      if (boardMemberError) {
+        console.warn('Board member table update failed:', boardMemberError);
+      }
 
       toast({
         title: "Role Assigned",
-        description: `${selectedUser.full_name || selectedUser.email} has been assigned as ${ROLE_DISPLAY_NAMES[selectedRole]}`,
+        description: `${selectedUser.full_name || selectedUser.email} has been assigned as ${ROLE_DISPLAY_NAMES[selectedRole]}${selectedRole === 'chief-of-staff' ? ' with admin privileges' : ''}`,
       });
 
       // Reset form
@@ -142,33 +192,32 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
     try {
       console.log('Attempting to remove role for user:', userId, userName);
       
-      // Try updating both tables to ensure consistency
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          exec_board_role: null,
-          is_exec_board: false,
-        } as any)
-        .eq('id', userId);
+      // Get current role to check if removing admin privileges
+      const { data: currentProfile } = await supabase
+        .from('gw_profiles')
+        .select('exec_board_role')
+        .eq('user_id', userId)
+        .single();
 
-      if (profileError) {
-        console.error('Profile update error:', profileError);
-        throw profileError;
+      const wasChiefOfStaff = currentProfile?.exec_board_role === 'chief-of-staff';
+      
+      // Update gw_profiles table
+      const updateData: any = {
+        exec_board_role: null,
+        is_exec_board: false,
+      };
+
+      // Remove admin privileges if they were Chief of Staff
+      if (wasChiefOfStaff) {
+        updateData.is_admin = false;
       }
 
-      // Also update gw_profiles if it exists
       const { error: gwProfileError } = await supabase
         .from('gw_profiles')
-        .update({
-          exec_board_role: null,
-          is_exec_board: false,
-        })
+        .update(updateData)
         .eq('user_id', userId);
 
-      if (gwProfileError) {
-        console.error('GW Profile update error:', gwProfileError);
-        // Don't throw here as it might not exist
-      }
+      if (gwProfileError) throw gwProfileError;
 
       // Remove from gw_executive_board_members table if exists
       const { error: boardMemberError } = await supabase
@@ -370,7 +419,7 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
               <SelectTrigger>
                 <SelectValue placeholder="Select a role..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border shadow-lg z-50">
                 {Object.entries(ROLE_DISPLAY_NAMES).map(([value, label]) => {
                   const isOccupied = currentBoardMembers.some(
                     member => member.exec_board_role === value && member.id !== selectedUser?.id
@@ -381,10 +430,12 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
                       key={value} 
                       value={value}
                       disabled={isOccupied}
+                      className="bg-white hover:bg-gray-100"
                     >
                       <div className="flex items-center gap-2">
                         {getRoleIcon(value)}
                         <span>{label}</span>
+                        {value === 'chief-of-staff' && <Badge variant="outline" className="text-xs">Admin Access</Badge>}
                         {isOccupied && <Badge variant="secondary">Occupied</Badge>}
                       </div>
                     </SelectItem>
