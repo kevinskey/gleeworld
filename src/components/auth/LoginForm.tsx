@@ -125,7 +125,7 @@ export const LoginForm = ({ onSwitchToForgot }: LoginFormProps) => {
         
         <Button type="submit" className="w-full" disabled={loading || socialLoading !== null}>
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Sing In
+          Sign In
         </Button>
         
         <div className="text-center">
