@@ -97,16 +97,14 @@ export const SheetMusicViewDialog = ({
         <div className="flex gap-4 h-[85vh] overflow-hidden">
           <div className={`${showSmartTools ? 'flex-1' : 'w-full'} overflow-y-auto`}>
             <Tabs defaultValue="overview" className="w-full">
-              {/* Mobile: Move tabs to bottom on small screens, top on larger screens */}
-              <div className="md:block hidden">
-                <TabsList className="grid w-full grid-cols-5">
-                  <TabsTrigger value="overview">Overview</TabsTrigger>
-                  <TabsTrigger value="notes">Notes</TabsTrigger>
-                  <TabsTrigger value="marked">Marked Scores</TabsTrigger>
-                  <TabsTrigger value="personal">My Notes</TabsTrigger>
-                  <TabsTrigger value="rehearsals">Rehearsals</TabsTrigger>
-                </TabsList>
-              </div>
+              {/* Mobile-optimized tabs with better touch targets */}
+              <TabsList className="grid w-full grid-cols-5 h-12 md:h-10 sticky top-0 z-10 bg-background border-b">
+                <TabsTrigger value="overview" className="text-xs md:text-sm py-2 px-1">Overview</TabsTrigger>
+                <TabsTrigger value="notes" className="text-xs md:text-sm py-2 px-1">Notes</TabsTrigger>
+                <TabsTrigger value="marked" className="text-xs md:text-sm py-2 px-1">Marked</TabsTrigger>
+                <TabsTrigger value="personal" className="text-xs md:text-sm py-2 px-1">My Notes</TabsTrigger>
+                <TabsTrigger value="rehearsals" className="text-xs md:text-sm py-2 px-1">Practice</TabsTrigger>
+              </TabsList>
               
               <TabsContent value="overview" className="mt-4">
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -231,17 +229,6 @@ export const SheetMusicViewDialog = ({
               <TabsContent value="rehearsals" className="mt-4">
                 <RehearsalLinks musicId={item.id} isAdmin={isAdmin} />
               </TabsContent>
-              
-              {/* Mobile: Tabs at bottom on small screens */}
-              <div className="md:hidden block fixed bottom-4 left-4 right-4 z-50">
-                <TabsList className="grid w-full grid-cols-5 bg-background/95 backdrop-blur-sm border shadow-lg">
-                  <TabsTrigger value="overview" className="text-xs">View</TabsTrigger>
-                  <TabsTrigger value="notes" className="text-xs">Notes</TabsTrigger>
-                  <TabsTrigger value="marked" className="text-xs">Marked</TabsTrigger>
-                  <TabsTrigger value="personal" className="text-xs">My Notes</TabsTrigger>
-                  <TabsTrigger value="rehearsals" className="text-xs">Practice</TabsTrigger>
-                </TabsList>
-              </div>
             </Tabs>
           </div>
 
