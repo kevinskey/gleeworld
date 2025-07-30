@@ -261,7 +261,7 @@ export const ExecutiveBoardDashboard = () => {
       {/* Background Image */}
       {backgroundImage && (
         <div 
-          className="fixed inset-0 bg-cover bg-center z-0 after:absolute after:inset-0 after:bg-black/60 after:backdrop-blur-[1px]"
+          className="fixed inset-0 bg-cover bg-center z-0 after:absolute after:inset-0 after:bg-white after:opacity-20"
           style={{ backgroundImage: `url(${backgroundImage})` }}
         />
       )}
