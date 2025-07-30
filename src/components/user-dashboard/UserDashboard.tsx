@@ -322,9 +322,23 @@ const UserDashboard = React.memo(() => {
     }));
   const recentActivity = getRecentActivity();
 
+  // Use the same historic campus background as Executive Board Dashboard
+  const backgroundImage = "/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png";
+
   return (
-    <UniversalLayout containerized={false}>
-      <div className="w-full max-w-7xl mx-auto px-1 sm:px-2 md:px-4 py-1 sm:py-2 md:py-4 space-y-2 sm:space-y-3 md:space-y-4">
+    <div className="min-h-screen relative">
+      {/* Background Image */}
+      {backgroundImage && (
+        <div 
+          className="fixed inset-0 bg-cover bg-center z-0 after:absolute after:inset-0 after:bg-white after:opacity-20"
+          style={{ backgroundImage: `url(${backgroundImage})` }}
+        />
+      )}
+      
+      {/* Content overlay */}
+      <div className="relative z-10">
+        <UniversalLayout containerized={false} className="bg-transparent">
+          <div className="w-full max-w-7xl mx-auto px-1 sm:px-2 md:px-4 py-1 sm:py-2 md:py-4 space-y-2 sm:space-y-3 md:space-y-4">
         
         {/* View Mode Toggle for Admins/Executives */}
         {(isAdmin || hasExecBoardPerms) && (
@@ -438,8 +452,10 @@ const UserDashboard = React.memo(() => {
             </div>
           </>
         )}
+          </div>
+        </UniversalLayout>
       </div>
-    </UniversalLayout>
+    </div>
   );
 });
 

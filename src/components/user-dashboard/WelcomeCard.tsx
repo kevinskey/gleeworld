@@ -15,8 +15,8 @@ interface WelcomeCardProps {
 }
 
 export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
-  // Use the same historic campus background as Executive Board Dashboard
-  const historicCampusImage = "/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png";
+  const { getSettingByName } = useDashboardSettings();
+  const welcomeCardSetting = getSettingByName('welcome_card_background');
   const [imageError, setImageError] = useState(false);
   const { dashboardData } = useUserDashboardContext();
 
@@ -35,37 +35,39 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
   // Enhanced error handling with logging
   const handleImageError = (error: React.SyntheticEvent<HTMLImageElement, Event>) => {
     console.error('Welcome card image failed to load:', {
-      imageUrl: historicCampusImage,
-      error: error.currentTarget.src
+      imageUrl: welcomeCardSetting?.image_url,
+      error: error.currentTarget.src,
+      setting: welcomeCardSetting
     });
     setImageError(true);
   };
 
   const handleImageLoad = () => {
-    console.log('Welcome card image loaded successfully:', historicCampusImage);
+    console.log('Welcome card image loaded successfully:', welcomeCardSetting?.image_url);
     setImageError(false);
   };
 
   // Memoize values to prevent re-renders causing blinking
   const backgroundStyles = useMemo(() => {
-    if (!historicCampusImage || imageError) {
+    if (!welcomeCardSetting?.image_url || imageError) {
       console.log('No background image or error:', { 
-        hasImageUrl: !!historicCampusImage, 
-        imageError
+        hasImageUrl: !!welcomeCardSetting?.image_url, 
+        imageError,
+        setting: welcomeCardSetting
       });
       return {};
     }
     
-    console.log('Using background image:', historicCampusImage);
+    console.log('Using background image:', welcomeCardSetting.image_url);
     return {
-      backgroundImage: `url("${historicCampusImage}")`,
+      backgroundImage: `url("${welcomeCardSetting.image_url}")`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat'
     };
-  }, [historicCampusImage, imageError]);
+  }, [welcomeCardSetting?.image_url, imageError]);
 
-  const hasBackgroundImage = Boolean(historicCampusImage && !imageError);
+  const hasBackgroundImage = Boolean(welcomeCardSetting?.image_url && !imageError);
 
   return (
     <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-lg min-h-[180px] sm:min-h-[220px] md:min-h-[260px] flex items-center">
@@ -75,13 +77,13 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
-              backgroundImage: `url("${historicCampusImage}")`,
+              backgroundImage: `url("${welcomeCardSetting?.image_url}")`,
               backgroundAttachment: 'scroll' // Better for mobile
             }}
           />
           {/* Hidden img element to detect load errors */}
           <img
-            src={historicCampusImage}
+            src={welcomeCardSetting?.image_url}
             alt=""
             className="hidden"
             onError={handleImageError}
