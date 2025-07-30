@@ -118,15 +118,29 @@ export const useAuditionLogs = () => {
           const migratedLog = newLogs?.find(log => {
             const logDate = format(new Date(log.audition_date), 'yyyy-MM-dd');
             // Direct comparison since both are now in 12-hour format
-            return logDate === slot.date && log.audition_time === slot.time;
+            const matches = logDate === slot.date && log.audition_time === slot.time;
+            console.log('🔍 Slot matching:', {
+              slotDate: slot.date,
+              slotTime: slot.time,
+              logDate: logDate,
+              logTime: log.audition_time,
+              matches: matches,
+              logName: log.applicant_name
+            });
+            return matches;
           });
-        
-        if (migratedLog) {
-          slot.isScheduled = true;
-          slot.auditionLog = migratedLog;
-          slot.id = migratedLog.id;
-        }
-      });
+          
+          if (migratedLog) {
+            console.log('✅ Found match! Setting slot as scheduled:', {
+              slotDate: slot.date,
+              slotTime: slot.time,
+              logName: migratedLog.applicant_name
+            });
+            slot.isScheduled = true;
+            slot.auditionLog = migratedLog;
+            slot.id = migratedLog.id;
+          }
+        });
 
       setLogs((newLogs || []) as AuditionLog[]);
 
