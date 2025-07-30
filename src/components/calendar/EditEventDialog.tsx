@@ -65,7 +65,11 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
     max_attendees: '',
     registration_required: false,
     is_public: true,
-    status: 'scheduled'
+    status: 'scheduled',
+    attendance_required: false,
+    attendance_deadline: '',
+    late_arrival_allowed: true,
+    excuse_required: false
   });
 
   const eventTypes = [
@@ -111,7 +115,11 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
         max_attendees: event.max_attendees?.toString() || '',
         registration_required: event.registration_required || false,
         is_public: event.is_public !== false,
-        status: event.status || 'scheduled'
+        status: event.status || 'scheduled',
+        attendance_required: event.attendance_required || false,
+        attendance_deadline: event.attendance_deadline ? formatDateForInput(event.attendance_deadline) : '',
+        late_arrival_allowed: event.late_arrival_allowed !== false,
+        excuse_required: event.excuse_required || false
       });
 
       // Set existing image if available
@@ -205,6 +213,10 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
         is_public: formData.is_public,
         status: formData.status,
         image_url: imageUrl,
+        attendance_required: formData.attendance_required,
+        attendance_deadline: formData.attendance_deadline ? new Date(formData.attendance_deadline + ':00').toISOString() : null,
+        late_arrival_allowed: formData.late_arrival_allowed,
+        excuse_required: formData.excuse_required,
         updated_at: new Date().toISOString()
       };
 
@@ -564,6 +576,60 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
                     onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_public: checked }))}
                   />
                 </div>
+
+                <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium">Attendance Required</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Should members be required to mark attendance for this event?
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.attendance_required}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, attendance_required: checked }))}
+                  />
+                </div>
+
+                {formData.attendance_required && (
+                  <div className="space-y-4 p-4 border rounded-lg bg-background">
+                    <div className="space-y-2">
+                      <Label htmlFor="attendance_deadline" className="text-sm font-medium">Attendance Deadline</Label>
+                      <Input
+                        id="attendance_deadline"
+                        type="datetime-local"
+                        value={formData.attendance_deadline}
+                        onChange={(e) => setFormData(prev => ({ ...prev, attendance_deadline: e.target.value }))}
+                        placeholder="When must attendance be marked?"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Label className="text-sm font-medium">Allow Late Arrivals</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Can members mark attendance after the event starts?
+                        </p>
+                      </div>
+                      <Switch
+                        checked={formData.late_arrival_allowed}
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, late_arrival_allowed: checked }))}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Label className="text-sm font-medium">Excuse Required for Absence</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Must members provide an excuse if they miss this event?
+                        </p>
+                      </div>
+                      <Switch
+                        checked={formData.excuse_required}
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, excuse_required: checked }))}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

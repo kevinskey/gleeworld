@@ -23,6 +23,10 @@ export interface GleeWorldEvent {
   created_by: string | null;
   created_at: string | null;
   updated_at: string | null;
+  attendance_required?: boolean | null;
+  attendance_deadline?: string | null;
+  late_arrival_allowed?: boolean | null;
+  excuse_required?: boolean | null;
   // Add source to differentiate between events and appointments
   source?: 'event' | 'appointment';
   // Calendar information from join
