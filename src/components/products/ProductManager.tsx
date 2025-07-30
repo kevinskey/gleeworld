@@ -398,6 +398,11 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onSave, 
         created_by: product ? undefined : (await supabase.auth.getUser()).data.user?.id,
       };
 
+      // Remove empty SKU to avoid unique constraint violations
+      if (!productData.sku || productData.sku.trim() === '') {
+        delete productData.sku;
+      }
+
       if (product) {
         const { error } = await supabase
           .from('products')
