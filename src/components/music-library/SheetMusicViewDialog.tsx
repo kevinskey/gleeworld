@@ -107,7 +107,7 @@ export const SheetMusicViewDialog = ({
               
               <TabsContent value="overview" className="mt-4">
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                  <div className="xl:col-span-2 space-y-4">
+                  <div className="xl:col-span-2">
                     {item.pdf_url ? (
                       <PDFViewer 
                         pdfUrl={item.pdf_url} 
@@ -117,24 +117,28 @@ export const SheetMusicViewDialog = ({
                       <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
                         <div className="w-full h-full flex items-center justify-center">
                           <FileText className="h-24 w-24 text-muted-foreground" />
+                          <p className="text-muted-foreground mt-2">No PDF available</p>
                         </div>
                       </div>
                     )}
-                    
-                    <div className="flex gap-2">
-                      {item.pdf_url && (
-                        <Button variant="outline" asChild>
+                  </div>
+
+                  <div className="xl:col-span-1 space-y-6">
+                    {/* Download button */}
+                    {item.pdf_url && (
+                      <div className="space-y-2">
+                        <Button variant="outline" asChild className="w-full">
                           <a href={item.pdf_url} download>
                             <Download className="h-4 w-4 mr-2" />
                             Download PDF
                           </a>
                         </Button>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
                     {/* Performance Integration Links */}
                     {isAdmin && (
-                      <div className="mt-4 p-3 bg-muted/50 rounded-lg space-y-2">
+                      <div className="p-3 bg-muted/50 rounded-lg space-y-2">
                         <h4 className="font-medium text-sm">Performance Tools</h4>
                         <div className="flex gap-2">
                           <Button variant="outline" size="sm" asChild>
@@ -162,9 +166,6 @@ export const SheetMusicViewDialog = ({
                         </audio>
                       </div>
                     )}
-                  </div>
-
-                  <div className="xl:col-span-1 space-y-6">
                     <div className="space-y-3">
                       <h3 className="text-lg font-semibold">Details</h3>
                       {item.composer && (
