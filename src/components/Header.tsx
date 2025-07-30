@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Camera, Menu, X, Bell } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -345,6 +345,11 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-6 w-6 sm:h-8 sm:w-8 rounded-full">
                   <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
+                    <AvatarImage 
+                      src={userProfile?.avatar_url || undefined} 
+                      alt={displayName}
+                      className="object-cover"
+                    />
                     <AvatarFallback className="bg-spelman-500 text-white">
                       {getInitials(displayName)}
                     </AvatarFallback>
