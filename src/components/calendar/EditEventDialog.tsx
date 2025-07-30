@@ -72,6 +72,14 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
     excuse_required: false
   });
 
+  // Helper function to calculate attendance deadline (30 minutes after start)
+  const calculateAttendanceDeadline = (startDate: string) => {
+    if (!startDate) return '';
+    const start = new Date(startDate + ':00');
+    const deadline = new Date(start.getTime() + 30 * 60000); // Add 30 minutes
+    return deadline.toISOString().slice(0, 16);
+  };
+
   const eventTypes = [
     { value: 'performance', label: 'Performance', color: 'bg-event-performance text-event-performance-fg' },
     { value: 'rehearsal', label: 'Rehearsal', color: 'bg-event-rehearsal text-event-rehearsal-fg' },
@@ -449,7 +457,14 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
                     id="start_date"
                     type="datetime-local"
                     value={formData.start_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
+                    onChange={(e) => {
+                      const newStartDate = e.target.value;
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        start_date: newStartDate,
+                        attendance_deadline: prev.attendance_required && newStartDate ? calculateAttendanceDeadline(newStartDate) : prev.attendance_deadline
+                      }));
+                    }}
                     required
                     className="animate-fade-in"
                   />
@@ -586,14 +601,23 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
                   </div>
                   <Switch
                     checked={formData.attendance_required}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, attendance_required: checked }))}
+                    onCheckedChange={(checked) => {
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        attendance_required: checked,
+                        attendance_deadline: checked && prev.start_date ? calculateAttendanceDeadline(prev.start_date) : prev.attendance_deadline
+                      }));
+                    }}
                   />
                 </div>
 
                 {formData.attendance_required && (
                   <div className="space-y-4 p-4 border rounded-lg bg-background">
                     <div className="space-y-2">
-                      <Label htmlFor="attendance_deadline" className="text-sm font-medium">Attendance Deadline</Label>
+                      <Label htmlFor="attendance_deadline" className="text-sm font-medium">
+                        Attendance Deadline
+                        <span className="text-xs text-muted-foreground ml-2">(Automatically set to 30 minutes after start)</span>
+                      </Label>
                       <Input
                         id="attendance_deadline"
                         type="datetime-local"

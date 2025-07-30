@@ -84,6 +84,14 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
     { value: 'other', label: 'Other' }
   ];
 
+  // Helper function to calculate attendance deadline (30 minutes after start)
+  const calculateAttendanceDeadline = (startDate: string) => {
+    if (!startDate) return '';
+    const start = new Date(startDate + ':00');
+    const deadline = new Date(start.getTime() + 30 * 60000); // Add 30 minutes
+    return deadline.toISOString().slice(0, 16);
+  };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -580,7 +588,14 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
                   id="start_date"
                   type="datetime-local"
                   value={formData.start_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
+                  onChange={(e) => {
+                    const newStartDate = e.target.value;
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      start_date: newStartDate,
+                      attendance_deadline: prev.attendance_required && newStartDate ? calculateAttendanceDeadline(newStartDate) : prev.attendance_deadline
+                    }));
+                  }}
                   required
                 />
               </div>
@@ -617,14 +632,23 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
                 </div>
                 <Switch
                   checked={formData.attendance_required}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, attendance_required: checked }))}
+                  onCheckedChange={(checked) => {
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      attendance_required: checked,
+                      attendance_deadline: checked && prev.start_date ? calculateAttendanceDeadline(prev.start_date) : prev.attendance_deadline
+                    }));
+                  }}
                 />
               </div>
 
               {formData.attendance_required && (
                 <div className="space-y-4 p-4 border rounded-lg bg-background">
                   <div className="space-y-2">
-                    <Label htmlFor="attendance_deadline">Attendance Deadline</Label>
+                    <Label htmlFor="attendance_deadline">
+                      Attendance Deadline
+                      <span className="text-xs text-muted-foreground ml-2">(Automatically set to 30 minutes after start)</span>
+                    </Label>
                     <Input
                       id="attendance_deadline"
                       type="datetime-local"
@@ -632,10 +656,10 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
                       onChange={(e) => setFormData(prev => ({ ...prev, attendance_deadline: e.target.value }))}
                       placeholder="When must attendance be marked?"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Members must mark their attendance before this time
-                    </p>
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    Members must mark their attendance before this time
+                  </p>
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
