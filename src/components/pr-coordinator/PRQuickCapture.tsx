@@ -146,29 +146,33 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
                 className="hidden"
               />
 
-              {isCameraReady && (
-                <div className="space-y-4">
-                  <div className="relative bg-black rounded-lg overflow-hidden">
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      playsInline
-                      muted
-                      className="w-full h-64 object-cover"
-                    />
-                    <canvas
-                      ref={canvasRef}
-                      className="hidden"
-                    />
-                  </div>
+              {/* Camera interface - always render video element for ref availability */}
+              <div className="space-y-4">
+                <div className={`relative bg-black rounded-lg overflow-hidden ${!isCameraReady ? 'hidden' : ''}`}>
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-64 object-cover"
+                  />
+                </div>
+                
+                {/* Always render canvas for capture functionality */}
+                <canvas
+                  ref={canvasRef}
+                  className="hidden"
+                />
+                
+                {isCameraReady && (
                   <div className="text-center">
                     <Button onClick={capturePhoto} size="lg" className="gap-2">
                       <Camera className="h-4 w-4" />
                       Capture Photo
                     </Button>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
