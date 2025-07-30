@@ -330,9 +330,11 @@ export const ExecutiveBoardDashboard = () => {
             
             {/* Welcome message with user's name */}
             {user?.user_metadata?.full_name && (
-              <p className="text-lg md:text-xl text-white/90 drop-shadow-md mt-2">
-                Welcome back, {user.user_metadata.full_name}! 👋
-              </p>
+              <div className="bg-black/30 backdrop-blur-sm rounded-lg px-4 py-2 mt-2 border border-white/20">
+                <p className="text-lg md:text-xl text-white font-medium">
+                  Welcome back, {user.user_metadata.full_name}! 👋
+                </p>
+              </div>
             )}
             
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
