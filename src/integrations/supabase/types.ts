@@ -7956,6 +7956,151 @@ export type Database = {
           },
         ]
       }
+      press_kit_items: {
+        Row: {
+          content: string | null
+          created_at: string
+          description: string | null
+          file_path: string | null
+          file_url: string | null
+          id: string
+          is_featured: boolean | null
+          item_type: string
+          metadata: Json | null
+          press_kit_id: string
+          sort_order: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          description?: string | null
+          file_path?: string | null
+          file_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          item_type: string
+          metadata?: Json | null
+          press_kit_id: string
+          sort_order?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          description?: string | null
+          file_path?: string | null
+          file_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          item_type?: string
+          metadata?: Json | null
+          press_kit_id?: string
+          sort_order?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "press_kit_items_press_kit_id_fkey"
+            columns: ["press_kit_id"]
+            isOneToOne: false
+            referencedRelation: "press_kits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      press_kit_shares: {
+        Row: {
+          access_token: string | null
+          created_at: string
+          downloaded_at: string | null
+          expires_at: string | null
+          id: string
+          press_kit_id: string
+          recipient_email: string | null
+          recipient_name: string | null
+          shared_by: string
+          view_count: number | null
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string
+          downloaded_at?: string | null
+          expires_at?: string | null
+          id?: string
+          press_kit_id: string
+          recipient_email?: string | null
+          recipient_name?: string | null
+          shared_by: string
+          view_count?: number | null
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string
+          downloaded_at?: string | null
+          expires_at?: string | null
+          id?: string
+          press_kit_id?: string
+          recipient_email?: string | null
+          recipient_name?: string | null
+          shared_by?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "press_kit_shares_press_kit_id_fkey"
+            columns: ["press_kit_id"]
+            isOneToOne: false
+            referencedRelation: "press_kits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      press_kits: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_featured: boolean | null
+          is_public: boolean | null
+          metadata: Json | null
+          status: string | null
+          template_type: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_public?: boolean | null
+          metadata?: Json | null
+          status?: string | null
+          template_type?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_public?: boolean | null
+          metadata?: Json | null
+          status?: string | null
+          template_type?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_categories: {
         Row: {
           created_at: string

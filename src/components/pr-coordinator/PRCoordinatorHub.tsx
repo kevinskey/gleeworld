@@ -11,6 +11,7 @@ import { PRQuickCapture } from './PRQuickCapture';
 import { PRImageDetails } from './PRImageDetails';
 import { PRBulkActions } from './PRBulkActions';
 import { PRTagManager } from './PRTagManager';
+import { PressKitManager } from './PressKitManager';
 import { TaskNotifications } from '@/components/shared/TaskNotifications';
 
 export const PRCoordinatorHub = () => {
@@ -249,6 +250,10 @@ export const PRCoordinatorHub = () => {
             onImageDelete={deleteImage}
             getImageUrl={getImageUrl}
           />
+        </TabsContent>
+
+        <TabsContent value="press-kits">
+          <PressKitManager />
         </TabsContent>
 
         <TabsContent value="tags">
