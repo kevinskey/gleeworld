@@ -43,6 +43,11 @@ export const PRCoordinatorHub = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showQuickCapture, setShowQuickCapture] = useState(false);
 
+  // Debug showQuickCapture state changes
+  useEffect(() => {
+    console.log('PRCoordinatorHub: showQuickCapture state changed to:', showQuickCapture);
+  }, [showQuickCapture]);
+
   const filteredImages = images.filter(image => {
     const matchesSearch = !searchQuery || 
       image.original_filename?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -75,11 +80,17 @@ export const PRCoordinatorHub = () => {
   // Listen for header camera trigger
   useEffect(() => {
     const handleQuickCapture = () => {
+      console.log('PRCoordinatorHub: Received trigger-pr-quick-capture event');
       setShowQuickCapture(true);
+      console.log('PRCoordinatorHub: Set showQuickCapture to true');
     };
 
+    console.log('PRCoordinatorHub: Adding event listener for trigger-pr-quick-capture');
     window.addEventListener('trigger-pr-quick-capture', handleQuickCapture);
-    return () => window.removeEventListener('trigger-pr-quick-capture', handleQuickCapture);
+    return () => {
+      console.log('PRCoordinatorHub: Removing event listener for trigger-pr-quick-capture');
+      window.removeEventListener('trigger-pr-quick-capture', handleQuickCapture);
+    };
   }, []);
 
   const handleTagFilter = (tagId: string) => {
