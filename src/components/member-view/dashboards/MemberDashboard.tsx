@@ -49,7 +49,8 @@ export const MemberDashboard = ({ user }: MemberDashboardProps) => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="min-h-screen bg-muted/30 p-6 -m-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {/* SCGC Handbook Card */}
       <Card 
         className="cursor-pointer hover:shadow-md transition-all duration-200 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10" 
@@ -258,6 +259,7 @@ export const MemberDashboard = ({ user }: MemberDashboardProps) => {
 
       {/* Spiritual Reflections Card */}
       <SpiritualReflectionsCard />
+      </div>
     </div>
   );
 };
