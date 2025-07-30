@@ -65,104 +65,40 @@ export const PDFViewerWithAnnotations = ({
   const [scale, setScale] = useState(1.2);
   const [pageAnnotations, setPageAnnotations] = useState<Record<number, any[]>>({});
 
-  // Load PDF
-  useEffect(() => {
-    console.log('PDFViewerWithAnnotations: Effect triggered', { 
-      signedUrl, 
-      urlLoading, 
-      urlError,
-      pdfJsVersion: pdfjsLib.version 
-    });
-    
-    if (!signedUrl) {
-      console.log('PDFViewerWithAnnotations: No signed URL available');
-      return;
-    }
-
-    const loadPDF = async () => {
-      console.log('PDFViewerWithAnnotations: Starting PDF load from:', signedUrl);
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        // Try to load with PDF.js
-        console.log('PDFViewerWithAnnotations: Attempting PDF.js load...');
-        const loadingTask = pdfjsLib.getDocument({
-          url: signedUrl,
-          cMapUrl: `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/cmaps/`,
-          cMapPacked: true,
-        });
-        
-        const loadedPdf = await loadingTask.promise;
-        console.log('PDFViewerWithAnnotations: PDF loaded successfully:', loadedPdf.numPages, 'pages');
-        setPdf(loadedPdf);
-        setTotalPages(loadedPdf.numPages);
-        setCurrentPage(1);
-      } catch (error) {
-        console.error('PDFViewerWithAnnotations: PDF.js failed, falling back to iframe:', error);
-        console.error('PDFViewerWithAnnotations: Failed URL was:', signedUrl);
-        
-        // Fallback to iframe viewer
-        setError('PDF.js failed, using iframe fallback');
-        setPdf(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadPDF();
-  }, [signedUrl]);
-
-  // Render current page
-  useEffect(() => {
-    if (!pdf || !canvasRef.current) return;
-
-    const renderPage = async () => {
-      try {
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        const page = await pdf.getPage(currentPage);
-        const viewport = page.getViewport({ scale });
-        
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        
-        // Update drawing canvas to match
-        if (drawingCanvasRef.current) {
-          drawingCanvasRef.current.width = viewport.width;
-          drawingCanvasRef.current.height = viewport.height;
-        }
-
-        const renderContext = {
-          canvasContext: ctx,
-          viewport: viewport
-        };
-
-        await page.render(renderContext).promise;
-        
-        // Redraw annotations for current page
-        redrawAnnotations();
-        
-        console.log(`Rendered page ${currentPage} at scale ${scale}`);
-      } catch (error) {
-        console.error('Error rendering page:', error);
-      }
-    };
-
-    renderPage();
-  }, [pdf, currentPage, scale]);
-
-  const handleLoad = () => {
+  // Handle iframe load
+  const handleIframeLoad = () => {
+    console.log('PDFViewerWithAnnotations: Google Docs viewer loaded successfully');
     setIsLoading(false);
     setError(null);
   };
 
-  const handleError = () => {
+  const handleIframeError = () => {
+    console.error('PDFViewerWithAnnotations: Google Docs viewer failed to load');
     setIsLoading(false);
-    setError('Failed to load PDF. The file might be corrupted or inaccessible.');
+    setError('Failed to load PDF viewer');
   };
+
+  // Initialize drawing canvas to match iframe size
+  useEffect(() => {
+    if (!drawingCanvasRef.current) return;
+    
+    const canvas = drawingCanvasRef.current;
+    const container = canvas.parentElement;
+    if (!container) return;
+    
+    // Set canvas size to match container
+    const resizeCanvas = () => {
+      const rect = container.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      redrawAnnotations();
+    };
+    
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    return () => window.removeEventListener('resize', resizeCanvas);
+  }, [annotationMode]);
 
   const redrawAnnotations = (pathsToRedraw?: any[]) => {
     if (!drawingCanvasRef.current) return;
@@ -173,8 +109,8 @@ export const PDFViewerWithAnnotations = ({
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Use page-specific annotations or current paths
-    const annotationsToRedraw = pathsToRedraw || pageAnnotations[currentPage] || [];
+    // Use current paths or provided paths
+    const annotationsToRedraw = pathsToRedraw || paths;
     
     annotationsToRedraw.forEach(path => {
       if (path.points && path.points.length > 1) {
@@ -255,70 +191,39 @@ export const PDFViewerWithAnnotations = ({
     if (!isDrawing || !currentPath) return;
     
     setIsDrawing(false);
-    
-    // Add to page-specific annotations
-    const newPageAnnotations = { ...pageAnnotations };
-    if (!newPageAnnotations[currentPage]) {
-      newPageAnnotations[currentPage] = [];
-    }
-    newPageAnnotations[currentPage].push(currentPath);
-    setPageAnnotations(newPageAnnotations);
-    
+    const newPaths = [...paths, currentPath];
+    setPaths(newPaths);
     setCurrentPath(null);
     setHasAnnotations(true);
   };
 
   const handleClear = () => {
-    const newPageAnnotations = { ...pageAnnotations };
-    newPageAnnotations[currentPage] = [];
-    setPageAnnotations(newPageAnnotations);
-    
-    // Check if any pages still have annotations
-    const stillHasAnnotations = Object.values(newPageAnnotations).some(annotations => annotations.length > 0);
-    setHasAnnotations(stillHasAnnotations);
-    
+    setPaths([]);
+    setHasAnnotations(false);
     redrawAnnotations([]);
-    toast.success("Page annotations cleared!");
+    toast.success("Annotations cleared!");
   };
 
   const handleUndo = () => {
-    const currentPagePaths = pageAnnotations[currentPage] || [];
-    if (currentPagePaths.length === 0) return;
+    if (paths.length === 0) return;
     
-    const newPageAnnotations = { ...pageAnnotations };
-    newPageAnnotations[currentPage] = currentPagePaths.slice(0, -1);
-    setPageAnnotations(newPageAnnotations);
-    
-    redrawAnnotations(newPageAnnotations[currentPage]);
-    
-    // Check if any pages still have annotations
-    const stillHasAnnotations = Object.values(newPageAnnotations).some(annotations => annotations.length > 0);
-    setHasAnnotations(stillHasAnnotations);
+    const newPaths = paths.slice(0, -1);
+    setPaths(newPaths);
+    redrawAnnotations(newPaths);
+    setHasAnnotations(newPaths.length > 0);
   };
 
   const handleSave = async () => {
-    if (!canvasRef.current || !drawingCanvasRef.current || !user || !musicId) {
+    if (!drawingCanvasRef.current || !user || !musicId) {
       toast.error("Cannot save - missing required information");
       return;
     }
     
     setIsSaving(true);
     try {
-      // Create composite canvas
-      const compositeCanvas = document.createElement('canvas');
-      compositeCanvas.width = canvasRef.current.width;
-      compositeCanvas.height = canvasRef.current.height;
-      const compositeCtx = compositeCanvas.getContext('2d');
-      
-      if (!compositeCtx) throw new Error('Could not create composite canvas');
-      
-      // Draw background PDF and annotations
-      compositeCtx.drawImage(canvasRef.current, 0, 0);
-      compositeCtx.drawImage(drawingCanvasRef.current, 0, 0);
-      
-      // Convert to blob
+      // Convert drawing canvas to blob
       const blob = await new Promise<Blob>((resolve, reject) => {
-        compositeCanvas.toBlob((blob) => {
+        drawingCanvasRef.current?.toBlob((blob) => {
           if (blob) resolve(blob);
           else reject(new Error('Failed to create blob'));
         }, 'image/png', 0.9);
@@ -344,25 +249,19 @@ export const PDFViewerWithAnnotations = ({
         .insert({
           music_id: musicId,
           uploader_id: user.id,
-          voice_part: `Page ${currentPage}`,
+          voice_part: 'Annotated',
           file_url: publicUrl,
-          description: `Annotated ${musicTitle || 'Score'} - Page ${currentPage}`,
-          canvas_data: JSON.stringify(pageAnnotations)
+          description: `Annotated ${musicTitle || 'Score'}`,
+          canvas_data: JSON.stringify(paths)
         });
       
       if (dbError) throw dbError;
       
       toast.success("Annotated score saved successfully!");
       
-      // Clear current page annotations after saving
-      const newPageAnnotations = { ...pageAnnotations };
-      newPageAnnotations[currentPage] = [];
-      setPageAnnotations(newPageAnnotations);
-      
-      // Check if any pages still have annotations
-      const stillHasAnnotations = Object.values(newPageAnnotations).some(annotations => annotations.length > 0);
-      setHasAnnotations(stillHasAnnotations);
-      
+      // Clear annotations after saving
+      setPaths([]);
+      setHasAnnotations(false);
       redrawAnnotations([]);
       setAnnotationMode(false);
     } catch (error) {
@@ -371,27 +270,6 @@ export const PDFViewerWithAnnotations = ({
     } finally {
       setIsSaving(false);
     }
-  };
-
-  // Navigation functions
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const handleZoomIn = () => {
-    setScale(Math.min(scale + 0.2, 3));
-  };
-
-  const handleZoomOut = () => {
-    setScale(Math.max(scale - 0.2, 0.5));
   };
 
   // Show loading while getting signed URL
@@ -483,65 +361,17 @@ export const PDFViewerWithAnnotations = ({
 
   return (
     <Card className={cn("w-full max-w-6xl mx-auto", className)}>
-      {/* Navigation and Annotation Toolbar */}
+      {/* Annotation Toolbar */}
       <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/50 rounded-t-lg border-b">
-        {/* PDF Navigation */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={goToPreviousPage}
-            disabled={currentPage <= 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          
-          <span className="text-sm font-medium px-2">
-            {currentPage} / {totalPages}
-          </span>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={goToNextPage}
-            disabled={currentPage >= totalPages}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Zoom Controls */}
-        <div className="flex items-center gap-1 border-l pl-2 ml-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleZoomOut}
-            disabled={scale <= 0.5}
-          >
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <span className="text-xs px-2">{Math.round(scale * 100)}%</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleZoomIn}
-            disabled={scale >= 3}
-          >
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-        </div>
-
         {/* Annotation Toggle */}
-        <div className="border-l pl-2 ml-2">
-          <Button
-            variant={annotationMode ? "default" : "outline"}
-            size="sm"
-            onClick={() => setAnnotationMode(!annotationMode)}
-          >
-            <Palette className="h-4 w-4 mr-2" />
-            {annotationMode ? "Exit Annotations" : "Annotate"}
-          </Button>
-        </div>
+        <Button
+          variant={annotationMode ? "default" : "outline"}
+          size="sm"
+          onClick={() => setAnnotationMode(!annotationMode)}
+        >
+          <Palette className="h-4 w-4 mr-2" />
+          {annotationMode ? "Exit Annotations" : "Annotate"}
+        </Button>
 
         {annotationMode && (
           <>
@@ -607,7 +437,7 @@ export const PDFViewerWithAnnotations = ({
                 variant="outline"
                 size="sm"
                 onClick={handleUndo}
-                disabled={(pageAnnotations[currentPage] || []).length === 0}
+                disabled={paths.length === 0}
               >
                 <Undo className="h-4 w-4" />
               </Button>
@@ -615,7 +445,7 @@ export const PDFViewerWithAnnotations = ({
                 variant="outline"
                 size="sm"
                 onClick={handleClear}
-                disabled={(pageAnnotations[currentPage] || []).length === 0}
+                disabled={paths.length === 0}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -639,8 +469,8 @@ export const PDFViewerWithAnnotations = ({
       </div>
 
       {/* PDF Content */}
-      <CardContent className="p-4">
-        <div className="relative w-full overflow-auto bg-gray-100 rounded border">
+      <CardContent className="p-0">
+        <div className="relative h-[800px] w-full">
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
               <div className="flex flex-col items-center space-y-2">
@@ -650,57 +480,41 @@ export const PDFViewerWithAnnotations = ({
             </div>
           )}
           
-          <div className="flex justify-center p-4">
-            <div className="relative bg-white shadow-lg">
-              {pdf ? (
-                <>
-                  {/* PDF Canvas - only show if PDF is loaded */}
-                  <canvas 
-                    ref={canvasRef}
-                    className="block"
-                  />
-                  
-                  {/* Drawing overlay canvas */}
-                  {annotationMode && (
-                    <canvas 
-                      ref={drawingCanvasRef}
-                      className={`absolute inset-0 ${
-                        activeTool !== "select" ? "cursor-crosshair" : "cursor-default"
-                      }`}
-                      onMouseDown={handleStart}
-                      onMouseMove={handleMove}
-                      onMouseUp={handleEnd}
-                      onMouseLeave={() => setIsDrawing(false)}
-                      onTouchStart={handleStart}
-                      onTouchMove={handleMove}
-                      onTouchEnd={handleEnd}
-                      onTouchCancel={() => setIsDrawing(false)}
-                    />
-                  )}
-                </>
-              ) : signedUrl ? (
-                /* Fallback to iframe if PDF.js fails */
-                <div className="w-full h-[800px]">
-                  <iframe
-                    src={`https://docs.google.com/gview?url=${encodeURIComponent(signedUrl)}&embedded=true`}
-                    className="w-full h-full border-0"
-                    title="PDF Viewer"
-                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-                  />
-                </div>
-              ) : (
-                <div className="p-8 text-center">
-                  <p className="text-muted-foreground">No PDF available</p>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Google Docs PDF Viewer */}
+          {signedUrl && (
+            <iframe
+              src={`https://docs.google.com/gview?url=${encodeURIComponent(signedUrl)}&embedded=true`}
+              className="w-full h-full border-0"
+              onLoad={handleIframeLoad}
+              onError={handleIframeError}
+              title="PDF Viewer"
+              sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+            />
+          )}
+
+          {/* Annotation Overlay Canvas */}
+          {annotationMode && (
+            <canvas 
+              ref={drawingCanvasRef}
+              className={`absolute inset-0 w-full h-full pointer-events-auto z-20 ${
+                activeTool !== "select" ? "cursor-crosshair" : "cursor-default"
+              }`}
+              onMouseDown={handleStart}
+              onMouseMove={handleMove}
+              onMouseUp={handleEnd}
+              onMouseLeave={() => setIsDrawing(false)}
+              onTouchStart={handleStart}
+              onTouchMove={handleMove}
+              onTouchEnd={handleEnd}
+              onTouchCancel={() => setIsDrawing(false)}
+            />
+          )}
         </div>
       </CardContent>
       
       {annotationMode && (
         <div className="text-xs text-muted-foreground text-center p-2 bg-muted/20">
-          {(pageAnnotations[currentPage] || []).length > 0 ? "Page annotations ready to save" : "Draw on the PDF to add annotations"}
+          {hasAnnotations ? "Annotations ready to save" : "Draw on the PDF to add annotations"}
         </div>
       )}
     </Card>
