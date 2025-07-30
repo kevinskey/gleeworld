@@ -116,6 +116,7 @@ export const MemberViewDashboard = () => {
       user={user}
       title={getTitle()}
       subtitle={getSubtitle()}
+      backgroundImage={backgroundImage}
       headerActions={
         <Button onClick={() => navigate('/dashboard')} variant="outline">
           <ArrowLeft className="mr-2 h-4 w-4" />
