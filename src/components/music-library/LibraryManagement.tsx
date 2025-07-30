@@ -6,7 +6,8 @@ import {
   Camera, 
   Upload, 
   Scan,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Scissors
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,6 +20,7 @@ import { EditablePhysicalCopyView } from './EditablePhysicalCopyView';
 import { StreamlinedFilterBar, FilterState } from './StreamlinedFilterBar';
 import { LibraryStats, LibraryStatsData } from '@/modules/glee-library/stats/LibraryStats';
 import { logSheetMusicAction, getDeviceType } from '@/lib/music-library/analytics';
+import { BulkPDFCroppingTool } from '@/components/glee-library/BulkPDFCroppingTool';
 
 interface ExtendedSheetMusic {
   id: string;
@@ -38,7 +40,6 @@ interface ExtendedSheetMusic {
   is_public: boolean;
   created_by: string;
   created_at: string;
-  voicing: string | null;
   // Physical copy fields
   physical_copies_count: number;
   physical_location: string | null;
@@ -51,6 +52,7 @@ interface ExtendedSheetMusic {
   purchase_price: number | null;
   donor_name: string | null;
   notes: string | null;
+  voicing: string | null;
   // Archive fields
   is_archived: boolean;
   archived_date: string | null;
@@ -99,7 +101,7 @@ export const LibraryManagement = () => {
 
       if (error) throw error;
       
-      const musicData = (data || []) as ExtendedSheetMusic[];
+      const musicData = (data || []) as any[];
       setSheetMusic(musicData);
       
       // Calculate stats with new format
@@ -220,7 +222,7 @@ export const LibraryManagement = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-1 h-auto p-1">
           <TabsTrigger value="all" className="text-xs sm:text-sm px-2 py-2">
             <span className="hidden sm:inline">All Items</span>
             <span className="sm:hidden">All</span>
@@ -237,6 +239,13 @@ export const LibraryManagement = () => {
             <span className="hidden sm:inline">Needs Inventory</span>
             <span className="sm:hidden">Inventory</span>
           </TabsTrigger>
+          {canAccessImportTools && (
+            <TabsTrigger value="ai-tools" className="text-xs sm:text-sm px-2 py-2">
+              <Scissors className="h-3 w-3 mr-1" />
+              <span className="hidden sm:inline">AI Tools</span>
+              <span className="sm:hidden">AI</span>
+            </TabsTrigger>
+          )}
         </TabsList>
         
         <TabsContent value="all" className="space-y-4">
@@ -274,6 +283,12 @@ export const LibraryManagement = () => {
             onRefresh={fetchSheetMusic} 
           />
         </TabsContent>
+        
+        {canAccessImportTools && (
+          <TabsContent value="ai-tools" className="space-y-4">
+            <BulkPDFCroppingTool />
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* Dialogs - Only for admins and librarians */}

@@ -5972,6 +5972,7 @@ export type Database = {
           copyright_year: number | null
           created_at: string | null
           created_by: string | null
+          crop_recommendations: Json | null
           difficulty_level: string | null
           donor_name: string | null
           id: string
@@ -6005,6 +6006,7 @@ export type Database = {
           copyright_year?: number | null
           created_at?: string | null
           created_by?: string | null
+          crop_recommendations?: Json | null
           difficulty_level?: string | null
           donor_name?: string | null
           id?: string
@@ -6038,6 +6040,7 @@ export type Database = {
           copyright_year?: number | null
           created_at?: string | null
           created_by?: string | null
+          crop_recommendations?: Json | null
           difficulty_level?: string | null
           donor_name?: string | null
           id?: string
