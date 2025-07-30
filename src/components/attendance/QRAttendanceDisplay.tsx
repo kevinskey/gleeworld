@@ -318,7 +318,18 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
               </div>
               
               <Button 
-                onClick={generateNewQRCode} 
+                onClick={() => {
+                  console.log('Generate QR button clicked');
+                  // Test QRCode library first
+                  try {
+                    QRCode.toDataURL('test', { width: 100 })
+                      .then(() => console.log('QRCode library test successful'))
+                      .catch((err) => console.error('QRCode library test failed:', err));
+                  } catch (err) {
+                    console.error('QRCode library import failed:', err);
+                  }
+                  generateNewQRCode();
+                }}
                 disabled={generating}
                 className="w-full"
               >
