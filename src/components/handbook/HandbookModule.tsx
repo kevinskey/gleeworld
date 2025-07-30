@@ -1,10 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
-import { Book, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Book, Search, GraduationCap, Users, Calendar, Music, Shield, DollarSign, Palette, MapPin, Star, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { HandbookExam } from "./HandbookExam";
-import { HandbookContractSigning } from "./HandbookContractSigning";
+import { Badge } from "@/components/ui/badge";
 
 export const HandbookModule = () => {
   const [searchTerm, setSearchTerm] = useState("");
