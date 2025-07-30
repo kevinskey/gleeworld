@@ -57,7 +57,7 @@ export const CalendarViews = () => {
 
   return (
     <TooltipProvider>
-      <div className="space-y-4 px-4 sm:px-6 md:px-8">
+      <div className="space-y-4 px-2.5 sm:px-6 md:px-8">
         <Card className="glass-dashboard-card">
           <CardHeader className="p-0">
             {/* Member Controls */}
