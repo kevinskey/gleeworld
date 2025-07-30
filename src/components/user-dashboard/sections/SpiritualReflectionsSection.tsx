@@ -59,8 +59,8 @@ export const SpiritualReflectionsSection = () => {
       </CardHeader>
       
       {!isCollapsed && (
-        <CardContent className="pt-0 flex-1 overflow-hidden">
-          {!latestReflection ? (
+        <CardContent className="pt-0 space-y-3 max-h-96 overflow-y-auto">
+          {!sharedReflections.length ? (
             <div className="text-center py-2 space-y-1">
               <div className="w-8 h-8 mx-auto bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center">
                 <Heart className="h-4 w-4 text-primary" />
@@ -75,48 +75,53 @@ export const SpiritualReflectionsSection = () => {
               </div>
             </div>
           ) : (
-            <div className="space-y-1 h-full overflow-hidden">
-              {/* Latest reflection preview */}
-              <div className="border border-primary/10 rounded-lg p-2 bg-background/50 backdrop-blur-sm h-full overflow-hidden">
-                <div className="flex items-start justify-between mb-1">
-                  <h4 className="font-medium text-base text-foreground line-clamp-1">{latestReflection.title}</h4>
-                  {latestReflection.is_featured && (
-                    <Badge variant="outline" className="text-sm border-accent text-accent ml-1">Featured</Badge>
-                  )}
-                </div>
-                
-                <div className="flex items-center gap-1 mb-1">
-                  <Badge className={`${getReflectionTypeColor(latestReflection.reflection_type || 'daily_devotional')} text-sm`} variant="secondary">
-                    {(latestReflection.reflection_type || 'daily_devotional').replace('_', ' ')}
-                  </Badge>
-                  {latestReflection.scripture_reference && (
-                    <Badge variant="outline" className="border-primary/20 text-primary text-sm">
-                      <Heart className="h-2 w-2 mr-1" />
-                      {latestReflection.scripture_reference}
+            <div className="space-y-3">
+              {/* Show all reflections */}
+              {sharedReflections.map((reflection, index) => (
+                <div key={reflection.id} className="border border-primary/10 rounded-lg p-3 bg-background/50 backdrop-blur-sm">
+                  <div className="flex items-start justify-between mb-2">
+                    <h4 className="font-medium text-base text-foreground">{reflection.title}</h4>
+                    <div className="flex items-center gap-1">
+                      {index === 0 && (
+                        <Badge variant="outline" className="text-xs border-primary text-primary">Latest</Badge>
+                      )}
+                      {reflection.is_featured && (
+                        <Badge variant="outline" className="text-xs border-accent text-accent">Featured</Badge>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-1 mb-2">
+                    <Badge className={`${getReflectionTypeColor(reflection.reflection_type || 'daily_devotional')} text-xs`} variant="secondary">
+                      {(reflection.reflection_type || 'daily_devotional').replace('_', ' ')}
                     </Badge>
-                  )}
-                </div>
-                
-                <p className="text-sm md:text-base text-muted-foreground line-clamp-2 mb-1">
-                  {latestReflection.content}
-                </p>
-                
-                <div className="text-sm text-muted-foreground">
-                  {latestReflection.shared_at 
-                    ? `Shared on ${new Date(latestReflection.shared_at).toLocaleDateString()}`
-                    : 'Recently shared'
-                  }
-                </div>
-              </div>
-
-              {/* Additional reflections count */}
-              {sharedReflections.length > 1 && (
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">
-                    +{sharedReflections.length - 1} more spiritual reflection{sharedReflections.length > 2 ? 's' : ''}
+                    {reflection.scripture_reference && (
+                      <Badge variant="outline" className="border-primary/20 text-primary text-xs">
+                        <Heart className="h-2 w-2 mr-1" />
+                        {reflection.scripture_reference}
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {reflection.content}
                   </p>
+                  
+                  <div className="text-xs text-muted-foreground">
+                    {reflection.shared_at 
+                      ? `Shared on ${new Date(reflection.shared_at).toLocaleDateString()}`
+                      : 'Recently shared'
+                    }
+                  </div>
                 </div>
-              )}
+              ))}
+              
+              {/* Summary at bottom */}
+              <div className="text-center pt-2 border-t border-primary/10">
+                <p className="text-xs text-muted-foreground">
+                  Showing {sharedReflections.length} spiritual reflection{sharedReflections.length !== 1 ? 's' : ''}
+                </p>
+              </div>
             </div>
           )}
         </CardContent>
