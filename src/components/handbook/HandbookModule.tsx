@@ -327,7 +327,80 @@ Transportation (by **bus** and/or **airplane**) will be provided for all partici
     {
       id: "anti-hazing-financial",
       title: "Anti-Hazing & Financial Obligations",
-      content: "Anti-hazing and financial obligations content will be added here from the PDF handbook..."
+      content: `## Anti-Hazing Policy
+
+The Spelman College Glee Club does **not tolerate any form of verbal or physical hazing** by students. Those accused and found guilty of such actions will be:
+
+- Dropped from the Glee Club course
+- Permanently removed from Glee Club membership
+- Subject to **disciplinary action by Spelman College**
+
+---
+
+## Financial Obligations
+
+To support the Glee Club's goals, **all members are expected to pay dues** to the Treasurer. These contributions help fund:
+
+- Uniform-related items
+- Bonding traditions
+- Food, hospitality, and swag for members
+
+---
+
+### 💵 Annual Dues
+
+- Annual one-time payment: **$100 USD**
+  _(for the 2020–2021 academic year; updated amounts may apply)_
+
+**Note:**
+The Treasurer, in consultation with the Executive Board and with approval of the Director or Program Coordinator, may offer **payment plans** for members.
+
+---
+
+### 🧁 Social Fees
+
+Dues also cover participation in Glee Club social events such as:
+
+- **Sister Social**
+- Retreats
+- End of Year Banquet
+- Outings and Gatherings
+- Events in collaboration with the Morehouse College Glee Club:
+  - Brother/Sister Social
+  - Homecoming Activities
+  - Christmas Carol Party
+
+---
+
+### 👗 Attire
+
+Uniforms reflect unity, pride, and the legacy of the SCGC. The **Wardrobe Mistress** will coordinate distribution and care of these items.
+
+**Provided by the Glee Club:**
+
+- Formal black dress (College property)
+- Jewelry (pearl necklace & earrings)
+- Red lipstick
+- Polo shirt
+- Glee Club t-shirt
+- Tour t-shirt
+
+**Your Responsibility:**
+
+- Return the formal dress and garment bag by end of academic year or upon instruction
+- Maintain personal attire and replacements
+- Replace lost/damaged items at your own expense
+
+---
+
+### 🎼 Music and Folders
+
+Each member is issued:
+
+- A folder
+- Sheet music (College property)
+
+Loss or damage may result in **financial responsibility** to repair or replace these items.`
     },
     {
       id: "branding-pr",
