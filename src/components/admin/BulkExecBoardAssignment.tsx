@@ -18,23 +18,23 @@ export const BulkExecBoardAssignment = () => {
     { email: "avachallenger@spelman.edu", full_name: "Ava Challenger", role: "pr_coordinator" }, // First PR person
     { email: "phoenixking@spelman.edu", full_name: "Phoenix King", role: "historian" },
     { email: "madisynwashington@spelman.edu", full_name: "Madisyn Washington", role: "librarian" }, // First co-librarian
-    { email: "drewroberts@spelman.edu", full_name: "Drew Roberts", role: "wardrobe_manager" }, // First co-wardrobe
+    { email: "soleilvailes@spelman.edu", full_name: "Soleil Vailes", role: "wardrobe_manager" }, // Wardrobe mistress
     { email: "kyerrashields@spelman.edu", full_name: "Kyerra Shields", role: "chaplain" },
-    { email: "arianaswindell@spelman.edu", full_name: "Ariana Swindell", role: "student_conductor" },
-    { email: "gabriellemagee@spelman.edu", full_name: "Gabrielle MaGee", role: "section_leader_s1" },
-    { email: "elissajefferson@spelman.edu", full_name: "Elissa Jefferson", role: "section_leader_s2" },
-    { email: "kathryntucker@spelman.edu", full_name: "Kathryn Tucker", role: "section_leader_a1" },
+    { email: "arianaswindell@spelman.edu", full_name: "Ariana Swindell", role: "student_conductor" }, // Also S1 section leader
+    { email: "sagemae@spelman.edu", full_name: "Sage Mae", role: "section_leader_a1" }, // A1 section leader
+    { email: "gabriellemagee@spelman.edu", full_name: "Gabrielle MaGee", role: "section_leader_a2" }, // A2 section leader
+    { email: "elissajefferson@spelman.edu", full_name: "Elissa Jefferson", role: "section_leader_s2" }, // S2 section leader
     
     // Users without valid roles - just add as members with exec board access
     { email: "jordynoneal@spelman.edu", full_name: "Jordyn O'Neal", role: "data_analyst" }, // Closest match to Chief of Staff
     { email: "sanaiaharrison@spelman.edu", full_name: "Sanaia Harrison", role: "data_analyst" }, // No merchandise role
     { email: "kennidytroupe@spelman.edu", full_name: "Kennidy Troupe", role: "assistant_chaplain" }, // No alumnae liaison
     { email: "allanawalker@spelman.edu", full_name: "Allana Walker", role: "data_analyst" }, // No setup crew role
+    { email: "drewroberts@spelman.edu", full_name: "Drew Roberts", role: "assistant_chaplain" }, // Second wardrobe person
     
     // Additional people who need some role
     { email: "tyarapetty@spelman.edu", full_name: "T'yara Petty", role: "assistant_chaplain" }, // Second PR person
     { email: "alexandrawilliams@spelman.edu", full_name: "Alexandra Williams", role: "assistant_chaplain" }, // Second co-librarian
-    { email: "soleilvailes@spelman.edu", full_name: "Soleil Vailes", role: "section_leader_a2" }, // Second co-wardrobe
   ];
 
   const handleBulkAssignment = async () => {
