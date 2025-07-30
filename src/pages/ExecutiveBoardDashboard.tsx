@@ -46,6 +46,7 @@ import {
   ClipboardList,
   Play
 } from "lucide-react";
+import { HandbookModule } from "@/components/handbook/HandbookModule";
 import { EventCreator } from "@/components/executive-board/EventCreator";
 import { BudgetTracker } from "@/components/executive-board/BudgetTracker";
 import { TaskChecklist } from "@/components/executive-board/TaskChecklist";
@@ -535,6 +536,10 @@ export const ExecutiveBoardDashboard = () => {
                 </TabsTrigger>
               </>
             )}
+            <TabsTrigger value="handbook" className="text-xs">
+              <BookOpen className="h-4 w-4 mr-1" />
+              Handbook
+            </TabsTrigger>
             <TabsTrigger value="position" className="text-xs">
               <PositionIcon className="h-4 w-4 mr-1" />
               My Role
@@ -1130,6 +1135,20 @@ export const ExecutiveBoardDashboard = () => {
               </TabsContent>
             </>
           )}
+
+          <TabsContent value="handbook">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5" />
+                  SCGC Handbook 2024
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <HandbookModule />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="position">
             <PositionTab position={selectedPosition} />
