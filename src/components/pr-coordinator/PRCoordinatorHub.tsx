@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Camera, Upload, Filter, Grid, List, Search, Tag, Download, Trash2, FileText, Briefcase, Share } from 'lucide-react';
+import { Camera, Upload, Filter, Grid, List, Search, Tag, Download, Trash2, FileText, Briefcase, Share, Database, BarChart3 } from 'lucide-react';
 import { usePRImages, PRImage, PRImageTag } from '@/hooks/usePRImages';
 import { PRImageGallery } from './PRImageGallery';
 import { PRQuickCapture } from './PRQuickCapture';
@@ -12,6 +12,8 @@ import { PRImageDetails } from './PRImageDetails';
 import { PRBulkActions } from './PRBulkActions';
 import { PRTagManager } from './PRTagManager';
 import { PressKitManager } from './PressKitManager';
+import { PRDataManager } from './PRDataManager';
+import { PRMetadataExporter } from './PRMetadataExporter';
 import { TaskNotifications } from '@/components/shared/TaskNotifications';
 
 export const PRCoordinatorHub = () => {
@@ -159,8 +161,10 @@ export const PRCoordinatorHub = () => {
       </div>
 
       <Tabs defaultValue="gallery" className="space-y-4">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="gallery">Image Gallery</TabsTrigger>
+          <TabsTrigger value="data-manager">Data Manager</TabsTrigger>
+          <TabsTrigger value="export">Export Tools</TabsTrigger>
           <TabsTrigger value="press-kits">Press Kits</TabsTrigger>
           <TabsTrigger value="tags">Tag Management</TabsTrigger>
           <TabsTrigger value="bulk">Bulk Operations</TabsTrigger>
@@ -260,6 +264,14 @@ export const PRCoordinatorHub = () => {
             onImageDelete={deleteImage}
             getImageUrl={getImageUrl}
           />
+        </TabsContent>
+
+        <TabsContent value="data-manager">
+          <PRDataManager />
+        </TabsContent>
+
+        <TabsContent value="export">
+          <PRMetadataExporter />
         </TabsContent>
 
         <TabsContent value="press-kits">
