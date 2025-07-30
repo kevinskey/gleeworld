@@ -778,7 +778,157 @@ On tour, a "first-year touring member" refers to anyone traveling for the **firs
     {
       id: "course-syllabus",
       title: "Course Syllabus",
-      content: "Course syllabus content will be added here from the PDF handbook..."
+      content: `## Course Title: Glee Club (MUS 070)
+
+### 📅 Term:
+**Spring 2024**
+
+---
+
+### 👤 Instructor Information
+
+**Instructor:** Dr. Kevin Johnson
+**Office:** Fine Arts 105
+**Office Hours:** Monday & Wednesday, 12:00–1:00 PM (or by appointment)
+**Phone:** 470-622-1392
+**Email:**
+- Office: kjohns10@spelman.edu
+- Personal: kevinskey@mac.com
+
+---
+
+### 📘 Course Description
+
+This course is designed to prepare and perform appropriate choral literature at the highest possible level, and to represent Spelman College in public performance. Students will learn proper and healthy singing techniques, musical terms, and choral concepts.
+
+---
+
+### 🎯 Learning Objectives
+
+1. Expose students to a broad spectrum of choral music styles.
+2. Develop musical performance skills.
+3. Foster collaborative learning and professional presentation.
+4. Develop leadership skills.
+
+---
+
+### 📚 Course Objectives
+
+By the end of the semester, students will be able to:
+
+1. Perform solfège singing with hand signs.
+2. Accurately sing scales at sight.
+3. Recognize and interpret diverse choral styles.
+4. Perform assigned repertoire to ensemble standards.
+5. Identify musical notation symbols and terminology.
+6. Use technology (e.g., Flipgrid) to demonstrate performance growth.
+
+---
+
+### 📝 Course Materials
+
+- This is an **auditioned course**; students must be officially enrolled (0 or 1 credit).
+- **Attendance is required.**
+- Professional behavior is expected at all times.
+- Devices such as iPads may be used for digital sheet music (PDF format).
+- **No food, drinks (except water), or gum** during rehearsal.
+
+---
+
+### 📌 Prerequisite
+
+- **Audition approval** required
+
+---
+
+### 🎼 Assignments & Activities
+
+#### Rehearsal Assignments
+- Full participation in all scheduled rehearsals and sectionals.
+
+#### Video Performance Submission
+- Submit final performance via **Flipgrid**.
+- Evaluated using a Flipgrid-based rubric.
+
+#### Online Sectionals
+- Led by Section Leaders via **Zoom** or **Microsoft Teams**.
+
+#### Sight-Singing
+- Minimum **2 quizzes per week** using **SightReadingFactory.com**
+- At least **30 minutes of practice** per week.
+
+#### Assessments
+- Periodic performance assessments via **Flipgrid**.
+
+---
+
+### 🧮 Grading Breakdown
+
+| Category                      | Weight   |
+|------------------------------|----------|
+| Sectionals & Rehearsals      | 25%      |
+| Sight Singing / Music Reading| 25%      |
+| Performances                 | 50%      |
+
+- Late submissions may be penalized.
+- Extra credit is at the discretion of the instructor.
+
+---
+
+### 📊 Grading Scale
+
+| Grade | Range    |
+|-------|----------|
+| A     | 95–100%  |
+| A–    | 90–94%   |
+| B+    | 87–89%   |
+| B     | 83–86%   |
+| B–    | 80–82%   |
+| C+    | 77–79%   |
+| C     | 73–76%   |
+| C–    | 70–72%   |
+| D+    | 65–69%   |
+| D     | 60–64%   |
+| F     | <59%     |
+
+---
+
+### 🛑 Attendance Policy (Reiterated)
+
+- Unexcused absence = **1 full letter grade deduction**
+- **3 tardies** = 1 absence
+- Contact the instructor within **1 week** of absence for possible excusal
+- Doctor's note may be required
+- Report any known conflicts in the **first week** of class
+
+---
+
+### 📅 Class Flow
+
+Each rehearsal includes:
+
+- Announcements
+- Vocal warm-ups
+- Music reading
+- Literature rehearsal (as ensemble progress dictates)
+
+---
+
+### ♿ Student Access Statement
+
+Spelman College supports full participation of all students. If you have or believe you have a disability, contact the **Student Access Center (SAC)** at 404-270-5289 or visit **MacVicar Hall, Room 106**.
+
+More info: [Spelman SAC Overview](https://www.spelman.edu/student-life/health-and-wellness/student-access-center/overview)
+
+---
+
+### 🧭 Academic Integrity Policy
+
+Academic excellence at Spelman College depends on a community of honesty and respect.
+
+- Follow the **Spelman Code of Conduct** (Student Handbook)
+- Maintain ethical standards in class and public behavior
+- Violations of the **Academic Integrity Policy** will result in sanctions as outlined in the College Bulletin`
     },
     {
       id: "contract-agreement",
