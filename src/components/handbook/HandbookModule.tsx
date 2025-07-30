@@ -1079,10 +1079,6 @@ Academic excellence at Spelman College depends on a community of honesty and res
           </div>
         )}
 
-        {/* Footer Note */}
-        <div className="text-xs text-muted-foreground text-center p-2 bg-muted/20 rounded">
-          Content placeholders shown - replace with actual handbook text from PDF
-        </div>
       </CardContent>
     </Card>
   );
