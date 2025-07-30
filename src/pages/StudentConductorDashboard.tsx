@@ -7,6 +7,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useNavigate } from "react-router-dom";
+import { useSectionalPlans } from "@/hooks/useSectionalPlans";
+import { useSRFAssignments } from "@/hooks/useSRFAssignments";
+import { useAuditionManagement } from "@/hooks/useAuditionManagement";
+import { useSubmissionReview } from "@/hooks/useSubmissionReview";
 import { 
   Music, 
   Calendar, 
@@ -38,30 +42,20 @@ export const StudentConductorDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
 
-  // Mock data for Assistant Conductor features
-  const sectionalPlans = [
-    { id: 1, sectionLeader: "Sarah Johnson", section: "Soprano 1", week: "Week 3", status: "Pending Review", uploadDate: "2024-01-26", focus: "Breath control, high notes" },
-    { id: 2, sectionLeader: "Maria Garcia", section: "Alto 2", week: "Week 3", status: "Approved", uploadDate: "2024-01-25", focus: "Rhythm in measures 32-48" },
-    { id: 3, sectionLeader: "Ashley Brown", section: "Soprano 2", week: "Week 3", status: "Needs Revision", uploadDate: "2024-01-24", focus: "Vowel placement" }
-  ];
+  // Real data hooks replacing mock data
+  const { plans: sectionalPlans, loading: plansLoading, updatePlanStatus } = useSectionalPlans();
+  const { assignments: srfAssignments, loading: srfLoading, createAssignment, sendReminder } = useSRFAssignments();
+  const { auditions, loading: auditionsLoading, updateAuditionStatus, addNotes, rescheduleAudition } = useAuditionManagement();
+  const { submissions, loading: submissionsLoading, updateSubmissionStatus, forwardToDirector } = useSubmissionReview();
 
-  const srfAssignments = [
-    { id: 1, title: "Bach Chorale #47", assigned: "15 students", completed: "12 students", dueDate: "2024-01-30", difficulty: "Intermediate" },
-    { id: 2, title: "Sight-reading Test #3", assigned: "15 students", completed: "8 students", dueDate: "2024-02-02", difficulty: "Advanced" },
-    { id: 3, title: "Major Scale Practice", assigned: "15 students", completed: "15 students", dueDate: "2024-01-28", difficulty: "Beginner" }
-  ];
-
-  const auditions = [
-    { id: 1, name: "Jennifer Wilson", timeSlot: "3:00 PM", date: "2024-02-05", type: "New Member", status: "Scheduled", notes: "Strong sight-reading background" },
-    { id: 2, name: "Taylor Davis", timeSlot: "3:15 PM", date: "2024-02-05", type: "Solo Audition", status: "Callback", notes: "Excellent tone quality" },
-    { id: 3, name: "Morgan Lee", timeSlot: "3:30 PM", date: "2024-02-05", type: "New Member", status: "Pending", notes: "Needs vocal technique work" }
-  ];
-
-  const submissions = [
-    { id: 1, from: "Section Leaders", title: "Weekly Progress Reports", date: "2024-01-26", status: "New", type: "Report" },
-    { id: 2, from: "Sarah Johnson", title: "Sectional Recording - S1", date: "2024-01-25", status: "Reviewed", type: "Audio" },
-    { id: 3, from: "Music Committee", title: "Spring Concert Repertoire Suggestions", date: "2024-01-24", status: "Forwarded", type: "Document" }
-  ];
+  // Calculate metrics from real data
+  const pendingPlansCount = sectionalPlans.filter(plan => plan.status === 'Pending Review').length;
+  const averageCompletionRate = srfAssignments.length > 0 
+    ? Math.round(srfAssignments.reduce((sum, assignment) => sum + (assignment.completedCount / assignment.assignedCount * 100), 0) / srfAssignments.length)
+    : 0;
+  const upcomingAuditionsCount = auditions.filter(audition => 
+    audition.status === 'Scheduled' && new Date(audition.date) >= new Date()
+  ).length;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -129,7 +123,7 @@ export const StudentConductorDashboard = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">3</div>
+                  <div className="text-2xl font-bold">{pendingPlansCount}</div>
                   <p className="text-sm text-muted-foreground">Plans awaiting review</p>
                   <Button size="sm" className="mt-3" onClick={() => setActiveTab("sections")}>
                     Review Plans
@@ -145,7 +139,7 @@ export const StudentConductorDashboard = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">68%</div>
+                  <div className="text-2xl font-bold">{averageCompletionRate}%</div>
                   <p className="text-sm text-muted-foreground">Average completion rate</p>
                   <Button size="sm" className="mt-3" onClick={() => setActiveTab("srf")}>
                     Manage SRF
@@ -161,8 +155,8 @@ export const StudentConductorDashboard = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">3</div>
-                  <p className="text-sm text-muted-foreground">Scheduled for Feb 5</p>
+                  <div className="text-2xl font-bold">{upcomingAuditionsCount}</div>
+                  <p className="text-sm text-muted-foreground">Scheduled upcoming auditions</p>
                   <Button size="sm" className="mt-3" onClick={() => setActiveTab("auditions")}>
                     View Schedule
                   </Button>
@@ -199,7 +193,11 @@ export const StudentConductorDashboard = () => {
                             <Eye className="h-4 w-4 mr-2" />
                             Review Plan
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => updatePlanStatus(plan.id, 'Approved')}
+                          >
                             <CheckCircle className="h-4 w-4 mr-2" />
                             Approve
                           </Button>
@@ -265,7 +263,11 @@ export const StudentConductorDashboard = () => {
                             <Eye className="h-4 w-4 mr-2" />
                             View Results
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => sendReminder(assignment.id)}
+                          >
                             <Send className="h-4 w-4 mr-2" />
                             Send Reminder
                           </Button>
@@ -356,11 +358,19 @@ export const StudentConductorDashboard = () => {
                             <Eye className="h-4 w-4 mr-2" />
                             Review
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => updateSubmissionStatus(submission.id, 'Completed')}
+                          >
                             <CheckCircle className="h-4 w-4 mr-2" />
                             Complete
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => forwardToDirector(submission.id)}
+                          >
                             <Send className="h-4 w-4 mr-2" />
                             Forward to Director
                           </Button>
