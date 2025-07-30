@@ -23,8 +23,8 @@
     --background: 0 0% 100%; /* Pure white background */
     --foreground: 0 0% 0%; /* Pure black text */
 
-    --card: 0 0% 100%; /* Pure white for cards */
-    --card-foreground: 0 0% 0%; /* Pure black text */
+    --card: 0 0% 98%; /* Softer off-white for cards */
+    --card-foreground: 0 0% 10%; /* Slightly softer black text */
 
     --popover: 0 0% 100%; /* Pure white */
     --popover-foreground: 0 0% 0%; /* Pure black text */
@@ -105,8 +105,8 @@
     --background: 0 0% 100%; /* Pure white */
     --foreground: 0 0% 0%; /* Pure black */
 
-    --card: 0 0% 100%; /* Pure white */
-    --card-foreground: 0 0% 0%; /* Pure black */
+    --card: 0 0% 98%; /* Softer off-white */
+    --card-foreground: 0 0% 10%; /* Slightly softer black */
 
     --popover: 0 0% 100%; /* Pure white */
     --popover-foreground: 0 0% 0%; /* Pure black */
