@@ -219,7 +219,12 @@ export const SheetMusicViewDialog = ({
               </TabsContent>
               
               <TabsContent value="marked" className="mt-4">
-                <MarkedScores musicId={item.id} voiceParts={item.voice_parts || []} />
+                <MarkedScores 
+                  musicId={item.id} 
+                  musicTitle={item.title}
+                  originalPdfUrl={item.pdf_url}
+                  voiceParts={item.voice_parts || []} 
+                />
               </TabsContent>
               
               <TabsContent value="personal" className="mt-4">

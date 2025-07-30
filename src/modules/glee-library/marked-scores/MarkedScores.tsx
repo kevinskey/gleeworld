@@ -1,16 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Download, FileText, PlusCircle } from 'lucide-react';
+import { Upload, Download, FileText, PlusCircle, Edit3, Palette } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { MarkedScoreManager } from '@/components/marked-scores/MarkedScoreManager';
 
 interface MarkedScore {
   id: string;
@@ -18,21 +14,25 @@ interface MarkedScore {
   voice_part: string;
   file_url: string;
   description: string | null;
+  canvas_data?: string | null;
   created_at: string;
   uploader_name?: string;
 }
 
 interface MarkedScoresProps {
   musicId: string;
+  musicTitle?: string;
+  originalPdfUrl?: string;
   voiceParts: string[];
 }
 
-export const MarkedScores = ({ musicId, voiceParts }: MarkedScoresProps) => {
+export const MarkedScores = ({ musicId, musicTitle, originalPdfUrl, voiceParts }: MarkedScoresProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [markedScores, setMarkedScores] = useState<MarkedScore[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [showAnnotationManager, setShowAnnotationManager] = useState(false);
+  const [showLegacyUpload, setShowLegacyUpload] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [newScore, setNewScore] = useState({
     voice_part: '',
@@ -84,7 +84,7 @@ export const MarkedScores = ({ musicId, voiceParts }: MarkedScoresProps) => {
     }
   };
 
-  const handleUpload = async () => {
+  const handleLegacyUpload = async () => {
     if (!user || !newScore.file || !newScore.voice_part) return;
 
     setUploading(true);
@@ -128,7 +128,7 @@ export const MarkedScores = ({ musicId, voiceParts }: MarkedScoresProps) => {
         description: '',
         file: null
       });
-      setShowUploadDialog(false);
+      setShowLegacyUpload(false);
       fetchMarkedScores();
     } catch (error) {
       console.error('Error uploading marked score:', error);
@@ -173,6 +173,9 @@ export const MarkedScores = ({ musicId, voiceParts }: MarkedScoresProps) => {
     }
   };
 
+  const annotatedScores = markedScores.filter(score => score.canvas_data);
+  const legacyScores = markedScores.filter(score => !score.canvas_data);
+  
   const groupedScores = markedScores.reduce((acc, score) => {
     if (!acc[score.voice_part]) acc[score.voice_part] = [];
     acc[score.voice_part].push(score);
@@ -183,74 +186,52 @@ export const MarkedScores = ({ musicId, voiceParts }: MarkedScoresProps) => {
     return <div className="flex justify-center py-8">Loading marked scores...</div>;
   }
 
+  // Use the new annotation manager if we have original PDF URL
+  if (originalPdfUrl) {
+    return (
+      <MarkedScoreManager
+        musicId={musicId}
+        musicTitle={musicTitle || 'Sheet Music'}
+        originalPdfUrl={originalPdfUrl}
+        voiceParts={voiceParts}
+      />
+    );
+  }
+
+  // Fallback to legacy system for uploaded PDFs without original
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Marked Scores</h3>
-        <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-          <DialogTrigger asChild>
-            <Button size="sm">
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Upload Marked Score
+        <div>
+          <h3 className="text-lg font-semibold">Marked Scores</h3>
+          <p className="text-sm text-muted-foreground">
+            Upload annotated versions of this sheet music
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {originalPdfUrl && (
+            <Button onClick={() => setShowAnnotationManager(true)}>
+              <Palette className="h-4 w-4 mr-2" />
+              Create Annotated Score
             </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Upload Marked Score</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="voice_part">Voice Part</Label>
-                <Select value={newScore.voice_part} onValueChange={(value) => setNewScore({ ...newScore, voice_part: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select voice part" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {voiceParts.map(part => (
-                      <SelectItem key={part} value={part}>{part}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="file">PDF File</Label>
-                <Input
-                  id="file"
-                  type="file"
-                  accept=".pdf"
-                  onChange={(e) => setNewScore({ ...newScore, file: e.target.files?.[0] || null })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="description">Description (Optional)</Label>
-                <Textarea
-                  id="description"
-                  value={newScore.description}
-                  onChange={(e) => setNewScore({ ...newScore, description: e.target.value })}
-                  placeholder="Describe the markings or notes..."
-                  rows={3}
-                />
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleUpload} 
-                  disabled={uploading || !newScore.file || !newScore.voice_part}
-                >
-                  {uploading ? 'Uploading...' : 'Upload'}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+          )}
+          <Button variant="outline" size="sm" onClick={() => setShowLegacyUpload(true)}>
+            <Upload className="h-4 w-4 mr-2" />
+            Upload File
+          </Button>
+        </div>
       </div>
 
       {markedScores.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          No marked scores have been uploaded yet.
-        </div>
+        <Card>
+          <CardContent className="text-center py-8">
+            <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <p className="text-muted-foreground">No marked scores yet</p>
+            <p className="text-sm text-muted-foreground">
+              Upload or create your first annotated score!
+            </p>
+          </CardContent>
+        </Card>
       ) : (
         <div className="space-y-6">
           {voiceParts.map(voicePart => (
@@ -267,33 +248,89 @@ export const MarkedScores = ({ musicId, voiceParts }: MarkedScoresProps) => {
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-base flex items-center gap-2">
                             <FileText className="h-4 w-4" />
-                            {score.voice_part} Marked Score
+                            {score.description || `${score.voice_part} Marked Score`}
+                            {score.canvas_data && (
+                              <Badge variant="default" className="text-xs">
+                                Annotated
+                              </Badge>
+                            )}
                           </CardTitle>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDownload(score)}
-                          >
-                            <Download className="h-4 w-4 mr-2" />
-                            Download
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownload(score)}
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              Download
+                            </Button>
+                          </div>
                         </div>
                         <div className="flex items-center justify-between text-sm text-muted-foreground">
                           <span>Uploaded by {score.uploader_name}</span>
                           <span>{new Date(score.created_at).toLocaleDateString()}</span>
                         </div>
                       </CardHeader>
-                      {score.description && (
-                        <CardContent>
-                          <p className="text-sm text-muted-foreground">{score.description}</p>
-                        </CardContent>
-                      )}
                     </Card>
                   ))}
                 </div>
               </div>
             )
           ))}
+        </div>
+      )}
+
+      {/* Legacy Upload Dialog - keeping for backwards compatibility */}
+      {showLegacyUpload && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Upload Marked Score</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Voice Part</label>
+                <select 
+                  value={newScore.voice_part} 
+                  onChange={(e) => setNewScore({ ...newScore, voice_part: e.target.value })}
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="">Select voice part</option>
+                  {voiceParts.map(part => (
+                    <option key={part} value={part}>{part}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">PDF File</label>
+                <input
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg"
+                  onChange={(e) => setNewScore({ ...newScore, file: e.target.files?.[0] || null })}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Description (Optional)</label>
+                <textarea
+                  value={newScore.description}
+                  onChange={(e) => setNewScore({ ...newScore, description: e.target.value })}
+                  placeholder="Describe the markings or notes..."
+                  rows={3}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowLegacyUpload(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleLegacyUpload} 
+                  disabled={uploading || !newScore.file || !newScore.voice_part}
+                >
+                  {uploading ? 'Uploading...' : 'Upload'}
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -3982,6 +3982,7 @@ export type Database = {
       }
       gw_marked_scores: {
         Row: {
+          canvas_data: string | null
           created_at: string
           description: string | null
           file_url: string
@@ -3991,6 +3992,7 @@ export type Database = {
           voice_part: string
         }
         Insert: {
+          canvas_data?: string | null
           created_at?: string
           description?: string | null
           file_url: string
@@ -4000,6 +4002,7 @@ export type Database = {
           voice_part: string
         }
         Update: {
+          canvas_data?: string | null
           created_at?: string
           description?: string | null
           file_url?: string
