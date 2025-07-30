@@ -519,7 +519,145 @@ Interested members should contact the **Merchandise Manager** to join the team.
     {
       id: "history-test",
       title: "History Test & Fact Sheet",
-      content: "History test and fact sheet content will be added here from the PDF handbook..."
+      content: `## History Test
+
+All Glee Club members are required to complete the **SCGC History Test** to demonstrate their knowledge of the organization's legacy.
+
+- Administered via **Microsoft Teams**
+- **Historian** is responsible for distribution and support
+- **Test Window:**
+  Available: *Friday, September 11th*
+  Deadline: *Friday, September 18th*
+
+### Study Materials:
+- Handbook
+- SCGC Factsheet
+- SCGC Traditions
+
+---
+
+## Fact Sheet
+
+### 🎼 Past Directors
+
+- Hilda Brendenburg (1924–1925)
+- Marrion Guthrie (1925–1926)
+- Stella J. Haugan (1926–1927)
+- Kemper Harreld (1927–1933)
+- Willis Laurence James (1933–1966)
+- Dr. Grace Boggs Smith (Interim, 1966–1967)
+- Dr. Roland Allison (1967–1989)
+- Aldrich Adkins (Interim, 1970–1971)
+- Ruth B. Stokes (1990–1991)
+- Dr. Norma Raybon (1991–1999)
+- Dr. Kevin P. Johnson (1999–Present)
+
+### 🎹 Notable Organist
+
+- Kemper Harreld (1924–1953)
+- Dr. Joyce Johnson (1953–present)
+
+---
+
+## 📆 Annual Performances
+
+- *When & Where I Enter* (New Student Orientation)
+- Opening Convocation
+- A Day In Your Life
+- Christmas Carol
+- Annual Spring Tour
+- Annual Spring Concert
+- Founders Day Convocation
+- Spelbound
+- Baccalaureate
+- Commencement
+
+---
+
+## 🌟 Notable Performances
+
+- Inauguration for President Jimmy Carter
+- White House Performance for President Barack Obama
+- Martin Luther King Jr. Birthday Celebration
+- Terras Sem Sombra Festival (Portugal)
+- 2018 ACDA Southern Region Conference
+- 2012 Ambassadors Ball (Obama Inauguration)
+
+---
+
+## 🏛️ Notable Venues
+
+- Faneuil Hall, Boston
+- Brooklyn Academy of Music, NY
+- Avery Fisher Hall at Lincoln Center
+- National Museum of American History, D.C.
+- The White House
+- Mother Emanuel AME Church, Charleston
+- Ebenezer Baptist Church, Atlanta
+- Sisters Chapel, Spelman College
+- King Chapel, Morehouse College
+- Spivey Hall
+- Atlanta Symphony Hall
+
+---
+
+## 🤝 Notable Collaborations
+
+- Atlanta Ballet
+- Atlanta Symphony Orchestra
+- Kathleen Battle
+- Natalie Cole
+- Dance Theatre of Harlem
+- The King Center
+- Aretha Franklin
+- Audra McDonald
+- Patti LaBelle
+- Jessye Norman
+- Phylicia Rashad
+- South African Youth Choir
+- Indra Thomas
+- Stevie Wonder
+- VocalEssence
+- Morehouse College Glee Club
+
+---
+
+## ✈️ International Travel
+
+- Canada (1963)
+- Brazil (1975)
+- Italy (2003)
+- Portugal (2019)
+
+---
+
+## 🇺🇸 Domestic Travel
+
+The Glee Club has performed in 33 of 50 U.S. states, including:
+
+Alabama, Arkansas, Arizona, California, Colorado, Connecticut, D.C., Delaware, Florida, Kansas, Kentucky, Illinois, Indiana, Iowa, Louisiana, Massachusetts, Maryland, Michigan, Missouri, Minnesota, Mississippi, Nevada, North Carolina, New Jersey, New York, Ohio, Oklahoma, Pennsylvania, South Carolina, Tennessee, Texas, Virginia, Wisconsin
+
+---
+
+## 🎉 Annual Social Events
+
+- Sister Social
+- Brother/Sister Social
+- Christmas Carol Watch Party
+- Homecoming Tent
+- Sunday Evening Christmas Carol
+
+---
+
+## 📺 Broadcasts
+
+- Christmas Carol Livestream
+- Sisters Chapel Broadcast
+- National Public Radio
+- Georgia Public Radio
+- CNN
+- Minneapolis Public Radio
+- BET Honors`
     },
     {
       id: "traditions",
