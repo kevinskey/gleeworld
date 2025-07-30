@@ -54,6 +54,12 @@ export const useAuditionLogs = () => {
 
       const existingLogs = logsResult.data || [];
       const timeBlocks = blocksResult.data || [];
+      
+      console.log('🔍 Audition logs loaded:', {
+        logsCount: existingLogs.length,
+        timeBlocksCount: timeBlocks.length,
+        logs: existingLogs
+      });
 
       // Generate all possible time slots from time blocks
       const allSlots = [];
