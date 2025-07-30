@@ -54,8 +54,8 @@ export const PublicHeader = () => {
             {/* Auth Button - Responsive sizing */}
             <Button asChild variant="default" size="sm" className="hidden sm:flex text-sm px-4 bg-blue-600 hover:bg-blue-700 text-white">
               <Link to="/auth">
-                <span className="hidden lg:inline">Sing In</span>
-                <span className="lg:hidden">Sing</span>
+                <span className="hidden lg:inline">Sign In</span>
+                <span className="lg:hidden">Sign</span>
               </Link>
             </Button>
             
@@ -92,7 +92,7 @@ export const PublicHeader = () => {
                   
                   <div className="pt-2 border-t border-gray-200/50">
                     <Button asChild className="w-full bg-spelman-blue-dark hover:bg-spelman-blue-light" size="sm" onClick={() => setIsOpen(false)}>
-                      <Link to="/auth">Sing In</Link>
+                      <Link to="/auth">Sign In</Link>
                     </Button>
                   </div>
                 </div>
