@@ -69,7 +69,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
   };
 
   return (
-    <div className={`relative flex justify-center ${className}`}>
+    <div className={`relative ${className}`}>
       <div
         className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/20 backdrop-blur-md border border-spelman-blue-light/30 cursor-pointer hover:bg-white/30 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md flex-shrink-0"
         onMouseEnter={() => setShowCountdown(true)}

@@ -60,18 +60,18 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                   />
                   <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur opacity-50 z-[111]"></div>
                 </div>
-                <div className="flex items-center gap-1 relative z-[111]">
+                <div className="flex items-center gap-3 relative z-[111]">
                   <span className="text-gray-900 font-bold text-lg sm:text-xl md:text-2xl whitespace-nowrap drop-shadow-sm relative z-[112]">
                     GleeWorld
                   </span>
+                  <HeaderClock className="text-sm" />
                 </div>
               </Link>
             </EnhancedTooltip>
           </div>
 
-          {/* Center area with clock and dashboard indicator - Always visible */}
-          <div className="flex items-center justify-center flex-1 gap-3">
-            <HeaderClock className="text-sm" />
+          {/* Center area with dashboard indicator - Always visible */}
+          <div className="flex items-center justify-center flex-1">
             {pageName !== 'GleeWorld' && (
               <span className="text-slate-700 font-bold text-[10px] px-2 py-1 rounded-md bg-blue-100 border border-blue-200 shadow-sm truncate max-w-32">
                 {pageName}
