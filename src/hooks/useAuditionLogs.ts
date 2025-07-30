@@ -114,11 +114,18 @@ export const useAuditionLogs = () => {
       if (newLogsError) throw newLogsError;
       
       // Update slots with migrated data
-      allSlots.forEach(slot => {
-        const migratedLog = newLogs?.find(log => {
-          const logDate = format(new Date(log.audition_date), 'yyyy-MM-dd');
-          return logDate === slot.date && log.audition_time === slot.time;
-        });
+        allSlots.forEach(slot => {
+          const migratedLog = newLogs?.find(log => {
+            const logDate = format(new Date(log.audition_date), 'yyyy-MM-dd');
+            // Convert 24-hour format to 12-hour format for comparison
+            const logTime24 = log.audition_time.slice(0, 5); // "15:35:00" -> "15:35"
+            const [hours, minutes] = logTime24.split(':').map(Number);
+            const period = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+            const logTime12 = `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+            
+            return logDate === slot.date && logTime12 === slot.time;
+          });
         
         if (migratedLog) {
           slot.isScheduled = true;
@@ -175,7 +182,24 @@ export const useAuditionLogs = () => {
           applicant_name: `${audition.first_name} ${audition.last_name}`,
           applicant_email: audition.email,
           audition_date: audition.audition_date.split('T')[0], // Extract date part
-          audition_time: audition.audition_time || '09:00',
+          audition_time: (() => {
+            // Convert "3:35 PM" format to "15:35:00" format for consistency
+            const timeStr = audition.audition_time || '09:00 AM';
+            if (timeStr.includes(':') && timeStr.includes(' ')) {
+              const [time, period] = timeStr.split(' ');
+              const [hours, minutes] = time.split(':').map(Number);
+              let hour24 = hours;
+              
+              if (period.toUpperCase() === 'PM' && hours !== 12) {
+                hour24 = hours + 12;
+              } else if (period.toUpperCase() === 'AM' && hours === 12) {
+                hour24 = 0;
+              }
+              
+              return `${hour24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
+            }
+            return '09:00:00'; // Default fallback
+          })(),
           voice_part: audition.voice_part,
           application_data: {
             first_name: audition.first_name,
