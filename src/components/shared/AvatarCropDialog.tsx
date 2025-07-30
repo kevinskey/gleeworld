@@ -74,6 +74,7 @@ export function AvatarCropDialog({
 
       ctx.imageSmoothingQuality = 'high';
 
+      // Draw the cropped portion of the image
       ctx.drawImage(
         image,
         pixelCrop.x * scaleX,
@@ -86,10 +87,11 @@ export function AvatarCropDialog({
         outputSize
       );
 
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         canvas.toBlob((blob) => {
           if (!blob) {
-            throw new Error('Canvas is empty');
+            reject(new Error('Canvas is empty'));
+            return;
           }
           const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
           resolve(file);
