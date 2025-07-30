@@ -273,7 +273,7 @@ export const ExecutiveBoardDashboard = () => {
               variant="outline"
               size="sm"
               onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-white/90 text-black border-white/20 hover:bg-white"
             >
               <Home className="h-4 w-4" />
               Back to Dashboard
@@ -282,7 +282,7 @@ export const ExecutiveBoardDashboard = () => {
               variant="ghost"
               size="sm"
               onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-white hover:bg-white/20 hover:text-white"
             >
               <X className="h-4 w-4" />
               Exit Executive Panel
