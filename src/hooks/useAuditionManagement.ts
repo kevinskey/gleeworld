@@ -262,6 +262,65 @@ export const useAuditionManagement = () => {
     }
   };
 
+  const updateAudition = async (auditionId: string, updateData: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    audition_date?: string;
+    audition_time?: string;
+    status?: 'pending' | 'approved' | 'rejected';
+    additional_info?: string;
+    is_soloist?: boolean;
+    phone?: string;
+    personality_description?: string;
+  }) => {
+    try {
+      const { data, error } = await supabase
+        .from('gw_auditions')
+        .update(updateData)
+        .eq('id', auditionId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update local state
+      setAuditions(prev => prev.map(audition => {
+        if (audition.id === auditionId) {
+          return {
+            ...audition,
+            name: data.first_name && data.last_name ? `${data.first_name} ${data.last_name}` : audition.name,
+            timeSlot: data.audition_time || audition.timeSlot,
+            date: data.audition_date ? new Date(data.audition_date).toISOString().split('T')[0] : audition.date,
+            type: data.is_soloist !== undefined ? (data.is_soloist ? 'Solo Audition' : 'New Member') : audition.type,
+            status: data.status ? (data.status === 'pending' ? 'Scheduled' : 
+                     data.status === 'approved' ? 'Completed' :
+                     data.status === 'rejected' ? 'Pending' : 'Scheduled') : audition.status,
+            notes: data.additional_info || audition.notes,
+            email: data.email || audition.email,
+            updated_at: data.updated_at
+          };
+        }
+        return audition;
+      }));
+
+      toast({
+        title: "Audition Updated",
+        description: "Audition has been updated successfully",
+      });
+
+      return data;
+    } catch (error) {
+      console.error('Error updating audition:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update audition",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     fetchAuditions();
   }, []);
@@ -274,6 +333,7 @@ export const useAuditionManagement = () => {
     addNotes,
     rescheduleAudition,
     addAudition,
-    deleteAudition
+    deleteAudition,
+    updateAudition
   };
 };

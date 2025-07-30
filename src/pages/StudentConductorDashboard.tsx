@@ -11,7 +11,8 @@ import { useSectionalPlans } from "@/hooks/useSectionalPlans";
 import { useSRFAssignments } from "@/hooks/useSRFAssignments";
 import { useAuditionManagement } from "@/hooks/useAuditionManagement";
 import { useSubmissionReview } from "@/hooks/useSubmissionReview";
-import { AddAuditionDialog } from "@/components/audition/AddAuditionDialog";
+import { AuditionDialog } from "@/components/audition/AuditionDialog";
+import { AuditionEntry } from "@/hooks/useAuditionManagement";
 import { 
   Music, 
   Calendar, 
@@ -38,18 +39,20 @@ import {
   Send,
   PenTool,
   Plus,
-  Trash2
+  Trash2,
+  Edit
 } from "lucide-react";
 
 export const StudentConductorDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
-  const [showAddAudition, setShowAddAudition] = useState(false);
+  const [showAuditionDialog, setShowAuditionDialog] = useState(false);
+  const [editingAudition, setEditingAudition] = useState<AuditionEntry | null>(null);
 
   // Real data hooks replacing mock data
   const { plans: sectionalPlans, loading: plansLoading, updatePlanStatus } = useSectionalPlans();
   const { assignments: srfAssignments, loading: srfLoading, createAssignment, sendReminder } = useSRFAssignments();
-  const { auditions, loading: auditionsLoading, updateAuditionStatus, addNotes, rescheduleAudition, addAudition, deleteAudition } = useAuditionManagement();
+  const { auditions, loading: auditionsLoading, updateAuditionStatus, addNotes, rescheduleAudition, addAudition, deleteAudition, updateAudition } = useAuditionManagement();
   const { submissions, loading: submissionsLoading, updateSubmissionStatus, forwardToDirector } = useSubmissionReview();
 
   // Calculate metrics from real data
@@ -63,12 +66,22 @@ export const StudentConductorDashboard = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Approved': case 'Completed': case 'Scheduled': return 'bg-green-100 text-green-800 border-green-200';
-      case 'Pending Review': case 'Pending': case 'New': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'Needs Revision': case 'Callback': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'Reviewed': case 'Forwarded': return 'bg-blue-100 text-blue-800 border-blue-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'Completed': return 'border-green-500 text-green-700';
+      case 'Scheduled': return 'border-blue-500 text-blue-700';
+      case 'Callback': return 'border-yellow-500 text-yellow-700';
+      case 'Pending': return 'border-orange-500 text-orange-700';
+      default: return 'border-gray-500 text-gray-700';
     }
+  };
+
+  const handleEditAudition = (audition: AuditionEntry) => {
+    setEditingAudition(audition);
+    setShowAuditionDialog(true);
+  };
+
+  const handleAddAudition = () => {
+    setEditingAudition(null);
+    setShowAuditionDialog(true);
   };
 
   return (
@@ -175,7 +188,7 @@ export const StudentConductorDashboard = () => {
                   <Users className="h-5 w-5" />
                   Auditions & Solos Hub
                 </CardTitle>
-                <Button onClick={() => setShowAddAudition(true)}>
+                <Button onClick={handleAddAudition}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Audition
                 </Button>
@@ -210,6 +223,14 @@ export const StudentConductorDashboard = () => {
                           <Button size="sm" variant="outline">
                             <MessageSquare className="h-4 w-4 mr-2" />
                             Add Notes
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleEditAudition(audition)}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
                           </Button>
                           <Button 
                             size="sm" 
@@ -434,10 +455,15 @@ export const StudentConductorDashboard = () => {
         </Tabs>
       </div>
       
-      <AddAuditionDialog
-        open={showAddAudition}
-        onOpenChange={setShowAddAudition}
+      <AuditionDialog
+        open={showAuditionDialog}
+        onOpenChange={(open) => {
+          setShowAuditionDialog(open);
+          if (!open) setEditingAudition(null);
+        }}
         onAddAudition={addAudition}
+        onUpdateAudition={updateAudition}
+        editingAudition={editingAudition}
       />
     </UniversalLayout>
   );
