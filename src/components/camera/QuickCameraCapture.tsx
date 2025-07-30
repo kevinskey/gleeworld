@@ -1,10 +1,15 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Camera, X, Check, RotateCcw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Camera, X, Check, RotateCcw, Upload, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePRImages, PRImageTag } from "@/hooks/usePRImages";
 
 interface QuickCameraCaptureProps {
   onClose: () => void;
@@ -13,9 +18,14 @@ interface QuickCameraCaptureProps {
 
 export const QuickCameraCapture = ({ onClose, onCapture }: QuickCameraCaptureProps) => {
   const { user } = useAuth();
+  const { tags, uploadImage } = usePRImages();
   const [isCapturing, setIsCapturing] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [title, setTitle] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -69,70 +79,49 @@ export const QuickCameraCapture = ({ onClose, onCapture }: QuickCameraCapturePro
       if (blob) {
         const imageUrl = URL.createObjectURL(blob);
         setCapturedImage(imageUrl);
+        setCapturedBlob(blob);
         setIsCapturing(false);
+        setShowEditDialog(true);
         
-        // Auto-save immediately
-        await savePhoto(blob);
+        // Set default title with timestamp
+        setTitle(`Quick Capture ${new Date().toLocaleDateString()}`);
       }
     }, 'image/jpeg', 0.8);
   }, []);
 
-  const savePhoto = async (blob: Blob) => {
-    if (!user) {
-      toast.error('User not authenticated');
+  const handleTagToggle = (tagId: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tagId)
+        ? prev.filter(id => id !== tagId)
+        : [...prev, tagId]
+    );
+  };
+
+  const savePhoto = async () => {
+    if (!user || !capturedBlob) {
+      toast.error('User not authenticated or no image captured');
       return;
     }
 
     setIsSaving(true);
     try {
-      // Generate filename with timestamp
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const filename = `quick-capture-${timestamp}.jpg`;
-      const filePath = `${user.id}/${filename}`;
+      // Create File object from blob
+      const file = new File([capturedBlob], `${title.replace(/[^a-zA-Z0-9]/g, '_')}.jpg`, {
+        type: 'image/jpeg'
+      });
 
-      // Upload to Supabase storage
-      const { error: uploadError } = await supabase.storage
-        .from('pr-images')
-        .upload(filePath, blob, {
-          contentType: 'image/jpeg',
-          upsert: false
-        });
+      // Use the PR upload system
+      await uploadImage(file, {
+        caption: title,
+        taken_at: new Date().toISOString(),
+        photographer_id: user.id,
+        tags: selectedTags.length > 0 ? selectedTags : undefined,
+      });
 
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        toast.error('Failed to save photo');
-        return;
-      }
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('pr-images')
-        .getPublicUrl(filePath);
-
-      // Insert record into pr_images table
-      const { error: dbError } = await supabase
-        .from('pr_images')
-        .insert({
-          uploaded_by: user.id,
-          filename,
-          file_path: filePath,
-          original_filename: filename,
-          caption: `Quick Capture ${new Date().toLocaleDateString()}`,
-          mime_type: 'image/jpeg',
-          photographer_id: user.id,
-          taken_at: new Date().toISOString(),
-          uploaded_at: new Date().toISOString(),
-          is_featured: false
-        });
-
-      if (dbError) {
-        console.error('Database error:', dbError);
-        toast.error('Photo saved but failed to log to database');
-      } else {
-        toast.success('Photo captured and saved successfully!');
-        if (onCapture) {
-          onCapture(publicUrl);
-        }
+      toast.success('Photo captured and saved successfully!');
+      
+      if (onCapture) {
+        onCapture(capturedImage!);
       }
 
       // Close after successful save
@@ -149,8 +138,34 @@ export const QuickCameraCapture = ({ onClose, onCapture }: QuickCameraCapturePro
     }
   };
 
+  const handleShare = async () => {
+    if (capturedImage && navigator.share) {
+      try {
+        await navigator.share({
+          title: title || 'Quick Capture Photo',
+          text: 'Check out this photo from Glee Club!',
+          url: capturedImage
+        });
+      } catch (error) {
+        console.log('Share failed:', error);
+        // Fallback to copy to clipboard
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(capturedImage);
+          toast.success('Image URL copied to clipboard!');
+        }
+      }
+    } else if (navigator.clipboard && capturedImage) {
+      await navigator.clipboard.writeText(capturedImage);
+      toast.success('Image URL copied to clipboard!');
+    }
+  };
+
   const retakePhoto = () => {
     setCapturedImage(null);
+    setCapturedBlob(null);
+    setShowEditDialog(false);
+    setTitle('');
+    setSelectedTags([]);
     setIsCapturing(true);
     startCamera();
   };
@@ -195,7 +210,7 @@ export const QuickCameraCapture = ({ onClose, onCapture }: QuickCameraCapturePro
               />
             )}
             
-            {capturedImage && (
+            {capturedImage && !showEditDialog && (
               <img
                 src={capturedImage}
                 alt="Captured"
@@ -206,8 +221,9 @@ export const QuickCameraCapture = ({ onClose, onCapture }: QuickCameraCapturePro
             <canvas ref={canvasRef} className="hidden" />
           </div>
 
-          <div className="flex gap-2 justify-center">
-            {isCapturing && (
+          {/* Camera Controls */}
+          {isCapturing && (
+            <div className="flex gap-2 justify-center">
               <Button
                 onClick={capturePhoto}
                 size="lg"
@@ -216,42 +232,97 @@ export const QuickCameraCapture = ({ onClose, onCapture }: QuickCameraCapturePro
                 <Camera className="h-5 w-5 mr-2" />
                 Capture
               </Button>
-            )}
+            </div>
+          )}
 
-            {capturedImage && !isSaving && (
-              <>
+          {/* Edit Dialog */}
+          {showEditDialog && capturedImage && (
+            <div className="space-y-4">
+              {/* Image Preview */}
+              <div className="relative">
+                <img
+                  src={capturedImage}
+                  alt="Captured"
+                  className="w-full max-h-48 object-contain rounded-lg border border-gray-600"
+                />
+              </div>
+
+              {/* Edit Form */}
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="title" className="text-white">Photo Title</Label>
+                  <Input
+                    id="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Enter photo title..."
+                    className="bg-gray-800 border-gray-600 text-white"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-white">Tags (Optional)</Label>
+                  <div className="flex flex-wrap gap-2 mt-2 max-h-20 overflow-y-auto">
+                    {tags.map(tag => (
+                      <Badge
+                        key={tag.id}
+                        variant={selectedTags.includes(tag.id) ? "default" : "outline"}
+                        className="cursor-pointer text-xs"
+                        onClick={() => handleTagToggle(tag.id)}
+                      >
+                        {tag.name}
+                      </Badge>
+                    ))}
+                  </div>
+                  {tags.length === 0 && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      No tags available
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 justify-between">
+                <div className="flex gap-2">
+                  <Button
+                    onClick={retakePhoto}
+                    variant="outline"
+                    size="sm"
+                    className="border-gray-600 text-white hover:bg-gray-800"
+                  >
+                    <RotateCcw className="h-4 w-4 mr-1" />
+                    Retake
+                  </Button>
+                  <Button
+                    onClick={handleShare}
+                    variant="outline"
+                    size="sm"
+                    className="border-gray-600 text-white hover:bg-gray-800"
+                  >
+                    <Share2 className="h-4 w-4 mr-1" />
+                    Share
+                  </Button>
+                </div>
                 <Button
-                  onClick={retakePhoto}
-                  variant="outline"
-                  size="lg"
-                  className="border-gray-600 text-white hover:bg-gray-800"
-                >
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Retake
-                </Button>
-                <Button
-                  onClick={() => savePhoto}
-                  size="lg"
+                  onClick={savePhoto}
+                  size="sm"
                   className="bg-green-600 hover:bg-green-700 text-white"
-                  disabled={isSaving}
+                  disabled={isSaving || !title.trim()}
                 >
-                  <Check className="h-4 w-4 mr-2" />
-                  Saved ✓
+                  <Upload className="h-4 w-4 mr-1" />
+                  {isSaving ? 'Saving...' : 'Save Photo'}
                 </Button>
-              </>
-            )}
+              </div>
+            </div>
+          )}
 
-            {isSaving && (
+          {isSaving && (
+            <div className="text-center">
               <Button size="lg" disabled className="bg-blue-600 text-white">
                 Saving...
               </Button>
-            )}
-          </div>
-
-          {capturedImage && (
-            <p className="text-center text-sm text-gray-400 mt-2">
-              Photo automatically saved to PR Images
-            </p>
+            </div>
           )}
         </CardContent>
       </Card>
