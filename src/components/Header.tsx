@@ -74,6 +74,7 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
   const isOnUserDashboard = location.pathname === '/dashboard';
 
   console.log('Header - userProfile:', userProfile);
+  console.log('Header - userProfile avatar_url:', userProfile?.avatar_url);
   console.log('Header - isAdmin:', isAdmin);
   console.log('Header - isPRCoordinator:', isPRCoordinator);
   console.log('Header - canAccessPR:', canAccessPR);

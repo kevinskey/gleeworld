@@ -407,6 +407,11 @@ const Profile = () => {
           title: "Success",
           description: "Avatar updated successfully",
         });
+
+        // Force a page refresh to update the header avatar
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       }
     } catch (error) {
       console.error('Error uploading avatar:', error);
