@@ -380,6 +380,23 @@ export default function ClassScheduleManager() {
                   <Save className="h-4 w-4" />
                   {editingSchedule ? 'Update' : 'Save'} Schedule
                 </Button>
+                {!editingSchedule && (
+                  <Button 
+                    type="submit" 
+                    variant="outline" 
+                    className="gap-2"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleSubmit(e as any).then(() => {
+                        resetForm();
+                        // Don't close dialog, allow adding another class
+                      });
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Save & Add Another
+                  </Button>
+                )}
               </div>
             </form>
           </DialogContent>
