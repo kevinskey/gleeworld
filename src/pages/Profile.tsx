@@ -465,7 +465,7 @@ const Profile = () => {
         </div>
 
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Profile Picture & Basic Info */}
           <Card className="bg-card border-border">
             <CardHeader>
@@ -474,7 +474,7 @@ const Profile = () => {
                 Basic Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
               <div className="flex items-center gap-6">
                 <div className="relative">
                   <Avatar className="h-24 w-24 border-4 border-border shadow-lg">
@@ -843,7 +843,7 @@ const Profile = () => {
                 Musical Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="voice_part">Voice Part</Label>
