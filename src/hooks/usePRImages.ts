@@ -150,9 +150,11 @@ export const usePRImages = () => {
 
       toast({
         title: "Success",
-        description: "Image uploaded successfully",
+        description: `Image "${file.name}" uploaded successfully`,
       });
 
+      console.log('usePRImages: Image uploaded successfully:', data);
+      console.log('usePRImages: Refreshing images list...');
       fetchImages(); // Refresh the images list
       return data;
     } catch (error) {
