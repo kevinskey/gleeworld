@@ -153,7 +153,7 @@ export const AnnotationCanvas = ({
     });
   };
 
-  const getMousePos = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const getEventPos = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = drawingCanvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     
@@ -161,17 +161,31 @@ export const AnnotationCanvas = ({
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     
+    let clientX, clientY;
+    
+    if ('touches' in e) {
+      // Touch event (including Apple Pencil)
+      const touch = e.touches[0] || e.changedTouches[0];
+      clientX = touch.clientX;
+      clientY = touch.clientY;
+    } else {
+      // Mouse event
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
     return {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
     };
   };
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleStart = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (activeTool === "select") return;
     
+    e.preventDefault(); // Prevent scrolling on touch
     setIsDrawing(true);
-    const pos = getMousePos(e);
+    const pos = getEventPos(e);
     
     const newPath = {
       points: [pos],
@@ -183,10 +197,11 @@ export const AnnotationCanvas = ({
     setCurrentPath(newPath);
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleMove = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing || !currentPath) return;
     
-    const pos = getMousePos(e);
+    e.preventDefault(); // Prevent scrolling on touch
+    const pos = getEventPos(e);
     const updatedPath = {
       ...currentPath,
       points: [...currentPath.points, pos]
@@ -196,7 +211,7 @@ export const AnnotationCanvas = ({
     redrawAnnotations([...paths, updatedPath]);
   };
 
-  const handleMouseUp = () => {
+  const handleEnd = () => {
     if (!isDrawing || !currentPath) return;
     
     setIsDrawing(false);
@@ -440,10 +455,14 @@ export const AnnotationCanvas = ({
                 height: 'auto',
                 display: 'block'
               }}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
+              onMouseDown={handleStart}
+              onMouseMove={handleMove}
+              onMouseUp={handleEnd}
               onMouseLeave={() => setIsDrawing(false)}
+              onTouchStart={handleStart}
+              onTouchMove={handleMove}
+              onTouchEnd={handleEnd}
+              onTouchCancel={() => setIsDrawing(false)}
             />
           </div>
           
