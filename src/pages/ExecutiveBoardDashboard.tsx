@@ -358,7 +358,7 @@ export const ExecutiveBoardDashboard = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="font-bebas font-bold tracking-wide">
-              <span className="block sm:hidden text-5xl text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">Exec Hub</span>
+              <span className="block sm:hidden text-5xl text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">Exec Board Hub</span>
               <span className="hidden sm:block text-4xl md:text-6xl lg:text-7xl xl:text-8xl text-foreground md:text-white md:drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">Executive Board Hub</span>
             </h1>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
