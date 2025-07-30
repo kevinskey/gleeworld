@@ -11,8 +11,10 @@ const Handbook = () => {
   }
 
   return (
-    <UniversalLayout maxWidth="2xl">
-      <HandbookModule />
+    <UniversalLayout maxWidth="full" containerized={false}>
+      <div className="mx-5">
+        <HandbookModule />
+      </div>
     </UniversalLayout>
   );
 };
