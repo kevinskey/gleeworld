@@ -31,6 +31,8 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
+  console.log('PRQuickCapture: Component rendered');
+
   const { 
     startCamera, 
     capturePhoto, 
@@ -41,10 +43,12 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
     isCapturing
   } = useCameraImport({
     onSuccess: (file) => {
+      console.log('PRQuickCapture: Camera success callback');
       setCapturedImage(file);
       setPreviewUrl(URL.createObjectURL(file));
     },
     onError: (error) => {
+      console.log('PRQuickCapture: Camera error callback:', error);
       toast({
         title: "Camera Error",
         description: error,
@@ -116,7 +120,10 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
           {!capturedImage ? (
             <div className="space-y-4">
               <div className="flex gap-3 justify-center">
-                <Button onClick={startCamera} disabled={isCameraReady} className="gap-2">
+                <Button onClick={() => {
+                  console.log('PRQuickCapture: Start Camera button clicked');
+                  startCamera();
+                }} disabled={isCameraReady} className="gap-2">
                   <Camera className="h-4 w-4" />
                   {isCameraReady ? 'Camera Active' : 'Start Camera'}
                 </Button>
