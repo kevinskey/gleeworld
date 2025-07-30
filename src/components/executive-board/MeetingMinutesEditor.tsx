@@ -309,8 +309,8 @@ export const MeetingMinutesEditor = ({ minute, onBack, onSave }: MeetingMinutesE
                   value={formData.agenda_items}
                   onChange={(e) => setFormData(prev => ({ ...prev, agenda_items: e.target.value }))}
                   placeholder="List agenda items (one per line)..."
-                  rows={6}
-                  className="border-l-4 border-l-green-500 font-mono"
+                  rows={8}
+                  className="border-l-4 border-l-green-500 font-mono min-h-[200px]"
                 />
               </div>
 
@@ -324,8 +324,8 @@ export const MeetingMinutesEditor = ({ minute, onBack, onSave }: MeetingMinutesE
                   value={formData.discussion_points}
                   onChange={(e) => setFormData(prev => ({ ...prev, discussion_points: e.target.value }))}
                   placeholder="Document key discussion points, decisions made, and important conversations..."
-                  rows={10}
-                  className="border-l-4 border-l-orange-500 leading-relaxed"
+                  rows={15}
+                  className="border-l-4 border-l-orange-500 leading-relaxed min-h-[300px]"
                 />
               </div>
 
@@ -339,8 +339,8 @@ export const MeetingMinutesEditor = ({ minute, onBack, onSave }: MeetingMinutesE
                   value={formData.action_items}
                   onChange={(e) => setFormData(prev => ({ ...prev, action_items: e.target.value }))}
                   placeholder="List action items with responsible parties (one per line)..."
-                  rows={6}
-                  className="border-l-4 border-l-red-500 font-mono"
+                  rows={8}
+                  className="border-l-4 border-l-red-500 font-mono min-h-[200px]"
                 />
               </div>
             </div>
