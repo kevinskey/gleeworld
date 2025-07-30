@@ -544,13 +544,9 @@ export const ExecutiveBoardDashboard = () => {
               <SpiritualReflectionsCard />
             </div>
 
-            {/* 2. Notifications */}
-            <div className="grid grid-cols-1 gap-6">
+            {/* 2. Notifications and Check In/Out - 50%/50% layout on desktop/iPad */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <NotificationsPanel />
-            </div>
-
-            {/* 3. Attendance */}
-            <div className="grid grid-cols-1 gap-6">
               <CheckInOutTool />
             </div>
 
