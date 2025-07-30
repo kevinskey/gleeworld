@@ -129,10 +129,10 @@ export const ExecutiveBoardDashboard = () => {
     try {
       console.log('Checking executive membership for user:', user.id);
       
-      // First check if user is super admin
+      // First check if user is super admin, admin, or exec board member
       const { data: profileData, error: profileError } = await supabase
         .from('gw_profiles')
-        .select('is_super_admin, is_admin')
+        .select('is_super_admin, is_admin, is_exec_board, exec_board_role')
         .eq('user_id', user.id)
         .single();
 
@@ -151,6 +151,20 @@ export const ExecutiveBoardDashboard = () => {
           is_active: true
         });
         setSelectedPosition('president');
+        return;
+      }
+
+      // Check if user is exec board member from gw_profiles
+      if (profileData?.is_exec_board && profileData?.exec_board_role) {
+        console.log('User has exec board access via gw_profiles');
+        setExecutiveData({
+          id: 'profile-access',
+          user_id: user.id,
+          position: profileData.exec_board_role as any,
+          academic_year: new Date().getFullYear().toString(),
+          is_active: true
+        });
+        setSelectedPosition(profileData.exec_board_role as any);
         return;
       }
 
