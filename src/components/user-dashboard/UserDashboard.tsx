@@ -317,7 +317,7 @@ export const UserDashboard = () => {
         {(isAdmin || hasExecBoardPerms) && (
           <div className="flex justify-center mb-4">
             <div className="flex items-center justify-between w-[90vw] max-w-3xl gap-3 sm:gap-6 px-4 sm:px-8 py-2 bg-secondary/10 rounded-lg border">
-              <span className="text-sm font-medium text-muted-foreground">Views:</span>
+              <span className="text-xs font-medium text-muted-foreground">Views:</span>
               <div className="flex items-center gap-1 sm:gap-2">
               <Button
                 variant={viewMode === 'admin' ? 'default' : 'ghost'}
