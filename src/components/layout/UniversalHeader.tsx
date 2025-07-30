@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, LayoutDashboard } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useProfile } from "@/hooks/useProfile";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { AppNavigation } from "@/components/navigation/AppNavigation";
 
@@ -23,10 +23,13 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
   const { user, signOut } = useAuth();
   const isMobile = useIsMobile();
   const location = useLocation();
-  const { profile } = useProfile();
+  const { userProfile } = useUserProfile(user);
   const { pageName } = usePageTitle();
   
-  
+  // Check if user has PR access (PR coordinator or admin)
+  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
+  const isPRCoordinator = userProfile?.exec_board_role === 'pr_coordinator';
+  const canAccessPR = isAdmin || isPRCoordinator;
 
   const handleSignOut = async () => {
     try {
@@ -84,19 +87,33 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                   <TaskNotifications />
                 </EnhancedTooltip>
                 
+                {/* PR Camera Quick Capture */}
+                {canAccessPR && (
+                  <EnhancedTooltip content="PR Quick Capture">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => window.location.href = '/dashboard/pr-hub'}
+                      className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 rounded-full hover:bg-white/20"
+                    >
+                      <Camera className="h-4 w-4" />
+                    </Button>
+                  </EnhancedTooltip>
+                )}
+                
                  <DropdownMenu>
                    <EnhancedTooltip content="Profile menu">
                      <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="relative h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 rounded-full p-0">
                           <Avatar className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9">
-                           <AvatarImage 
-                             src={profile?.avatar_url || undefined} 
-                             alt={profile?.full_name || user.email || "Profile"} 
+                            <AvatarImage 
+                              src={userProfile?.avatar_url || undefined} 
+                              alt={userProfile?.full_name || user.email || "Profile"}
                              className="object-cover"
                            />
-                           <AvatarFallback className="bg-gray-200 text-gray-700">
-                             {profile?.full_name ? 
-                               profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() :
+                            <AvatarFallback className="bg-gray-200 text-gray-700">
+                              {userProfile?.full_name ? 
+                                userProfile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() :
                                <User className="h-3 w-3 sm:h-4 sm:w-4" />
                              }
                            </AvatarFallback>
@@ -106,8 +123,8 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                    </EnhancedTooltip>
                     <DropdownMenuContent className="w-48 py-1" align="end" forceMount>
                       <div className="flex flex-col space-y-0.5 p-1.5">
-                        <p className="text-xs font-medium leading-none truncate">
-                          {profile?.full_name || user.email}
+                         <p className="text-xs font-medium leading-none truncate">
+                           {userProfile?.full_name || user.email}
                         </p>
                         <p className="text-xs leading-none text-muted-foreground">
                           {user.email}
