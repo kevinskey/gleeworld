@@ -25,10 +25,10 @@ export const LoadingSpinner = ({
   };
 
   return (
-    <div className={`flex items-center justify-center py-8 ${className}`}>
-      <div className="text-center">
-        <Loader2 className={`${sizeClasses[size]} animate-spin text-white mx-auto mb-4`} />
-        <p className={`text-white/70 ${textSizeClasses[size]}`}>{text}</p>
+    <div className={`flex items-center justify-center py-4 sm:py-6 md:py-8 ${className}`}>
+      <div className="text-center px-2">
+        <Loader2 className={`${sizeClasses[size]} animate-spin text-white mx-auto mb-2 sm:mb-3 md:mb-4`} />
+        <p className={`text-white/70 ${textSizeClasses[size]} leading-relaxed`}>{text}</p>
       </div>
     </div>
   );

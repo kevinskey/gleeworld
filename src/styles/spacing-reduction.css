@@ -63,4 +63,30 @@
   .dropdown-item-compact {
     @apply py-1 px-2 text-sm leading-tight;
   }
+
+  /* Touch-friendly mobile utilities */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0;
+  }
+  
+  .mobile-text-lg {
+    @apply text-sm sm:text-base md:text-lg;
+  }
+  
+  .mobile-text-xl {
+    @apply text-base sm:text-lg md:text-xl;
+  }
+  
+  .mobile-text-2xl {
+    @apply text-lg sm:text-xl md:text-2xl;
+  }
+
+  /* Overflow handling utilities */
+  .text-overflow-fade {
+    @apply relative after:absolute after:right-0 after:top-0 after:h-full after:w-8 after:bg-gradient-to-l after:from-background after:to-transparent;
+  }
+  
+  .scrollbar-thin-mobile {
+    @apply scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent md:scrollbar-thumb-primary/30;
+  }
 }

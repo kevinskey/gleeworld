@@ -61,22 +61,22 @@ export const QuickActionsSection = ({ isAdmin, actionFilter }: QuickActionsSecti
   return (
     <div className="w-full">
       {/* Desktop Layout */}
-      <div className="hidden md:block space-y-4">
+      <div className="hidden md:block space-y-3">
         <div className="flex items-center gap-2 text-secondary-foreground">
           <Zap className="h-5 w-5" />
-          <h3 className="text-lg font-semibold">{getSectionTitle()}</h3>
+          <h3 className="text-base lg:text-lg font-semibold">{getSectionTitle()}</h3>
         </div>
-        <div className={`grid gap-4 ${actionFilter ? 'grid-cols-1' : 'grid-cols-3'}`}>
+        <div className={`grid gap-3 lg:gap-4 ${actionFilter ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-3'}`}>
           {quickActions.map((action) => {
             const IconComponent = action.icon;
             return (
               <EnhancedTooltip key={action.route} content={action.description}>
                 <Button 
-                  className="h-20 flex-col space-y-2 text-sm w-full" 
+                  className="h-16 lg:h-20 flex-col space-y-1.5 lg:space-y-2 text-xs lg:text-sm w-full" 
                   variant="outline"
                   onClick={() => navigate(action.route)}
                 >
-                  <IconComponent className="h-6 w-6" />
+                  <IconComponent className="h-5 w-5 lg:h-6 lg:w-6" />
                   <span className="text-center leading-tight">
                     {action.label}
                   </span>
@@ -88,20 +88,20 @@ export const QuickActionsSection = ({ isAdmin, actionFilter }: QuickActionsSecti
       </div>
 
       {/* Mobile Layout - Individual Collapsible Cards */}
-      <div className="md:hidden space-y-2 px-1">
+      <div className="md:hidden space-y-1.5 px-0.5">
         {quickActions.map((action) => {
           const IconComponent = action.icon;
           const [isActionCollapsed, setIsActionCollapsed] = useState(actionFilter === 'music' ? false : true);
           
           return (
             <Card key={action.route} className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 border-primary/20 shadow-sm">
-              <CardHeader className="pb-2 cursor-pointer" onClick={() => setIsActionCollapsed(!isActionCollapsed)}>
-                <CardTitle className="flex items-center justify-between text-secondary-foreground text-base">
+              <CardHeader className="pb-1.5 cursor-pointer touch-manipulation min-h-[60px]" onClick={() => setIsActionCollapsed(!isActionCollapsed)}>
+                <CardTitle className="flex items-center justify-between text-secondary-foreground text-sm">
                   <div className="flex items-center gap-2">
-                    <IconComponent className="h-4 w-4" />
-                    {action.label}
+                    <IconComponent className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">{action.label}</span>
                   </div>
-                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 flex-shrink-0 min-h-[44px]">
                     {isActionCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                   </Button>
                 </CardTitle>
@@ -109,12 +109,12 @@ export const QuickActionsSection = ({ isAdmin, actionFilter }: QuickActionsSecti
               
               {!isActionCollapsed && (
                 <CardContent>
-                  <div className="space-y-3">
-                    <p className="text-sm text-muted-foreground">
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
                       {action.description}
                     </p>
                     <Button 
-                      className="w-full" 
+                      className="w-full text-sm py-2 min-h-[44px]" 
                       onClick={() => navigate(action.route)}
                     >
                       Open {action.label}
