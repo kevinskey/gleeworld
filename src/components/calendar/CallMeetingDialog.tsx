@@ -238,9 +238,10 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2 border-primary/30 hover:bg-primary/10">
-          <Users className="h-4 w-4" />
-          Call a Meeting
+        <Button variant="outline" size="sm" className="gap-1 border-primary/30 hover:bg-primary/10 text-xs sm:text-sm px-2 sm:px-3">
+          <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+          <span className="hidden sm:inline">Call a Meeting</span>
+          <span className="sm:hidden">CM</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">

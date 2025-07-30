@@ -61,19 +61,19 @@ export const CalendarViews = () => {
           {/* Member Controls */}
           <div className="bg-muted/30 rounded-lg border border-border/50">
             <div className="flex items-center justify-between gap-2 p-2">
-              <h3 className="text-sm font-medium text-muted-foreground">Member Controls</h3>
+              <h3 className="text-xs sm:text-sm font-medium text-muted-foreground">Member Controls</h3>
             </div>
-            <div className="flex flex-nowrap gap-2 w-full p-2">
-              <div className="flex-1 min-w-0">
+            <div className="grid grid-cols-3 gap-1 p-2 w-full">
+              <div className="min-w-0">
                 <AppointmentScheduler />
               </div>
               {user && (
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0">
                   <CreateEventDialog onEventCreated={fetchEvents} />
                 </div>
               )}
               {isExecMember && (
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0">
                   <CallMeetingDialog onMeetingCreated={fetchEvents} />
                 </div>
               )}
