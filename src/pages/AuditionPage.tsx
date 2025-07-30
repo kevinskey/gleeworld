@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { Mic, ArrowLeft, ArrowRight } from "lucide-react";
 import { Navigate } from "react-router-dom";
+import { CongratulationsDialog } from "@/components/audition/CongratulationsDialog";
 import { AuditionFormProvider, useAuditionForm, AuditionFormData } from "@/components/audition/AuditionFormProvider";
 import { AuditionFormProgress } from "@/components/audition/AuditionFormProgress";
 import { RegistrationPage } from "@/components/audition/pages/RegistrationPage";
@@ -19,6 +20,7 @@ import { SchedulingAndSelfiePage } from "@/components/audition/pages/SchedulingA
 function AuditionFormContent() {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCongratulations, setShowCongratulations] = useState(false);
   const { 
     form, 
     currentPage, 
@@ -104,9 +106,8 @@ function AuditionFormContent() {
       }
 
       console.log('✅ Successfully saved to database!');
-      toast.success("Audition application submitted successfully!");
       form.reset();
-      // Reset will be handled by the provider
+      setShowCongratulations(true);
     } catch (error: any) {
       console.error('💥 Detailed error:', {
         message: error?.message,
@@ -281,6 +282,11 @@ function AuditionFormContent() {
           </Card>
         </div>
       </div>
+      
+      <CongratulationsDialog 
+        open={showCongratulations}
+        onOpenChange={setShowCongratulations}
+      />
     </div>
   );
 }
