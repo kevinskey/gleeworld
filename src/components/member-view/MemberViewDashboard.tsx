@@ -61,8 +61,8 @@ export const MemberViewDashboard = () => {
     );
   }
 
-  const welcomeCardSetting = getSettingByName('welcome_card_background');
-  const backgroundImage = welcomeCardSetting?.image_url;
+  // Use the same historic campus background as Executive Board Dashboard
+  const backgroundImage = "/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png";
 
   const renderDashboardContent = () => {
     console.log('MemberViewDashboard: rendering dashboard for user:', user);
