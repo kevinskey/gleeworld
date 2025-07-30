@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { 
   Pencil, 
   Eraser, 
@@ -10,18 +11,18 @@ import {
   Undo,
   MousePointer,
   Loader2,
-  Palette
+  Palette,
+  AlertCircle,
+  ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
-import * as pdfjsLib from 'pdfjs-dist';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-
-// Set up PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+import { useSheetMusicUrl } from '@/hooks/useSheetMusicUrl';
+import { cn } from '@/lib/utils';
 
 interface PDFViewerWithAnnotationsProps {
-  pdfUrl: string;
+  pdfUrl: string | null;
   musicId?: string;
   musicTitle?: string;
   className?: string;
@@ -34,68 +35,31 @@ export const PDFViewerWithAnnotations = ({
   className = "" 
 }: PDFViewerWithAnnotationsProps) => {
   const { user } = useAuth();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { signedUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(pdfUrl);
   const drawingCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [activeTool, setActiveTool] = useState<"select" | "draw" | "erase">("select");
   const [brushSize, setBrushSize] = useState([3]);
   const [brushColor, setBrushColor] = useState("#ff0000");
-  const [isLoading, setIsLoading] = useState(false);
-  const [pdfLoading, setPdfLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [paths, setPaths] = useState<any[]>([]);
   const [currentPath, setCurrentPath] = useState<any>(null);
   const [hasAnnotations, setHasAnnotations] = useState(false);
   const [annotationMode, setAnnotationMode] = useState(false);
 
-  const CANVAS_WIDTH = 800;
-  const CANVAS_HEIGHT = 1000;
+  const handleLoad = () => {
+    console.log('PDFViewer: PDF loaded successfully');
+    setIsLoading(false);
+    setError(null);
+  };
 
-  // Load PDF
-  useEffect(() => {
-    if (!canvasRef.current || !pdfUrl) return;
-
-    const loadPDF = async () => {
-      setPdfLoading(true);
-      try {
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        canvas.width = CANVAS_WIDTH;
-        canvas.height = CANVAS_HEIGHT;
-
-        const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
-        const page = await pdf.getPage(1);
-        
-        const viewport = page.getViewport({ scale: 1 });
-        const scale = Math.min(CANVAS_WIDTH / viewport.width, CANVAS_HEIGHT / viewport.height);
-        const scaledViewport = page.getViewport({ scale });
-        
-        const renderContext = {
-          canvasContext: ctx,
-          viewport: scaledViewport
-        };
-        
-        await page.render(renderContext).promise;
-      } catch (error) {
-        console.error('Error loading PDF:', error);
-        toast.error('Failed to load PDF');
-      } finally {
-        setPdfLoading(false);
-      }
-    };
-
-    loadPDF();
-  }, [pdfUrl]);
-
-  // Initialize drawing canvas
-  useEffect(() => {
-    if (!drawingCanvasRef.current) return;
-    
-    const canvas = drawingCanvasRef.current;
-    canvas.width = CANVAS_WIDTH;
-    canvas.height = CANVAS_HEIGHT;
-  }, []);
+  const handleError = () => {
+    console.error('PDFViewer: Failed to load PDF:', signedUrl);
+    setIsLoading(false);
+    setError('Failed to load PDF. The file might be corrupted or inaccessible.');
+  };
 
   const redrawAnnotations = (pathsToRedraw = paths) => {
     if (!drawingCanvasRef.current) return;
@@ -104,7 +68,7 @@ export const PDFViewerWithAnnotations = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     pathsToRedraw.forEach(path => {
       if (path.points && path.points.length > 1) {
@@ -208,28 +172,16 @@ export const PDFViewerWithAnnotations = ({
   };
 
   const handleSave = async () => {
-    if (!canvasRef.current || !drawingCanvasRef.current || !user || !musicId) {
+    if (!drawingCanvasRef.current || !user || !musicId) {
       toast.error("Cannot save - missing required information");
       return;
     }
     
-    setIsLoading(true);
+    setIsSaving(true);
     try {
-      // Create composite canvas
-      const compositeCanvas = document.createElement('canvas');
-      compositeCanvas.width = CANVAS_WIDTH;
-      compositeCanvas.height = CANVAS_HEIGHT;
-      const compositeCtx = compositeCanvas.getContext('2d');
-      
-      if (!compositeCtx) throw new Error('Could not create composite canvas');
-      
-      // Draw background PDF and annotations
-      compositeCtx.drawImage(canvasRef.current, 0, 0);
-      compositeCtx.drawImage(drawingCanvasRef.current, 0, 0);
-      
-      // Convert to blob
+      // Convert canvas to blob
       const blob = await new Promise<Blob>((resolve, reject) => {
-        compositeCanvas.toBlob((blob) => {
+        drawingCanvasRef.current?.toBlob((blob) => {
           if (blob) resolve(blob);
           else reject(new Error('Failed to create blob'));
         }, 'image/png', 0.9);
@@ -272,16 +224,101 @@ export const PDFViewerWithAnnotations = ({
       console.error('Error saving annotated score:', error);
       toast.error("Failed to save annotated score");
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
+
+  // Show loading while getting signed URL
+  if (!pdfUrl) {
+    return (
+      <Card className={cn("w-full max-w-4xl mx-auto", className)}>
+        <CardContent className="p-8">
+          <div className="flex items-center justify-center">
+            <p className="text-muted-foreground">No PDF available</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (urlLoading) {
+    return (
+      <Card className={cn("w-full max-w-4xl mx-auto", className)}>
+        <CardContent className="p-8">
+          <div className="flex flex-col items-center justify-center space-y-2">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Preparing PDF...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (urlError || !signedUrl) {
+    return (
+      <Card className={cn("w-full max-w-4xl mx-auto", className)}>
+        <CardContent className="p-8">
+          <div className="flex flex-col items-center justify-center text-center space-y-4">
+            <AlertCircle className="h-12 w-12 text-destructive" />
+            <div>
+              <h3 className="text-lg font-semibold text-destructive">Failed to Load PDF</h3>
+              <p className="text-sm text-muted-foreground mt-1">{urlError || 'PDF unavailable'}</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => window.open(pdfUrl, '_blank')}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Try Direct Link
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className={cn("w-full max-w-4xl mx-auto", className)}>
+        <CardContent className="p-8">
+          <div className="flex flex-col items-center justify-center text-center space-y-4">
+            <AlertCircle className="h-12 w-12 text-destructive" />
+            <div>
+              <h3 className="text-lg font-semibold text-destructive">Failed to Load PDF</h3>
+              <p className="text-sm text-muted-foreground mt-1">{error}</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => window.open(signedUrl || pdfUrl, '_blank')}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open in New Tab
+              </Button>
+              <Button 
+                onClick={() => {
+                  setError(null);
+                  setIsLoading(true);
+                }} 
+                variant="outline"
+              >
+                Try Again
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const colors = ["#ff0000", "#000000", "#0000ff", "#008000", "#800080", "#ffa500"];
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <Card className={cn("w-full max-w-6xl mx-auto", className)}>
       {/* Annotation Toolbar */}
-      <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/50 rounded-lg">
+      <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/50 rounded-t-lg border-b">
         <Button
           variant={annotationMode ? "default" : "outline"}
           size="sm"
@@ -371,9 +408,9 @@ export const PDFViewerWithAnnotations = ({
                 <Button
                   size="sm"
                   onClick={handleSave}
-                  disabled={isLoading || !musicId}
+                  disabled={isSaving || !musicId}
                 >
-                  {isLoading ? (
+                  {isSaving ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <Save className="h-4 w-4" />
@@ -386,53 +423,52 @@ export const PDFViewerWithAnnotations = ({
         )}
       </div>
 
-      {/* PDF Canvas */}
-      <div className="relative border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
-        {pdfLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
-            <Loader2 className="h-8 w-8 animate-spin mr-2" />
-            <span>Loading PDF...</span>
-          </div>
-        )}
-        
-        {/* Background PDF canvas */}
-        <canvas 
-          ref={canvasRef}
-          className="absolute inset-0 w-full h-auto"
-          style={{ 
-            maxWidth: '100%',
-            height: 'auto',
-            display: 'block'
-          }}
-        />
-        
-        {/* Drawing canvas for annotations */}
-        <canvas 
-          ref={drawingCanvasRef}
-          className={`relative w-full h-auto ${
-            annotationMode && activeTool !== "select" ? "cursor-crosshair" : "cursor-default"
-          }`}
-          style={{ 
-            maxWidth: '100%',
-            height: 'auto',
-            display: 'block'
-          }}
-          onMouseDown={handleStart}
-          onMouseMove={handleMove}
-          onMouseUp={handleEnd}
-          onMouseLeave={() => setIsDrawing(false)}
-          onTouchStart={handleStart}
-          onTouchMove={handleMove}
-          onTouchEnd={handleEnd}
-          onTouchCancel={() => setIsDrawing(false)}
-        />
-      </div>
+      {/* PDF Content */}
+      <CardContent className="p-0">
+        <div className="relative h-[800px] w-full">
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
+              <div className="flex flex-col items-center space-y-2">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Loading PDF...</p>
+              </div>
+            </div>
+          )}
+          
+          <iframe
+            src={`https://docs.google.com/gview?url=${encodeURIComponent(signedUrl)}&embedded=true`}
+            className="w-full h-full border-0"
+            onLoad={handleLoad}
+            onError={handleError}
+            title="PDF Viewer"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+          />
+
+          {/* Drawing overlay canvas */}
+          {annotationMode && (
+            <canvas 
+              ref={drawingCanvasRef}
+              className={`absolute inset-0 w-full h-full pointer-events-auto ${
+                activeTool !== "select" ? "cursor-crosshair" : "cursor-default"
+              }`}
+              onMouseDown={handleStart}
+              onMouseMove={handleMove}
+              onMouseUp={handleEnd}
+              onMouseLeave={() => setIsDrawing(false)}
+              onTouchStart={handleStart}
+              onTouchMove={handleMove}
+              onTouchEnd={handleEnd}
+              onTouchCancel={() => setIsDrawing(false)}
+            />
+          )}
+        </div>
+      </CardContent>
       
       {annotationMode && (
-        <div className="text-xs text-muted-foreground text-center">
+        <div className="text-xs text-muted-foreground text-center p-2 bg-muted/20">
           {hasAnnotations ? "Annotations ready to save" : "Draw on the PDF to add annotations"}
         </div>
       )}
-    </div>
+    </Card>
   );
 };
