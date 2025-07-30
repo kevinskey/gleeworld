@@ -4,9 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface UserProfile {
   id: string;
+  user_id: string;
   email: string;
   role: string;
   full_name?: string;
+  is_admin: boolean;
+  is_super_admin: boolean;
+  exec_board_role?: string;
+  is_exec_board: boolean;
 }
 
 export const useUserRole = () => {
@@ -24,9 +29,9 @@ export const useUserRole = () => {
 
       try {
         const { data, error } = await supabase
-          .from('profiles')
-          .select('id, email, role, full_name')
-          .eq('id', user.id)
+          .from('gw_profiles')
+          .select('id, user_id, email, role, full_name, is_admin, is_super_admin, exec_board_role, is_exec_board')
+          .eq('user_id', user.id)
           .single();
 
         if (error) {
@@ -48,22 +53,27 @@ export const useUserRole = () => {
 
   const canDownloadPDF = () => {
     if (!profile) return false;
-    return ['admin', 'super-admin', 'librarian'].includes(profile.role);
+    return profile.is_admin || profile.is_super_admin || profile.role === 'librarian';
   };
 
   const canDownloadMP3 = () => {
     if (!profile) return false;
-    return profile.role === 'super-admin';
+    return profile.is_super_admin;
   };
 
   const isAdmin = () => {
     if (!profile) return false;
-    return ['admin', 'super-admin'].includes(profile.role);
+    return profile.is_admin || profile.is_super_admin;
   };
 
   const isSuperAdmin = () => {
     if (!profile) return false;
-    return profile.role === 'super-admin';
+    return profile.is_super_admin;
+  };
+
+  const isExecutiveBoard = () => {
+    if (!profile) return false;
+    return profile.is_exec_board || profile.is_admin || profile.is_super_admin;
   };
 
   return {
@@ -73,5 +83,6 @@ export const useUserRole = () => {
     canDownloadMP3,
     isAdmin,
     isSuperAdmin,
+    isExecutiveBoard,
   };
 };
