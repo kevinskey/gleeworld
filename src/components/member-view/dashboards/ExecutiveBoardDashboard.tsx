@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { SpiritualReflectionsCard } from "../SpiritualReflectionsCard";
+import { PRCoordinatorHub } from "@/components/pr-coordinator/PRCoordinatorHub";
 import { 
   Calendar, 
   CheckCircle, 
@@ -30,6 +31,14 @@ interface ExecutiveBoardDashboardProps {
 }
 
 export const ExecutiveBoardDashboard = ({ user }: ExecutiveBoardDashboardProps) => {
+  // Check if user is PR coordinator
+  const isPRCoordinator = user.exec_board_role === 'pr_coordinator';
+
+  // If PR coordinator, show the PR Hub instead of default dashboard
+  if (isPRCoordinator) {
+    return <PRCoordinatorHub />;
+  }
+
   // Real data - to be connected to actual data sources
   const execData = {
     attendance: {
