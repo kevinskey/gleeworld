@@ -1940,6 +1940,45 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_agendas: {
+        Row: {
+          agenda_items: Json
+          created_at: string
+          created_by: string
+          id: string
+          meeting_date: string
+          meeting_type: string
+          notes: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          agenda_items?: Json
+          created_at?: string
+          created_by: string
+          id?: string
+          meeting_date: string
+          meeting_type?: string
+          notes?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          agenda_items?: Json
+          created_at?: string
+          created_by?: string
+          id?: string
+          meeting_date?: string
+          meeting_type?: string
+          notes?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_alumnae_notifications: {
         Row: {
           content: string
@@ -4199,6 +4238,7 @@ export type Database = {
       gw_meeting_minutes: {
         Row: {
           action_items: string[]
+          agenda_id: string | null
           agenda_items: string[]
           attendees: string[]
           created_at: string
@@ -4216,6 +4256,7 @@ export type Database = {
         }
         Insert: {
           action_items?: string[]
+          agenda_id?: string | null
           agenda_items?: string[]
           attendees?: string[]
           created_at?: string
@@ -4233,6 +4274,7 @@ export type Database = {
         }
         Update: {
           action_items?: string[]
+          agenda_id?: string | null
           agenda_items?: string[]
           attendees?: string[]
           created_at?: string
@@ -4248,7 +4290,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "gw_meeting_minutes_agenda_id_fkey"
+            columns: ["agenda_id"]
+            isOneToOne: false
+            referencedRelation: "gw_agendas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_member_care_records: {
         Row: {
