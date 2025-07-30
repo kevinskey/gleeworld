@@ -11,6 +11,7 @@ import { PRQuickCapture } from './PRQuickCapture';
 import { PRImageDetails } from './PRImageDetails';
 import { PRBulkActions } from './PRBulkActions';
 import { PRTagManager } from './PRTagManager';
+import { TaskNotifications } from '@/components/shared/TaskNotifications';
 
 export const PRCoordinatorHub = () => {
   const {
@@ -72,12 +73,13 @@ export const PRCoordinatorHub = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold text-foreground">PR Coordinator Hub</h1>
           <p className="text-muted-foreground">Manage and organize member photos for publicity</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          <TaskNotifications />
           <Button onClick={() => setShowQuickCapture(true)} className="gap-2">
             <Camera className="h-4 w-4" />
             Quick Capture
