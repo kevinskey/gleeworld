@@ -3,9 +3,25 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Input } from "@/components/ui/input";
 import { Book, Search } from "lucide-react";
 import { useState } from "react";
+import { HandbookExam } from "./HandbookExam";
+import { HandbookContractSigning } from "./HandbookContractSigning";
 
 export const HandbookModule = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [examPassed, setExamPassed] = useState(false);
+  const [examScore, setExamScore] = useState(0);
+  const [examAttempts, setExamAttempts] = useState(0);
+  const [showExam, setShowExam] = useState(false);
+  const [showContract, setShowContract] = useState(false);
+
+  const handleExamComplete = (passed: boolean, score: number, attempts: number) => {
+    setExamPassed(passed);
+    setExamScore(score);
+    setExamAttempts(attempts);
+    if (passed) {
+      setShowContract(true);
+    }
+  };
 
   // Handbook sections structure
   const handbookSections = [
@@ -1032,9 +1048,23 @@ Academic excellence at Spelman College depends on a community of honesty and res
                 {section.title}
               </AccordionTrigger>
               <AccordionContent className="prose prose-sm max-w-none">
-                <div className="whitespace-pre-wrap text-foreground">
-                  {section.content}
-                </div>
+                {section.id === "handbook-exam" ? (
+                  <div className="not-prose">
+                    <HandbookExam onExamComplete={handleExamComplete} />
+                  </div>
+                ) : section.id === "contract-agreement" ? (
+                  <div className="not-prose">
+                    <HandbookContractSigning 
+                      examPassed={examPassed}
+                      examScore={examScore}
+                      examAttempts={examAttempts}
+                    />
+                  </div>
+                ) : (
+                  <div className="whitespace-pre-wrap text-foreground">
+                    {section.content}
+                  </div>
+                )}
               </AccordionContent>
             </AccordionItem>
           ))}
