@@ -283,9 +283,9 @@ const NotificationCenter = () => {
                 variant="ghost" 
                 size="sm" 
                 className="flex-1 text-xs hover:bg-blue-100 transition-colors"
-                onClick={() => window.location.href = '/notification-center'}
+                onClick={() => window.location.href = '/exec-board'}
               >
-                View Activity Dashboard
+                Communications Hub
               </Button>
               <div className="flex items-center ml-2">
                 <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse mr-1"></div>

@@ -17,7 +17,7 @@ export const PAGE_NAMES: Record<string, string> = {
   '/profile': 'Profile',
   '/profile/setup': 'Profile Setup',
   '/notifications': 'Notifications',
-  '/notification-center': 'Notification Center',
+  
   '/announcements': 'Announcements',
   '/admin/announcements/new': 'Create Announcement',
   '/admin/announcements/edit': 'Edit Announcement',

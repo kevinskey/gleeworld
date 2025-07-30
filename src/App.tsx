@@ -45,7 +45,7 @@ import About from "./pages/About";
 import AttendanceTestPage from "./pages/AttendanceTestPage";
 import AttendancePage from "./pages/AttendancePage";
 import MusicLibraryPage from "./pages/MusicLibrary";
-import NotificationCenter from "./pages/NotificationCenter";
+
 import Budgets from "./pages/Budgets";
 import Treasurer from "./pages/Treasurer";
 import TourManager from "./pages/TourManager";
@@ -376,14 +376,6 @@ const App = () => {
                        </ProtectedRoute>
                      } 
                    />
-                    <Route 
-                      path="/notification-center" 
-                      element={
-                        <ProtectedRoute>
-                          <NotificationCenter />
-                        </ProtectedRoute>
-                      } 
-                    />
                      <Route 
                        path="/budgets" 
                        element={
