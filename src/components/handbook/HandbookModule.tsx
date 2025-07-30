@@ -479,7 +479,42 @@ Spelman College defines the SCGC pages as **"Organization Pages"**, managed by s
     {
       id: "merchandise",
       title: "Merchandise Details",
-      content: "Merchandise details content will be added here from the PDF handbook..."
+      content: `## Merchandise, Paraphernalia, and Recordings
+
+The Spelman College Glee Club offers merchandise, paraphernalia, and recordings for purchase by members and the public. These items are typically sold at:
+
+- Full concerts on campus
+- Tour stops
+- Special events
+
+---
+
+### 🧾 Sales & Management
+
+- The **Merchandise Manager** oversees all production and sales.
+- A **Merchandise Team** may be formed from general members with customer service experience.
+- Members of the sales team should be familiar with:
+  - Spelman College facts
+  - Glee Club mission and history
+  - Admissions basics (when asked by guests)
+
+Interested members should contact the **Merchandise Manager** to join the team.
+
+---
+
+### 🛍️ Current Glee Club Merchandise
+
+| Item Description                        | Price         |
+|----------------------------------------|---------------|
+| CDs: "Amaze and Inspire", "Pearls of Wisdom", "Negro Spirituals", "Gospel" | $15.00 each   |
+| CD: "Pearls and Poinsettias"           | $25.00        |
+| SCGC Phone Wallet                      | $5.00         |
+| SCGC Canvas Bag                        | $10.00        |
+| SCGC Makeup Bag                        | $5.00         |
+| SCGC Water Bottle                      | $7.00         |
+| SCGC Fan                               | $1.00         |
+| T-Shirts                               | $13.00–$15.00 |
+| Hoodies                                | $30.00–$40.00 |`
     },
     {
       id: "history-test",
