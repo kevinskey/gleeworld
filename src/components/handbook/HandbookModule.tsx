@@ -12,7 +12,16 @@ export const HandbookModule = () => {
     {
       id: "director-statement",
       title: "Director's Statement",
-      content: "Director's statement content will be added here from the PDF handbook..."
+      content: `Welcome to the Spelman College Glee Club,
+
+We are glad that you have chosen to be a part of our organization. The Spelman College Glee Club has a long history of choral excellence that we are excited to share with you. In return, we ask that you do your very best to represent yourself, your family, this organization, and Spelman College in a manner we can all be proud of.
+
+If you remain, you will grow in ways that you never thought you would or even could. This music-making experience can be one that you treasure for the rest of your life. This organization is the only one of its kind and offers you a high profile, life-changing experience. You are now a part of a long history of Glee Club sisterhood; a relationship that can and will last for the rest of your life.
+
+**Amaze and Inspire,**
+**Dr. Kevin P. Johnson**
+Director, Spelman College Glee Club
+*Revised January 2024*`
     },
     {
       id: "history",
