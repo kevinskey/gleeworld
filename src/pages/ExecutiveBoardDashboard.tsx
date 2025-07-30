@@ -418,13 +418,18 @@ export const ExecutiveBoardDashboard = () => {
                   </SelectContent>
                 </Select>
               ) : (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  <PositionIcon className="h-3 w-3" />
-                  {getPositionName(selectedPosition)}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <PositionIcon className="h-3 w-3" />
+                    {getPositionName(selectedPosition)}
+                  </Badge>
+                  <Badge variant="outline" className="block sm:hidden">
+                    2025/26
+                  </Badge>
+                </div>
               )}
-              <Badge variant="outline">
-                {executiveData.academic_year}
+              <Badge variant="outline" className="hidden sm:block">
+                2025/26
               </Badge>
             </div>
           </div>
