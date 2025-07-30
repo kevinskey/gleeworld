@@ -70,54 +70,63 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
 
   return (
     <div className={`relative ${className}`}>
-      <div
-        className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/20 backdrop-blur-md border border-spelman-blue-light/30 cursor-pointer hover:bg-white/30 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md flex-shrink-0"
-        onMouseEnter={() => setShowCountdown(true)}
-        onMouseLeave={() => setShowCountdown(false)}
-        onClick={() => setShowCountdown(!showCountdown)}
-      >
-        {/* Clock Face */}
-        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/30 to-white/10">
-          {/* Hour Markers */}
-          {[...Array(12)].map((_, i) => (
+      <div className="flex items-center gap-2">
+        <div
+          className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/20 backdrop-blur-md border border-spelman-blue-light/30 cursor-pointer hover:bg-white/30 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md flex-shrink-0"
+          onMouseEnter={() => setShowCountdown(true)}
+          onMouseLeave={() => setShowCountdown(false)}
+          onClick={() => setShowCountdown(!showCountdown)}
+        >
+          {/* Clock Face */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/30 to-white/10">
+            {/* Hour Markers */}
+            {[...Array(12)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-0.5 h-1.5 bg-gray-700 rounded-full"
+                style={{
+                  top: '2px',
+                  left: '50%',
+                  transformOrigin: '50% 16px',
+                  transform: `translateX(-50%) rotate(${i * 30}deg)`,
+                }}
+              />
+            ))}
+            
+            {/* Hour Hand */}
             <div
-              key={i}
-              className="absolute w-0.5 h-1.5 bg-gray-700 rounded-full"
+              className="absolute top-1/2 left-1/2 w-0.5 bg-gray-800 rounded-full origin-bottom z-10"
               style={{
-                top: '2px',
-                left: '50%',
-                transformOrigin: '50% 16px',
-                transform: `translateX(-50%) rotate(${i * 30}deg)`,
+                height: '9px',
+                transform: `translate(-50%, -100%) rotate(${getHourAngle()}deg)`,
               }}
             />
-          ))}
-          
-          {/* Hour Hand */}
-          <div
-            className="absolute top-1/2 left-1/2 w-0.5 bg-gray-800 rounded-full origin-bottom z-10"
-            style={{
-              height: '9px',
-              transform: `translate(-50%, -100%) rotate(${getHourAngle()}deg)`,
-            }}
-          />
-          
-          {/* Minute Hand */}
-          <div
-            className="absolute top-1/2 left-1/2 w-0.5 bg-gray-700 rounded-full origin-bottom z-20"
-            style={{
-              height: '14px',
-              transform: `translate(-50%, -100%) rotate(${getMinuteAngle()}deg)`,
-            }}
-          />
-          
-          {/* Center Dot */}
-          <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-spelman-blue-dark rounded-full transform -translate-x-1/2 -translate-y-1/2 z-30" />
+            
+            {/* Minute Hand */}
+            <div
+              className="absolute top-1/2 left-1/2 w-0.5 bg-gray-700 rounded-full origin-bottom z-20"
+              style={{
+                height: '14px',
+                transform: `translate(-50%, -100%) rotate(${getMinuteAngle()}deg)`,
+              }}
+            />
+            
+            {/* Center Dot */}
+            <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-spelman-blue-dark rounded-full transform -translate-x-1/2 -translate-y-1/2 z-30" />
+          </div>
+        </div>
+        
+        {/* Countdown Text - Always visible on desktop */}
+        <div className="hidden sm:block">
+          <span className="text-xs text-gray-700 font-medium whitespace-nowrap">
+            🎄 {getCountdownText()}
+          </span>
         </div>
       </div>
       
-      {/* Countdown Tooltip */}
+      {/* Mobile Countdown Tooltip - Only on hover for mobile */}
       {showCountdown && (
-        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-[120]">
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-[120] sm:hidden">
           <Badge 
             variant="secondary" 
             className="bg-spelman-blue-dark text-white px-3 py-2 text-sm font-medium shadow-xl animate-fade-in whitespace-nowrap border border-white/20"
