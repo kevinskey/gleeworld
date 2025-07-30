@@ -67,7 +67,12 @@ export const PDFViewerWithAnnotations = ({
 
   // Load PDF
   useEffect(() => {
-    console.log('PDFViewerWithAnnotations: Effect triggered', { signedUrl, urlLoading, urlError });
+    console.log('PDFViewerWithAnnotations: Effect triggered', { 
+      signedUrl, 
+      urlLoading, 
+      urlError,
+      pdfJsVersion: pdfjsLib.version 
+    });
     
     if (!signedUrl) {
       console.log('PDFViewerWithAnnotations: No signed URL available');
@@ -77,17 +82,29 @@ export const PDFViewerWithAnnotations = ({
     const loadPDF = async () => {
       console.log('PDFViewerWithAnnotations: Starting PDF load from:', signedUrl);
       setIsLoading(true);
+      setError(null);
+      
       try {
-        const loadedPdf = await pdfjsLib.getDocument(signedUrl).promise;
+        // Try to load with PDF.js
+        console.log('PDFViewerWithAnnotations: Attempting PDF.js load...');
+        const loadingTask = pdfjsLib.getDocument({
+          url: signedUrl,
+          cMapUrl: `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/cmaps/`,
+          cMapPacked: true,
+        });
+        
+        const loadedPdf = await loadingTask.promise;
         console.log('PDFViewerWithAnnotations: PDF loaded successfully:', loadedPdf.numPages, 'pages');
         setPdf(loadedPdf);
         setTotalPages(loadedPdf.numPages);
         setCurrentPage(1);
       } catch (error) {
-        console.error('PDFViewerWithAnnotations: Error loading PDF:', error);
+        console.error('PDFViewerWithAnnotations: PDF.js failed, falling back to iframe:', error);
         console.error('PDFViewerWithAnnotations: Failed URL was:', signedUrl);
-        console.error('PDFViewerWithAnnotations: Error details:', JSON.stringify(error, null, 2));
-        setError(`Failed to load PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        
+        // Fallback to iframe viewer
+        setError('PDF.js failed, using iframe fallback');
+        setPdf(null);
       } finally {
         setIsLoading(false);
       }
@@ -635,28 +652,46 @@ export const PDFViewerWithAnnotations = ({
           
           <div className="flex justify-center p-4">
             <div className="relative bg-white shadow-lg">
-              {/* PDF Canvas */}
-              <canvas 
-                ref={canvasRef}
-                className="block"
-              />
-              
-              {/* Drawing overlay canvas */}
-              {annotationMode && (
-                <canvas 
-                  ref={drawingCanvasRef}
-                  className={`absolute inset-0 ${
-                    activeTool !== "select" ? "cursor-crosshair" : "cursor-default"
-                  }`}
-                  onMouseDown={handleStart}
-                  onMouseMove={handleMove}
-                  onMouseUp={handleEnd}
-                  onMouseLeave={() => setIsDrawing(false)}
-                  onTouchStart={handleStart}
-                  onTouchMove={handleMove}
-                  onTouchEnd={handleEnd}
-                  onTouchCancel={() => setIsDrawing(false)}
-                />
+              {pdf ? (
+                <>
+                  {/* PDF Canvas - only show if PDF is loaded */}
+                  <canvas 
+                    ref={canvasRef}
+                    className="block"
+                  />
+                  
+                  {/* Drawing overlay canvas */}
+                  {annotationMode && (
+                    <canvas 
+                      ref={drawingCanvasRef}
+                      className={`absolute inset-0 ${
+                        activeTool !== "select" ? "cursor-crosshair" : "cursor-default"
+                      }`}
+                      onMouseDown={handleStart}
+                      onMouseMove={handleMove}
+                      onMouseUp={handleEnd}
+                      onMouseLeave={() => setIsDrawing(false)}
+                      onTouchStart={handleStart}
+                      onTouchMove={handleMove}
+                      onTouchEnd={handleEnd}
+                      onTouchCancel={() => setIsDrawing(false)}
+                    />
+                  )}
+                </>
+              ) : signedUrl ? (
+                /* Fallback to iframe if PDF.js fails */
+                <div className="w-full h-[800px]">
+                  <iframe
+                    src={`https://docs.google.com/gview?url=${encodeURIComponent(signedUrl)}&embedded=true`}
+                    className="w-full h-full border-0"
+                    title="PDF Viewer"
+                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                  />
+                </div>
+              ) : (
+                <div className="p-8 text-center">
+                  <p className="text-muted-foreground">No PDF available</p>
+                </div>
               )}
             </div>
           </div>
