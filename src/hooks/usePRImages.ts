@@ -246,6 +246,7 @@ export const usePRImages = () => {
     const { data } = supabase.storage
       .from('pr-images')
       .getPublicUrl(filePath);
+    console.log('getImageUrl:', { filePath, publicUrl: data.publicUrl });
     return data.publicUrl;
   };
 
