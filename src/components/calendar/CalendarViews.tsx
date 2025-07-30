@@ -111,18 +111,18 @@ export const CalendarViews = () => {
           </CardHeader>
         <CardContent className="px-1.5 pt-2">
           <Tabs value={activeView} onValueChange={setActiveView}>
-            <TabsList className="grid w-full grid-cols-3 h-8 md:h-10">
-              <TabsTrigger value="month" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2">
+            <TabsList className="grid w-full grid-cols-3 h-8 md:h-10 gap-1">
+              <TabsTrigger value="month" className="flex items-center justify-center gap-1 text-xs md:text-sm px-1 md:px-2">
                 <Grid3X3Icon className="h-3 w-3 md:h-4 md:w-4" />
                 <span className="hidden sm:inline">Month</span>
                 <span className="sm:hidden">Mo</span>
               </TabsTrigger>
-              <TabsTrigger value="week" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2">
+              <TabsTrigger value="week" className="flex items-center justify-center gap-1 text-xs md:text-sm px-1 md:px-2">
                 <CalendarIcon className="h-3 w-3 md:h-4 md:w-4" />
                 <span className="hidden sm:inline">Week</span>
                 <span className="sm:hidden">Wk</span>
               </TabsTrigger>
-              <TabsTrigger value="list" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2">
+              <TabsTrigger value="list" className="flex items-center justify-center gap-1 text-xs md:text-sm px-1 md:px-2">
                 <ListIcon className="h-3 w-3 md:h-4 md:w-4" />
                 <span className="hidden sm:inline">List</span>
                 <span className="sm:hidden">Li</span>
