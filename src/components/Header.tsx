@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Camera, Menu, X } from "lucide-react";
+import { Camera, Menu, X, Bell } from "lucide-react";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -180,6 +180,18 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
 
           {/* Right side actions */}
           <div className="flex items-center space-x-1 sm:space-x-2">
+            {/* Notification Bell */}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="relative gap-2 text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30"
+              title="Notifications"
+            >
+              <Bell className="h-4 w-4" />
+              {/* Notification badge - uncomment when you have notification count */}
+              {/* <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span> */}
+            </Button>
+
             {/* PR Camera Quick Capture */}
             {canAccessPR && (
               <Button 
