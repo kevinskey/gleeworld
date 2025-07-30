@@ -16,7 +16,8 @@ import {
   Clock,
   Award,
   ArrowRight,
-  MapPin
+  MapPin,
+  GraduationCap
 } from "lucide-react";
 
 interface MemberDashboardProps {
@@ -49,6 +50,32 @@ export const MemberDashboard = ({ user }: MemberDashboardProps) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* SCGC Handbook Card */}
+      <Card 
+        className="cursor-pointer hover:shadow-md transition-all duration-200 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10" 
+        onClick={() => navigate('/handbook')}
+      >
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-base md:text-lg font-semibold text-primary">SCGC Handbook</CardTitle>
+          <div className="flex items-center gap-2">
+            <GraduationCap className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+            <ArrowRight className="h-4 w-4 text-primary" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="text-3xl md:text-4xl font-bold text-primary">2024</div>
+          <p className="text-sm md:text-base text-muted-foreground">Official member guide</p>
+          <div className="mt-3 p-3 bg-white/50 dark:bg-black/20 rounded-lg border border-primary/10">
+            <div className="text-sm font-medium text-foreground mb-1">Quick Access</div>
+            <div className="text-xs text-muted-foreground">
+              • Requirements & policies<br/>
+              • Traditions & history<br/>
+              • Take handbook exam
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Attendance Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
