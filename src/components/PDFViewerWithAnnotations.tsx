@@ -67,19 +67,27 @@ export const PDFViewerWithAnnotations = ({
 
   // Load PDF
   useEffect(() => {
-    if (!signedUrl) return;
+    console.log('PDFViewerWithAnnotations: Effect triggered', { signedUrl, urlLoading, urlError });
+    
+    if (!signedUrl) {
+      console.log('PDFViewerWithAnnotations: No signed URL available');
+      return;
+    }
 
     const loadPDF = async () => {
+      console.log('PDFViewerWithAnnotations: Starting PDF load from:', signedUrl);
       setIsLoading(true);
       try {
         const loadedPdf = await pdfjsLib.getDocument(signedUrl).promise;
+        console.log('PDFViewerWithAnnotations: PDF loaded successfully:', loadedPdf.numPages, 'pages');
         setPdf(loadedPdf);
         setTotalPages(loadedPdf.numPages);
         setCurrentPage(1);
-        console.log(`PDF loaded: ${loadedPdf.numPages} pages`);
       } catch (error) {
-        console.error('Error loading PDF:', error);
-        setError('Failed to load PDF');
+        console.error('PDFViewerWithAnnotations: Error loading PDF:', error);
+        console.error('PDFViewerWithAnnotations: Failed URL was:', signedUrl);
+        console.error('PDFViewerWithAnnotations: Error details:', JSON.stringify(error, null, 2));
+        setError(`Failed to load PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
       } finally {
         setIsLoading(false);
       }
