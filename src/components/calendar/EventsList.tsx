@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { CalendarIcon, MapPinIcon, ClockIcon, UsersIcon, EditIcon, ChevronRightIcon } from "lucide-react";
+import { CalendarIcon, MapPinIcon, ClockIcon, UsersIcon, EditIcon, ChevronRightIcon, Trash2Icon } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EventDetailDialog } from "./EventDetailDialog";
@@ -10,6 +11,8 @@ import { EditEventDialog } from "./EditEventDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { EventHoverCard } from "./EventHoverCard";
 import { getEventTypeColor, getStatusColor } from "@/utils/colorUtils";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface EventsListProps {
   events: GleeWorldEvent[];
@@ -18,10 +21,38 @@ interface EventsListProps {
 
 export const EventsList = ({ events, onEventUpdated }: EventsListProps) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [selectedEvent, setSelectedEvent] = useState<GleeWorldEvent | null>(null);
   const [editingEvent, setEditingEvent] = useState<GleeWorldEvent | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
 
-  // Using centralized color utilities now
+  const handleDeleteEvent = async (event: GleeWorldEvent) => {
+    setDeleteLoading(event.id);
+    try {
+      const { error } = await supabase
+        .from('gw_events')
+        .delete()
+        .eq('id', event.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Event deleted successfully!",
+      });
+
+      onEventUpdated?.();
+    } catch (err) {
+      console.error('Error deleting event:', err);
+      toast({
+        title: "Error",
+        description: "Failed to delete event",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteLoading(null);
+    }
+  };
 
   const handleEventClick = (event: GleeWorldEvent) => {
     const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
@@ -104,8 +135,41 @@ export const EventsList = ({ events, onEventUpdated }: EventsListProps) => {
                     </div>
                   </div>
 
-                  {/* Action indicator */}
-                  <div className="flex-shrink-0 self-start">
+                  {/* Action indicators */}
+                  <div className="flex-shrink-0 self-start flex items-center gap-2">
+                    {canEdit && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={(e) => e.stopPropagation()}
+                            disabled={deleteLoading === event.id}
+                          >
+                            <Trash2Icon className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Event</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{event.title}"? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteEvent(event)}
+                              disabled={deleteLoading === event.id}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              {deleteLoading === event.id ? "Deleting..." : "Delete Event"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                     <ChevronRightIcon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
                 </div>
