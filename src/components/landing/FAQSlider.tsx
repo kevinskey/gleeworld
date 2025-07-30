@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronDown, Music, MessageCircleQuestion } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Music, MessageCircleQuestion } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const faqData = [
@@ -42,13 +41,13 @@ const faqData = [
 ];
 
 export const FAQSlider = () => {
-  const [openItems, setOpenItems] = useState<string[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedQuestionId, setSelectedQuestionId] = useState<string>(faqData[0].id);
   
   // Total items = FAQ questions + 1 footer card
   const totalItems = faqData.length + 1;
 
-  // Auto-rotate questions every 7 seconds
+  // Auto-rotate questions every 7 seconds (mobile only)
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentQuestionIndex((prev) => (prev + 1) % totalItems);
@@ -57,16 +56,11 @@ export const FAQSlider = () => {
     return () => clearInterval(timer);
   }, [totalItems]);
 
-  const toggleItem = (id: string) => {
-    setOpenItems(prev => 
-      prev.includes(id) 
-        ? prev.filter(item => item !== id)
-        : [...prev, id]
-    );
+  const handleQuestionSelect = (questionId: string) => {
+    setSelectedQuestionId(questionId);
   };
 
-  const isOpen = (id: string) => openItems.includes(id);
-
+  const selectedQuestion = faqData.find(item => item.id === selectedQuestionId);
   const currentFAQ = faqData[currentQuestionIndex];
   const isFooterCard = currentQuestionIndex >= faqData.length;
 
@@ -177,56 +171,72 @@ export const FAQSlider = () => {
           </div>
         </div>
 
-        {/* Desktop: Original Accordion */}
-        <div className="hidden md:block space-y-4">
-          {faqData.map((item, index) => (
-            <div
-              key={item.id}
-              className="bg-background/60 backdrop-blur-sm border border-border rounded-xl overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md"
-            >
-              <button
-                onClick={() => toggleItem(item.id)}
-                className="w-full px-6 py-5 md:px-8 md:py-6 text-left flex items-center justify-between transition-colors duration-200 hover:bg-primary/5"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-sm md:text-base font-bold text-primary-foreground">
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                  </div>
-                  <h3 className="text-base md:text-lg lg:text-xl font-semibold text-foreground pr-4">
-                    {item.question}
-                  </h3>
-                </div>
-                <ChevronDown 
+        {/* iPad & Desktop: Two-Section Layout */}
+        <div className="hidden md:block">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+            {/* Left Section: Questions List */}
+            <div className="space-y-3">
+              <h3 className="text-lg lg:text-xl font-semibold text-foreground mb-4">Questions</h3>
+              {faqData.map((item, index) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleQuestionSelect(item.id)}
                   className={cn(
-                    "w-5 h-5 md:w-6 md:h-6 text-muted-foreground transition-transform duration-200 flex-shrink-0",
-                    isOpen(item.id) && "rotate-180"
+                    "w-full text-left bg-background/60 backdrop-blur-sm border border-border rounded-lg p-4 lg:p-5 transition-all duration-200 hover:shadow-md hover:bg-primary/5",
+                    selectedQuestionId === item.id 
+                      ? "ring-2 ring-primary ring-offset-2 bg-primary/5 border-primary/30" 
+                      : "hover:border-primary/20"
                   )}
-                />
-              </button>
-              
-              <div
-                className={cn(
-                  "overflow-hidden transition-all duration-300 ease-in-out",
-                  isOpen(item.id) ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-                )}
-              >
-                <div className="px-6 pb-6 md:px-8 md:pb-8">
-                  <div className="pl-12 md:pl-14">
-                    <p className={cn(
-                      "text-muted-foreground leading-relaxed",
-                      item.id === "audition-process" 
-                        ? "text-xs md:text-sm lg:text-base" 
-                        : "text-sm md:text-base lg:text-lg"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className={cn(
+                      "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors",
+                      selectedQuestionId === item.id 
+                        ? "bg-primary text-primary-foreground" 
+                        : "bg-primary/20 text-primary"
                     )}>
-                      {item.answer}
-                    </p>
+                      <span className="text-sm font-bold">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                    </div>
+                    <h4 className={cn(
+                      "text-sm lg:text-base font-medium leading-snug transition-colors",
+                      selectedQuestionId === item.id 
+                        ? "text-primary" 
+                        : "text-foreground"
+                    )}>
+                      {item.question}
+                    </h4>
                   </div>
-                </div>
-              </div>
+                </button>
+              ))}
             </div>
-          ))}
+
+            {/* Right Section: Selected Answer */}
+            <div className="lg:pl-4">
+              <h3 className="text-lg lg:text-xl font-semibold text-foreground mb-4">Answer</h3>
+              {selectedQuestion && (
+                <div className="bg-primary/5 backdrop-blur-sm border border-primary/20 rounded-lg p-6 lg:p-8 shadow-sm">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="flex-shrink-0 w-8 h-8 bg-primary/80 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-bold text-primary-foreground">A</span>
+                    </div>
+                    <h4 className="text-base lg:text-lg font-semibold text-foreground">
+                      {selectedQuestion.question}
+                    </h4>
+                  </div>
+                  <p className={cn(
+                    "text-muted-foreground leading-relaxed",
+                    selectedQuestion.id === "audition-process" 
+                      ? "text-sm lg:text-base" 
+                      : "text-base lg:text-lg"
+                  )}>
+                    {selectedQuestion.answer}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Footer CTA - Desktop only */}
