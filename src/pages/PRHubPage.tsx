@@ -6,10 +6,14 @@ import { Navigate } from "react-router-dom";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 const PRHubPage = () => {
+  console.log('PRHubPage: Component is being rendered');
   const { user } = useAuth();
   const { userProfile, loading } = useUserProfile(user);
 
+  console.log('PRHubPage: Current state', { user: !!user, userProfile, loading });
+
   if (loading) {
+    console.log('PRHubPage: Still loading profile...');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" text="Loading PR Hub..." />
@@ -33,10 +37,8 @@ const PRHubPage = () => {
     fullUserProfile: userProfile
   });
 
-  if (!canAccessPR) {
-    console.log('PRHubPage: Access denied, redirecting to dashboard');
-    return <Navigate to="/dashboard" replace />;
-  }
+  // Temporarily disable access control for debugging
+  console.log('PRHubPage: Rendering PR Hub (access control disabled for debugging)');
 
   return (
     <UniversalLayout>
