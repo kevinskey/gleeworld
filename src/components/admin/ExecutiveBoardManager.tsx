@@ -120,8 +120,8 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
         is_exec_board: true,
       };
 
-      // Chief of Staff gets admin privileges
-      if (selectedRole === 'chief-of-staff') {
+      // President gets admin privileges (since chief-of-staff doesn't exist in enum)
+      if (selectedRole === 'president') {
         updates.is_admin = true;
       }
 
@@ -146,24 +146,38 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
         console.warn('Profile table update failed (may not exist):', profileError);
       }
 
-      // Add/update in gw_executive_board_members table
-      const { error: boardMemberError } = await supabase
-        .from('gw_executive_board_members')
-        .upsert({
-          user_id: selectedUser.id,
-          position: selectedRole as any,
-          is_active: true,
-          academic_year: new Date().getFullYear().toString(),
-          appointed_date: new Date().toISOString().split('T')[0],
-        });
+      // Convert role name to match database enum (replace dashes with underscores and filter valid roles)
+      const validEnumRoles = [
+        'president', 'secretary', 'treasurer', 'tour_manager', 'wardrobe_manager', 
+        'librarian', 'historian', 'pr_coordinator', 'chaplain', 'data_analyst', 
+        'assistant_chaplain', 'student_conductor', 'section_leader_s1', 'section_leader_s2', 
+        'section_leader_a1', 'section_leader_a2'
+      ];
+      
+      const dbRoleName = selectedRole.replace(/-/g, '_');
+      
+      // Add/update in gw_executive_board_members table only if role exists in enum
+      if (validEnumRoles.includes(dbRoleName)) {
+        const { error: boardMemberError } = await supabase
+          .from('gw_executive_board_members')
+          .upsert({
+            user_id: selectedUser.id,
+            position: dbRoleName as any,
+            is_active: true,
+            academic_year: new Date().getFullYear().toString(),
+            appointed_date: new Date().toISOString().split('T')[0],
+          });
 
-      if (boardMemberError) {
-        console.warn('Board member table update failed:', boardMemberError);
+        if (boardMemberError) {
+          console.warn('Board member table update failed:', boardMemberError);
+        }
+      } else {
+        console.warn(`Role ${selectedRole} (${dbRoleName}) not found in database enum, skipping board member table update`);
       }
 
       toast({
         title: "Role Assigned",
-        description: `${selectedUser.full_name || selectedUser.email} has been assigned as ${ROLE_DISPLAY_NAMES[selectedRole]}${selectedRole === 'chief-of-staff' ? ' with admin privileges' : ''}`,
+        description: `${selectedUser.full_name || selectedUser.email} has been assigned as ${ROLE_DISPLAY_NAMES[selectedRole]}${selectedRole === 'president' ? ' with admin privileges' : ''}`,
       });
 
       // Reset form
@@ -199,7 +213,7 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
         .eq('user_id', userId)
         .single();
 
-      const wasChiefOfStaff = currentProfile?.exec_board_role === 'chief-of-staff';
+      const wasPresident = currentProfile?.exec_board_role === 'president';
       
       // Update gw_profiles table
       const updateData: any = {
@@ -207,8 +221,8 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
         is_exec_board: false,
       };
 
-      // Remove admin privileges if they were Chief of Staff
-      if (wasChiefOfStaff) {
+      // Remove admin privileges if they were President
+      if (wasPresident) {
         updateData.is_admin = false;
       }
 
@@ -435,7 +449,7 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
                       <div className="flex items-center gap-2">
                         {getRoleIcon(value)}
                         <span>{label}</span>
-                        {value === 'chief-of-staff' && <Badge variant="outline" className="text-xs">Admin Access</Badge>}
+                        {value === 'president' && <Badge variant="outline" className="text-xs">Admin Access</Badge>}
                         {isOccupied && <Badge variant="secondary">Occupied</Badge>}
                       </div>
                     </SelectItem>
