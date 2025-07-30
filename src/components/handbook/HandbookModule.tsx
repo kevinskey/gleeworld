@@ -931,6 +931,58 @@ Academic excellence at Spelman College depends on a community of honesty and res
 - Violations of the **Academic Integrity Policy** will result in sanctions as outlined in the College Bulletin`
     },
     {
+      id: "handbook-exam",
+      title: "📘 Final Step: Handbook Comprehension Exam",
+      content: `Before signing the official Glee Club Handbook Contract, all members must complete a 15-question comprehension test.
+
+---
+
+### 🧠 Test Overview
+
+- The test is **AI-generated** from the exact content of the 2023–2024 SCGC Handbook.
+- Members must earn a **100% score** to proceed to the signature page.
+- The test may include multiple-choice, true/false, and short-answer formats.
+- Each question pulls from different sections (e.g., Dress Code, Attendance Policy, Exec Roles, Traditions).
+
+---
+
+### ✅ Instructions
+
+1. Click **"Start Handbook Exam"** below.
+2. Complete the 15-question assessment.
+3. Once you score 100%, you'll be automatically redirected to the final **Contract Agreement** section.
+4. If your score is below 100%, you will be prompted to review the missed sections and retake the exam.
+
+---
+
+## 🔒 Access Control (for Lovable to implement)
+
+- **Test access is restricted to authenticated current Members and Execs.**
+- The **Historian** has visibility over test analytics, completion status, and can generate reports.
+- The exam module should live under the **Historian Dashboard Hub** with its own tile or tab.
+
+---
+
+## 🧩 Feature Requirements (for Dev Team)
+
+- **Module Name:** "Handbook Exam"
+- **Location:** Historian Dashboard Hub
+- **Connected To:** Handbook Module → Unlocks Contract Agreement section upon pass
+- **Scoring Logic:** 15/15 required for completion
+- **AI Engine:** Use Lovable's GPT-4 API or custom fine-tuned model based on 2023–2024 SCGC Handbook
+- **Storage:** Save results to member profile (including date/time, attempt count, and status)
+- **Reset Option:** Allow up to 3 attempts before requiring manual unlock by an Admin or Historian
+
+---
+
+## 💬 Message to Member (on exam completion screen)
+
+> 🎉 Congratulations! You passed the SCGC Handbook Exam with 100%.
+> You may now continue to the final step and sign your official Glee Club Contract.
+
+[ → Proceed to Contract Agreement ]`
+    },
+    {
       id: "contract-agreement",
       title: "Contract Agreement",
       content: "Contract agreement content will be added here from the PDF handbook..."
