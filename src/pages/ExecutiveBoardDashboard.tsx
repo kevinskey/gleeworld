@@ -313,12 +313,13 @@ export const ExecutiveBoardDashboard = () => {
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-4xl md:text-7xl lg:text-8xl xl:text-9xl font-bebas font-bold tracking-wide text-foreground md:text-white md:drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">
-              Executive Board Hub
+            <h1 className="text-2xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-bebas font-bold tracking-wide text-foreground md:text-white md:drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">
+              <span className="block sm:hidden">Exec Hub</span>
+              <span className="hidden sm:block">Executive Board Hub</span>
             </h1>
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
               {isAdmin ? (
                 <Select value={selectedPosition} onValueChange={(value: ExecutivePosition) => setSelectedPosition(value)}>
                   <SelectTrigger className="w-[200px]">
@@ -422,12 +423,15 @@ export const ExecutiveBoardDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 lg:grid-cols-9"
-            style={{ gridTemplateColumns: selectedPosition === 'tour_manager' ? 'repeat(9, 1fr)' : 'repeat(8, 1fr)' }}
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-9 overflow-x-auto"
+            style={{ 
+              gridTemplateColumns: window.innerWidth < 640 ? 'repeat(3, 1fr)' : 
+                                 selectedPosition === 'tour_manager' ? 'repeat(9, 1fr)' : 'repeat(8, 1fr)' 
+            }}
           >
-            <TabsTrigger value="dashboard" className="text-xs">
-              <Users className="h-4 w-4 mr-1" />
-              Dashboard
+            <TabsTrigger value="dashboard" className="text-xs px-1 sm:px-3">
+              <Users className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Dashboard</span>
             </TabsTrigger>
             <TabsTrigger value="calendar" className="text-xs">
               <Calendar className="h-4 w-4 mr-1" />
