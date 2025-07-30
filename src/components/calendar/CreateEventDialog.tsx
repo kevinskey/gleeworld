@@ -464,10 +464,10 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1 text-xs w-full border-primary/30 hover:bg-primary/10 px-2">
-          <Plus className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-          <span className="truncate hidden sm:inline">Add Event</span>
-          <span className="truncate sm:hidden">Add</span>
+        <Button variant="outline" size="sm" className="gap-1 text-xs w-full h-12 border-primary/30 hover:bg-primary/10 px-2 flex flex-col items-center justify-center">
+          <Plus className="h-4 w-4 flex-shrink-0" />
+          <span className="text-[10px] leading-tight hidden sm:inline">Add Event</span>
+          <span className="text-[10px] leading-tight sm:hidden">Add</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto">

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { CalendarIcon, ListIcon, Grid3X3Icon, Plus } from "lucide-react";
 import { MonthlyCalendar } from "./MonthlyCalendar";
 import { EventsList } from "./EventsList";
@@ -55,31 +56,59 @@ export const CalendarViews = () => {
   }
 
   return (
-    <div className="space-y-4">
-      <Card className="glass-dashboard-card">
-        <CardHeader className="p-0">
-          {/* Member Controls */}
-          <div className="bg-muted/30 rounded-lg border border-border/50">
-            <div className="flex items-center justify-between gap-2 p-2">
-              <h3 className="text-xs sm:text-sm font-medium text-muted-foreground">Member Controls</h3>
-            </div>
-            <div className="grid grid-cols-3 gap-1 p-2 w-full">
-              <div className="min-w-0">
-                <AppointmentScheduler />
+    <TooltipProvider>
+      <div className="space-y-4">
+        <Card className="glass-dashboard-card">
+          <CardHeader className="p-0">
+            {/* Member Controls */}
+            <div className="bg-muted/30 rounded-lg border border-border/50">
+              <div className="flex items-center justify-between gap-2 p-2">
+                <h3 className="text-xs sm:text-sm font-medium text-muted-foreground">Member Controls</h3>
               </div>
-              {user && (
-                <div className="min-w-0">
-                  <CreateEventDialog onEventCreated={fetchEvents} />
+              <div className="grid grid-cols-3 gap-2 p-3 w-full">
+                <div className="flex justify-center">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="w-full max-w-[120px]">
+                        <AppointmentScheduler />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Schedule a Glee Club audition appointment</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
-              )}
-              {isExecMember && (
-                <div className="min-w-0">
-                  <CallMeetingDialog onMeetingCreated={fetchEvents} />
-                </div>
-              )}
+                {user && (
+                  <div className="flex justify-center">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="w-full max-w-[120px]">
+                          <CreateEventDialog onEventCreated={fetchEvents} />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Create a new event for the calendar</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                )}
+                {isExecMember && (
+                  <div className="flex justify-center">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="w-full max-w-[120px]">
+                          <CallMeetingDialog onMeetingCreated={fetchEvents} />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Call an executive board meeting</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </CardHeader>
+          </CardHeader>
         <CardContent className="p-0 pt-2">
           <Tabs value={activeView} onValueChange={setActiveView}>
             <TabsList className="grid w-full grid-cols-3 h-8 md:h-10">
@@ -152,5 +181,6 @@ export const CalendarViews = () => {
         <CalendarExport />
       </div>
     </div>
+    </TooltipProvider>
   );
 };
