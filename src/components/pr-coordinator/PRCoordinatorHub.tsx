@@ -26,6 +26,12 @@ export const PRCoordinatorHub = () => {
     refreshTags,
   } = usePRImages();
 
+  console.log('PRCoordinatorHub: Component rendered with:', { 
+    imagesCount: images.length, 
+    loading, 
+    images: images.slice(0, 2) // Show first 2 images for debugging
+  });
+
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [selectedImage, setSelectedImage] = useState<PRImage | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');

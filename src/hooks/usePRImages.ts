@@ -42,6 +42,7 @@ export const usePRImages = () => {
 
   const fetchImages = async () => {
     try {
+      console.log('usePRImages: Starting fetchImages...');
       setLoading(true);
       const { data, error } = await supabase
         .from('pr_images')
@@ -55,7 +56,12 @@ export const usePRImages = () => {
         `)
         .order('uploaded_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('usePRImages: Raw query result:', { data, error });
+
+      if (error) {
+        console.error('usePRImages: Query error:', error);
+        throw error;
+      }
 
       const processedImages = data?.map(image => ({
         ...image,
@@ -63,6 +69,9 @@ export const usePRImages = () => {
         uploader: undefined,
         tags: image.tags?.map((t: any) => t.tag) || []
       })) || [];
+
+      console.log('usePRImages: Processed images:', processedImages);
+      console.log('usePRImages: Total images found:', processedImages.length);
 
       setImages(processedImages);
     } catch (error) {
