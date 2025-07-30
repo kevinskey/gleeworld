@@ -82,6 +82,8 @@ export const PRCoordinatorHub = () => {
           <TaskNotifications />
           <Button onClick={() => {
             console.log('PR Quick Capture button clicked');
+            console.log('Current showQuickCapture state:', showQuickCapture);
+            console.log('Setting showQuickCapture to true');
             setShowQuickCapture(true);
           }} className="gap-2">
             <Camera className="h-4 w-4" />
