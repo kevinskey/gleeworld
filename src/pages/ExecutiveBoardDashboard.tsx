@@ -301,11 +301,11 @@ export const ExecutiveBoardDashboard = () => {
           /* Desktop Navigation Layout */
           <div className="flex items-center justify-end">
             {/* View Mode Toggle - Desktop */}
-            <div className="flex items-center gap-2 p-1 bg-white/10 rounded-lg border border-white/20">
+            <div className="flex items-center gap-2 p-1 bg-white/90 backdrop-blur-sm rounded-lg border border-white/50 shadow-lg">
               <Button
                 variant="default"
                 size="sm"
-                className="flex items-center gap-2 text-sm px-3 h-9 bg-white text-black hover:bg-white/90"
+                className="flex items-center gap-2 text-sm px-3 h-9 bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 <Crown className="h-4 w-4" />
                 Exec Board View
@@ -314,7 +314,7 @@ export const ExecutiveBoardDashboard = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 text-sm px-3 h-9 text-white hover:bg-white/20"
+                className="flex items-center gap-2 text-sm px-3 h-9 text-gray-700 hover:bg-gray-100"
               >
                 <Users className="h-4 w-4" />
                 Member View
