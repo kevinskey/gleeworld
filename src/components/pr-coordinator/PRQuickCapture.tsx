@@ -31,7 +31,27 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const { startCamera, capturePhoto, stopCamera, isCameraReady } = useCameraImport();
+  const { 
+    startCamera, 
+    capturePhoto, 
+    stopCamera, 
+    isCameraReady,
+    videoRef,
+    canvasRef,
+    isCapturing
+  } = useCameraImport({
+    onSuccess: (file) => {
+      setCapturedImage(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    },
+    onError: (error) => {
+      toast({
+        title: "Camera Error",
+        description: error,
+        variant: "destructive",
+      });
+    }
+  });
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -120,11 +140,23 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
               />
 
               {isCameraReady && (
-                <div className="text-center">
-                  <div className="bg-muted p-8 rounded-lg">
-                    <Camera className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">Camera is ready</p>
-                    <Button onClick={capturePhoto} className="mt-4">
+                <div className="space-y-4">
+                  <div className="relative bg-black rounded-lg overflow-hidden">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-64 object-cover"
+                    />
+                    <canvas
+                      ref={canvasRef}
+                      className="hidden"
+                    />
+                  </div>
+                  <div className="text-center">
+                    <Button onClick={capturePhoto} size="lg" className="gap-2">
+                      <Camera className="h-4 w-4" />
                       Capture Photo
                     </Button>
                   </div>
