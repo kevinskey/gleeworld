@@ -9792,6 +9792,10 @@ export type Database = {
           created_at: string
         }[]
       }
+      get_avatar_url: {
+        Args: { user_id_param: string }
+        Returns: string
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
