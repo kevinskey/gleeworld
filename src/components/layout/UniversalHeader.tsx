@@ -47,7 +47,7 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
   return (
     <header className="bg-gradient-to-r from-white/10 via-white/5 to-white/10 backdrop-blur-lg border-b border-white/30 sticky top-0 z-[100] shadow-xl">
       <div className="container mx-auto px-2 sm:px-4 lg:px-6">
-        <div className="flex items-center justify-between min-h-10 sm:min-h-14 py-1 sm:py-2">
+        <div className="flex items-center justify-between min-h-10 sm:min-h-14 py-4 sm:py-5">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 flex-1">
             <EnhancedTooltip content="Go to GleeWorld Home">
