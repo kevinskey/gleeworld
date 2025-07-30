@@ -115,7 +115,35 @@ export const AnnotationCanvas = ({
 
   const loadBackgroundImage = async (canvas: any, imageUrl: string, fabricModule: any) => {
     try {
-      const img = await fabricModule.FabricImage.fromURL(imageUrl);
+      let finalImageUrl = imageUrl;
+      
+      // Check if the URL is a PDF and convert it to an image
+      if (imageUrl.toLowerCase().includes('.pdf') || imageUrl.includes('application/pdf')) {
+        // For PDF files, we'll create a simple message instead of trying to load
+        // In a production app, you'd use PDF.js to convert PDF to image
+        console.log('PDF detected, skipping image load for now');
+        canvas.backgroundColor = "#f8f9fa";
+        canvas.renderAll();
+        
+        // Add a text message explaining the PDF limitation
+        const text = new fabricModule.Text('PDF background not yet supported\nUse the drawing tools to annotate', {
+          left: CANVAS_WIDTH / 2,
+          top: CANVAS_HEIGHT / 2,
+          fontSize: 24,
+          textAlign: 'center',
+          originX: 'center',
+          originY: 'center',
+          fill: '#666666',
+          selectable: false,
+          evented: false
+        });
+        
+        canvas.add(text);
+        canvas.renderAll();
+        return;
+      }
+      
+      const img = await fabricModule.FabricImage.fromURL(finalImageUrl);
       
       // Scale image to fit canvas while maintaining aspect ratio
       const scaleX = CANVAS_WIDTH / img.width;
@@ -137,6 +165,10 @@ export const AnnotationCanvas = ({
     } catch (error) {
       console.error('Error loading background image:', error);
       toast.error('Failed to load sheet music image');
+      
+      // Fallback: show canvas without background
+      canvas.backgroundColor = "#f8f9fa";
+      canvas.renderAll();
     }
   };
 
@@ -402,12 +434,22 @@ export const AnnotationCanvas = ({
       {/* Canvas */}
       <Card>
         <CardContent className="p-4">
-          <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+          <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
             <canvas 
               ref={canvasRef} 
-              className="max-w-full"
-              style={{ display: 'block' }}
+              className="max-w-full h-auto block border-0"
+              style={{ 
+                display: 'block',
+                maxWidth: '100%',
+                height: 'auto'
+              }}
             />
+          </div>
+          <div className="mt-2 text-xs text-gray-500 text-center">
+            {backgroundImageUrl?.includes('.pdf') ? 
+              'PDF background detected - Use drawing tools to annotate' : 
+              'Use the tools above to annotate the sheet music'
+            }
           </div>
         </CardContent>
       </Card>
