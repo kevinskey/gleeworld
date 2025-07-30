@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -57,7 +58,7 @@ interface ExtendedSheetMusic {
 }
 
 export const LibraryManagement = () => {
-  const { user } = useAuth();
+  const { profile } = useUserRole();
   const { toast } = useToast();
   
   const [filters, setFilters] = useState<FilterState>({
@@ -162,47 +163,52 @@ export const LibraryManagement = () => {
   });
 
 
+  // Check if user can access import tools (admins and librarians only)
+  const canAccessImportTools = profile?.role && ['admin', 'super-admin', 'librarian'].includes(profile.role);
+
   return (
     <div className="container mx-auto p-2 sm:p-6 space-y-3 sm:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:gap-4">
-        <div>
-          <h1 className="text-xl sm:text-3xl font-bold">Library Management</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage both digital and physical sheet music library
-          </p>
+      {/* Header and Import Tools - Only for admins and librarians */}
+      {canAccessImportTools && (
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <div>
+            <h1 className="text-xl sm:text-3xl font-bold">Library Management</h1>
+            <p className="text-sm text-muted-foreground">
+              Manage both digital and physical sheet music library
+            </p>
+          </div>
+          
+          {/* Mobile: Stack buttons vertically, Desktop: horizontal */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
+            <Button 
+              onClick={() => setCameraDialog(true)} 
+              className="flex items-center justify-center gap-2 w-full sm:w-auto"
+            >
+              <Camera className="h-4 w-4" />
+              <span className="text-sm">Camera Import</span>
+            </Button>
+            <Button 
+              onClick={() => setCsvDialog(true)} 
+              variant="outline" 
+              className="flex items-center justify-center gap-2 w-full sm:w-auto"
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              <span className="text-sm">CSV Import</span>
+            </Button>
+            <Button 
+              onClick={() => setUploadDialog(true)} 
+              variant="outline" 
+              className="flex items-center justify-center gap-2 w-full sm:w-auto"
+            >
+              <Upload className="h-4 w-4" />
+              <span className="text-sm">Upload Files</span>
+            </Button>
+          </div>
         </div>
-        
-        {/* Mobile: Stack buttons vertically, Desktop: horizontal */}
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
-          <Button 
-            onClick={() => setCameraDialog(true)} 
-            className="flex items-center justify-center gap-2 w-full sm:w-auto"
-          >
-            <Camera className="h-4 w-4" />
-            <span className="text-sm">Camera Import</span>
-          </Button>
-          <Button 
-            onClick={() => setCsvDialog(true)} 
-            variant="outline" 
-            className="flex items-center justify-center gap-2 w-full sm:w-auto"
-          >
-            <FileSpreadsheet className="h-4 w-4" />
-            <span className="text-sm">CSV Import</span>
-          </Button>
-          <Button 
-            onClick={() => setUploadDialog(true)} 
-            variant="outline" 
-            className="flex items-center justify-center gap-2 w-full sm:w-auto"
-          >
-            <Upload className="h-4 w-4" />
-            <span className="text-sm">Upload Files</span>
-          </Button>
-        </div>
-      </div>
+      )}
 
-      {/* Stats Cards */}
-      <LibraryStats stats={stats} loading={loading} />
+      {/* Stats Cards - Only for admins and librarians */}
+      {canAccessImportTools && <LibraryStats stats={stats} loading={loading} />}
 
       {/* Search and Filters */}
       <StreamlinedFilterBar 
@@ -270,24 +276,28 @@ export const LibraryManagement = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Dialogs */}
-      <UploadDialog
-        open={uploadDialog}
-        onOpenChange={setUploadDialog}
-        activeTab="sheet-music"
-      />
-      
-      <CameraImportDialog
-        open={cameraDialog}
-        onOpenChange={setCameraDialog}
-        onSuccess={fetchSheetMusic}
-      />
-      
-      <CSVImportDialog
-        open={csvDialog}
-        onOpenChange={setCsvDialog}
-        onSuccess={fetchSheetMusic}
-      />
+      {/* Dialogs - Only for admins and librarians */}
+      {canAccessImportTools && (
+        <>
+          <UploadDialog
+            open={uploadDialog}
+            onOpenChange={setUploadDialog}
+            activeTab="sheet-music"
+          />
+          
+          <CameraImportDialog
+            open={cameraDialog}
+            onOpenChange={setCameraDialog}
+            onSuccess={fetchSheetMusic}
+          />
+          
+          <CSVImportDialog
+            open={csvDialog}
+            onOpenChange={setCsvDialog}
+            onSuccess={fetchSheetMusic}
+          />
+        </>
+      )}
     </div>
   );
 };
