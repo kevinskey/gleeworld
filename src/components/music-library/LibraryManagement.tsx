@@ -179,28 +179,40 @@ export const LibraryManagement = () => {
 
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-2 sm:p-6 space-y-3 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Library Management</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-3xl font-bold">Library Management</h1>
+          <p className="text-sm text-muted-foreground">
             Manage both digital and physical sheet music library
           </p>
         </div>
         
-        <div className="flex gap-2">
-          <Button onClick={() => setCameraDialog(true)} className="flex items-center gap-2">
+        {/* Mobile: Stack buttons vertically, Desktop: horizontal */}
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
+          <Button 
+            onClick={() => setCameraDialog(true)} 
+            className="flex items-center justify-center gap-2 w-full sm:w-auto"
+          >
             <Camera className="h-4 w-4" />
-            Camera Import
+            <span className="text-sm">Camera Import</span>
           </Button>
-          <Button onClick={() => setCsvDialog(true)} variant="outline" className="flex items-center gap-2">
+          <Button 
+            onClick={() => setCsvDialog(true)} 
+            variant="outline" 
+            className="flex items-center justify-center gap-2 w-full sm:w-auto"
+          >
             <FileSpreadsheet className="h-4 w-4" />
-            CSV Import
+            <span className="text-sm">CSV Import</span>
           </Button>
-          <Button onClick={() => setUploadDialog(true)} variant="outline" className="flex items-center gap-2">
+          <Button 
+            onClick={() => setUploadDialog(true)} 
+            variant="outline" 
+            className="flex items-center justify-center gap-2 w-full sm:w-auto"
+          >
             <Upload className="h-4 w-4" />
-            Upload Files
+            <span className="text-sm">Upload Files</span>
           </Button>
         </div>
       </div>
@@ -218,11 +230,23 @@ export const LibraryManagement = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="all">All Items</TabsTrigger>
-          <TabsTrigger value="digital">Digital Only</TabsTrigger>
-          <TabsTrigger value="physical">Physical Copies</TabsTrigger>
-          <TabsTrigger value="inventory">Needs Inventory</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 h-auto p-1">
+          <TabsTrigger value="all" className="text-xs sm:text-sm px-2 py-2">
+            <span className="hidden sm:inline">All Items</span>
+            <span className="sm:hidden">All</span>
+          </TabsTrigger>
+          <TabsTrigger value="digital" className="text-xs sm:text-sm px-2 py-2">
+            <span className="hidden sm:inline">Digital Only</span>
+            <span className="sm:hidden">Digital</span>
+          </TabsTrigger>
+          <TabsTrigger value="physical" className="text-xs sm:text-sm px-2 py-2">
+            <span className="hidden sm:inline">Physical Copies</span>
+            <span className="sm:hidden">Physical</span>
+          </TabsTrigger>
+          <TabsTrigger value="inventory" className="text-xs sm:text-sm px-2 py-2">
+            <span className="hidden sm:inline">Needs Inventory</span>
+            <span className="sm:hidden">Inventory</span>
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="all" className="space-y-4">
