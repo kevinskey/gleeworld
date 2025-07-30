@@ -341,13 +341,17 @@ export const SheetMusicLibrary = ({
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleView(item);
-                    if (item.pdf_url && onPdfSelect) {
-                      onPdfSelect(item.pdf_url, item.title);
-                    }
-                  }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log('Eye button clicked for item:', item.title, 'PDF URL:', item.pdf_url);
+                  handleView(item);
+                  if (item.pdf_url && onPdfSelect) {
+                    console.log('Calling onPdfSelect with:', item.pdf_url, item.title);
+                    onPdfSelect(item.pdf_url, item.title);
+                  } else {
+                    console.log('No PDF URL or onPdfSelect callback available');
+                  }
+                }}
                 >
                   <Eye className="h-3 w-3" />
                 </Button>
@@ -450,9 +454,13 @@ export const SheetMusicLibrary = ({
                         variant="outline" 
                         onClick={(e) => {
                           e.stopPropagation();
+                          console.log('Eye button clicked (list view) for item:', item.title, 'PDF URL:', item.pdf_url);
                           handleView(item);
                           if (item.pdf_url && onPdfSelect) {
+                            console.log('Calling onPdfSelect (list view) with:', item.pdf_url, item.title);
                             onPdfSelect(item.pdf_url, item.title);
+                          } else {
+                            console.log('No PDF URL or onPdfSelect callback available (list view)');
                           }
                         }}
                       >

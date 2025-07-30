@@ -17,6 +17,7 @@ export const MusicLibrary = () => {
   const [activeSetlistPlayer, setActiveSetlistPlayer] = useState<string | null>(null);
 
   const handlePdfSelect = (pdfUrl: string, title: string) => {
+    console.log('MusicLibrary: handlePdfSelect called with URL:', pdfUrl, 'Title:', title);
     setSelectedPdf({ url: pdfUrl, title });
   };
 

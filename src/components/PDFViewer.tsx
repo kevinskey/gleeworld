@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PDFViewerProps {
@@ -16,34 +16,53 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  console.log('PDFViewer: Attempting to load PDF:', pdfUrl);
+
   const handleLoad = () => {
-    setIsLoading(false);
-    setError(null);
+  console.log('PDFViewer: PDF loaded successfully');
+  setIsLoading(false);
+  setError(null);
+};
+
+const handleError = () => {
+  console.error('PDFViewer: Failed to load PDF:', pdfUrl);
+  setIsLoading(false);
+  setError('Failed to load PDF. The file might be corrupted or inaccessible.');
   };
 
-  const handleError = () => {
-    setIsLoading(false);
-    setError('Failed to load PDF');
-  };
-
-  if (error) {
-    return (
-      <Card className={cn("w-full max-w-4xl mx-auto", className)}>
-        <CardContent className="p-8">
-          <div className="flex flex-col items-center justify-center text-center space-y-4">
-            <AlertCircle className="h-12 w-12 text-destructive" />
-            <div>
-              <h3 className="text-lg font-semibold text-destructive">Failed to Load PDF</h3>
-              <p className="text-sm text-muted-foreground mt-1">{error}</p>
-            </div>
-            <Button onClick={() => window.location.reload()} variant="outline">
+if (error) {
+  return (
+    <Card className={cn("w-full max-w-4xl mx-auto", className)}>
+      <CardContent className="p-8">
+        <div className="flex flex-col items-center justify-center text-center space-y-4">
+          <AlertCircle className="h-12 w-12 text-destructive" />
+          <div>
+            <h3 className="text-lg font-semibold text-destructive">Failed to Load PDF</h3>
+            <p className="text-sm text-muted-foreground mt-1">{error}</p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => window.open(pdfUrl, '_blank')}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Open in New Tab
+            </Button>
+            <Button 
+              onClick={() => {
+                setError(null);
+                setIsLoading(true);
+              }} 
+              variant="outline"
+            >
               Try Again
             </Button>
           </div>
-        </CardContent>
-      </Card>
-    );
-  }
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
   return (
     <Card className={cn("w-full max-w-6xl mx-auto", className)}>
