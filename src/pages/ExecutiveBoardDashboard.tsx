@@ -268,7 +268,7 @@ export const ExecutiveBoardDashboard = () => {
       {/* Content overlay */}
       <div className="relative z-10">
         <UniversalLayout className="bg-transparent">
-          <div className="space-y-6 md:px-8 lg:px-12 xl:px-16">
+          <div className="space-y-6 p-4 md:px-8 lg:px-12 xl:px-16 max-w-full overflow-hidden">
         {/* Mobile-First Navigation Layout */}
         {isMobile ? (
           <div className="space-y-4">
