@@ -75,9 +75,11 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                 </div>
               </Link>
             </EnhancedTooltip>
-            
-            {/* Clock - Next to Glee World text - hidden on mobile */}
-            <HeaderClock className="hidden sm:block ml-1 sm:ml-2" />
+          </div>
+
+          {/* Center area with clock */}
+          <div className="hidden sm:flex items-center justify-center flex-1">
+            <HeaderClock className="text-sm scale-75" />
           </div>
 
           {/* Right side actions */}
