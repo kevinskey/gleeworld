@@ -662,7 +662,118 @@ Alabama, Arkansas, Arizona, California, Colorado, Connecticut, D.C., Delaware, F
     {
       id: "traditions",
       title: "Traditions",
-      content: "Traditions content will be added here from the PDF handbook..."
+      content: `## Glee Club Traditions
+
+The Spelman College Glee Club, one of the oldest organizations on campus, maintains rich traditions that foster sisterhood, unity, and musical excellence. These traditions are meant to uplift—not to intimidate—and must never violate Glee Club or College policies.
+
+---
+
+### 🎀 General Traditions
+
+- **Sister Social**
+  An opportunity for incoming first-years to showcase their voices and officially bond with the ensemble. A signature SCGC experience.
+
+- **Brother/Sister Social**
+  First-year SCGC members are paired with first-year MCGC members as "Glee Siblings."
+
+- **Acknowledging Madame President**
+  Whenever the President is introduced or introduces herself, the Glee Club stands and claps in acknowledgment.
+
+- **Morehouse Partnership**
+  Collaboration with the Morehouse College Glee Club is central. First-year SCGC members are assigned an MCGC sibling.
+
+---
+
+### 🎵 Song Traditions
+
+- **Thank You Song**
+  Sung after a tour concert to honor and thank the host.
+
+  > "Thank you all for what you've done
+  > To make our stay a very special one
+  > So, thank you
+  > God bless and keep you every day"
+
+- **Birthday Song**
+  Each month, the Glee Club performs a special rendition of "Happy Birthday."
+
+- **Bus Driver Song**
+  Sung to thank the bus driver after off-campus performances.
+
+  > "Thank you Mr./Miss Bus Driver
+  > Bus driver, bus driver
+  > Thank you Mr./Miss Bus Driver
+  > Thanks for the ride"
+
+- **Spelman Hymn**
+  *Words and Music by Eddye Money Shivery, C '34*
+
+- **"A Choice to Change the World"**
+  *Written by Dr. Kevin Johnson and Sarah Stephens, C '07*
+
+- **"We Are Christmas"**
+  *Written by Dr. Kevin Johnson and Sarah Stephens, C '07*
+
+---
+
+### 🎄 Christmas Carol Traditions
+
+- **Senior Tributes**
+  On the final night of the Christmas Carol Concert, underclass members deliver personal tributes to each senior backstage.
+
+- **Amen Run**
+  At the end of each Christmas Carol Concert, after singing "Amen," the Glee Club exits swiftly from Sisters Chapel or Kings Chapel.
+
+- **Christmas Carol Staples**
+  - Hail to the Lord's Anointed
+  - Behold the Star
+  - We Are Christmas
+  - The First Noel
+  - Joy to the World
+  - Hark! The Herald Angels Sing
+  - Go Tell It on the Mountain
+
+- **Performance Wardrobe**
+  Formal black dress, pearl necklace, teardrop earrings, and red lipstick.
+
+---
+
+### 🚌 Tour Traditions
+
+- **Buckets of Love**
+  Special acknowledgments shared by members after performances while riding the tour bus.
+
+- **Quick Introductions**
+  At the end of each concert, each member introduces herself:
+
+  > "Greetings/Hello, my name is [First & Last Name],
+  > I am a [Classification & Major],
+  > From [City, State]"
+
+---
+
+### 🧑🏽‍🎓 First-Year Traditions
+
+A "first-year" member is any student in her **first two semesters** in SCGC, regardless of Spelman class year.
+
+#### Responsibilities Include:
+
+- Mandatory membership on the **Set-Up Crew**
+- **Early call times** for events (assigned by Set-Up Crew Manager or First-Year Ambassador)
+- Sitting in the **rear of the bus** while traveling
+- Receiving items **last** (food, t-shirts, music, etc.)
+
+---
+
+### ⚙️ Set-Up Crew
+
+Comprised of all first-year members, the Set-Up Crew is responsible for:
+
+- Moving and organizing equipment, instruments, and chairs
+- Following the directions of the **Set-Up Crew Manager**, **Student Conductor**, or **Stage Manager**
+
+**Note:**
+On tour, a "first-year touring member" refers to anyone traveling for the **first time**, regardless of semesters in SCGC.`
     },
     {
       id: "course-syllabus",
