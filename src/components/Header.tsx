@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Camera, Menu, X, Bell } from "lucide-react";
+import { QuickCameraCapture } from "@/components/camera/QuickCameraCapture";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -203,14 +204,9 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => {
-                console.log('Header camera button clicked - navigating to PR Hub');
-                console.log('Current user:', user);
-                console.log('Navigation function available:', typeof navigate);
-                navigate('/dashboard/pr-hub');
-              }}
+              onClick={() => setShowPRCapture(true)}
               className="gap-1 sm:gap-2 text-primary hover:bg-primary/10 border-2 border-primary/50 bg-primary/5 h-8 sm:h-10 px-2 sm:px-3 lg:px-4"
-              title="PR Quick Capture - Click to access camera"
+              title="Quick Camera Capture"
             >
               <Camera className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline text-xs sm:text-sm">📸 Camera</span>
@@ -402,6 +398,17 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
           </div>
         </div>
       </div>
+      
+      {/* Quick Camera Capture Modal */}
+      {showPRCapture && (
+        <QuickCameraCapture
+          onClose={() => setShowPRCapture(false)}
+          onCapture={(imageUrl) => {
+            console.log('Photo captured:', imageUrl);
+            setShowPRCapture(false);
+          }}
+        />
+      )}
     </header>
   );
 };
