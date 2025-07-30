@@ -99,6 +99,10 @@ export const AuditionLogs = () => {
     }
   };
 
+  const totalSlots = allTimeSlots.length;
+  const scheduledSlots = allTimeSlots.filter(slot => slot.isScheduled).length;
+  const availableSlots = totalSlots - scheduledSlots;
+
   const openDeleteConfirm = (logId: string) => {
     setLogToDelete(logId);
     setDeleteConfirmOpen(true);
@@ -136,12 +140,19 @@ export const AuditionLogs = () => {
               <Music className="h-5 w-5" />
               Audition Logs
             </CardTitle>
-            {logs.length === 0 && (
-              <Button onClick={addSampleData} variant="outline" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Sample Data
-              </Button>
-            )}
+            <div className="flex items-center gap-4">
+              <div className="text-sm">
+                <span className="font-medium">{totalSlots}</span> total slots • 
+                <span className="font-medium text-green-600 ml-1">{availableSlots}</span> available • 
+                <span className="font-medium text-blue-600 ml-1">{scheduledSlots}</span> scheduled
+              </div>
+              {logs.length === 0 && (
+                <Button onClick={addSampleData} variant="outline" size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Sample Data
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
