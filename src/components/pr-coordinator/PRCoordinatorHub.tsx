@@ -87,6 +87,19 @@ export const PRCoordinatorHub = () => {
 
     console.log('PRCoordinatorHub: Adding event listener for trigger-pr-quick-capture');
     window.addEventListener('trigger-pr-quick-capture', handleQuickCapture);
+    
+    // Also check for event on mount in case it was dispatched before listener was added
+    setTimeout(() => {
+      console.log('PRCoordinatorHub: Checking for pending quick capture trigger');
+      // Check if we should trigger quick capture based on URL params or sessionStorage
+      const shouldTrigger = sessionStorage.getItem('trigger-pr-quick-capture');
+      if (shouldTrigger) {
+        console.log('PRCoordinatorHub: Found pending trigger, activating quick capture');
+        setShowQuickCapture(true);
+        sessionStorage.removeItem('trigger-pr-quick-capture');
+      }
+    }, 100);
+    
     return () => {
       console.log('PRCoordinatorHub: Removing event listener for trigger-pr-quick-capture');
       window.removeEventListener('trigger-pr-quick-capture', handleQuickCapture);

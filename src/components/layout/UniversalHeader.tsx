@@ -104,12 +104,14 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                       size="sm" 
                       onClick={() => {
                         console.log('Camera button clicked - navigating to PR Hub');
+                        // Set flag in sessionStorage for backup trigger method
+                        sessionStorage.setItem('trigger-pr-quick-capture', 'true');
                         navigate('/dashboard/pr-hub');
-                        // Trigger quick capture after navigation
+                        // Trigger quick capture after navigation with longer delay to ensure component is mounted
                         setTimeout(() => {
                           console.log('Dispatching trigger-pr-quick-capture event');
                           window.dispatchEvent(new CustomEvent('trigger-pr-quick-capture'));
-                        }, 100);
+                        }, 500);
                       }}
                       className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 rounded-full hover:bg-white/20"
                     >
