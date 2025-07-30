@@ -171,6 +171,97 @@ export const useAuditionManagement = () => {
     }
   };
 
+  const addAudition = async (auditionData: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    audition_date: string;
+    audition_time: string;
+    status?: 'pending' | 'approved' | 'rejected';
+    additional_info?: string;
+    is_soloist?: boolean;
+    phone?: string;
+    user_id?: string;
+    personality_description?: string;
+  }) => {
+    try {
+      const insertData = {
+        ...auditionData,
+        status: auditionData.status || 'pending',
+        user_id: auditionData.user_id || '',
+        phone: auditionData.phone || '',
+        personality_description: auditionData.personality_description || ''
+      };
+
+      const { data, error } = await supabase
+        .from('gw_auditions')
+        .insert([insertData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Transform and add to local state
+      const newAudition: AuditionEntry = {
+        id: data.id,
+        name: `${data.first_name} ${data.last_name}`,
+        timeSlot: data.audition_time || 'TBD',
+        date: new Date(data.audition_date).toISOString().split('T')[0],
+        type: data.is_soloist ? 'Solo Audition' : 'New Member',
+        status: data.status === 'pending' ? 'Scheduled' : 
+                data.status === 'approved' ? 'Completed' :
+                data.status === 'rejected' ? 'Pending' : 'Scheduled',
+        notes: data.additional_info || 'No additional notes',
+        email: data.email,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+
+      setAuditions(prev => [...prev, newAudition]);
+
+      toast({
+        title: "Audition Added",
+        description: "New audition has been added successfully",
+      });
+
+      return newAudition;
+    } catch (error) {
+      console.error('Error adding audition:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add audition",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const deleteAudition = async (auditionId: string) => {
+    try {
+      const { error } = await supabase
+        .from('gw_auditions')
+        .delete()
+        .eq('id', auditionId);
+
+      if (error) throw error;
+
+      // Remove from local state
+      setAuditions(prev => prev.filter(audition => audition.id !== auditionId));
+
+      toast({
+        title: "Audition Deleted",
+        description: "Audition has been deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting audition:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete audition",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     fetchAuditions();
   }, []);
@@ -181,6 +272,8 @@ export const useAuditionManagement = () => {
     fetchAuditions,
     updateAuditionStatus,
     addNotes,
-    rescheduleAudition
+    rescheduleAudition,
+    addAudition,
+    deleteAudition
   };
 };

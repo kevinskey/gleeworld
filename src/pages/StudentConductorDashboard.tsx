@@ -11,6 +11,7 @@ import { useSectionalPlans } from "@/hooks/useSectionalPlans";
 import { useSRFAssignments } from "@/hooks/useSRFAssignments";
 import { useAuditionManagement } from "@/hooks/useAuditionManagement";
 import { useSubmissionReview } from "@/hooks/useSubmissionReview";
+import { AddAuditionDialog } from "@/components/audition/AddAuditionDialog";
 import { 
   Music, 
   Calendar, 
@@ -35,17 +36,20 @@ import {
   ClipboardList,
   Settings,
   Send,
-  PenTool
+  PenTool,
+  Plus,
+  Trash2
 } from "lucide-react";
 
 export const StudentConductorDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
+  const [showAddAudition, setShowAddAudition] = useState(false);
 
   // Real data hooks replacing mock data
   const { plans: sectionalPlans, loading: plansLoading, updatePlanStatus } = useSectionalPlans();
   const { assignments: srfAssignments, loading: srfLoading, createAssignment, sendReminder } = useSRFAssignments();
-  const { auditions, loading: auditionsLoading, updateAuditionStatus, addNotes, rescheduleAudition } = useAuditionManagement();
+  const { auditions, loading: auditionsLoading, updateAuditionStatus, addNotes, rescheduleAudition, addAudition, deleteAudition } = useAuditionManagement();
   const { submissions, loading: submissionsLoading, updateSubmissionStatus, forwardToDirector } = useSubmissionReview();
 
   // Calculate metrics from real data
@@ -166,11 +170,15 @@ export const StudentConductorDashboard = () => {
 
           <TabsContent value="auditions" className="mt-6">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
                   Auditions & Solos Hub
                 </CardTitle>
+                <Button onClick={() => setShowAddAudition(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Audition
+                </Button>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -202,6 +210,14 @@ export const StudentConductorDashboard = () => {
                           <Button size="sm" variant="outline">
                             <MessageSquare className="h-4 w-4 mr-2" />
                             Add Notes
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => deleteAudition(audition.id)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
                           </Button>
                         </div>
                       </CardContent>
@@ -417,6 +433,12 @@ export const StudentConductorDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+      
+      <AddAuditionDialog
+        open={showAddAudition}
+        onOpenChange={setShowAddAudition}
+        onAddAudition={addAudition}
+      />
     </UniversalLayout>
   );
 };
