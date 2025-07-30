@@ -114,19 +114,29 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
   };
 
   const generateNewQRCode = async () => {
-    if (!user || !eventId) return;
+    console.log('Starting QR code generation...', { user: user?.id, eventId });
+    
+    if (!user || !eventId) {
+      console.log('Missing user or eventId:', { user: !!user, eventId });
+      return;
+    }
 
     setGenerating(true);
     try {
+      console.log('Calling generate_secure_qr_token function...');
       // Generate new QR token using secure function (will use v2 after types refresh)
       const { data: tokenData, error: tokenError } = await supabase.rpc('generate_secure_qr_token', {
         event_id_param: eventId
       });
 
+      console.log('Token generation result:', { tokenData, tokenError });
+
       if (tokenError) throw tokenError;
 
       const token = tokenData as string;
       const expiresAt = new Date(Date.now() + expiryMinutes * 60 * 1000).toISOString();
+
+      console.log('Inserting QR code record...', { eventId, token: token?.substring(0, 10) + '...', expiresAt });
 
       // Create QR code record
       const { data: qrData, error: qrError } = await supabase
@@ -140,9 +150,13 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
         .select()
         .single();
 
+      console.log('QR code insert result:', { qrData, qrError });
+
       if (qrError) throw qrError;
 
       setQrCode(qrData);
+      
+      console.log('Generating QR image...');
       await generateQRImage(token);
 
       toast({
@@ -152,6 +166,12 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
 
     } catch (error) {
       console.error('Error generating QR code:', error);
+      console.error('Error details:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint
+      });
       toast({
         title: "Generation Failed",
         description: "Failed to generate QR code",
