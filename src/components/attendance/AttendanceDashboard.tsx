@@ -229,7 +229,7 @@ export const AttendanceDashboard = () => {
         <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 rounded-xl p-4 sm:p-6 border shadow-lg">
           <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-white">
             <ClipboardCheck className="h-4 w-4 sm:h-5 sm:w-5" />
-            <span className="truncate">Take Attendance</span>
+            <span className="truncate">ble</span>
             <Badge variant="secondary" className="ml-2 bg-white/20 text-white border-white/30">
               {isAdmin ? 'Admin' : 'Secretary'}
             </Badge>

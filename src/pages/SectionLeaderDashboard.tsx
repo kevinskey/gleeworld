@@ -254,7 +254,7 @@ export const SectionLeaderDashboard = () => {
                 </Button>
                 <Button className="w-full justify-start" variant="outline">
                   <UserCheck className="h-4 w-4 mr-2" />
-                  Take Attendance
+                  ble
                 </Button>
                 <Button className="w-full justify-start" variant="outline">
                   <Star className="h-4 w-4 mr-2" />
