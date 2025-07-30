@@ -24,6 +24,7 @@ export const QuickCameraCapture = ({ onClose, onCapture }: QuickCameraCapturePro
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [title, setTitle] = useState('');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -88,6 +89,20 @@ export const QuickCameraCapture = ({ onClose, onCapture }: QuickCameraCapturePro
       }
     }, 'image/jpeg', 0.8);
   }, []);
+
+  const handleTitleSubmit = (newTitle: string) => {
+    setTitle(newTitle);
+    setIsEditingTitle(false);
+  };
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      setIsEditingTitle(false);
+    }
+    if (e.key === 'Escape') {
+      setIsEditingTitle(false);
+    }
+  };
 
   const handleTagToggle = (tagId: string) => {
     setSelectedTags(prev => 
@@ -187,6 +202,7 @@ export const QuickCameraCapture = ({ onClose, onCapture }: QuickCameraCapturePro
     setCapturedImage(null);
     setCapturedBlob(null);
     setShowEditDialog(false);
+    setIsEditingTitle(false);
     setTitle('');
     setSelectedTags([]);
     setIsCapturing(true);
@@ -273,14 +289,25 @@ export const QuickCameraCapture = ({ onClose, onCapture }: QuickCameraCapturePro
               {/* Edit Form */}
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="title" className="text-white">Photo Title</Label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Enter photo title..."
-                    className="bg-gray-800 border-gray-600 text-white"
-                  />
+                  <Label className="text-white">Photo Title</Label>
+                  {isEditingTitle ? (
+                    <Input
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      onBlur={() => setIsEditingTitle(false)}
+                      onKeyDown={handleTitleKeyDown}
+                      placeholder="Enter photo title..."
+                      className="bg-gray-800 border-gray-600 text-white"
+                      autoFocus
+                    />
+                  ) : (
+                    <div
+                      onClick={() => setIsEditingTitle(true)}
+                      className="w-full p-2 bg-gray-800 border border-gray-600 rounded-md text-white cursor-pointer hover:bg-gray-700 transition-colors min-h-[40px] flex items-center"
+                    >
+                      {title || "Tap to add title..."}
+                    </div>
+                  )}
                 </div>
 
                 <div>
