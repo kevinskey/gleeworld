@@ -174,41 +174,15 @@ export const StudentConductorDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {sectionalPlans.map((plan) => (
-                    <Card key={plan.id} className="hover:shadow-md transition-shadow">
-                      <CardContent className="pt-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h4 className="font-semibold">{plan.sectionLeader} - {plan.section}</h4>
-                            <p className="text-sm text-muted-foreground">{plan.week} • Uploaded {plan.uploadDate}</p>
-                          </div>
-                          <Badge className={`border ${getStatusColor(plan.status)}`}>
-                            {plan.status}
-                          </Badge>
-                        </div>
-                        <p className="text-sm mb-3">Focus: {plan.focus}</p>
-                        <div className="flex gap-2">
-                          <Button size="sm">
-                            <Eye className="h-4 w-4 mr-2" />
-                            Review Plan
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => updatePlanStatus(plan.id, 'Approved')}
-                          >
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Approve
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            <MessageSquare className="h-4 w-4 mr-2" />
-                            Add Comment
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                <div className="text-center py-8">
+                  <UserCheck className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-semibold mb-2">Sectional Management</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Review section leader plans, approve activities, and manage sectional coordination.
+                  </p>
+                  <Button onClick={() => navigate('/sectional-management')}>
+                    Go to Sectional Management
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -223,58 +197,15 @@ export const StudentConductorDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex gap-3 mb-4">
-                    <Button>
-                      <Play className="h-4 w-4 mr-2" />
-                      Create Assignment
-                    </Button>
-                    <Button variant="outline">
-                      <ClipboardList className="h-4 w-4 mr-2" />
-                      Placement Test
-                    </Button>
-                    <Button variant="outline">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Template Builder
-                    </Button>
-                  </div>
-                  {srfAssignments.map((assignment) => (
-                    <Card key={assignment.id} className="hover:shadow-md transition-shadow">
-                      <CardContent className="pt-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h4 className="font-semibold">{assignment.title}</h4>
-                            <p className="text-sm text-muted-foreground">Due: {assignment.dueDate}</p>
-                          </div>
-                          <Badge variant="outline">{assignment.difficulty}</Badge>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 mb-3">
-                          <div>
-                            <p className="text-sm text-muted-foreground">Assigned</p>
-                            <p className="font-medium">{assignment.assigned}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">Completed</p>
-                            <p className="font-medium">{assignment.completed}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm">
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Results
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => sendReminder(assignment.id)}
-                          >
-                            <Send className="h-4 w-4 mr-2" />
-                            Send Reminder
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                <div className="text-center py-8">
+                  <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-semibold mb-2">SRF Management</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Create assignments, track student progress, and manage SightReadingFactory integration.
+                  </p>
+                  <Button onClick={() => navigate('/srf-management')}>
+                    Go to SRF Management
+                  </Button>
                 </div>
               </CardContent>
             </Card>
