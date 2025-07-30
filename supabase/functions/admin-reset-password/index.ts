@@ -12,28 +12,12 @@ interface ResetPasswordRequest {
   newPassword: string;
 }
 
-// Password validation function
+// Password validation function - updated to match client requirements
 const validatePassword = (password: string): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
   
-  if (password.length < 8) {
-    errors.push("Password must be at least 8 characters long");
-  }
-  
-  if (!/[A-Z]/.test(password)) {
-    errors.push("Password must contain at least one uppercase letter");
-  }
-  
-  if (!/[a-z]/.test(password)) {
-    errors.push("Password must contain at least one lowercase letter");
-  }
-  
-  if (!/\d/.test(password)) {
-    errors.push("Password must contain at least one number");
-  }
-  
-  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-    errors.push("Password must contain at least one special character");
+  if (password.length < 6) {
+    errors.push("Password must be at least 6 characters long");
   }
   
   return {
@@ -124,14 +108,14 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Invalid authentication");
     }
 
-    // Check if user has admin privileges
+    // Check if user has admin privileges using gw_profiles table
     const { data: profile, error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
+      .from("gw_profiles")
+      .select("is_admin, is_super_admin")
+      .eq("user_id", user.id)
       .single();
 
-    if (profileError || !profile || !["admin", "super-admin"].includes(profile.role)) {
+    if (profileError || !profile || (!profile.is_admin && !profile.is_super_admin)) {
       throw new Error("Insufficient permissions");
     }
 
