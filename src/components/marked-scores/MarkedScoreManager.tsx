@@ -250,14 +250,14 @@ export const MarkedScoreManager = ({
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
           <h3 className="text-lg font-semibold">Marked Scores</h3>
           <p className="text-sm text-muted-foreground">
             Annotate and save marked versions of this sheet music
           </p>
         </div>
-        <Button onClick={handleCreateNew}>
+        <Button onClick={handleCreateNew} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Create Marked Score
         </Button>
@@ -289,51 +289,59 @@ export const MarkedScoreManager = ({
               <CardContent>
                 <div className="grid gap-3">
                   {scores.map((score) => (
-                    <div key={score.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex-1">
-                        <p className="font-medium">{score.description || 'Untitled'}</p>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div key={score.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border rounded-lg">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{score.description || 'Untitled'}</p>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            {score.uploader_name}
+                            <User className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{score.uploader_name}</span>
                           </span>
                           <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
+                            <Calendar className="h-3 w-3 flex-shrink-0" />
                             {new Date(score.created_at).toLocaleDateString()}
                           </span>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleView(score)}
+                          className="flex-1 sm:flex-none"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-4 w-4 sm:mr-0" />
+                          <span className="ml-2 sm:hidden">View</span>
                         </Button>
                         {score.uploader_id === user?.id && (
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleEdit(score)}
+                            className="flex-1 sm:flex-none"
                           >
-                            <Edit3 className="h-4 w-4" />
+                            <Edit3 className="h-4 w-4 sm:mr-0" />
+                            <span className="ml-2 sm:hidden">Edit</span>
                           </Button>
                         )}
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleDownload(score)}
+                          className="flex-1 sm:flex-none"
                         >
-                          <Download className="h-4 w-4" />
+                          <Download className="h-4 w-4 sm:mr-0" />
+                          <span className="ml-2 sm:hidden">Download</span>
                         </Button>
                         {score.uploader_id === user?.id && (
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleDelete(score)}
+                            className="flex-1 sm:flex-none"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4 sm:mr-0" />
+                            <span className="ml-2 sm:hidden">Delete</span>
                           </Button>
                         )}
                       </div>
@@ -360,7 +368,7 @@ export const MarkedScoreManager = ({
           }
         }}
       >
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
           <DialogHeader>
             <DialogTitle>
               {editingScore ? 'Edit Marked Score' : 'Create Marked Score'}
@@ -369,7 +377,7 @@ export const MarkedScoreManager = ({
           
           <div className="space-y-4">
             {/* Metadata Form */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="voice_part">Voice Part</Label>
                 <Select 
@@ -412,7 +420,7 @@ export const MarkedScoreManager = ({
 
       {/* View Dialog */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
           <DialogHeader>
             <DialogTitle>View Marked Score</DialogTitle>
           </DialogHeader>

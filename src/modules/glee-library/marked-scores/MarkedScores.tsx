@@ -201,21 +201,21 @@ export const MarkedScores = ({ musicId, musicTitle, originalPdfUrl, voiceParts }
   // Fallback to legacy system for uploaded PDFs without original
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
           <h3 className="text-lg font-semibold">Marked Scores</h3>
           <p className="text-sm text-muted-foreground">
             Upload annotated versions of this sheet music
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           {originalPdfUrl && (
-            <Button onClick={() => setShowAnnotationManager(true)}>
+            <Button onClick={() => setShowAnnotationManager(true)} className="w-full sm:w-auto">
               <Palette className="h-4 w-4 mr-2" />
               Create Annotated Score
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={() => setShowLegacyUpload(true)}>
+          <Button variant="outline" size="sm" onClick={() => setShowLegacyUpload(true)} className="w-full sm:w-auto">
             <Upload className="h-4 w-4 mr-2" />
             Upload File
           </Button>
@@ -245,29 +245,30 @@ export const MarkedScores = ({ musicId, musicTitle, originalPdfUrl, voiceParts }
                   {groupedScores[voicePart].map(score => (
                     <Card key={score.id}>
                       <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-base flex items-center gap-2">
-                            <FileText className="h-4 w-4" />
-                            {score.description || `${score.voice_part} Marked Score`}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <CardTitle className="text-base flex items-center gap-2 min-w-0">
+                            <FileText className="h-4 w-4 flex-shrink-0" />
+                            <span className="truncate">{score.description || `${score.voice_part} Marked Score`}</span>
                             {score.canvas_data && (
-                              <Badge variant="default" className="text-xs">
+                              <Badge variant="default" className="text-xs flex-shrink-0">
                                 Annotated
                               </Badge>
                             )}
                           </CardTitle>
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 w-full sm:w-auto">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleDownload(score)}
+                              className="w-full sm:w-auto"
                             >
                               <Download className="h-4 w-4 mr-2" />
                               Download
                             </Button>
                           </div>
                         </div>
-                        <div className="flex items-center justify-between text-sm text-muted-foreground">
-                          <span>Uploaded by {score.uploader_name}</span>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 text-sm text-muted-foreground">
+                          <span className="truncate">Uploaded by {score.uploader_name}</span>
                           <span>{new Date(score.created_at).toLocaleDateString()}</span>
                         </div>
                       </CardHeader>
