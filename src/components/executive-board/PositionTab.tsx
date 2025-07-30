@@ -5,6 +5,7 @@ import {
   Crown, FileText, DollarSign, MapPin, Shirt, BookOpen, 
   Camera, MessageSquare, Heart, BarChart3, Music2, UserCheck 
 } from "lucide-react";
+import { PRCoordinatorHub } from "@/components/pr-coordinator/PRCoordinatorHub";
 
 export type ExecutivePosition = 
   | 'president'
@@ -353,6 +354,11 @@ const positionData = {
 };
 
 export const PositionTab = ({ position }: PositionTabProps) => {
+  // Special case: PR Coordinator gets the full PR Hub
+  if (position === 'pr_coordinator') {
+    return <PRCoordinatorHub />;
+  }
+  
   const data = positionData[position];
   const Icon = data.icon;
 
