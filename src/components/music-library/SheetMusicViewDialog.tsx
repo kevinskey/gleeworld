@@ -21,7 +21,7 @@ import { MarkedScores } from '@/modules/glee-library/marked-scores/MarkedScores'
 import { PersonalNotes } from '@/modules/glee-library/personal-notes/PersonalNotes';
 import { SmartToolsSidebar } from '@/modules/glee-library/smart-tools/SmartToolsSidebar';
 import { RehearsalLinks } from '@/modules/glee-library/rehearsal-links/RehearsalLinks';
-import { PDFViewer } from '@/components/PDFViewer';
+import { PDFViewerWithAnnotations } from '@/components/PDFViewerWithAnnotations';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface SheetMusic {
@@ -110,8 +110,10 @@ export const SheetMusicViewDialog = ({
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                   <div className="xl:col-span-2">
                     {item.pdf_url ? (
-                      <PDFViewer 
+                      <PDFViewerWithAnnotations 
                         pdfUrl={item.pdf_url} 
+                        musicId={item.id}
+                        musicTitle={item.title}
                         className="w-full"
                       />
                     ) : (
