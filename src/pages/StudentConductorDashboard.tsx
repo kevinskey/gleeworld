@@ -102,10 +102,8 @@ export const StudentConductorDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="sections">Sections</TabsTrigger>
-            <TabsTrigger value="srf">SRF</TabsTrigger>
             <TabsTrigger value="auditions">Auditions</TabsTrigger>
             <TabsTrigger value="submissions">Submissions</TabsTrigger>
             <TabsTrigger value="setup">Setup</TabsTrigger>
@@ -125,7 +123,7 @@ export const StudentConductorDashboard = () => {
                 <CardContent>
                   <div className="text-2xl font-bold">{pendingPlansCount}</div>
                   <p className="text-sm text-muted-foreground">Plans awaiting review</p>
-                  <Button size="sm" className="mt-3" onClick={() => setActiveTab("sections")}>
+                  <Button size="sm" className="mt-3" onClick={() => navigate('/sectional-management')}>
                     Review Plans
                   </Button>
                 </CardContent>
@@ -141,7 +139,7 @@ export const StudentConductorDashboard = () => {
                 <CardContent>
                   <div className="text-2xl font-bold">{averageCompletionRate}%</div>
                   <p className="text-sm text-muted-foreground">Average completion rate</p>
-                  <Button size="sm" className="mt-3" onClick={() => setActiveTab("srf")}>
+                  <Button size="sm" className="mt-3" onClick={() => navigate('/srf-management')}>
                     Manage SRF
                   </Button>
                 </CardContent>
@@ -165,51 +163,6 @@ export const StudentConductorDashboard = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="sections" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UserCheck className="h-5 w-5" />
-                  Section Leader Oversight
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <UserCheck className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold mb-2">Sectional Management</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Review section leader plans, approve activities, and manage sectional coordination.
-                  </p>
-                  <Button onClick={() => navigate('/sectional-management')}>
-                    Go to Sectional Management
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="srf" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5" />
-                  Sight Reading Manager (SRF Integration)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold mb-2">SRF Management</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Create assignments, track student progress, and manage SightReadingFactory integration.
-                  </p>
-                  <Button onClick={() => navigate('/srf-management')}>
-                    Go to SRF Management
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           <TabsContent value="auditions" className="mt-6">
             <Card>
