@@ -112,11 +112,11 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
 
   return (
     <header className="glass-nav sticky top-0 z-50">
-      <div className="container mx-auto px-1 sm:px-4">
-        <div className="flex items-center justify-between h-12 sm:h-14 md:h-16">
+      <div className="container mx-auto px-2 sm:px-4 lg:px-6">
+        <div className="flex items-center justify-between h-14 sm:h-16 md:h-18">
           {/* Logo */}
           <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
-            <h1 className="text-2xl sm:text-2xl md:text-xl lg:text-2xl font-bold text-primary truncate">
+            <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary truncate">
               Contract Manager
             </h1>
           </div>
@@ -185,20 +185,21 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
           </nav>
 
           {/* Right side actions */}
-          <div className="flex items-center space-x-1 sm:space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
             {/* Notification Bell */}
             <Button 
               variant="ghost" 
               size="sm" 
-              className="relative gap-2 text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30"
+              className="relative gap-1 sm:gap-2 text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30 h-8 w-8 sm:h-10 sm:w-10 lg:h-auto lg:w-auto lg:px-3"
               title="Notifications"
             >
-              <Bell className="h-4 w-4" />
+              <Bell className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden lg:inline text-sm">Notifications</span>
               {/* Notification badge - uncomment when you have notification count */}
               {/* <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span> */}
             </Button>
 
-            {/* PR Camera Quick Capture - Temporarily always visible for debugging */}
+            {/* PR Camera Quick Capture - Responsive sizing */}
             <Button 
               variant="ghost" 
               size="sm" 
@@ -208,11 +209,11 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
                 console.log('Navigation function available:', typeof navigate);
                 navigate('/dashboard/pr-hub');
               }}
-              className="gap-2 text-primary hover:bg-primary/10 border-2 border-primary/50 bg-primary/5"
+              className="gap-1 sm:gap-2 text-primary hover:bg-primary/10 border-2 border-primary/50 bg-primary/5 h-8 sm:h-10 px-2 sm:px-3 lg:px-4"
               title="PR Quick Capture - Click to access camera"
             >
-              <Camera className="h-4 w-4" />
-              <span className="sm:inline">📸 Camera</span>
+              <Camera className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline text-xs sm:text-sm">📸 Camera</span>
             </Button>
             
             {/* Dashboard Views Dropdown - Only for admins */}

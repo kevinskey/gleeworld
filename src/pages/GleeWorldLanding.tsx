@@ -195,21 +195,21 @@ export const GleeWorldLanding = () => {
 
   const getTitleSize = (size: string | null) => {
     switch (size) {
-      case 'small': return 'text-2xl md:text-3xl';
-      case 'medium': return 'text-2xl md:text-4xl';
-      case 'large': return 'text-2xl md:text-6xl';
-      case 'xl': return 'text-2xl md:text-7xl';
-      default: return 'text-2xl md:text-6xl';
+      case 'small': return 'text-lg sm:text-xl md:text-2xl lg:text-3xl';
+      case 'medium': return 'text-xl sm:text-2xl md:text-3xl lg:text-4xl';
+      case 'large': return 'text-2xl sm:text-3xl md:text-4xl lg:text-6xl';
+      case 'xl': return 'text-3xl sm:text-4xl md:text-5xl lg:text-7xl';
+      default: return 'text-2xl sm:text-3xl md:text-4xl lg:text-6xl';
     }
   };
 
   const getDescriptionSize = (size: string | null) => {
     switch (size) {
-      case 'small': return 'text-base md:text-lg';
-      case 'medium': return 'text-lg md:text-xl';
-      case 'large': return 'text-xl md:text-2xl';
-      case 'xl': return 'text-2xl md:text-3xl';
-      default: return 'text-xl md:text-2xl';
+      case 'small': return 'text-sm sm:text-base md:text-lg';
+      case 'medium': return 'text-base sm:text-lg md:text-xl';
+      case 'large': return 'text-lg sm:text-xl md:text-2xl';
+      case 'xl': return 'text-xl sm:text-2xl md:text-3xl';
+      default: return 'text-base sm:text-lg md:text-xl lg:text-2xl';
     }
   };
 
@@ -251,10 +251,10 @@ export const GleeWorldLanding = () => {
       <FAQSlider />
 
       {/* Hero Section */}
-      <section className="pt-2 pb-4 sm:pt-4 sm:pb-6 px-2 sm:px-4 md:px-6 lg:px-8">
+      <section className="pt-1 pb-2 sm:pt-2 sm:pb-4 md:pt-4 md:pb-6 px-2 sm:px-4 md:px-6 lg:px-8">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="overflow-hidden bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl">
-            <div className="min-h-[300px] h-auto overflow-auto relative">
+            <div className="min-h-[250px] sm:min-h-[350px] md:min-h-[400px] lg:min-h-[500px] h-auto overflow-auto relative">
               {heroSlides.length > 0 ? (
                 <>
                   {/* Desktop Image */}
@@ -302,7 +302,7 @@ export const GleeWorldLanding = () => {
                   <div className="absolute inset-0">
                     {/* Title Section */}
                     {currentHeroSlide?.title && (
-                      <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.title_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.title_position_horizontal)} px-4 sm:px-6 lg:px-8 pointer-events-none`}>
+                      <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.title_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.title_position_horizontal)} px-3 sm:px-4 md:px-6 lg:px-8 pointer-events-none`}>
                         <h1 className={`${getTitleSize(currentHeroSlide.title_size)} font-bold text-white max-w-4xl pointer-events-auto drop-shadow-2xl text-center sm:text-left leading-tight`}>
                           {currentHeroSlide.title}
                         </h1>
@@ -311,7 +311,7 @@ export const GleeWorldLanding = () => {
                     
                     {/* Description Section */}
                     {currentHeroSlide?.description && (
-                      <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.description_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.description_position_horizontal)} px-4 sm:px-6 lg:px-8 pointer-events-none`}>
+                      <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.description_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.description_position_horizontal)} px-3 sm:px-4 md:px-6 lg:px-8 pointer-events-none`}>
                         <p className={`${getDescriptionSize(currentHeroSlide.description_size)} text-white/90 max-w-2xl pointer-events-auto drop-shadow-lg text-center sm:text-left leading-relaxed`}>
                           {currentHeroSlide.description}
                         </p>
@@ -320,8 +320,8 @@ export const GleeWorldLanding = () => {
                     
                     {/* Action Button Section */}
                     {currentHeroSlide?.action_button_enabled && currentHeroSlide?.action_button_text && currentHeroSlide?.action_button_url && (
-                      <div className="absolute inset-0 flex justify-center items-end pb-8 sm:pb-12 md:pb-16 px-4 sm:px-6 pointer-events-none">
-                        <Button size="sm" className="pointer-events-auto bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground shadow-2xl text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3" asChild>
+                      <div className="absolute inset-0 flex justify-center items-end pb-4 sm:pb-6 md:pb-8 lg:pb-12 px-3 sm:px-4 md:px-6 pointer-events-none">
+                        <Button size="sm" className="pointer-events-auto bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground shadow-2xl text-xs sm:text-sm md:text-base px-3 py-2 sm:px-4 sm:py-2 md:px-6 md:py-3" asChild>
                           <a href={currentHeroSlide.action_button_url} target="_blank" rel="noopener noreferrer">
                             {currentHeroSlide.action_button_text}
                           </a>
@@ -331,8 +331,8 @@ export const GleeWorldLanding = () => {
                     
                     {/* Legacy button support */}
                     {!currentHeroSlide?.action_button_enabled && currentHeroSlide?.button_text && currentHeroSlide?.link_url && (
-                      <div className="absolute inset-0 flex justify-center items-end pb-8 sm:pb-12 md:pb-16 px-4 sm:px-6 pointer-events-none">
-                        <Button size="sm" className="pointer-events-auto bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground shadow-2xl text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3" asChild>
+                      <div className="absolute inset-0 flex justify-center items-end pb-4 sm:pb-6 md:pb-8 lg:pb-12 px-3 sm:px-4 md:px-6 pointer-events-none">
+                        <Button size="sm" className="pointer-events-auto bg-primary/90 backdrop-blur-md border border-white/30 hover:bg-primary text-primary-foreground shadow-2xl text-xs sm:text-sm md:text-base px-3 py-2 sm:px-4 sm:py-2 md:px-6 md:py-3" asChild>
                           <a href={currentHeroSlide.link_url} target="_blank" rel="noopener noreferrer">
                             {currentHeroSlide.button_text}
                           </a>
@@ -344,9 +344,9 @@ export const GleeWorldLanding = () => {
                 </>
               ) : (
                 <div className="w-full h-full bg-gradient-to-r from-pink-100/50 to-rose-200/50 flex items-center justify-center backdrop-blur-sm">
-                  <div className="text-center">
-                    <Calendar className="h-24 w-24 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">No hero slides configured</p>
+                  <div className="text-center p-4">
+                    <Calendar className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                    <p className="text-gray-600 text-sm sm:text-base">No hero slides configured</p>
                   </div>
                 </div>
               )}

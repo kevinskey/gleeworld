@@ -70,7 +70,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
   const hasBackgroundImage = Boolean(welcomeCardSetting?.image_url && !imageError);
 
   return (
-    <div className="relative overflow-hidden rounded-3xl shadow-lg min-h-[200px] sm:min-h-[240px] flex items-center">
+    <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-lg min-h-[180px] sm:min-h-[220px] md:min-h-[260px] flex items-center">
       {/* Background Image Layer */}
       {hasBackgroundImage && (
         <>
@@ -95,26 +95,26 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
       {/* Background Gradient Layer (fallback or overlay) */}
       <div 
         className={`absolute inset-0 ${hasBackgroundImage 
-          ? 'bg-black/40 sm:bg-black/30' 
+          ? 'bg-black/50 sm:bg-black/40 md:bg-black/30' 
           : 'bg-gradient-to-r from-spelman-blue-dark via-spelman-blue-light to-spelman-blue-dark'
         }`}
       />
       
       {/* Content Layer */}
-      <div className="relative z-10 text-center w-full px-6 py-8">
-        <h1 className="text-[30px] sm:text-[34px] font-medium text-white drop-shadow-lg">
+      <div className="relative z-10 text-center w-full px-4 sm:px-6 py-6 sm:py-8">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-white drop-shadow-lg leading-tight">
           Welcome back {displayName}!
         </h1>
-        <p className="text-white/90 text-base mt-2 drop-shadow">
+        <p className="text-white/90 text-sm sm:text-base md:text-lg mt-2 sm:mt-3 drop-shadow leading-relaxed">
           {[profile?.exec_board_role, profile?.voice_part].filter(Boolean).join(', ') || getUserTitle()} • Member since {profile?.created_at ? format(new Date(profile.created_at), 'MMMM yyyy') : 'Recently'}
         </p>
       </div>
       
       {/* Notification Music Note */}
       {dashboardData?.unread_notifications > 0 && (
-        <div className="absolute top-4 right-4 z-20">
+        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20">
           <BellDot 
-            className="w-8 h-8 text-white drop-shadow-lg animate-pulse" 
+            className="w-6 h-6 sm:w-8 sm:h-8 text-white drop-shadow-lg animate-pulse" 
           />
         </div>
       )}

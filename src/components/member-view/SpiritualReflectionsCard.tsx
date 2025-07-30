@@ -24,17 +24,17 @@ export const SpiritualReflectionsCard = () => {
 
   if (loading) {
     return (
-      <Card className="md:col-span-2">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Book className="h-5 w-5" />
+      <Card className="col-span-1 md:col-span-2">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Book className="h-4 w-4 sm:h-5 sm:w-5" />
             Spiritual Gleeflections
           </CardTitle>
-          <CardDescription>Messages from our Chaplain</CardDescription>
+          <CardDescription className="text-sm">Messages from our Chaplain</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-center p-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          <div className="flex justify-center p-4 sm:p-6">
+            <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-primary"></div>
           </div>
         </CardContent>
       </Card>
@@ -43,16 +43,16 @@ export const SpiritualReflectionsCard = () => {
 
   if (sharedReflections.length === 0) {
     return (
-      <Card className="md:col-span-2">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Book className="h-5 w-5" />
+      <Card className="col-span-1 md:col-span-2">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Book className="h-4 w-4 sm:h-5 sm:w-5" />
             Spiritual Gleeflections
           </CardTitle>
-          <CardDescription>Messages from our Chaplain</CardDescription>
+          <CardDescription className="text-sm">Messages from our Chaplain</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-4">
+          <p className="text-xs sm:text-sm text-muted-foreground text-center py-4 sm:py-6">
             No spiritual reflections have been shared yet.
           </p>
         </CardContent>
@@ -63,17 +63,17 @@ export const SpiritualReflectionsCard = () => {
   const latestReflection = sharedReflections[0];
 
   return (
-    <Card className="md:col-span-2">
+    <Card className="col-span-1 md:col-span-2">
       <Collapsible.Root open={!isMobile || isOpen} onOpenChange={setIsOpen}>
-        <CardHeader>
+        <CardHeader className="pb-3 sm:pb-4">
           <Collapsible.Trigger asChild>
             <div className="flex items-center justify-between cursor-pointer">
               <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Book className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <Book className="h-4 w-4 sm:h-5 sm:w-5" />
                   Spiritual Gleeflections
                 </CardTitle>
-                <CardDescription>Messages from our Chaplain</CardDescription>
+                <CardDescription className="text-sm">Messages from our Chaplain</CardDescription>
               </div>
               {isMobile && (
                 <div className="flex items-center">
@@ -84,31 +84,31 @@ export const SpiritualReflectionsCard = () => {
           </Collapsible.Trigger>
         </CardHeader>
         <Collapsible.Content>
-          <CardContent>
-            <div className="space-y-4">
+          <CardContent className="pt-0">
+            <div className="space-y-3 sm:space-y-4">
               {/* Latest reflection preview */}
-              <div className="border rounded-lg p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-medium text-sm">{latestReflection.title}</h4>
+              <div className="border rounded-lg p-3 sm:p-4">
+                <div className="flex items-start justify-between mb-2 sm:mb-3">
+                  <h4 className="font-medium text-sm sm:text-base leading-tight pr-2">{latestReflection.title}</h4>
                   {latestReflection.is_featured && (
-                    <Badge variant="outline" className="text-xs">Featured</Badge>
+                    <Badge variant="outline" className="text-xs flex-shrink-0">Featured</Badge>
                   )}
                 </div>
                 
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
                   <Badge className={getReflectionTypeColor(latestReflection.reflection_type || 'daily_devotional')} variant="secondary">
                     {(latestReflection.reflection_type || 'daily_devotional').replace('_', ' ')}
                   </Badge>
                   {latestReflection.scripture_reference && (
-                    <Badge variant="outline">
+                    <Badge variant="outline" className="w-fit">
                       <Heart className="h-3 w-3 mr-1" />
                       {latestReflection.scripture_reference}
                     </Badge>
                   )}
                 </div>
                 
-                <ScrollArea className="h-20 sm:h-24 mb-2">
-                  <p className="text-sm text-muted-foreground pr-4">
+                <ScrollArea className="h-16 sm:h-20 md:h-24 mb-2 sm:mb-3">
+                  <p className="text-xs sm:text-sm text-muted-foreground pr-4 leading-relaxed">
                     {latestReflection.content}
                   </p>
                 </ScrollArea>
@@ -124,7 +124,7 @@ export const SpiritualReflectionsCard = () => {
               {/* Additional reflections count */}
               {sharedReflections.length > 1 && (
                 <div className="text-center">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     +{sharedReflections.length - 1} more spiritual reflection{sharedReflections.length > 2 ? 's' : ''}
                   </p>
                 </div>
