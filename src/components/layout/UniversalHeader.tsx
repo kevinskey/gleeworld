@@ -70,8 +70,17 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
             </EnhancedTooltip>
           </div>
 
-          {/* Center area with dashboard indicator - Always visible */}
-          <div className="flex items-center justify-center flex-1">
+          {/* Center area with dashboard button and page indicator */}
+          <div className="flex items-center justify-center flex-1 gap-3">
+            <Button 
+              asChild 
+              className="h-7 px-6 bg-black text-gray-400 hover:bg-gray-900 hover:text-gray-300 border border-gray-700 text-sm font-medium"
+            >
+              <Link to="/dashboard">
+                <LayoutDashboard className="mr-2 h-3 w-3" />
+                Dashboard
+              </Link>
+            </Button>
             {pageName !== 'GleeWorld' && (
               <span className="text-slate-700 font-bold text-[10px] px-2 py-1 rounded-md bg-blue-100 border border-blue-200 shadow-sm truncate max-w-32">
                 {pageName}
