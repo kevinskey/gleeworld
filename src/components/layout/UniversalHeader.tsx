@@ -157,12 +157,12 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                           Profile
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild className="py-1.5 text-xs">
-                        <Link to="/dashboard" className="flex items-center">
-                          <Settings className="mr-1.5 h-3 w-3" />
-                          Settings
-                        </Link>
-                      </DropdownMenuItem>
+                       <DropdownMenuItem asChild className="py-1.5 text-xs">
+                         <Link to="/settings" className="flex items-center">
+                           <Settings className="mr-1.5 h-3 w-3" />
+                           Settings
+                         </Link>
+                       </DropdownMenuItem>
                      <DropdownMenuSeparator />
                      <DropdownMenuItem onClick={handleSignOut} className="py-1.5 text-xs">
                        <LogOut className="mr-1.5 h-3 w-3" />
