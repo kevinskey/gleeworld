@@ -106,3 +106,6 @@ verify_jwt = false
 
 [functions.google-places-lookup]
 verify_jwt = false
+
+[functions.convert-heic-to-jpeg]
+verify_jwt = false

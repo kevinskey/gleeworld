@@ -717,7 +717,7 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
                     <Input
                       id="event_image"
                       type="file"
-                      accept="image/*"
+                      accept="image/*,.heic,.heif"
                       onChange={handleImageUpload}
                       className="hidden"
                     />

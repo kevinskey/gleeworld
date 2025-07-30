@@ -134,7 +134,7 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/*,.heic,.heif"
                 onChange={handleFileUpload}
                 className="hidden"
               />

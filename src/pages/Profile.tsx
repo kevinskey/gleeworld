@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { convertHeicToJpeg, createFileFromBase64, isHeicFile } from "@/utils/heicConverter";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -352,12 +353,13 @@ const Profile = () => {
     }
   };
 
-  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
+    // Validate file type - now including HEIC
+    const isValidImage = file.type.startsWith('image/') || isHeicFile(file);
+    if (!isValidImage) {
       toast({
         title: "Error",
         description: "Please select a valid image file",
@@ -366,10 +368,51 @@ const Profile = () => {
       return;
     }
 
-    // Create a URL for the selected image to show in crop dialog
-    const imageUrl = URL.createObjectURL(file);
-    setSelectedImageForCrop(imageUrl);
-    setIsCropDialogOpen(true);
+    try {
+      let imageFile = file;
+      let imageUrl: string;
+
+      // Check if it's a HEIC file and convert if needed
+      if (isHeicFile(file)) {
+        toast({
+          title: "Processing HEIC",
+          description: "Converting HEIC file to JPEG...",
+        });
+
+        const conversionResult = await convertHeicToJpeg(file);
+        
+        if (!conversionResult.success) {
+          toast({
+            title: "HEIC Conversion Failed",
+            description: conversionResult.error || "Could not convert HEIC file",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (conversionResult.base64) {
+          // Convert base64 back to file
+          imageFile = createFileFromBase64(conversionResult.base64, file.name.replace(/\.heic$/i, '.jpg'));
+          imageUrl = conversionResult.base64;
+        } else {
+          imageUrl = URL.createObjectURL(imageFile);
+        }
+      } else {
+        // For regular image files, just create object URL
+        imageUrl = URL.createObjectURL(imageFile);
+      }
+
+      setSelectedImageForCrop(imageUrl);
+      setIsCropDialogOpen(true);
+
+    } catch (error) {
+      console.error('Error processing image:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process image file",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCroppedImageUpload = async (croppedImageFile: File) => {
@@ -492,7 +535,7 @@ const Profile = () => {
                     <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center cursor-pointer hover:bg-black/60 transition-colors">
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/*,.heic,.heif"
                         onChange={handleAvatarUpload}
                         className="absolute inset-0 opacity-0 cursor-pointer"
                       />

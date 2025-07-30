@@ -270,7 +270,7 @@ export const CameraImportDialog = ({ open, onOpenChange, onSuccess }: CameraImpo
                   <div className="relative">
                     <input
                       type="file"
-                      accept="image/*,application/pdf"
+                      accept="image/*,.heic,.heif,application/pdf"
                       onChange={handleFileSelect}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       id="file-upload"

@@ -504,7 +504,7 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
               <input
                 type="file"
                 multiple
-                accept="image/*"
+                accept="image/*,.heic,.heif"
                 onChange={(e) => e.target.files && handleImageSelect(e.target.files)}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               />
