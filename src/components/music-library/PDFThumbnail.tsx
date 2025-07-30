@@ -110,6 +110,7 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
               onError={handlePreviewError}
               title={alt}
               style={{ pointerEvents: 'none' }}
+              sandbox="allow-scripts allow-same-origin"
             />
           </>
         ) : (

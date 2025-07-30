@@ -84,6 +84,7 @@ if (error) {
             onLoad={handleLoad}
             onError={handleError}
             title="PDF Viewer"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
           />
         </div>
       </CardContent>
