@@ -68,6 +68,7 @@ import TourPlanner from "./pages/TourPlanner";
 import BookingRequest from "./pages/BookingRequest";
 import Wardrobe from "./pages/Wardrobe";
 import { ProductManagement } from "./pages/ProductManagement";
+import PRHubPage from "./pages/PRHubPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -483,13 +484,21 @@ const App = () => {
                                  <ExecutiveBoardDashboard />
                                </ProtectedRoute>
                              } 
+                              />
+                             <Route 
+                               path="/dashboard/pr-hub" 
+                               element={
+                                 <ProtectedRoute>
+                                   <PRHubPage />
+                                 </ProtectedRoute>
+                               } 
                              />
-                            <Route 
-                              path="/dashboard/section-leader" 
-                              element={
-                                <ProtectedRoute>
-                                  <SectionLeaderDashboard />
-                                </ProtectedRoute>
+                             <Route 
+                               path="/dashboard/section-leader" 
+                               element={
+                                 <ProtectedRoute>
+                                   <SectionLeaderDashboard />
+                                 </ProtectedRoute>
                               } 
                              />
                             <Route 

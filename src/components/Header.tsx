@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Camera, Menu, X } from "lucide-react";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -30,7 +31,6 @@ import {
   Shield,
   Activity,
   FileText,
-  Menu,
   UserCog,
   ChevronDown,
   GraduationCap
@@ -45,9 +45,9 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { userProfile, displayName } = useUserProfile(user);
-  const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showPRCapture, setShowPRCapture] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -68,6 +68,8 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
   };
 
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
+  const isPRCoordinator = userProfile?.exec_board_role === 'pr_coordinator';
+  const canAccessPR = isAdmin || isPRCoordinator;
   const isSuperAdmin = userProfile?.role === 'super-admin';
   const isOnUserDashboard = location.pathname === '/dashboard';
 
@@ -178,6 +180,20 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
 
           {/* Right side actions */}
           <div className="flex items-center space-x-1 sm:space-x-2">
+            {/* PR Camera Quick Capture */}
+            {canAccessPR && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/dashboard/pr-hub')}
+                className="gap-2 text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30"
+                title="PR Quick Capture"
+              >
+                <Camera className="h-4 w-4" />
+                <span className="hidden sm:inline">PR</span>
+              </Button>
+            )}
+            
             {/* Dashboard Views Dropdown - Only for admins */}
             {isAdmin && (
               <DropdownMenu>

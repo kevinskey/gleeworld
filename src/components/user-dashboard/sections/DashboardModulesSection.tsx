@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { 
   Calendar, 
   User, 
@@ -15,13 +17,34 @@ import {
   ShoppingBag,
   DollarSign,
   Route,
-  MapPin
+  MapPin,
+  Camera
 } from "lucide-react";
 
 export const DashboardModulesSection = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { userProfile } = useUserProfile(user);
 
-  const moduleCategories = [
+  // Check user permissions
+  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
+  const isPRCoordinator = userProfile?.exec_board_role === 'pr_coordinator';
+  const canAccessPR = isAdmin || isPRCoordinator;
+
+  type Module = {
+    name: string;
+    description: string;
+    icon: any;
+    route: string;
+    requiresPRAccess?: boolean;
+  };
+
+  const moduleCategories: Array<{
+    title: string;
+    icon: any;
+    iconColor: string;
+    modules: Module[];
+  }> = [
     {
       title: "Events",
       icon: Calendar,
@@ -111,6 +134,20 @@ export const DashboardModulesSection = () => {
       ]
     },
     {
+      title: "PR & Media",
+      icon: Camera,
+      iconColor: "text-pink-600",
+      modules: [
+        {
+          name: "PR & Media Hub",
+          description: "Manage publicity photos",
+          icon: Camera,
+          route: "/dashboard/pr-hub",
+          requiresPRAccess: true
+        }
+      ]
+    },
+    {
       title: "Finance",
       icon: DollarSign,
       iconColor: "text-emerald-600",
@@ -167,23 +204,31 @@ export const DashboardModulesSection = () => {
                   {category.title}
                 </h3>
                 <div className="space-y-2">
-                  {category.modules.map((module) => {
-                    const ModuleIcon = module.icon;
-                    return (
-                      <Button 
-                        key={module.route}
-                        variant="ghost" 
-                        className="w-full justify-start h-auto p-3"
-                        onClick={() => navigate(module.route)}
-                      >
-                        <ModuleIcon className="h-4 w-4 mr-2" />
-                        <div className="text-left">
-                          <div>{module.name}</div>
-                          <div className="text-xs text-gray-500">{module.description}</div>
-                        </div>
-                      </Button>
-                    );
-                  })}
+                  {category.modules
+                    .filter(module => {
+                      // Filter out PR Hub for users without access
+                      if (module.requiresPRAccess && !canAccessPR) {
+                        return false;
+                      }
+                      return true;
+                    })
+                    .map((module) => {
+                      const ModuleIcon = module.icon;
+                      return (
+                        <Button 
+                          key={module.route}
+                          variant="ghost" 
+                          className="w-full justify-start h-auto p-3"
+                          onClick={() => navigate(module.route)}
+                        >
+                          <ModuleIcon className="h-4 w-4 mr-2" />
+                          <div className="text-left">
+                            <div>{module.name}</div>
+                            <div className="text-xs text-gray-500">{module.description}</div>
+                          </div>
+                        </Button>
+                      );
+                    })}
                 </div>
               </div>
             );

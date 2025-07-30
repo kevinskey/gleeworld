@@ -54,7 +54,7 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
 
     setIsUploading(true);
     try {
-      await onCapture(capturedImage, {
+      const uploadedImage = await onCapture(capturedImage, {
         caption: caption.trim() || undefined,
         taken_at: new Date().toISOString(),
         tags: selectedTags.length > 0 ? selectedTags : undefined,
