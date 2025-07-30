@@ -294,44 +294,10 @@ export const ExecutiveBoardDashboard = () => {
                 </Button>
               </div>
             </div>
-            
-            {/* Navigation Buttons */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 text-white hover:bg-white/20 hover:text-white"
-              >
-                <X className="h-4 w-4" />
-                Exit
-              </Button>
-            </div>
           </div>
         ) : (
           /* Desktop Navigation Layout */
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 bg-white/90 text-black border-white/20 hover:bg-white"
-              >
-                <Home className="h-4 w-4" />
-                Back to Dashboard
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 text-white hover:bg-white/20 hover:text-white"
-              >
-                <X className="h-4 w-4" />
-                Exit Executive Panel
-              </Button>
-            </div>
-            
+          <div className="flex items-center justify-end">
             {/* View Mode Toggle - Desktop */}
             <div className="flex items-center gap-2 p-1 bg-white/10 rounded-lg border border-white/20">
               <Button
