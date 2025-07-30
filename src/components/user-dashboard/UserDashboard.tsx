@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
@@ -32,7 +32,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Eye, User, Home, X, Crown } from "lucide-react";
 
-export const UserDashboard = () => {
+const UserDashboard = React.memo(() => {
   console.log('UserDashboard component rendering...');
   const [viewMode, setViewMode] = useState<'admin' | 'member'>('admin');
   const { user } = useAuth();
@@ -440,4 +440,6 @@ export const UserDashboard = () => {
       </div>
     </UniversalLayout>
   );
-};
+});
+
+export { UserDashboard };
