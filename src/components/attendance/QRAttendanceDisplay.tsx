@@ -50,7 +50,16 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
   const [showLiveUpdates, setShowLiveUpdates] = useState(false);
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
+  // Debug logging
+  console.log('QRAttendanceDisplay mounted with:', { 
+    user: user?.id, 
+    eventId, 
+    eventTitle,
+    userRole: user?.role 
+  });
+
   useEffect(() => {
+    console.log('Loading existing QR code on mount...');
     loadExistingQRCode();
   }, [eventId]);
 
@@ -86,9 +95,15 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
   }, [qrCode, showLiveUpdates, onScanUpdate]);
 
   const loadExistingQRCode = async () => {
-    if (!eventId) return;
+    console.log('loadExistingQRCode called with eventId:', eventId);
+    
+    if (!eventId) {
+      console.log('No eventId provided');
+      return;
+    }
 
     try {
+      console.log('Querying for existing QR codes...');
       const { data, error } = await supabase
         .from('gw_attendance_qr_codes')
         .select('*')
@@ -99,14 +114,19 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
         .limit(1)
         .maybeSingle();
 
+      console.log('Existing QR query result:', { data, error });
+
       if (error) throw error;
 
       if (data) {
+        console.log('Found existing QR code, generating image...');
         setQrCode(data);
         await generateQRImage(data.qr_token);
         if (showLiveUpdates) {
           loadRecentScans();
         }
+      } else {
+        console.log('No existing QR code found');
       }
     } catch (error) {
       console.error('Error loading existing QR code:', error);
@@ -183,6 +203,8 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
   };
 
   const generateQRImage = async (token: string) => {
+    console.log('generateQRImage called with token:', token?.substring(0, 10) + '...');
+    
     try {
       const qrDataURL = await QRCode.toDataURL(token, {
         width: 300,
@@ -192,9 +214,16 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
           light: '#FFFFFF',
         },
       });
+      
+      console.log('QR image generated successfully');
       setQrImageData(qrDataURL);
     } catch (error) {
       console.error('Error generating QR image:', error);
+      console.error('QRCode library error details:', {
+        name: error?.name,
+        message: error?.message,
+        stack: error?.stack
+      });
     }
   };
 
