@@ -315,8 +315,8 @@ export const UserDashboard = () => {
         
         {/* View Mode Toggle for Admins/Executives */}
         {(isAdmin || hasExecBoardPerms) && (
-          <div className="flex justify-end mb-4">
-            <div className="flex items-center gap-1 sm:gap-2 p-1 bg-secondary/10 rounded-lg border">
+          <div className="flex justify-center mb-4">
+            <div className="flex items-center justify-between w-[95vw] max-w-4xl gap-4 sm:gap-8 p-2 bg-secondary/10 rounded-lg border">
               <Button
                 variant={viewMode === 'admin' ? 'default' : 'ghost'}
                 size="sm"
