@@ -273,24 +273,24 @@ export const ExecutiveBoardDashboard = () => {
         {isMobile ? (
           <div className="space-y-4">
             {/* View Mode Toggle - Full Width on Mobile */}
-            <div className="w-full">
+            <div className="w-full mobile-stable">
               <div className="flex items-center gap-2 p-2 bg-white/90 rounded-lg border shadow-sm">
                 <Button
                   variant="default"
                   size="sm"
-                  className="flex-1 flex items-center justify-center gap-2 text-sm px-4 h-10 bg-primary text-primary-foreground"
+                  className="flex-1 flex items-center justify-center gap-2 text-xs sm:text-sm px-2 sm:px-4 h-10 bg-primary text-primary-foreground mobile-control"
                 >
-                  <Crown className="h-4 w-4" />
-                  Exec Board View
+                  <Crown className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="truncate">Exec Board View</span>
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigate('/dashboard')}
-                  className="flex-1 flex items-center justify-center gap-2 text-sm px-4 h-10 text-primary hover:bg-primary/10"
+                  className="flex-1 flex items-center justify-center gap-2 text-xs sm:text-sm px-2 sm:px-4 h-10 text-primary hover:bg-primary/10 mobile-control"
                 >
-                  <Users className="h-4 w-4" />
-                  Member View
+                  <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="truncate">Member View</span>
                 </Button>
               </div>
             </div>
@@ -435,24 +435,27 @@ export const ExecutiveBoardDashboard = () => {
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-9 overflow-x-auto"
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mobile-stable">
+          <TabsList className="w-full overflow-x-auto scrollbar-hide mobile-tabs"
             style={{ 
-              gridTemplateColumns: window.innerWidth < 640 ? 'repeat(3, 1fr)' : 
-                                 selectedPosition === 'tour_manager' ? 'repeat(9, 1fr)' : 'repeat(8, 1fr)' 
+              display: 'flex',
+              flexWrap: 'nowrap',
+              gap: '0.125rem',
+              padding: '0.25rem',
+              minHeight: '2.5rem'
             }}
           >
-            <TabsTrigger value="dashboard" className="text-xs px-1 sm:px-3">
-              <Users className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
-              <span className="hidden sm:inline">Dashboard</span>
+            <TabsTrigger value="dashboard" className="text-xs px-2 py-1 whitespace-nowrap flex-shrink-0 min-w-fit">
+              <Users className="h-3 w-3 mr-1" />
+              <span className="hidden xs:inline sm:inline">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="text-xs">
-              <Calendar className="h-4 w-4 mr-1" />
-              Calendar
+            <TabsTrigger value="calendar" className="text-xs px-2 py-1 whitespace-nowrap flex-shrink-0 min-w-fit">
+              <Calendar className="h-3 w-3 mr-1" />
+              <span>Calendar</span>
             </TabsTrigger>
-            <TabsTrigger value="announcements" className="text-xs">
-              <Megaphone className="h-4 w-4 mr-1" />
-              Minutes
+            <TabsTrigger value="announcements" className="text-xs px-2 py-1 whitespace-nowrap flex-shrink-0 min-w-fit">
+              <Megaphone className="h-3 w-3 mr-1" />
+              <span>Minutes</span>
             </TabsTrigger>
             {selectedPosition === 'secretary' && (
               <TabsTrigger value="attendance" className="text-xs">

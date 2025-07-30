@@ -355,3 +355,35 @@
 
 /* Import spacing reduction utilities */
 @import './styles/spacing-reduction.css';
+
+/* Mobile viewport stabilization */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Prevent layout shifts on mobile */
+@media (max-width: 768px) {
+  .mobile-stable {
+    will-change: auto;
+    transform: translateZ(0);
+  }
+  
+  /* Ensure tabs don't cause horizontal scrolling issues */
+  .mobile-tabs {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* Prevent text from wrapping in mobile controls */
+  .mobile-control {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
