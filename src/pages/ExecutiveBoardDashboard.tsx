@@ -298,15 +298,6 @@ export const ExecutiveBoardDashboard = () => {
             {/* Navigation Buttons */}
             <div className="flex items-center gap-2">
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 bg-white/90 text-black border-white/20 hover:bg-white flex-1"
-              >
-                <Home className="h-4 w-4" />
-                Dashboard
-              </Button>
-              <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/dashboard')}
@@ -366,9 +357,9 @@ export const ExecutiveBoardDashboard = () => {
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-bebas font-bold tracking-wide text-foreground md:text-white md:drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">
-              <span className="block sm:hidden">Exec Hub</span>
-              <span className="hidden sm:block">Executive Board Hub</span>
+            <h1 className="font-bebas font-bold tracking-wide">
+              <span className="block sm:hidden text-5xl text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">Exec Hub</span>
+              <span className="hidden sm:block text-4xl md:text-6xl lg:text-7xl xl:text-8xl text-foreground md:text-white md:drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">Executive Board Hub</span>
             </h1>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
               {isAdmin ? (
