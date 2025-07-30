@@ -14,6 +14,7 @@ import { PRTagManager } from './PRTagManager';
 import { PressKitManager } from './PressKitManager';
 import { PRDataManager } from './PRDataManager';
 import { PRMetadataExporter } from './PRMetadataExporter';
+import PressKitTemplateGenerator from './PressKitTemplateGenerator';
 import { TaskNotifications } from '@/components/shared/TaskNotifications';
 
 export const PRCoordinatorHub = () => {
@@ -161,13 +162,14 @@ export const PRCoordinatorHub = () => {
       </div>
 
       <Tabs defaultValue="gallery" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="gallery">Image Gallery</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-7">
+          <TabsTrigger value="gallery">Gallery</TabsTrigger>
           <TabsTrigger value="data-manager">Data Manager</TabsTrigger>
-          <TabsTrigger value="export">Export Tools</TabsTrigger>
+          <TabsTrigger value="export">Export</TabsTrigger>
           <TabsTrigger value="press-kits">Press Kits</TabsTrigger>
-          <TabsTrigger value="tags">Tag Management</TabsTrigger>
-          <TabsTrigger value="bulk">Bulk Operations</TabsTrigger>
+          <TabsTrigger value="ai-templates">AI Templates</TabsTrigger>
+          <TabsTrigger value="tags">Tags</TabsTrigger>
+          <TabsTrigger value="bulk">Bulk</TabsTrigger>
         </TabsList>
 
         <TabsContent value="gallery" className="space-y-4">
@@ -276,6 +278,10 @@ export const PRCoordinatorHub = () => {
 
         <TabsContent value="press-kits">
           <PressKitManager />
+        </TabsContent>
+
+        <TabsContent value="ai-templates">
+          <PressKitTemplateGenerator />
         </TabsContent>
 
         <TabsContent value="tags">
