@@ -24,26 +24,66 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
 
   const startCamera = useCallback(async () => {
     try {
+      console.log('useCameraImport: Starting camera...');
       setIsCapturing(true);
       
-      // Request camera access
-      const stream = await navigator.mediaDevices.getUserMedia({
+      // Wait longer for DOM to be ready to prevent blinking
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      if (!videoRef.current) {
+        console.error('useCameraImport: Video ref not available');
+        setIsCapturing(false);
+        const errorMessage = 'Camera interface not ready. Please try again.';
+        onError?.(errorMessage);
+        return;
+      }
+      
+      // Simplified camera constraints to reduce permission issues
+      const constraints = {
         video: {
-          facingMode: 'environment', // Use back camera if available
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         }
-      });
+      };
+      
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (error) {
+        console.log('useCameraImport: Environment camera failed, trying basic camera');
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
 
       streamRef.current = stream;
       
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-        setIsCameraReady(true);
-      }
+      // Wait for video setup before playing
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Video setup timeout'));
+        }, 5000);
+        
+        const video = videoRef.current!;
+        video.onloadedmetadata = () => {
+          console.log('useCameraImport: Video metadata loaded');
+          clearTimeout(timeout);
+          resolve();
+        };
+        
+        video.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error('Video setup failed'));
+        };
+        
+        video.srcObject = stream;
+      });
+      
+      await videoRef.current.play();
+      setIsCameraReady(true);
+      console.log('useCameraImport: Camera ready');
+      
     } catch (error) {
-      console.error('Error accessing camera:', error);
+      console.error('useCameraImport: Error accessing camera:', error);
       const errorMessage = 'Unable to access camera. Please check permissions or use file upload instead.';
       toast({
         title: "Camera Error",
