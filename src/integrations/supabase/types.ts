@@ -2545,6 +2545,7 @@ export type Database = {
         Row: {
           applicant_email: string
           applicant_name: string
+          applicant_picture_url: string | null
           application_data: Json | null
           audition_date: string
           audition_id: string | null
@@ -2564,6 +2565,7 @@ export type Database = {
         Insert: {
           applicant_email: string
           applicant_name: string
+          applicant_picture_url?: string | null
           application_data?: Json | null
           audition_date: string
           audition_id?: string | null
@@ -2583,6 +2585,7 @@ export type Database = {
         Update: {
           applicant_email?: string
           applicant_name?: string
+          applicant_picture_url?: string | null
           application_data?: Json | null
           audition_date?: string
           audition_id?: string | null

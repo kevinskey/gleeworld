@@ -20,7 +20,10 @@ import {
   Save,
   X,
   Plus,
-  Trash2
+  Trash2,
+  FileText,
+  GraduationCap,
+  MessageSquare
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -240,62 +243,175 @@ export const AuditionLogs = () => {
                                 View Application
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
+                            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                               <DialogHeader>
                                 <DialogTitle>Application Details - {slot.auditionLog.applicant_name}</DialogTitle>
                               </DialogHeader>
-                              <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <strong>Name:</strong> {slot.auditionLog.applicant_name}
+                              <div className="space-y-6">
+                                {/* Header section with picture and basic info */}
+                                <div className="flex gap-6 p-4 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg">
+                                  {/* Applicant Picture */}
+                                  <div className="flex-shrink-0">
+                                    {slot.auditionLog.applicant_picture_url ? (
+                                      <div className="relative">
+                                        <img 
+                                          src={slot.auditionLog.applicant_picture_url} 
+                                          alt={`${slot.auditionLog.applicant_name}'s headshot`}
+                                          className="w-24 h-24 rounded-full object-cover border-2 border-primary/20"
+                                        />
+                                      </div>
+                                    ) : (
+                                      <div className="w-24 h-24 rounded-full bg-muted border-2 border-primary/20 flex items-center justify-center">
+                                        <User className="h-8 w-8 text-muted-foreground" />
+                                      </div>
+                                    )}
                                   </div>
-                                  <div>
-                                    <strong>Email:</strong> {slot.auditionLog.applicant_email}
-                                  </div>
-                                  <div>
-                                    <strong>Voice Part:</strong> {slot.auditionLog.voice_part || 'Not specified'}
-                                  </div>
-                                  <div>
-                                    <strong>Status:</strong> 
-                                    <Badge className={`ml-2 ${getStatusColor(slot.auditionLog.status)}`}>
-                                      {slot.auditionLog.status.charAt(0).toUpperCase() + slot.auditionLog.status.slice(1)}
-                                    </Badge>
+                                  
+                                  {/* Basic Info */}
+                                  <div className="flex-1 space-y-2">
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div>
+                                        <strong className="text-sm text-muted-foreground">Name:</strong>
+                                        <p className="font-semibold">{slot.auditionLog.applicant_name}</p>
+                                      </div>
+                                      <div>
+                                        <strong className="text-sm text-muted-foreground">Email:</strong>
+                                        <p className="text-sm">{slot.auditionLog.applicant_email}</p>
+                                      </div>
+                                      <div>
+                                        <strong className="text-sm text-muted-foreground">Voice Part:</strong>
+                                        <p>{slot.auditionLog.voice_part || 'Not specified'}</p>
+                                      </div>
+                                      <div>
+                                        <strong className="text-sm text-muted-foreground">Status:</strong>
+                                        <Badge className={`ml-2 ${getStatusColor(slot.auditionLog.status)}`}>
+                                          {slot.auditionLog.status.charAt(0).toUpperCase() + slot.auditionLog.status.slice(1)}
+                                        </Badge>
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
-                                
+
+                                {/* Application Data */}
                                 {slot.auditionLog.application_data && Object.keys(slot.auditionLog.application_data).length > 0 && (
                                   <div>
-                                    <strong>Application Data:</strong>
-                                    <div className="mt-2 p-3 bg-gray-50 rounded text-sm">
+                                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                                      <FileText className="h-5 w-5" />
+                                      Application Information
+                                    </h3>
+                                    <div className="p-4 bg-muted/30 rounded-lg space-y-3">
                                       {typeof slot.auditionLog.application_data === 'object' ? 
                                         Object.entries(slot.auditionLog.application_data).map(([key, value]) => (
-                                          <div key={key} className="mb-2">
-                                            <strong>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong> {String(value)}
+                                          <div key={key} className="flex justify-between items-start py-2 border-b border-border/30 last:border-0">
+                                            <strong className="text-sm text-muted-foreground min-w-0 flex-1 mr-4">
+                                              {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:
+                                            </strong>
+                                            <span className="text-sm min-w-0 flex-1 text-right">{String(value)}</span>
                                           </div>
                                         )) : 
-                                        <pre>{JSON.stringify(slot.auditionLog.application_data, null, 2)}</pre>
+                                        <pre className="text-sm bg-background p-3 rounded border overflow-x-auto">
+                                          {JSON.stringify(slot.auditionLog.application_data, null, 2)}
+                                        </pre>
                                       }
                                     </div>
                                   </div>
                                 )}
-                                
+
+                                {/* Current Grades Display */}
                                 {slot.auditionLog.grade_data && Object.keys(slot.auditionLog.grade_data).length > 0 && (
                                   <div>
-                                    <strong>Grade Data:</strong>
-                                    <div className="mt-2 p-3 bg-green-50 rounded text-sm">
+                                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                                      <Star className="h-5 w-5 text-yellow-500" />
+                                      Current Grades
+                                    </h3>
+                                    <div className="p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg space-y-3">
                                       {Object.entries(slot.auditionLog.grade_data).map(([key, value]) => (
-                                        <div key={key} className="mb-2">
-                                          <strong>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong> {String(value)}
+                                        <div key={key} className="flex justify-between items-center py-2 border-b border-yellow-200/50 dark:border-yellow-800/30 last:border-0">
+                                          <strong className="text-sm">
+                                            {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:
+                                          </strong>
+                                          <span className="font-semibold text-yellow-700 dark:text-yellow-300">{String(value)}</span>
                                         </div>
                                       ))}
                                     </div>
                                   </div>
                                 )}
-                                
+
+                                {/* Quick Grading Section */}
+                                <div className="border-t pt-6">
+                                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                                    <GraduationCap className="h-5 w-5 text-primary" />
+                                    Grading Section
+                                  </h3>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-primary/5 rounded-lg">
+                                    <div className="space-y-2">
+                                      <label className="text-sm font-medium">Vocal Quality</label>
+                                      <div className="flex gap-1">
+                                        {[1, 2, 3, 4, 5].map((rating) => (
+                                          <button
+                                            key={rating}
+                                            className="w-8 h-8 rounded-full border-2 border-yellow-300 hover:bg-yellow-100 flex items-center justify-center text-sm font-medium transition-colors"
+                                          >
+                                            {rating}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                      <label className="text-sm font-medium">Musicality</label>
+                                      <div className="flex gap-1">
+                                        {[1, 2, 3, 4, 5].map((rating) => (
+                                          <button
+                                            key={rating}
+                                            className="w-8 h-8 rounded-full border-2 border-blue-300 hover:bg-blue-100 flex items-center justify-center text-sm font-medium transition-colors"
+                                          >
+                                            {rating}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                      <label className="text-sm font-medium">Overall</label>
+                                      <div className="flex gap-1">
+                                        {[1, 2, 3, 4, 5].map((rating) => (
+                                          <button
+                                            key={rating}
+                                            className="w-8 h-8 rounded-full border-2 border-green-300 hover:bg-green-100 flex items-center justify-center text-sm font-medium transition-colors"
+                                          >
+                                            {rating}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="mt-4 space-y-3">
+                                    <label className="text-sm font-medium">Grading Notes</label>
+                                    <textarea 
+                                      placeholder="Add grading notes and feedback..."
+                                      className="w-full h-20 p-3 border rounded-lg resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                    />
+                                    <div className="flex gap-2 justify-end">
+                                      <Button variant="outline" size="sm">
+                                        Save Draft
+                                      </Button>
+                                      <Button size="sm">
+                                        Submit Grade
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Notes */}
                                 {slot.auditionLog.notes && (
                                   <div>
-                                    <strong>Notes:</strong>
-                                    <p className="mt-1 p-3 bg-gray-50 rounded">{slot.auditionLog.notes}</p>
+                                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                                      <MessageSquare className="h-5 w-5" />
+                                      Additional Notes
+                                    </h3>
+                                    <div className="p-4 bg-muted/30 rounded-lg">
+                                      <p className="text-sm leading-relaxed">{slot.auditionLog.notes}</p>
+                                    </div>
                                   </div>
                                 )}
                               </div>

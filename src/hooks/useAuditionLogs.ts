@@ -20,6 +20,7 @@ export interface AuditionLog {
   graded_at?: string;
   notes?: string;
   is_reviewed: boolean;
+  applicant_picture_url?: string;
   created_at: string;
   updated_at: string;
 }
