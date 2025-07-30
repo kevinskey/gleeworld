@@ -71,7 +71,7 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
 
           {/* Center area with clock and dashboard indicator - Always visible */}
           <div className="flex items-center justify-center flex-1 gap-3">
-            <HeaderClock className="text-sm scale-75 bg-white/90 rounded px-2 py-1 shadow-sm border" />
+            <HeaderClock className="text-sm" />
             {pageName !== 'GleeWorld' && (
               <span className="text-slate-700 font-bold text-[10px] px-2 py-1 rounded-md bg-blue-100 border border-blue-200 shadow-sm truncate max-w-32">
                 {pageName}
