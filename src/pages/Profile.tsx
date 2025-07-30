@@ -446,8 +446,8 @@ const Profile = () => {
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Profile</h1>
-            <p className="text-gray-600">{isEditing ? "Make changes to your profile information" : "Manage your personal information"}</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Profile</h1>
+            <p className="text-muted-foreground">{isEditing ? "Make changes to your profile information" : "Manage your personal information"}</p>
           </div>
           <Button
             onClick={() => setIsEditing(!isEditing)}
@@ -475,9 +475,9 @@ const Profile = () => {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Profile Picture & Basic Info */}
-          <Card className="bg-white/95 backdrop-blur-sm border border-white/20">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-card-foreground">
                 <User className="h-5 w-5" />
                 Basic Information
               </CardTitle>
@@ -485,10 +485,10 @@ const Profile = () => {
             <CardContent className="space-y-6">
               <div className="flex items-center gap-6">
                 <div className="relative">
-                  <Avatar className="h-24 w-24 border-4 border-white/20 shadow-lg">
+                  <Avatar className="h-24 w-24 border-4 border-border shadow-lg">
                     <AvatarImage src={profile?.avatar_url || ""} className="object-cover" />
-                    <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20">
-                      <User className="h-12 w-12 text-primary" />
+                    <AvatarFallback className="bg-muted text-muted-foreground">
+                      <User className="h-12 w-12" />
                     </AvatarFallback>
                   </Avatar>
                   {isEditing && (
@@ -513,7 +513,7 @@ const Profile = () => {
                       className="mt-1"
                     />
                     {errors.full_name && (
-                      <p className="text-red-500 text-sm mt-1">{errors.full_name.message}</p>
+                      <p className="text-destructive text-sm mt-1">{errors.full_name.message}</p>
                     )}
                   </div>
                   <div>
@@ -552,9 +552,9 @@ const Profile = () => {
           </Card>
 
           {/* Contact Information */}
-          <Card className="bg-white/95 backdrop-blur-sm border border-white/20">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-card-foreground">
                 <Phone className="h-5 w-5" />
                 Contact Information
               </CardTitle>
@@ -579,16 +579,16 @@ const Profile = () => {
                   placeholder="https://"
                 />
                 {errors.website_url && (
-                  <p className="text-red-500 text-sm mt-1">{errors.website_url.message}</p>
+                  <p className="text-destructive text-sm mt-1">{errors.website_url.message}</p>
                 )}
               </div>
             </CardContent>
           </Card>
 
           {/* Addresses */}
-          <Card className="bg-white/95 backdrop-blur-sm border border-white/20">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-card-foreground">
                 <MapPin className="h-5 w-5" />
                 Addresses
               </CardTitle>
@@ -619,9 +619,9 @@ const Profile = () => {
 
           {/* Academic Information */}
           {shouldShowField('academic') && (
-            <Card className="bg-white/95 backdrop-blur-sm border border-white/20">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-card-foreground">
                   <GraduationCap className="h-5 w-5" />
                   Academic Information
                 </CardTitle>
@@ -666,9 +666,9 @@ const Profile = () => {
 
           {/* Wardrobe & Wellness */}
           {shouldShowField('wardrobe') && (
-            <Card className="bg-white/95 backdrop-blur-sm border border-white/20">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-card-foreground">
                   <Shirt className="h-5 w-5" />
                   Wardrobe & Wellness
                 </CardTitle>
@@ -752,9 +752,9 @@ const Profile = () => {
 
           {/* Health & Safety */}
           {shouldShowField('health') && (
-            <Card className="bg-white/95 backdrop-blur-sm border border-white/20">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-card-foreground">
                   <Heart className="h-5 w-5" />
                   Health & Safety
                 </CardTitle>
@@ -822,9 +822,9 @@ const Profile = () => {
 
           {/* Professional Information */}
           {shouldShowField('professional') && (
-            <Card className="bg-white/95 backdrop-blur-sm border border-white/20">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-card-foreground">
                   <Briefcase className="h-5 w-5" />
                   Professional Information
                 </CardTitle>
@@ -844,9 +844,9 @@ const Profile = () => {
           )}
 
           {/* Musical Information */}
-          <Card className="bg-white/95 backdrop-blur-sm border border-white/20">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-card-foreground">
                 <Music className="h-5 w-5" />
                 Musical Information
               </CardTitle>
@@ -917,9 +917,9 @@ const Profile = () => {
           </Card>
 
           {/* Payment Information */}
-          <Card className="bg-white/95 backdrop-blur-sm border border-white/20">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-card-foreground">
                 <DollarSign className="h-5 w-5" />
                 Payment Information
               </CardTitle>
@@ -948,9 +948,9 @@ const Profile = () => {
           </Card>
 
           {/* Social Media */}
-          <Card className="bg-white/95 backdrop-blur-sm border border-white/20">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-card-foreground">
                 <Globe className="h-5 w-5" />
                 Social Media Links
               </CardTitle>
