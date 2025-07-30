@@ -22,7 +22,10 @@ const PRHubPage = () => {
   const isPRCoordinator = userProfile?.exec_board_role === 'pr_coordinator';
   const canAccessPR = isAdmin || isPRCoordinator;
 
+  console.log('PRHubPage: Access check', { isAdmin, isPRCoordinator, canAccessPR, userProfile: userProfile?.role });
+
   if (!canAccessPR) {
+    console.log('PRHubPage: Access denied, redirecting to dashboard');
     return <Navigate to="/dashboard" replace />;
   }
 

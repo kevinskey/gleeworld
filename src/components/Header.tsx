@@ -202,7 +202,10 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => navigate('/dashboard/pr-hub')}
+              onClick={() => {
+                console.log('Header camera button clicked - navigating to PR Hub');
+                navigate('/dashboard/pr-hub');
+              }}
               className="gap-2 text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30"
               title="PR Quick Capture"
             >

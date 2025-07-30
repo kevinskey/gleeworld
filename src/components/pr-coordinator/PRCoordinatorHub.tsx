@@ -80,7 +80,10 @@ export const PRCoordinatorHub = () => {
         </div>
         <div className="flex gap-3 items-center">
           <TaskNotifications />
-          <Button onClick={() => setShowQuickCapture(true)} className="gap-2">
+          <Button onClick={() => {
+            console.log('PR Quick Capture button clicked');
+            setShowQuickCapture(true);
+          }} className="gap-2">
             <Camera className="h-4 w-4" />
             Quick Capture
           </Button>
