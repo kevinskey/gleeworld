@@ -69,9 +69,9 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
             </EnhancedTooltip>
           </div>
 
-          {/* Center area with clock and dashboard indicator */}
-          <div className="hidden sm:flex items-center justify-center flex-1 gap-3">
-            <HeaderClock className="text-sm scale-75" />
+          {/* Center area with clock and dashboard indicator - Always visible */}
+          <div className="flex items-center justify-center flex-1 gap-3">
+            <HeaderClock className="text-sm scale-75 bg-white/90 rounded px-2 py-1 shadow-sm border" />
             {pageName !== 'GleeWorld' && (
               <span className="text-slate-700 font-medium text-xs px-2 py-1 rounded-md bg-blue-100 border border-blue-200 shadow-sm truncate max-w-32">
                 {pageName}
