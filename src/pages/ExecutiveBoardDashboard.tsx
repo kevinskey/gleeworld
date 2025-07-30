@@ -315,7 +315,7 @@ export const ExecutiveBoardDashboard = () => {
 
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bebas font-bold tracking-wide text-foreground md:text-white md:drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bebas font-bold tracking-wide text-foreground md:text-white md:drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">
               Executive Board Hub
             </h1>
             <div className="flex items-center gap-2 mt-2">
@@ -553,14 +553,14 @@ export const ExecutiveBoardDashboard = () => {
 
             {/* 4. Upcoming Events - Horizontal Scroll */}
             <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-white drop-shadow-md">Upcoming Events</h3>
+              <h3 className="text-2xl font-semibold text-white drop-shadow-md">Upcoming Events</h3>
               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <Card key={i} className="flex-shrink-0 w-72 snap-start">
                     <CardContent className="p-4">
-                      <h4 className="font-semibold mb-2">Spring Concert {i}</h4>
-                      <p className="text-sm text-muted-foreground mb-2">March {15 + i}, 2024</p>
-                      <p className="text-sm">Sisters Chapel</p>
+                      <h4 className="text-lg font-semibold mb-2">Spring Concert {i}</h4>
+                      <p className="text-base text-muted-foreground mb-2">March {15 + i}, 2024</p>
+                      <p className="text-base">Sisters Chapel</p>
                       <Badge variant="secondary" className="mt-2">Performance</Badge>
                     </CardContent>
                   </Card>
@@ -570,7 +570,7 @@ export const ExecutiveBoardDashboard = () => {
 
             {/* 5. Music Library - Horizontal Scroll */}
             <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-white drop-shadow-md">Our Music</h3>
+              <h3 className="text-2xl font-semibold text-white drop-shadow-md">Our Music</h3>
               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth">
                 <MusicLibraryViewer />
               </div>
@@ -599,18 +599,18 @@ export const ExecutiveBoardDashboard = () => {
 
             {/* 7. YouTube Videos - Horizontal Scroll */}
             <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-white drop-shadow-md">YouTube</h3>
+              <h3 className="text-2xl font-semibold text-white drop-shadow-md">YouTube</h3>
               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <Card key={i} className="flex-shrink-0 w-80 snap-start">
                     <div className="aspect-video bg-muted overflow-hidden">
                       <div className="w-full h-full bg-gradient-to-br from-red-500/20 to-red-600/40 flex items-center justify-center">
-                        <span className="text-lg font-semibold">Video {i}</span>
+                        <span className="text-xl font-semibold">Video {i}</span>
                       </div>
                     </div>
                     <CardContent className="p-4">
-                      <h4 className="font-semibold mb-1">Concert Performance</h4>
-                      <p className="text-sm text-muted-foreground">2 days ago • 1.2K views</p>
+                      <h4 className="text-lg font-semibold mb-1">Concert Performance</h4>
+                      <p className="text-base text-muted-foreground">2 days ago • 1.2K views</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -782,8 +782,8 @@ export const ExecutiveBoardDashboard = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">3</div>
-                      <p className="text-sm text-muted-foreground">Plans awaiting review</p>
+                      <div className="text-3xl font-bold">3</div>
+                      <p className="text-base text-muted-foreground">Plans awaiting review</p>
                       <Button size="sm" className="mt-3" onClick={() => setActiveTab("sections-srf")}>
                         Review Plans
                       </Button>
