@@ -19,7 +19,8 @@ import {
   Eye,
   Save,
   X,
-  Plus
+  Plus,
+  Trash2
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -29,13 +30,16 @@ export const AuditionLogs = () => {
     loading, 
     updateLogStatus, 
     saveGradeData: saveGrade, 
-    addSampleData 
+    addSampleData,
+    deleteAuditionLog
   } = useAuditionLogs();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedLog, setSelectedLog] = useState<AuditionLog | null>(null);
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [logToDelete, setLogToDelete] = useState<string | null>(null);
   const [gradeData, setGradeData] = useState({
     vocal_score: "",
     musicality_score: "",
@@ -80,6 +84,23 @@ export const AuditionLogs = () => {
       case 'no_show': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const handleDeleteLog = async () => {
+    if (!logToDelete) return;
+    
+    try {
+      await deleteAuditionLog(logToDelete);
+      setDeleteConfirmOpen(false);
+      setLogToDelete(null);
+    } catch (error) {
+      console.error('Failed to delete audition log:', error);
+    }
+  };
+
+  const openDeleteConfirm = (logId: string) => {
+    setLogToDelete(logId);
+    setDeleteConfirmOpen(true);
   };
 
   const filteredLogs = logs.filter(log => {
@@ -285,6 +306,14 @@ export const AuditionLogs = () => {
                             <SelectItem value="no_show">No Show</SelectItem>
                           </SelectContent>
                         </Select>
+                        
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => openDeleteConfirm(log.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
@@ -457,6 +486,33 @@ export const AuditionLogs = () => {
                   Save Grade
                 </Button>
               )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Audition Log</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>Are you sure you want to delete this audition log? This action cannot be undone.</p>
+            <div className="flex justify-end gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setDeleteConfirmOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteLog}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
             </div>
           </div>
         </DialogContent>

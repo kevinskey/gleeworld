@@ -277,12 +277,38 @@ export const useAuditionLogs = () => {
     loadAuditionLogs();
   }, []);
 
+  const deleteAuditionLog = async (logId: string) => {
+    try {
+      const { error } = await supabase
+        .from('gw_audition_logs')
+        .delete()
+        .eq('id', logId);
+
+      if (error) throw error;
+      
+      // Reload logs after deletion
+      await loadAuditionLogs();
+      toast({
+        title: "Success",
+        description: "Audition log deleted successfully"
+      });
+    } catch (error) {
+      console.error('Error deleting audition log:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete audition log",
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
   return {
     logs,
     loading,
-    loadAuditionLogs,
     updateLogStatus,
     saveGradeData,
-    addSampleData
+    addSampleData,
+    deleteAuditionLog
   };
 };
