@@ -369,9 +369,8 @@ const Profile = () => {
     }
 
     try {
-      let imageFile = file;
-      let imageUrl: string;
-
+      let processedFile = file;
+      
       // Check if it's a HEIC file and convert if needed
       if (isHeicFile(file)) {
         toast({
@@ -390,18 +389,17 @@ const Profile = () => {
           return;
         }
 
-        if (conversionResult.base64) {
-          // Convert base64 back to file
-          imageFile = createFileFromBase64(conversionResult.base64, file.name.replace(/\.heic$/i, '.jpg'));
-          imageUrl = conversionResult.base64;
-        } else {
-          imageUrl = URL.createObjectURL(imageFile);
-        }
-      } else {
-        // For regular image files, just create object URL
-        imageUrl = URL.createObjectURL(imageFile);
+        // Use the converted file
+        processedFile = conversionResult.file!;
+        
+        toast({
+          title: "HEIC Converted",
+          description: "Successfully converted to JPEG format",
+        });
       }
 
+      // Create object URL for the processed file (converted or original)
+      const imageUrl = URL.createObjectURL(processedFile);
       setSelectedImageForCrop(imageUrl);
       setIsCropDialogOpen(true);
 

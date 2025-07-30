@@ -1,13 +1,12 @@
-import { supabase } from "@/integrations/supabase/client";
+import heic2any from 'heic2any';
 
 export interface HeicConversionResult {
   success: boolean;
-  base64?: string;
+  file?: File;
   originalFormat?: boolean;
   filename?: string;
   error?: string;
   isHeic?: boolean;
-  suggestion?: string;
 }
 
 export const isHeicFile = (file: File): boolean => {
@@ -19,47 +18,47 @@ export const isHeicFile = (file: File): boolean => {
 
 export const convertHeicToJpeg = async (file: File): Promise<HeicConversionResult> => {
   try {
-    console.log('Starting HEIC conversion for file:', file.name);
+    console.log('Starting client-side HEIC conversion for file:', file.name);
     
-    const formData = new FormData();
-    formData.append('file', file);
+    // If not a HEIC file, return as-is
+    if (!isHeicFile(file)) {
+      return {
+        success: true,
+        file: file,
+        originalFormat: true,
+        filename: file.name
+      };
+    }
 
-    const { data, error } = await supabase.functions.invoke('convert-heic-to-jpeg', {
-      body: formData,
+    console.log('Converting HEIC file to JPEG...');
+    
+    // Convert HEIC to JPEG using heic2any
+    const convertedBlob = await heic2any({
+      blob: file,
+      toType: 'image/jpeg',
+      quality: 0.9
+    }) as Blob;
+
+    // Create a new File from the converted blob
+    const convertedFileName = file.name.replace(/\.heic$/i, '.jpg').replace(/\.heif$/i, '.jpg');
+    const convertedFile = new File([convertedBlob], convertedFileName, {
+      type: 'image/jpeg',
+      lastModified: Date.now()
     });
 
-    if (error) {
-      console.error('Edge function error:', error);
-      return {
-        success: false,
-        error: 'Failed to process image',
-        isHeic: isHeicFile(file)
-      };
-    }
-
-    if (data.error) {
-      console.warn('Conversion error:', data.error);
-      return {
-        success: false,
-        error: data.error,
-        isHeic: data.isHeic,
-        suggestion: data.suggestion
-      };
-    }
-
-    console.log('HEIC conversion successful');
+    console.log('HEIC conversion successful:', convertedFile);
     return {
       success: true,
-      base64: data.base64,
-      originalFormat: data.originalFormat,
-      filename: data.filename || file.name
+      file: convertedFile,
+      originalFormat: false,
+      filename: convertedFileName
     };
 
   } catch (error) {
     console.error('HEIC conversion failed:', error);
     return {
       success: false,
-      error: 'Failed to convert HEIC file',
+      error: `Failed to convert HEIC file: ${error instanceof Error ? error.message : 'Unknown error'}`,
       isHeic: isHeicFile(file)
     };
   }
