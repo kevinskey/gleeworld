@@ -73,6 +73,11 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
   const isSuperAdmin = userProfile?.role === 'super-admin';
   const isOnUserDashboard = location.pathname === '/dashboard';
 
+  console.log('Header - userProfile:', userProfile);
+  console.log('Header - isAdmin:', isAdmin);
+  console.log('Header - isPRCoordinator:', isPRCoordinator);
+  console.log('Header - canAccessPR:', canAccessPR);
+
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
   ];
@@ -192,19 +197,17 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
               {/* <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span> */}
             </Button>
 
-            {/* PR Camera Quick Capture */}
-            {canAccessPR && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate('/dashboard/pr-hub')}
-                className="gap-2 text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30"
-                title="PR Quick Capture"
-              >
-                <Camera className="h-4 w-4" />
-                <span className="hidden sm:inline">PR</span>
-              </Button>
-            )}
+            {/* PR Camera Quick Capture - Temporarily always visible for debugging */}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate('/dashboard/pr-hub')}
+              className="gap-2 text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30"
+              title="PR Quick Capture"
+            >
+              <Camera className="h-4 w-4" />
+              <span className="hidden sm:inline">PR</span>
+            </Button>
             
             {/* Dashboard Views Dropdown - Only for admins */}
             {isAdmin && (
