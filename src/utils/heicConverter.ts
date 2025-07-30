@@ -1,5 +1,3 @@
-import heic2any from 'heic2any';
-
 export interface HeicConversionResult {
   success: boolean;
   file?: File;
@@ -18,7 +16,7 @@ export const isHeicFile = (file: File): boolean => {
 
 export const convertHeicToJpeg = async (file: File): Promise<HeicConversionResult> => {
   try {
-    console.log('Starting client-side HEIC conversion for file:', file.name);
+    console.log('Checking HEIC conversion for file:', file.name);
     
     // If not a HEIC file, return as-is
     if (!isHeicFile(file)) {
@@ -30,36 +28,57 @@ export const convertHeicToJpeg = async (file: File): Promise<HeicConversionResul
       };
     }
 
-    console.log('Converting HEIC file to JPEG...');
+    console.log('HEIC file detected, attempting conversion...');
     
-    // Convert HEIC to JPEG using heic2any
-    const convertedBlob = await heic2any({
-      blob: file,
-      toType: 'image/jpeg',
-      quality: 0.9
-    }) as Blob;
+    try {
+      // Dynamically import heic2any to avoid CSP issues during initial load
+      const heic2any = await import('heic2any');
+      
+      // Convert HEIC to JPEG using heic2any
+      const convertedBlob = await heic2any.default({
+        blob: file,
+        toType: 'image/jpeg',
+        quality: 0.9
+      }) as Blob;
 
-    // Create a new File from the converted blob
-    const convertedFileName = file.name.replace(/\.heic$/i, '.jpg').replace(/\.heif$/i, '.jpg');
-    const convertedFile = new File([convertedBlob], convertedFileName, {
-      type: 'image/jpeg',
-      lastModified: Date.now()
-    });
+      // Create a new File from the converted blob
+      const convertedFileName = file.name.replace(/\.heic$/i, '.jpg').replace(/\.heif$/i, '.jpg');
+      const convertedFile = new File([convertedBlob], convertedFileName, {
+        type: 'image/jpeg',
+        lastModified: Date.now()
+      });
 
-    console.log('HEIC conversion successful:', convertedFile);
-    return {
-      success: true,
-      file: convertedFile,
-      originalFormat: false,
-      filename: convertedFileName
-    };
+      console.log('HEIC conversion successful:', convertedFile);
+      return {
+        success: true,
+        file: convertedFile,
+        originalFormat: false,
+        filename: convertedFileName
+      };
+    } catch (conversionError) {
+      console.warn('HEIC conversion failed, CSP may be blocking web workers:', conversionError);
+      
+      // If conversion fails (likely due to CSP), return the original file
+      // The user can still upload it, but as HEIC format
+      return {
+        success: false,
+        file: file,
+        originalFormat: true,
+        filename: file.name,
+        error: 'HEIC conversion not available in this environment. You can try uploading as-is or convert to JPEG manually.',
+        isHeic: true
+      };
+    }
 
   } catch (error) {
-    console.error('HEIC conversion failed:', error);
+    console.error('HEIC conversion setup failed:', error);
     return {
       success: false,
-      error: `Failed to convert HEIC file: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      isHeic: isHeicFile(file)
+      error: `HEIC conversion not available: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      isHeic: isHeicFile(file),
+      file: file,
+      originalFormat: true,
+      filename: file.name
     };
   }
 };
