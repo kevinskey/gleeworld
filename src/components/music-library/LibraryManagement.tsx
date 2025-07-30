@@ -15,7 +15,7 @@ import { UploadDialog } from './UploadDialog';
 import { CameraImportDialog } from './CameraImportDialog';
 import { CSVImportDialog } from './CSVImportDialog';
 import { EditablePhysicalCopyView } from './EditablePhysicalCopyView';
-import { FilterBar, FilterState } from '@/modules/glee-library/filters/FilterBar';
+import { StreamlinedFilterBar, FilterState } from './StreamlinedFilterBar';
 import { LibraryStats, LibraryStatsData } from '@/modules/glee-library/stats/LibraryStats';
 import { logSheetMusicAction, getDeviceType } from '@/lib/music-library/analytics';
 
@@ -205,7 +205,7 @@ export const LibraryManagement = () => {
       <LibraryStats stats={stats} loading={loading} />
 
       {/* Search and Filters */}
-      <FilterBar 
+      <StreamlinedFilterBar 
         filters={filters} 
         onFiltersChange={handleFiltersChange}
         showFormatFilter={true}
