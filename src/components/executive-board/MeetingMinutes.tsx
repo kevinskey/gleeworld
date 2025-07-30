@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, 
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 import { MeetingMinutesEditor } from "./MeetingMinutesEditor";
 import { MeetingMinutesDocument } from "./MeetingMinutesDocument";
+
 
 type MeetingStatus = 'draft' | 'approved' | 'archived';
 type ViewMode = 'list' | 'editor' | 'document';
@@ -172,13 +174,39 @@ export const MeetingMinutes = () => {
             Document and manage executive board meeting minutes
           </p>
         </div>
-        <Button onClick={handleCreateNew} className="self-start sm:self-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          New Meeting Minutes
-        </Button>
       </div>
 
-      {/* Meeting Minutes List */}
+      {/* Tabs for Agendas and Minutes */}
+      <Tabs defaultValue="minutes" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="agendas" className="text-lg font-bold px-6 py-3">
+            Agendas
+          </TabsTrigger>
+          <TabsTrigger value="minutes" className="text-lg font-bold px-6 py-3">
+            Minutes
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="agendas">
+          <Card>
+            <CardContent className="p-12 text-center">
+              <FileText className="h-16 w-16 mx-auto mb-6 text-muted-foreground" />
+              <h3 className="text-xl font-semibold mb-3">Agenda Management</h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                Agenda management functionality coming soon.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="minutes">
+          <div className="space-y-4">
+            <div className="flex justify-end">
+              <Button onClick={handleCreateNew}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Meeting Minutes
+              </Button>
+            </div>
       <div className="grid gap-4">
         {minutes.length === 0 ? (
           <Card>
@@ -273,6 +301,9 @@ export const MeetingMinutes = () => {
           ))
         )}
       </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
