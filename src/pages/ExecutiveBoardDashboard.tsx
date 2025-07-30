@@ -457,15 +457,15 @@ export const ExecutiveBoardDashboard = () => {
               minHeight: '2.5rem'
             }}
           >
-            <TabsTrigger value="dashboard" className="text-xs px-2 py-1 whitespace-nowrap flex-shrink-0 min-w-fit">
+            <TabsTrigger value="dashboard" className="text-sm px-2 py-1 whitespace-nowrap flex-shrink-0 min-w-fit">
               <Users className="h-3 w-3 mr-1" />
               <span className="hidden xs:inline sm:inline">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="text-xs px-2 py-1 whitespace-nowrap flex-shrink-0 min-w-fit">
+            <TabsTrigger value="calendar" className="text-sm px-2 py-1 whitespace-nowrap flex-shrink-0 min-w-fit">
               <Calendar className="h-3 w-3 mr-1" />
               <span>Calendar</span>
             </TabsTrigger>
-            <TabsTrigger value="announcements" className="text-xs px-2 py-1 whitespace-nowrap flex-shrink-0 min-w-fit">
+            <TabsTrigger value="announcements" className="text-sm px-2 py-1 whitespace-nowrap flex-shrink-0 min-w-fit">
               <Megaphone className="h-3 w-3 mr-1" />
               <span>Minutes</span>
             </TabsTrigger>
@@ -569,15 +569,15 @@ export const ExecutiveBoardDashboard = () => {
                 </TabsTrigger>
               </>
             )}
-            <TabsTrigger value="audition-logs" className="text-xs">
+            <TabsTrigger value="audition-logs" className="text-sm">
               <Music className="h-4 w-4 mr-1" />
               Audition Logs
             </TabsTrigger>
-            <TabsTrigger value="handbook" className="text-xs">
+            <TabsTrigger value="handbook" className="text-sm">
               <BookOpen className="h-4 w-4 mr-1" />
               Handbook
             </TabsTrigger>
-            <TabsTrigger value="position" className="text-xs">
+            <TabsTrigger value="position" className="text-sm">
               <PositionIcon className="h-4 w-4 mr-1" />
               My Role
             </TabsTrigger>
