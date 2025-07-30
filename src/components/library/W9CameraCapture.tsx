@@ -48,46 +48,36 @@ export const W9CameraCapture = () => {
       // Set capturing state first to render video element
       setIsCapturing(true);
       
-      // Use requestAnimationFrame to ensure DOM is updated
-      await new Promise(resolve => requestAnimationFrame(resolve));
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Wait for DOM to be ready with longer timeout to prevent blinking
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       if (!videoRef.current) {
         setIsCapturing(false);
         throw new Error('Camera interface failed to load. Please close and reopen the dialog.');
       }
       
-      // Portrait constraints for 8.5x11 document capture (8.5:11 ratio ≈ 0.77:1)
-      let constraints = {
+      console.log('Requesting camera access...');
+      
+      // Simplified constraints to reduce permission issues
+      const constraints = {
         video: { 
-          facingMode: { ideal: 'environment' },
-          width: { ideal: 1056, min: 720 },   // 8.5 * 124 ≈ 1056
-          height: { ideal: 1364, min: 936 }   // 11 * 124 ≈ 1364 (8.5:11 ratio)
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         },
         audio: false
       };
       
-      // Fallback to basic constraints if environment camera fails
-      let fallbackConstraints = {
-        video: true,
-        audio: false
-      };
-      
-      console.log('Requesting camera access...');
       let mediaStream;
-      
       try {
-        // Try with environment camera first
         mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       } catch (error) {
-        console.log('Environment camera failed, trying fallback:', error);
-        // Fallback to any available camera
-        try {
-          mediaStream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
-        } catch (fallbackError) {
-          console.error('Both camera attempts failed:', fallbackError);
-          throw fallbackError;
-        }
+        console.log('Environment camera failed, trying basic camera:', error);
+        // Fallback to basic constraints
+        mediaStream = await navigator.mediaDevices.getUserMedia({ 
+          video: true, 
+          audio: false 
+        });
       }
       
       const videoTracks = mediaStream.getVideoTracks();
@@ -104,39 +94,41 @@ export const W9CameraCapture = () => {
       // Set video properties for maximum compatibility
       video.setAttribute('playsinline', 'true');  
       video.setAttribute('webkit-playsinline', 'true');
-      video.setAttribute('controls', 'false');
       video.muted = true;
       video.autoplay = true;
-      video.defaultMuted = true;
       video.playsInline = true;
       
-      // Set up event handlers before assigning stream
-      video.onloadedmetadata = () => {
-        console.log('Video metadata loaded, dimensions:', video.videoWidth, 'x', video.videoHeight);
-      };
+      // Wait for video to be ready before playing
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Video setup timeout'));
+        }, 5000);
+        
+        video.onloadedmetadata = () => {
+          console.log('Video metadata loaded, dimensions:', video.videoWidth, 'x', video.videoHeight);
+          clearTimeout(timeout);
+          resolve();
+        };
+        
+        video.onerror = (e) => {
+          console.error('Video element error:', e);
+          clearTimeout(timeout);
+          reject(new Error('Video setup failed'));
+        };
+        
+        // Assign stream
+        video.srcObject = mediaStream;
+      });
       
-      video.onerror = (e) => {
-        console.error('Video element error:', e);
-      };
-      
-      // Assign stream and update state
-      video.srcObject = mediaStream;
+      // Update state after successful setup
       setStream(mediaStream);
-      setIsCapturing(true);
       
       // Try to play the video
       try {
-        console.log('Attempting to play video...');
-        const playPromise = video.play();
-        
-        if (playPromise !== undefined) {
-          await playPromise;
-          console.log('Video playing successfully');
-        }
+        await video.play();
+        console.log('Video playing successfully');
       } catch (playError) {
-        console.error('Error playing video:', playError);
-        // Don't throw here, the video might still work for capturing
-        console.log('Video play error, but continuing...');
+        console.warn('Video play error (may still work):', playError);
       }
       
       console.log('Camera initialization complete');
@@ -155,7 +147,7 @@ export const W9CameraCapture = () => {
       if (error instanceof Error) {
         console.log('Error details:', error.name, error.message);
         if (error.name === 'NotAllowedError') {
-          errorMessage += 'Please allow camera access in your browser settings and try again.';
+          errorMessage += 'Please allow camera access when prompted and refresh the page.';
         } else if (error.name === 'NotFoundError') {
           errorMessage += 'No camera found. Please connect a camera and try again.';
         } else if (error.name === 'NotSupportedError') {
@@ -163,7 +155,7 @@ export const W9CameraCapture = () => {
         } else if (error.name === 'NotReadableError') {
           errorMessage += 'Camera is being used by another application. Please close other apps and try again.';
         } else {
-          errorMessage += `${error.message}. Please check camera permissions and ensure you\'re using HTTPS.`;
+          errorMessage += `${error.message}. Please check camera permissions.`;
         }
       }
       
