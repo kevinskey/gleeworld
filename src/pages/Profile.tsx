@@ -256,6 +256,47 @@ const Profile = () => {
         throw error;
       }
 
+      // Also sync with gw_profiles table to keep data consistent
+      const { error: gwError } = await supabase
+        .from("gw_profiles")
+        .update({
+          full_name: data.full_name,
+          bio: data.bio,
+          website_url: data.website_url,
+          phone_number: data.phone_number,
+          student_number: data.student_number,
+          workplace: data.workplace,
+          school_address: data.school_address,
+          home_address: data.home_address,
+          voice_part: data.voice_part === "" ? null : data.voice_part,
+          can_dance: data.can_dance,
+          preferred_payment_method: data.preferred_payment_method === "" ? null : data.preferred_payment_method,
+          instruments_played: selectedInstruments,
+          social_media_links: socialMediaLinks,
+          
+          // New fields
+          dress_size: data.dress_size,
+          shoe_size: data.shoe_size,
+          hair_color: data.hair_color,
+          has_tattoos: data.has_tattoos,
+          visible_piercings: data.visible_piercings,
+          academic_major: data.academic_major,
+          pronouns: data.pronouns,
+          class_year: data.class_year === "" ? null : Number(data.class_year),
+          emergency_contact: data.emergency_contact,
+          dietary_restrictions: selectedDietaryRestrictions,
+          allergies: data.allergies,
+          parent_guardian_contact: data.parent_guardian_contact,
+          
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", user.id);
+
+      if (gwError) {
+        console.warn("Error syncing with gw_profiles:", gwError);
+        // Don't throw error since main profiles update succeeded
+      }
+
       console.log("Profile updated successfully");
       toast({
         title: "Success",
