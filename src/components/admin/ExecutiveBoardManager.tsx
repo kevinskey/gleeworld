@@ -140,15 +140,48 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
   const handleRemoveRole = async (userId: string, userName: string) => {
     setUpdating(true);
     try {
-      const { error } = await supabase
+      console.log('Attempting to remove role for user:', userId, userName);
+      
+      // Try updating both tables to ensure consistency
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({
           exec_board_role: null,
           is_exec_board: false,
-        } as any) // Temporary type assertion until Supabase types are regenerated
+        } as any)
         .eq('id', userId);
 
-      if (error) throw error;
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        throw profileError;
+      }
+
+      // Also update gw_profiles if it exists
+      const { error: gwProfileError } = await supabase
+        .from('gw_profiles')
+        .update({
+          exec_board_role: null,
+          is_exec_board: false,
+        })
+        .eq('user_id', userId);
+
+      if (gwProfileError) {
+        console.error('GW Profile update error:', gwProfileError);
+        // Don't throw here as it might not exist
+      }
+
+      // Remove from gw_executive_board_members table if exists
+      const { error: boardMemberError } = await supabase
+        .from('gw_executive_board_members')
+        .update({ is_active: false })
+        .eq('user_id', userId);
+
+      if (boardMemberError) {
+        console.error('Board member deactivation error:', boardMemberError);
+        // Don't throw here as it might not exist
+      }
+
+      console.log('Successfully removed executive board role');
 
       toast({
         title: "Role Removed",
@@ -161,7 +194,7 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
       console.error('Error removing role:', err);
       toast({
         title: "Error",
-        description: "Failed to remove executive board role",
+        description: `Failed to remove executive board role: ${err.message}`,
         variant: "destructive",
       });
     } finally {
