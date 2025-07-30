@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useAuditionLogs, AuditionLog } from "@/hooks/useAuditionLogs";
 import { 
@@ -41,7 +42,10 @@ export const AuditionLogs = () => {
     stage_presence_score: "",
     overall_score: "",
     feedback: "",
-    recommendation: ""
+    recommendation: "",
+    is_soloist: false,
+    potential_section: "",
+    pass_fail: false
   });
 
   const openReviewDialog = (log: AuditionLog) => {
@@ -52,7 +56,10 @@ export const AuditionLogs = () => {
       stage_presence_score: "",
       overall_score: "",
       feedback: "",
-      recommendation: ""
+      recommendation: "",
+      is_soloist: false,
+      potential_section: "",
+      pass_fail: false
     });
     setIsReviewDialogOpen(true);
   };
@@ -378,6 +385,62 @@ export const AuditionLogs = () => {
                   <SelectItem value="callback">Callback Required</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Potential Section</label>
+                <Select
+                  value={gradeData.potential_section}
+                  onValueChange={(value) => setGradeData(prev => ({ ...prev, potential_section: value }))}
+                  disabled={selectedLog?.status === 'graded'}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select section" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="s1">Soprano 1</SelectItem>
+                    <SelectItem value="s2">Soprano 2</SelectItem>
+                    <SelectItem value="a1">Alto 1</SelectItem>
+                    <SelectItem value="a2">Alto 2</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="is_soloist"
+                    checked={gradeData.is_soloist}
+                    onCheckedChange={(checked) => setGradeData(prev => ({ ...prev, is_soloist: !!checked }))}
+                    disabled={selectedLog?.status === 'graded'}
+                  />
+                  <label 
+                    htmlFor="is_soloist" 
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Soloist Potential
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <div className="border-t pt-4">
+              <div className="flex items-center space-x-3">
+                <Checkbox
+                  id="pass_fail"
+                  checked={gradeData.pass_fail}
+                  onCheckedChange={(checked) => setGradeData(prev => ({ ...prev, pass_fail: !!checked }))}
+                  disabled={selectedLog?.status === 'graded'}
+                  className="h-5 w-5"
+                />
+                <label 
+                  htmlFor="pass_fail" 
+                  className="text-lg font-semibold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  PASS - Accept into Glee Club
+                </label>
+              </div>
             </div>
             
             <div className="flex justify-end gap-3">
