@@ -447,7 +447,7 @@ const Profile = () => {
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-2">Profile</h1>
-            <p className="text-muted-foreground">{isEditing ? "Make changes to your profile information" : "Manage your personal information"}</p>
+            <p className="text-muted-foreground">{isEditing ? "Make changes to your profile information" : ""}</p>
           </div>
           <Button
             onClick={() => setIsEditing(!isEditing)}
