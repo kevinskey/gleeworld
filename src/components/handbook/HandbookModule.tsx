@@ -245,7 +245,64 @@ Failure to meet rehearsal expectations may result in **dismissal from rehearsal*
     {
       id: "dress-code",
       title: "Dress Code",
-      content: "Dress code content will be added here from the PDF handbook..."
+      content: `### 🎼 Formal Attire:
+
+- Formal Black Dress
+- Black Sheer Stockings
+- ALL Black Closed-Toe Shoes
+- Black Undergarments
+- Pearl Teardrop Earrings
+- Pearl Necklace
+- Red Lipstick
+
+---
+
+### 🖤 Informal Black Attire:
+
+- Black Blouse
+  _(No cleavage, sheer/see-through, or spaghetti straps)_
+- Black Skirt
+  _(Knee-Length, no side splits or high splits, loosely fitting)_
+- Flesh Tone Sheer Stockings
+- Black Undergarments
+- Black Closed-Toe/Closed-Heel/Closed-Side Shoes
+- **No other jewelry**
+- **Natural/Nude Makeup** (No red lipstick)
+
+---
+
+### 👗 Cardigan Attire:
+
+- Assigned Cardigan (Top button buttoned)
+- Assigned Blue A-Line Skirt
+- Flesh Tone Stockings
+- Black Undergarments
+- Black Closed-Toe Shoes
+- Pearl Stud Earrings and Necklace
+- Natural/Nude Makeup (No red lipstick)
+
+---
+
+### 👕 Polo Attire:
+
+- Glee Club Polo Shirt
+- Blue Jeans or Black Slacks *(varies by occasion)*
+- Closed-Toe/Closed-Heel/Closed-Side Shoes
+- Dark Undergarments
+- Natural/Nude Makeup
+- Nude Lipstick or Lip Gloss
+- Pearl Stud Earrings and Necklace
+
+---
+
+### 🚫 Prohibited:
+
+- **All piercings must be removed**
+- **All tattoos must be covered with makeup**
+- **Hair ornaments must be black**
+- No sparkling makeup, perfume, or body glitter
+
+**Failure to follow any of the above may result in dismissal from performance.**`
     },
     {
       id: "tour-overview",
