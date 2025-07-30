@@ -83,9 +83,20 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
   const getEventsForDate = (date: Date) => {
     console.log('Getting events for date:', date, 'Total events:', events.length);
     const dayEvents = events.filter(event => {
-      // Use parseISO to properly handle the date string, then compare just the date part
-      const eventDate = parseISO(event.start_date);
-      const matches = isSameDay(eventDate, date);
+      // Parse the event date and convert to local timezone for comparison
+      const eventDate = new Date(event.start_date);
+      
+      // Compare year, month, and day only (ignore time)
+      const eventDay = eventDate.getDate();
+      const eventMonth = eventDate.getMonth();
+      const eventYear = eventDate.getFullYear();
+      
+      const compareDay = date.getDate();
+      const compareMonth = date.getMonth();
+      const compareYear = date.getFullYear();
+      
+      const matches = eventDay === compareDay && eventMonth === compareMonth && eventYear === compareYear;
+      
       if (events.length > 0) {
         console.log('Event:', event.title, 'Event date:', event.start_date, 'Parsed date:', eventDate, 'Checking against:', date, 'Matches:', matches);
       }
