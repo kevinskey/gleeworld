@@ -84,6 +84,16 @@ export const StudentConductorDashboard = () => {
     setShowAuditionDialog(true);
   };
 
+  const handleCreateSRFAssignment = () => {
+    // Create a default assignment - in the future this could open a dialog
+    const newAssignmentData = {
+      title: 'New Assignment',
+      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      difficulty: 'Intermediate' as const
+    };
+    createAssignment(newAssignmentData);
+  };
+
   return (
     <UniversalLayout>
       <div className="container mx-auto px-4 py-6">
@@ -119,9 +129,11 @@ export const StudentConductorDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="auditions">Auditions</TabsTrigger>
+            <TabsTrigger value="solos">Solos</TabsTrigger>
+            <TabsTrigger value="srf">SRF</TabsTrigger>
             <TabsTrigger value="submissions">Submissions</TabsTrigger>
             <TabsTrigger value="setup">Setup</TabsTrigger>
             <TabsTrigger value="communication">Messages</TabsTrigger>
@@ -186,7 +198,7 @@ export const StudentConductorDashboard = () => {
               <CardHeader className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  Auditions & Solos Hub
+                  New Member Auditions
                 </CardTitle>
                 <Button onClick={handleAddAudition}>
                   <Plus className="h-4 w-4 mr-2" />
@@ -195,7 +207,7 @@ export const StudentConductorDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {auditions.map((audition) => (
+                  {auditions.filter(audition => audition.type === 'New Member').map((audition) => (
                     <Card key={audition.id} className="hover:shadow-md transition-shadow">
                       <CardContent className="pt-4">
                         <div className="flex items-start justify-between mb-3">
@@ -244,9 +256,178 @@ export const StudentConductorDashboard = () => {
                       </CardContent>
                     </Card>
                   ))}
+                  {auditions.filter(audition => audition.type === 'New Member').length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No new member auditions scheduled
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="solos" className="mt-6">
+            <Card>
+              <CardHeader className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="h-5 w-5" />
+                  Solo Auditions
+                </CardTitle>
+                <Button onClick={handleAddAudition}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Solo Audition
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {auditions.filter(audition => audition.type === 'Solo Audition').map((audition) => (
+                    <Card key={audition.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="pt-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h4 className="font-semibold">{audition.name}</h4>
+                            <p className="text-sm text-muted-foreground">{audition.date} at {audition.timeSlot}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Badge variant="outline">{audition.type}</Badge>
+                            <Badge className={`border ${getStatusColor(audition.status)}`}>
+                              {audition.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        <p className="text-sm mb-3">Notes: {audition.notes}</p>
+                        <div className="flex gap-2">
+                          <Button size="sm">
+                            <FileText className="h-4 w-4 mr-2" />
+                            Score Sheet
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Clock className="h-4 w-4 mr-2" />
+                            Reschedule
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <MessageSquare className="h-4 w-4 mr-2" />
+                            Add Notes
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleEditAudition(audition)}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => deleteAudition(audition.id)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  {auditions.filter(audition => audition.type === 'Solo Audition').length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No solo auditions scheduled
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="srf" className="mt-6">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    Sight Reading Factory Management
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="text-2xl font-bold">{srfAssignments.length}</div>
+                        <p className="text-sm text-muted-foreground">Active Assignments</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="text-2xl font-bold">{averageCompletionRate}%</div>
+                        <p className="text-sm text-muted-foreground">Completion Rate</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="text-2xl font-bold">
+                          {srfAssignments.filter(a => new Date(a.dueDate) < new Date()).length}
+                        </div>
+                        <p className="text-sm text-muted-foreground">Overdue</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold">Current Assignments</h3>
+                      <Button onClick={handleCreateSRFAssignment}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        New Assignment
+                      </Button>
+                    </div>
+                    
+                    {srfAssignments.map((assignment) => (
+                      <Card key={assignment.id} className="hover:shadow-md transition-shadow">
+                        <CardContent className="pt-4">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h4 className="font-semibold">{assignment.title}</h4>
+                              <p className="text-sm text-muted-foreground">Due: {assignment.dueDate}</p>
+                            </div>
+                            <Badge variant={new Date(assignment.dueDate) < new Date() ? "destructive" : "default"}>
+                              {assignment.completedCount}/{assignment.assignedCount} Complete
+                            </Badge>
+                          </div>
+                          <Progress 
+                            value={(assignment.completedCount / assignment.assignedCount) * 100} 
+                            className="mb-3"
+                          />
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline">
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => sendReminder(assignment.id)}
+                            >
+                              <Send className="h-4 w-4 mr-2" />
+                              Send Reminder
+                            </Button>
+                            <Button size="sm" variant="outline">
+                              <Settings className="h-4 w-4 mr-2" />
+                              Modify
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    
+                    {srfAssignments.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No SRF assignments yet. Create your first assignment to get started.
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="submissions" className="mt-6">
