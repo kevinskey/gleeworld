@@ -46,14 +46,7 @@ export const usePRImages = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('pr_images')
-        .select(`
-          *,
-          photographer:photographer_id(full_name),
-          uploader:uploaded_by(full_name),
-          tags:pr_image_tag_associations(
-            tag:pr_image_tags(*)
-          )
-        `)
+        .select('*')
         .order('uploaded_at', { ascending: false });
 
       console.log('usePRImages: Raw query result:', { data, error });
@@ -65,9 +58,7 @@ export const usePRImages = () => {
 
       const processedImages = data?.map(image => ({
         ...image,
-        photographer: undefined,
-        uploader: undefined,
-        tags: image.tags?.map((t: any) => t.tag) || []
+        tags: [] // We'll fetch tags separately for now
       })) || [];
 
       console.log('usePRImages: Processed images:', processedImages);
