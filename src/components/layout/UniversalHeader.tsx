@@ -121,7 +121,7 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                        </Button>
                      </DropdownMenuTrigger>
                    </EnhancedTooltip>
-                    <DropdownMenuContent className="w-48 py-1" align="end" forceMount>
+                    <DropdownMenuContent className="w-48 py-1 bg-white shadow-lg border border-gray-200 z-[200]" align="end" forceMount>
                       <div className="flex flex-col space-y-0.5 p-1.5">
                          <p className="text-xs font-medium leading-none truncate">
                            {userProfile?.full_name || user.email}
