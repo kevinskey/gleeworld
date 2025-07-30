@@ -130,7 +130,19 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🔍 Call Meeting - Starting handleSubmit', { 
+      user: user?.id, 
+      selectedDate, 
+      formData,
+      execMembersCount: execMembers.length 
+    });
+    
     if (!user || !selectedDate || !formData.time) {
+      console.log('❌ Call Meeting - Missing required fields', { 
+        user: !!user, 
+        selectedDate: !!selectedDate, 
+        time: formData.time 
+      });
       toast({
         title: "Validation Error",
         description: "Please fill in all required fields",
@@ -141,6 +153,7 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
 
     setLoading(true);
     try {
+      console.log('🔍 Call Meeting - Creating meeting event...');
       // Create the meeting event
       const meetingDateTime = new Date(selectedDate);
       const [hours, minutes] = formData.time.split(':').map(Number);
@@ -150,17 +163,23 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
       endDateTime.setMinutes(endDateTime.getMinutes() + parseInt(formData.duration));
 
       // Get the default calendar or executive board calendar
-      const { data: calendars } = await supabase
+      console.log('🔍 Call Meeting - Looking for calendar...');
+      const { data: calendars, error: calendarError } = await supabase
         .from('gw_calendars')
-        .select('id')
+        .select('id, name')
         .or('name.ilike.%executive%,is_default.eq.true')
         .eq('is_visible', true)
         .limit(1);
 
+      console.log('🔍 Call Meeting - Calendar query result:', { calendars, calendarError });
+
       const calendarId = calendars?.[0]?.id;
       if (!calendarId) {
+        console.log('❌ Call Meeting - No calendar found');
         throw new Error('No suitable calendar found for the meeting');
       }
+
+      console.log('🔍 Call Meeting - Using calendar:', calendarId);
 
       const eventData = {
         title: formData.title,
@@ -175,11 +194,15 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
         calendar_id: calendarId
       };
 
+      console.log('🔍 Call Meeting - Event data:', eventData);
+
       const { data: newEvent, error: eventError } = await supabase
         .from('gw_events')
         .insert(eventData)
         .select()
         .single();
+
+      console.log('🔍 Call Meeting - Event creation result:', { newEvent, eventError });
 
       if (eventError) throw eventError;
 
