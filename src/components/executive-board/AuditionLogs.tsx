@@ -35,6 +35,14 @@ export const AuditionLogs = () => {
     deleteAuditionLog
   } = useAuditionLogs();
 
+  console.log('🔍 AuditionLogs component state:', {
+    logsCount: logs.length,
+    timeSlotsCount: allTimeSlots.length,
+    loading,
+    logs: logs,
+    timeSlots: allTimeSlots
+  });
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedLog, setSelectedLog] = useState<AuditionLog | null>(null);
