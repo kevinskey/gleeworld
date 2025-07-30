@@ -26,7 +26,57 @@ Director, Spelman College Glee Club
     {
       id: "history",
       title: "History of the Spelman College Glee Club",
-      content: "History content will be added here from the PDF handbook..."
+      content: `The Spelman College Glee Club has maintained a formal reputation of choral excellence since it began in 1924. It is an organization that is open by audition to all students of the Spelman College community. The Glee Club's repertoire consists of secular choral literature for women's voices with special emphasis on traditional spirituals, music by African-American Composers, music from different cultures, and other commissioned works.
+
+The Spelman legacy of song is inextricably entwined in our institutional history. The founders of Spelman College, Sophia B. Packard and Harriet E. Giles, possessed more than a desire to open a school for Black women and girls in the post-slavery South. They desired to establish and teach a curriculum that ensured a well-rounded educational experience. Therefore, instruction in music was introduced into the course offerings early on. Miss Giles, an accomplished pianist, taught music lessons prior to moving to Atlanta. Had it not been for her divine calling, she might very well have had a career as a concert pianist. Yet, the prospect of founding the school that would become Spelman beckoned both Miss Packard and Miss Giles. To help fund the move to Atlanta, Miss Giles sold her beloved piano.
+
+This legacy is embodied in the Spelman College Glee Club, which is the primary performance organization of the College. The Glee Club sings for most major campus events, including Founder's Day Convocation and Baccalaureate and Commencement services. Generations of young women, including those who major and minor in music, as well as those focusing on other areas of study, have given their time, talent, and energy in exchange for membership in this special elite group embedded within the Spelman sisterhood.
+
+---
+
+### Early Beginnings
+
+The beginnings of the Glee Club can be traced back to 1882, just one year after the college opened. In this year, the first joint concert of the Atlanta Baptist Female Seminary (Spelman College) and the Atlanta Baptist Seminary (Morehouse College) was held. This effort evolved into annual music performances and continues today as the Spelman-Morehouse Christmas Carol Concert held every December.
+
+In 1911, Kemper Harreld joined the faculty of Morehouse College, where he established a Glee Club and orchestra. A renowned concert violinist and conductor, he developed a reputation for excellence in classical and folk music. Harreld became a member of the Spelman music faculty in 1927, and was chairman of the music departments of both institutions for twenty-seven years. It was during Harreld's first year at Spelman that President Florence M. Read initiated the first Christmas Carol Concert by the Morehouse and Spelman Glee Clubs in the newly built Sister's Chapel.
+
+Over the years the Christmas Carol Concert has become the perennial highlight of the Christmas season in Atlanta and is presented by both the Spelman and Morehouse College Glee Clubs. The audience swells to over 10,000 for the three-night celebratory concert, and the national television broadcast is widely viewed throughout the country.
+
+---
+
+### Recent Highlights
+
+The Glee Club has had the unique opportunity to perform on a number of occasions with the Atlanta Symphony Orchestra and sing with such musicians as Jessye Norman, Indra Thomas, Audra McDonald, and Patti LaBelle.
+
+Each year the Spelman College Glee Club, in coalition with the Morehouse College Glee Club and the Atlanta Symphony Orchestra, participates in the Martin Luther King, Jr., Birthday celebration — a concert that is broadcast worldwide. The Glee Club has also been featured on "Performance Today" for National Public Radio.
+
+Major annual performances of the Spelman College Glee Club include:
+- The Christmas Carol Concert
+- The Spring Concert Tour
+- The Annual Spring Concert
+- The Spelman-Morehouse-Tuskegee Black History Month Celebration
+
+The Spelman College Glee Club has traveled throughout the country performing for a variety of audiences in venues like:
+- Fanueil Hall (Boston)
+- Brooklyn Academy of Music (NY)
+- Avery Fisher Hall at Lincoln Center
+- Spivey Hall and Symphony Hall (Atlanta)
+
+International travel includes performances in Brazil, Canada, and Italy.
+
+---
+
+### Leadership Legacy
+
+- Kemper Harreld (1927)
+- Willis Laurence James (1933–1966)
+- Dr. Grace Boggs Smith (Interim)
+- Dr. Roland Allison (1967–1989)
+- Dr. Ruth B. Stokes (1990–1991)
+- Dr. Norma Raybon (1991–1999)
+- **Dr. Kevin P. Johnson (1999–Present)**
+
+Dr. Johnson continues to uphold the Glee Club's tradition of choral excellence while amazing and inspiring all those who come in contact with the ensemble.`
     },
     {
       id: "director-bio",
