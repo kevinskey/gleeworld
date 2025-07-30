@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, LayoutDashboard, ImagePlus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -96,7 +96,7 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                       onClick={() => navigate('/dashboard/pr-hub')}
                       className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 rounded-full hover:bg-white/20"
                     >
-                      <Camera className="h-6 w-6" />
+                      <ImagePlus className="h-6 w-6" />
                     </Button>
                   </EnhancedTooltip>
                 )}
