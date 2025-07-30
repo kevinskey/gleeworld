@@ -39,14 +39,14 @@ export const useAdminStipends = () => {
       setLoading(true);
       setError(null);
 
-      // Check if user is admin
+      // Check if user is admin using gw_profiles table
       const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
+        .from('gw_profiles')
+        .select('is_admin, is_super_admin')
+        .eq('user_id', user.id)
         .single();
 
-      if (!profile || !['admin', 'super-admin'].includes(profile.role)) {
+      if (!profile || (!profile.is_admin && !profile.is_super_admin)) {
         throw new Error('Access denied: Admin privileges required');
       }
 
@@ -95,12 +95,12 @@ export const useAdminStipends = () => {
         throw assignmentsError;
       }
 
-      // Fetch all user profiles
+      // Fetch all user profiles from gw_profiles table
       const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name, email');
+        .from('gw_profiles')
+        .select('user_id, full_name, email');
 
-      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
       // Also fetch any actual payments for context
       const { data: userPayments } = await supabase
@@ -340,14 +340,14 @@ export const useAdminStipends = () => {
       setLoading(true);
       console.log('Syncing contract stipends to finance records...');
 
-      // Check if user is admin
+      // Check if user is admin using gw_profiles table
       const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
+        .from('gw_profiles')
+        .select('is_admin, is_super_admin')
+        .eq('user_id', user.id)
         .single();
 
-      if (!profile || !['admin', 'super-admin'].includes(profile.role)) {
+      if (!profile || (!profile.is_admin && !profile.is_super_admin)) {
         throw new Error('Access denied: Admin privileges required');
       }
 
