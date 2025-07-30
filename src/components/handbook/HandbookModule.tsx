@@ -137,7 +137,54 @@ He is a member of the American Society of Composers and Publishers as well as an
     {
       id: "executive-requirements",
       title: "Executive Board Requirements",
-      content: "Executive board requirements content will be added here from the PDF handbook..."
+      content: `A Spelman College Glee Club Executive Board Member must:
+
+- Be registered both semesters of the next academic year.
+- Have been a member of the Glee Club for at least two consecutive semesters unless otherwise appointed by the Directors and President.
+- Have a minimum 2.7 cumulative GPA.
+- Be earning an A in Glee Club.
+- Attend ALL executive board meetings.
+- Attend ALL scheduled performances and social events.
+- Must arrive fifteen minutes prior to ALL performance call times.
+- Must remain post-performance to ensure cleanliness.
+- Fulfill the duties of her position as outlined.
+
+**Note:** Absence from executive board meetings, Glee Club social events, or concerts may result in impeachment.
+
+---
+
+### 📋 Electoral Process:
+
+- Elections will be held prior to the banquet at the close of the Spring Semester.
+- Each applicant will be required to submit a resume, report for an interview, and present a speech.
+
+#### Scoring:
+- Resume, interview, speech, and general body vote are used to calculate the final score.
+- This is combined with the vote from the Director and Alumnae Board to determine the winner.
+
+- Selection of the Student Conductors and Section Leaders is at the Director's discretion.
+- Any officer may be removed by majority vote at the Director's discretion or by the Executive Board and the Director.
+
+---
+
+### 📌 Appointment / Application Process:
+
+- Positions may be appointed at the Director's discretion.
+- Members may apply for desired positions.
+- Application submission deadline is determined by the Director.
+- Candidates are interviewed by the Director, President, current position holder, and a member of the Alumnae Board.
+- Final decisions are made by the Director and announced at the Spring Banquet.
+
+**Note:** Either process (election or appointment) may be chosen or changed at the Director's discretion.
+
+---
+
+### 📜 Commitment Clause:
+
+- Each Executive Board member is required to carry out their position for the entire year.
+- If unable to complete their term, members must meet with the Directors to discuss consequences.
+- Executive Board members do not have the ability to take a leave of absence.
+- If an Exec member needs a break not excused by medical/emergency leave, they will forfeit their position and may be replaced.`
     },
     {
       id: "membership-commitment",
