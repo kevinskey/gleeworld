@@ -10,6 +10,7 @@ import { useCameraImport } from '@/hooks/useCameraImport';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { uploadFileAndGetUrl } from "@/utils/storage";
 
 interface CameraImportDialogProps {
   open: boolean;
@@ -128,20 +129,13 @@ export const CameraImportDialog = ({ open, onOpenChange, onSuccess }: CameraImpo
   };
 
   const uploadFile = async (file: File): Promise<string> => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const result = await uploadFileAndGetUrl(file, 'sheet-music');
     
-    const { error: uploadError } = await supabase.storage
-      .from('sheet-music')
-      .upload(fileName, file);
-
-    if (uploadError) throw uploadError;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('sheet-music')
-      .getPublicUrl(fileName);
-
-    return publicUrl;
+    if (!result) {
+      throw new Error('Failed to upload file');
+    }
+    
+    return result.url;
   };
 
   const handleSubmit = async () => {

@@ -11,6 +11,7 @@ import { Upload, FileText, Music, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { uploadFileAndGetUrl } from "@/utils/storage";
 
 interface UploadDialogProps {
   open: boolean;
@@ -76,21 +77,14 @@ export const UploadDialog = ({ open, onOpenChange, activeTab }: UploadDialogProp
     }
   };
 
-  const uploadFile = async (file: File, bucket: string, folder: string) => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+  const uploadFile = async (file: File, bucket: string, folder: string = '') => {
+    const result = await uploadFileAndGetUrl(file, bucket, folder);
     
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .upload(fileName, file);
-
-    if (error) throw error;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(fileName);
-
-    return publicUrl;
+    if (!result) {
+      throw new Error(`Failed to upload file to ${bucket}`);
+    }
+    
+    return result.url;
   };
 
   const submitSheetMusic = async () => {

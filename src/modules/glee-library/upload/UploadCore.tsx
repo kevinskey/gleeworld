@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { generateSheetMusicFilename } from '@/lib/music-library/file-naming';
 import { logSheetMusicAction, getDeviceType } from '@/lib/music-library/analytics';
+import { uploadFileAndGetUrl } from "@/utils/storage";
 
 export interface UploadFormData {
   title: string;
@@ -66,15 +67,10 @@ export const useSheetMusicUpload = () => {
       });
 
       // Upload file to storage
-      const filePath = `${user.id}/${filename}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('sheet-music')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) throw uploadError;
+      const result = await uploadFileAndGetUrl(file, 'sheet-music', user.id);
+      if (!result) {
+        throw new Error('Failed to upload file to storage');
+      }
 
       setUploadProgress({
         stage: 'processing',
@@ -96,7 +92,7 @@ export const useSheetMusicUpload = () => {
           voice_parts: formData.voiceParts || null,
           language: formData.language || null,
           tags: formData.tags || null,
-          pdf_url: uploadData.path,
+          pdf_url: result.url,
           is_public: formData.isPublic,
           created_by: user.id,
         })
