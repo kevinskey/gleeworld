@@ -109,7 +109,7 @@ export const CalendarViews = () => {
               </div>
             </div>
           </CardHeader>
-        <CardContent className="p-4 pt-2">
+        <CardContent className="p-0 pt-2">
           <Tabs value={activeView} onValueChange={setActiveView}>
             <TabsList className="grid w-full grid-cols-3 h-8 md:h-10">
               <TabsTrigger value="month" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2">
