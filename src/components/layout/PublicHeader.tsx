@@ -52,7 +52,7 @@ export const PublicHeader = () => {
           {/* Right side actions */}
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             {/* Auth Button - Responsive sizing */}
-            <Button asChild variant="secondary" size="sm" className="hidden sm:flex text-xs sm:text-sm px-2 sm:px-3">
+            <Button asChild variant="default" size="sm" className="hidden sm:flex text-sm px-4 bg-blue-600 hover:bg-blue-700 text-white">
               <Link to="/auth">
                 <span className="hidden lg:inline">Sing In</span>
                 <span className="lg:hidden">Sing</span>
