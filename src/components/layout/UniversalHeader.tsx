@@ -99,8 +99,8 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                       <img 
                         src="/lovable-uploads/a9348c2b-145b-4530-a755-80ee32c5bf6f.png" 
                         alt="Camera" 
-                        className="h-7 w-7 filter brightness-0 saturate-100"
-                        style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%)' }}
+                        className="h-7 w-7 filter"
+                        style={{ filter: 'brightness(0) saturate(100%) invert(21%) sepia(100%) saturate(4274%) hue-rotate(220deg) brightness(91%) contrast(91%)' }}
                       />
                     </Button>
                   </EnhancedTooltip>
