@@ -464,14 +464,6 @@ const Profile = () => {
           </Button>
         </div>
 
-        {!isEditing && (
-          <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-            <p className="text-blue-100 text-sm">
-              <Edit className="h-4 w-4 inline mr-2" />
-              Click "Edit Profile" above to make changes to your information
-            </p>
-          </div>
-        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Profile Picture & Basic Info */}
