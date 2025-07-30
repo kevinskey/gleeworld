@@ -88,22 +88,38 @@ export const AnnotationCanvas = ({
   }, [backgroundImageUrl]);
 
   const loadBackground = async () => {
-    if (!backgroundImageUrl || !canvasRef.current) return;
+    console.log('loadBackground called with URL:', backgroundImageUrl);
+    
+    if (!backgroundImageUrl || !canvasRef.current) {
+      console.log('loadBackground: No URL or canvas ref');
+      return;
+    }
 
     setPdfLoading(true);
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      console.log('loadBackground: No canvas context');
+      return;
+    }
 
     try {
+      console.log('loadBackground: Processing URL:', backgroundImageUrl);
+      
       if (backgroundImageUrl.toLowerCase().includes('.pdf')) {
+        console.log('loadBackground: Detected PDF file, loading with PDF.js');
         // Load PDF and convert first page to image
         const pdf = await pdfjsLib.getDocument(backgroundImageUrl).promise;
+        console.log('loadBackground: PDF loaded successfully');
+        
         const page = await pdf.getPage(1);
+        console.log('loadBackground: First page retrieved');
         
         const viewport = page.getViewport({ scale: 1 });
         const scale = Math.min(CANVAS_WIDTH / viewport.width, CANVAS_HEIGHT / viewport.height);
         const scaledViewport = page.getViewport({ scale });
+        
+        console.log('loadBackground: Rendering PDF page with scale:', scale);
         
         const renderContext = {
           canvasContext: ctx,
@@ -111,12 +127,14 @@ export const AnnotationCanvas = ({
         };
         
         await page.render(renderContext).promise;
-        console.log('PDF rendered successfully');
+        console.log('PDF rendered successfully to canvas');
       } else {
+        console.log('loadBackground: Detected image file, loading as image');
         // Load regular image
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
+          console.log('loadBackground: Image loaded, dimensions:', img.width, 'x', img.height);
           const scale = Math.min(CANVAS_WIDTH / img.width, CANVAS_HEIGHT / img.height);
           const width = img.width * scale;
           const height = img.height * scale;
@@ -125,6 +143,10 @@ export const AnnotationCanvas = ({
           
           ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
           ctx.drawImage(img, x, y, width, height);
+          console.log('Image rendered successfully to canvas');
+        };
+        img.onerror = (error) => {
+          console.error('loadBackground: Image failed to load:', error);
         };
         img.src = backgroundImageUrl;
       }
