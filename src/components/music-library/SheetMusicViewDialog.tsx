@@ -21,6 +21,7 @@ import { MarkedScores } from '@/modules/glee-library/marked-scores/MarkedScores'
 import { PersonalNotes } from '@/modules/glee-library/personal-notes/PersonalNotes';
 import { SmartToolsSidebar } from '@/modules/glee-library/smart-tools/SmartToolsSidebar';
 import { RehearsalLinks } from '@/modules/glee-library/rehearsal-links/RehearsalLinks';
+import { PDFViewer } from '@/components/PDFViewer';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface SheetMusic {
@@ -75,7 +76,7 @@ export const SheetMusicViewDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -93,8 +94,8 @@ export const SheetMusicViewDialog = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className={`flex gap-6 ${showSmartTools ? 'max-h-[80vh] overflow-hidden' : ''}`}>
-          <div className="flex-1 overflow-y-auto">
+        <div className="flex gap-4 h-[85vh] overflow-hidden">
+          <div className={`${showSmartTools ? 'flex-1' : 'w-full'} overflow-y-auto`}>
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -105,35 +106,27 @@ export const SheetMusicViewDialog = ({
               </TabsList>
               
               <TabsContent value="overview" className="mt-4">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
-                      {item.thumbnail_url ? (
-                        <img
-                          src={item.thumbnail_url}
-                          alt={`${item.title} thumbnail`}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                  <div className="xl:col-span-2 space-y-4">
+                    {item.pdf_url ? (
+                      <PDFViewer 
+                        pdfUrl={item.pdf_url} 
+                        className="w-full"
+                      />
+                    ) : (
+                      <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
                         <div className="w-full h-full flex items-center justify-center">
                           <FileText className="h-24 w-24 text-muted-foreground" />
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                     
                     <div className="flex gap-2">
                       {item.pdf_url && (
-                        <Button asChild className="flex-1">
-                          <a href={item.pdf_url} target="_blank" rel="noopener noreferrer">
-                            <FileText className="h-4 w-4 mr-2" />
-                            View PDF
-                          </a>
-                        </Button>
-                      )}
-                      {item.pdf_url && (
                         <Button variant="outline" asChild>
                           <a href={item.pdf_url} download>
-                            <Download className="h-4 w-4" />
+                            <Download className="h-4 w-4 mr-2" />
+                            Download PDF
                           </a>
                         </Button>
                       )}
@@ -171,7 +164,7 @@ export const SheetMusicViewDialog = ({
                     )}
                   </div>
 
-                  <div className="space-y-6">
+                  <div className="xl:col-span-1 space-y-6">
                     <div className="space-y-3">
                       <h3 className="text-lg font-semibold">Details</h3>
                       {item.composer && (
@@ -238,7 +231,9 @@ export const SheetMusicViewDialog = ({
           </div>
 
           {showSmartTools && (
-            <SmartToolsSidebar sheetMusic={item} />
+            <div className="w-80 flex-shrink-0 overflow-y-auto">
+              <SmartToolsSidebar sheetMusic={item} />
+            </div>
           )}
         </div>
       </DialogContent>
