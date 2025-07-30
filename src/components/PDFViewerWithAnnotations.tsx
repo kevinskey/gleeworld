@@ -17,13 +17,15 @@ import {
   ChevronLeft,
   ChevronRight,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
+  Share2
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useSheetMusicUrl } from '@/hooks/useSheetMusicUrl';
 import { cn } from '@/lib/utils';
+import { AnnotationSharingDialog } from '@/components/marked-scores/AnnotationSharingDialog';
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Set up PDF.js worker
@@ -57,6 +59,7 @@ export const PDFViewerWithAnnotations = ({
   const [currentPath, setCurrentPath] = useState<any>(null);
   const [hasAnnotations, setHasAnnotations] = useState(false);
   const [annotationMode, setAnnotationMode] = useState(false);
+  const [currentMarkedScoreId, setCurrentMarkedScoreId] = useState<string | null>(null);
   
   // PDF-specific state
   const [pdf, setPdf] = useState<any>(null);
@@ -244,7 +247,7 @@ export const PDFViewerWithAnnotations = ({
         .getPublicUrl(filePath);
       
       // Save to database
-      const { error: dbError } = await supabase
+      const { data, error: dbError } = await supabase
         .from('gw_marked_scores')
         .insert({
           music_id: musicId,
@@ -252,10 +255,18 @@ export const PDFViewerWithAnnotations = ({
           voice_part: 'Annotated',
           file_url: publicUrl,
           description: `Annotated ${musicTitle || 'Score'}`,
-          canvas_data: JSON.stringify(paths)
-        });
+          canvas_data: JSON.stringify(paths),
+          is_shareable: true
+        })
+        .select()
+        .single();
       
       if (dbError) throw dbError;
+      
+      // Store the marked score ID for sharing
+      if (data) {
+        setCurrentMarkedScoreId(data.id);
+      }
       
       toast.success("Annotated score saved successfully!");
       
@@ -462,6 +473,17 @@ export const PDFViewerWithAnnotations = ({
                   )}
                   Save
                 </Button>
+              )}
+              {currentMarkedScoreId && musicTitle && (
+                <AnnotationSharingDialog 
+                  markedScoreId={currentMarkedScoreId} 
+                  musicTitle={musicTitle}
+                >
+                  <Button variant="outline" size="sm">
+                    <Share2 className="h-4 w-4" />
+                    Share
+                  </Button>
+                </AnnotationSharingDialog>
               )}
             </div>
           </>

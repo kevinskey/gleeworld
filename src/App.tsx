@@ -70,6 +70,7 @@ import BookingRequest from "./pages/BookingRequest";
 import Wardrobe from "./pages/Wardrobe";
 import { ProductManagement } from "./pages/ProductManagement";
 import PRHubPage from "./pages/PRHubPage";
+import { SharedAnnotation } from "./pages/SharedAnnotation";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -326,7 +327,15 @@ const App = () => {
                      <PressKit />
                    </PublicRoute>
                  } 
-                />
+                 />
+                <Route 
+                  path="/shared-annotation/:shareToken" 
+                  element={
+                    <PublicRoute>
+                      <SharedAnnotation />
+                    </PublicRoute>
+                  } 
+                 />
                 <Route 
                   path="/about" 
                   element={
