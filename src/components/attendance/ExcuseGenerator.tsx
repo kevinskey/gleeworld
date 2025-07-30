@@ -98,7 +98,7 @@ export const ExcuseGenerator = ({ onRequestEdited }: ExcuseGeneratorProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingRequest, setEditingRequest] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Class Conflict Worksheet states
   const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
@@ -116,8 +116,8 @@ export const ExcuseGenerator = ({ onRequestEdited }: ExcuseGeneratorProps) => {
   const [conflictAnalysis, setConflictAnalysis] = useState<ConflictAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSubmittingConflict, setIsSubmittingConflict] = useState(false);
-  const [isConflictWorksheetCollapsed, setIsConflictWorksheetCollapsed] = useState(true);
-  const [isAttendanceStatsCollapsed, setIsAttendanceStatsCollapsed] = useState(true);
+  const [isConflictWorksheetCollapsed, setIsConflictWorksheetCollapsed] = useState(false);
+  const [isAttendanceStatsCollapsed, setIsAttendanceStatsCollapsed] = useState(false);
 
   const reasonOptions = [
     'Medical appointment',

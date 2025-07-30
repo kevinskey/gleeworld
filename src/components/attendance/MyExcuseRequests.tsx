@@ -44,7 +44,7 @@ export const MyExcuseRequests = ({ onEditRequest }: MyExcuseRequestsProps) => {
   const { toast } = useToast();
   const [myRequests, setMyRequests] = useState<MyExcuseRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const loadMyRequests = async () => {
     if (!user) return;
