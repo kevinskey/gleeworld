@@ -243,12 +243,25 @@ export const UserDashboard = () => {
   const displayName = profile?.full_name || user.email?.split('@')[0] || 'Member';
 
   // Get user dashboard data from context
-  const { dashboardData, payments, notifications } = useUserDashboardContext();
+  const { dashboardData, payments, notifications, loading: dashboardLoading } = useUserDashboardContext();
   console.log('UserDashboard: Context data loaded', { 
     dashboardData: !!dashboardData, 
     payments: payments?.length, 
-    notifications: notifications?.length 
+    notifications: notifications?.length,
+    loading: dashboardLoading
   });
+  
+  // Prevent rendering until dashboard data is ready to avoid blinking
+  if (dashboardLoading) {
+    console.log('UserDashboard: Dashboard data still loading, showing loading state');
+    return (
+      <UniversalLayout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <LoadingSpinner size="lg" text="Loading dashboard data..." />
+        </div>
+      </UniversalLayout>
+    );
+  }
   
   // Create real recent activity from various sources
   const getRecentActivity = () => {
