@@ -14,6 +14,7 @@ interface PRBulkActionsProps {
   onAction: () => void;
   onDelete: (imageId: string) => Promise<void>;
   onUpdateTags: (imageId: string, tagIds: string[]) => Promise<void>;
+  getImageUrl: (filePath: string) => string;
 }
 
 export const PRBulkActions = ({
@@ -23,6 +24,7 @@ export const PRBulkActions = ({
   onAction,
   onDelete,
   onUpdateTags,
+  getImageUrl,
 }: PRBulkActionsProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -96,22 +98,20 @@ export const PRBulkActions = ({
     if (selectedImages.length === 0) return;
 
     try {
-      // Note: In a real implementation, you would want to create a zip file
-      // For now, we'll download images individually
+      // Download images individually
       for (const imageId of selectedImages) {
         const image = images.find(img => img.id === imageId);
         if (image) {
-          // Create download link
-          const response = await fetch(`/api/storage/pr-images/${image.file_path}`);
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
+          const imageUrl = getImageUrl(image.file_path);
           const link = document.createElement('a');
-          link.href = url;
+          link.href = imageUrl;
           link.download = image.original_filename || `image-${image.id}.jpg`;
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          window.URL.revokeObjectURL(url);
+          
+          // Add small delay between downloads to prevent browser blocking
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
       }
 
@@ -269,7 +269,7 @@ export const PRBulkActions = ({
               {selectedImageData.slice(0, 12).map((image) => (
                 <div key={image.id} className="aspect-square">
                   <img
-                    src={`/api/storage/pr-images/${image.file_path}`}
+                    src={getImageUrl(image.file_path)}
                     alt={image.original_filename || 'Selected image'}
                     className="w-full h-full object-cover rounded border"
                   />

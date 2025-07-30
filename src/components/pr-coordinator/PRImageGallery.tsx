@@ -5,8 +5,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { PRImage } from '@/hooks/usePRImages';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { Calendar, User, Image as ImageIcon, Star } from 'lucide-react';
+import { Calendar, User, Image as ImageIcon, Star, Trash2, Edit, Download, Eye } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 interface PRImageGalleryProps {
   images: PRImage[];
@@ -15,6 +16,7 @@ interface PRImageGalleryProps {
   loading: boolean;
   onImageSelect: (imageId: string) => void;
   onImageClick: (image: PRImage) => void;
+  onImageDelete?: (imageId: string) => Promise<void>;
   getImageUrl: (filePath: string) => string;
 }
 
@@ -25,8 +27,42 @@ export const PRImageGallery = ({
   loading,
   onImageSelect,
   onImageClick,
+  onImageDelete,
   getImageUrl,
 }: PRImageGalleryProps) => {
+  const { toast } = useToast();
+
+  const handleQuickDelete = async (e: React.MouseEvent, imageId: string) => {
+    e.stopPropagation();
+    if (!onImageDelete) return;
+    
+    if (window.confirm('Are you sure you want to delete this image? This action cannot be undone.')) {
+      try {
+        await onImageDelete(imageId);
+        toast({
+          title: "Success",
+          description: "Image deleted successfully",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to delete image",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleDownload = (e: React.MouseEvent, image: PRImage) => {
+    e.stopPropagation();
+    const imageUrl = getImageUrl(image.file_path);
+    const link = document.createElement('a');
+    link.href = imageUrl;
+    link.download = image.original_filename || 'pr-image.jpg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -79,9 +115,42 @@ export const PRImageGallery = ({
                 </Badge>
               )}
 
+              {/* Action Buttons */}
+              <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-7 w-7 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onImageClick(image);
+                  }}
+                >
+                  <Eye className="h-3 w-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-7 w-7 p-0"
+                  onClick={(e) => handleDownload(e, image)}
+                >
+                  <Download className="h-3 w-3" />
+                </Button>
+                {onImageDelete && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="h-7 w-7 p-0"
+                    onClick={(e) => handleQuickDelete(e, image.id)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+
               {/* Tags */}
               {image.tags && image.tags.length > 0 && (
-                <div className="absolute bottom-2 left-2 flex gap-1 max-w-[calc(100%-1rem)]">
+                <div className="absolute bottom-2 left-2 flex gap-1 max-w-[calc(100%-4rem)]">
                   {image.tags.slice(0, 2).map((tag) => (
                     <Badge key={tag.id} variant="secondary" className="text-xs">
                       {tag.name}
@@ -159,13 +228,35 @@ export const PRImageGallery = ({
                     )}
                   </div>
 
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onImageClick(image)}
-                  >
-                    View Details
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onImageClick(image);
+                      }}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => handleDownload(e, image)}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                    {onImageDelete && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={(e) => handleQuickDelete(e, image.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">

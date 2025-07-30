@@ -245,6 +245,7 @@ export const PRCoordinatorHub = () => {
             loading={loading}
             onImageSelect={handleImageSelect}
             onImageClick={setSelectedImage}
+            onImageDelete={deleteImage}
             getImageUrl={getImageUrl}
           />
         </TabsContent>
@@ -267,6 +268,7 @@ export const PRCoordinatorHub = () => {
             }}
             onDelete={deleteImage}
             onUpdateTags={updateImageTags}
+            getImageUrl={getImageUrl}
           />
         </TabsContent>
       </Tabs>

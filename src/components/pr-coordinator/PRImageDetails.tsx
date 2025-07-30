@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { PRImage, PRImageTag } from '@/hooks/usePRImages';
 import { Download, Trash2, Edit, Save, X, Star, Calendar, User, FileImage } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
