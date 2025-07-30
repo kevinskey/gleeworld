@@ -14,10 +14,6 @@ export interface LibraryStatsData {
   totalDigital: number;
   totalPhysical: number;
   bothFormats: number;
-  needsInventory: number;
-  totalValue: number;
-  recentUploads: number;
-  popularPieces: number;
 }
 
 interface LibraryStatsProps {
@@ -53,40 +49,13 @@ export const LibraryStats = ({ stats, loading = false }: LibraryStatsProps) => {
       color: 'text-amber-600',
       bgColor: 'bg-amber-50',
       borderColor: 'border-amber-200'
-    },
-    {
-      title: 'Needs Inventory',
-      value: stats.needsInventory,
-      description: 'Physical copies to count',
-      icon: Clock,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-      borderColor: 'border-orange-200'
-    },
-    {
-      title: 'Total Value',
-      value: `$${stats.totalValue.toLocaleString()}`,
-      description: 'Estimated library worth',
-      icon: DollarSign,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50',
-      borderColor: 'border-emerald-200'
-    },
-    {
-      title: 'Recent Activity',
-      value: stats.recentUploads,
-      description: 'Uploads this month',
-      icon: TrendingUp,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      borderColor: 'border-purple-200'
     }
   ];
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Array.from({ length: 6 }).map((_, index) => (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {Array.from({ length: 3 }).map((_, index) => (
           <Card key={index} className="animate-pulse">
             <CardHeader className="pb-2">
               <div className="h-4 bg-gray-200 rounded w-3/4"></div>
@@ -102,7 +71,7 @@ export const LibraryStats = ({ stats, loading = false }: LibraryStatsProps) => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {statCards.map((stat, index) => {
         const IconComponent = stat.icon;
         
@@ -127,25 +96,10 @@ export const LibraryStats = ({ stats, loading = false }: LibraryStatsProps) => {
                 {stat.description}
               </p>
               
-              {/* Show trend indicator for applicable stats */}
-              {(stat.title === 'Recent Activity' && stats.recentUploads > 0) && (
-                <Badge variant="secondary" className="mt-2 text-xs">
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                  Active
-                </Badge>
-              )}
-              
               {(stat.title === 'Both Formats' && stats.bothFormats > 0) && (
                 <Badge variant="default" className="mt-2 text-xs">
                   <Star className="h-3 w-3 mr-1" />
                   Complete
-                </Badge>
-              )}
-              
-              {(stat.title === 'Needs Inventory' && stats.needsInventory > 0) && (
-                <Badge variant="destructive" className="mt-2 text-xs">
-                  <Clock className="h-3 w-3 mr-1" />
-                  Action Required
                 </Badge>
               )}
             </CardContent>

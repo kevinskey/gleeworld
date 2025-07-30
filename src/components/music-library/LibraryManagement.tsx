@@ -82,10 +82,6 @@ export const LibraryManagement = () => {
     totalDigital: 0,
     totalPhysical: 0,
     bothFormats: 0,
-    needsInventory: 0,
-    totalValue: 0,
-    recentUploads: 0,
-    popularPieces: 0,
   });
 
   useEffect(() => {
@@ -116,24 +112,12 @@ export const LibraryManagement = () => {
             totalDigital: acc.totalDigital + (hasDigital ? 1 : 0),
             totalPhysical: acc.totalPhysical + (item.physical_copies_count || 0),
             bothFormats: acc.bothFormats + (hasBoth ? 1 : 0),
-            needsInventory: acc.needsInventory + (
-              hasPhysical && !item.last_inventory_date ? 1 : 0
-            ),
-            totalValue: acc.totalValue + (item.purchase_price || 0),
-            recentUploads: acc.recentUploads + (
-              new Date(item.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) ? 1 : 0
-            ),
-            popularPieces: acc.popularPieces // Will be calculated from analytics later
           };
         },
         { 
           totalDigital: 0, 
           totalPhysical: 0, 
           bothFormats: 0, 
-          needsInventory: 0, 
-          totalValue: 0, 
-          recentUploads: 0, 
-          popularPieces: 0 
         }
       );
       
