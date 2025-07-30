@@ -150,13 +150,7 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                           {user.email}
                         </p>
                       </div>
-                     <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild className="py-1.5 text-xs">
-                        <Link to="/dashboard" className="flex items-center">
-                          <LayoutDashboard className="mr-1.5 h-3 w-3" />
-                          Dashboard
-                        </Link>
-                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem asChild className="py-1.5 text-xs">
                         <Link to="/profile" className="flex items-center">
                           <User className="mr-1.5 h-3 w-3" />
