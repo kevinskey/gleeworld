@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Canvas as FabricCanvas, FabricImage } from "fabric";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,7 +30,8 @@ export const AnnotationCanvas = ({
   onAnnotationChange 
 }: AnnotationCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
+  const [fabricCanvas, setFabricCanvas] = useState<any>(null);
+  const [fabricLoaded, setFabricLoaded] = useState(false);
   const [activeTool, setActiveTool] = useState<"select" | "draw" | "erase">("draw");
   const [brushSize, setBrushSize] = useState([3]);
   const [brushColor, setBrushColor] = useState("#ff0000");
@@ -43,72 +43,89 @@ export const AnnotationCanvas = ({
   const CANVAS_WIDTH = 800;
   const CANVAS_HEIGHT = 1000;
 
+  // Load Fabric.js dynamically
   useEffect(() => {
-    if (!canvasRef.current) return;
-
-    const canvas = new FabricCanvas(canvasRef.current, {
-      width: CANVAS_WIDTH,
-      height: CANVAS_HEIGHT,
-      backgroundColor: "#ffffff",
-      selection: activeTool === "select",
-    });
-
-    // Configure drawing brush
-    canvas.freeDrawingBrush.color = brushColor;
-    canvas.freeDrawingBrush.width = brushSize[0];
-
-    setFabricCanvas(canvas);
-
-    // Load background image if provided
-    if (backgroundImageUrl) {
-      loadBackgroundImage(canvas, backgroundImageUrl);
-    }
-
-    // Load initial annotations if provided
-    if (initialAnnotations) {
+    const loadFabric = async () => {
       try {
-        canvas.loadFromJSON(initialAnnotations);
+        if (typeof window === 'undefined') return;
+        
+        const fabricModule = await import('fabric');
+        setFabricLoaded(true);
+        
+        if (canvasRef.current) {
+          const canvas = new fabricModule.Canvas(canvasRef.current, {
+            width: CANVAS_WIDTH,
+            height: CANVAS_HEIGHT,
+            backgroundColor: "#ffffff",
+            selection: activeTool === "select",
+          });
+
+          // Configure drawing brush
+          canvas.freeDrawingBrush.color = brushColor;
+          canvas.freeDrawingBrush.width = brushSize[0];
+
+          setFabricCanvas(canvas);
+
+          // Load background image if provided
+          if (backgroundImageUrl) {
+            loadBackgroundImage(canvas, backgroundImageUrl, fabricModule);
+          }
+
+          // Load initial annotations if provided
+          if (initialAnnotations) {
+            try {
+              canvas.loadFromJSON(initialAnnotations);
+            } catch (error) {
+              console.error('Error loading initial annotations:', error);
+            }
+          }
+
+          // Save initial state to history
+          saveToHistory(canvas);
+
+          // Listen for canvas changes
+          canvas.on('path:created', () => {
+            saveToHistory(canvas);
+            onAnnotationChange?.(true);
+          });
+
+          canvas.on('object:added', () => {
+            onAnnotationChange?.(true);
+          });
+
+          canvas.on('object:removed', () => {
+            const hasObjects = canvas.getObjects().filter(obj => obj.type !== 'image').length > 0;
+            onAnnotationChange?.(hasObjects);
+          });
+        }
       } catch (error) {
-        console.error('Error loading initial annotations:', error);
+        console.error('Error loading Fabric.js:', error);
+        toast.error('Failed to load annotation tools');
       }
-    }
+    };
 
-    // Save initial state to history
-    saveToHistory(canvas);
-
-    // Listen for canvas changes
-    canvas.on('path:created', () => {
-      saveToHistory(canvas);
-      onAnnotationChange?.(true);
-    });
-
-    canvas.on('object:added', () => {
-      onAnnotationChange?.(true);
-    });
-
-    canvas.on('object:removed', () => {
-      const hasObjects = canvas.getObjects().filter(obj => obj.type !== 'image').length > 0;
-      onAnnotationChange?.(hasObjects);
-    });
+    loadFabric();
 
     return () => {
-      canvas.dispose();
+      if (fabricCanvas) {
+        fabricCanvas.dispose();
+      }
     };
   }, []);
 
-  const loadBackgroundImage = async (canvas: FabricCanvas, imageUrl: string) => {
+  const loadBackgroundImage = async (canvas: any, imageUrl: string, fabricModule: any) => {
     try {
-      const img = await FabricImage.fromURL(imageUrl);
+      const img = await fabricModule.FabricImage.fromURL(imageUrl);
       
       // Scale image to fit canvas while maintaining aspect ratio
-      const scaleX = CANVAS_WIDTH / img.width!;
-      const scaleY = CANVAS_HEIGHT / img.height!;
+      const scaleX = CANVAS_WIDTH / img.width;
+      const scaleY = CANVAS_HEIGHT / img.height;
       const scale = Math.min(scaleX, scaleY);
       
       img.scale(scale);
       img.set({
-        left: (CANVAS_WIDTH - img.width! * scale) / 2,
-        top: (CANVAS_HEIGHT - img.height! * scale) / 2,
+        left: (CANVAS_WIDTH - img.width * scale) / 2,
+        top: (CANVAS_HEIGHT - img.height * scale) / 2,
         selectable: false,
         evented: false,
         excludeFromExport: false
@@ -123,7 +140,7 @@ export const AnnotationCanvas = ({
     }
   };
 
-  const saveToHistory = useCallback((canvas: FabricCanvas) => {
+  const saveToHistory = useCallback((canvas: any) => {
     const state = JSON.stringify(canvas.toJSON());
     setCanvasHistory(prev => {
       const newHistory = prev.slice(0, historyIndex + 1);
@@ -134,7 +151,7 @@ export const AnnotationCanvas = ({
   }, [historyIndex]);
 
   useEffect(() => {
-    if (!fabricCanvas) return;
+    if (!fabricCanvas || !fabricLoaded) return;
 
     // Update drawing mode and brush settings
     fabricCanvas.isDrawingMode = activeTool === "draw";
@@ -151,7 +168,7 @@ export const AnnotationCanvas = ({
       fabricCanvas.freeDrawingBrush.color = "#ffffff";
       fabricCanvas.freeDrawingBrush.width = brushSize[0] * 2;
     }
-  }, [activeTool, brushSize, brushColor, fabricCanvas]);
+  }, [activeTool, brushSize, brushColor, fabricCanvas, fabricLoaded]);
 
   const handleToolClick = (tool: typeof activeTool) => {
     setActiveTool(tool);
@@ -162,7 +179,7 @@ export const AnnotationCanvas = ({
     
     // Keep background image, remove annotations only
     const objects = fabricCanvas.getObjects();
-    const backgroundImage = objects.find(obj => obj.type === 'image');
+    const backgroundImage = objects.find((obj: any) => obj.type === 'image');
     
     fabricCanvas.clear();
     
@@ -253,6 +270,17 @@ export const AnnotationCanvas = ({
     "#ffa500", // Orange
     "#ffff00", // Yellow
   ];
+
+  if (!fabricLoaded) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p>Loading annotation tools...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-4">

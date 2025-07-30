@@ -118,58 +118,15 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 const RootRoute = () => {
   const { loading } = useAuth();
   
-  console.log('RootRoute: Executing with loading=', loading);
-  console.log('RootRoute: Current URL=', window.location.href);
-  console.log('RootRoute: Current pathname=', window.location.pathname);
-  
   if (loading) {
-    console.log('RootRoute: Auth is loading, showing loading spinner');
     return (
-      <div className="min-h-screen bg-blue-100 flex items-center justify-center">
-        <div className="text-center p-8 bg-white rounded-lg shadow-lg">
-          <LoadingSpinner size="lg" text="Initializing authentication..." />
-          <p className="mt-4 text-gray-600">Loading application...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <LoadingSpinner size="lg" text="Initializing authentication..." />
       </div>
     );
   }
   
-  console.log('RootRoute: Auth loaded, rendering GleeWorldLanding');
-  
-  // Add a simple fallback test
-  try {
-    console.log('RootRoute: About to render GleeWorldLanding component');
-    return (
-      <div className="min-h-screen bg-green-100">
-        <div className="p-8 text-center">
-          <h1 className="text-4xl font-bold text-black mb-4">Test Page</h1>
-          <p className="text-black">If you see this, the routing is working!</p>
-          <div className="mt-8">
-            <GleeWorldLanding />
-          </div>
-        </div>
-      </div>
-    );
-  } catch (error) {
-    console.error('RootRoute: Error rendering GleeWorldLanding:', error);
-    return (
-      <div className="min-h-screen bg-red-100 flex items-center justify-center">
-        <div className="text-center p-8 bg-white rounded-lg shadow-lg">
-          <h1 className="text-2xl font-bold mb-4 text-red-600">Loading Error</h1>
-          <p className="text-gray-600 mb-4">There was an issue loading the page.</p>
-          <pre className="text-xs text-left bg-gray-100 p-2 rounded mb-4 overflow-auto max-w-md">
-            {error?.toString()}
-          </pre>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Reload Page
-          </button>
-        </div>
-      </div>
-    );
-  }
+  return <GleeWorldLanding />;
 };
 
 const App = () => {
