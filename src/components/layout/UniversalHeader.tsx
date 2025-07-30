@@ -1,5 +1,5 @@
 
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -21,6 +21,7 @@ interface UniversalHeaderProps {
 
 export const UniversalHeader = ({}: UniversalHeaderProps) => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const location = useLocation();
   const { userProfile } = useUserProfile(user);
@@ -93,7 +94,7 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      onClick={() => window.location.href = '/dashboard/pr-hub'}
+                      onClick={() => navigate('/dashboard/pr-hub')}
                       className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 rounded-full hover:bg-white/20"
                     >
                       <Camera className="h-4 w-4" />
