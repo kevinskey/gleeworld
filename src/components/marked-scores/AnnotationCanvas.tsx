@@ -11,14 +11,18 @@ import {
   Trash2, 
   Undo, 
   Redo,
-  Move,
-  MousePointer
+  MousePointer,
+  Loader2
 } from "lucide-react";
 import { toast } from "sonner";
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Set up PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 interface AnnotationCanvasProps {
   backgroundImageUrl?: string;
-  initialAnnotations?: string; // JSON string of canvas state
+  initialAnnotations?: string;
   onSave: (canvasData: string, imageBlob: Blob) => Promise<void>;
   onAnnotationChange?: (hasAnnotations: boolean) => void;
 }
@@ -30,241 +34,226 @@ export const AnnotationCanvas = ({
   onAnnotationChange 
 }: AnnotationCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [fabricCanvas, setFabricCanvas] = useState<any>(null);
-  const [fabricLoaded, setFabricLoaded] = useState(false);
+  const drawingCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
   const [activeTool, setActiveTool] = useState<"select" | "draw" | "erase">("draw");
   const [brushSize, setBrushSize] = useState([3]);
   const [brushColor, setBrushColor] = useState("#ff0000");
   const [isLoading, setIsLoading] = useState(false);
-  const [canvasHistory, setCanvasHistory] = useState<string[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [paths, setPaths] = useState<any[]>([]);
+  const [currentPath, setCurrentPath] = useState<any>(null);
+  const [hasAnnotations, setHasAnnotations] = useState(false);
 
-  // Canvas dimensions
   const CANVAS_WIDTH = 800;
   const CANVAS_HEIGHT = 1000;
 
-  // Load Fabric.js dynamically
+  // Initialize canvas and load PDF/image
   useEffect(() => {
-    const loadFabric = async () => {
+    if (!canvasRef.current || !drawingCanvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const drawingCanvas = drawingCanvasRef.current;
+    
+    canvas.width = CANVAS_WIDTH;
+    canvas.height = CANVAS_HEIGHT;
+    drawingCanvas.width = CANVAS_WIDTH;
+    drawingCanvas.height = CANVAS_HEIGHT;
+
+    if (backgroundImageUrl) {
+      loadBackground();
+    }
+
+    // Load initial annotations
+    if (initialAnnotations) {
       try {
-        if (typeof window === 'undefined') return;
-        
-        const fabricModule = await import('fabric');
-        setFabricLoaded(true);
-        
-        if (canvasRef.current) {
-          const canvas = new fabricModule.Canvas(canvasRef.current, {
-            width: CANVAS_WIDTH,
-            height: CANVAS_HEIGHT,
-            backgroundColor: "#ffffff",
-            selection: activeTool === "select",
-          });
-
-          // Configure drawing brush
-          canvas.freeDrawingBrush.color = brushColor;
-          canvas.freeDrawingBrush.width = brushSize[0];
-
-          setFabricCanvas(canvas);
-
-          // Load background image if provided
-          if (backgroundImageUrl) {
-            loadBackgroundImage(canvas, backgroundImageUrl, fabricModule);
-          }
-
-          // Load initial annotations if provided
-          if (initialAnnotations) {
-            try {
-              canvas.loadFromJSON(initialAnnotations);
-            } catch (error) {
-              console.error('Error loading initial annotations:', error);
-            }
-          }
-
-          // Save initial state to history
-          saveToHistory(canvas);
-
-          // Listen for canvas changes
-          canvas.on('path:created', () => {
-            saveToHistory(canvas);
-            onAnnotationChange?.(true);
-          });
-
-          canvas.on('object:added', () => {
-            onAnnotationChange?.(true);
-          });
-
-          canvas.on('object:removed', () => {
-            const hasObjects = canvas.getObjects().filter(obj => obj.type !== 'image').length > 0;
-            onAnnotationChange?.(hasObjects);
-          });
-        }
+        const savedPaths = JSON.parse(initialAnnotations);
+        setPaths(savedPaths);
+        redrawAnnotations(savedPaths);
       } catch (error) {
-        console.error('Error loading Fabric.js:', error);
-        toast.error('Failed to load annotation tools');
+        console.error('Error loading initial annotations:', error);
       }
-    };
+    }
+  }, [backgroundImageUrl]);
 
-    loadFabric();
+  const loadBackground = async () => {
+    if (!backgroundImageUrl || !canvasRef.current) return;
 
-    return () => {
-      if (fabricCanvas) {
-        fabricCanvas.dispose();
-      }
-    };
-  }, []);
+    setPdfLoading(true);
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-  const loadBackgroundImage = async (canvas: any, imageUrl: string, fabricModule: any) => {
     try {
-      let finalImageUrl = imageUrl;
-      
-      // Check if the URL is a PDF and convert it to an image
-      if (imageUrl.toLowerCase().includes('.pdf') || imageUrl.includes('application/pdf')) {
-        // For PDF files, we'll create a simple message instead of trying to load
-        // In a production app, you'd use PDF.js to convert PDF to image
-        console.log('PDF detected, skipping image load for now');
-        canvas.backgroundColor = "#f8f9fa";
-        canvas.renderAll();
+      if (backgroundImageUrl.toLowerCase().includes('.pdf')) {
+        // Load PDF and convert first page to image
+        const pdf = await pdfjsLib.getDocument(backgroundImageUrl).promise;
+        const page = await pdf.getPage(1);
         
-        // Add a text message explaining the PDF limitation
-        const text = new fabricModule.Text('PDF background not yet supported\nUse the drawing tools to annotate', {
-          left: CANVAS_WIDTH / 2,
-          top: CANVAS_HEIGHT / 2,
-          fontSize: 24,
-          textAlign: 'center',
-          originX: 'center',
-          originY: 'center',
-          fill: '#666666',
-          selectable: false,
-          evented: false
-        });
+        const viewport = page.getViewport({ scale: 1 });
+        const scale = Math.min(CANVAS_WIDTH / viewport.width, CANVAS_HEIGHT / viewport.height);
+        const scaledViewport = page.getViewport({ scale });
         
-        canvas.add(text);
-        canvas.renderAll();
-        return;
+        const renderContext = {
+          canvasContext: ctx,
+          viewport: scaledViewport
+        };
+        
+        await page.render(renderContext).promise;
+        console.log('PDF rendered successfully');
+      } else {
+        // Load regular image
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          const scale = Math.min(CANVAS_WIDTH / img.width, CANVAS_HEIGHT / img.height);
+          const width = img.width * scale;
+          const height = img.height * scale;
+          const x = (CANVAS_WIDTH - width) / 2;
+          const y = (CANVAS_HEIGHT - height) / 2;
+          
+          ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+          ctx.drawImage(img, x, y, width, height);
+        };
+        img.src = backgroundImageUrl;
       }
-      
-      const img = await fabricModule.FabricImage.fromURL(finalImageUrl);
-      
-      // Scale image to fit canvas while maintaining aspect ratio
-      const scaleX = CANVAS_WIDTH / img.width;
-      const scaleY = CANVAS_HEIGHT / img.height;
-      const scale = Math.min(scaleX, scaleY);
-      
-      img.scale(scale);
-      img.set({
-        left: (CANVAS_WIDTH - img.width * scale) / 2,
-        top: (CANVAS_HEIGHT - img.height * scale) / 2,
-        selectable: false,
-        evented: false,
-        excludeFromExport: false
-      });
-      
-      canvas.add(img);
-      canvas.sendObjectToBack(img);
-      canvas.renderAll();
     } catch (error) {
-      console.error('Error loading background image:', error);
-      toast.error('Failed to load sheet music image');
-      
-      // Fallback: show canvas without background
-      canvas.backgroundColor = "#f8f9fa";
-      canvas.renderAll();
+      console.error('Error loading background:', error);
+      toast.error('Failed to load background');
+    } finally {
+      setPdfLoading(false);
     }
   };
 
-  const saveToHistory = useCallback((canvas: any) => {
-    const state = JSON.stringify(canvas.toJSON());
-    setCanvasHistory(prev => {
-      const newHistory = prev.slice(0, historyIndex + 1);
-      newHistory.push(state);
-      return newHistory.slice(-20); // Keep last 20 states
-    });
-    setHistoryIndex(prev => prev + 1);
-  }, [historyIndex]);
-
-  useEffect(() => {
-    if (!fabricCanvas || !fabricLoaded) return;
-
-    // Update drawing mode and brush settings
-    fabricCanvas.isDrawingMode = activeTool === "draw";
-    fabricCanvas.selection = activeTool === "select";
+  const redrawAnnotations = (pathsToRedraw = paths) => {
+    if (!drawingCanvasRef.current) return;
     
-    if (fabricCanvas.freeDrawingBrush) {
-      fabricCanvas.freeDrawingBrush.color = brushColor;
-      fabricCanvas.freeDrawingBrush.width = brushSize[0];
-    }
+    const canvas = drawingCanvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    // Configure eraser mode
-    if (activeTool === "erase") {
-      fabricCanvas.isDrawingMode = true;
-      fabricCanvas.freeDrawingBrush.color = "#ffffff";
-      fabricCanvas.freeDrawingBrush.width = brushSize[0] * 2;
-    }
-  }, [activeTool, brushSize, brushColor, fabricCanvas, fabricLoaded]);
+    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    
+    pathsToRedraw.forEach(path => {
+      if (path.points && path.points.length > 1) {
+        ctx.strokeStyle = path.color;
+        ctx.lineWidth = path.size;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        ctx.beginPath();
+        ctx.moveTo(path.points[0].x, path.points[0].y);
+        
+        for (let i = 1; i < path.points.length; i++) {
+          ctx.lineTo(path.points[i].x, path.points[i].y);
+        }
+        
+        ctx.stroke();
+      }
+    });
+  };
 
-  const handleToolClick = (tool: typeof activeTool) => {
-    setActiveTool(tool);
+  const getMousePos = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = drawingCanvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (activeTool === "select") return;
+    
+    setIsDrawing(true);
+    const pos = getMousePos(e);
+    
+    const newPath = {
+      points: [pos],
+      color: activeTool === "erase" ? "#ffffff" : brushColor,
+      size: activeTool === "erase" ? brushSize[0] * 2 : brushSize[0],
+      tool: activeTool
+    };
+    
+    setCurrentPath(newPath);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDrawing || !currentPath) return;
+    
+    const pos = getMousePos(e);
+    const updatedPath = {
+      ...currentPath,
+      points: [...currentPath.points, pos]
+    };
+    
+    setCurrentPath(updatedPath);
+    redrawAnnotations([...paths, updatedPath]);
+  };
+
+  const handleMouseUp = () => {
+    if (!isDrawing || !currentPath) return;
+    
+    setIsDrawing(false);
+    const newPaths = [...paths, currentPath];
+    setPaths(newPaths);
+    setCurrentPath(null);
+    setHasAnnotations(true);
+    onAnnotationChange?.(true);
   };
 
   const handleClear = () => {
-    if (!fabricCanvas) return;
-    
-    // Keep background image, remove annotations only
-    const objects = fabricCanvas.getObjects();
-    const backgroundImage = objects.find((obj: any) => obj.type === 'image');
-    
-    fabricCanvas.clear();
-    
-    if (backgroundImage) {
-      fabricCanvas.add(backgroundImage);
-      fabricCanvas.sendObjectToBack(backgroundImage);
-    }
-    
-    fabricCanvas.backgroundColor = "#ffffff";
-    fabricCanvas.renderAll();
-    saveToHistory(fabricCanvas);
+    setPaths([]);
+    setHasAnnotations(false);
+    redrawAnnotations([]);
     onAnnotationChange?.(false);
     toast.success("Annotations cleared!");
   };
 
   const handleUndo = () => {
-    if (!fabricCanvas || historyIndex <= 0) return;
+    if (paths.length === 0) return;
     
-    const previousState = canvasHistory[historyIndex - 1];
-    fabricCanvas.loadFromJSON(previousState).then(() => {
-      fabricCanvas.renderAll();
-      setHistoryIndex(prev => prev - 1);
-    });
-  };
-
-  const handleRedo = () => {
-    if (!fabricCanvas || historyIndex >= canvasHistory.length - 1) return;
-    
-    const nextState = canvasHistory[historyIndex + 1];
-    fabricCanvas.loadFromJSON(nextState).then(() => {
-      fabricCanvas.renderAll();
-      setHistoryIndex(prev => prev + 1);
-    });
+    const newPaths = paths.slice(0, -1);
+    setPaths(newPaths);
+    redrawAnnotations(newPaths);
+    setHasAnnotations(newPaths.length > 0);
+    onAnnotationChange?.(newPaths.length > 0);
   };
 
   const handleSave = async () => {
-    if (!fabricCanvas) return;
+    if (!canvasRef.current || !drawingCanvasRef.current) return;
     
     setIsLoading(true);
     try {
-      // Get canvas data as JSON
-      const canvasData = JSON.stringify(fabricCanvas.toJSON());
+      // Create a composite canvas
+      const compositeCanvas = document.createElement('canvas');
+      compositeCanvas.width = CANVAS_WIDTH;
+      compositeCanvas.height = CANVAS_HEIGHT;
+      const compositeCtx = compositeCanvas.getContext('2d');
       
-      // Export as image
-      const dataURL = fabricCanvas.toDataURL({
-        format: 'png',
-        quality: 0.9,
-        multiplier: 2 // Higher resolution
-      });
+      if (!compositeCtx) throw new Error('Could not get composite canvas context');
+      
+      // Draw background (PDF/image)
+      compositeCtx.drawImage(canvasRef.current, 0, 0);
+      
+      // Draw annotations on top
+      compositeCtx.drawImage(drawingCanvasRef.current, 0, 0);
       
       // Convert to blob
-      const response = await fetch(dataURL);
-      const blob = await response.blob();
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        compositeCanvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Failed to create blob'));
+        }, 'image/png', 0.9);
+      });
+      
+      // Save annotations data as JSON
+      const canvasData = JSON.stringify(paths);
       
       await onSave(canvasData, blob);
       toast.success("Marked score saved successfully!");
@@ -277,17 +266,24 @@ export const AnnotationCanvas = ({
   };
 
   const handleDownload = () => {
-    if (!fabricCanvas) return;
+    if (!canvasRef.current || !drawingCanvasRef.current) return;
     
-    const dataURL = fabricCanvas.toDataURL({
-      format: 'png',
-      quality: 0.9,
-      multiplier: 2
-    });
+    // Create composite canvas
+    const compositeCanvas = document.createElement('canvas');
+    compositeCanvas.width = CANVAS_WIDTH;
+    compositeCanvas.height = CANVAS_HEIGHT;
+    const compositeCtx = compositeCanvas.getContext('2d');
     
+    if (!compositeCtx) return;
+    
+    // Draw background and annotations
+    compositeCtx.drawImage(canvasRef.current, 0, 0);
+    compositeCtx.drawImage(drawingCanvasRef.current, 0, 0);
+    
+    // Download
     const link = document.createElement('a');
     link.download = `marked-score-${Date.now()}.png`;
-    link.href = dataURL;
+    link.href = compositeCanvas.toDataURL('image/png');
     link.click();
     
     toast.success("Image downloaded!");
@@ -303,17 +299,6 @@ export const AnnotationCanvas = ({
     "#ffff00", // Yellow
   ];
 
-  if (!fabricLoaded) {
-    return (
-      <Card>
-        <CardContent className="p-8 text-center">
-          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p>Loading annotation tools...</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <div className="space-y-4">
       {/* Toolbar */}
@@ -325,7 +310,7 @@ export const AnnotationCanvas = ({
               <Button
                 variant={activeTool === "select" ? "default" : "outline"}
                 size="sm"
-                onClick={() => handleToolClick("select")}
+                onClick={() => setActiveTool("select")}
               >
                 <MousePointer className="h-4 w-4" />
                 Select
@@ -333,7 +318,7 @@ export const AnnotationCanvas = ({
               <Button
                 variant={activeTool === "draw" ? "default" : "outline"}
                 size="sm"
-                onClick={() => handleToolClick("draw")}
+                onClick={() => setActiveTool("draw")}
               >
                 <Pencil className="h-4 w-4" />
                 Draw
@@ -341,7 +326,7 @@ export const AnnotationCanvas = ({
               <Button
                 variant={activeTool === "erase" ? "default" : "outline"}
                 size="sm"
-                onClick={() => handleToolClick("erase")}
+                onClick={() => setActiveTool("erase")}
               >
                 <Eraser className="h-4 w-4" />
                 Erase
@@ -355,12 +340,12 @@ export const AnnotationCanvas = ({
                   key={color}
                   variant="outline"
                   size="sm"
-                  className="w-8 h-8 p-0 rounded-full"
+                  className="w-8 h-8 p-0 rounded-full border-2"
                   style={{ backgroundColor: color }}
                   onClick={() => setBrushColor(color)}
                 >
                   {brushColor === color && (
-                    <div className="w-3 h-3 bg-white rounded-full" />
+                    <div className="w-3 h-3 bg-white rounded-full border border-gray-400" />
                   )}
                 </Button>
               ))}
@@ -380,32 +365,21 @@ export const AnnotationCanvas = ({
               <Badge variant="outline">{brushSize[0]}</Badge>
             </div>
 
-            {/* History Controls */}
-            <div className="flex gap-2">
+            {/* Actions */}
+            <div className="flex gap-2 ml-auto">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleUndo}
-                disabled={historyIndex <= 0}
+                disabled={paths.length === 0}
               >
                 <Undo className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleRedo}
-                disabled={historyIndex >= canvasHistory.length - 1}
-              >
-                <Redo className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-2 ml-auto">
-              <Button
-                variant="outline"
-                size="sm"
                 onClick={handleClear}
+                disabled={paths.length === 0}
               >
                 <Trash2 className="h-4 w-4" />
                 Clear
@@ -423,7 +397,11 @@ export const AnnotationCanvas = ({
                 onClick={handleSave}
                 disabled={isLoading}
               >
-                <Save className="h-4 w-4" />
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
                 {isLoading ? "Saving..." : "Save"}
               </Button>
             </div>
@@ -434,22 +412,52 @@ export const AnnotationCanvas = ({
       {/* Canvas */}
       <Card>
         <CardContent className="p-4">
-          <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+          {pdfLoading && (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin mr-2" />
+              <span>Loading sheet music...</span>
+            </div>
+          )}
+          
+          <div className="relative border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+            {/* Background canvas (PDF/image) */}
             <canvas 
-              ref={canvasRef} 
-              className="max-w-full h-auto block border-0"
+              ref={canvasRef}
+              className="absolute inset-0 w-full h-auto"
               style={{ 
-                display: 'block',
                 maxWidth: '100%',
-                height: 'auto'
+                height: 'auto',
+                display: 'block'
               }}
             />
+            
+            {/* Drawing canvas (annotations) */}
+            <canvas 
+              ref={drawingCanvasRef}
+              className="relative w-full h-auto cursor-crosshair"
+              style={{ 
+                maxWidth: '100%',
+                height: 'auto',
+                display: 'block'
+              }}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={() => setIsDrawing(false)}
+            />
           </div>
+          
           <div className="mt-2 text-xs text-gray-500 text-center">
-            {backgroundImageUrl?.includes('.pdf') ? 
-              'PDF background detected - Use drawing tools to annotate' : 
-              'Use the tools above to annotate the sheet music'
-            }
+            {backgroundImageUrl ? (
+              backgroundImageUrl.includes('.pdf') ? 
+                'PDF loaded - Use drawing tools to annotate' : 
+                'Image loaded - Use drawing tools to annotate'
+            ) : (
+              'No background loaded - Use drawing tools on blank canvas'
+            )}
+            {hasAnnotations && (
+              <span className="ml-2 text-green-600">• Has annotations</span>
+            )}
           </div>
         </CardContent>
       </Card>
