@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Book, Search, GraduationCap, Users, Calendar, Music, Shield, DollarSign, Palette, MapPin, Star, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { HandbookExam } from "./HandbookExam";
-import { Badge } from "@/components/ui/badge";
+import { HandbookContractSigning } from "./HandbookContractSigning";
 
 export const HandbookModule = () => {
   const [searchTerm, setSearchTerm] = useState("");
