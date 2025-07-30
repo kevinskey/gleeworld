@@ -218,7 +218,7 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="ghost" 
-                    className="text-primary hover:bg-primary/10 border border-primary/30 hidden lg:flex items-center gap-2"
+                    className="text-primary hover:bg-primary/20 bg-white/90 backdrop-blur-sm border border-primary/50 shadow-lg hidden lg:flex items-center gap-2"
                   >
                     <Shield className="h-4 w-4" />
                     <span className="text-sm">{getCurrentDashboardView()}</span>
