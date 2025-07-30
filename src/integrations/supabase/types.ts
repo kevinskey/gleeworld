@@ -2541,6 +2541,66 @@ export type Database = {
           },
         ]
       }
+      gw_audition_logs: {
+        Row: {
+          applicant_email: string
+          applicant_name: string
+          application_data: Json | null
+          audition_date: string
+          audition_id: string | null
+          audition_time: string
+          created_at: string
+          grade_data: Json | null
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          is_reviewed: boolean | null
+          notes: string | null
+          status: string | null
+          updated_at: string
+          user_id: string | null
+          voice_part: string | null
+        }
+        Insert: {
+          applicant_email: string
+          applicant_name: string
+          application_data?: Json | null
+          audition_date: string
+          audition_id?: string | null
+          audition_time: string
+          created_at?: string
+          grade_data?: Json | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          is_reviewed?: boolean | null
+          notes?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+          voice_part?: string | null
+        }
+        Update: {
+          applicant_email?: string
+          applicant_name?: string
+          application_data?: Json | null
+          audition_date?: string
+          audition_id?: string | null
+          audition_time?: string
+          created_at?: string
+          grade_data?: Json | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          is_reviewed?: boolean | null
+          notes?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+          voice_part?: string | null
+        }
+        Relationships: []
+      }
       gw_auditions: {
         Row: {
           additional_info: string | null

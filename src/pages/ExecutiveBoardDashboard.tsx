@@ -78,6 +78,7 @@ import { LibraryManagement } from "@/components/music-library/LibraryManagement"
 import { HistorianWorkpage } from "@/components/historian/HistorianWorkpage";
 import { ChaplainWorkHub } from "@/components/chaplain/ChaplainWorkHub";
 import { PRCoordinatorHub } from "@/components/pr-coordinator/PRCoordinatorHub";
+import { AuditionLogs } from "@/components/executive-board/AuditionLogs";
 
 
 export type ExecutivePosition = 
@@ -568,6 +569,10 @@ export const ExecutiveBoardDashboard = () => {
                 </TabsTrigger>
               </>
             )}
+            <TabsTrigger value="audition-logs" className="text-xs">
+              <Music className="h-4 w-4 mr-1" />
+              Audition Logs
+            </TabsTrigger>
             <TabsTrigger value="handbook" className="text-xs">
               <BookOpen className="h-4 w-4 mr-1" />
               Handbook
@@ -1173,6 +1178,10 @@ export const ExecutiveBoardDashboard = () => {
               </TabsContent>
             </>
           )}
+
+          <TabsContent value="audition-logs">
+            <AuditionLogs />
+          </TabsContent>
 
           <TabsContent value="handbook">
             <Card>
