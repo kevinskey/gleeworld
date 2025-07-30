@@ -47,6 +47,7 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
   // Load executive board members
   const loadExecMembers = async () => {
     try {
+      console.log('🔍 Loading executive board members...');
       const { data, error } = await supabase
         .from('gw_executive_board_members')
         .select(`
@@ -62,6 +63,8 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
         .eq('is_active', true)
         .order('position');
 
+      console.log('🔍 Executive board query result:', { data, error });
+
       if (error) throw error;
 
       const membersWithProfiles = data?.map(member => ({
@@ -71,9 +74,10 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
           : member.gw_profiles
       })) || [];
 
+      console.log('🔍 Processed executive board members:', membersWithProfiles);
       setExecMembers(membersWithProfiles);
     } catch (error) {
-      console.error('Error loading executive board members:', error);
+      console.error('❌ Error loading executive board members:', error);
       toast({
         title: "Error",
         description: "Failed to load executive board members",
