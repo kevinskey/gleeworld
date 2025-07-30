@@ -44,24 +44,68 @@ export const usePRImages = () => {
     try {
       console.log('usePRImages: Starting fetchImages...');
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // First, get the basic image data
+      const { data: imageData, error: imageError } = await supabase
         .from('pr_images')
         .select('*')
         .order('uploaded_at', { ascending: false });
 
-      console.log('usePRImages: Raw query result:', { data, error });
-
-      if (error) {
-        console.error('usePRImages: Query error:', error);
-        throw error;
+      if (imageError) {
+        console.error('usePRImages: Query error:', imageError);
+        throw imageError;
       }
 
-      const processedImages = data?.map(image => ({
-        ...image,
-        tags: [] // We'll fetch tags separately for now
-      })) || [];
+      console.log('usePRImages: Raw image data:', { imageData, imageError });
 
-      console.log('usePRImages: Processed images:', processedImages);
+      // Then, get photographer and uploader info separately
+      const processedImages = await Promise.all((imageData || []).map(async (image) => {
+        let photographer = null;
+        let uploader = null;
+
+        // Get photographer info if photographer_id exists
+        if (image.photographer_id) {
+          const { data: photographerData } = await supabase
+            .from('gw_profiles')
+            .select('full_name, first_name, last_name')
+            .eq('user_id', image.photographer_id)
+            .single();
+          
+          if (photographerData) {
+            photographer = {
+              full_name: photographerData.full_name || 
+                        `${photographerData.first_name || ''} ${photographerData.last_name || ''}`.trim() ||
+                        'Unknown Photographer'
+            };
+          }
+        }
+
+        // Get uploader info
+        if (image.uploaded_by) {
+          const { data: uploaderData } = await supabase
+            .from('gw_profiles')
+            .select('full_name, first_name, last_name')
+            .eq('user_id', image.uploaded_by)
+            .single();
+          
+          if (uploaderData) {
+            uploader = {
+              full_name: uploaderData.full_name || 
+                        `${uploaderData.first_name || ''} ${uploaderData.last_name || ''}`.trim() ||
+                        'Unknown User'
+            };
+          }
+        }
+
+        return {
+          ...image,
+          tags: [], // We'll fetch tags separately for now
+          photographer,
+          uploader
+        };
+      }));
+
+      console.log('usePRImages: Processed images with photographer info:', processedImages);
       console.log('usePRImages: Total images found:', processedImages.length);
 
       setImages(processedImages);

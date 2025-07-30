@@ -52,7 +52,7 @@ export const PRDataManager = () => {
   });
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
-  // Extract location data from caption
+  // Extract location data from caption and use actual photographer data
   const extractMetadata = (image: PRImage) => {
     const caption = image.caption || '';
     
@@ -63,28 +63,32 @@ export const PRDataManager = () => {
       longitude: parseFloat(locationMatch[2])
     } : null;
     
-    // Extract username (format: "By: username")
-    const usernameMatch = caption.match(/By: ([^|]+)/);
-    const username = usernameMatch ? usernameMatch[1].trim() : '';
+    // Use actual photographer name from database, fallback to caption extraction
+    const photographerName = image.photographer?.full_name || 
+      image.uploader?.full_name || 
+      (() => {
+        const usernameMatch = caption.match(/By: ([^|]+)/);
+        return usernameMatch ? usernameMatch[1].trim() : 'Unknown';
+      })();
     
     // Extract capture time (format: "Captured: date time")
     const capturedMatch = caption.match(/Captured: ([^|]+)/);
     const capturedTime = capturedMatch ? capturedMatch[1].trim() : '';
     
-    return { location, username, capturedTime };
+    return { location, photographerName, capturedTime };
   };
 
   // Filter and sort images
   const filteredAndSortedImages = useMemo(() => {
     let filtered = images.filter(image => {
-      const { username } = extractMetadata(image);
+      const { photographerName } = extractMetadata(image);
       const searchLower = searchQuery.toLowerCase();
       
       return (
         image.caption?.toLowerCase().includes(searchLower) ||
         image.filename.toLowerCase().includes(searchLower) ||
         image.original_filename?.toLowerCase().includes(searchLower) ||
-        username.toLowerCase().includes(searchLower)
+        photographerName.toLowerCase().includes(searchLower)
       );
     });
 
@@ -146,12 +150,12 @@ export const PRDataManager = () => {
 
   const handleExportData = () => {
     const csvData = filteredAndSortedImages.map(image => {
-      const { location, username, capturedTime } = extractMetadata(image);
+      const { location, photographerName, capturedTime } = extractMetadata(image);
       return {
         filename: image.filename,
         original_filename: image.original_filename || '',
         caption: image.caption || '',
-        username,
+        photographer: photographerName,
         captured_time: capturedTime,
         uploaded_at: formatDate(image.uploaded_at),
         file_size: formatFileSize(image.file_size),
@@ -338,7 +342,7 @@ export const PRDataManager = () => {
             </TableHeader>
             <TableBody>
               {filteredAndSortedImages.map((image) => {
-                const { location, username, capturedTime } = extractMetadata(image);
+                const { location, photographerName, capturedTime } = extractMetadata(image);
                 const imageUrl = getImageUrl(image.file_path);
                 
                 return (
@@ -366,12 +370,12 @@ export const PRDataManager = () => {
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        {username && (
-                          <div className="flex items-center gap-1 text-xs">
-                            <User className="h-3 w-3" />
-                            <span className="truncate max-w-[100px]">{username}</span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1 text-xs">
+                          <User className="h-3 w-3" />
+                          <span className="truncate max-w-[120px]" title={photographerName}>
+                            {photographerName}
+                          </span>
+                        </div>
                         {location && (
                           <div className="flex items-center gap-1 text-xs">
                             <MapPin className="h-3 w-3" />
@@ -455,7 +459,7 @@ export const PRDataManager = () => {
           <Card>
             <CardContent className="p-4">
               <div className="text-2xl font-bold">
-                {new Set(filteredAndSortedImages.map(img => extractMetadata(img).username)).size}
+                {new Set(filteredAndSortedImages.map(img => extractMetadata(img).photographerName)).size}
               </div>
               <div className="text-sm text-muted-foreground">Contributors</div>
             </CardContent>
