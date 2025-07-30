@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { format, startOfDay, endOfDay } from 'date-fns';
+import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
 
 export interface AuditionLog {
   id: string;
@@ -25,47 +27,118 @@ export interface AuditionLog {
 export const useAuditionLogs = () => {
   const { toast } = useToast();
   const [logs, setLogs] = useState<AuditionLog[]>([]);
+  const [allTimeSlots, setAllTimeSlots] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const EASTERN_TZ = 'America/New_York';
 
   const loadAuditionLogs = async () => {
     try {
       setLoading(true);
       
-      // First, check if there are any logs in the new table
-      const { data: existingLogs, error: logsError } = await supabase
-        .from('gw_audition_logs')
-        .select('*')
-        .order('audition_date', { ascending: false });
+      // Fetch audition logs and time blocks in parallel
+      const [logsResult, blocksResult] = await Promise.all([
+        supabase
+          .from('gw_audition_logs')
+          .select('*')
+          .order('audition_date', { ascending: false }),
+        supabase
+          .from('audition_time_blocks')
+          .select('*')
+          .eq('is_active', true)
+          .order('start_date', { ascending: true })
+      ]);
 
-      if (logsError) throw logsError;
+      if (logsResult.error) throw logsResult.error;
+      if (blocksResult.error) throw blocksResult.error;
 
-      // If no logs exist, try to migrate from the existing gw_auditions table
-      if (!existingLogs || existingLogs.length === 0) {
+      const existingLogs = logsResult.data || [];
+      const timeBlocks = blocksResult.data || [];
+
+      // Generate all possible time slots from time blocks
+      const allSlots = [];
+      
+      for (const block of timeBlocks) {
+        const startDate = new Date(block.start_date);
+        const endDate = new Date(block.end_date);
+        const duration = block.appointment_duration_minutes || 30;
+
+        // Convert to Eastern timezone
+        const blockStartET = toZonedTime(startDate, EASTERN_TZ);
+        const blockEndET = toZonedTime(endDate, EASTERN_TZ);
+
+        // Get the date portion for this block
+        const slotDate = format(blockStartET, 'yyyy-MM-dd');
+        
+        // Generate time slots for this block
+        const currentTime = new Date(blockStartET);
+        const endTime = new Date(blockEndET);
+
+        while (currentTime < endTime) {
+          const timeString = formatInTimeZone(currentTime, EASTERN_TZ, 'h:mm a');
+          
+          // Check if this slot has a scheduled audition
+          const scheduledLog = existingLogs.find(log => {
+            const logDate = format(new Date(log.audition_date), 'yyyy-MM-dd');
+            return logDate === slotDate && log.audition_time === timeString;
+          });
+
+          allSlots.push({
+            id: scheduledLog?.id || `slot-${slotDate}-${timeString}`,
+            date: slotDate,
+            time: timeString,
+            isScheduled: !!scheduledLog,
+            auditionLog: scheduledLog || null,
+            blockId: block.id
+          });
+
+          currentTime.setMinutes(currentTime.getMinutes() + duration);
+        }
+      }
+
+      // If no logs exist in the new table, try to migrate from existing gw_auditions
+      if (existingLogs.length === 0) {
         await migrateExistingAuditions();
         
-        // Fetch again after migration
+        // Fetch again after migration and update slots
         const { data: newLogs, error: newLogsError } = await supabase
           .from('gw_audition_logs')
           .select('*')
           .order('audition_date', { ascending: false });
 
         if (newLogsError) throw newLogsError;
+        
+        // Update slots with migrated data
+        allSlots.forEach(slot => {
+          const migratedLog = newLogs?.find(log => {
+            const logDate = format(new Date(log.audition_date), 'yyyy-MM-dd');
+            return logDate === slot.date && log.audition_time === slot.time;
+          });
+          
+          if (migratedLog) {
+            slot.isScheduled = true;
+            slot.auditionLog = migratedLog;
+            slot.id = migratedLog.id;
+          }
+        });
+
         setLogs((newLogs || []) as AuditionLog[]);
       } else {
         setLogs(existingLogs as AuditionLog[]);
       }
+
+      setAllTimeSlots(allSlots);
     } catch (error) {
-      console.error('Error loading audition logs:', error);
+      console.error('Error loading audition data:', error);
       toast({
         title: "Error",
-        description: "Failed to load audition logs",
+        description: "Failed to load audition data",
         variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
-
   const migrateExistingAuditions = async () => {
     try {
       // Check if gw_auditions table exists and has data
@@ -305,6 +378,7 @@ export const useAuditionLogs = () => {
 
   return {
     logs,
+    allTimeSlots,
     loading,
     updateLogStatus,
     saveGradeData,

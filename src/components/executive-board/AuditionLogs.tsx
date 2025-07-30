@@ -27,6 +27,7 @@ import { format } from "date-fns";
 export const AuditionLogs = () => {
   const { 
     logs, 
+    allTimeSlots,
     loading, 
     updateLogStatus, 
     saveGradeData: saveGrade, 
@@ -103,11 +104,17 @@ export const AuditionLogs = () => {
     setDeleteConfirmOpen(true);
   };
 
-  const filteredLogs = logs.filter(log => {
-    const matchesSearch = log.applicant_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         log.applicant_email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || log.status === statusFilter;
-    return matchesSearch && matchesStatus;
+  const filteredSlots = allTimeSlots.filter(slot => {
+    if (slot.isScheduled && slot.auditionLog) {
+      const log = slot.auditionLog;
+      const matchesSearch = log.applicant_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           log.applicant_email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === "all" || log.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    } else {
+      // For unscheduled slots, show them when no specific filter is applied
+      return statusFilter === "all" && searchTerm === "";
+    }
   });
 
   if (loading) {
@@ -170,10 +177,10 @@ export const AuditionLogs = () => {
 
           {/* Logs List */}
           <div className="space-y-3">
-            {filteredLogs.length === 0 ? (
+            {filteredSlots.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <Music className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No audition logs found</p>
+                <p>No audition slots found</p>
                 {logs.length === 0 && (
                   <Button onClick={addSampleData} className="mt-4">
                     <Plus className="h-4 w-4 mr-2" />
@@ -182,140 +189,171 @@ export const AuditionLogs = () => {
                 )}
               </div>
             ) : (
-              filteredLogs.map((log) => (
-                <Card key={log.id} className="hover:shadow-md transition-shadow">
+              filteredSlots.map((slot) => (
+                <Card key={slot.id} className={`hover:shadow-md transition-shadow ${!slot.isScheduled ? 'border-dashed opacity-60' : ''}`}>
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <User className="h-4 w-4 text-gray-400" />
-                          <span className="font-medium">{log.applicant_name}</span>
-                          <Badge className={getStatusColor(log.status)}>
-                            {log.status.charAt(0).toUpperCase() + log.status.slice(1)}
-                          </Badge>
-                          {log.voice_part && (
-                            <Badge variant="outline">{log.voice_part}</Badge>
-                          )}
+                    {slot.isScheduled && slot.auditionLog ? (
+                      // Scheduled audition slot
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <User className="h-4 w-4 text-gray-400" />
+                            <span className="font-medium">{slot.auditionLog.applicant_name}</span>
+                            <Badge className={getStatusColor(slot.auditionLog.status)}>
+                              {slot.auditionLog.status.charAt(0).toUpperCase() + slot.auditionLog.status.slice(1)}
+                            </Badge>
+                            {slot.auditionLog.voice_part && (
+                              <Badge variant="outline">{slot.auditionLog.voice_part}</Badge>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {format(new Date(slot.auditionLog.audition_date), 'MMM d, yyyy')}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {slot.auditionLog.audition_time}
+                            </div>
+                          </div>
+                          
+                          <p className="text-sm text-gray-500">{slot.auditionLog.applicant_email}</p>
                         </div>
                         
-                        <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {format(new Date(log.audition_date), 'MMM d, yyyy')}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {log.audition_time}
-                          </div>
-                        </div>
-                        
-                        <p className="text-sm text-gray-500">{log.applicant_email}</p>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              <Eye className="h-3 w-3 mr-1" />
-                              View Application
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
-                            <DialogHeader>
-                              <DialogTitle>Application Details - {log.applicant_name}</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <strong>Name:</strong> {log.applicant_name}
+                        <div className="flex items-center gap-2">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm">
+                                <Eye className="h-3 w-3 mr-1" />
+                                View Application
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl">
+                              <DialogHeader>
+                                <DialogTitle>Application Details - {slot.auditionLog.applicant_name}</DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <strong>Name:</strong> {slot.auditionLog.applicant_name}
+                                  </div>
+                                  <div>
+                                    <strong>Email:</strong> {slot.auditionLog.applicant_email}
+                                  </div>
+                                  <div>
+                                    <strong>Voice Part:</strong> {slot.auditionLog.voice_part || 'Not specified'}
+                                  </div>
+                                  <div>
+                                    <strong>Status:</strong> 
+                                    <Badge className={`ml-2 ${getStatusColor(slot.auditionLog.status)}`}>
+                                      {slot.auditionLog.status.charAt(0).toUpperCase() + slot.auditionLog.status.slice(1)}
+                                    </Badge>
+                                  </div>
                                 </div>
-                                <div>
-                                  <strong>Email:</strong> {log.applicant_email}
-                                </div>
-                                <div>
-                                  <strong>Voice Part:</strong> {log.voice_part || 'Not specified'}
-                                </div>
-                                <div>
-                                  <strong>Status:</strong> 
-                                  <Badge className={`ml-2 ${getStatusColor(log.status)}`}>
-                                    {log.status.charAt(0).toUpperCase() + log.status.slice(1)}
-                                  </Badge>
-                                </div>
-                              </div>
-                              
-                              {log.application_data && Object.keys(log.application_data).length > 0 && (
-                                <div>
-                                  <strong>Application Data:</strong>
-                                  <div className="mt-2 p-3 bg-gray-50 rounded text-sm">
-                                    {typeof log.application_data === 'object' ? 
-                                      Object.entries(log.application_data).map(([key, value]) => (
+                                
+                                {slot.auditionLog.application_data && Object.keys(slot.auditionLog.application_data).length > 0 && (
+                                  <div>
+                                    <strong>Application Data:</strong>
+                                    <div className="mt-2 p-3 bg-gray-50 rounded text-sm">
+                                      {typeof slot.auditionLog.application_data === 'object' ? 
+                                        Object.entries(slot.auditionLog.application_data).map(([key, value]) => (
+                                          <div key={key} className="mb-2">
+                                            <strong>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong> {String(value)}
+                                          </div>
+                                        )) : 
+                                        <pre>{JSON.stringify(slot.auditionLog.application_data, null, 2)}</pre>
+                                      }
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {slot.auditionLog.grade_data && Object.keys(slot.auditionLog.grade_data).length > 0 && (
+                                  <div>
+                                    <strong>Grade Data:</strong>
+                                    <div className="mt-2 p-3 bg-green-50 rounded text-sm">
+                                      {Object.entries(slot.auditionLog.grade_data).map(([key, value]) => (
                                         <div key={key} className="mb-2">
                                           <strong>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong> {String(value)}
                                         </div>
-                                      )) : 
-                                      <pre>{JSON.stringify(log.application_data, null, 2)}</pre>
-                                    }
+                                      ))}
+                                    </div>
                                   </div>
-                                </div>
-                              )}
-                              
-                              {log.grade_data && Object.keys(log.grade_data).length > 0 && (
-                                <div>
-                                  <strong>Grade Data:</strong>
-                                  <div className="mt-2 p-3 bg-green-50 rounded text-sm">
-                                    {Object.entries(log.grade_data).map(([key, value]) => (
-                                      <div key={key} className="mb-2">
-                                        <strong>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong> {String(value)}
-                                      </div>
-                                    ))}
+                                )}
+                                
+                                {slot.auditionLog.notes && (
+                                  <div>
+                                    <strong>Notes:</strong>
+                                    <p className="mt-1 p-3 bg-gray-50 rounded">{slot.auditionLog.notes}</p>
                                   </div>
-                                </div>
-                              )}
-                              
-                              {log.notes && (
-                                <div>
-                                  <strong>Notes:</strong>
-                                  <p className="mt-1 p-3 bg-gray-50 rounded">{log.notes}</p>
-                                </div>
-                              )}
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                                )}
+                              </div>
+                            </DialogContent>
+                          </Dialog>
 
-                        <Button 
-                          variant="default" 
-                          size="sm"
-                          onClick={() => openReviewDialog(log)}
-                          disabled={log.status === 'graded'}
-                        >
-                          <Star className="h-3 w-3 mr-1" />
-                          {log.status === 'graded' ? 'View Grade' : 'Grade'}
-                        </Button>
+                          <Button 
+                            variant="default" 
+                            size="sm"
+                            onClick={() => openReviewDialog(slot.auditionLog)}
+                            disabled={slot.auditionLog.status === 'graded'}
+                          >
+                            <Star className="h-3 w-3 mr-1" />
+                            {slot.auditionLog.status === 'graded' ? 'View Grade' : 'Grade'}
+                          </Button>
 
-                        <Select
-                          value={log.status}
-                          onValueChange={(value) => updateLogStatus(log.id, value)}
-                        >
-                          <SelectTrigger className="w-28">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="scheduled">Scheduled</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                            <SelectItem value="graded">Graded</SelectItem>
-                            <SelectItem value="no_show">No Show</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => openDeleteConfirm(log.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                          <Select
+                            value={slot.auditionLog.status}
+                            onValueChange={(value) => updateLogStatus(slot.auditionLog.id, value)}
+                          >
+                            <SelectTrigger className="w-28">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="scheduled">Scheduled</SelectItem>
+                              <SelectItem value="completed">Completed</SelectItem>
+                              <SelectItem value="graded">Graded</SelectItem>
+                              <SelectItem value="no_show">No Show</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => openDeleteConfirm(slot.auditionLog.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      // Available but unscheduled slot
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <Clock className="h-4 w-4 text-gray-400" />
+                            <span className="font-medium text-gray-500">Available Slot</span>
+                            <Badge variant="outline" className="border-dashed">
+                              Available
+                            </Badge>
+                          </div>
+                          
+                          <div className="flex items-center gap-4 text-sm text-gray-600">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {format(new Date(slot.date), 'MMM d, yyyy')}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {slot.time}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="text-sm text-gray-400">
+                          No audition scheduled
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))
