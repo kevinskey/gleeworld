@@ -211,8 +211,8 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{upcomingAuditionsCount}</div>
-            <p className="text-xs text-muted-foreground">Upcoming auditions</p>
+            <div className="text-3xl md:text-4xl font-bold">{upcomingAuditionsCount}</div>
+            <p className="text-base md:text-lg text-muted-foreground">Upcoming auditions</p>
             <div className="mt-2 space-y-1">
               <div className="flex justify-between text-xs">
                 <span>Total Auditions</span>
@@ -233,8 +233,8 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{averageCompletionRate}%</div>
-            <p className="text-xs text-muted-foreground">Average completion rate</p>
+            <div className="text-3xl md:text-4xl font-bold">{averageCompletionRate}%</div>
+            <p className="text-base md:text-lg text-muted-foreground">Average completion rate</p>
             <div className="mt-2 space-y-1">
               <div className="flex justify-between text-xs">
                 <span>Active Assignments</span>
@@ -337,8 +337,8 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                     <CardContent className="pt-4">
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <h4 className="font-semibold">{audition.name}</h4>
-                          <p className="text-sm text-muted-foreground">{audition.date} at {audition.timeSlot}</p>
+                            <h4 className="text-lg md:text-xl font-semibold">{audition.name}</h4>
+                            <p className="text-base md:text-lg text-muted-foreground">{audition.date} at {audition.timeSlot}</p>
                         </div>
                         <div className="flex gap-2">
                           <Badge variant="outline">{audition.type}</Badge>
@@ -347,7 +347,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                           </Badge>
                         </div>
                       </div>
-                      <p className="text-sm mb-3">Notes: {audition.notes}</p>
+                        <p className="text-base md:text-lg mb-3">Notes: {audition.notes}</p>
                       <div className="flex gap-2">
                         <Button size="sm">
                           <FileText className="h-4 w-4 mr-2" />
@@ -402,8 +402,8 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                     <CardContent className="pt-4">
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <h4 className="font-semibold">{audition.name}</h4>
-                          <p className="text-sm text-muted-foreground">{audition.date} at {audition.timeSlot}</p>
+                            <h4 className="text-lg md:text-xl font-semibold">{audition.name}</h4>
+                            <p className="text-base md:text-lg text-muted-foreground">{audition.date} at {audition.timeSlot}</p>
                         </div>
                         <div className="flex gap-2">
                           <Badge variant="outline">{audition.type}</Badge>
@@ -412,7 +412,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                           </Badge>
                         </div>
                       </div>
-                      <p className="text-sm mb-3">Notes: {audition.notes}</p>
+                      <p className="text-base md:text-lg mb-3">Notes: {audition.notes}</p>
                       <div className="flex gap-2">
                         <Button size="sm">
                           <FileText className="h-4 w-4 mr-2" />
@@ -460,29 +460,29 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <Card>
                   <CardContent className="pt-4">
-                    <div className="text-2xl font-bold">{srfAssignments.length}</div>
-                    <p className="text-sm text-muted-foreground">Active Assignments</p>
+                        <div className="text-3xl md:text-4xl font-bold">{srfAssignments.length}</div>
+                        <p className="text-base md:text-lg text-muted-foreground">Active Assignments</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="pt-4">
-                    <div className="text-2xl font-bold">{averageCompletionRate}%</div>
-                    <p className="text-sm text-muted-foreground">Completion Rate</p>
+                        <div className="text-3xl md:text-4xl font-bold">{averageCompletionRate}%</div>
+                        <p className="text-base md:text-lg text-muted-foreground">Completion Rate</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="pt-4">
-                    <div className="text-2xl font-bold">
-                      {srfAssignments.filter(a => new Date(a.dueDate) < new Date()).length}
-                    </div>
-                    <p className="text-sm text-muted-foreground">Overdue</p>
+                        <div className="text-3xl md:text-4xl font-bold">
+                          {srfAssignments.filter(a => new Date(a.dueDate) < new Date()).length}
+                        </div>
+                        <p className="text-base md:text-lg text-muted-foreground">Overdue</p>
                   </CardContent>
                 </Card>
               </div>
               
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Current Assignments</h3>
+                  <h3 className="text-xl md:text-2xl font-semibold">Current Assignments</h3>
                   <Button onClick={handleCreateSRFAssignment}>
                     <Plus className="h-4 w-4 mr-2" />
                     New Assignment
@@ -494,8 +494,8 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                     <CardContent className="pt-4">
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <h4 className="font-semibold">{assignment.title}</h4>
-                          <p className="text-sm text-muted-foreground">Due: {assignment.dueDate}</p>
+                              <h4 className="text-lg md:text-xl font-semibold">{assignment.title}</h4>
+                              <p className="text-base md:text-lg text-muted-foreground">Due: {assignment.dueDate}</p>
                         </div>
                         <Badge variant={new Date(assignment.dueDate) < new Date() ? "destructive" : "default"}>
                           {assignment.completedCount}/{assignment.assignedCount} Complete
