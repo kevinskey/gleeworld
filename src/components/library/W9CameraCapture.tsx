@@ -525,7 +525,10 @@ export const W9CameraCapture = () => {
           {!isCapturing && !capturedImage && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <Button onClick={startCamera} className="h-20">
+                <Button onClick={() => {
+                  console.log('W9 Camera button clicked');
+                  startCamera();
+                }} className="h-20">
                   <Camera className="h-6 w-6 mr-2" />
                   Use Camera
                 </Button>
