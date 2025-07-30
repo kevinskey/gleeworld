@@ -59,8 +59,8 @@ export const AnnouncementsEventsSection = ({ upcomingEvents }: AnnouncementsEven
     <div className="w-full">
       {/* Desktop Layout - Full width with 3 columns */}
       <div className="hidden md:flex gap-4 w-full">
-        {/* Notifications Column */}
-        <Card className="bg-gradient-to-r from-secondary/5 via-accent/5 to-primary/5 border-secondary/20 shadow-lg h-64 flex-1">
+        {/* Notifications Column - 50% width */}
+        <Card className="bg-gradient-to-r from-secondary/5 via-accent/5 to-primary/5 border-secondary/20 shadow-lg h-64 w-1/2">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-secondary-foreground text-base">
               <Bell className="h-4 w-4" />
@@ -111,8 +111,8 @@ export const AnnouncementsEventsSection = ({ upcomingEvents }: AnnouncementsEven
           </CardContent>
         </Card>
 
-        {/* Checked Out Items Column */}
-        <Card className="bg-gradient-to-r from-accent/5 via-secondary/5 to-primary/5 border-accent/20 shadow-lg h-64 flex-1">
+        {/* Checked Out Items Column - 50% width */}
+        <Card className="bg-gradient-to-r from-accent/5 via-secondary/5 to-primary/5 border-accent/20 shadow-lg h-64 w-1/2">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-secondary-foreground text-base">
               <Package className="h-4 w-4" />
@@ -151,46 +151,6 @@ export const AnnouncementsEventsSection = ({ upcomingEvents }: AnnouncementsEven
           </CardContent>
         </Card>
 
-        {/* Dues Column */}
-        <Card className="bg-gradient-to-r from-primary/5 via-accent/5 to-secondary/5 border-primary/20 shadow-lg h-64 flex-1">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-secondary-foreground text-base">
-              <DollarSign className="h-4 w-4" />
-              Outstanding Dues
-              {duesInfo.totalDue > 0 && (
-                <Badge variant="destructive" className="text-xs">
-                  <AlertCircle className="h-3 w-3 mr-1" />
-                  Due
-                </Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-44">
-              {duesInfo.totalDue === 0 ? (
-                <div className="text-center py-4">
-                  <DollarSign className="h-6 w-6 text-green-500 mx-auto mb-1" />
-                  <p className="text-sm text-green-600">All dues paid!</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold text-foreground">${duesInfo.totalDue.toFixed(2)}</span>
-                    <span className="text-sm text-muted-foreground">Due: {new Date(duesInfo.dueDate).toLocaleDateString()}</span>
-                  </div>
-                  <div className="space-y-1">
-                    {duesInfo.items.map((item, index) => (
-                      <div key={index} className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">{item.description}</span>
-                        <span className="font-medium">${item.amount.toFixed(2)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </ScrollArea>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Mobile Layout - Collapsible Sections */}
