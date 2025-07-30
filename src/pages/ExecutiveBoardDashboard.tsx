@@ -549,22 +549,78 @@ export const ExecutiveBoardDashboard = () => {
               <CheckInOutTool />
             </div>
 
-            {/* 4. Music Library */}
-            <div className="grid grid-cols-1 gap-6">
-              <MusicLibraryViewer />
+            {/* 4. Upcoming Events - Horizontal Scroll */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-white drop-shadow-md">Upcoming Events</h3>
+              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Card key={i} className="flex-shrink-0 w-72 snap-start">
+                    <CardContent className="p-4">
+                      <h4 className="font-semibold mb-2">Spring Concert {i}</h4>
+                      <p className="text-sm text-muted-foreground mb-2">March {15 + i}, 2024</p>
+                      <p className="text-sm">Sisters Chapel</p>
+                      <Badge variant="secondary" className="mt-2">Performance</Badge>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
 
-            {/* 5. Tasks and Dues */}
+            {/* 5. Music Library - Horizontal Scroll */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-white drop-shadow-md">Our Music</h3>
+              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth">
+                <MusicLibraryViewer />
+              </div>
+            </div>
+
+            {/* 6. Glee Store - Horizontal Scroll */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-white drop-shadow-md">Glee Store</h3>
+              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Card key={i} className="flex-shrink-0 w-64 snap-start">
+                    <div className="aspect-square bg-muted overflow-hidden">
+                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
+                        <span className="text-lg font-semibold">Product {i}</span>
+                      </div>
+                    </div>
+                    <CardContent className="p-4">
+                      <h4 className="font-semibold mb-1">Glee Club T-Shirt</h4>
+                      <p className="text-sm text-muted-foreground mb-2">$25.00</p>
+                      <Button size="sm" className="w-full">Add to Cart</Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* 7. YouTube Videos - Horizontal Scroll */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-white drop-shadow-md">YouTube</h3>
+              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Card key={i} className="flex-shrink-0 w-80 snap-start">
+                    <div className="aspect-video bg-muted overflow-hidden">
+                      <div className="w-full h-full bg-gradient-to-br from-red-500/20 to-red-600/40 flex items-center justify-center">
+                        <span className="text-lg font-semibold">Video {i}</span>
+                      </div>
+                    </div>
+                    <CardContent className="p-4">
+                      <h4 className="font-semibold mb-1">Concert Performance</h4>
+                      <p className="text-sm text-muted-foreground">2 days ago • 1.2K views</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* 8. Tasks and Calendar */}
             <div className="grid grid-cols-1 gap-6">
               <TaskChecklist />
             </div>
 
-            {/* 6. Events Calendar */}
-            <div className="grid grid-cols-1 gap-6">
-              <EventCreator />
-            </div>
-
-            {/* 7. Full Calendar */}
+            {/* 9. Full Calendar */}
             <div className="grid grid-cols-1 gap-6">
               <CalendarViews />
             </div>
