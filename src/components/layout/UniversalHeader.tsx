@@ -64,22 +64,19 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                   <span className="text-gray-900 font-bold text-lg sm:text-xl md:text-2xl whitespace-nowrap drop-shadow-sm relative z-[112]">
                     GleeWorld
                   </span>
-                  {pageName !== 'GleeWorld' && (
-                    <>
-                      <span className="text-gray-500 text-sm sm:text-lg md:text-xl hidden sm:inline opacity-60">|</span>
-                      <span className="text-white font-medium text-xs sm:text-sm md:text-base truncate max-w-20 sm:max-w-32 md:max-w-48 bg-gradient-to-r from-slate-800 to-slate-900 pl-1 pr-1.5 py-0.5 rounded-md ml-1 sm:ml-2 shadow-md border border-white/10">
-                        {pageName}
-                      </span>
-                    </>
-                  )}
                 </div>
               </Link>
             </EnhancedTooltip>
           </div>
 
-          {/* Center area with clock */}
-          <div className="hidden sm:flex items-center justify-center flex-1">
+          {/* Center area with clock and dashboard indicator */}
+          <div className="hidden sm:flex items-center justify-center flex-1 gap-3">
             <HeaderClock className="text-sm scale-75" />
+            {pageName !== 'GleeWorld' && (
+              <span className="text-slate-700 font-medium text-xs px-2 py-1 rounded-md bg-blue-100 border border-blue-200 shadow-sm truncate max-w-32">
+                {pageName}
+              </span>
+            )}
           </div>
 
           {/* Right side actions */}
