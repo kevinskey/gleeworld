@@ -290,23 +290,25 @@ export const ExecutiveBoardDashboard = () => {
           </div>
           
           {/* View Mode Toggle */}
-          <div className="flex items-center gap-2 p-1 bg-secondary/10 rounded-lg border">
+          <div className="flex items-center gap-1 sm:gap-2 p-1 bg-secondary/10 rounded-lg border">
             <Button
               variant="default"
               size="sm"
-              className="flex items-center gap-2"
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9"
             >
-              <Crown className="h-4 w-4" />
-              Exec Board View
+              <Crown className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Exec Board View</span>
+              <span className="xs:hidden">Exec</span>
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9"
             >
-              <Users className="h-4 w-4" />
-              Member View
+              <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Member View</span>
+              <span className="xs:hidden">Member</span>
             </Button>
           </div>
         </div>
