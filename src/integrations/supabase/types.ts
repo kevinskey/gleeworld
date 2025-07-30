@@ -1979,6 +1979,112 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_annotation_public_shares: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          is_public: boolean | null
+          marked_score_id: string
+          permission_type: string
+          share_token: string
+          shared_by: string
+          title: string
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_public?: boolean | null
+          marked_score_id: string
+          permission_type?: string
+          share_token?: string
+          shared_by: string
+          title: string
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_public?: boolean | null
+          marked_score_id?: string
+          permission_type?: string
+          share_token?: string
+          shared_by?: string
+          title?: string
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_annotation_public_shares_marked_score_id_fkey"
+            columns: ["marked_score_id"]
+            isOneToOne: false
+            referencedRelation: "gw_marked_scores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_annotation_shares: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          marked_score_id: string
+          message: string | null
+          permission_type: string
+          shared_at: string | null
+          shared_by: string
+          shared_with: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          marked_score_id: string
+          message?: string | null
+          permission_type?: string
+          shared_at?: string | null
+          shared_by: string
+          shared_with: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          marked_score_id?: string
+          message?: string | null
+          permission_type?: string
+          shared_at?: string | null
+          shared_by?: string
+          shared_with?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_annotation_shares_marked_score_id_fkey"
+            columns: ["marked_score_id"]
+            isOneToOne: false
+            referencedRelation: "gw_marked_scores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_announcements: {
         Row: {
           announcement_type: string | null
@@ -3987,7 +4093,9 @@ export type Database = {
           description: string | null
           file_url: string
           id: string
+          is_shareable: boolean | null
           music_id: string
+          share_settings: Json | null
           uploader_id: string
           voice_part: string
         }
@@ -3997,7 +4105,9 @@ export type Database = {
           description?: string | null
           file_url: string
           id?: string
+          is_shareable?: boolean | null
           music_id: string
+          share_settings?: Json | null
           uploader_id: string
           voice_part: string
         }
@@ -4007,7 +4117,9 @@ export type Database = {
           description?: string | null
           file_url?: string
           id?: string
+          is_shareable?: boolean | null
           music_id?: string
+          share_settings?: Json | null
           uploader_id?: string
           voice_part?: string
         }
@@ -9675,6 +9787,10 @@ export type Database = {
       has_username_permission: {
         Args: { user_email_param: string; module_name_param: string }
         Returns: boolean
+      }
+      increment_annotation_share_views: {
+        Args: { share_token_param: string }
+        Returns: undefined
       }
       increment_play_count: {
         Args: { track_uuid: string }
