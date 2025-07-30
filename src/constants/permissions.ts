@@ -31,6 +31,7 @@ export const PERMISSIONS = [
   'access_budget_creation',
   'access_contracts',
   'access_tour_planner',
+  'access_handbook',
   'send_emails',
   'manage_username_permissions',
   'approve_budgets_treasurer',
@@ -46,6 +47,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     'view_own_w9_forms',
     'sign_contracts',
     'submit_w9_forms',
+    'access_handbook',
   ],
   [USER_ROLES.ADMIN]: [
     'view_all_contracts',
@@ -60,11 +62,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     'send_emails',
     'manage_username_permissions',
     'access_tour_planner',
+    'access_handbook',
   ],
   [USER_ROLES.TREASURER]: [
     'approve_budgets_treasurer',
     'access_budget_creation',
     'view_all_payments',
+    'access_handbook',
   ],
   [USER_ROLES.SUPER_ADMIN]: [
     'all_permissions',
@@ -72,6 +76,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     'manage_system_settings',
     'view_activity_logs',
     'approve_budgets_super_admin',
+    'access_handbook',
   ],
 } as const;
 
@@ -116,6 +121,11 @@ export const DASHBOARD_MODULES = {
     name: 'Tour Planner',
     description: 'Plan and manage tours, cities, and tasks',
     permission: 'access_tour_planner' as Permission,
+  },
+  handbook: {
+    name: 'Handbook',
+    description: 'Official Glee Club handbook and executive board positions',
+    permission: 'access_handbook' as Permission,
   },
 } as const;
 

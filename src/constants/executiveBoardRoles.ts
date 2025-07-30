@@ -102,11 +102,11 @@ export const ROLE_RESPONSIBILITIES: Record<ExecutiveBoardRole, string> = {
 // Define which dashboard modules each executive board role has access to
 export const EXEC_BOARD_MODULE_PERMISSIONS: Record<ExecutiveBoardRole, string[]> = {
   // Artistic Leadership
-  [EXECUTIVE_BOARD_ROLES.STUDENT_CONDUCTOR]: ['youtube_management', 'send_emails'],
-  [EXECUTIVE_BOARD_ROLES.SOPRANO_1_SECTION_LEADER]: ['send_emails'],
-  [EXECUTIVE_BOARD_ROLES.SOPRANO_2_SECTION_LEADER]: ['send_emails'],
-  [EXECUTIVE_BOARD_ROLES.ALTO_1_SECTION_LEADER]: ['send_emails'],
-  [EXECUTIVE_BOARD_ROLES.ALTO_2_SECTION_LEADER]: ['send_emails'],
+  [EXECUTIVE_BOARD_ROLES.STUDENT_CONDUCTOR]: ['youtube_management', 'send_emails', 'handbook'],
+  [EXECUTIVE_BOARD_ROLES.SOPRANO_1_SECTION_LEADER]: ['send_emails', 'handbook'],
+  [EXECUTIVE_BOARD_ROLES.SOPRANO_2_SECTION_LEADER]: ['send_emails', 'handbook'],
+  [EXECUTIVE_BOARD_ROLES.ALTO_1_SECTION_LEADER]: ['send_emails', 'handbook'],
+  [EXECUTIVE_BOARD_ROLES.ALTO_2_SECTION_LEADER]: ['send_emails', 'handbook'],
   
   // Managing Leadership / Executive Officers
   [EXECUTIVE_BOARD_ROLES.PRESIDENT]: [
@@ -117,70 +117,86 @@ export const EXEC_BOARD_MODULE_PERMISSIONS: Record<ExecutiveBoardRole, string[]>
     'contracts',
     'send_emails',
     'manage_permissions',
+    'handbook',
   ],
   [EXECUTIVE_BOARD_ROLES.VICE_PRESIDENT]: [
     'budget_creation',
     'contracts',
     'send_emails',
     'youtube_management',
+    'handbook',
   ],
   [EXECUTIVE_BOARD_ROLES.SECRETARY]: [
     'send_emails',
     'contracts',
+    'handbook',
   ],
   [EXECUTIVE_BOARD_ROLES.TREASURER]: [
     'budget_creation',
     'contracts',
     'send_emails',
+    'handbook',
   ],
   [EXECUTIVE_BOARD_ROLES.TOUR_MANAGER]: [
     'budget_creation',
     'contracts',
     'send_emails',
+    'handbook',
   ],
   [EXECUTIVE_BOARD_ROLES.ROAD_MANAGER]: [
     'send_emails',
+    'handbook',
   ],
   [EXECUTIVE_BOARD_ROLES.MERCHANDISE_MANAGER]: [
     'budget_creation',
     'send_emails',
+    'handbook',
   ],
   [EXECUTIVE_BOARD_ROLES.PUBLIC_RELATIONS_COORDINATOR]: [
     'hero_management',
     'send_emails',
     'youtube_management',
+    'handbook',
   ],
   [EXECUTIVE_BOARD_ROLES.PUBLIC_RELATIONS_CO_MANAGER_1]: [
     'hero_management',
     'send_emails',
     'youtube_management',
+    'handbook',
   ],
   [EXECUTIVE_BOARD_ROLES.PUBLIC_RELATIONS_CO_MANAGER_2]: [
     'hero_management',
     'send_emails',
     'youtube_management',
+    'handbook',
   ],
   [EXECUTIVE_BOARD_ROLES.HISTORIAN]: [
     'youtube_management',
+    'handbook',
   ],
   [EXECUTIVE_BOARD_ROLES.ALUMNAE_LIAISON]: [
     'send_emails',
+    'handbook',
   ],
   [EXECUTIVE_BOARD_ROLES.ALUMNAE_CORRESPONDENT]: [
     'send_emails',
+    'handbook',
   ],
-  [EXECUTIVE_BOARD_ROLES.CO_LIBRARIAN_1]: [],
-  [EXECUTIVE_BOARD_ROLES.CO_LIBRARIAN_2]: [],
-  [EXECUTIVE_BOARD_ROLES.CO_WARDROBE_MISTRESS_1]: [],
-  [EXECUTIVE_BOARD_ROLES.CO_WARDROBE_MISTRESS_2]: [],
+  [EXECUTIVE_BOARD_ROLES.CO_LIBRARIAN_1]: ['handbook'],
+  [EXECUTIVE_BOARD_ROLES.CO_LIBRARIAN_2]: ['handbook'],
+  [EXECUTIVE_BOARD_ROLES.CO_WARDROBE_MISTRESS_1]: ['handbook'],
+  [EXECUTIVE_BOARD_ROLES.CO_WARDROBE_MISTRESS_2]: ['handbook'],
   [EXECUTIVE_BOARD_ROLES.CHAPLAIN]: [
     'send_emails',
+    'handbook',
   ],
   [EXECUTIVE_BOARD_ROLES.SET_UP_CREW_MANAGER]: [
     'dashboard_settings',
+    'handbook',
   ],
   [EXECUTIVE_BOARD_ROLES.STAGE_MANAGER]: [
     'dashboard_settings',
+    'handbook',
   ],
   [EXECUTIVE_BOARD_ROLES.CHIEF_OF_STAFF]: [
     'hero_management',
@@ -193,9 +209,11 @@ export const EXEC_BOARD_MODULE_PERMISSIONS: Record<ExecutiveBoardRole, string[]>
     'admin_panel',
     'user_management',
     'system_settings',
+    'handbook',
   ],
   [EXECUTIVE_BOARD_ROLES.DATA_ANALYST]: [
     'dashboard_settings',
+    'handbook',
   ],
 };
 

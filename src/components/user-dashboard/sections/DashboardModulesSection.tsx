@@ -18,7 +18,8 @@ import {
   DollarSign,
   Route,
   MapPin,
-  Camera
+  Camera,
+  Book as BookIcon
 } from "lucide-react";
 
 export const DashboardModulesSection = () => {
@@ -182,6 +183,19 @@ export const DashboardModulesSection = () => {
           description: "Manage tour logistics",
           icon: MapPin,
           route: "/tour-manager"
+        }
+      ]
+    },
+    {
+      title: "Resources",
+      icon: BookIcon,
+      iconColor: "text-teal-600",
+      modules: [
+        {
+          name: "Handbook",
+          description: "Official Glee Club handbook",
+          icon: BookIcon,
+          route: "/handbook"
         }
       ]
     }

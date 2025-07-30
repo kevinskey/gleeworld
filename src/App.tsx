@@ -56,6 +56,7 @@ import AlumnaeLanding from "./pages/AlumnaeLanding";
 import AlumnaeAdmin from "./pages/admin/AlumnaeAdmin";
 import SendNotificationPage from "./pages/SendNotificationPage";
 import AuditionPage from "./pages/AuditionPage";
+import Handbook from "./pages/Handbook";
 import ScholarshipHub from "./pages/ScholarshipHub";
 import AdminScholarships from "./pages/AdminScholarships";
 import AdminProducts from "./pages/AdminProducts";
@@ -574,15 +575,23 @@ const App = () => {
                                     <ProductManagement />
                                   </ProtectedRoute>
                                 } 
-                              />
-                  <Route 
-                    path="/landing"
-                   element={
-                     <PublicRoute>
-                       <GleeWorldLanding />
-                     </PublicRoute>
-                   } 
-                 />
+                               />
+                               <Route 
+                                 path="/handbook" 
+                                 element={
+                                   <ProtectedRoute>
+                                     <Handbook />
+                                   </ProtectedRoute>
+                                 } 
+                               />
+                               <Route 
+                                 path="/landing"
+                                 element={
+                                   <PublicRoute>
+                                     <GleeWorldLanding />
+                                   </PublicRoute>
+                                 } 
+                               />
                  <Route 
                    path="/" 
                    element={<RootRoute />} 
