@@ -77,30 +77,70 @@ export const QuickCameraCapture = ({ onClose, onCapture }: QuickCameraCapturePro
       return;
     }
 
-    console.log('QuickCameraCapture: Auto-saving photo immediately');
+    console.log('QuickCameraCapture: Auto-saving photo with enhanced metadata');
     setIsSaving(true);
     
     try {
-      // Create File object from blob
-      const file = new File([blob], `${photoTitle.replace(/[^a-zA-Z0-9]/g, '_')}.jpg`, {
+      // Get current location
+      let locationData = null;
+      try {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 60000
+          });
+        });
+        
+        locationData = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy
+        };
+        console.log('QuickCameraCapture: Location captured:', locationData);
+      } catch (locationError) {
+        console.log('QuickCameraCapture: Location access denied or failed:', locationError);
+      }
+
+      // Create enhanced metadata
+      const now = new Date();
+      const timestamp = now.toISOString();
+      const username = user.email || user.id;
+      
+      // Create File object from blob with timestamp in filename
+      const timestampStr = now.toISOString().replace(/[:.]/g, '-').slice(0, -5);
+      const fileName = `quick-capture-${timestampStr}-${username.replace(/[@.]/g, '_')}.jpg`;
+      
+      const file = new File([blob], fileName, {
         type: 'image/jpeg'
       });
 
-      console.log('QuickCameraCapture: Created file object for auto-save', {
+      console.log('QuickCameraCapture: Created file with enhanced metadata', {
         name: file.name,
         size: file.size,
-        type: file.type
+        type: file.type,
+        timestamp,
+        username,
+        location: locationData
       });
 
-      // Use the PR upload system with basic metadata
+      // Enhanced caption with metadata
+      const enhancedCaption = [
+        photoTitle,
+        `Captured: ${now.toLocaleString()}`,
+        `By: ${username}`,
+        locationData ? `Location: ${locationData.latitude.toFixed(6)}, ${locationData.longitude.toFixed(6)}` : 'Location: Not available'
+      ].join(' | ');
+
+      // Use the PR upload system with enhanced metadata
       await uploadImage(file, {
-        caption: photoTitle,
-        taken_at: new Date().toISOString(),
+        caption: enhancedCaption,
+        taken_at: timestamp,
         photographer_id: user.id,
       });
 
-      console.log('QuickCameraCapture: Auto-save successful');
-      toast.success('Photo captured and saved successfully!');
+      console.log('QuickCameraCapture: Auto-save successful with enhanced metadata');
+      toast.success('Photo captured with timestamp, username, and location!');
       
       if (onCapture) {
         onCapture(URL.createObjectURL(blob));
