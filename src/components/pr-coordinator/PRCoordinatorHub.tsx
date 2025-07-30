@@ -86,6 +86,17 @@ export const PRCoordinatorHub = () => {
         </div>
         <div className="flex gap-3 items-center">
           <TaskNotifications />
+          <Button 
+            onClick={() => {
+              console.log('Manual refresh triggered');
+              refreshImages();
+              refreshTags();
+            }} 
+            variant="outline" 
+            className="gap-2"
+          >
+            Refresh
+          </Button>
           <Button onClick={() => {
             console.log('PR Quick Capture button clicked');
             console.log('Current showQuickCapture state:', showQuickCapture);
