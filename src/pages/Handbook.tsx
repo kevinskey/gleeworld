@@ -1,6 +1,7 @@
 import { HandbookModule } from "@/components/handbook/HandbookModule";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 const Handbook = () => {
   const { user } = useAuth();
@@ -10,11 +11,9 @@ const Handbook = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <HandbookModule />
-      </div>
-    </div>
+    <UniversalLayout maxWidth="2xl">
+      <HandbookModule />
+    </UniversalLayout>
   );
 };
 
