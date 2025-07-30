@@ -81,7 +81,15 @@ Dr. Johnson continues to uphold the Glee Club's tradition of choral excellence w
     {
       id: "director-bio",
       title: "Director Biography",
-      content: "Director biography content will be added here from the PDF handbook..."
+      content: `Dr. Kevin Johnson is an Associate Professor of Music at Spelman College. His teaching opportunities include the Spelman College Glee Club, choral conducting and literature, and several courses relating to general music education.
+
+Dr. Johnson earned a Bachelor's and Master's Degree in Music from California State University, Los Angeles, and the Doctoral Degree from the University of Missouri–Kansas City Conservatory of Music. He taught choral and general music in high schools in Los Angeles for ten years, and has worked as Director of Music at various churches for over twenty years.
+
+Dr. Johnson is an active conductor/clinician for elementary, junior high, and high school honor choruses throughout the United States, and is often invited to provide choral workshops and retreats for music education and churches. Johnson is a choral arranger and composer with works published by Colla Voce, Lion & Lamb Publishers, Treble Clef, and G/A Publishers.
+
+He is a member of the American Society of Composers and Publishers as well as an active member of the American Choral Directors Association. He is a member of Pi Kappa Lambda National Music Honor Society, and has been the recipient of several musical honors and awards throughout the West Coast and Midwest.
+
+*Revised January 2024*`
     },
     {
       id: "leadership-roles",
