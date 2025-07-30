@@ -316,34 +316,37 @@ export const UserDashboard = () => {
         {/* View Mode Toggle for Admins/Executives */}
         {(isAdmin || hasExecBoardPerms) && (
           <div className="flex justify-end mb-4">
-            <div className="flex items-center gap-2 p-1 bg-secondary/10 rounded-lg border">
+            <div className="flex items-center gap-1 sm:gap-2 p-1 bg-secondary/10 rounded-lg border">
               <Button
                 variant={viewMode === 'admin' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('admin')}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9"
               >
-                <Shield className="h-4 w-4" />
-                Admin View
+                <Shield className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline">Admin View</span>
+                <span className="xs:hidden">Admin</span>
               </Button>
               <Button
                 variant={viewMode === 'member' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('member')}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9"
               >
-                <User className="h-4 w-4" />
-                Member View
+                <User className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline">Member View</span>
+                <span className="xs:hidden">Member</span>
               </Button>
               {(isExecBoardMember || hasExecBoardPerms) && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigate('/dashboard/executive-board')}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9"
                 >
-                  <Crown className="h-4 w-4" />
-                  Exec Board View
+                  <Crown className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Exec Board View</span>
+                  <span className="xs:hidden">Exec</span>
                 </Button>
               )}
             </div>
