@@ -379,17 +379,12 @@ export const UserDashboard = () => {
           <QuickActionsSection isAdmin={isAdmin} actionFilter="attendance" />
         </div>
 
-        {/* 4. Music Library */}
-        <div className="grid grid-cols-1 gap-6">
-          <QuickActionsSection isAdmin={isAdmin} actionFilter="music" />
-        </div>
-
-        {/* 5. Tasks and Dues */}
+        {/* 4. Tasks and Dues */}
         <div className="grid grid-cols-1 gap-6">
           <TasksSection />
         </div>
 
-        {/* 6. Events Calendar */}
+        {/* 5. Events Calendar */}
         <div className="grid grid-cols-1 gap-6">
           <EventsAndActivitySection 
             upcomingEvents={upcomingEventsList}
@@ -397,9 +392,14 @@ export const UserDashboard = () => {
           />
         </div>
 
-        {/* 7. Full Calendar */}
+        {/* 6. Full Calendar */}
         <div className="grid grid-cols-1 gap-6">
           <QuickActionsSection isAdmin={isAdmin} actionFilter="calendar" />
+        </div>
+
+        {/* 7. Music Library - At bottom for infinite scroll */}
+        <div className="grid grid-cols-1 gap-6">
+          <QuickActionsSection isAdmin={isAdmin} actionFilter="music" />
         </div>
 
         {/* Show Admin/Executive Features Only for Those Roles and in Admin View Mode */}
