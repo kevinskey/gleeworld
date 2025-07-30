@@ -327,6 +327,14 @@ export const ExecutiveBoardDashboard = () => {
               <span className="block sm:hidden text-5xl text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">Exec Board Hub</span>
               <span className="hidden sm:block text-4xl md:text-6xl lg:text-7xl xl:text-8xl text-foreground md:text-white md:drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">Executive Board Hub</span>
             </h1>
+            
+            {/* Welcome message with user's name */}
+            {user?.user_metadata?.full_name && (
+              <p className="text-lg md:text-xl text-white/90 drop-shadow-md mt-2">
+                Welcome back, {user.user_metadata.full_name}! 👋
+              </p>
+            )}
+            
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
               {isAdmin ? (
                 <Select value={selectedPosition} onValueChange={(value: ExecutivePosition) => setSelectedPosition(value)}>
