@@ -87,7 +87,7 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                   onClick={() => navigate('/dashboard')}
                   variant="ghost"
                   size="sm"
-                  className="h-6 px-3 text-xs font-medium text-gray-400 hover:text-gray-600 hover:bg-white/10 transition-all duration-200 active:scale-95 active:bg-white/20 transform"
+                  className="h-6 px-3 text-xs font-medium text-gray-900 hover:text-gray-700 hover:bg-white/10 transition-all duration-200 active:scale-95 active:bg-white/20 transform active:transition-transform active:duration-75"
                 >
                   Dashboard
                 </Button>
