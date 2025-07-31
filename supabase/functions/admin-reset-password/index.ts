@@ -13,7 +13,7 @@ interface ResetPasswordRequest {
   newPassword: string;
 }
 
-// Password validation function - updated to match client requirements
+// Password validation function - simplified for admin reset
 const validatePassword = (password: string): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
   
@@ -129,10 +129,25 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error(`Failed to find user: ${userError.message}`);
       }
       
-      const user = userData.users.find(u => u.email === email);
+      let user = userData.users.find(u => u.email === email);
+      
+      // If user doesn't exist, create them first
       if (!user) {
-        throw new Error(`User with email ${email} not found`);
+        console.log(`User ${email} not found, creating new user...`);
+        const { data: newUserData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+          email: email,
+          password: newPassword,
+          email_confirm: true
+        });
+        
+        if (createError) {
+          throw new Error(`Failed to create user ${email}: ${createError.message}`);
+        }
+        
+        user = newUserData.user;
+        console.log(`Created new user ${email} with ID ${user.id}`);
       }
+      
       targetUserId = user.id;
     }
 
@@ -140,14 +155,32 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Either userId or email must be provided');
     }
 
-    // Update the user's password
-    const { data, error } = await supabaseAdmin.auth.admin.updateUserById(targetUserId, {
-      password: newPassword
-    });
-
-    if (error) {
-      throw error;
+    // Update the user's password (for existing users)
+    if (email) {
+      // Check if user already exists with correct password
+      const { data: userData } = await supabaseAdmin.auth.admin.listUsers();
+      const existingUser = userData.users.find(u => u.email === email);
+      
+      if (existingUser) {
+        const { data, error } = await supabaseAdmin.auth.admin.updateUserById(targetUserId, {
+          password: newPassword
+        });
+        
+        if (error) {
+          throw error;
+        }
+      }
+    } else {
+      // Original userId-based password update
+      const { data, error } = await supabaseAdmin.auth.admin.updateUserById(targetUserId, {
+        password: newPassword
+      });
+      
+      if (error) {
+        throw error;
+      }
     }
+
 
     return new Response(
       JSON.stringify({ success: true, message: "Password reset successfully" }),
