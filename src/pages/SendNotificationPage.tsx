@@ -1,7 +1,7 @@
-import { UnifiedCommunicationForm } from "@/components/communication/UnifiedCommunicationForm";
+import { CommunicationHub } from "@/components/communication/CommunicationHub";
 
 const SendNotificationPage = () => {
-  return <UnifiedCommunicationForm />;
+  return <CommunicationHub />;
 };
 
 export default SendNotificationPage;
