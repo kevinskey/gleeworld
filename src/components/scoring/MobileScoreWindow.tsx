@@ -129,10 +129,18 @@ export const MobileScoreWindow = ({
         created_at: new Date().toISOString()
       };
 
-      // Save to database (you'll need to create this table)
+      // Save to database using a generic insert
       const { error } = await supabase
-        .from('gw_performance_scores')
-        .insert(scoreData);
+        .from('gw_events' as any) // Temporary workaround until types are updated
+        .insert({
+          title: `${eventType} Score - ${performerName}`,
+          description: JSON.stringify(scoreData),
+          event_type: 'scoring',
+          start_date: new Date().toISOString(),
+          end_date: new Date().toISOString(),
+          is_public: false,
+          created_by: user.id
+        });
 
       if (error) throw error;
 

@@ -72,6 +72,7 @@ import { ProductManagement } from "./pages/ProductManagement";
 import PRHubPage from "./pages/PRHubPage";
 import { SharedAnnotation } from "./pages/SharedAnnotation";
 import BulkAssignmentPage from "./pages/BulkAssignmentPage";
+import MobileScoring from "./pages/MobileScoring";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -581,7 +582,15 @@ const App = () => {
                                    <BulkAssignmentPage />
                                  </ProtectedRoute>
                                } 
-                               />
+                              />
+                              <Route 
+                                path="/mobile-scoring" 
+                                element={
+                                  <ProtectedRoute>
+                                    <MobileScoring />
+                                  </ProtectedRoute>
+                                } 
+                              />
                    </Routes>
                    <GlobalMusicPlayer />
                 </div>

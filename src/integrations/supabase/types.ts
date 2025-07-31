@@ -5029,6 +5029,54 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_performance_scores: {
+        Row: {
+          categories: Json
+          comments: string | null
+          created_at: string
+          evaluator_id: string
+          event_type: string
+          id: string
+          max_score: number
+          overall_score: number | null
+          percentage: number
+          performer_id: string | null
+          performer_name: string
+          total_score: number
+          updated_at: string
+        }
+        Insert: {
+          categories?: Json
+          comments?: string | null
+          created_at?: string
+          evaluator_id: string
+          event_type?: string
+          id?: string
+          max_score?: number
+          overall_score?: number | null
+          percentage?: number
+          performer_id?: string | null
+          performer_name: string
+          total_score?: number
+          updated_at?: string
+        }
+        Update: {
+          categories?: Json
+          comments?: string | null
+          created_at?: string
+          evaluator_id?: string
+          event_type?: string
+          id?: string
+          max_score?: number
+          overall_score?: number | null
+          percentage?: number
+          performer_id?: string | null
+          performer_name?: string
+          total_score?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_permissions: {
         Row: {
           category: string | null

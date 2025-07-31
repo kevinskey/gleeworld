@@ -1,0 +1,14 @@
+{
+  "appId": "app.lovable.68e737ffb69d444d8896ed604144004c",
+  "appName": "gleeworld",
+  "webDir": "dist",
+  "server": {
+    "url": "https://68e737ff-b69d-444d-8896-ed604144004c.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
+  }
+}
