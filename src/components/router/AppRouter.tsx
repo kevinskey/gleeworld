@@ -28,6 +28,7 @@ import { Checkout } from "@/pages/Checkout";
 import { Success } from "@/pages/shop/Success";
 import BookingRequest from "@/pages/BookingRequest";
 import TourPlanner from "@/pages/TourPlanner";
+import SendNotificationPage from "@/pages/SendNotificationPage";
 
 
 export const router = createBrowserRouter([
@@ -58,6 +59,10 @@ export const router = createBrowserRouter([
   {
     path: "/notifications",
     element: <Notifications />,
+  },
+  {
+    path: "/notifications/send",
+    element: <SendNotificationPage />,
   },
   {
     path: "/sms-test",
