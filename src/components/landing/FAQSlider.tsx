@@ -80,7 +80,7 @@ export const FAQSlider = () => {
 
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Header - Desktop only */}
-        <div className="hidden md:block text-center mb-16 md:mb-20 relative z-50">
+        <div className="hidden md:block text-center mb-16 md:mb-20 mt-8 md:mt-12 lg:mt-16 relative z-50">
           {/* Subtle mask for softening */}
           <div className="absolute inset-0 bg-background/20 backdrop-blur-sm rounded-lg -m-4"></div>
           <div className="relative z-10">
