@@ -80,7 +80,7 @@ export const FAQSlider = () => {
 
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Header - Desktop only */}
-        <div className="hidden md:block text-center mb-16 md:mb-20">
+        <div className="hidden md:block text-center mb-16 md:mb-20 relative z-50">
           <div className="inline-flex items-center justify-center space-x-2 mb-4">
             <Music className="w-6 h-6 md:w-8 md:h-8 text-primary" />
             <MessageCircleQuestion className="w-6 h-6 md:w-8 md:h-8 text-primary" />
