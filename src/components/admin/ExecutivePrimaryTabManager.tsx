@@ -24,6 +24,7 @@ const TAB_OPTIONS = [
   { value: 'events', label: 'Events', icon: Calendar },
   { value: 'finances', label: 'Finances', icon: DollarSign },
   { value: 'reports', label: 'Reports', icon: BarChart3 },
+  { value: 'attendance', label: 'Attendance', icon: Users },
   { value: 'settings', label: 'Settings', icon: Settings },
 ];
 
