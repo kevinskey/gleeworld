@@ -192,9 +192,9 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
             )}
 
             {!user && (
-              <EnhancedTooltip content="Sing in to access your dashboard">
-                <Button asChild variant="default" size="sm" className="text-sm px-6 min-w-[80px] whitespace-nowrap bg-blue-600 hover:bg-blue-700 text-white">
-                  <Link to="/auth">Sing In</Link>
+              <EnhancedTooltip content="Sign in to access your dashboard">
+                <Button asChild variant="default" size="sm" className="text-xs sm:text-sm px-3 sm:px-6 min-w-[70px] sm:min-w-[80px] whitespace-nowrap bg-blue-600 hover:bg-blue-700 text-white font-medium">
+                  <Link to="/auth">Sign In</Link>
                 </Button>
               </EnhancedTooltip>
             )}
