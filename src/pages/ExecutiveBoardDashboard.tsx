@@ -254,15 +254,51 @@ export const ExecutiveBoardDashboard = () => {
       <UniversalLayout>
         <PageHeader 
           title="Executive Board Hub"
-          description="Access denied"
+          description="Access verification required"
         />
-        <Alert className="max-w-2xl mx-auto">
-          <Shield className="h-4 w-4" />
-          <AlertDescription>
-            You are not currently a member of the Executive Board. If you believe this is an error, 
-            please contact your administrator.
-          </AlertDescription>
-        </Alert>
+        <div className="max-w-2xl mx-auto space-y-6">
+          <Alert>
+            <Shield className="h-4 w-4" />
+            <AlertDescription>
+              <div className="space-y-3">
+                <p className="font-medium">Executive Board access required</p>
+                <p>To access the Executive Board Hub, you need one of the following:</p>
+                <ul className="list-disc pl-5 space-y-1 text-sm">
+                  <li>Super Admin or Admin privileges</li>
+                  <li>Executive Board member status with assigned role</li>
+                  <li>Active membership in the Executive Board</li>
+                </ul>
+                <p className="text-sm text-muted-foreground">
+                  If you believe you should have access, please contact your administrator to:
+                </p>
+                <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                  <li>Set your <code>is_exec_board</code> flag to true</li>
+                  <li>Assign your <code>exec_board_role</code> (e.g., president, secretary, treasurer)</li>
+                  <li>Or grant admin/super admin permissions</li>
+                </ul>
+              </div>
+            </AlertDescription>
+          </Alert>
+          
+          <div className="flex gap-3">
+            <Button 
+              onClick={() => navigate('/dashboard')}
+              variant="outline"
+              className="flex-1"
+            >
+              <Home className="mr-2 h-4 w-4" />
+              Back to Dashboard
+            </Button>
+            <Button 
+              onClick={() => navigate('/profile')}
+              variant="default"
+              className="flex-1"
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              View Profile
+            </Button>
+          </div>
+        </div>
       </UniversalLayout>
     );
   }
