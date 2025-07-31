@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 const publicNavItems = [
   { href: "/", label: "Home", shortLabel: "Home" },
@@ -17,12 +18,20 @@ interface ResponsiveNavigationProps {
 
 export const ResponsiveNavigation = ({ mobile = false, onItemClick }: ResponsiveNavigationProps) => {
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   const isActivePath = (path: string) => {
     if (path === "/") {
       return location.pathname === "/" || location.pathname === "/landing";
     }
     return location.pathname === path;
+  };
+
+  const handleAuthAction = async () => {
+    if (user) {
+      await signOut();
+    }
+    onItemClick?.();
   };
 
   if (mobile) {
@@ -42,6 +51,24 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
             {item.label}
           </Link>
         ))}
+        
+        {/* Dynamic Auth Button */}
+        {user ? (
+          <button
+            onClick={handleAuthAction}
+            className="flex items-center px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90 w-full justify-start mt-2"
+          >
+            Sign Out
+          </button>
+        ) : (
+          <Link
+            to="/auth"
+            onClick={onItemClick}
+            className="flex items-center px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90 w-full justify-start mt-2"
+          >
+            Sign In
+          </Link>
+        )}
       </>
     );
   }
