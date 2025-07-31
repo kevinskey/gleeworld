@@ -36,7 +36,7 @@ export const AttendanceDashboard = () => {
   const { profile } = useProfile();
   const [activeTab, setActiveTab] = useState('overview');
   const [canTakeAttendance, setCanTakeAttendance] = useState(false);
-  const [userSectionCollapsed, setUserSectionCollapsed] = useState(false);
+  const [userSectionCollapsed, setUserSectionCollapsed] = useState(true); // Default to closed
   const [classScheduleCollapsed, setClassScheduleCollapsed] = useState(false);
   const [stats, setStats] = useState({
     myAttendance: 0,
