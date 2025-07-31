@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Music } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Plus, Music, History } from "lucide-react";
+import { SavedScoresViewer } from "@/components/scoring/SavedScoresViewer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -80,7 +82,7 @@ export default function MobileScoring() {
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-md mx-auto space-y-4">
-        {/* Header */}
+        {/* Header with Tabs */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-center text-lg flex items-center justify-center gap-2">
@@ -88,86 +90,99 @@ export default function MobileScoring() {
               Performance Scoring
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Event Type Selector */}
-            <div>
-              <Label htmlFor="eventType">Event Type</Label>
-              <Select value={eventType} onValueChange={(value: any) => setEventType(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="audition">Audition</SelectItem>
-                  <SelectItem value="performance">Performance</SelectItem>
-                  <SelectItem value="competition">Competition</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Search */}
-            <div>
-              <Label htmlFor="search">Search Performers</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="search"
-                  placeholder="Search by name or email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Performers List */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Select Performer</CardTitle>
-          </CardHeader>
           <CardContent>
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {filteredPerformers.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Music className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>No performers found</p>
+            <Tabs defaultValue="score" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="score">New Score</TabsTrigger>
+                <TabsTrigger value="history">View Scores</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="score" className="space-y-4 mt-4">
+                {/* Event Type Selector */}
+                <div>
+                  <Label htmlFor="eventType">Event Type</Label>
+                  <Select value={eventType} onValueChange={(value: any) => setEventType(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="audition">Audition</SelectItem>
+                      <SelectItem value="performance">Performance</SelectItem>
+                      <SelectItem value="competition">Competition</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              ) : (
-                filteredPerformers.map((performer) => (
-                  <div
-                    key={performer.id}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <h3 className="font-medium">{performer.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {performer.voice_part && `${performer.voice_part} • `}
-                        {performer.email}
-                      </p>
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={() => startScoring(performer)}
-                      className="ml-3"
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Score
-                    </Button>
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Quick Actions */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center text-sm text-muted-foreground">
-              <Music className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>Select a performer above to begin scoring their {eventType}</p>
-            </div>
+                {/* Search */}
+                <div>
+                  <Label htmlFor="search">Search Performers</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search by name or email..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                {/* Performers List */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Select Performer</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      {filteredPerformers.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Music className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p>No performers found</p>
+                        </div>
+                      ) : (
+                        filteredPerformers.map((performer) => (
+                          <div
+                            key={performer.id}
+                            className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="flex-1">
+                              <h3 className="font-medium">{performer.name}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {performer.voice_part && `${performer.voice_part} • `}
+                                {performer.email}
+                              </p>
+                            </div>
+                            <Button
+                              size="sm"
+                              onClick={() => startScoring(performer)}
+                              className="ml-3"
+                            >
+                              <Plus className="h-4 w-4 mr-1" />
+                              Score
+                            </Button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Quick Actions */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center text-sm text-muted-foreground">
+                      <Music className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>Select a performer above to begin scoring their {eventType}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="history" className="mt-4">
+                <SavedScoresViewer />
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>

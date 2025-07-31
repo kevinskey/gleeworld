@@ -9997,6 +9997,21 @@ export type Database = {
         Args: { track_uuid: string }
         Returns: undefined
       }
+      insert_performance_score: {
+        Args: {
+          p_performer_id: string
+          p_performer_name: string
+          p_evaluator_id: string
+          p_event_type: string
+          p_categories: string
+          p_total_score: number
+          p_max_score: number
+          p_percentage: number
+          p_overall_score: number
+          p_comments: string
+        }
+        Returns: string
+      }
       is_admin: {
         Args: { _user_id: string }
         Returns: boolean

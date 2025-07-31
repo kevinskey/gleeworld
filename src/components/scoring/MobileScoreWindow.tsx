@@ -130,28 +130,37 @@ export const MobileScoreWindow = ({
 
       console.log('Saving score data:', scoreData);
 
-      // Use a direct SQL insert since the table isn't in TypeScript types yet
-      const { error } = await supabase.rpc('insert_performance_score', {
-        p_performer_id: performerId,
-        p_performer_name: performerName,
-        p_evaluator_id: user.id,
-        p_event_type: eventType,
-        p_categories: JSON.stringify(categories.reduce((acc, cat) => ({
-          ...acc,
-          [cat.id]: cat.currentScore
-        }), {})),
-        p_total_score: totalEarned,
-        p_max_score: totalPossible,
-        p_percentage: parseFloat(percentage),
-        p_overall_score: overallScore,
-        p_comments: comments
-      });
+      // Use direct SQL to insert into the events table with required fields
+      const { data, error } = await supabase
+        .from('gw_events')
+        .insert({
+          title: `${eventType.toUpperCase()}: ${performerName} - Score: ${percentage}%`,
+          description: `Performance Score Data:\n\nScores:\n${categories.map(cat => 
+            `${cat.name}: ${cat.currentScore}/${cat.maxScore}`
+          ).join('\n')}\n\nOverall Score: ${overallScore}/100\n\nComments: ${comments}`,
+          event_type: 'scoring',
+          start_date: new Date().toISOString(),
+          end_date: new Date().toISOString(),
+          location: eventType,
+          venue_name: performerName,
+          is_public: false,
+          created_by: user.id,
+          external_source: 'scoring_system',
+          external_id: `score_${performerId}_${Date.now()}`,
+          calendar_id: '00000000-0000-0000-0000-000000000000' // Default calendar ID for scoring events
+        })
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
+
+      console.log('Score saved successfully:', data);
 
       toast({
         title: "Score Saved!",
-        description: `${performerName}'s score has been saved successfully.`
+        description: `${performerName}'s ${eventType} score (${percentage}%) has been saved successfully.`
       });
 
       onScoreSubmitted?.(scoreData);
