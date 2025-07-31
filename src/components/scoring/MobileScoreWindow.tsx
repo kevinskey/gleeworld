@@ -28,7 +28,7 @@ interface MobileScoreWindowProps {
 
 export const MobileScoreWindow = ({ 
   performerId, 
-  performerName = "Performer", 
+  performerName = "Sarah Johnson", 
   eventType = 'audition',
   onScoreSubmitted 
 }: MobileScoreWindowProps) => {
@@ -40,45 +40,51 @@ export const MobileScoreWindow = ({
       id: 'vocal',
       name: 'Vocal Quality',
       maxScore: 10,
-      currentScore: 0,
+      currentScore: 8,
       icon: <Mic className="h-4 w-4" />
     },
     {
       id: 'pitch',
       name: 'Pitch Accuracy',
       maxScore: 10,
-      currentScore: 0,
+      currentScore: 9,
       icon: <Music className="h-4 w-4" />
     },
     {
       id: 'rhythm',
       name: 'Rhythm & Timing',
       maxScore: 10,
-      currentScore: 0,
+      currentScore: 7,
       icon: <Music className="h-4 w-4" />
     },
     {
       id: 'expression',
       name: 'Musical Expression',
       maxScore: 10,
-      currentScore: 0,
+      currentScore: 8,
       icon: <Star className="h-4 w-4" />
     },
     {
       id: 'stage',
       name: 'Stage Presence',
       maxScore: 10,
-      currentScore: 0,
+      currentScore: 9,
       icon: <Users className="h-4 w-4" />
     }
   ]);
 
-  const [comments, setComments] = useState("");
-  const [overallScore, setOverallScore] = useState(0);
+  const [comments, setComments] = useState("Excellent breath control and clear diction. Strong stage presence with confident delivery. Could work on maintaining consistent vibrato in the upper register.");
+  const [overallScore, setOverallScore] = useState(85);
   const [isSaving, setIsSaving] = useState(false);
-  const [songTitle, setSongTitle] = useState("");
+  const [songTitle, setSongTitle] = useState("Amazing Grace");
   const [sheetMusicData, setSheetMusicData] = useState<any>(null);
-  const [performerProfile, setPerformerProfile] = useState<any>(null);
+  const [performerProfile, setPerformerProfile] = useState<any>({
+    first_name: "Sarah",
+    last_name: "Johnson", 
+    avatar_url: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
+    class_year: 2026,
+    voice_part: "Soprano"
+  });
   const [isTablet, setIsTablet] = useState(false);
 
   // Detect tablet/iPad view
@@ -112,6 +118,7 @@ export const MobileScoreWindow = ({
         }
       } catch (error) {
         console.log('Error fetching performer profile:', error);
+        // Keep the placeholder data if fetch fails
       }
     };
 
@@ -175,8 +182,8 @@ export const MobileScoreWindow = ({
     setCategories(prev => prev.map(cat => ({ ...cat, currentScore: 0 })));
     setComments("");
     setOverallScore(0);
-    setSongTitle("");
-    setSheetMusicData(null);
+    setSongTitle("Amazing Grace");
+    // Keep the sample performer profile data
   };
 
   const saveScore = async () => {
