@@ -12,6 +12,7 @@ import { SavedScoresViewer } from "@/components/scoring/SavedScoresViewer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import operaSingerImage from "@/assets/opera-singer-performance.jpg";
 
 
 interface Performer {
@@ -101,15 +102,22 @@ export default function MobileScoring() {
   return (
     <UniversalLayout maxWidth="md" containerized={true}>
       <div className="max-w-md mx-auto space-y-4">
-        {/* Header with Tabs */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-center text-lg flex items-center justify-center gap-2">
-              <Music className="h-5 w-5" />
-              Performance Scoring
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        {/* Dramatic Header with Opera Singer Image */}
+        <Card className="overflow-hidden">
+          <div 
+            className="relative h-48 bg-cover bg-center bg-no-repeat flex items-end"
+            style={{ backgroundImage: `url(${operaSingerImage})` }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+            <CardHeader className="relative z-10 text-white pb-4">
+              <CardTitle className="text-2xl font-bold flex items-center gap-3">
+                <Music className="h-6 w-6" />
+                Performance Scoring
+              </CardTitle>
+              <p className="text-white/90 text-sm">Evaluate artistic excellence and vocal mastery</p>
+            </CardHeader>
+          </div>
+          <CardContent className="pt-0">
             <Tabs defaultValue="score" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="score">New Score</TabsTrigger>
