@@ -3,6 +3,7 @@ import { CommunicationCenterModule } from "@/components/admin/CommunicationCente
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { SpiritualReflectionsCard } from "../SpiritualReflectionsCard";
+import { NotificationCenter } from "@/components/admin/NotificationCenter";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuditionManagement } from "@/hooks/useAuditionManagement";
@@ -166,6 +167,9 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
   return (
     <div className="space-y-6">
+      {/* Notification Center */}
+      <NotificationCenter />
+
       {/* Admin Overview Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* System Health Card */}

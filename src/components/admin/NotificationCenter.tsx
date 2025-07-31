@@ -10,11 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import * as Collapsible from "@radix-ui/react-collapsible";
 import { 
-  Book, 
-  Heart, 
+  Bell, 
   ChevronDown, 
   ChevronUp, 
-  Bell, 
   MessageSquare, 
   Send, 
   Users, 
@@ -23,13 +21,11 @@ import {
   Clock,
   AlertTriangle
 } from "lucide-react";
-import { useSharedSpiritualReflections } from "@/hooks/useSharedSpiritualReflections";
 import { useTasks } from "@/hooks/useTasks";
 import { useNotificationDelivery } from "@/hooks/useNotificationDelivery";
 import { useToast } from "@/hooks/use-toast";
 
-export const ExpandableSpiritualReflectionsCard = () => {
-  const { sharedReflections, loading } = useSharedSpiritualReflections();
+export const NotificationCenter = () => {
   const { notifications, markNotificationAsRead, getUnreadNotificationCount } = useTasks();
   const { sendSMSNotification } = useNotificationDelivery();
   const { toast } = useToast();
@@ -43,16 +39,6 @@ export const ExpandableSpiritualReflectionsCard = () => {
   const [sendingSMS, setSendingSMS] = useState(false);
 
   const unreadCount = getUnreadNotificationCount();
-
-  const getReflectionTypeColor = (type: string) => {
-    switch (type) {
-      case 'daily_devotional': return 'bg-blue-100 text-blue-800';
-      case 'weekly_message': return 'bg-green-100 text-green-800';
-      case 'prayer': return 'bg-purple-100 text-purple-800';
-      case 'scripture_study': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -124,32 +110,6 @@ export const ExpandableSpiritualReflectionsCard = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <Card className="w-full">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Book className="h-4 w-4" />
-            Spiritual Gleeflections
-            {unreadCount > 0 && (
-              <Badge variant="destructive" className="h-5 w-5 text-xs flex items-center justify-center p-0">
-                {unreadCount}
-              </Badge>
-            )}
-          </CardTitle>
-          <CardDescription className="text-sm">Messages & Notifications</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-center p-4">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const latestReflection = sharedReflections[0];
-
   return (
     <Card className="w-full">
       <Collapsible.Root open={isOpen} onOpenChange={setIsOpen}>
@@ -158,15 +118,15 @@ export const ExpandableSpiritualReflectionsCard = () => {
             <div className="flex items-center justify-between cursor-pointer">
               <div>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <Book className="h-4 w-4" />
-                  Spiritual Gleeflections
+                  <Bell className="h-4 w-4" />
+                  Notification Center
                   {unreadCount > 0 && (
                     <Badge variant="destructive" className="h-5 w-5 text-xs flex items-center justify-center p-0">
                       {unreadCount}
                     </Badge>
                   )}
                 </CardTitle>
-                <CardDescription className="text-sm">Messages & Notifications</CardDescription>
+                <CardDescription className="text-sm">SMS & Email Communications</CardDescription>
               </div>
               <div className="flex items-center gap-2">
                 {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -297,60 +257,6 @@ export const ExpandableSpiritualReflectionsCard = () => {
                 </div>
               </ScrollArea>
             </div>
-
-            <Separator />
-
-            {/* Latest Spiritual Reflection */}
-            {latestReflection && (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Heart className="h-4 w-4 text-purple-600" />
-                  <h4 className="font-medium text-sm">Latest Reflection</h4>
-                </div>
-                
-                <div className="border rounded-lg p-3">
-                  <div className="flex items-start justify-between mb-2">
-                    <h5 className="font-medium text-sm leading-tight pr-2">{latestReflection.title}</h5>
-                    {latestReflection.is_featured && (
-                      <Badge variant="outline" className="text-xs flex-shrink-0">Featured</Badge>
-                    )}
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    <Badge className={getReflectionTypeColor(latestReflection.reflection_type || 'daily_devotional')} variant="secondary">
-                      {(latestReflection.reflection_type || 'daily_devotional').replace('_', ' ')}
-                    </Badge>
-                    {latestReflection.scripture_reference && (
-                      <Badge variant="outline" className="text-xs">
-                        {latestReflection.scripture_reference}
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  <ScrollArea className="h-16 mb-2">
-                    <p className="text-xs text-muted-foreground pr-4 leading-relaxed">
-                      {latestReflection.content}
-                    </p>
-                  </ScrollArea>
-                  
-                  <div className="text-xs text-muted-foreground">
-                    {latestReflection.shared_at 
-                      ? `Shared on ${new Date(latestReflection.shared_at).toLocaleDateString()}`
-                      : 'Recently shared'
-                    }
-                  </div>
-                </div>
-
-                {/* Additional reflections count */}
-                {sharedReflections.length > 1 && (
-                  <div className="text-center mt-2">
-                    <p className="text-xs text-muted-foreground">
-                      +{sharedReflections.length - 1} more reflection{sharedReflections.length > 2 ? 's' : ''}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
           </CardContent>
         </Collapsible.Content>
       </Collapsible.Root>

@@ -12,7 +12,7 @@ import { SavedScoresViewer } from "@/components/scoring/SavedScoresViewer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
-import { ExpandableSpiritualReflectionsCard } from "@/components/mobile-scoring/ExpandableSpiritualReflectionsCard";
+
 
 interface Performer {
   id: string;
@@ -101,9 +101,6 @@ export default function MobileScoring() {
   return (
     <UniversalLayout maxWidth="md" containerized={true}>
       <div className="max-w-md mx-auto space-y-4">
-        {/* Expandable Spiritual Reflections Card with Notifications and SMS */}
-        <ExpandableSpiritualReflectionsCard />
-        
         {/* Header with Tabs */}
         <Card>
           <CardHeader className="pb-3">
