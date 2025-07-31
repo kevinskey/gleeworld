@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CommunicationCenterModule } from "@/components/admin/CommunicationCenterModule";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { SpiritualReflectionsCard } from "../SpiritualReflectionsCard";
@@ -533,6 +534,9 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Communication Center Module */}
+      <CommunicationCenterModule />
 
       {/* Spiritual Reflections Card */}
       <SpiritualReflectionsCard />
