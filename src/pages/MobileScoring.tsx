@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { MobileScoreWindow } from "@/components/scoring/MobileScoreWindow";
+import { SightReadingScoreWindow } from "@/components/scoring/SightReadingScoreWindow";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Plus, Music, History } from "lucide-react";
+import { Search, Plus, Music, History, BookOpen } from "lucide-react";
 import { SavedScoresViewer } from "@/components/scoring/SavedScoresViewer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,9 +24,10 @@ export default function MobileScoring() {
   const { user } = useAuth();
   const [performers, setPerformers] = useState<Performer[]>([]);
   const [selectedPerformer, setSelectedPerformer] = useState<Performer | null>(null);
-  const [eventType, setEventType] = useState<'audition' | 'performance' | 'competition'>('audition');
+  const [eventType, setEventType] = useState<'audition' | 'performance' | 'competition' | 'sight_reading_test'>('audition');
   const [searchTerm, setSearchTerm] = useState("");
   const [showScoring, setShowScoring] = useState(false);
+  const [showSightReading, setShowSightReading] = useState(false);
 
   useEffect(() => {
     fetchPerformers();
@@ -60,11 +62,16 @@ export default function MobileScoring() {
 
   const startScoring = (performer: Performer) => {
     setSelectedPerformer(performer);
-    setShowScoring(true);
+    if (eventType === 'sight_reading_test') {
+      setShowSightReading(true);
+    } else {
+      setShowScoring(true);
+    }
   };
 
   const handleScoreSubmitted = (scoreData: any) => {
     setShowScoring(false);
+    setShowSightReading(false);
     setSelectedPerformer(null);
     setSearchTerm("");
   };
@@ -74,7 +81,17 @@ export default function MobileScoring() {
       <MobileScoreWindow
         performerId={selectedPerformer.id}
         performerName={selectedPerformer.name}
-        eventType={eventType}
+        eventType={eventType as 'audition' | 'performance' | 'competition'}
+        onScoreSubmitted={handleScoreSubmitted}
+      />
+    );
+  }
+
+  if (showSightReading && selectedPerformer) {
+    return (
+      <SightReadingScoreWindow
+        performerId={selectedPerformer.id}
+        performerName={selectedPerformer.name}
         onScoreSubmitted={handleScoreSubmitted}
       />
     );
@@ -110,6 +127,7 @@ export default function MobileScoring() {
                       <SelectItem value="audition">Audition</SelectItem>
                       <SelectItem value="performance">Performance</SelectItem>
                       <SelectItem value="competition">Competition</SelectItem>
+                      <SelectItem value="sight_reading_test">Sight Reading Test</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -159,8 +177,17 @@ export default function MobileScoring() {
                               onClick={() => startScoring(performer)}
                               className="ml-3"
                             >
-                              <Plus className="h-4 w-4 mr-1" />
-                              Score
+                              {eventType === 'sight_reading_test' ? (
+                                <>
+                                  <BookOpen className="h-4 w-4 mr-1" />
+                                  Evaluate
+                                </>
+                              ) : (
+                                <>
+                                  <Plus className="h-4 w-4 mr-1" />
+                                  Score
+                                </>
+                              )}
                             </Button>
                           </div>
                         ))
@@ -174,7 +201,7 @@ export default function MobileScoring() {
                   <CardContent className="pt-6">
                     <div className="text-center text-sm text-muted-foreground">
                       <Music className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p>Select a performer above to begin scoring their {eventType}</p>
+                      <p>Select a performer above to begin {eventType === 'sight_reading_test' ? 'sight reading evaluation' : `scoring their ${eventType}`}</p>
                     </div>
                   </CardContent>
                 </Card>
