@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Calendar, Download } from "lucide-react";
+import { Loader2, Calendar, Download, Star } from "lucide-react";
 
 export const GoogleCalendarSync = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [calendarId, setCalendarId] = useState("");
+  const [isSyncingHolidays, setIsSyncingHolidays] = useState(false);
   const { toast } = useToast();
 
   const handleGoogleAuth = () => {
@@ -63,6 +64,35 @@ export const GoogleCalendarSync = () => {
     }
   };
 
+  const handleHolidaySync = async () => {
+    setIsSyncingHolidays(true);
+    try {
+      const currentYear = new Date().getFullYear();
+      const { data, error } = await supabase.functions.invoke('sync-national-holidays', {
+        body: {
+          year: currentYear
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Holiday Sync Successful!",
+        description: `Imported ${data.imported} new holidays and updated ${data.updated} existing holidays for ${currentYear}.`
+      });
+      
+    } catch (error) {
+      console.error('Holiday sync error:', error);
+      toast({
+        title: "Holiday Sync Failed",
+        description: "Failed to sync national holidays. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSyncingHolidays(false);
+    }
+  };
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
@@ -105,6 +135,27 @@ export const GoogleCalendarSync = () => {
             </>
           )}
         </Button>
+
+        <div className="border-t pt-4">
+          <Button 
+            onClick={handleHolidaySync} 
+            disabled={isSyncingHolidays}
+            variant="outline"
+            className="w-full"
+          >
+            {isSyncingHolidays ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Syncing Holidays...
+              </>
+            ) : (
+              <>
+                <Star className="mr-2 h-4 w-4" />
+                Sync National Holidays
+              </>
+            )}
+          </Button>
+        </div>
 
         <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm">
           <p className="font-medium text-blue-900 dark:text-blue-100">Ready to sync!</p>
