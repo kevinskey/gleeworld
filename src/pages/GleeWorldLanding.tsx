@@ -7,6 +7,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useMusic, Album } from "@/hooks/useMusic";
+import { useYouTubeVideos } from "@/hooks/useYouTubeVideos";
+import gleeClubFallback from "@/assets/glee-club-fallback.jpg";
 import { AlbumModal } from "@/components/music/AlbumModal";
 import { YoutubeVideoSection } from "@/components/youtube/YoutubeVideoSection";
 import { FAQSlider } from "@/components/landing/FAQSlider";
@@ -76,6 +78,7 @@ interface HeroSlide {
 export const GleeWorldLanding = () => {
   const { user } = useAuth();
   const { albums } = useMusic();
+  const { videos, getVideoEmbedUrl } = useYouTubeVideos();
   const [events, setEvents] = useState<Event[]>([]);
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -83,6 +86,12 @@ export const GleeWorldLanding = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   const [isAlbumModalOpen, setIsAlbumModalOpen] = useState(false);
+  const [showFallbackImage, setShowFallbackImage] = useState(false);
+
+  // Get the featured video or fallback to the hardcoded video ID
+  const backgroundVideo = videos.find(video => video.is_featured) || 
+                         videos.find(video => video.video_id === 'fDvKSh6jGKA') || 
+                         videos[0];
 
   // Remove hardcoded sample tracks - they're now handled by the edge function
 
@@ -246,22 +255,38 @@ export const GleeWorldLanding = () => {
     <PublicLayout>
       {/* YouTube Video Background Section */}
       <section className="fixed top-0 left-0 w-full h-screen z-0 overflow-hidden">
-        {/* YouTube Embed */}
-        <div className="absolute inset-0">
-          <iframe
-            src="https://www.youtube.com/embed/fDvKSh6jGKA?autoplay=1&mute=1&loop=1&playlist=fDvKSh6jGKA&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&enablejsapi=1&start=3861&end=4200"
-            className="w-full h-full object-cover"
-            style={{
-              width: '300%',
-              height: '300%',
-              marginLeft: '-100%',
-              marginTop: '-100%',
-            }}
-            allow="autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture"
-            allowFullScreen
-            title="Glee Club Background Video"
-          />
-        </div>
+        {!showFallbackImage && backgroundVideo ? (
+          <>
+            {/* YouTube Embed */}
+            <div className="absolute inset-0">
+              <iframe
+                src={getVideoEmbedUrl(backgroundVideo.video_id, true, true, 3861)}
+                className="w-full h-full object-cover"
+                style={{
+                  width: '300%',
+                  height: '300%',
+                  marginLeft: '-100%',
+                  marginTop: '-100%',
+                }}
+                allow="autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture"
+                allowFullScreen
+                title={backgroundVideo.title || "Glee Club Background Video"}
+                onError={() => setShowFallbackImage(true)}
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Fallback Glee Club Image */}
+            <div className="absolute inset-0">
+              <img 
+                src={gleeClubFallback}
+                alt="Spelman College Glee Club Performance"
+                className="w-full h-full object-cover brightness-75 contrast-105"
+              />
+            </div>
+          </>
+        )}
         
         {/* Overlay for dimming */}
         <div className="absolute inset-0 bg-black/40 z-10"></div>
