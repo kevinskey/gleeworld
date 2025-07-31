@@ -38,11 +38,15 @@ export const useRoleBasedRedirect = () => {
     // Role-based redirect logic
     const isAdmin = userProfile.role === 'admin' || userProfile.role === 'super-admin';
     const isAlumna = userProfile.role === 'alumna';
+    const isExecutiveBoard = userProfile.is_exec_board || userProfile.is_admin || userProfile.is_super_admin;
     
     console.log('useRoleBasedRedirect: Redirect logic', {
       userRole: userProfile.role,
       isAdmin,
       isAlumna,
+      isExecutiveBoard,
+      isExecBoard: userProfile.is_exec_board,
+      execBoardRole: userProfile.exec_board_role,
       currentPath: location.pathname
     });
     
@@ -53,6 +57,10 @@ export const useRoleBasedRedirect = () => {
     } else if (isAlumna) {
       console.log('useRoleBasedRedirect: Redirecting alumna to alumnae portal');
       navigate('/alumnae', { replace: true });
+      window.scrollTo(0, 0);
+    } else if (isExecutiveBoard) {
+      console.log('useRoleBasedRedirect: Redirecting exec board member to executive board dashboard');
+      navigate('/dashboard/executive-board', { replace: true });
       window.scrollTo(0, 0);
     } else {
       console.log('useRoleBasedRedirect: Redirecting regular user to dashboard');
