@@ -18,7 +18,7 @@ export const BulkExecBoardAssignment = () => {
     { email: "avachallenger@spelman.edu", full_name: "Ava Challenger", role: "pr_coordinator" }, // First PR person
     { email: "phoenixking@spelman.edu", full_name: "Phoenix King", role: "historian" },
     { email: "madisynwashington@spelman.edu", full_name: "Madisyn Washington", role: "librarian" }, // First co-librarian
-    { email: "soleilvailes@spelman.edu", full_name: "Soleil Vailes", role: "wardrobe_manager" }, // Wardrobe mistress
+    { email: "drewroberts@spelman.edu", full_name: "Drew Roberts", role: "wardrobe_manager" }, // Wardrobe mistress
     { email: "kyerrashields@spelman.edu", full_name: "Kyerra Shields", role: "chaplain" },
     { email: "arianaswindell@spelman.edu", full_name: "Ariana Swindell", role: "student_conductor" }, // Also S1 section leader
     { email: "sagemae@spelman.edu", full_name: "Sage Mae", role: "section_leader_a1" }, // A1 section leader
@@ -30,7 +30,7 @@ export const BulkExecBoardAssignment = () => {
     { email: "sanaiaharrison@spelman.edu", full_name: "Sanaia Harrison", role: "data_analyst" }, // No merchandise role
     { email: "kennidytroupe@spelman.edu", full_name: "Kennidy Troupe", role: "assistant_chaplain" }, // No alumnae liaison
     { email: "allanawalker@spelman.edu", full_name: "Allana Walker", role: "data_analyst" }, // No setup crew role
-    { email: "drewroberts@spelman.edu", full_name: "Drew Roberts", role: "assistant_chaplain" }, // Second wardrobe person
+    { email: "soleilvailes@spelman.edu", full_name: "Soleil Vailes", role: "assistant_chaplain" }, // Second wardrobe person
     
     // Additional people who need some role
     { email: "tyarapetty@spelman.edu", full_name: "T'yara Petty", role: "assistant_chaplain" }, // Second PR person
