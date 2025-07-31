@@ -86,12 +86,6 @@ export const PublicHeader = () => {
                   <nav className="flex flex-col gap-0">
                     <ResponsiveNavigation mobile onItemClick={() => setIsOpen(false)} />
                   </nav>
-                  
-                  <div className="pt-2 border-t border-gray-200/50">
-                    <Button asChild className="w-full bg-spelman-blue-dark hover:bg-spelman-blue-light" size="sm" onClick={() => setIsOpen(false)}>
-                      <Link to="/auth">Sign In</Link>
-                    </Button>
-                  </div>
                 </div>
               </SheetContent>
             </Sheet>
