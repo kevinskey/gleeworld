@@ -176,6 +176,7 @@ export const useAuditionLogs = () => {
           audition_id: audition.id,
           applicant_name: `${audition.first_name} ${audition.last_name}`,
           applicant_email: audition.email,
+          applicant_picture_url: audition.selfie_url, // Add the selfie URL for avatar display
           audition_date: audition.audition_date.split('T')[0], // Extract date part
           audition_time: audition.audition_time || '9:00 AM', // Keep 12-hour format
           voice_part: audition.voice_part,
