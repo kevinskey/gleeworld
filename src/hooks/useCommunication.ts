@@ -81,7 +81,7 @@ export const useCommunication = () => {
           case 'role':
             if (group.id === 'doc') {
               query = query.eq('is_super_admin', true);
-            } else if (group.id === 'all_exec_board') {
+            } else if (group.id === 'executive_board') {
               const { data: execData } = await supabase
                 .from('gw_executive_board_members')
                 .select('user_id')
