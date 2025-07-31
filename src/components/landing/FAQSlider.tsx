@@ -81,16 +81,20 @@ export const FAQSlider = () => {
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Header - Desktop only */}
         <div className="hidden md:block text-center mb-16 md:mb-20 relative z-50">
-          <div className="inline-flex items-center justify-center space-x-2 mb-4">
-            <Music className="w-6 h-6 md:w-8 md:h-8 text-primary" />
-            <MessageCircleQuestion className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+          {/* Subtle mask for softening */}
+          <div className="absolute inset-0 bg-background/20 backdrop-blur-sm rounded-lg -m-4"></div>
+          <div className="relative z-10">
+            <div className="inline-flex items-center justify-center space-x-2 mb-4">
+              <Music className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+              <MessageCircleQuestion className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+            </div>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-lg md:text-xl text-muted-foreground">
+              Spelman College Glee Club
+            </p>
           </div>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
-            Frequently Asked Questions
-          </h2>
-          <p className="text-lg md:text-xl text-muted-foreground">
-            Spelman College Glee Club
-          </p>
         </div>
 
         {/* Mobile: News ticker header */}
