@@ -116,8 +116,8 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
           </div>
         </div>
         
-        {/* Countdown Text - Visible on very large screens, hidden on smaller screens where it becomes hover-only */}
-        <div className="hidden 2xl:block">
+        {/* Countdown Text - Visible on large screens, hidden on smaller screens where it becomes hover-only */}
+        <div className="hidden xl:block">
           <span className="text-xs text-gray-700 font-medium whitespace-nowrap">
             🎄 {getCountdownText()}
           </span>
@@ -126,7 +126,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
       
       {/* Hover Tooltip for when countdown text is hidden */}
       {showCountdown && (
-        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-[120] 2xl:hidden">
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-[120] xl:hidden">
           <Badge 
             variant="secondary" 
             className="bg-spelman-blue-dark text-white px-3 py-2 text-sm font-medium shadow-xl animate-fade-in whitespace-nowrap border border-white/20"
