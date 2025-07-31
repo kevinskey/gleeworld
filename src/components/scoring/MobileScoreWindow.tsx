@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Star, Save, RotateCcw, Music, Mic, Users, FileText, ExternalLink, ArrowLeft, X, UserCheck, Shield } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Star, Save, RotateCcw, Music, Mic, Users, FileText, ExternalLink, ArrowLeft, X, UserCheck, Shield, ChevronDown, ChevronUp, GraduationCap, MapPin, Phone, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -86,6 +87,28 @@ export const MobileScoreWindow = ({
     voice_part: "Soprano"
   });
   const [isTablet, setIsTablet] = useState(false);
+  const [applicationOpen, setApplicationOpen] = useState(false);
+
+  // Sample application data
+  const applicationData = {
+    personal_info: {
+      hometown: "Atlanta, Georgia",
+      phone: "(404) 555-0123",
+      email: "sarah.johnson@spelman.edu",
+      major: "Music Education",
+      gpa: "3.8"
+    },
+    experience: {
+      previous_choir: "Atlanta Youth Choir (3 years)",
+      solo_experience: "Church soloist since age 16",
+      instruments: "Piano (intermediate), Guitar (beginner)"
+    },
+    essays: {
+      why_glee: "Music has been my passion since childhood. Joining the Spelman Glee Club represents the perfect opportunity to combine my love for choral music with the sisterhood and excellence that Spelman represents. I want to be part of a legacy that has inspired audiences for over 100 years.",
+      goals: "I hope to grow as both a musician and a leader. I want to learn from the talented women in this ensemble while contributing my own voice and energy to continue the tradition of amazing performances.",
+      commitment: "I understand the time commitment required and am prepared to prioritize rehearsals, performances, and the high standards expected of Glee Club members."
+    }
+  };
 
   // Detect tablet/iPad view
   useEffect(() => {
@@ -415,6 +438,104 @@ export const MobileScoreWindow = ({
 
         {/* Right Column - Scoring Interface (iPad) / Continue Below (Phone) */}
         <div className={`space-y-4 ${isTablet ? 'col-span-1' : ''}`}>
+
+          {/* Application Section */}
+          <Collapsible open={applicationOpen} onOpenChange={setApplicationOpen}>
+            <Card className="bg-gradient-to-r from-secondary/5 to-primary/5 border-secondary/20">
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="pb-3 hover:bg-secondary/5 transition-colors rounded-t-lg">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <GraduationCap className="h-5 w-5" />
+                      Application Details
+                    </CardTitle>
+                    {applicationOpen ? (
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              
+              <CollapsibleContent>
+                <CardContent className="pt-0 bg-background/50 backdrop-blur-sm border-t border-secondary/20">
+                  <div className="grid grid-cols-10 gap-4">
+                    {/* Left Column - Image (40%) */}
+                    <div className="col-span-4 flex flex-col items-center space-y-3">
+                      <Avatar className="h-24 w-24 border-3 border-secondary/30">
+                        <AvatarImage 
+                          src={performerProfile?.avatar_url} 
+                          alt={`${performerProfile?.first_name} ${performerProfile?.last_name}`} 
+                        />
+                        <AvatarFallback className="text-lg font-semibold bg-secondary/10">
+                          {performerProfile?.first_name && performerProfile?.last_name 
+                            ? `${performerProfile.first_name[0]}${performerProfile.last_name[0]}`.toUpperCase()
+                            : "SJ"
+                          }
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="text-center space-y-1">
+                        <h4 className="font-semibold">
+                          {performerProfile?.first_name} {performerProfile?.last_name}
+                        </h4>
+                        <Badge variant="outline" className="text-xs">
+                          Class of {performerProfile?.class_year}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    {/* Right Column - Application Data (60%) */}
+                    <div className="col-span-6 space-y-4">
+                      {/* Personal Info */}
+                      <div className="space-y-2">
+                        <h5 className="font-medium text-sm text-primary">Personal Information</h5>
+                        <div className="grid grid-cols-1 gap-1 text-xs">
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-3 w-3 text-muted-foreground" />
+                            <span>{applicationData.personal_info.hometown}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-3 w-3 text-muted-foreground" />
+                            <span>{applicationData.personal_info.email}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <GraduationCap className="h-3 w-3 text-muted-foreground" />
+                            <span>{applicationData.personal_info.major} • GPA: {applicationData.personal_info.gpa}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Experience */}
+                      <div className="space-y-2">
+                        <h5 className="font-medium text-sm text-primary">Musical Experience</h5>
+                        <div className="space-y-1 text-xs">
+                          <p><span className="font-medium">Previous Choir:</span> {applicationData.experience.previous_choir}</p>
+                          <p><span className="font-medium">Solo Experience:</span> {applicationData.experience.solo_experience}</p>
+                          <p><span className="font-medium">Instruments:</span> {applicationData.experience.instruments}</p>
+                        </div>
+                      </div>
+
+                      {/* Essay Excerpts */}
+                      <div className="space-y-2">
+                        <h5 className="font-medium text-sm text-primary">Essay Responses</h5>
+                        <div className="space-y-2">
+                          <div className="p-2 bg-muted/30 rounded text-xs">
+                            <p className="font-medium mb-1">Why Glee Club?</p>
+                            <p className="line-clamp-2">{applicationData.essays.why_glee}</p>
+                          </div>
+                          <div className="p-2 bg-muted/30 rounded text-xs">
+                            <p className="font-medium mb-1">Goals & Commitment</p>
+                            <p className="line-clamp-2">{applicationData.essays.goals}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
 
           {/* Song Title Section */}
           <Card>
