@@ -40,7 +40,7 @@ export const PublicHeader = () => {
                   Spelman Glee Club
                 </span>
               </div>
-              <div className="hidden xl:block" title="Current time">
+              <div className="hidden lg:block" title="Current time">
                 <HeaderClock />
               </div>
             </div>
