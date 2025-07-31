@@ -80,13 +80,13 @@ export const PublicHeader = () => {
                 onOpenAutoFocus={(e) => e.preventDefault()}
                 onCloseAutoFocus={(e) => e.preventDefault()}
               >
-                <div className="flex flex-col gap-4 py-4 animate-fade-in">
-                  <div className="flex items-center justify-center gap-2 pb-2 border-b border-gray-200/50">
-                    <Music className="h-5 w-5 text-spelman-blue-dark" />
-                    <span className="font-semibold text-base text-gray-800">Menu</span>
+                <div className="flex flex-col gap-2 py-2 animate-fade-in">
+                  <div className="flex items-center justify-center gap-2 pb-1 border-b border-gray-200/50">
+                    <Music className="h-4 w-4 text-spelman-blue-dark" />
+                    <span className="font-semibold text-sm text-gray-800">Menu</span>
                   </div>
                   
-                  <nav className="flex flex-col gap-1">
+                  <nav className="flex flex-col gap-0">
                     <ResponsiveNavigation mobile onItemClick={() => setIsOpen(false)} />
                   </nav>
                   
