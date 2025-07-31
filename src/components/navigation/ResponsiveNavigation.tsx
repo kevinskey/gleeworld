@@ -74,7 +74,7 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
   }
 
   return (
-    <nav className="hidden sm:flex items-center">
+    <nav className="hidden lg:flex items-center">
       {/* Large screens - Full labels with reasonable size */}
       <div className="hidden xl:flex items-center gap-4">
         {publicNavItems.map((item) => (

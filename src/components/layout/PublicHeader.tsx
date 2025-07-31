@@ -40,9 +40,7 @@ export const PublicHeader = () => {
                   Spelman Glee Club
                 </span>
               </div>
-              <div className="hidden lg:block" title="Current time">
-                <HeaderClock />
-              </div>
+              <HeaderClock />
             </div>
           </Link>
           
@@ -61,9 +59,9 @@ export const PublicHeader = () => {
               </Link>
             </Button>
             
-            {/* Friendly Mobile Menu - Non-scary dropdown */}
+            {/* Friendly Mobile Menu - Shows below lg breakpoint */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
-              <SheetTrigger asChild className="sm:hidden">
+              <SheetTrigger asChild className="lg:hidden">
                 <MusicStaffMenu onClick={() => setIsOpen(!isOpen)} />
               </SheetTrigger>
               <SheetContent 

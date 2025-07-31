@@ -73,7 +73,7 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
                   <span className="text-gray-900 font-bold text-lg sm:text-xl md:text-2xl whitespace-nowrap drop-shadow-sm relative z-[112]">
                     GleeWorld
                   </span>
-                  <HeaderClock className="text-sm hidden lg:block" />
+                  <HeaderClock className="text-sm" />
                 </div>
               </Link>
             </EnhancedTooltip>
