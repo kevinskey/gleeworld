@@ -80,8 +80,13 @@ export const ProductManager = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      
+      console.log('Fetched products:', data);
+      console.log('Products with images:', data?.filter(p => p.images && p.images.length > 0));
+      
       setProducts(data || []);
     } catch (error: any) {
+      console.error('Error fetching products:', error);
       toast({
         title: "Error",
         description: "Failed to fetch products",
@@ -276,6 +281,14 @@ export const ProductManager = () => {
                   src={product.images[0].image_url}
                   alt={product.images[0].alt_text}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.error('Failed to load image:', product.images?.[0]?.image_url);
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                  onLoad={() => {
+                    console.log('Successfully loaded image:', product.images?.[0]?.image_url);
+                  }}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground">
