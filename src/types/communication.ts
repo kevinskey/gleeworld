@@ -58,26 +58,27 @@ export interface CommunicationDelivery {
 
 export const RECIPIENT_GROUPS: RecipientGroup[] = [
   // Administrative Roles
-  { id: 'doc', label: 'Doc (Super Admin)', type: 'role' },
-  { id: 'all_exec_board', label: 'All Executive Board', type: 'role' },
+  { id: 'executive_board', label: 'Executive Board', type: 'role' },
   { id: 'section_leaders', label: 'Section Leaders', type: 'role' },
-  { id: 'student_conductor', label: 'Student Conductor', type: 'role' },
+  
+  // All Members
+  { id: 'all_members', label: 'All Members', type: 'special' },
+  
+  // Academic Year
+  { id: 'freshman', label: 'Freshman', type: 'academic_year' },
+  { id: 'sophomore', label: 'Sophomore', type: 'academic_year' },
+  { id: 'junior', label: 'Junior', type: 'academic_year' },
+  { id: 'seniors', label: 'Seniors', type: 'academic_year' },
+  
+  // Special Crews
+  { id: 'setup_crew', label: 'Set Up Crew', type: 'special' },
+  { id: 'merchandise_crew', label: 'Merchandise Crew', type: 'special' },
   
   // Voice Parts
   { id: 'soprano_1', label: 'Soprano 1', type: 'voice_part' },
   { id: 'soprano_2', label: 'Soprano 2', type: 'voice_part' },
   { id: 'alto_1', label: 'Alto 1', type: 'voice_part' },
   { id: 'alto_2', label: 'Alto 2', type: 'voice_part' },
-  
-  // Academic Standing
-  { id: 'first_years', label: 'First Years', type: 'academic_year' },
-  { id: 'sophomores', label: 'Sophomores', type: 'academic_year' },
-  { id: 'juniors', label: 'Juniors', type: 'academic_year' },
-  { id: 'seniors', label: 'Seniors', type: 'academic_year' },
-  
-  // Special Groups
-  { id: 'alumnae', label: 'Alumnae', type: 'special' },
-  { id: 'all_users', label: 'All Users', type: 'special' },
 ];
 
 export const COMMUNICATION_CHANNELS: CommunicationChannel[] = [

@@ -3,9 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { RecipientGroup, RECIPIENT_GROUPS } from '@/types/communication';
-import { Users, Search, UserCheck } from 'lucide-react';
+import { GroupManagement } from './GroupManagement';
+import { Users, Search, UserCheck, Settings } from 'lucide-react';
 
 interface RecipientSelectorProps {
   selectedGroups: RecipientGroup[];
@@ -19,8 +22,12 @@ export const RecipientSelector = ({
   recipientCount
 }: RecipientSelectorProps) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [customGroups, setCustomGroups] = useState<RecipientGroup[]>([]);
+  const [isManageDialogOpen, setIsManageDialogOpen] = useState(false);
+  
+  const allGroups = [...RECIPIENT_GROUPS, ...customGroups];
 
-  const groupedRecipients = RECIPIENT_GROUPS.reduce((acc, group) => {
+  const groupedRecipients = allGroups.reduce((acc, group) => {
     if (!acc[group.type]) {
       acc[group.type] = [];
     }
@@ -54,6 +61,23 @@ export const RecipientSelector = ({
            type === 'academic_year' ? '🎓' : '⭐';
   };
 
+  const handleGroupAdd = (group: RecipientGroup) => {
+    setCustomGroups(prev => [...prev, group]);
+  };
+
+  const handleGroupEdit = (group: RecipientGroup) => {
+    setCustomGroups(prev => prev.map(g => g.id === group.id ? group : g));
+  };
+
+  const handleGroupDelete = (groupId: string) => {
+    setCustomGroups(prev => prev.filter(g => g.id !== groupId));
+    // Also remove from selected groups if it was selected
+    const groupToRemove = customGroups.find(g => g.id === groupId);
+    if (groupToRemove && selectedGroups.some(g => g.id === groupId)) {
+      onGroupToggle(groupToRemove);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -62,11 +86,32 @@ export const RecipientSelector = ({
             <Users className="h-5 w-5" />
             Select Recipients
           </div>
-          <div className="flex items-center gap-2 text-sm font-normal">
-            <UserCheck className="h-4 w-4 text-green-600" />
-            <span className="text-green-600 font-medium">
-              {recipientCount} selected
-            </span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-sm font-normal">
+              <UserCheck className="h-4 w-4 text-green-600" />
+              <span className="text-green-600 font-medium">
+                {recipientCount} selected
+              </span>
+            </div>
+            <Dialog open={isManageDialogOpen} onOpenChange={setIsManageDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Manage Groups
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Manage Recipient Groups</DialogTitle>
+                </DialogHeader>
+                <GroupManagement
+                  groups={customGroups}
+                  onGroupAdd={handleGroupAdd}
+                  onGroupEdit={handleGroupEdit}
+                  onGroupDelete={handleGroupDelete}
+                />
+              </DialogContent>
+            </Dialog>
           </div>
         </CardTitle>
       </CardHeader>
