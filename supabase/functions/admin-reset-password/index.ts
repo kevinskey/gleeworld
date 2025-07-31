@@ -59,11 +59,11 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Rate limiting
-    const clientIP = req.headers.get('x-forwarded-for') || 'unknown';
-    if (!checkRateLimit(clientIP)) {
+    // Rate limiting with enhanced security
+    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    if (!checkRateLimit(clientIP, 3, 900000)) { // More restrictive: 3 attempts per 15 minutes
       return new Response(JSON.stringify({
-        error: "Rate limit exceeded"
+        error: "Rate limit exceeded for password reset operations"
       }), {
         status: 429,
         headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -72,12 +72,23 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { userId, email, newPassword }: ResetPasswordRequest = await req.json();
 
-    // Validate password strength
+    // Enhanced password validation
     const passwordValidation = validatePassword(newPassword);
     if (!passwordValidation.isValid) {
       return new Response(JSON.stringify({
         error: "Password validation failed",
         details: passwordValidation.errors
+      }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    // Prevent weak default passwords
+    if (newPassword.toLowerCase() === 'spelman' || newPassword.toLowerCase() === 'password' || newPassword === '123456') {
+      return new Response(JSON.stringify({
+        error: "Password validation failed",
+        details: ["Password is too common and insecure. Please use a stronger password."]
       }), {
         status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -109,15 +120,25 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Invalid authentication");
     }
 
-    // Check if user has admin privileges using gw_profiles table
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from("gw_profiles")
-      .select("is_admin, is_super_admin")
-      .eq("user_id", user.id)
-      .single();
+    // Enhanced admin verification using secure function
+    const { data: adminCheck, error: adminError } = await supabaseAdmin
+      .rpc('verify_admin_access', { requesting_user_id: user.id });
 
-    if (profileError || !profile || (!profile.is_admin && !profile.is_super_admin)) {
-      throw new Error("Insufficient permissions");
+    if (adminError || !adminCheck) {
+      // Log the unauthorized attempt
+      await supabaseAdmin.rpc('log_security_event', {
+        p_action_type: 'unauthorized_admin_password_reset_attempt',
+        p_resource_type: 'password_reset',
+        p_resource_id: null,
+        p_details: { 
+          attempted_by: user.id,
+          target_email: email,
+          target_user_id: userId,
+          client_ip: clientIP
+        }
+      });
+      
+      throw new Error("Insufficient admin privileges");
     }
 
     let targetUserId = userId;
@@ -129,23 +150,11 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error(`Failed to find user: ${userError.message}`);
       }
       
-      let user = userData.users.find(u => u.email === email);
+      const user = userData.users.find(u => u.email === email);
       
-      // If user doesn't exist, create them first
+      // SECURITY FIX: Do not create users automatically - only reset existing users
       if (!user) {
-        console.log(`User ${email} not found, creating new user...`);
-        const { data: newUserData, error: createError } = await supabaseAdmin.auth.admin.createUser({
-          email: email,
-          password: newPassword,
-          email_confirm: true
-        });
-        
-        if (createError) {
-          throw new Error(`Failed to create user ${email}: ${createError.message}`);
-        }
-        
-        user = newUserData.user;
-        console.log(`Created new user ${email} with ID ${user.id}`);
+        throw new Error(`User with email ${email} not found. User creation is not allowed through password reset function.`);
       }
       
       targetUserId = user.id;
@@ -155,30 +164,31 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Either userId or email must be provided');
     }
 
-    // Update the user's password (for existing users)
-    if (email) {
-      // Check if user already exists with correct password
-      const { data: userData } = await supabaseAdmin.auth.admin.listUsers();
-      const existingUser = userData.users.find(u => u.email === email);
-      
-      if (existingUser) {
-        const { data, error } = await supabaseAdmin.auth.admin.updateUserById(targetUserId, {
-          password: newPassword
-        });
-        
-        if (error) {
-          throw error;
-        }
+    // Log the password reset action for security audit
+    await supabaseAdmin.rpc('log_security_event', {
+      p_action_type: 'admin_password_reset',
+      p_resource_type: 'user_account',
+      p_resource_id: targetUserId,
+      p_details: { 
+        performed_by: user.id,
+        target_user_id: targetUserId,
+        target_email: email,
+        client_ip: clientIP
       }
-    } else {
-      // Original userId-based password update
-      const { data, error } = await supabaseAdmin.auth.admin.updateUserById(targetUserId, {
-        password: newPassword
-      });
-      
-      if (error) {
-        throw error;
+    });
+
+    // Update the user's password
+    const { data, error } = await supabaseAdmin.auth.admin.updateUserById(targetUserId, {
+      password: newPassword,
+      user_metadata: {
+        force_password_change: true,
+        password_reset_by_admin: true,
+        password_reset_at: new Date().toISOString()
       }
+    });
+    
+    if (error) {
+      throw error;
     }
 
 

@@ -57,44 +57,15 @@ export const ExecuteBulkAssignment = () => {
       setResults(assignmentData.results || []);
       console.log('Assignment results:', assignmentData);
 
-      // Then, reset passwords for all users
-      console.log('Starting password resets...');
-      const passwordResetResults = [];
-
-      for (const assignment of assignments) {
-        try {
-          console.log(`Resetting password for ${assignment.email}...`);
-          
-          const { data: resetData, error: resetError } = await supabase.functions.invoke('admin-reset-password', {
-            body: { 
-              email: assignment.email,
-              newPassword: 'spelman'
-            }
-          });
-
-          if (resetError) {
-            console.error(`Password reset failed for ${assignment.email}:`, resetError);
-            passwordResetResults.push({
-              email: assignment.email,
-              success: false,
-              error: resetError.message || 'Password reset failed'
-            });
-          } else {
-            console.log(`Password reset successful for ${assignment.email}`);
-            passwordResetResults.push({
-              email: assignment.email,
-              success: true
-            });
-          }
-        } catch (error) {
-          console.error(`Error resetting password for ${assignment.email}:`, error);
-          passwordResetResults.push({
-            email: assignment.email,
-            success: false,
-            error: 'Network error during password reset'
-          });
-        }
-      }
+      // Password setup is now handled automatically by the bulk assignment function
+      console.log('Secure passwords have been automatically generated...');
+      
+      // Create password results from assignment results since passwords are handled automatically
+      const passwordResetResults = assignmentData.results?.map((result: any) => ({
+        email: result.email,
+        success: result.success,
+        message: result.success ? "Secure temporary password generated" : result.error
+      })) || [];
 
       setPasswordResults(passwordResetResults);
 
@@ -136,7 +107,7 @@ export const ExecuteBulkAssignment = () => {
               <p className="font-medium mb-2">This will:</p>
               <ul className="list-disc list-inside space-y-1">
                 <li>Assign executive board roles to {assignments.length} users</li>
-                <li>Set all passwords to "spelman"</li>
+                <li>Generate secure temporary passwords that must be changed on first login</li>
                 <li>Grant appropriate permissions and access levels</li>
                 <li>Create user profiles for anyone who doesn't exist</li>
               </ul>
@@ -213,7 +184,7 @@ export const ExecuteBulkAssignment = () => {
                 <div key={index} className="flex items-center justify-between p-2 border rounded">
                   <div>
                     <span className="font-medium">{result.email}</span>
-                    <span className="text-sm text-gray-500 ml-2">(password: spelman)</span>
+                    <span className="text-sm text-gray-500 ml-2">(secure temp password)</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {result.success ? (
