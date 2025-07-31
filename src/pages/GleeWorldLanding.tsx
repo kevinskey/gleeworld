@@ -292,7 +292,7 @@ export const GleeWorldLanding = () => {
         <div className="absolute inset-0 bg-black/40 z-10"></div>
         
         {/* Gradient fade to content below */}
-        <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-background via-background/60 to-transparent z-20"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-bl from-background via-background/60 to-transparent z-20"></div>
       </section>
 
       {/* Audition Hover Card */}
