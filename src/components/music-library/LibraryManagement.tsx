@@ -222,28 +222,31 @@ export const LibraryManagement = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-1 h-auto p-1">
-          <TabsTrigger value="all" className="text-xs sm:text-sm px-2 py-2">
+        <TabsList className="grid w-full h-auto p-1 
+          grid-cols-2 gap-1 sm:grid-cols-4 
+          md:grid-cols-5 md:gap-2">
+          <TabsTrigger value="all" className="text-xs px-1 py-2 min-w-0 sm:text-sm sm:px-2">
             <span className="hidden sm:inline">All Items</span>
-            <span className="sm:hidden">All</span>
+            <span className="sm:hidden truncate">All</span>
           </TabsTrigger>
-          <TabsTrigger value="digital" className="text-xs sm:text-sm px-2 py-2">
+          <TabsTrigger value="digital" className="text-xs px-1 py-2 min-w-0 sm:text-sm sm:px-2">
             <span className="hidden sm:inline">Digital Only</span>
-            <span className="sm:hidden">Digital</span>
+            <span className="sm:hidden truncate">Digital</span>
           </TabsTrigger>
-          <TabsTrigger value="physical" className="text-xs sm:text-sm px-2 py-2">
+          <TabsTrigger value="physical" className="text-xs px-1 py-2 min-w-0 sm:text-sm sm:px-2">
             <span className="hidden sm:inline">Physical Copies</span>
-            <span className="sm:hidden">Physical</span>
+            <span className="sm:hidden truncate">Physical</span>
           </TabsTrigger>
-          <TabsTrigger value="inventory" className="text-xs sm:text-sm px-2 py-2">
-            <span className="hidden sm:inline">Needs Inventory</span>
-            <span className="sm:hidden">Inventory</span>
+          <TabsTrigger value="inventory" className="text-xs px-1 py-2 min-w-0 sm:text-sm sm:px-2">
+            <span className="hidden md:inline">Needs Inventory</span>
+            <span className="md:hidden truncate">Inventory</span>
           </TabsTrigger>
           {canAccessImportTools && (
-            <TabsTrigger value="ai-tools" className="text-xs sm:text-sm px-2 py-2">
-              <Scissors className="h-3 w-3 mr-1" />
-              <span className="hidden sm:inline">AI Tools</span>
-              <span className="sm:hidden">AI</span>
+            <TabsTrigger value="ai-tools" className="text-xs px-1 py-2 min-w-0 sm:text-sm sm:px-2 
+              col-span-2 sm:col-span-1">
+              <Scissors className="h-3 w-3 mr-1 shrink-0" />
+              <span className="hidden md:inline">AI Tools</span>
+              <span className="md:hidden truncate">AI</span>
             </TabsTrigger>
           )}
         </TabsList>

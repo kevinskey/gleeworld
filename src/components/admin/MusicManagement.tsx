@@ -852,11 +852,11 @@ export const MusicManagement = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 p-2 sm:p-4 lg:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Music Management</h2>
-        <div className="flex space-x-2">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Music Management</h2>
+        <div className="flex flex-col gap-2 sm:flex-row sm:space-x-2">
           <Dialog open={isCreatingAlbum || !!editingAlbum} onOpenChange={(open) => {
             if (!open) {
               setIsCreatingAlbum(false);
@@ -1088,7 +1088,7 @@ export const MusicManagement = () => {
                 <div className="border-t pt-4">
                   <h4 className="font-medium mb-3">Track Details (for single upload or batch defaults)</h4>
                   
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="track-title">Title *</Label>
                       <Input
@@ -1349,13 +1349,13 @@ export const MusicManagement = () => {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
                 <h3 className="text-lg font-semibold">Tracks ({sortedAlbumTracks.length})</h3>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
                   <div className="flex items-center gap-2">
                     <Select value={albumTrackSortBy} onValueChange={(value: any) => setAlbumTrackSortBy(value)}>
-                      <SelectTrigger className="w-32">
+                      <SelectTrigger className="w-24 sm:w-32">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
@@ -1384,10 +1384,10 @@ export const MusicManagement = () => {
                   </div>
                   <Button 
                     onClick={() => openAlbumForTrackAdd(selectedAlbum)}
-                    className="bg-primary hover:bg-primary/90"
+                    className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Track to Album
+                    <span className="sm:inline">Add Track to Album</span>
                   </Button>
                 </div>
               </div>
@@ -1409,18 +1409,18 @@ export const MusicManagement = () => {
                   {sortedAlbumTracks.map((track: any, index: number) => (
                     <div
                       key={track.id}
-                      className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="flex items-center space-x-2 sm:space-x-4 p-2 sm:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                     >
-                      <div className="w-8 h-8 bg-primary/20 rounded flex items-center justify-center text-sm font-medium text-primary">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary/20 rounded flex items-center justify-center text-xs sm:text-sm font-medium text-primary shrink-0">
                         {track.track_number || index + 1}
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 truncate">{track.title}</h4>
-                        <p className="text-sm text-gray-600 truncate">{track.artist}</p>
+                        <h4 className="font-medium text-gray-900 truncate text-sm sm:text-base">{track.title}</h4>
+                        <p className="text-xs sm:text-sm text-gray-600 truncate">{track.artist}</p>
                       </div>
                       
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
+                      <div className="hidden sm:flex items-center space-x-4 text-sm text-gray-500">
                         <div className="flex items-center" title="Play count">
                           <Play className="h-4 w-4 mr-1" />
                           <span className="text-xs">{track.play_count || 0} plays</span>
