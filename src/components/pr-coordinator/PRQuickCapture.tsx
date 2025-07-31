@@ -38,6 +38,7 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
     capturePhoto, 
     stopCamera, 
     isCameraReady,
+    cameraError,
     videoRef,
     canvasRef,
     isCapturing
@@ -119,13 +120,19 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
           {/* Camera/Upload Section */}
           {!capturedImage ? (
             <div className="space-y-4">
+              {cameraError && (
+                <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <p className="text-sm text-destructive">{cameraError}</p>
+                </div>
+              )}
+              
               <div className="flex gap-3 justify-center">
                 <Button onClick={() => {
                   console.log('PRQuickCapture: Start Camera button clicked');
                   startCamera();
-                }} disabled={isCameraReady} className="gap-2">
+                }} disabled={isCameraReady || isCapturing} className="gap-2">
                   <Camera className="h-4 w-4" />
-                  {isCameraReady ? 'Camera Active' : 'Start Camera'}
+                  {isCapturing ? 'Starting Camera...' : isCameraReady ? 'Camera Active' : 'Start Camera'}
                 </Button>
                 
                 <Button 
@@ -156,6 +163,17 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
                     muted
                     className="w-full h-64 object-cover"
                   />
+                  {isCameraReady && (
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                      <Button
+                        onClick={capturePhoto}
+                        size="lg"
+                        className="bg-red-600 hover:bg-red-700 text-white rounded-full w-16 h-16"
+                      >
+                        <Camera className="h-6 w-6" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Always render canvas for capture functionality */}
@@ -163,15 +181,6 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
                   ref={canvasRef}
                   className="hidden"
                 />
-                
-                {isCameraReady && (
-                  <div className="text-center">
-                    <Button onClick={capturePhoto} size="lg" className="gap-2">
-                      <Camera className="h-4 w-4" />
-                      Capture Photo
-                    </Button>
-                  </div>
-                )}
               </div>
             </div>
           ) : (

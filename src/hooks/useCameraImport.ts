@@ -11,6 +11,7 @@ interface CameraImportOptions {
 export const useCameraImport = (options: CameraImportOptions = {}) => {
   const [isCapturing, setIsCapturing] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -25,6 +26,7 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
   const startCamera = useCallback(async () => {
     try {
       console.log('useCameraImport: Starting camera...');
+      setCameraError(null);
       setIsCapturing(true);
       
       // Wait longer for DOM to be ready to prevent blinking
@@ -85,6 +87,7 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
     } catch (error) {
       console.error('useCameraImport: Error accessing camera:', error);
       const errorMessage = 'Unable to access camera. Please check permissions or use file upload instead.';
+      setCameraError(errorMessage);
       toast({
         title: "Camera Error",
         description: errorMessage,
@@ -92,6 +95,7 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
       });
       onError?.(errorMessage);
       setIsCapturing(false);
+      setIsCameraReady(false);
     }
   }, [onError, toast]);
 
@@ -104,6 +108,7 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
     }
     setIsCapturing(false);
     setIsCameraReady(false);
+    setCameraError(null);
   }, []);
 
   const capturePhoto = useCallback(async () => {
@@ -205,6 +210,7 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
   return {
     isCapturing,
     isCameraReady,
+    cameraError,
     videoRef,
     canvasRef,
     startCamera,
