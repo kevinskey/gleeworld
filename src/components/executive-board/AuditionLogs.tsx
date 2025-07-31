@@ -119,6 +119,10 @@ export const AuditionLogs = () => {
     console.log('🗑️ DELETE BUTTON: Dialog should now be open, deleteConfirmOpen set to true');
   };
 
+  // Debug logging to track state changes
+  console.log('🔍 AuditionLogs render - Total slots:', allTimeSlots.length, 'Logs:', logs.length);
+  console.log('🔍 AuditionLogs render - Scheduled slots:', allTimeSlots.filter(s => s.isScheduled).length);
+
   const filteredSlots = allTimeSlots.filter(slot => {
     if (slot.isScheduled && slot.auditionLog) {
       const log = slot.auditionLog;
@@ -131,6 +135,8 @@ export const AuditionLogs = () => {
       return statusFilter === "all" && searchTerm === "";
     }
   });
+
+  console.log('🔍 AuditionLogs render - Filtered slots:', filteredSlots.length, 'Scheduled in filtered:', filteredSlots.filter(s => s.isScheduled).length);
 
   if (loading) {
     return (
