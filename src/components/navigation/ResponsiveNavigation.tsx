@@ -43,7 +43,7 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
             to={item.href}
             onClick={onItemClick}
             className={cn(
-              "flex items-center px-4 py-3 rounded-lg text-base font-medium transition-all duration-200",
+              "flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
               "text-foreground hover:bg-accent w-full justify-start",
               isActivePath(item.href) && "bg-accent text-accent-foreground"
             )}
@@ -56,7 +56,7 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
         {user ? (
           <button
             onClick={handleAuthAction}
-            className="flex items-center px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90 w-full justify-start mt-2"
+            className="flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90 w-full justify-start mt-1"
           >
             Sign Out
           </button>
@@ -64,7 +64,7 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
           <Link
             to="/auth"
             onClick={onItemClick}
-            className="flex items-center px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90 w-full justify-start mt-2"
+            className="flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90 w-full justify-start mt-1"
           >
             Sign In
           </Link>
