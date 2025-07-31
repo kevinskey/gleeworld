@@ -280,8 +280,8 @@ export const GleeWorldLanding = () => {
             {/* Fallback Glee Club Image */}
             <div className="absolute inset-0">
               <img 
-                src={gleeClubFallback}
-                alt="Spelman College Glee Club Performance"
+                src="/lovable-uploads/1fd284bf-d474-493f-a363-1104a0653923.png"
+                alt="Spelman College Glee Club Group Photo"
                 className="w-full h-full object-cover brightness-75 contrast-105"
               />
             </div>

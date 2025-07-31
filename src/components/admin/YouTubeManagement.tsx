@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useYouTubeVideos } from "@/hooks/useYouTubeVideos";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Youtube, 
@@ -17,7 +18,8 @@ import {
   ArrowLeft,
   ArrowRight,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  Download
 } from "lucide-react";
 
 interface YouTubeVideo {
@@ -25,7 +27,7 @@ interface YouTubeVideo {
   youtube_id: string;
   title: string;
   description: string;
-  duration?: number;
+  duration?: string;
   thumbnail_url: string;
   view_count?: number;
   category?: string;
@@ -39,10 +41,12 @@ interface YouTubeVideo {
 
 export const YouTubeManagement = () => {
   const { toast } = useToast();
+  const { videos: hookVideos, loading: hookLoading, syncYouTubeVideos, refetch } = useYouTubeVideos();
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const [showManualUpload, setShowManualUpload] = useState(false);
+  const [channelInput, setChannelInput] = useState('');
   const [manualVideo, setManualVideo] = useState({
     youtube_id: '',
     title: '',
@@ -56,20 +60,77 @@ export const YouTubeManagement = () => {
     loadVideos();
   }, []);
 
+  // Update local videos when hook videos change
+  useEffect(() => {
+    if (hookVideos) {
+      setVideos(hookVideos.map(video => ({
+        id: video.id,
+        youtube_id: video.video_id,
+        title: video.title,
+        description: video.description,
+        thumbnail_url: video.thumbnail_url,
+        view_count: video.view_count,
+        is_featured: video.is_featured,
+        published_at: video.published_at,
+        video_url: video.video_url,
+        duration: video.duration
+      })));
+    }
+  }, [hookVideos]);
+
   const loadVideos = async () => {
     setLoading(true);
     try {
       // Load videos
       const { data: videosData, error: videosError } = await supabase
-        .from('gw_youtube_videos')
+        .from('youtube_videos')
         .select('*')
         .order('published_at', { ascending: false });
 
       if (videosData && !videosError) {
-        setVideos(videosData);
+        setVideos(videosData.map(video => ({
+          id: video.id,
+          youtube_id: video.video_id,
+          title: video.title,
+          description: video.description,
+          thumbnail_url: video.thumbnail_url,
+          view_count: video.view_count,
+          is_featured: video.is_featured,
+          published_at: video.published_at,
+          video_url: video.video_url,
+          duration: video.duration
+        })));
       }
     } catch (error) {
       console.error('Error loading videos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSyncVideos = async () => {
+    if (!channelInput.trim()) {
+      toast({
+        title: "Channel Input Required",
+        description: "Please enter a YouTube channel URL or ID.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await syncYouTubeVideos(channelInput);
+      toast({
+        title: "Sync Successful",
+        description: "YouTube videos have been synced successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Sync Failed",
+        description: error.message || "Failed to sync YouTube videos.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -82,7 +143,7 @@ export const YouTubeManagement = () => {
 
     try {
       const { error } = await supabase
-        .from('gw_youtube_videos')
+        .from('youtube_videos')
         .update({ is_featured: !video.is_featured })
         .eq('id', videoId);
 
@@ -108,7 +169,7 @@ export const YouTubeManagement = () => {
   const handleDeleteVideo = async (videoId: string) => {
     try {
       const { error } = await supabase
-        .from('gw_youtube_videos')
+        .from('youtube_videos')
         .delete()
         .eq('id', videoId);
 
@@ -190,8 +251,19 @@ export const YouTubeManagement = () => {
       };
 
       const { error } = await supabase
-        .from('gw_youtube_videos')
-        .insert([videoData]);
+        .from('youtube_videos')
+        .insert([{
+          video_id: videoData.youtube_id,
+          title: videoData.title,
+          description: videoData.description,
+          thumbnail_url: videoData.thumbnail_url,
+          video_url: videoData.video_url,
+          view_count: videoData.view_count,
+          published_at: videoData.published_at,
+          duration: '',
+          is_featured: videoData.is_featured,
+          channel_id: 'manual-upload'
+        }]);
 
       if (error) throw error;
 
@@ -229,6 +301,22 @@ export const YouTubeManagement = () => {
             <h1 className="text-2xl font-bold text-gray-900">YouTube Management</h1>
             <p className="text-gray-600">Manage your YouTube video collection</p>
           </div>
+        </div>
+        <div className="flex space-x-2">
+          <Input
+            placeholder="YouTube Channel URL or ID"
+            value={channelInput}
+            onChange={(e) => setChannelInput(e.target.value)}
+            className="max-w-md"
+          />
+          <Button 
+            onClick={handleSyncVideos} 
+            disabled={loading || hookLoading}
+            variant="default"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            {loading || hookLoading ? 'Syncing...' : 'Sync Videos'}
+          </Button>
         </div>
       </div>
 
@@ -330,7 +418,7 @@ export const YouTubeManagement = () => {
                 <Play className="h-5 w-5 mr-2" />
                 Video Collection ({videos.length} videos)
               </CardTitle>
-              <Button onClick={loadVideos} variant="outline" size="sm">
+              <Button onClick={() => refetch()} variant="outline" size="sm">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
