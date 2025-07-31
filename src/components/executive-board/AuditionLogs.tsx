@@ -208,7 +208,7 @@ export const AuditionLogs = () => {
                   <CardContent className="p-4">
                     {slot.isScheduled && slot.auditionLog ? (
                       // Scheduled audition slot
-                      <div className="flex items-center justify-between">
+                       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">{/* Modified to be responsive */}
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <User className="h-4 w-4 text-gray-400" />
@@ -235,12 +235,13 @@ export const AuditionLogs = () => {
                           <p className="text-sm text-gray-500">{slot.auditionLog.applicant_email}</p>
                         </div>
                         
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 min-w-0 shrink-0">
                           <Dialog>
                             <DialogTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                <Eye className="h-3 w-3 mr-1" />
-                                View Application
+                              <Button variant="outline" size="sm" className="w-full sm:w-auto text-xs sm:text-sm">
+                                <Eye className="h-3 w-3 sm:mr-1" />
+                                <span className="hidden sm:inline">View Application</span>
+                                <span className="sm:hidden">View</span>
                               </Button>
                             </DialogTrigger>
                             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -423,16 +424,18 @@ export const AuditionLogs = () => {
                             size="sm"
                             onClick={() => openReviewDialog(slot.auditionLog)}
                             disabled={slot.auditionLog.status === 'graded'}
+                            className="w-full sm:w-auto text-xs sm:text-sm"
                           >
-                            <Star className="h-3 w-3 mr-1" />
-                            {slot.auditionLog.status === 'graded' ? 'View Grade' : 'Grade'}
+                            <Star className="h-3 w-3 sm:mr-1" />
+                            <span className="hidden sm:inline">{slot.auditionLog.status === 'graded' ? 'View Grade' : 'Grade'}</span>
+                            <span className="sm:hidden">{slot.auditionLog.status === 'graded' ? 'View' : 'Grade'}</span>
                           </Button>
 
                           <Select
                             value={slot.auditionLog.status}
                             onValueChange={(value) => updateLogStatus(slot.auditionLog.id, value)}
                           >
-                            <SelectTrigger className="w-28">
+                            <SelectTrigger className="w-full sm:w-32 text-xs sm:text-sm">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -447,8 +450,11 @@ export const AuditionLogs = () => {
                             variant="destructive"
                             size="sm"
                             onClick={() => openDeleteConfirm(slot.auditionLog.id)}
+                            className="w-full sm:w-auto text-xs sm:text-sm"
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <Trash2 className="h-3 w-3 sm:mr-1" />
+                            <span className="hidden sm:inline">Delete</span>
+                            <span className="sm:hidden">Del</span>
                           </Button>
                         </div>
                       </div>
