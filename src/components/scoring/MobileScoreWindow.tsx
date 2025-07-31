@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Star, Save, RotateCcw, Music, Mic, Users } from "lucide-react";
+import { Star, Save, RotateCcw, Music, Mic, Users, FileText, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -75,6 +75,45 @@ export const MobileScoreWindow = ({
   const [comments, setComments] = useState("");
   const [overallScore, setOverallScore] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const [songTitle, setSongTitle] = useState("");
+  const [sheetMusicData, setSheetMusicData] = useState<any>(null);
+
+  // Search for sheet music when song title changes
+  useEffect(() => {
+    const searchSheetMusic = async () => {
+      if (songTitle.trim().length < 2) {
+        setSheetMusicData(null);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('gw_sheet_music')
+          .select('id, title, composer, pdf_url')
+          .ilike('title', `%${songTitle.trim()}%`)
+          .limit(1)
+          .single();
+
+        if (data && !error) {
+          setSheetMusicData(data);
+        } else {
+          setSheetMusicData(null);
+        }
+      } catch (error) {
+        console.log('No sheet music found for:', songTitle);
+        setSheetMusicData(null);
+      }
+    };
+
+    const timeoutId = setTimeout(searchSheetMusic, 500);
+    return () => clearTimeout(timeoutId);
+  }, [songTitle]);
+
+  const handleSheetMusicClick = () => {
+    if (sheetMusicData?.pdf_url) {
+      window.open(sheetMusicData.pdf_url, '_blank');
+    }
+  };
 
   const updateCategoryScore = (categoryId: string, score: number) => {
     setCategories(prev => 
@@ -96,6 +135,8 @@ export const MobileScoreWindow = ({
     setCategories(prev => prev.map(cat => ({ ...cat, currentScore: 0 })));
     setComments("");
     setOverallScore(0);
+    setSongTitle("");
+    setSheetMusicData(null);
   };
 
   const saveScore = async () => {
@@ -117,6 +158,8 @@ export const MobileScoreWindow = ({
         performer_name: performerName,
         evaluator_id: user.id,
         event_type: eventType,
+        song_title: songTitle.trim() || null,
+        sheet_music_id: sheetMusicData?.id || null,
         categories: JSON.stringify(categories.reduce((acc, cat) => ({
           ...acc,
           [cat.id]: cat.currentScore
@@ -134,8 +177,8 @@ export const MobileScoreWindow = ({
       const { data, error } = await supabase
         .from('gw_events')
         .insert({
-          title: `${eventType.toUpperCase()}: ${performerName} - Score: ${percentage}%`,
-          description: `Performance Score Data:\n\nScores:\n${categories.map(cat => 
+          title: `${eventType.toUpperCase()}: ${performerName}${songTitle ? ` - ${songTitle}` : ''} - Score: ${percentage}%`,
+          description: `Performance Score Data:\n\n${songTitle ? `Song: ${songTitle}\n` : ''}${sheetMusicData ? `Composer: ${sheetMusicData.composer}\n` : ''}\nScores:\n${categories.map(cat => 
             `${cat.name}: ${cat.currentScore}/${cat.maxScore}`
           ).join('\n')}\n\nOverall Score: ${overallScore}/100\n\nComments: ${comments}`,
           event_type: 'scoring',
@@ -196,6 +239,74 @@ export const MobileScoreWindow = ({
               </Badge>
             </div>
           </CardHeader>
+        </Card>
+
+        {/* Song Title Section */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Song Selection</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <Label htmlFor="songTitle">Song Title</Label>
+              <Input
+                id="songTitle"
+                placeholder="Enter the song being performed..."
+                value={songTitle}
+                onChange={(e) => setSongTitle(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            
+            {sheetMusicData && (
+              <div className="p-3 bg-muted/50 rounded-lg border">
+                <div className="flex items-start gap-3">
+                  <FileText className="h-5 w-5 text-primary mt-0.5" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm">{sheetMusicData.title}</span>
+                      {sheetMusicData.pdf_url && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={handleSheetMusicClick}
+                          title="Open PDF"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                    {sheetMusicData.composer && (
+                      <p className="text-xs text-muted-foreground">
+                        by {sheetMusicData.composer}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {sheetMusicData.pdf_url && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-2"
+                    onClick={handleSheetMusicClick}
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    View Sheet Music PDF
+                  </Button>
+                )}
+              </div>
+            )}
+            
+            {songTitle.trim().length > 2 && !sheetMusicData && (
+              <div className="p-3 bg-muted/30 rounded-lg border border-dashed">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Music className="h-4 w-4" />
+                  <span>No sheet music found for "{songTitle}"</span>
+                </div>
+              </div>
+            )}
+          </CardContent>
         </Card>
 
         {/* Scoring Categories */}
