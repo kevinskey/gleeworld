@@ -3649,6 +3649,7 @@ export type Database = {
           is_active: boolean
           notes: string | null
           position: Database["public"]["Enums"]["executive_position"]
+          primary_tab: string | null
           updated_at: string
           user_id: string
         }
@@ -3660,6 +3661,7 @@ export type Database = {
           is_active?: boolean
           notes?: string | null
           position: Database["public"]["Enums"]["executive_position"]
+          primary_tab?: string | null
           updated_at?: string
           user_id: string
         }
@@ -3671,6 +3673,7 @@ export type Database = {
           is_active?: boolean
           notes?: string | null
           position?: Database["public"]["Enums"]["executive_position"]
+          primary_tab?: string | null
           updated_at?: string
           user_id?: string
         }

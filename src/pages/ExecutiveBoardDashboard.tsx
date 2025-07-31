@@ -171,7 +171,7 @@ export const ExecutiveBoardDashboard = () => {
       // Check if user is an active executive board member
       const { data, error } = await supabase
         .from('gw_executive_board_members')
-        .select('*')
+        .select('*, primary_tab')
         .eq('user_id', user.id)
         .eq('is_active', true)
         .single();
@@ -187,6 +187,12 @@ export const ExecutiveBoardDashboard = () => {
       setExecutiveData(data);
       if (data) {
         setSelectedPosition(data.position);
+        
+        // Set the primary tab as the default active tab
+        if (data.primary_tab) {
+          console.log('Setting primary tab from database:', data.primary_tab);
+          setActiveTab(data.primary_tab);
+        }
       }
     } catch (error) {
       console.error('Error:', error);

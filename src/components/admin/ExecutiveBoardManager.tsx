@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ExecutivePrimaryTabManager } from "./ExecutivePrimaryTabManager";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -539,6 +540,9 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
           </div>
         </CardContent>
       </Card>
+
+      {/* Primary Tab Management */}
+      <ExecutivePrimaryTabManager />
     </div>
   );
 };
