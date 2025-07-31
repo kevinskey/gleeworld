@@ -394,29 +394,46 @@ export const useAuditionLogs = () => {
 
   const deleteAuditionLog = async (logId: string) => {
     try {
-      const { error } = await supabase
+      console.log('🗑️ Attempting to delete audition log:', logId);
+      
+      const { data, error } = await supabase
         .from('gw_audition_logs')
         .delete()
-        .eq('id', logId);
+        .eq('id', logId)
+        .select();
+
+      console.log('🗑️ Delete response:', { data, error });
 
       if (error) throw error;
       
       // Update local state optimistically - remove from logs
-      setLogs(prev => prev.filter(log => log.id !== logId));
+      setLogs(prev => {
+        const newLogs = prev.filter(log => log.id !== logId);
+        console.log('🗑️ Updated logs state:', { before: prev.length, after: newLogs.length });
+        return newLogs;
+      });
       
       // Update time slots - convert back to unscheduled slot
-      setAllTimeSlots(prev => prev.map(slot => 
-        slot.auditionLog?.id === logId 
-          ? { ...slot, isScheduled: false, auditionLog: null, id: `slot-${slot.date}-${slot.time}` }
-          : slot
-      ));
+      setAllTimeSlots(prev => {
+        const newSlots = prev.map(slot => 
+          slot.auditionLog?.id === logId 
+            ? { ...slot, isScheduled: false, auditionLog: null, id: `slot-${slot.date}-${slot.time}` }
+            : slot
+        );
+        console.log('🗑️ Updated time slots state:', { 
+          scheduledBefore: prev.filter(s => s.isScheduled).length,
+          scheduledAfter: newSlots.filter(s => s.isScheduled).length 
+        });
+        return newSlots;
+      });
 
+      console.log('🗑️ Delete operation completed successfully');
       toast({
         title: "Success",
         description: "Audition log deleted successfully"
       });
     } catch (error) {
-      console.error('Error deleting audition log:', error);
+      console.error('🗑️ Error deleting audition log:', error);
       toast({
         title: "Error",
         description: "Failed to delete audition log",
