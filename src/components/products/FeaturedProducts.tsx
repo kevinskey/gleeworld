@@ -8,13 +8,25 @@ import { useToast } from '@/hooks/use-toast';
 
 interface Product {
   id: string;
-  title: string;
+  name: string;
   description: string | null;
+  short_description: string | null;
   price: number;
-  product_type: string;
-  images: string[] | null;
-  tags: string[] | null;
-  is_active: boolean | null;
+  sale_price: number | null;
+  category_id: string | null;
+  is_active: boolean;
+  is_featured: boolean;
+  images?: ProductImage[];
+  category?: {
+    name: string;
+  };
+}
+
+interface ProductImage {
+  id: string;
+  image_url: string;
+  alt_text: string;
+  is_primary: boolean;
 }
 
 interface FeaturedProductsProps {
@@ -41,9 +53,14 @@ export const FeaturedProducts = ({
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('gw_products')
-        .select('*')
+        .from('products')
+        .select(`
+          *,
+          category:product_categories(name),
+          images:product_images(*)
+        `)
         .eq('is_active', true)
+        .eq('is_featured', true)
         .order('created_at', { ascending: false })
         .limit(limit);
 
@@ -70,27 +87,20 @@ export const FeaturedProducts = ({
 
   const getProductImage = (product: Product) => {
     if (product.images && product.images.length > 0) {
-      return product.images[0];
+      return product.images[0].image_url;
     }
     return '/placeholder.svg';
   };
 
-  const getProductTypeLabel = (type: string) => {
-    const typeMap: { [key: string]: string } = {
-      'tshirts': 'T-Shirts',
-      'hoodies': 'Hoodies',
-      'sweatshirts': 'Sweatshirts',
-      'jackets': 'Jackets',
-      'hats': 'Hats',
-      'polos': 'Polos',
-      'drinkware': 'Drinkware',
-      'keepsakes': 'Keepsakes',
-      'sheet_music': 'Sheet Music',
-      'recordings': 'Recordings',
-      'performances': 'Performances',
-      'musical_lessons': 'Musical Lessons'
-    };
-    return typeMap[type] || type;
+  const getCurrentPrice = (product: Product) => {
+    if (product.sale_price && product.sale_price < product.price) {
+      return product.sale_price;
+    }
+    return product.price;
+  };
+
+  const hasDiscount = (product: Product) => {
+    return product.sale_price && product.sale_price < product.price;
   };
 
   const scrollLeft = () => {
@@ -144,7 +154,7 @@ export const FeaturedProducts = ({
         {showTitle && (
           <h2 className="text-3xl font-bold text-primary mb-4">Featured Products</h2>
         )}
-        <p className="text-muted-foreground">No products available at the moment.</p>
+        <p className="text-muted-foreground">No featured products available. Use the star icon in Product Management to add favorites!</p>
       </div>
     );
   }
@@ -198,18 +208,28 @@ export const FeaturedProducts = ({
               <div className="relative aspect-square overflow-hidden bg-muted">
                 <img
                   src={getProductImage(product)}
-                  alt={product.title}
+                  alt={product.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = '/placeholder.svg';
                   }}
                 />
-                <div className="absolute top-2 right-2">
-                  <Badge variant="secondary" className="bg-white/90 text-primary">
-                    {getProductTypeLabel(product.product_type)}
-                  </Badge>
+                
+                {/* Featured Star */}
+                <div className="absolute top-2 left-2">
+                  <div className="bg-yellow-500 text-white p-1 rounded-full">
+                    <Star className="h-4 w-4 fill-current" />
+                  </div>
                 </div>
+                
+                {product.category && (
+                  <div className="absolute top-2 right-2">
+                    <Badge variant="secondary" className="bg-white/90 text-primary">
+                      {product.category.name}
+                    </Badge>
+                  </div>
+                )}
                 
                 {/* Hover overlay with quick view */}
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -222,40 +242,37 @@ export const FeaturedProducts = ({
               <CardContent className="p-4 space-y-3">
                 <div className="space-y-1">
                   <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors">
-                    {product.title}
+                    {product.name}
                   </h3>
-                  {product.description && (
+                  {(product.short_description || product.description) && (
                     <p className="text-sm text-muted-foreground line-clamp-2">
-                      {product.description}
+                      {product.short_description || product.description}
                     </p>
                   )}
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold text-primary">
-                    {formatPrice(product.price)}
-                  </div>
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span>New</span>
-                  </div>
-                </div>
-                
-                {product.tags && product.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {product.tags.slice(0, 2).map((tag, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                    {product.tags.length > 2 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{product.tags.length - 2}
-                      </Badge>
+                  <div className="space-y-1">
+                    {hasDiscount(product) ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl font-bold text-green-600">
+                          {formatPrice(getCurrentPrice(product))}
+                        </span>
+                        <span className="text-sm line-through text-muted-foreground">
+                          {formatPrice(product.price)}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="text-2xl font-bold text-primary">
+                        {formatPrice(getCurrentPrice(product))}
+                      </div>
                     )}
                   </div>
-                )}
-                
+                  <div className="flex items-center gap-1 text-sm text-amber-500">
+                    <Star className="h-4 w-4 fill-current" />
+                    <span>Featured</span>
+                  </div>
+                </div>
                 <Button className="w-full group/btn hover-scale" size="sm">
                   <ShoppingCart className="h-4 w-4 mr-2" />
                   Add to Cart

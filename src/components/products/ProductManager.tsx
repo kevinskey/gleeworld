@@ -168,6 +168,30 @@ export const ProductManager = () => {
     }
   };
 
+  const toggleFeatured = async (productId: string, currentFeatured: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ is_featured: !currentFeatured })
+        .eq('id', productId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Product ${!currentFeatured ? 'added to' : 'removed from'} favorites`,
+      });
+
+      fetchProducts();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -258,12 +282,22 @@ export const ProductManager = () => {
                   No Image
                 </div>
               )}
-              {product.is_featured && (
-                <Badge className="absolute top-2 left-2" variant="secondary">
-                  <Star className="w-3 h-3 mr-1" />
-                  Featured
-                </Badge>
-              )}
+              
+              {/* Favorite Star */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`absolute top-2 left-2 p-1 h-8 w-8 rounded-full transition-all ${
+                  product.is_featured 
+                    ? 'bg-yellow-500 hover:bg-yellow-600 text-white' 
+                    : 'bg-black/50 hover:bg-black/70 text-white'
+                }`}
+                onClick={() => toggleFeatured(product.id, product.is_featured)}
+                title={product.is_featured ? "Remove from favorites" : "Add to favorites"}
+              >
+                <Star className={`h-4 w-4 ${product.is_featured ? 'fill-current' : ''}`} />
+              </Button>
+              
               {!product.is_active && (
                 <Badge className="absolute top-2 right-2" variant="destructive">
                   Inactive
