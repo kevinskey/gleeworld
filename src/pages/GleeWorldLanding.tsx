@@ -28,6 +28,7 @@ import {
   Play
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { NotificationCenter } from "@/components/admin/NotificationCenter";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import {
   NavigationMenu,
@@ -354,6 +355,15 @@ export const GleeWorldLanding = () => {
           </Card>
         </div>
       </section>
+
+      {/* Notification Center - for authenticated users */}
+      {user && (
+        <section className="pt-2 pb-4 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
+          <div className="w-full max-w-screen-2xl mx-auto">
+            <NotificationCenter />
+          </div>
+        </section>
+      )}
 
       {/* Upcoming Events Section */}
       <section className="pt-4 pb-6 sm:pt-6 sm:pb-8 md:pt-8 md:pb-10 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
