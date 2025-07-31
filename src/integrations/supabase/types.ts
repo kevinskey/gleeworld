@@ -2886,6 +2886,39 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_calendar_auto_sync: {
+        Row: {
+          calendar_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          last_sync_at: string | null
+          sync_frequency_hours: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calendar_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_sync_at?: string | null
+          sync_frequency_hours?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calendar_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_sync_at?: string | null
+          sync_frequency_hours?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_calendars: {
         Row: {
           color: string

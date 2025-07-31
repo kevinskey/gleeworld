@@ -5,12 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Calendar, Download, Star } from "lucide-react";
+import { Loader2, Calendar, Download, Star, Settings, Plus, Trash2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export const GoogleCalendarSync = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [calendarId, setCalendarId] = useState("");
   const [isSyncingHolidays, setIsSyncingHolidays] = useState(false);
+  const [autoSyncConfigs, setAutoSyncConfigs] = useState<any[]>([]);
+  const [showAutoSyncDialog, setShowAutoSyncDialog] = useState(false);
   const { toast } = useToast();
 
   const handleGoogleAuth = () => {
@@ -93,6 +97,96 @@ export const GoogleCalendarSync = () => {
     }
   };
 
+  const fetchAutoSyncConfigs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gw_calendar_auto_sync')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setAutoSyncConfigs(data || []);
+    } catch (error) {
+      console.error('Error fetching auto-sync configs:', error);
+    }
+  };
+
+  const handleAddAutoSync = async () => {
+    if (!calendarId) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide your Calendar ID",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('gw_calendar_auto_sync')
+        .insert({
+          calendar_id: calendarId,
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          is_active: true,
+          sync_frequency_hours: 24
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Auto-Sync Added!",
+        description: "Calendar will now sync automatically every 24 hours."
+      });
+
+      setCalendarId("");
+      fetchAutoSyncConfigs();
+    } catch (error) {
+      console.error('Error adding auto-sync:', error);
+      toast({
+        title: "Failed to Add Auto-Sync",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleToggleAutoSync = async (id: string, isActive: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('gw_calendar_auto_sync')
+        .update({ is_active: !isActive })
+        .eq('id', id);
+
+      if (error) throw error;
+      fetchAutoSyncConfigs();
+    } catch (error) {
+      console.error('Error toggling auto-sync:', error);
+    }
+  };
+
+  const handleDeleteAutoSync = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('gw_calendar_auto_sync')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      fetchAutoSyncConfigs();
+      
+      toast({
+        title: "Auto-Sync Removed",
+        description: "Calendar auto-sync configuration deleted."
+      });
+    } catch (error) {
+      console.error('Error deleting auto-sync:', error);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchAutoSyncConfigs();
+  }, []);
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
@@ -118,25 +212,91 @@ export const GoogleCalendarSync = () => {
           </p>
         </div>
 
-        <Button 
-          onClick={handleManualSync} 
-          disabled={isSyncing || !calendarId}
-          className="w-full"
-        >
-          {isSyncing ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Syncing...
-            </>
-          ) : (
-            <>
-              <Download className="mr-2 h-4 w-4" />
-              Import from Google Calendar
-            </>
-          )}
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleManualSync} 
+            disabled={isSyncing || !calendarId}
+            className="flex-1"
+          >
+            {isSyncing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Syncing...
+              </>
+            ) : (
+              <>
+                <Download className="mr-2 h-4 w-4" />
+                Sync Once
+              </>
+            )}
+          </Button>
+          
+          <Button 
+            onClick={handleAddAutoSync} 
+            disabled={!calendarId}
+            variant="outline"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
 
-        <div className="border-t pt-4">
+        <div className="border-t pt-4 space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium">Auto-Sync Calendars</span>
+            <Dialog open={showAutoSyncDialog} onOpenChange={setShowAutoSyncDialog}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Auto-Sync Settings</DialogTitle>
+                  <DialogDescription>
+                    Manage calendars that sync automatically every hour.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {autoSyncConfigs.map((config) => (
+                    <div key={config.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <Checkbox 
+                          checked={config.is_active}
+                          onCheckedChange={() => handleToggleAutoSync(config.id, config.is_active)}
+                        />
+                        <div>
+                          <p className="text-sm font-medium">{config.calendar_id}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Every {config.sync_frequency_hours}h • 
+                            {config.last_sync_at ? ` Last: ${new Date(config.last_sync_at).toLocaleDateString()}` : ' Never synced'}
+                          </p>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleDeleteAutoSync(config.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  {autoSyncConfigs.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No auto-sync calendars configured
+                    </p>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+          
+          {autoSyncConfigs.length > 0 && (
+            <div className="text-xs text-muted-foreground">
+              {autoSyncConfigs.filter(c => c.is_active).length} of {autoSyncConfigs.length} calendars active
+            </div>
+          )}
+          
           <Button 
             onClick={handleHolidaySync} 
             disabled={isSyncingHolidays}
@@ -158,8 +318,8 @@ export const GoogleCalendarSync = () => {
         </div>
 
         <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm">
-          <p className="font-medium text-blue-900 dark:text-blue-100">Ready to sync!</p>
-          <p className="text-blue-700 dark:text-blue-300">Your Google API key has been configured. Just enter your Calendar ID above and click Import.</p>
+          <p className="font-medium text-blue-900 dark:text-blue-100">Auto-Sync Active!</p>
+          <p className="text-blue-700 dark:text-blue-300">Calendars sync automatically every hour. Add calendars using the + button next to "Sync Once".</p>
         </div>
 
         <div className="text-xs text-muted-foreground space-y-1">
