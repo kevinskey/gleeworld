@@ -131,8 +131,9 @@ export const AuditionLogs = () => {
       const matchesStatus = statusFilter === "all" || log.status === statusFilter;
       return matchesSearch && matchesStatus;
     } else {
-      // For unscheduled slots, show them when no specific filter is applied
-      return statusFilter === "all" && searchTerm === "";
+      // Only show unscheduled slots when specifically filtering for "all" and no search term
+      // But don't show them by default to avoid confusion
+      return false; // Changed this to hide unscheduled slots by default
     }
   });
 
