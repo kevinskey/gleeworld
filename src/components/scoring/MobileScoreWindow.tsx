@@ -163,7 +163,7 @@ export const MobileScoreWindow = ({
           .select('id, title, composer, pdf_url')
           .ilike('title', `%${songTitle.trim()}%`)
           .limit(1)
-          .single();
+          .maybeSingle();
 
         if (data && !error) {
           setSheetMusicData(data);
@@ -190,7 +190,10 @@ export const MobileScoreWindow = ({
     setCategories(prev => 
       prev.map(cat => 
         cat.id === categoryId 
-          ? { ...cat, currentScore: Math.max(0, Math.min(score, cat.maxScore)) }
+          ? { 
+              ...cat, 
+              currentScore: Math.max(0, Math.min(score, cat.maxScore)) // Ensure score is between 0 and maxScore
+            }
           : cat
       )
     );
@@ -199,7 +202,15 @@ export const MobileScoreWindow = ({
   const calculateTotalScore = () => {
     const totalPossible = categories.reduce((sum, cat) => sum + cat.maxScore, 0);
     const totalEarned = categories.reduce((sum, cat) => sum + cat.currentScore, 0);
-    return { totalEarned, totalPossible, percentage: (totalEarned / totalPossible * 100).toFixed(1) };
+    
+    // Ensure we don't divide by zero and handle edge cases
+    const percentage = totalPossible > 0 ? (totalEarned / totalPossible * 100) : 0;
+    
+    return { 
+      totalEarned, 
+      totalPossible, 
+      percentage: percentage.toFixed(1) 
+    };
   };
 
   const resetScores = () => {
@@ -244,25 +255,40 @@ export const MobileScoreWindow = ({
 
       console.log('Saving score data:', scoreData);
 
-      // Use direct SQL to insert into the events table with required fields
+      // Create a performance score record - using a simpler approach
+      const scoreRecord = {
+        title: `${eventType.toUpperCase()}: ${performerName}${songTitle ? ` - ${songTitle}` : ''} - Score: ${percentage}%`,
+        description: `Performance Score Data:
+
+${songTitle ? `Song: ${songTitle}` : 'No song specified'}
+${sheetMusicData?.composer ? `Composer: ${sheetMusicData.composer}` : ''}
+
+Category Scores:
+${categories.map(cat => `${cat.name}: ${cat.currentScore}/${cat.maxScore} (${((cat.currentScore / cat.maxScore) * 100).toFixed(1)}%)`).join('\n')}
+
+Total Score: ${totalEarned}/${totalPossible} (${percentage}%)
+Overall Rating: ${overallScore}/100
+
+Evaluator Comments:
+${comments || 'No comments provided'}
+
+Evaluated by: ${user?.user_metadata?.full_name || user?.email || 'Unknown Evaluator'}
+Date: ${new Date().toLocaleString()}`,
+        event_type: 'scoring',
+        start_date: new Date().toISOString(),
+        end_date: new Date().toISOString(),
+        location: `${eventType} Evaluation`,
+        venue_name: performerName,
+        is_public: false,
+        created_by: user.id,
+        external_source: 'scoring_system',
+        external_id: `score_${performerId}_${Date.now()}`,
+        calendar_id: '00000000-0000-0000-0000-000000000000' // Required field for scoring events
+      };
+
       const { data, error } = await supabase
         .from('gw_events')
-        .insert({
-          title: `${eventType.toUpperCase()}: ${performerName}${songTitle ? ` - ${songTitle}` : ''} - Score: ${percentage}%`,
-          description: `Performance Score Data:\n\n${songTitle ? `Song: ${songTitle}\n` : ''}${sheetMusicData ? `Composer: ${sheetMusicData.composer}\n` : ''}\nScores:\n${categories.map(cat => 
-            `${cat.name}: ${cat.currentScore}/${cat.maxScore}`
-          ).join('\n')}\n\nOverall Score: ${overallScore}/100\n\nComments: ${comments}`,
-          event_type: 'scoring',
-          start_date: new Date().toISOString(),
-          end_date: new Date().toISOString(),
-          location: eventType,
-          venue_name: performerName,
-          is_public: false,
-          created_by: user.id,
-          external_source: 'scoring_system',
-          external_id: `score_${performerId}_${Date.now()}`,
-          calendar_id: '00000000-0000-0000-0000-000000000000' // Default calendar ID for scoring events
-        })
+        .insert(scoreRecord)
         .select();
 
       if (error) {
