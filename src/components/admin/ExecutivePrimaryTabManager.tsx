@@ -199,7 +199,7 @@ export const ExecutivePrimaryTabManager = () => {
           <h4 className="font-medium mb-2">Default Tab Assignments</h4>
           <div className="text-sm text-muted-foreground space-y-1">
             <div>• President: Dashboard</div>
-            <div>• Secretary: Communications</div>
+            <div>• Secretary: Attendance</div>
             <div>• Treasurer: Finances</div>
             <div>• Tour Manager: Events</div>
             <div>• PR Coordinator: Communications</div>
