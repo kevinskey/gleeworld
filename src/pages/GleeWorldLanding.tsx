@@ -245,7 +245,7 @@ export const GleeWorldLanding = () => {
   return (
     <PublicLayout>
       {/* YouTube Video Background Section */}
-      <section className="fixed top-0 left-0 w-full h-screen z-10 overflow-hidden">
+      <section className="fixed top-0 left-0 w-full h-screen z-0 overflow-hidden">
         {/* YouTube Embed */}
         <div className="absolute inset-0">
           <iframe
@@ -263,14 +263,11 @@ export const GleeWorldLanding = () => {
         </div>
         
         {/* Overlay for dimming */}
-        <div className="absolute inset-0 bg-black/30 z-10"></div>
+        <div className="absolute inset-0 bg-black/40 z-10"></div>
         
-        {/* Gradient fade to FAQ section */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background via-background/80 to-transparent z-20"></div>
+        {/* Gradient fade to content below */}
+        <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-background via-background/60 to-transparent z-20"></div>
       </section>
-
-      {/* Spacer to push content below video */}
-      <div className="h-screen relative z-30"></div>
 
       {/* Audition Hover Card */}
       <AuditionHoverCard />
