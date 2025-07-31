@@ -34,30 +34,72 @@ Deno.serve(async (req) => {
       try {
         console.log(`Processing assignment for ${assignment.email} -> ${assignment.role}`);
 
-        // First, check if user exists in gw_profiles
+        // First, check if auth user exists
+        const { data: allUsers, error: listError } = await supabaseClient.auth.admin.listUsers();
+        if (listError) {
+          throw new Error(`Failed to list users: ${listError.message}`);
+        }
+
+        let authUser = allUsers.users.find(u => u.email === assignment.email);
+        
+        // If auth user doesn't exist, create them first
+        if (!authUser) {
+          console.log(`Auth user ${assignment.email} not found, creating new auth user...`);
+          
+          const { data: newUserData, error: createAuthError } = await supabaseClient.auth.admin.createUser({
+            email: assignment.email,
+            password: 'spelman', // Set password to spelman immediately
+            email_confirm: true
+          });
+          
+          if (createAuthError) {
+            console.error(`Error creating auth user for ${assignment.email}:`, createAuthError);
+            results.push({
+              email: assignment.email,
+              success: false,
+              error: `Failed to create auth user: ${createAuthError.message}`
+            });
+            continue;
+          }
+          
+          authUser = newUserData.user;
+          console.log(`Created new auth user for ${assignment.email} with ID: ${authUser.id}`);
+        } else {
+          // Reset password for existing auth user
+          console.log(`Resetting password for existing auth user: ${assignment.email}`);
+          const { error: resetError } = await supabaseClient.auth.admin.updateUserById(authUser.id, {
+            password: 'spelman'
+          });
+          
+          if (resetError) {
+            console.warn(`Failed to reset password for ${assignment.email}:`, resetError);
+          }
+        }
+
+        const userId = authUser.id;
+
+        // Now check if profile exists
         let { data: existingProfile } = await supabaseClient
           .from('gw_profiles')
           .select('user_id, email, full_name')
-          .eq('email', assignment.email)
+          .eq('user_id', userId)
           .single();
 
-        let userId = existingProfile?.user_id;
-
-        // If user doesn't exist, create them
         if (!existingProfile) {
-          console.log(`User ${assignment.email} not found, creating new user...`);
+          console.log(`Profile for ${assignment.email} not found, creating new profile...`);
           
-          // Create user profile
+          // Create user profile linked to auth user
           const { data: newProfile, error: createError } = await supabaseClient
             .from('gw_profiles')
             .insert({
+              user_id: userId,
               email: assignment.email,
               full_name: assignment.full_name,
               role: 'member',
               exec_board_role: assignment.role,
               is_exec_board: true,
-              is_admin: assignment.is_admin || false,
-              verified: false,
+              is_admin: assignment.role === 'president',
+              verified: true, // Set as verified since they're being assigned by admin
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             })
@@ -74,7 +116,6 @@ Deno.serve(async (req) => {
             continue;
           }
 
-          userId = newProfile.user_id;
           console.log(`Created new profile for ${assignment.email} with user_id: ${userId}`);
         } else {
           // Update existing profile
