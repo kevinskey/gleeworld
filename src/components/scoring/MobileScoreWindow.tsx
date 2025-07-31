@@ -338,13 +338,21 @@ export const MobileScoreWindow = ({
                         src={performerProfile?.avatar_url} 
                         alt={performerName} 
                       />
-                      <AvatarFallback className="text-xl font-semibold bg-primary/10">
-                        {performerName.split(' ').map(n => n[0]).join('').toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    
-                    <div className="text-center space-y-2">
-                      <h3 className="font-bold text-2xl">{performerName}</h3>
+                       <AvatarFallback className="text-xl font-semibold bg-primary/10">
+                         {performerProfile?.first_name && performerProfile?.last_name 
+                           ? `${performerProfile.first_name[0]}${performerProfile.last_name[0]}`.toUpperCase()
+                           : performerName.split(' ').map(n => n[0]).join('').toUpperCase()
+                         }
+                       </AvatarFallback>
+                     </Avatar>
+                     
+                     <div className="text-center space-y-2">
+                       <h3 className="font-bold text-2xl">
+                         {performerProfile?.first_name && performerProfile?.last_name 
+                           ? `${performerProfile.first_name} ${performerProfile.last_name}`
+                           : performerName
+                         }
+                       </h3>
                       {performerProfile && (
                         <div className="space-y-1">
                           {performerProfile.class_year && (
@@ -374,12 +382,20 @@ export const MobileScoreWindow = ({
                           src={performerProfile?.avatar_url} 
                           alt={performerName} 
                         />
-                        <AvatarFallback className="font-semibold bg-primary/10">
-                          {performerName.split(' ').map(n => n[0]).join('').toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-semibold text-xl">{performerName}</h3>
+                         <AvatarFallback className="font-semibold bg-primary/10">
+                           {performerProfile?.first_name && performerProfile?.last_name 
+                             ? `${performerProfile.first_name[0]}${performerProfile.last_name[0]}`.toUpperCase()
+                             : performerName.split(' ').map(n => n[0]).join('').toUpperCase()
+                           }
+                         </AvatarFallback>
+                       </Avatar>
+                       <div>
+                         <h3 className="font-semibold text-xl">
+                           {performerProfile?.first_name && performerProfile?.last_name 
+                             ? `${performerProfile.first_name} ${performerProfile.last_name}`
+                             : performerName
+                           }
+                         </h3>
                         {performerProfile?.voice_part && (
                           <Badge variant="secondary" className="text-xs">
                             {performerProfile.voice_part}
