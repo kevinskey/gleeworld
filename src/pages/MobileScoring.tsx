@@ -10,6 +10,7 @@ import { Search, Plus, Music, History } from "lucide-react";
 import { SavedScoresViewer } from "@/components/scoring/SavedScoresViewer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 interface Performer {
   id: string;
@@ -80,7 +81,7 @@ export default function MobileScoring() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <UniversalLayout maxWidth="md" containerized={true}>
       <div className="max-w-md mx-auto space-y-4">
         {/* Header with Tabs */}
         <Card>
@@ -186,6 +187,6 @@ export default function MobileScoring() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </UniversalLayout>
   );
 }
