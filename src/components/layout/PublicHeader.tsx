@@ -52,11 +52,8 @@ export const PublicHeader = () => {
           {/* Right side actions */}
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             {/* Auth Button - Responsive sizing */}
-            <Button asChild variant="default" size="sm" className="hidden sm:flex text-sm px-4 bg-blue-600 hover:bg-blue-700 text-white">
-              <Link to="/auth">
-                <span className="hidden lg:inline">Sign In</span>
-                <span className="lg:hidden">Sign</span>
-              </Link>
+            <Button asChild variant="default" size="sm" className="hidden lg:flex text-sm px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white">
+              <Link to="/auth">Sign In</Link>
             </Button>
             
             {/* Friendly Mobile Menu - Shows below lg breakpoint */}
