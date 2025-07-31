@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Star, Save, RotateCcw, Music, Mic, Users, FileText, ExternalLink } from "lucide-react";
+import { Star, Save, RotateCcw, Music, Mic, Users, FileText, ExternalLink, ArrowLeft, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -272,6 +272,28 @@ export const MobileScoreWindow = ({
 
   return (
     <div className={`min-h-screen bg-background p-4 pb-safe ${isTablet ? 'max-w-4xl mx-auto' : ''}`}>
+      
+      {/* Back Button Header */}
+      <div className="flex items-center justify-between mb-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onScoreSubmitted?.(null)}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Scoring
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onScoreSubmitted?.(null)}
+          className="h-8 w-8 p-0"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+
       <div className={`space-y-4 ${isTablet ? 'grid grid-cols-2 gap-6' : ''}`}>
         
         {/* Left Column - Audition Card (iPad) / Full Width (Phone) */}
