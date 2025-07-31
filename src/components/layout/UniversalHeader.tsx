@@ -92,6 +92,20 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
             {user && (
               <>
+                {/* Back to Dashboard button for scoring pages */}
+                {location.pathname.includes('/mobile-scoring') && (
+                  <EnhancedTooltip content="Back to Dashboard">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => navigate('/dashboard')}
+                      className="h-7 w-7 sm:h-8 sm:w-8 p-1 rounded-md hover:bg-white/20"
+                    >
+                      <LayoutDashboard className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </Button>
+                  </EnhancedTooltip>
+                )}
+
                 <EnhancedTooltip content="View notifications and tasks">
                   <TaskNotifications />
                 </EnhancedTooltip>
