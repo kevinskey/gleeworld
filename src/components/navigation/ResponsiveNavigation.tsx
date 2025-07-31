@@ -75,14 +75,14 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
 
   return (
     <nav className="hidden sm:flex items-center">
-      {/* Large screens - Full labels with bigger text */}
+      {/* Large screens - Full labels with reasonable size */}
       <div className="hidden xl:flex items-center gap-4">
         {publicNavItems.map((item) => (
           <Link
             key={item.href}
             to={item.href}
             className={cn(
-              "px-5 py-3 rounded-lg text-xl font-medium transition-all duration-200",
+              "px-4 py-2 rounded-lg text-base font-medium transition-all duration-200",
               "text-gray-700 hover:text-gray-900 hover:bg-white/20 backdrop-blur-sm",
               isActivePath(item.href) && "text-gray-900 bg-white/30 backdrop-blur-sm"
             )}
@@ -92,14 +92,14 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
         ))}
       </div>
 
-      {/* Medium-Large screens - Short labels with good size */}
+      {/* Medium-Large screens - Short labels with normal size */}
       <div className="hidden lg:flex xl:hidden items-center gap-3">
         {publicNavItems.map((item) => (
           <Link
             key={item.href}
             to={item.href}
             className={cn(
-              "px-4 py-2 rounded-lg text-lg font-medium transition-all duration-200",
+              "px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
               "text-gray-700 hover:text-gray-900 hover:bg-white/20 backdrop-blur-sm",
               isActivePath(item.href) && "text-gray-900 bg-white/30 backdrop-blur-sm"
             )}
