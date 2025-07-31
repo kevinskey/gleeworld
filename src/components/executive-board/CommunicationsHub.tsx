@@ -3,8 +3,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Mail, MessageSquare, Users, FileText, Settings, Bell } from 'lucide-react';
-import { MassEmailManager } from '@/components/notifications/MassEmailManager';
-import { SMSHistoryManager } from '@/components/notifications/SMSHistoryManager';
 import { UnifiedCommunicationsHub } from '@/components/communications/UnifiedCommunicationsHub';
 import { PublicFormsManager } from '@/components/notifications/PublicFormsManager';
 import { NewsletterManager } from '@/components/notifications/NewsletterManager';
@@ -14,7 +12,7 @@ import { PrivacyPreferencesManager } from '@/components/notifications/PrivacyPre
 import { useNotificationPermissions } from '@/hooks/useNotificationPermissions';
 
 export const CommunicationsHub = () => {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('communications');
   const { hasPermission, isLoading, isSuperAdmin, permissions } = useNotificationPermissions();
   
   // Debug logging
