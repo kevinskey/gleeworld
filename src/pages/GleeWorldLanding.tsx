@@ -249,7 +249,7 @@ export const GleeWorldLanding = () => {
         {/* YouTube Embed */}
         <div className="absolute inset-0">
           <iframe
-            src="https://www.youtube.com/embed/fDvKSh6jGKA?autoplay=1&mute=1&loop=1&playlist=fDvKSh6jGKA&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&start=3861"
+            src="https://www.youtube.com/embed/fDvKSh6jGKA?autoplay=1&mute=1&loop=1&playlist=fDvKSh6jGKA&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&enablejsapi=1&start=3861&end=4200"
             className="w-full h-full object-cover"
             style={{
               width: '300%',
@@ -257,8 +257,9 @@ export const GleeWorldLanding = () => {
               marginLeft: '-100%',
               marginTop: '-100%',
             }}
-            allow="autoplay; encrypted-media"
+            allow="autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture"
             allowFullScreen
+            title="Glee Club Background Video"
           />
         </div>
         
