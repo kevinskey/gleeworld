@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Star, Save, RotateCcw, Music, Mic, Users, FileText, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -77,6 +78,45 @@ export const MobileScoreWindow = ({
   const [isSaving, setIsSaving] = useState(false);
   const [songTitle, setSongTitle] = useState("");
   const [sheetMusicData, setSheetMusicData] = useState<any>(null);
+  const [performerProfile, setPerformerProfile] = useState<any>(null);
+  const [isTablet, setIsTablet] = useState(false);
+
+  // Detect tablet/iPad view
+  useEffect(() => {
+    const checkIsTablet = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      // Consider it a tablet if width is >= 768px or if it's in landscape mode with reasonable size
+      setIsTablet(width >= 768 || (width >= 640 && height <= width));
+    };
+    
+    checkIsTablet();
+    window.addEventListener('resize', checkIsTablet);
+    return () => window.removeEventListener('resize', checkIsTablet);
+  }, []);
+
+  // Fetch performer profile and avatar
+  useEffect(() => {
+    const fetchPerformerProfile = async () => {
+      if (!performerId) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('gw_profiles')
+          .select('first_name, last_name, avatar_url, class_year, voice_part')
+          .eq('user_id', performerId)
+          .single();
+
+        if (data && !error) {
+          setPerformerProfile(data);
+        }
+      } catch (error) {
+        console.log('Error fetching performer profile:', error);
+      }
+    };
+
+    fetchPerformerProfile();
+  }, [performerId]);
 
   // Search for sheet music when song title changes
   useEffect(() => {
@@ -224,28 +264,95 @@ export const MobileScoreWindow = ({
   const { totalEarned, totalPossible, percentage } = calculateTotalScore();
 
   return (
-    <div className="min-h-screen bg-background p-4 pb-safe">
-      <div className="max-w-md mx-auto space-y-4">
-        {/* Header */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-center text-lg">
-              {eventType.charAt(0).toUpperCase() + eventType.slice(1)} Scoring
-            </CardTitle>
-            <div className="text-center">
-              <h3 className="font-semibold text-xl">{performerName}</h3>
-              <Badge variant="secondary" className="mt-1">
-                {totalEarned}/{totalPossible} ({percentage}%)
-              </Badge>
-            </div>
-          </CardHeader>
-        </Card>
+    <div className={`min-h-screen bg-background p-4 pb-safe ${isTablet ? 'max-w-4xl mx-auto' : ''}`}>
+      <div className={`space-y-4 ${isTablet ? 'grid grid-cols-2 gap-6' : ''}`}>
+        
+        {/* Left Column - Audition Card (iPad) / Full Width (Phone) */}
+        <div className={`space-y-4 ${isTablet ? 'col-span-1' : ''}`}>
+          {/* Audition Card Header */}
+          <Card className={`${eventType === 'audition' && isTablet ? 'bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20' : ''}`}>
+            <CardHeader className="pb-3">
+              <CardTitle className={`text-center ${isTablet ? 'text-xl' : 'text-lg'}`}>
+                {eventType.charAt(0).toUpperCase() + eventType.slice(1)} {eventType === 'audition' ? 'Evaluation' : 'Scoring'}
+              </CardTitle>
+              
+              {/* Performer Info with Picture */}
+              <div className={`${isTablet ? 'space-y-4' : 'text-center'}`}>
+                {isTablet && eventType === 'audition' ? (
+                  // iPad Audition Card Layout
+                  <div className="flex flex-col items-center space-y-4 p-4">
+                    <Avatar className="h-24 w-24 border-4 border-primary/20">
+                      <AvatarImage 
+                        src={performerProfile?.avatar_url} 
+                        alt={performerName} 
+                      />
+                      <AvatarFallback className="text-xl font-semibold bg-primary/10">
+                        {performerName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <div className="text-center space-y-2">
+                      <h3 className="font-bold text-2xl">{performerName}</h3>
+                      {performerProfile && (
+                        <div className="space-y-1">
+                          {performerProfile.class_year && (
+                            <Badge variant="outline" className="text-sm">
+                              Class of {performerProfile.class_year}
+                            </Badge>
+                          )}
+                          {performerProfile.voice_part && (
+                            <Badge variant="secondary" className="text-sm ml-2">
+                              {performerProfile.voice_part}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <Badge variant="default" className="text-lg px-4 py-2">
+                      {totalEarned}/{totalPossible} ({percentage}%)
+                    </Badge>
+                  </div>
+                ) : (
+                  // Phone Layout or Non-Audition
+                  <div className="text-center space-y-2">
+                    <div className="flex items-center justify-center gap-3">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage 
+                          src={performerProfile?.avatar_url} 
+                          alt={performerName} 
+                        />
+                        <AvatarFallback className="font-semibold bg-primary/10">
+                          {performerName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-semibold text-xl">{performerName}</h3>
+                        {performerProfile?.voice_part && (
+                          <Badge variant="secondary" className="text-xs">
+                            {performerProfile.voice_part}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <Badge variant="secondary" className="mt-1">
+                      {totalEarned}/{totalPossible} ({percentage}%)
+                    </Badge>
+                  </div>
+                )}
+              </div>
+            </CardHeader>
+          </Card>
+        </div>
 
-        {/* Song Title Section */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Song Selection</CardTitle>
-          </CardHeader>
+        {/* Right Column - Scoring Interface (iPad) / Continue Below (Phone) */}
+        <div className={`space-y-4 ${isTablet ? 'col-span-1' : ''}`}>
+
+          {/* Song Title Section */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Song Selection</CardTitle>
+            </CardHeader>
           <CardContent className="space-y-3">
             <div>
               <Label htmlFor="songTitle">Song Title</Label>
@@ -435,6 +542,7 @@ export const MobileScoreWindow = ({
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );
