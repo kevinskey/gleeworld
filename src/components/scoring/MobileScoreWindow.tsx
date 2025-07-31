@@ -117,30 +117,35 @@ export const MobileScoreWindow = ({
         performer_name: performerName,
         evaluator_id: user.id,
         event_type: eventType,
-        categories: categories.reduce((acc, cat) => ({
+        categories: JSON.stringify(categories.reduce((acc, cat) => ({
           ...acc,
           [cat.id]: cat.currentScore
-        }), {}),
+        }), {})),
         total_score: totalEarned,
         max_score: totalPossible,
         percentage: parseFloat(percentage),
         overall_score: overallScore,
-        comments: comments,
-        created_at: new Date().toISOString()
+        comments: comments
       };
 
-      // Save to database using a generic insert
-      const { error } = await supabase
-        .from('gw_events' as any) // Temporary workaround until types are updated
-        .insert({
-          title: `${eventType} Score - ${performerName}`,
-          description: JSON.stringify(scoreData),
-          event_type: 'scoring',
-          start_date: new Date().toISOString(),
-          end_date: new Date().toISOString(),
-          is_public: false,
-          created_by: user.id
-        });
+      console.log('Saving score data:', scoreData);
+
+      // Use a direct SQL insert since the table isn't in TypeScript types yet
+      const { error } = await supabase.rpc('insert_performance_score', {
+        p_performer_id: performerId,
+        p_performer_name: performerName,
+        p_evaluator_id: user.id,
+        p_event_type: eventType,
+        p_categories: JSON.stringify(categories.reduce((acc, cat) => ({
+          ...acc,
+          [cat.id]: cat.currentScore
+        }), {})),
+        p_total_score: totalEarned,
+        p_max_score: totalPossible,
+        p_percentage: parseFloat(percentage),
+        p_overall_score: overallScore,
+        p_comments: comments
+      });
 
       if (error) throw error;
 
