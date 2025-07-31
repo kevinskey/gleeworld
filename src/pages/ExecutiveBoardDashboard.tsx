@@ -201,6 +201,37 @@ export const ExecutiveBoardDashboard = () => {
     }
   };
 
+  // Map positions to their primary tabs
+  const getPositionPrimaryTab = (position: ExecutivePosition): string => {
+    const primaryTabMapping: Record<ExecutivePosition, string> = {
+      president: 'dashboard',
+      secretary: 'attendance',
+      treasurer: 'finances',
+      tour_manager: 'tour-overview',
+      pr_coordinator: 'pr-hub',
+      librarian: 'music-library',
+      historian: 'historian-hub',
+      data_analyst: 'dashboard', // reports would be better but not available
+      chaplain: 'chaplain-hub',
+      assistant_chaplain: 'chaplain-hub',
+      student_conductor: 'conductor-overview',
+      wardrobe_manager: 'wardrobe',
+      section_leader_s1: 'dashboard',
+      section_leader_s2: 'dashboard',
+      section_leader_a1: 'dashboard',
+      section_leader_a2: 'dashboard'
+    };
+    return primaryTabMapping[position] || 'dashboard';
+  };
+
+  // Handle position change and automatically switch to primary tab
+  const handlePositionChange = (value: ExecutivePosition) => {
+    setSelectedPosition(value);
+    const primaryTab = getPositionPrimaryTab(value);
+    setActiveTab(primaryTab);
+    console.log(`Position changed to ${value}, switching to primary tab: ${primaryTab}`);
+  };
+
   const getPositionIcon = (position: ExecutivePosition) => {
     const icons = {
       president: Crown,
@@ -398,7 +429,7 @@ export const ExecutiveBoardDashboard = () => {
             
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
               {isAdmin ? (
-                <Select value={selectedPosition} onValueChange={(value: ExecutivePosition) => setSelectedPosition(value)}>
+                <Select value={selectedPosition} onValueChange={handlePositionChange}>
                   <SelectTrigger className="w-[200px]">
                     <div className="flex items-center gap-2">
                       <PositionIcon className="h-4 w-4" />
