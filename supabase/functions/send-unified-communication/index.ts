@@ -182,7 +182,7 @@ async function getRoleRecipients(supabase: any, roleId: string): Promise<Recipie
     }));
   }
 
-  if (roleId === 'all_exec_board') {
+  if (roleId === 'executive_board') {
     const { data } = await supabase
       .from('gw_executive_board_members')
       .select(`
