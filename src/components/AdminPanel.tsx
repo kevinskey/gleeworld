@@ -62,7 +62,7 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="glass-card p-8">
-          <p className="text-white/70">Please sing in to access the admin panel.</p>
+          <p className="text-white/70">Please sign in to access the admin panel.</p>
         </div>
       </div>
     );

@@ -2,7 +2,7 @@
 export const PAGE_NAMES: Record<string, string> = {
   '/': 'Home',
   '/landing': 'Home',
-  '/auth': 'Sing In',
+  '/auth': 'Sign In',
   '/dashboard': 'Dashboard',
   
   '/activity-logs': 'Activity Logs',
