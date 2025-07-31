@@ -244,6 +244,34 @@ export const GleeWorldLanding = () => {
 
   return (
     <PublicLayout>
+      {/* YouTube Video Background Section */}
+      <section className="fixed top-0 left-0 w-full h-screen z-10 overflow-hidden">
+        {/* YouTube Embed */}
+        <div className="absolute inset-0">
+          <iframe
+            src="https://www.youtube.com/embed/fDvKSh6jGKA?autoplay=1&mute=1&loop=1&playlist=fDvKSh6jGKA&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&start=3861"
+            className="w-full h-full object-cover"
+            style={{
+              width: '300%',
+              height: '300%',
+              marginLeft: '-100%',
+              marginTop: '-100%',
+            }}
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+          />
+        </div>
+        
+        {/* Overlay for dimming */}
+        <div className="absolute inset-0 bg-black/30 z-10"></div>
+        
+        {/* Gradient fade to FAQ section */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background via-background/80 to-transparent z-20"></div>
+      </section>
+
+      {/* Spacer to push content below video */}
+      <div className="h-screen relative z-30"></div>
+
       {/* Audition Hover Card */}
       <AuditionHoverCard />
 
