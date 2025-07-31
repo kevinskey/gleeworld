@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Mail, MessageSquare, Users, FileText, Settings, Bell } from 'lucide-react';
 import { MassEmailManager } from '@/components/notifications/MassEmailManager';
 import { SMSHistoryManager } from '@/components/notifications/SMSHistoryManager';
-import { MemberCommunications } from '@/components/notifications/MemberCommunications';
+import { UnifiedCommunicationsHub } from '@/components/communications/UnifiedCommunicationsHub';
 import { PublicFormsManager } from '@/components/notifications/PublicFormsManager';
 import { NewsletterManager } from '@/components/notifications/NewsletterManager';
 import { NotificationHistoryWithDelivery } from '@/components/notifications/NotificationHistoryWithDelivery';
@@ -159,15 +159,15 @@ export const CommunicationsHub = () => {
 
         {/* Show all tabs for debugging */}
         <TabsContent value="mass-email">
-          <MassEmailManager />
+          <UnifiedCommunicationsHub />
         </TabsContent>
 
         <TabsContent value="sms">
-          <SMSHistoryManager />
+          <UnifiedCommunicationsHub />
         </TabsContent>
 
         <TabsContent value="communications">
-          <MemberCommunications />
+          <UnifiedCommunicationsHub />
         </TabsContent>
 
         <TabsContent value="newsletter">
