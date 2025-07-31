@@ -255,39 +255,34 @@ export const MobileScoreWindow = ({
 
       console.log('Saving score data:', scoreData);
 
-      // Create a performance score record - using a simpler approach
+      // Save to the dedicated performance scores table
       const scoreRecord = {
-        title: `${eventType.toUpperCase()}: ${performerName}${songTitle ? ` - ${songTitle}` : ''} - Score: ${percentage}%`,
-        description: `Performance Score Data:
-
-${songTitle ? `Song: ${songTitle}` : 'No song specified'}
-${sheetMusicData?.composer ? `Composer: ${sheetMusicData.composer}` : ''}
-
-Category Scores:
-${categories.map(cat => `${cat.name}: ${cat.currentScore}/${cat.maxScore} (${((cat.currentScore / cat.maxScore) * 100).toFixed(1)}%)`).join('\n')}
-
-Total Score: ${totalEarned}/${totalPossible} (${percentage}%)
-Overall Rating: ${overallScore}/100
-
-Evaluator Comments:
-${comments || 'No comments provided'}
-
-Evaluated by: ${user?.user_metadata?.full_name || user?.email || 'Unknown Evaluator'}
-Date: ${new Date().toLocaleString()}`,
-        event_type: 'scoring',
-        start_date: new Date().toISOString(),
-        end_date: new Date().toISOString(),
-        location: `${eventType} Evaluation`,
-        venue_name: performerName,
-        is_public: false,
-        created_by: user.id,
-        external_source: 'scoring_system',
-        external_id: `score_${performerId}_${Date.now()}`,
-        calendar_id: '00000000-0000-0000-0000-000000000000' // Required field for scoring events
+        performer_id: performerId,
+        performer_name: performerName,
+        evaluator_id: user.id,
+        event_type: eventType,
+        song_title: songTitle.trim() || null,
+        sheet_music_id: sheetMusicData?.id || null,
+        category_scores: categories.reduce((acc, cat) => ({
+          ...acc,
+          [cat.id]: {
+            name: cat.name,
+            score: cat.currentScore,
+            maxScore: cat.maxScore,
+            percentage: ((cat.currentScore / cat.maxScore) * 100).toFixed(1)
+          }
+        }), {}),
+        total_score: totalEarned,
+        max_score: totalPossible,
+        percentage: parseFloat(percentage),
+        overall_score: overallScore,
+        comments: comments.trim() || null
       };
 
+      console.log('Saving score to gw_performance_scores:', scoreRecord);
+
       const { data, error } = await supabase
-        .from('gw_events')
+        .from('gw_performance_scores')
         .insert(scoreRecord)
         .select();
 

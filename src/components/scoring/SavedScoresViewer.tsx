@@ -9,12 +9,18 @@ import { useToast } from "@/hooks/use-toast";
 
 interface SavedScore {
   id: string;
-  title: string;
-  description: string;
-  location: string;
-  venue_name: string;
+  title?: string;
+  description?: string;
+  performer_name?: string;
+  event_type?: string;
+  song_title?: string;
+  total_score?: number;
+  max_score?: number;
+  percentage?: number;
+  overall_score?: number;
+  comments?: string;
   created_at: string;
-  external_id: string;
+  category_scores?: any;
 }
 
 export const SavedScoresViewer = () => {
@@ -31,15 +37,40 @@ export const SavedScoresViewer = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('gw_events')
+      // Try to fetch from the new gw_performance_scores table first
+      const { data: newScores, error: newError } = await supabase
+        .from('gw_performance_scores')
         .select('*')
-        .eq('event_type', 'scoring')
-        .eq('created_by', user.id)
+        .eq('evaluator_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setSavedScores(data || []);
+      if (newScores && newScores.length > 0) {
+        // Transform new scores to match expected format
+        const transformedScores = newScores.map((score: any) => ({
+          id: score.id,
+          title: `${score.event_type.toUpperCase()}: ${score.performer_name}${score.song_title ? ` - ${score.song_title}` : ''} - Score: ${score.percentage}%`,
+          description: `Total Score: ${score.total_score}/${score.max_score} (${score.percentage}%)\n${score.comments || 'No comments'}`,
+          created_at: score.created_at,
+          performer_name: score.performer_name,
+          event_type: score.event_type,
+          total_score: score.total_score,
+          max_score: score.max_score,
+          percentage: score.percentage
+        }));
+        setSavedScores(transformedScores);
+      } else {
+        // Fallback to old gw_events table for legacy scores
+        const { data: oldScores, error: oldError } = await supabase
+          .from('gw_events')
+          .select('*')
+          .eq('event_type', 'scoring')
+          .eq('created_by', user.id)
+          .order('created_at', { ascending: false });
+
+        if (oldScores) {
+          setSavedScores(oldScores);
+        }
+      }
     } catch (error) {
       console.error('Error fetching saved scores:', error);
       toast({
@@ -54,12 +85,21 @@ export const SavedScoresViewer = () => {
 
   const deleteScore = async (scoreId: string) => {
     try {
-      const { error } = await supabase
-        .from('gw_events')
+      // Try deleting from new table first
+      const { error: newError } = await supabase
+        .from('gw_performance_scores')
         .delete()
         .eq('id', scoreId);
 
-      if (error) throw error;
+      if (newError) {
+        // If not found, try old table
+        const { error: oldError } = await supabase
+          .from('gw_events')
+          .delete()
+          .eq('id', scoreId);
+
+        if (oldError) throw oldError;
+      }
 
       setSavedScores(prev => prev.filter(score => score.id !== scoreId));
       toast({
@@ -121,16 +161,16 @@ export const SavedScoresViewer = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Badge variant="secondary">
-                      {extractEventType(score.title)}
+                      {score.title ? extractEventType(score.title) : score.event_type?.toUpperCase() || 'SCORE'}
                     </Badge>
                     <Badge variant="outline">
-                      {extractScorePercentage(score.title)}
+                      {score.title ? extractScorePercentage(score.title) : `${score.percentage || 0}%`}
                     </Badge>
                   </div>
                   
                   <div>
                     <h3 className="font-semibold">
-                      {extractPerformerName(score.title)}
+                      {score.title ? extractPerformerName(score.title) : score.performer_name || 'Unknown Performer'}
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       {new Date(score.created_at).toLocaleDateString()} at{' '}
