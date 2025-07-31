@@ -91,14 +91,20 @@ export const AuditionLogs = () => {
   };
 
   const handleDeleteLog = async () => {
-    if (!logToDelete) return;
+    console.log('🗑️ DELETE DIALOG: handleDeleteLog called with logToDelete:', logToDelete);
+    if (!logToDelete) {
+      console.log('🗑️ DELETE DIALOG: No logToDelete, returning early');
+      return;
+    }
     
     try {
+      console.log('🗑️ DELETE DIALOG: Calling deleteAuditionLog function');
       await deleteAuditionLog(logToDelete);
+      console.log('🗑️ DELETE DIALOG: Delete successful, closing dialog');
       setDeleteConfirmOpen(false);
       setLogToDelete(null);
     } catch (error) {
-      console.error('Failed to delete audition log:', error);
+      console.error('🗑️ DELETE DIALOG: Failed to delete audition log:', error);
     }
   };
 
@@ -107,8 +113,10 @@ export const AuditionLogs = () => {
   const availableSlots = totalSlots - scheduledSlots;
 
   const openDeleteConfirm = (logId: string) => {
+    console.log('🗑️ DELETE BUTTON: openDeleteConfirm called with logId:', logId);
     setLogToDelete(logId);
     setDeleteConfirmOpen(true);
+    console.log('🗑️ DELETE BUTTON: Dialog should now be open, deleteConfirmOpen set to true');
   };
 
   const filteredSlots = allTimeSlots.filter(slot => {
