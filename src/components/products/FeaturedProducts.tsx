@@ -106,16 +106,22 @@ export const FeaturedProducts = ({
   const scrollLeft = () => {
     const container = document.getElementById('products-container');
     if (container) {
-      const scrollAmount = window.innerWidth < 640 ? -288 : -320; // 72*4 for mobile, 80*4 for desktop
-      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      const cardWidth = window.innerWidth < 768 ? 288 : 320; // Card width + gap
+      container.scrollBy({ 
+        left: -cardWidth, 
+        behavior: 'smooth' 
+      });
     }
   };
 
   const scrollRight = () => {
     const container = document.getElementById('products-container');
     if (container) {
-      const scrollAmount = window.innerWidth < 640 ? 288 : 320; // 72*4 for mobile, 80*4 for desktop
-      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      const cardWidth = window.innerWidth < 768 ? 288 : 320; // Card width + gap  
+      container.scrollBy({ 
+        left: cardWidth, 
+        behavior: 'smooth' 
+      });
     }
   };
 
@@ -173,21 +179,23 @@ export const FeaturedProducts = ({
       {/* Horizontal Product Slider */}
       <div className="relative group">
         {/* Navigation Arrows */}
-        {products.length > 3 && (
+        {products.length > 1 && (
           <>
             <Button
               variant="outline"
               size="icon"
               onClick={scrollLeft}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm border-white/20 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-white/95 backdrop-blur-sm border-white/20 shadow-lg opacity-80 hover:opacity-100 transition-opacity duration-300 hover:bg-white"
+              aria-label="Scroll left"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button
-              variant="outline"
+              variant="outline"  
               size="icon"
               onClick={scrollRight}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm border-white/20 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-white/95 backdrop-blur-sm border-white/20 shadow-lg opacity-80 hover:opacity-100 transition-opacity duration-300 hover:bg-white"
+              aria-label="Scroll right"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -197,13 +205,16 @@ export const FeaturedProducts = ({
         {/* Products Container */}
         <div 
           id="products-container"
-          className="flex gap-3 sm:gap-6 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth"
-          style={{ scrollbarWidth: 'thin' }}
+          className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth"
+          style={{ 
+            scrollbarWidth: 'thin',
+            WebkitOverflowScrolling: 'touch'
+          }}
         >
           {products.map((product) => (
             <Card 
               key={product.id} 
-              className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20 flex-shrink-0 w-72 sm:w-80 snap-start hover-scale"
+              className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20 flex-shrink-0 w-72 md:w-80 snap-start hover-scale"
             >
               <div className="relative aspect-square overflow-hidden bg-muted">
                 <img
