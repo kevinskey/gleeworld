@@ -255,19 +255,30 @@ export const AuditionLogs = () => {
                                    <div className="flex-shrink-0">
                                      {slot.auditionLog.applicant_picture_url ? (
                                        <div className="relative">
-                                         <img 
-                                           src={slot.auditionLog.applicant_picture_url} 
-                                           alt={`${slot.auditionLog.applicant_name}'s headshot`}
-                                           className="w-24 h-24 rounded-full object-cover border-2 border-primary/20"
-                                           onError={(e) => {
-                                             console.log('Image failed to load:', slot.auditionLog.applicant_picture_url);
-                                             e.currentTarget.style.display = 'none';
-                                             e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                                           }}
-                                           onLoad={() => {
-                                             console.log('Image loaded successfully:', slot.auditionLog.applicant_picture_url);
-                                           }}
-                                         />
+                                         <Dialog>
+                                           <DialogTrigger asChild>
+                                             <img 
+                                               src={slot.auditionLog.applicant_picture_url} 
+                                               alt={`${slot.auditionLog.applicant_name}'s headshot`}
+                                               className="w-24 h-24 rounded-full object-cover border-2 border-primary/20 cursor-pointer hover:opacity-80 transition-opacity"
+                                               onError={(e) => {
+                                                 console.log('Image failed to load:', slot.auditionLog.applicant_picture_url);
+                                                 e.currentTarget.style.display = 'none';
+                                                 e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                               }}
+                                               onLoad={() => {
+                                                 console.log('Image loaded successfully:', slot.auditionLog.applicant_picture_url);
+                                               }}
+                                             />
+                                           </DialogTrigger>
+                                           <DialogContent className="max-w-2xl">
+                                             <img 
+                                               src={slot.auditionLog.applicant_picture_url} 
+                                               alt={`${slot.auditionLog.applicant_name}'s full photo`}
+                                               className="w-full h-auto rounded-lg"
+                                             />
+                                           </DialogContent>
+                                         </Dialog>
                                          <div className="hidden w-24 h-24 rounded-full bg-muted border-2 border-primary/20 flex items-center justify-center">
                                            <User className="h-8 w-8 text-muted-foreground" />
                                          </div>
