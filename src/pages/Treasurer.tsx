@@ -29,8 +29,8 @@ const Treasurer = () => {
                 <DollarSign className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Treasurer Hub</h1>
-                <p className="text-sm text-gray-600">Financial management & registers</p>
+                <h1 className="text-xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Treasurer Hub</h1>
+                <p className="text-sm text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">Financial management & registers</p>
               </div>
             </div>
           </div>
@@ -68,7 +68,7 @@ const Treasurer = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Dues</p>
-                  <p className="text-lg font-bold text-gray-900">$12,450</p>
+                  <p className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">$12,450</p>
                 </div>
               </div>
             </CardContent>
@@ -82,7 +82,7 @@ const Treasurer = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-600">Merchandise</p>
-                  <p className="text-lg font-bold text-gray-900">$8,320</p>
+                  <p className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">$8,320</p>
                 </div>
               </div>
             </CardContent>
@@ -96,7 +96,7 @@ const Treasurer = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-600">Stipends</p>
-                  <p className="text-lg font-bold text-gray-900">$5,150</p>
+                  <p className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">$5,150</p>
                 </div>
               </div>
             </CardContent>
@@ -110,7 +110,7 @@ const Treasurer = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-600">Balance</p>
-                  <p className="text-lg font-bold text-gray-900">$25,920</p>
+                  <p className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">$25,920</p>
                 </div>
               </div>
             </CardContent>
@@ -122,7 +122,7 @@ const Treasurer = () => {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <CardHeader className="pb-0">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <CardTitle className="text-lg">Financial Registers</CardTitle>
+                <CardTitle className="text-lg text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Financial Registers</CardTitle>
                 <TabsList className="grid grid-cols-4 w-fit">
                   <TabsTrigger value="dues" className="flex items-center gap-2 text-xs">
                     <Users className="h-3 w-3" />
@@ -148,7 +148,7 @@ const Treasurer = () => {
               <TabsContent value="dues" className="mt-0">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-gray-700">Member Dues Register</h3>
+                    <h3 className="text-sm font-medium text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">Member Dues Register</h3>
                     <Button size="sm" className="h-8">
                       <Users className="h-3 w-3 mr-1" />
                       Add Entry
@@ -163,7 +163,7 @@ const Treasurer = () => {
               <TabsContent value="merchandise" className="mt-0">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-gray-700">Merchandise Income Register</h3>
+                    <h3 className="text-sm font-medium text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">Merchandise Income Register</h3>
                     <Button size="sm" className="h-8">
                       <ShoppingBag className="h-3 w-3 mr-1" />
                       Add Sale
@@ -178,7 +178,7 @@ const Treasurer = () => {
               <TabsContent value="stipends" className="mt-0">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-gray-700">Performance Stipends Register</h3>
+                    <h3 className="text-sm font-medium text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">Performance Stipends Register</h3>
                     <Button size="sm" className="h-8">
                       <Wallet className="h-3 w-3 mr-1" />
                       Add Stipend
@@ -193,7 +193,7 @@ const Treasurer = () => {
               <TabsContent value="ledger" className="mt-0">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-gray-700">General Glee Club Ledger</h3>
+                    <h3 className="text-sm font-medium text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">General Glee Club Ledger</h3>
                     <Button size="sm" className="h-8">
                       <BookOpen className="h-3 w-3 mr-1" />
                       Add Entry
