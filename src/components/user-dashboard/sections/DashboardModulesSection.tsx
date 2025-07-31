@@ -19,7 +19,9 @@ import {
   Route,
   MapPin,
   Camera,
-  Book as BookIcon
+  Book as BookIcon,
+  Star,
+  Award
 } from "lucide-react";
 
 export const DashboardModulesSection = () => {
@@ -68,6 +70,12 @@ export const DashboardModulesSection = () => {
           description: "Track participation",
           icon: CheckCircle,
           route: "/attendance"
+        },
+        {
+          name: "Performance Scoring",
+          description: "Score auditions & performances",
+          icon: Star,
+          route: "/mobile-scoring"
         }
       ]
     },
