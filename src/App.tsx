@@ -71,6 +71,7 @@ import Wardrobe from "./pages/Wardrobe";
 import { ProductManagement } from "./pages/ProductManagement";
 import PRHubPage from "./pages/PRHubPage";
 import { SharedAnnotation } from "./pages/SharedAnnotation";
+import BulkAssignmentPage from "./pages/BulkAssignmentPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -572,9 +573,17 @@ const App = () => {
                    path="/" 
                    element={<RootRoute />} 
                  />
-                  <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  <GlobalMusicPlayer />
+                    <Route path="*" element={<NotFound />} />
+                             <Route 
+                               path="/admin/bulk-assignment" 
+                               element={
+                                 <ProtectedRoute>
+                                   <BulkAssignmentPage />
+                                 </ProtectedRoute>
+                               } 
+                               />
+                   </Routes>
+                   <GlobalMusicPlayer />
                 </div>
               </MusicPlayerProvider>
             </CustomTooltipProvider>
