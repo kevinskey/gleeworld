@@ -223,7 +223,17 @@ export const useAuditionLogs = () => {
 
       if (error) throw error;
       
-      await loadAuditionLogs();
+      // Update local state optimistically
+      setLogs(prev => prev.map(log => 
+        log.id === logId ? { ...log, status: newStatus as any, updated_at: new Date().toISOString() } : log
+      ));
+      
+      setAllTimeSlots(prev => prev.map(slot => 
+        slot.auditionLog?.id === logId 
+          ? { ...slot, auditionLog: { ...slot.auditionLog, status: newStatus, updated_at: new Date().toISOString() } }
+          : slot
+      ));
+      
       toast({
         title: "Success",
         description: "Status updated successfully"
@@ -242,21 +252,33 @@ export const useAuditionLogs = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
+      const updateData = {
+        grade_data: gradeData,
+        status: 'graded',
+        graded_by: user?.id,
+        graded_at: new Date().toISOString(),
+        is_reviewed: true,
+        updated_at: new Date().toISOString()
+      };
+
       const { error } = await supabase
         .from('gw_audition_logs')
-        .update({
-          grade_data: gradeData,
-          status: 'graded',
-          graded_by: user?.id,
-          graded_at: new Date().toISOString(),
-          is_reviewed: true,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', logId);
 
       if (error) throw error;
 
-      await loadAuditionLogs();
+      // Update local state optimistically
+      setLogs(prev => prev.map(log => 
+        log.id === logId ? { ...log, ...updateData, status: 'graded' } : log
+      ));
+      
+      setAllTimeSlots(prev => prev.map(slot => 
+        slot.auditionLog?.id === logId 
+          ? { ...slot, auditionLog: { ...slot.auditionLog, ...updateData, status: 'graded' } }
+          : slot
+      ));
+
       toast({
         title: "Success",
         description: "Audition graded successfully"
@@ -378,8 +400,16 @@ export const useAuditionLogs = () => {
 
       if (error) throw error;
       
-      // Reload logs after deletion
-      await loadAuditionLogs();
+      // Update local state optimistically - remove from logs
+      setLogs(prev => prev.filter(log => log.id !== logId));
+      
+      // Update time slots - convert back to unscheduled slot
+      setAllTimeSlots(prev => prev.map(slot => 
+        slot.auditionLog?.id === logId 
+          ? { ...slot, isScheduled: false, auditionLog: null, id: `slot-${slot.date}-${slot.time}` }
+          : slot
+      ));
+
       toast({
         title: "Success",
         description: "Audition log deleted successfully"
