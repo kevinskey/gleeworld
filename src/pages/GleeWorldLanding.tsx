@@ -312,7 +312,7 @@ export const GleeWorldLanding = () => {
                   <img 
                     src={currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
                     alt="Hero Background"
-                    className="hidden md:block w-full h-full object-cover transition-opacity duration-500 brightness-110 contrast-105"
+                    className="hidden md:block w-full h-full object-cover transition-opacity duration-500 brightness-95 contrast-100"
                     onError={(e) => {
                       console.log('Hero image failed to load, using fallback');
                       // Only fallback if the current src is not already the fallback
@@ -326,7 +326,7 @@ export const GleeWorldLanding = () => {
                   <img 
                     src={currentHeroSlide?.ipad_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
                     alt="Hero Background"
-                    className="hidden sm:block md:hidden w-full h-full object-cover transition-opacity duration-500 brightness-110 contrast-105"
+                    className="hidden sm:block md:hidden w-full h-full object-cover transition-opacity duration-500 brightness-95 contrast-100"
                     onError={(e) => {
                       console.log('iPad hero image failed to load, using fallback');
                       if (!e.currentTarget.src.includes('unsplash.com')) {
@@ -339,7 +339,7 @@ export const GleeWorldLanding = () => {
                   <img 
                     src={currentHeroSlide?.mobile_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
                     alt="Hero Background"
-                    className="block sm:hidden w-full h-full object-cover object-center transition-opacity duration-500 brightness-110 contrast-105"
+                    className="block sm:hidden w-full h-full object-cover object-center transition-opacity duration-500 brightness-95 contrast-100"
                     onError={(e) => {
                       console.log('Mobile hero image failed to load, using fallback');
                       if (!e.currentTarget.src.includes('unsplash.com')) {
@@ -394,7 +394,7 @@ export const GleeWorldLanding = () => {
                   
                 </>
               ) : (
-                <div className="w-full h-full bg-gradient-to-r from-pink-100/50 to-rose-200/50 flex items-center justify-center backdrop-blur-sm">
+                <div className="w-full h-full bg-gradient-to-r from-slate-100/50 to-gray-200/50 flex items-center justify-center backdrop-blur-sm">
                   <div className="text-center p-4">
                     <Calendar className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 text-gray-400 mx-auto mb-3 sm:mb-4" />
                     <p className="text-gray-600 text-sm sm:text-base">No hero slides configured</p>
@@ -452,7 +452,7 @@ export const GleeWorldLanding = () => {
                             <img 
                               src={event.image_url || getDefaultEventImage(event.id)}
                               alt={event.title}
-                              className="w-full h-full object-contain p-4 rounded-t-lg brightness-110 contrast-105"
+                              className="w-full h-full object-contain p-4 rounded-t-lg brightness-95 contrast-100"
                               onError={(e) => {
                                 console.log('Image failed to load:', event.image_url, 'for event:', event.title);
                                 e.currentTarget.src = getDefaultEventImage(event.id);
@@ -502,7 +502,7 @@ export const GleeWorldLanding = () => {
                                 <img 
                                   src={event.image_url || getDefaultEventImage(event.id)}
                                   alt={event.title}
-                                  className="w-full h-full object-contain p-4 rounded-t-lg brightness-110 contrast-105"
+                                  className="w-full h-full object-contain p-4 rounded-t-lg brightness-95 contrast-100"
                                   onError={(e) => {
                                     console.log('Image failed to load:', event.image_url, 'for event:', event.title);
                                     e.currentTarget.src = getDefaultEventImage(event.id);
@@ -616,12 +616,12 @@ export const GleeWorldLanding = () => {
                         className="hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 group cursor-pointer h-full"
                         onClick={() => handleAlbumClick(album)}
                       >
-                        <div className="aspect-square bg-gradient-to-br from-purple-100/50 to-pink-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
+                        <div className="aspect-square bg-gradient-to-br from-slate-100/30 to-gray-200/30 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
                           {album.cover_image_url ? (
                             <img 
                               src={album.cover_image_url}
                               alt={`${album.title} cover`}
-                              className="w-full h-full object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-110 brightness-110 contrast-105"
+                              className="w-full h-full object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-110 brightness-95 contrast-100"
                               onError={(e) => {
                                 // Use a placeholder image if cover fails to load
                                 e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80";
