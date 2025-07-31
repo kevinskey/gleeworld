@@ -396,15 +396,45 @@ export const useAuditionLogs = () => {
     try {
       console.log('🗑️ Attempting to delete audition log:', logId);
       
-      const { data, error } = await supabase
+      // First, let's check what record we're trying to delete
+      const { data: recordToDelete, error: fetchError } = await supabase
         .from('gw_audition_logs')
-        .delete()
+        .select('*')
+        .eq('id', logId)
+        .single();
+        
+      console.log('🗑️ Record to delete:', recordToDelete);
+      console.log('🗑️ Fetch error:', fetchError);
+      
+      // Now attempt the delete with detailed response
+      const { data, error, count } = await supabase
+        .from('gw_audition_logs')
+        .delete({ count: 'exact' })
         .eq('id', logId)
         .select();
 
-      console.log('🗑️ Delete response:', { data, error });
+      console.log('🗑️ Delete response detailed:', { 
+        data, 
+        error, 
+        count,
+        dataLength: data?.length,
+        errorMessage: error?.message,
+        errorCode: error?.code,
+        errorDetails: error?.details
+      });
 
-      if (error) throw error;
+      if (error) {
+        console.error('🗑️ Database error during delete:', error);
+        throw error;
+      }
+      
+      // Check if any rows were actually deleted
+      if (!data || data.length === 0) {
+        console.error('🗑️ No rows were deleted - policy may be blocking deletion');
+        throw new Error('No rows were deleted - permission denied or record not found');
+      }
+      
+      console.log('🗑️ Successfully deleted record:', data[0]);
       
       // Update local state optimistically - remove from logs
       setLogs(prev => {
@@ -436,7 +466,7 @@ export const useAuditionLogs = () => {
       console.error('🗑️ Error deleting audition log:', error);
       toast({
         title: "Error",
-        description: "Failed to delete audition log",
+        description: `Failed to delete audition log: ${error.message}`,
         variant: "destructive"
       });
       throw error;
