@@ -79,8 +79,20 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
             </EnhancedTooltip>
           </div>
 
-          {/* Center area with page indicator */}
-          <div className="flex items-center justify-center flex-1">
+          {/* Center area with dashboard button and page indicator */}
+          <div className="flex items-center justify-center flex-1 gap-2">
+            {user && (
+              <EnhancedTooltip content="Go to Dashboard">
+                <Button
+                  onClick={() => navigate('/dashboard')}
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-3 text-xs font-medium text-gray-400 hover:text-gray-600 hover:bg-white/10 transition-all duration-200 active:scale-95 active:bg-white/20 transform"
+                >
+                  Dashboard
+                </Button>
+              </EnhancedTooltip>
+            )}
             {pageName !== 'GleeWorld' && (
               <span className="text-slate-700 font-bold text-[10px] px-2 py-1 rounded-md bg-blue-100 border border-blue-200 shadow-sm truncate max-w-32">
                 {pageName}
