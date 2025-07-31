@@ -36,7 +36,7 @@ export const AttendanceDashboard = () => {
   const { profile } = useProfile();
   const [activeTab, setActiveTab] = useState('overview');
   const [canTakeAttendance, setCanTakeAttendance] = useState(false);
-  const [userSectionCollapsed, setUserSectionCollapsed] = useState(true); // Default to closed
+  const [userSectionCollapsed, setUserSectionCollapsed] = useState(false);
   const [classScheduleCollapsed, setClassScheduleCollapsed] = useState(false);
   const [stats, setStats] = useState({
     myAttendance: 0,
@@ -74,6 +74,11 @@ export const AttendanceDashboard = () => {
       const hasSecretaryRole = gwProfile?.special_roles?.includes('secretary');
       
       setCanTakeAttendance(isSuperAdmin || isSecretary || hasSecretaryRole);
+      
+      // Collapse personal attendance section by default for secretaries
+      if (isSecretary || hasSecretaryRole) {
+        setUserSectionCollapsed(true);
+      }
     } catch (error) {
       console.error('Error checking attendance permissions:', error);
       setCanTakeAttendance(false);
