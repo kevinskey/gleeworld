@@ -41,7 +41,7 @@ export const PublicHeader = () => {
                 </span>
               </div>
               <div className="hidden xl:block" title="Current time">
-                <HeaderClock />
+                <HeaderClock className="hidden xl:block" />
               </div>
             </div>
           </Link>
