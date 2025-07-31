@@ -135,10 +135,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       console.log('AuthContext: Starting sign out...');
       
-      // Clear auth state IMMEDIATELY and set loading
+      // Clear auth state IMMEDIATELY
       setUser(null);
       setSession(null);
-      setLoading(true);
       
       // Clear any stored auth tokens
       try {
@@ -158,18 +157,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.error('AuthContext: Error signing out:', error);
       }
       
-      // Small delay to ensure state propagation
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      setLoading(false);
-      
       // Force redirect to home page instead of auth page
       window.location.replace('/');
     } catch (error) {
       console.error('AuthContext: Sign out failed:', error);
       setUser(null);
       setSession(null);
-      setLoading(false);
       window.location.replace('/');
     }
   };
