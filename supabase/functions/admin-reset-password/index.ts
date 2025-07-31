@@ -8,7 +8,8 @@ const corsHeaders = {
 };
 
 interface ResetPasswordRequest {
-  userId: string;
+  email?: string;
+  userId?: string;
   newPassword: string;
 }
 
@@ -69,7 +70,7 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const { userId, newPassword }: ResetPasswordRequest = await req.json();
+    const { userId, email, newPassword }: ResetPasswordRequest = await req.json();
 
     // Validate password strength
     const passwordValidation = validatePassword(newPassword);
@@ -119,8 +120,28 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Insufficient permissions");
     }
 
+    let targetUserId = userId;
+    
+    // If email is provided instead of userId, look up the user ID
+    if (email && !userId) {
+      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers();
+      if (userError) {
+        throw new Error(`Failed to find user: ${userError.message}`);
+      }
+      
+      const user = userData.users.find(u => u.email === email);
+      if (!user) {
+        throw new Error(`User with email ${email} not found`);
+      }
+      targetUserId = user.id;
+    }
+
+    if (!targetUserId) {
+      throw new Error('Either userId or email must be provided');
+    }
+
     // Update the user's password
-    const { data, error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+    const { data, error } = await supabaseAdmin.auth.admin.updateUserById(targetUserId, {
       password: newPassword
     });
 
