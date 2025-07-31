@@ -46,10 +46,19 @@ Deno.serve(async (req) => {
         if (!authUser) {
           console.log(`Auth user ${assignment.email} not found, creating new auth user...`);
           
+          // Generate secure temporary password
+          const tempPassword = crypto.getRandomValues(new Uint8Array(12))
+            .reduce((acc, byte) => acc + String.fromCharCode(33 + (byte % 94)), '');
+          
           const { data: newUserData, error: createAuthError } = await supabaseClient.auth.admin.createUser({
             email: assignment.email,
-            password: 'spelman', // Set password to spelman immediately
-            email_confirm: true
+            password: tempPassword,
+            email_confirm: true,
+            user_metadata: {
+              force_password_change: true,
+              temp_password: true,
+              full_name: assignment.full_name
+            }
           });
           
           if (createAuthError) {
@@ -65,10 +74,18 @@ Deno.serve(async (req) => {
           authUser = newUserData.user;
           console.log(`Created new auth user for ${assignment.email} with ID: ${authUser.id}`);
         } else {
-          // Reset password for existing auth user
+          // Generate secure temporary password for existing user
+          const tempPassword = crypto.getRandomValues(new Uint8Array(12))
+            .reduce((acc, byte) => acc + String.fromCharCode(33 + (byte % 94)), '');
+          
           console.log(`Resetting password for existing auth user: ${assignment.email}`);
           const { error: resetError } = await supabaseClient.auth.admin.updateUserById(authUser.id, {
-            password: 'spelman'
+            password: tempPassword,
+            user_metadata: {
+              force_password_change: true,
+              temp_password: true,
+              full_name: assignment.full_name
+            }
           });
           
           if (resetError) {
