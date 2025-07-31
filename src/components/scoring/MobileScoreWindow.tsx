@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Star, Save, RotateCcw, Music, Mic, Users, FileText, ExternalLink, ArrowLeft, X } from "lucide-react";
+import { Star, Save, RotateCcw, Music, Mic, Users, FileText, ExternalLink, ArrowLeft, X, UserCheck, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -293,6 +293,29 @@ export const MobileScoreWindow = ({
           <X className="h-4 w-4" />
         </Button>
       </div>
+
+      {/* Adjudicator Info */}
+      <Card className="mb-4 bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 border-2 border-primary/20">
+              <Shield className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-muted-foreground">ADJUDICATOR</span>
+                <UserCheck className="h-4 w-4 text-primary" />
+              </div>
+              <p className="font-semibold text-lg">
+                {user?.user_metadata?.full_name || user?.email || "Evaluator"}
+              </p>
+            </div>
+            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/30">
+              {eventType.charAt(0).toUpperCase() + eventType.slice(1)} Judge
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className={`space-y-4 ${isTablet ? 'grid grid-cols-2 gap-6' : ''}`}>
         
