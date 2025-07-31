@@ -226,7 +226,7 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
                 {format(day, 'd')}
               </div>
               <div className="space-y-0.5 md:space-y-1 mt-1">
-                {dayEvents.slice(0, isMobile ? 1 : 2).map(event => {
+                {dayEvents.slice(0, isMobile ? 2 : 3).map(event => {
                   console.log('Rendering event:', event.title, 'for day:', day.toDateString());
                   console.log('Event data:', { id: event.id, created_by: event.created_by, user_id: user?.id, user_role: user?.role });
                    const canEdit = user && userPermissions && (
@@ -236,46 +236,35 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
                    );
                    console.log('Can edit?', canEdit, 'User:', user?.id, 'Event creator:', event.created_by, 'User permissions:', userPermissions);
                   const isSelected = (editingEvent?.id === event.id) || (selectedEvent?.id === event.id);
-                  return (
-                    <EventHoverCard key={event.id} event={event} canEdit={canEdit}>
-                      <div
-                        className={`
-                          text-[10px] sm:text-xs p-1 sm:p-2 rounded-md cursor-pointer 
-                          transition-all duration-200 min-h-[28px] sm:min-h-[32px]
-                          touch-manipulation border border-transparent
-                          ${isSelected 
-                            ? 'ring-2 ring-primary ring-offset-1 scale-105 shadow-md' 
-                            : 'hover:shadow-md hover:scale-[1.02] active:scale-[0.98]'
-                          }
-                          ${getEventTypeColor(event.event_type)}
-                        `}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEventClick(event);
-                        }}
-                        title={`${event.title}${canEdit ? ' (Tap to edit)' : ' (Tap for details)'}`}
-                      >
-                        <div className="flex items-center gap-1 w-full">
-                           <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-current rounded-full flex-shrink-0 opacity-70" />
-                           <div className="truncate font-medium flex-1 leading-tight">
-                             {event.title}
-                           </div>
-                           {canEdit && (
-                             <Badge variant="secondary" className="text-[8px] px-1 py-0 h-3 bg-primary/20 text-primary border-primary/30">
-                               EDIT
-                             </Badge>
-                           )}
-                        </div>
-                        <div className="text-[8px] sm:text-[10px] opacity-70 truncate mt-0.5">
-                          {format(parseISO(event.start_date), 'h:mm a')}
-                        </div>
-                      </div>
-                    </EventHoverCard>
-                  );
+                   return (
+                     <EventHoverCard key={event.id} event={event} canEdit={canEdit}>
+                       <div
+                         className={`
+                           text-[10px] sm:text-xs p-1 rounded-sm cursor-pointer 
+                           transition-colors duration-200 min-h-[16px] sm:min-h-[18px]
+                           touch-manipulation border-l-2 border-l-current
+                           ${isSelected 
+                             ? 'ring-1 ring-primary ring-offset-1' 
+                             : 'hover:opacity-80 active:opacity-60'
+                           }
+                           ${getEventTypeColor(event.event_type)}
+                         `}
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           handleEventClick(event);
+                         }}
+                         title={`${event.title}${canEdit ? ' (Tap to edit)' : ' (Tap for details)'}`}
+                       >
+                         <div className="truncate font-medium leading-tight">
+                           {event.title}
+                         </div>
+                       </div>
+                     </EventHoverCard>
+                   );
                 })}
-                {dayEvents.length > (isMobile ? 1 : 2) && (
-                  <div className="text-[8px] md:text-xs text-muted-foreground text-center py-1 hover:text-primary cursor-pointer">
-                    +{dayEvents.length - (isMobile ? 1 : 2)} more
+                {dayEvents.length > (isMobile ? 2 : 3) && (
+                  <div className="text-[8px] md:text-xs text-muted-foreground text-center py-0.5 hover:text-primary cursor-pointer">
+                    +{dayEvents.length - (isMobile ? 2 : 3)} more
                   </div>
                 )}
               </div>
