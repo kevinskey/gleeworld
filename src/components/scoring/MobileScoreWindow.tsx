@@ -88,6 +88,7 @@ export const MobileScoreWindow = ({
   });
   const [isTablet, setIsTablet] = useState(false);
   const [applicationOpen, setApplicationOpen] = useState(false);
+  const [categoriesOpen, setCategoriesOpen] = useState(true);
 
   // Sample application data
   const applicationData = {
@@ -605,12 +606,34 @@ export const MobileScoreWindow = ({
           </CardContent>
         </Card>
 
-        {/* Scoring Categories */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Score Categories</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          {/* Scoring Categories */}
+          <Collapsible open={categoriesOpen} onOpenChange={setCategoriesOpen}>
+            <Card>
+              <div className="flex items-center">
+                <CollapsibleTrigger className="flex-1">
+                  <CardHeader className="pb-3 hover:bg-muted/30 transition-colors rounded-t-lg">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Star className="h-5 w-5" />
+                        Score Categories
+                      </CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {totalEarned}/{totalPossible} ({percentage}%)
+                        </Badge>
+                        {categoriesOpen ? (
+                          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </div>
+                    </div>
+                  </CardHeader>
+                </CollapsibleTrigger>
+              </div>
+              
+              <CollapsibleContent>
+                <CardContent className="space-y-4 bg-background/80 backdrop-blur-sm border-t border-muted/20">
             {categories.map((category) => (
               <div key={category.id} className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -652,9 +675,11 @@ export const MobileScoreWindow = ({
                   ))}
                 </div>
               </div>
-            ))}
-          </CardContent>
-        </Card>
+                  ))}
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
 
         {/* Overall Score */}
         <Card>
