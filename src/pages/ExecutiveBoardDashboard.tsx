@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
+import { ExecutiveBoardDirectory } from "@/components/shared/ExecutiveBoardDirectory";
 import { 
   Crown,
   Shield,
@@ -173,6 +174,9 @@ export const ExecutiveBoardDashboard = () => {
 
         {/* Community Hub */}
         <CommunityHubWidget />
+
+        {/* Executive Board Directory */}
+        <ExecutiveBoardDirectory variant="full" showActions={true} />
 
       </div>
     </UniversalLayout>
