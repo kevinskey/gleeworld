@@ -748,6 +748,11 @@ export const ExecutiveBoardDashboard = () => {
             <AttendanceDashboard />
           </TabsContent>
 
+          {/* Wardrobe Tab */}
+          <TabsContent value="wardrobe">
+            <WardrobeMistressHub />
+          </TabsContent>
+
           {/* Music Library Tab */}
           <TabsContent value="music-library">
             {selectedPosition === 'librarian' ? (
