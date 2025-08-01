@@ -25,6 +25,42 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@300;400;500;700&family=Dancing+Script:wght@400;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+      // Debug Google Fonts loading
+      console.log('Google Fonts loading...');
+      
+      // Check if fonts are loaded
+      if (document.fonts) {
+        document.fonts.ready.then(() => {
+          console.log('All fonts loaded successfully');
+          console.log('Available fonts:', Array.from(document.fonts.values()).map(f => f.family));
+        });
+        
+        document.fonts.onloadingdone = (e) => {
+          console.log('Font loading done:', e);
+        };
+        
+        document.fonts.onloadingerror = (e) => {
+          console.error('Font loading error:', e);
+        };
+      }
+      
+      // Test Dancing Script specifically
+      setTimeout(() => {
+        const testEl = document.createElement('div');
+        testEl.style.fontFamily = 'Dancing Script, cursive';
+        testEl.style.fontSize = '16px';
+        testEl.textContent = 'Test';
+        testEl.style.position = 'absolute';
+        testEl.style.left = '-9999px';
+        document.body.appendChild(testEl);
+        
+        const computedStyle = window.getComputedStyle(testEl);
+        console.log('Dancing Script computed font-family:', computedStyle.fontFamily);
+        
+        document.body.removeChild(testEl);
+      }, 1000);
+    </script>
   </head>
 
   <body>
