@@ -36,107 +36,115 @@ export const NotificationsSection = () => {
 
   return (
     <div className="w-full">
-      {/* Desktop Layout */}
+      {/* Desktop Layout - Now Collapsible */}
       <div className="hidden md:block">
-        <Card className="bg-gradient-to-r from-secondary/5 via-accent/5 to-primary/5 border-secondary/20 shadow-lg h-64">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-secondary-foreground text-base">
-              <Bell className="h-4 w-4" />
-              Notifications
-              <Badge variant="secondary" className="text-xs">
-                {unreadCount > 0 ? `${unreadCount} unread` : notifications.length}
-              </Badge>
+        <Card className="bg-gradient-to-r from-secondary/5 via-accent/5 to-primary/5 border-secondary/20 shadow-lg">
+          <CardHeader className="pb-2 cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
+            <CardTitle className="flex items-center justify-between text-secondary-foreground text-base">
+              <div className="flex items-center gap-2">
+                <Bell className="h-4 w-4" />
+                Notifications
+                <Badge variant="secondary" className="text-xs">
+                  {unreadCount > 0 ? `${unreadCount} unread` : notifications.length}
+                </Badge>
+              </div>
+              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+              </Button>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-44">
-              <div className="space-y-2 pr-4">
-                {loading ? (
-                  <div className="text-center py-4">
-                    <p className="text-sm text-muted-foreground">Loading notifications...</p>
-                  </div>
-                ) : displayNotifications.length === 0 ? (
-                  <div className="text-center py-4">
-                    <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">No notifications</p>
-                  </div>
-                ) : (
-                  displayNotifications.map((notification) => (
-                    <div 
-                      key={notification.id} 
-                      className={`border rounded-lg p-3 backdrop-blur-sm hover:bg-background/70 transition-colors cursor-pointer relative ${
-                        !notification.is_read 
-                          ? 'border-secondary/20 bg-background/60 ring-1 ring-primary/20' 
-                          : 'border-secondary/10 bg-background/50'
-                      }`}
-                      onClick={() => setSelectedItem({
-                        id: notification.id,
-                        title: notification.title,
-                        content: notification.message,
-                        type: 'notification' as const,
-                        subType: notification.type,
-                        actionRequired: !notification.is_read
-                      })}
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <h5 className={`font-medium text-base line-clamp-1 ${!notification.is_read ? 'text-foreground' : 'text-muted-foreground'}`}>
-                          {notification.title}
-                        </h5>
-                        <div className="flex items-center gap-1 ml-2">
-                          {notification.type && (
-                            <Badge className={`${getNotificationTypeColor(notification.type)} text-xs`} variant="secondary">
-                              {notification.type}
-                            </Badge>
-                          )}
-                          <div className="flex items-center gap-1">
-                            {!notification.is_read && (
+          
+          {!isCollapsed && (
+            <CardContent>
+              <ScrollArea className="h-44">
+                <div className="space-y-2 pr-4">
+                  {loading ? (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-muted-foreground">Loading notifications...</p>
+                    </div>
+                  ) : displayNotifications.length === 0 ? (
+                    <div className="text-center py-4">
+                      <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">No notifications</p>
+                    </div>
+                  ) : (
+                    displayNotifications.map((notification) => (
+                      <div 
+                        key={notification.id} 
+                        className={`border rounded-lg p-3 backdrop-blur-sm hover:bg-background/70 transition-colors cursor-pointer relative ${
+                          !notification.is_read 
+                            ? 'border-secondary/20 bg-background/60 ring-1 ring-primary/20' 
+                            : 'border-secondary/10 bg-background/50'
+                        }`}
+                        onClick={() => setSelectedItem({
+                          id: notification.id,
+                          title: notification.title,
+                          content: notification.message,
+                          type: 'notification' as const,
+                          subType: notification.type,
+                          actionRequired: !notification.is_read
+                        })}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <h5 className={`font-medium text-base line-clamp-1 ${!notification.is_read ? 'text-foreground' : 'text-muted-foreground'}`}>
+                            {notification.title}
+                          </h5>
+                          <div className="flex items-center gap-1 ml-2">
+                            {notification.type && (
+                              <Badge className={`${getNotificationTypeColor(notification.type)} text-xs`} variant="secondary">
+                                {notification.type}
+                              </Badge>
+                            )}
+                            <div className="flex items-center gap-1">
+                              {!notification.is_read && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    markNotificationAsRead(notification.id);
+                                  }}
+                                  className="h-6 w-6 p-0 hover:bg-primary/10"
+                                  title="Mark as read"
+                                >
+                                  <Check className="h-3 w-3" />
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  markNotificationAsRead(notification.id);
+                                  deleteNotification(notification.id);
                                 }}
-                                className="h-6 w-6 p-0 hover:bg-primary/10"
-                                title="Mark as read"
+                                className="h-6 w-6 p-0 hover:bg-destructive/10 text-destructive"
+                                title="Delete notification"
                               >
-                                <Check className="h-3 w-3" />
+                                <Trash2 className="h-3 w-3" />
                               </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteNotification(notification.id);
-                              }}
-                              className="h-6 w-6 p-0 hover:bg-destructive/10 text-destructive"
-                              title="Delete notification"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                            </div>
                           </div>
                         </div>
+                        <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                          {notification.message}
+                        </p>
+                        <div className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          {notification.created_at 
+                            ? new Date(notification.created_at).toLocaleString()
+                            : 'Recently posted'
+                          }
+                        </div>
+                        {!notification.is_read && (
+                          <div className="absolute top-2 left-2 w-2 h-2 bg-primary rounded-full"></div>
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                        {notification.message}
-                      </p>
-                      <div className="text-sm text-muted-foreground flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {notification.created_at 
-                          ? new Date(notification.created_at).toLocaleString()
-                          : 'Recently posted'
-                        }
-                      </div>
-                      {!notification.is_read && (
-                        <div className="absolute top-2 left-2 w-2 h-2 bg-primary rounded-full"></div>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
-          </CardContent>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          )}
         </Card>
       </div>
 
