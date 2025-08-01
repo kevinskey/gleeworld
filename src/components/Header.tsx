@@ -2,8 +2,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Camera, Menu, X, Bell } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Camera, Menu, X, Bell, CheckCircle, Clock, MessageSquare, Info, AlertCircle } from "lucide-react";
 import { QuickCameraCapture } from "@/components/camera/QuickCameraCapture";
+import { useNotifications } from "@/hooks/useNotifications";
+import { format } from "date-fns";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -49,6 +53,25 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showPRCapture, setShowPRCapture] = useState(false);
+  
+  // Notifications hook
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+
+  // Helper function to get notification icon
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'sms_notification':
+        return <MessageSquare className="h-4 w-4 text-blue-500" />;
+      case 'success':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'error':
+        return <AlertCircle className="h-4 w-4 text-red-500" />;
+      case 'warning':
+        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+      default:
+        return <Info className="h-4 w-4 text-blue-500" />;
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -187,18 +210,119 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
 
           {/* Right side actions */}
           <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
-            {/* Notification Bell */}
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="relative gap-1 sm:gap-2 text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30 h-8 w-8 sm:h-10 sm:w-10 lg:h-auto lg:w-auto lg:px-3"
-              title="Notifications"
-            >
-              <Bell className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden lg:inline text-sm">Notifications</span>
-              {/* Notification badge - uncomment when you have notification count */}
-              {/* <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span> */}
-            </Button>
+            {/* Notification Bell with Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="relative gap-1 sm:gap-2 text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30 h-8 w-8 sm:h-10 sm:w-10 lg:h-auto lg:w-auto lg:px-3"
+                  title="Notifications"
+                >
+                  <Bell className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden lg:inline text-sm">Notifications</span>
+                  {unreadCount > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-1 -right-1 h-5 w-5 text-xs flex items-center justify-center p-0 min-w-[20px]"
+                    >
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </Badge>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                className="w-80 bg-white shadow-lg border border-gray-200 z-[70]" 
+                align="end"
+                sideOffset={5}
+              >
+                <div className="p-3 border-b border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-gray-900">Notifications</h3>
+                    {unreadCount > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={markAllAsRead}
+                        className="text-xs text-blue-600 hover:text-blue-800 h-auto p-1"
+                      >
+                        Mark all read
+                      </Button>
+                    )}
+                  </div>
+                  {unreadCount > 0 && (
+                    <p className="text-xs text-gray-500 mt-1">{unreadCount} unread</p>
+                  )}
+                </div>
+                
+                <ScrollArea className="max-h-96">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500">
+                      <Bell className="h-8 w-8 mx-auto text-gray-300 mb-2" />
+                      <p className="text-sm">No notifications</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-gray-100">
+                      {notifications.slice(0, 10).map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`p-3 hover:bg-gray-50 cursor-pointer transition-colors ${
+                            !notification.is_read ? 'bg-blue-50 border-l-4 border-l-blue-400' : ''
+                          }`}
+                          onClick={() => !notification.is_read && markAsRead(notification.id)}
+                        >
+                          <div className="flex items-start space-x-3">
+                            {getNotificationIcon(notification.type || 'default')}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className={`text-sm ${!notification.is_read ? 'font-medium text-gray-900' : 'text-gray-700'}`}>
+                                  {notification.title}
+                                </p>
+                                {!notification.is_read && (
+                                  <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
+                                )}
+                                {notification.type === 'sms_notification' && (
+                                  <Badge variant="outline" className="text-xs">
+                                    SMS
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-gray-600 line-clamp-2 mb-1">
+                                {notification.message}
+                              </p>
+                              {notification.metadata && 
+                               typeof notification.metadata === 'object' && 
+                               'sender_phone' in notification.metadata && (
+                                <p className="text-xs text-gray-400 mb-1">
+                                  From: {notification.metadata.sender_phone as string}
+                                </p>
+                              )}
+                              <div className="flex items-center text-xs text-gray-400">
+                                <Clock className="h-3 w-3 mr-1" />
+                                {format(new Date(notification.created_at), 'MMM dd, h:mm a')}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+                
+                {notifications.length > 0 && (
+                  <div className="p-2 border-t border-gray-100">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate('/notifications')}
+                      className="w-full text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                    >
+                      View all notifications
+                    </Button>
+                  </div>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* PR Camera Quick Capture - Responsive sizing */}
             <Button 
