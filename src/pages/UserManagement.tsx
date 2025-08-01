@@ -10,10 +10,10 @@ const UserManagement = () => {
   const { users, loading: usersLoading, error: usersError, refetch: refetchUsers } = useUsers();
 
   // Check if user is admin or super admin
-  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
+  const isAdmin = userProfile?.is_admin || userProfile?.is_super_admin || userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
   
   console.log('UserManagement page loaded - user:', user?.id, 'isAdmin:', isAdmin, 'userProfile:', userProfile, 'profileLoading:', profileLoading, 'authLoading:', authLoading, 'usersLoading:', usersLoading, 'usersError:', usersError);
-  console.log('UserManagement: Admin check details - userProfile?.role:', userProfile?.role, 'isAdmin calculation:', isAdmin, 'authLoading:', authLoading, 'profileLoading:', profileLoading);
+  console.log('UserManagement: Admin check details - userProfile?.role:', userProfile?.role, 'userProfile?.is_admin:', userProfile?.is_admin, 'userProfile?.is_super_admin:', userProfile?.is_super_admin, 'isAdmin calculation:', isAdmin, 'authLoading:', authLoading, 'profileLoading:', profileLoading);
   
   // Show loading while auth or profile is loading
   if (authLoading || profileLoading) {
