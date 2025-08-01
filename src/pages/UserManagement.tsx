@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 
 const UserManagement = () => {
+  console.log('UserManagement: Component starting to load...');
   const { user, loading: authLoading } = useAuth();
   const { userProfile, loading: profileLoading } = useUserProfile(user);
   const { users, loading: usersLoading, error: usersError, refetch: refetchUsers } = useUsers();
