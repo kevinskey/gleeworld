@@ -21,7 +21,9 @@ import {
   Award,
   Shield,
   CheckCircle,
-  Clock
+  Clock,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@/hooks/useUsers";
@@ -60,6 +62,7 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
   const [notes, setNotes] = useState("");
   const [boardMembers, setBoardMembers] = useState<BoardMember[]>([]);
   const [updating, setUpdating] = useState(false);
+  const [isCurrentBoardCollapsed, setIsCurrentBoardCollapsed] = useState(false);
 
   const filteredUsers = users.filter(user => 
     user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -290,71 +293,87 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
       {/* Current Executive Board */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Current Executive Board
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              <CardTitle>Current Executive Board</CardTitle>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCurrentBoardCollapsed(!isCurrentBoardCollapsed)}
+              className="h-8 w-8 p-0"
+            >
+              {isCurrentBoardCollapsed ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronUp className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
           <CardDescription>
             Active executive board members and their roles
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          {currentBoardMembers.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p>No executive board members assigned</p>
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              {currentBoardMembers.map((member) => {
-                const role = member.exec_board_role as ExecutiveBoardRole;
-                const quickActions = ROLE_QUICK_ACTIONS[role] || [];
-                
-                return (
-                  <div 
-                    key={member.id || member.user_id} 
-                    className="flex items-center justify-between p-4 border rounded-lg bg-white"
-                  >
-                    <div className="flex items-center gap-4">
+        {!isCurrentBoardCollapsed && (
+          <CardContent>
+            {currentBoardMembers.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>No executive board members assigned</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {currentBoardMembers.map((member) => {
+                  const role = member.exec_board_role as ExecutiveBoardRole;
+                  const quickActions = ROLE_QUICK_ACTIONS[role] || [];
+                  
+                  return (
+                    <div 
+                      key={member.id || member.user_id} 
+                      className="flex items-center justify-between p-4 border rounded-lg bg-white"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          {getRoleIcon(role)}
+                          <div>
+                            <div className="font-medium">
+                              {member.full_name || member.email}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {member.email}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Badge className={getRoleColor(role)}>
+                            {ROLE_DISPLAY_NAMES[role]}
+                          </Badge>
+                          <div className="text-xs text-gray-500 max-w-md">
+                            {ROLE_RESPONSIBILITIES[role]}
+                          </div>
+                        </div>
+                      </div>
                       <div className="flex items-center gap-2">
-                        {getRoleIcon(role)}
-                        <div>
-                          <div className="font-medium">
-                            {member.full_name || member.email}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {member.email}
-                          </div>
+                        <div className="text-sm text-gray-500">
+                          {quickActions.length} quick actions available
                         </div>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Badge className={getRoleColor(role)}>
-                          {ROLE_DISPLAY_NAMES[role]}
-                        </Badge>
-                        <div className="text-xs text-gray-500 max-w-md">
-                          {ROLE_RESPONSIBILITIES[role]}
-                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleRemoveRole(member.user_id, member.full_name || member.email)}
+                          disabled={updating}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="text-sm text-gray-500">
-                        {quickActions.length} quick actions available
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleRemoveRole(member.user_id, member.full_name || member.email)}
-                        disabled={updating}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        )}
       </Card>
 
       {/* Assign New Role */}
