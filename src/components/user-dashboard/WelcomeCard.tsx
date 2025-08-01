@@ -123,7 +123,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
         <img 
           src="/lovable-uploads/8775a40d-2f4b-486a-b712-f11a753ba969.png"
           alt="GLEE 100 Anniversary Emblem"
-          className="w-12 h-16 sm:w-14 sm:h-18 md:w-16 md:h-20 drop-shadow-lg opacity-90 hover:opacity-100 transition-opacity"
+          className="w-8 h-10 sm:w-10 sm:h-12 md:w-12 md:h-14 drop-shadow-lg opacity-90 hover:opacity-100 transition-opacity"
         />
       </div>
       
