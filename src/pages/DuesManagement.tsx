@@ -74,7 +74,7 @@ export const DuesManagement = () => {
 
   const fetchPaymentPlans = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('gw_dues_payment_plans')
         .select(`
           *,
@@ -96,7 +96,7 @@ export const DuesManagement = () => {
 
   const fetchReminders = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('gw_dues_reminders')
         .select('*')
         .order('created_at', { ascending: false });

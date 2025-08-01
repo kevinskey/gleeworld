@@ -85,7 +85,7 @@ export const CreateReminderDialog = ({
         reminderData.payment_plan_id = formData.target_id;
       }
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('gw_dues_reminders')
         .insert([reminderData]);
 

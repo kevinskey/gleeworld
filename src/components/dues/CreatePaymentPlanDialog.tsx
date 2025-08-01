@@ -94,7 +94,7 @@ export const CreatePaymentPlanDialog = ({ open, onOpenChange, onSuccess, duesRec
       });
     }
     
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('gw_payment_plan_installments')
       .insert(installmentData);
       
@@ -110,7 +110,7 @@ export const CreatePaymentPlanDialog = ({ open, onOpenChange, onSuccess, duesRec
       const endDate = calculateEndDate();
       const installmentAmount = parseFloat(calculateInstallmentAmount());
       
-      const { data: planData, error: planError } = await supabase
+      const { data: planData, error: planError } = await (supabase as any)
         .from('gw_dues_payment_plans')
         .insert([{
           dues_record_id: formData.dues_record_id,

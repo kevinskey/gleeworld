@@ -29,7 +29,7 @@ export const PaymentPlansList = ({ paymentPlans, onRefresh }: PaymentPlansListPr
     const newStatus = currentStatus === 'active' ? 'paused' : 'active';
     
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('gw_dues_payment_plans')
         .update({ status: newStatus })
         .eq('id', planId);
