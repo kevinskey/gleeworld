@@ -13,6 +13,7 @@ const UserManagement = () => {
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
   
   console.log('UserManagement page loaded - user:', user?.id, 'isAdmin:', isAdmin, 'userProfile:', userProfile, 'profileLoading:', profileLoading, 'authLoading:', authLoading, 'usersLoading:', usersLoading, 'usersError:', usersError);
+  console.log('UserManagement: Admin check details - userProfile?.role:', userProfile?.role, 'isAdmin calculation:', isAdmin, 'authLoading:', authLoading, 'profileLoading:', profileLoading);
   
   // Show loading while auth or profile is loading
   if (authLoading || profileLoading) {
