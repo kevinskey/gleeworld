@@ -86,6 +86,7 @@ interface LoveMessageForm {
   message: string;
   note_color: string;
   is_anonymous: boolean;
+  decorations: string;
 }
 
 export const CommunityHubWidget = () => {
@@ -127,8 +128,9 @@ export const CommunityHubWidget = () => {
   const loveForm = useForm<LoveMessageForm>({
     defaultValues: {
       message: "",
-      note_color: "yellow",
+      note_color: "blue",
       is_anonymous: false,
+      decorations: "",
     },
   });
 
@@ -318,7 +320,8 @@ export const CommunityHubWidget = () => {
           user_id: user.id,
           message: data.message,
           note_color: data.note_color,
-          is_anonymous: data.is_anonymous
+          is_anonymous: data.is_anonymous,
+          decorations: data.decorations || ""
         });
 
       if (error) throw error;
@@ -333,21 +336,26 @@ export const CommunityHubWidget = () => {
   };
 
   const noteColors = [
-    { value: 'yellow', label: 'Yellow', bg: 'bg-yellow-200', border: 'border-yellow-300' },
-    { value: 'pink', label: 'Pink', bg: 'bg-pink-200', border: 'border-pink-300' },
-    { value: 'blue', label: 'Blue', bg: 'bg-blue-200', border: 'border-blue-300' },
-    { value: 'green', label: 'Green', bg: 'bg-green-200', border: 'border-green-300' },
-    { value: 'purple', label: 'Purple', bg: 'bg-purple-200', border: 'border-purple-300' },
+    { value: 'sky', label: 'Sky Blue', bg: 'bg-sky-200', border: 'border-sky-300' },
+    { value: 'blue', label: 'Ocean Blue', bg: 'bg-blue-200', border: 'border-blue-300' },
+    { value: 'indigo', label: 'Deep Blue', bg: 'bg-indigo-200', border: 'border-indigo-300' },
+    { value: 'cyan', label: 'Bright Blue', bg: 'bg-cyan-200', border: 'border-cyan-300' },
+    { value: 'slate', label: 'Steel Blue', bg: 'bg-slate-200', border: 'border-slate-300' },
   ];
+
+  const emojis = ['🎈', '🎉', '💙', '⭐', '🌟', '✨', '💫', '🦋', '🌸', '🌺', '🎵', '🎶', '🏆', '👑', '💎'];
+  const balloons = ['🎈', '🎉', '🎊', '🎁', '🌈'];
+  const hearts = ['💙', '💚', '💜', '🤍', '🖤', '💛', '🧡', '❤️'];
+  const sparkles = ['✨', '⭐', '🌟', '💫', '☆', '★'];
 
   const getNoteColorClasses = (color: string) => {
     switch (color) {
-      case 'yellow': return 'bg-yellow-200 border-yellow-300 hover:bg-yellow-300';
-      case 'pink': return 'bg-pink-200 border-pink-300 hover:bg-pink-300';
+      case 'sky': return 'bg-sky-200 border-sky-300 hover:bg-sky-300';
       case 'blue': return 'bg-blue-200 border-blue-300 hover:bg-blue-300';
-      case 'green': return 'bg-green-200 border-green-300 hover:bg-green-300';
-      case 'purple': return 'bg-purple-200 border-purple-300 hover:bg-purple-300';
-      default: return 'bg-yellow-200 border-yellow-300 hover:bg-yellow-300';
+      case 'indigo': return 'bg-indigo-200 border-indigo-300 hover:bg-indigo-300';
+      case 'cyan': return 'bg-cyan-200 border-cyan-300 hover:bg-cyan-300';
+      case 'slate': return 'bg-slate-200 border-slate-300 hover:bg-slate-300';
+      default: return 'bg-blue-200 border-blue-300 hover:bg-blue-300';
     }
   };
 
@@ -421,10 +429,10 @@ export const CommunityHubWidget = () => {
                       <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
                         <DialogTrigger asChild>
                           <div 
-                            className="bg-yellow-100 border-2 border-dashed border-yellow-400 rounded-lg p-3 min-h-[120px] flex flex-col items-center justify-center cursor-pointer hover:bg-yellow-200 transition-colors shadow-md transform rotate-1 hover:rotate-0 transition-transform"
+                            className="bg-blue-100 border-2 border-dashed border-blue-400 rounded-lg p-3 min-h-[120px] flex flex-col items-center justify-center cursor-pointer hover:bg-blue-200 transition-colors shadow-md transform rotate-1 hover:rotate-0 transition-transform"
                           >
-                            <Plus className="h-6 w-6 text-yellow-600 mb-2" />
-                            <span className="text-xs text-yellow-700 text-center font-medium">
+                            <Plus className="h-6 w-6 text-blue-600 mb-2" />
+                            <span className="text-xs text-blue-700 text-center font-medium">
                               Add Love Note
                             </span>
                           </div>
@@ -476,10 +484,84 @@ export const CommunityHubWidget = () => {
                                     </FormControl>
                                     <FormMessage />
                                   </FormItem>
-                                )}
-                              />
-                              
-                              <FormField
+                                 )}
+                               />
+                               
+                               <FormField
+                                 control={loveForm.control}
+                                 name="decorations"
+                                 render={({ field }) => (
+                                   <FormItem>
+                                     <FormLabel>Add Fun Decorations</FormLabel>
+                                     <FormControl>
+                                       <div className="space-y-3">
+                                         <div className="flex flex-wrap gap-2">
+                                           <div className="text-xs font-medium text-muted-foreground mb-1 w-full">Balloons & Party:</div>
+                                           {balloons.map((emoji) => (
+                                             <button
+                                               key={emoji}
+                                               type="button"
+                                               onClick={() => field.onChange(field.value + emoji)}
+                                               className="text-lg hover:scale-110 transition-transform bg-secondary/50 rounded p-1"
+                                               title="Add balloon"
+                                             >
+                                               {emoji}
+                                             </button>
+                                           ))}
+                                         </div>
+                                         <div className="flex flex-wrap gap-2">
+                                           <div className="text-xs font-medium text-muted-foreground mb-1 w-full">Hearts & Love:</div>
+                                           {hearts.map((emoji) => (
+                                             <button
+                                               key={emoji}
+                                               type="button"
+                                               onClick={() => field.onChange(field.value + emoji)}
+                                               className="text-lg hover:scale-110 transition-transform bg-secondary/50 rounded p-1"
+                                               title="Add heart"
+                                             >
+                                               {emoji}
+                                             </button>
+                                           ))}
+                                         </div>
+                                         <div className="flex flex-wrap gap-2">
+                                           <div className="text-xs font-medium text-muted-foreground mb-1 w-full">Sparkles & Magic:</div>
+                                           {sparkles.map((emoji) => (
+                                             <button
+                                               key={emoji}
+                                               type="button"
+                                               onClick={() => field.onChange(field.value + emoji)}
+                                               className="text-lg hover:scale-110 transition-transform bg-secondary/50 rounded p-1"
+                                               title="Add sparkle"
+                                             >
+                                               {emoji}
+                                             </button>
+                                           ))}
+                                         </div>
+                                         <div className="flex items-center gap-2 mt-2">
+                                           <Input
+                                             placeholder="Your decorations..."
+                                             value={field.value}
+                                             onChange={field.onChange}
+                                             className="text-lg"
+                                             maxLength={20}
+                                           />
+                                           <Button
+                                             type="button"
+                                             variant="outline"
+                                             size="sm"
+                                             onClick={() => field.onChange("")}
+                                           >
+                                             Clear
+                                           </Button>
+                                         </div>
+                                       </div>
+                                     </FormControl>
+                                     <FormMessage />
+                                   </FormItem>
+                                 )}
+                               />
+                               
+                               <FormField
                                 control={loveForm.control}
                                 name="is_anonymous"
                                 render={({ field }) => (
@@ -520,10 +602,17 @@ export const CommunityHubWidget = () => {
                           style={{ animationDelay: `${index * 0.1}s` }}
                         >
                           <div className="h-full flex flex-col justify-between">
-                            <p className="text-xs leading-relaxed text-gray-800 mb-2 line-clamp-4">
-                              {message.message}
-                            </p>
-                            <div className="flex items-end justify-between">
+                            <div className="flex-1">
+                              <p className="text-xs leading-relaxed text-gray-800 mb-2 line-clamp-4">
+                                {message.message}
+                              </p>
+                              {(message as any).decorations && (
+                                <div className="mt-2 text-lg leading-none">
+                                  {(message as any).decorations}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-end justify-between mt-2">
                               <span className="text-xs text-gray-600 font-medium">
                                 {message.sender_name}
                               </span>
