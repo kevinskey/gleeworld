@@ -28,6 +28,7 @@ export const EnhancedUserManagement = ({
   error, 
   onRefetch 
 }: EnhancedUserManagementProps) => {
+  console.log('EnhancedUserManagement rendering with:', { usersCount: users.length, loading, error });
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
