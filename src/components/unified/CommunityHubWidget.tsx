@@ -502,96 +502,18 @@ export const CommunityHubWidget = () => {
                         alt="Sending you buckets of love"
                         className="w-32 h-auto mb-2"
                       />
-                    </div>
-                    
-                    
-                    {/* 3D Interactive Bucket Container */}
-                    <div className="relative flex justify-center items-end" style={{ perspective: "800px" }}>
-                      {/* 3D Bucket Structure */}
-                      <div className="relative" style={{ transformStyle: "preserve-3d" }}>
-                        
-                        {/* Bucket Body - Main Container */}
-                        <div 
-                          className="relative w-48 h-32 mx-auto"
-                          style={{
-                            background: "linear-gradient(145deg, #7dd3fc 0%, #0ea5e9 50%, #0284c7 100%)",
-                            borderRadius: "0 0 24px 24px",
-                            transform: "rotateX(10deg) rotateY(-5deg)",
-                            boxShadow: `
-                              inset 0 2px 8px rgba(255,255,255,0.3),
-                              inset 0 -2px 8px rgba(0,0,0,0.2),
-                              0 8px 20px rgba(0,0,0,0.15),
-                              0 4px 8px rgba(0,0,0,0.1)
-                            `,
-                            clipPath: "polygon(20% 0%, 80% 0%, 90% 100%, 10% 100%)"
-                          }}
-                        >
-                          
-                          {/* Bucket Rim - Top Edge */}
-                          <div 
-                            className="absolute -top-1 left-0 right-0 h-3 bg-gradient-to-r from-slate-400 via-slate-300 to-slate-400 rounded-full"
-                            style={{
-                              transform: "rotateX(-15deg) translateZ(2px)",
-                              boxShadow: "0 2px 4px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.3)"
-                            }}
-                          />
-                          
-                          {/* Left Handle */}
-                          <div 
-                            className="absolute -left-6 top-2 w-12 h-20 border-4 border-slate-500 rounded-full"
-                            style={{
-                              borderRight: "transparent",
-                              transform: "rotateY(-20deg) translateZ(-5px)",
-                              background: "linear-gradient(90deg, transparent 50%, rgba(148,163,184,0.1) 60%)",
-                              boxShadow: "-2px 0 4px rgba(0,0,0,0.2)"
-                            }}
-                          />
-                          
-                          {/* Right Handle */}
-                          <div 
-                            className="absolute -right-6 top-2 w-12 h-20 border-4 border-slate-500 rounded-full"
-                            style={{
-                              borderLeft: "transparent",
-                              transform: "rotateY(20deg) translateZ(-5px)",
-                              background: "linear-gradient(270deg, transparent 50%, rgba(148,163,184,0.1) 60%)",
-                              boxShadow: "2px 0 4px rgba(0,0,0,0.2)"
-                            }}
-                          />
-                          
-                          {/* Bucket Interior Gradient */}
-                          <div 
-                            className="absolute inset-2 rounded-b-2xl"
-                            style={{
-                              background: "radial-gradient(ellipse at center top, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 70%)",
-                              clipPath: "polygon(15% 0%, 85% 0%, 95% 100%, 5% 100%)"
-                            }}
-                          />
-                          
-                          {/* Hearts/Messages Container */}
-                          <div className="relative px-6 py-4 h-full overflow-hidden">
-                            {/* Center Add Button - Floating Heart */}
-                            <div className="absolute inset-0 flex items-center justify-center z-20">
-                              <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
-                                <DialogTrigger asChild>
-                                  <div 
-                                    className="group relative bg-gradient-to-br from-pink-100 to-pink-50 border-2 border-dashed border-pink-300 rounded-xl p-4 w-16 h-16 flex items-center justify-center cursor-pointer hover:from-pink-200 hover:to-pink-100 transition-all duration-300 hover:scale-110 hover:rotate-3"
-                                    style={{
-                                      transform: "translateZ(10px)",
-                                      boxShadow: "0 4px 12px rgba(244,114,182,0.2), 0 2px 4px rgba(244,114,182,0.1)"
-                                    }}
-                                  >
-                                    <div className="relative">
-                                      <Heart className="h-6 w-6 text-pink-500 fill-pink-200 group-hover:fill-pink-300 transition-colors" />
-                                      <Plus className="h-3 w-3 text-pink-600 absolute -top-1 -right-1 bg-white rounded-full border border-pink-300" />
-                                    </div>
-                                    {/* Floating sparkles */}
-                                    <div className="absolute -top-1 -left-1 w-2 h-2 bg-pink-300 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-pulse transition-opacity" />
-                                    <div className="absolute -bottom-1 -right-1 w-1.5 h-1.5 bg-pink-400 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-pulse transition-opacity delay-75" />
-                                  </div>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-[525px]">
+                      
+                      {/* Add Love Note Button */}
+                      <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="text-xs">
+                            <Plus className="h-3 w-3 mr-1" />
+                            Add Love Note
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[525px]">
                           <DialogHeader>
-                            <DialogTitle>Share a Message of Love & Encouragement</DialogTitle>
+                            <DialogTitle>Share a Love Note</DialogTitle>
                           </DialogHeader>
                           <Form {...loveForm}>
                             <form onSubmit={loveForm.handleSubmit(onSubmitLoveMessage)} className="space-y-4">
@@ -603,7 +525,7 @@ export const CommunityHubWidget = () => {
                                     <FormLabel>Your Message</FormLabel>
                                     <FormControl>
                                       <Textarea
-                                        placeholder="Write an encouraging message for your fellow Glee Club members..."
+                                        placeholder="Share some love and encouragement..."
                                         className="min-h-[100px]"
                                         {...field}
                                       />
@@ -620,15 +542,15 @@ export const CommunityHubWidget = () => {
                                   <FormItem>
                                     <FormLabel>Note Color</FormLabel>
                                     <FormControl>
-                                      <div className="flex gap-2">
+                                      <div className="flex gap-2 flex-wrap">
                                         {noteColors.map((color) => (
                                           <button
                                             key={color.value}
                                             type="button"
                                             onClick={() => field.onChange(color.value)}
                                             className={`w-8 h-8 rounded-full border-2 ${color.bg} ${color.border} ${
-                                              field.value === color.value ? 'ring-2 ring-primary' : ''
-                                            }`}
+                                              field.value === color.value ? 'border-gray-800 scale-110' : 'border-gray-300'
+                                            } transition-all`}
                                             title={color.label}
                                           />
                                         ))}
@@ -636,84 +558,53 @@ export const CommunityHubWidget = () => {
                                     </FormControl>
                                     <FormMessage />
                                   </FormItem>
-                                 )}
-                               />
-                               
-                               <FormField
-                                 control={loveForm.control}
-                                 name="decorations"
-                                 render={({ field }) => (
-                                   <FormItem>
-                                     <FormLabel>Add Fun Decorations</FormLabel>
-                                     <FormControl>
-                                       <div className="space-y-3">
-                                         <div className="flex flex-wrap gap-2">
-                                           <div className="text-xs font-medium text-muted-foreground mb-1 w-full">Balloons & Party:</div>
-                                           {balloons.map((emoji) => (
-                                             <button
-                                               key={emoji}
-                                               type="button"
-                                               onClick={() => field.onChange(field.value + emoji)}
-                                               className="text-lg hover:scale-110 transition-transform bg-secondary/50 rounded p-1"
-                                               title="Add balloon"
-                                             >
-                                               {emoji}
-                                             </button>
-                                           ))}
-                                         </div>
-                                         <div className="flex flex-wrap gap-2">
-                                           <div className="text-xs font-medium text-muted-foreground mb-1 w-full">Hearts & Love:</div>
-                                           {hearts.map((emoji) => (
-                                             <button
-                                               key={emoji}
-                                               type="button"
-                                               onClick={() => field.onChange(field.value + emoji)}
-                                               className="text-lg hover:scale-110 transition-transform bg-secondary/50 rounded p-1"
-                                               title="Add heart"
-                                             >
-                                               {emoji}
-                                             </button>
-                                           ))}
-                                         </div>
-                                         <div className="flex flex-wrap gap-2">
-                                           <div className="text-xs font-medium text-muted-foreground mb-1 w-full">Sparkles & Magic:</div>
-                                           {sparkles.map((emoji) => (
-                                             <button
-                                               key={emoji}
-                                               type="button"
-                                               onClick={() => field.onChange(field.value + emoji)}
-                                               className="text-lg hover:scale-110 transition-transform bg-secondary/50 rounded p-1"
-                                               title="Add sparkle"
-                                             >
-                                               {emoji}
-                                             </button>
-                                           ))}
-                                         </div>
-                                         <div className="flex items-center gap-2 mt-2">
-                                           <Input
-                                             placeholder="Your decorations..."
-                                             value={field.value}
-                                             onChange={field.onChange}
-                                             className="text-lg"
-                                             maxLength={20}
-                                           />
-                                           <Button
-                                             type="button"
-                                             variant="outline"
-                                             size="sm"
-                                             onClick={() => field.onChange("")}
-                                           >
-                                             Clear
-                                           </Button>
-                                         </div>
-                                       </div>
-                                     </FormControl>
-                                     <FormMessage />
-                                   </FormItem>
-                                 )}
-                               />
-                               
-                               <FormField
+                                )}
+                              />
+                              
+                              <FormField
+                                control={loveForm.control}
+                                name="decorations"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Add Decorations (Optional)</FormLabel>
+                                    <FormControl>
+                                      <div className="space-y-2">
+                                        <div className="flex gap-1 flex-wrap">
+                                          {emojis.map((emoji) => (
+                                            <button
+                                              key={emoji}
+                                              type="button"
+                                              onClick={() => field.onChange(field.value + emoji)}
+                                              className="w-8 h-8 text-lg hover:bg-gray-100 rounded transition-colors"
+                                            >
+                                              {emoji}
+                                            </button>
+                                          ))}
+                                        </div>
+                                        <div className="flex gap-2">
+                                          <Input
+                                            value={field.value}
+                                            onChange={(e) => field.onChange(e.target.value)}
+                                            placeholder="✨🎵💙"
+                                            className="flex-1"
+                                          />
+                                          <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => field.onChange("")}
+                                          >
+                                            Clear
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
                                 control={loveForm.control}
                                 name="is_anonymous"
                                 render={({ field }) => (
@@ -743,68 +634,112 @@ export const CommunityHubWidget = () => {
                           </Form>
                         </DialogContent>
                       </Dialog>
-
-                            {/* Existing Love Messages - distributed around the bucket */}
-                          {loveMessages.map((message, index) => {
-                            // Better distribution - circular arrangement around center
-                            const totalMessages = loveMessages.length;
-                            const angle = (index / totalMessages) * 2 * Math.PI;
-                            const radius = 35; // Distance from center
-                            
-                            // Convert polar to cartesian coordinates
-                            const x = 50 + Math.cos(angle) * radius * (0.8 + Math.random() * 0.4);
-                            const y = 50 + Math.sin(angle) * radius * (0.6 + Math.random() * 0.4);
-                            
-                            return (
-                              <div 
-                                key={message.id}
-                                onClick={() => handleNoteClick(message)}
-                                className={`${getNoteColorClasses(message.note_color)} border-2 rounded-lg p-2 w-24 h-20 shadow-md transition-all cursor-pointer hover:scale-110 hover:shadow-lg animate-fade-in absolute group`}
-                                style={{ 
-                                  animationDelay: `${index * 0.1}s`,
-                                  left: `${Math.max(5, Math.min(75, x))}%`,
-                                  top: `${Math.max(5, Math.min(65, y))}%`,
-                                  transform: `rotate(${(Math.random() - 0.5) * 20}deg)`,
-                                  zIndex: 1,
-                                  backgroundColor: message.likes >= 3 ? '#ef4444' : undefined, // Red for completed love (3+ likes)
-                                  borderColor: message.likes >= 3 ? '#dc2626' : undefined,
-                                }}
-                              >
-                               <div className="h-full flex flex-col justify-between text-xs">
-                                 <div className="flex-1">
-                                   <p className={`text-xs leading-tight mb-1 line-clamp-2 ${message.likes >= 3 ? 'text-white' : 'text-gray-800'}`}>
-                                     {message.message.length > 35 ? `${message.message.substring(0, 32)}...` : message.message}
-                                   </p>
-                                   {(message as any).decorations && (
-                                     <div className="text-sm leading-none">
-                                       {(message as any).decorations}
-                                     </div>
-                                   )}
-                                 </div>
-                                 <div className="flex items-center justify-between text-xs">
-                                   <span className={`font-medium truncate mr-1 ${message.likes >= 3 ? 'text-white' : 'text-gray-600'}`} title={message.sender_name}>
-                                     {message.sender_name}
-                                   </span>
-                                   <div className="flex items-center gap-1">
-                                     <button
-                                       onClick={() => handleLikeMessage(message.id)}
-                                       className={`flex items-center gap-1 transition-colors ${
-                                         message.user_liked 
-                                           ? (message.likes >= 3 ? 'text-white' : 'text-red-600')
-                                           : (message.likes >= 3 ? 'text-white hover:text-red-200' : 'text-red-500 hover:text-red-600')
-                                       }`}
-                                     >
-                                       <Heart className={`h-2 w-2 ${message.user_liked ? 'fill-current' : ''}`} />
-                                       {message.likes > 0 && <span className="text-xs">{message.likes}</span>}
-                                     </button>
-                                   </div>
-                                 </div>
-                               </div>
-                              </div>
-                            );
-                          })}
+                    </div>
+                    
+                    {/* 3D Interactive Bucket Container */}
+                    <div className="relative flex justify-center items-end h-64" style={{ perspective: "800px" }}>
+                      {/* 3D Bucket Structure */}
+                      <div className="relative" style={{ transformStyle: "preserve-3d" }}>
+                        {/* Bucket Body - Main Container */}
+                        <div 
+                          className="relative w-48 h-32 mx-auto"
+                          style={{
+                            background: "linear-gradient(145deg, #7dd3fc 0%, #0ea5e9 50%, #0284c7 100%)",
+                            borderRadius: "0 0 24px 24px",
+                            transform: "rotateX(10deg) rotateY(-5deg)",
+                            boxShadow: "0 15px 35px rgba(14, 165, 233, 0.3), inset 0 2px 10px rgba(255, 255, 255, 0.3)",
+                          }}
+                        >
+                          {/* Bucket Handle Left */}
+                          <div 
+                            className="absolute top-4 -left-6 w-8 h-12 border-4 border-blue-300 rounded-full"
+                            style={{
+                              borderRightColor: "transparent",
+                              transform: "rotateY(-30deg)",
+                            }}
+                          />
+                          
+                          {/* Bucket Handle Right */}
+                          <div 
+                            className="absolute top-4 -right-6 w-8 h-12 border-4 border-blue-300 rounded-full"
+                            style={{
+                              borderLeftColor: "transparent",
+                              transform: "rotateY(30deg)",
+                            }}
+                          />
+                          
+                          {/* Bucket Rim */}
+                          <div 
+                            className="absolute -top-2 left-0 right-0 h-4 bg-gradient-to-r from-blue-400 via-blue-300 to-blue-500 rounded-full"
+                            style={{
+                              boxShadow: "0 -2px 8px rgba(14, 165, 233, 0.4)",
+                            }}
+                          />
                         </div>
                       </div>
+
+                      {/* Existing Love Messages - distributed around the bucket */}
+                      {loveMessages.map((message, index) => {
+                        // Better distribution - circular arrangement around center
+                        const totalMessages = loveMessages.length;
+                        const angle = (index / totalMessages) * 2 * Math.PI;
+                        const radius = 35; // Distance from center
+                        
+                        // Convert polar to cartesian coordinates
+                        const x = 50 + Math.cos(angle) * radius * (0.8 + Math.random() * 0.4);
+                        const y = 50 + Math.sin(angle) * radius * (0.6 + Math.random() * 0.4);
+                        
+                        return (
+                          <div 
+                            key={message.id}
+                            onClick={() => handleNoteClick(message)}
+                            className={`${getNoteColorClasses(message.note_color)} border-2 rounded-lg p-2 w-24 h-20 shadow-md transition-all cursor-pointer hover:scale-110 hover:shadow-lg animate-fade-in absolute group`}
+                            style={{ 
+                              animationDelay: `${index * 0.1}s`,
+                              left: `${Math.max(5, Math.min(75, x))}%`,
+                              top: `${Math.max(5, Math.min(65, y))}%`,
+                              transform: `rotate(${(Math.random() - 0.5) * 20}deg)`,
+                              zIndex: 1,
+                              backgroundColor: message.likes >= 3 ? '#ef4444' : undefined,
+                              borderColor: message.likes >= 3 ? '#dc2626' : undefined,
+                            }}
+                          >
+                            <div className="h-full flex flex-col justify-between text-xs">
+                              <div className="flex-1">
+                                <p className={`text-xs leading-tight mb-1 line-clamp-2 ${message.likes >= 3 ? 'text-white' : 'text-gray-800'}`}>
+                                  {message.message.length > 35 ? `${message.message.substring(0, 32)}...` : message.message}
+                                </p>
+                                {(message as any).decorations && (
+                                  <div className="text-sm leading-none">
+                                    {(message as any).decorations}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex items-center justify-between text-xs">
+                                <span className={`font-medium truncate mr-1 ${message.likes >= 3 ? 'text-white' : 'text-gray-600'}`} title={message.sender_name}>
+                                  {message.sender_name}
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleLikeMessage(message.id);
+                                    }}
+                                    className={`flex items-center gap-1 transition-colors ${
+                                      message.user_liked 
+                                        ? (message.likes >= 3 ? 'text-white' : 'text-red-600')
+                                        : (message.likes >= 3 ? 'text-white hover:text-red-200' : 'text-red-500 hover:text-red-600')
+                                    }`}
+                                  >
+                                    <Heart className={`h-2 w-2 ${message.user_liked ? 'fill-current' : ''}`} />
+                                    {message.likes > 0 && <span className="text-xs">{message.likes}</span>}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
