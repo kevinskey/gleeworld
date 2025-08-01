@@ -119,6 +119,7 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
     setUpdating(true);
     try {
       console.log('Assigning role:', selectedRole, 'to user:', selectedUser.id);
+      console.log('Current user auth.uid():', await supabase.auth.getUser());
       
       const updates: any = {
         exec_board_role: selectedRole,
