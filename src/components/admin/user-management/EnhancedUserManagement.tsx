@@ -54,7 +54,11 @@ export const EnhancedUserManagement = ({
       const matchesSearch = !searchTerm || 
         user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesRole = roleFilter === "all" || user.role === roleFilter;
+      
+      const matchesRole = roleFilter === "all" || 
+        user.role === roleFilter ||
+        (roleFilter === "executive-board" && user.is_exec_board);
+        
       return matchesSearch && matchesRole;
     })
     .sort((a, b) => {

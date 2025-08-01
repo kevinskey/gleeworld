@@ -98,7 +98,8 @@ export type ExecutivePosition =
   | 'section_leader_s1'
   | 'section_leader_s2'
   | 'section_leader_a1'
-  | 'section_leader_a2';
+  | 'section_leader_a2'
+  | 'set_up_crew_manager';
 
 interface ExecutiveMember {
   id: string;
@@ -219,7 +220,8 @@ export const ExecutiveBoardDashboard = () => {
       section_leader_s1: 'dashboard',
       section_leader_s2: 'dashboard',
       section_leader_a1: 'dashboard',
-      section_leader_a2: 'dashboard'
+      section_leader_a2: 'dashboard',
+      set_up_crew_manager: 'dashboard'
     };
     return primaryTabMapping[position] || 'dashboard';
   };
@@ -249,7 +251,8 @@ export const ExecutiveBoardDashboard = () => {
       section_leader_s1: UserCheck,
       section_leader_s2: UserCheck,
       section_leader_a1: UserCheck,
-      section_leader_a2: UserCheck
+      section_leader_a2: UserCheck,
+      set_up_crew_manager: Shield
     };
     return icons[position] || Shield;
   };
@@ -271,7 +274,8 @@ export const ExecutiveBoardDashboard = () => {
       section_leader_s1: "Section Leader (S1)",
       section_leader_s2: "Section Leader (S2)",
       section_leader_a1: "Section Leader (A1)",
-      section_leader_a2: "Section Leader (A2)"
+      section_leader_a2: "Section Leader (A2)",
+      set_up_crew_manager: "Set-up Crew Manager"
     };
     return names[position] || position;
   };

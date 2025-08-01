@@ -23,7 +23,8 @@ export type ExecutivePosition =
   | 'section_leader_s1'
   | 'section_leader_s2'
   | 'section_leader_a1'
-  | 'section_leader_a2';
+  | 'section_leader_a2'
+  | 'set_up_crew_manager';
 
 interface PositionTabProps {
   position: ExecutivePosition;

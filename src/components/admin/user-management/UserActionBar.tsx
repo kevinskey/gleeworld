@@ -136,7 +136,10 @@ export const UserActionBar = ({
             <SelectContent>
               <SelectItem value="all">All Roles</SelectItem>
               <SelectItem value="user">Users</SelectItem>
+              <SelectItem value="member">Members</SelectItem>
+              <SelectItem value="fan">Fans</SelectItem>
               <SelectItem value="alumnae">Alumnae</SelectItem>
+              <SelectItem value="executive-board">Executive Board</SelectItem>
               <SelectItem value="admin">Admins</SelectItem>
               <SelectItem value="super-admin">Super Admins</SelectItem>
             </SelectContent>
