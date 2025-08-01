@@ -7,9 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Package, AlertTriangle, Edit, Minus, TrendingUp } from 'lucide-react';
+import { Plus, Package, AlertTriangle, Edit, Minus, TrendingUp, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { AddWardrobeItemDialog } from './AddWardrobeItemDialog';
 
 interface WardrobeItem {
   id: string;
@@ -133,6 +134,27 @@ export const WardrobeInventoryDashboard = () => {
     setShowUpdateDialog(true);
   };
 
+  const handleDeleteItem = async (item: WardrobeItem) => {
+    if (!confirm(`Are you sure you want to delete "${item.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('wardrobe_items')
+        .delete()
+        .eq('id', item.id);
+
+      if (error) throw error;
+
+      toast.success('Item deleted successfully');
+      fetchItems();
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      toast.error('Failed to delete item');
+    }
+  };
+
   const filteredItems = items.filter(item => {
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -241,19 +263,22 @@ export const WardrobeInventoryDashboard = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1"
         />
-        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filter by category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {categories.map(category => (
-              <SelectItem key={category} value={category}>
-                {category.charAt(0).toUpperCase() + category.slice(1)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Filter by category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map(category => (
+                <SelectItem key={category} value={category}>
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <AddWardrobeItemDialog onItemAdded={fetchItems} />
+        </div>
       </div>
 
       {/* Inventory Grid */}
@@ -332,14 +357,23 @@ export const WardrobeInventoryDashboard = () => {
                   <p className="text-xs text-muted-foreground mt-2">{item.notes}</p>
                 )}
 
-                <Button 
-                  onClick={() => openUpdateDialog(item)} 
-                  className="w-full mt-3"
-                  size="sm"
-                >
-                  <Edit className="h-3 w-3 mr-1" />
-                  Update Inventory
-                </Button>
+                <div className="flex gap-2 mt-3">
+                  <Button 
+                    onClick={() => openUpdateDialog(item)} 
+                    className="flex-1"
+                    size="sm"
+                  >
+                    <Edit className="h-3 w-3 mr-1" />
+                    Update
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteItem(item)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
