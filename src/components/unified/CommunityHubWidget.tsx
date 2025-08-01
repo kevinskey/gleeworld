@@ -589,7 +589,7 @@ export const CommunityHubWidget = () => {
                                     <div className="absolute -bottom-1 -right-1 w-1.5 h-1.5 bg-pink-400 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-pulse transition-opacity delay-75" />
                                   </div>
                                 </DialogTrigger>
-                        <DialogContent className="sm:max-w-[525px]">
+                                <DialogContent className="sm:max-w-[525px]">
                           <DialogHeader>
                             <DialogTitle>Share a Message of Love & Encouragement</DialogTitle>
                           </DialogHeader>
@@ -744,7 +744,7 @@ export const CommunityHubWidget = () => {
                         </DialogContent>
                       </Dialog>
 
-                          {/* Existing Love Messages - distributed around the bucket */}
+                            {/* Existing Love Messages - distributed around the bucket */}
                           {loveMessages.map((message, index) => {
                             // Better distribution - circular arrangement around center
                             const totalMessages = loveMessages.length;
