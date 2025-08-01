@@ -437,12 +437,12 @@ export const GleeWorldLanding = () => {
               ) : events.length > 0 ? (
                 <>
                   {/* Desktop view - Single horizontal scrolling row */}
-                  <div className="hidden md:block overflow-hidden">
+                  <div className="hidden md:block">
                     <div 
-                      className="flex gap-4 lg:gap-6 overflow-x-auto overflow-y-hidden pb-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent max-w-full touch-pan-x snap-x snap-mandatory scroll-smooth"
+                      className="flex gap-4 lg:gap-6 overflow-x-scroll pb-4 scrollbar-hide"
                       style={{ 
-                        WebkitOverflowScrolling: 'touch',
-                        touchAction: 'pan-x'
+                        scrollBehavior: 'smooth',
+                        WebkitOverflowScrolling: 'touch'
                       }}
                     >
                       {events.map((event) => (
