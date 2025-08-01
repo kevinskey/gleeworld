@@ -413,7 +413,7 @@ export const GleeWorldLanding = () => {
             <div className="text-center mb-4 sm:mb-6 md:mb-8">
               <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
                 <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-secondary animate-pulse" />
-                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-2">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-gray-900 mb-2">
                   Upcoming Events
                 </h2>
                 <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-primary animate-pulse" />
@@ -591,7 +591,7 @@ export const GleeWorldLanding = () => {
             <div className="text-center mb-4 sm:mb-6 md:mb-8">
               <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
                 <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-secondary animate-pulse" />
-                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-2">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-gray-900 mb-2">
                   The Glee Store
                 </h2>
                 <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-primary animate-pulse" />
@@ -611,7 +611,7 @@ export const GleeWorldLanding = () => {
               <div className="text-center mb-4 sm:mb-6 md:mb-8">
                 <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
                   <AlbumIcon className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-secondary animate-pulse" />
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-2">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-gray-900 mb-2">
                     Our Music
                   </h2>
                   <AlbumIcon className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-primary animate-pulse" />
@@ -690,7 +690,7 @@ export const GleeWorldLanding = () => {
             <div className="text-center mb-4 sm:mb-6 md:mb-8">
               <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
                 <Youtube className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-red-500 animate-pulse" />
-                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-2">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-gray-900 mb-2">
                   YouTube Channel
                 </h2>
                 <Youtube className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-red-600 animate-pulse" />
