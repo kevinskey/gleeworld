@@ -291,7 +291,7 @@ const ExecutiveServicesDirectory = () => {
                 <div className="space-y-2 text-sm">
                   <p><strong>Campus Security:</strong> (404) 270-5000</p>
                   <p><strong>Glee Club Emergency Line:</strong> (404) 270-GLEE</p>
-                  <p><strong>Director Emergency:</strong> (555) 123-4567</p>
+                  <p><strong>Director Emergency:</strong> 470-622-1392</p>
                 </div>
                 <Button size="sm" variant="destructive" className="w-full">
                   <Phone className="h-4 w-4 mr-2" />
