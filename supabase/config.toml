@@ -109,3 +109,6 @@ verify_jwt = false
 
 [functions.convert-heic-to-jpeg]
 verify_jwt = false
+
+[functions.send-general-inquiry]
+verify_jwt = false

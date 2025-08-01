@@ -1,6 +1,7 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { GeneralInquiryDialog } from "@/components/forms/GeneralInquiryDialog";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -250,10 +251,7 @@ const ExecutiveServicesDirectory = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button variant="outline" className="h-16 flex-col">
-                <MessageCircle className="h-5 w-5 mb-2" />
-                Submit General Inquiry
-              </Button>
+              <GeneralInquiryDialog />
               <Button variant="outline" className="h-16 flex-col">
                 <Calendar className="h-5 w-5 mb-2" />
                 View Upcoming Events
