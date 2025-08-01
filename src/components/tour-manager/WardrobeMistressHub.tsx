@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Package, Users, ShoppingCart, ClipboardCheck, MessageSquare, FileText } from 'lucide-react';
 import { WardrobeInventoryDashboard } from './wardrobe/WardrobeInventoryDashboard';
 import { MemberManagementPanel } from './wardrobe/MemberManagementPanel';
-import { DistributionCheckoutSystem } from './wardrobe/DistributionCheckoutSystem';
+import { WardrobeCheckoutSystem } from './wardrobe/WardrobeCheckoutSystem';
 import { OrderManagement } from './wardrobe/OrderManagement';
 import { WardrobeAnnouncements } from './wardrobe/WardrobeAnnouncements';
 import { WardrobeReports } from './wardrobe/WardrobeReports';
@@ -57,7 +57,7 @@ export const WardrobeMistressHub = () => {
         </TabsContent>
 
         <TabsContent value="checkout">
-          <DistributionCheckoutSystem />
+          <WardrobeCheckoutSystem />
         </TabsContent>
 
         <TabsContent value="orders">
