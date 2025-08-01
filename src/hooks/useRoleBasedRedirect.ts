@@ -100,7 +100,7 @@ export const useRoleBasedRedirect = () => {
         window.scrollTo(0, 0);
       } else if (isExecutiveBoard) {
         console.log('useRoleBasedRedirect: Redirecting exec board member to executive board dashboard');
-        navigate('/dashboard/executive-board', { replace: true });
+        navigate('/executive-board', { replace: true });
         window.scrollTo(0, 0);
       } else {
         console.log('useRoleBasedRedirect: Redirecting regular user to dashboard');

@@ -283,7 +283,7 @@ const UserDashboard = React.memo(() => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate('/dashboard/executive-board')}
+                  onClick={() => navigate('/executive-board')}
                   className="flex items-center gap-1 text-xs sm:text-sm px-1.5 sm:px-2 md:px-3 h-7 sm:h-8 md:h-9 min-h-[44px] touch-manipulation"
                 >
                   <Crown className="h-3 w-3 sm:h-4 sm:w-4" />

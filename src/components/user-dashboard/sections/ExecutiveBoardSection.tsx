@@ -40,32 +40,32 @@ export const ExecutiveBoardSection = ({ isExecBoardMember }: ExecutiveBoardSecti
       icon: Plus,
       label: "Create",
       description: "Create events, budgets, and other executive board items",
-      route: "/dashboard/executive-board"
+      route: "/executive-board"
     },
     {
       icon: Settings,
       label: "Manage",
       description: "Manage ongoing events, budgets, and executive board activities",
-      route: "/dashboard/executive-board"
+      route: "/executive-board"
     },
     {
       icon: FileText,
       label: "Assess",
       description: "Assess performance, review reports, and analyze executive board metrics",
-      route: "/dashboard/executive-board"
+      route: "/executive-board"
     }
   ];
 
   const execPositions = [
-    { name: "President", icon: Crown, route: "/dashboard/executive-board" },
-    { name: "Vice President", icon: Shield, route: "/dashboard/executive-board" },
-    { name: "Secretary", icon: FileText, route: "/dashboard/executive-board" },
-    { name: "Treasurer", icon: DollarSign, route: "/dashboard/executive-board" },
-    { name: "Business Manager", icon: ShoppingBag, route: "/dashboard/executive-board" },
-    { name: "Librarian", icon: BookOpen, route: "/dashboard/executive-board" },
-    { name: "Chaplain", icon: Star, route: "/dashboard/executive-board" },
-    { name: "Historian", icon: Calendar, route: "/dashboard/executive-board" },
-    { name: "Social Chair", icon: Users, route: "/dashboard/executive-board" },
+    { name: "President", icon: Crown, route: "/executive-board" },
+    { name: "Vice President", icon: Shield, route: "/executive-board" },
+    { name: "Secretary", icon: FileText, route: "/executive-board" },
+    { name: "Treasurer", icon: DollarSign, route: "/executive-board" },
+    { name: "Business Manager", icon: ShoppingBag, route: "/executive-board" },
+    { name: "Librarian", icon: BookOpen, route: "/executive-board" },
+    { name: "Chaplain", icon: Star, route: "/executive-board" },
+    { name: "Historian", icon: Calendar, route: "/executive-board" },
+    { name: "Social Chair", icon: Users, route: "/executive-board" },
     { name: "Section Leader", icon: UserCheck, route: "/dashboard/section-leader" },
     { name: "Student Conductor", icon: Music2, route: "/dashboard/student-conductor" }
   ];

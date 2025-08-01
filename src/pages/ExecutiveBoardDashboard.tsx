@@ -73,14 +73,14 @@ export const ExecutiveBoardDashboard = () => {
     switch (role) {
       case 'president':
         return [
-          { name: 'Executive Hub', path: '/dashboard/executive-board', icon: Crown },
+          { name: 'Executive Hub', path: '/executive-board', icon: Crown },
           { name: 'Event Planner', path: '/event-planner', icon: Calendar },
           { name: 'Budget Management', path: '/budgets', icon: DollarSign },
           { name: 'Announcements', path: '/admin/announcements/new', icon: MessageSquare }
         ];
       case 'secretary':
         return [
-          { name: 'Executive Hub', path: '/dashboard/executive-board', icon: Crown },
+          { name: 'Executive Hub', path: '/executive-board', icon: Crown },
           { name: 'Attendance', path: '/attendance', icon: FileText },
           { name: 'Meeting Minutes', path: '/calendar', icon: Calendar },
           { name: 'Communications', path: '/admin/announcements/new', icon: MessageSquare }
@@ -108,7 +108,7 @@ export const ExecutiveBoardDashboard = () => {
       case 'historian':
         return [
           { name: 'Historian Dashboard', path: '/historian', icon: Camera },
-          { name: 'Archives', path: '/dashboard/executive-board', icon: Camera },
+          { name: 'Archives', path: '/executive-board', icon: Camera },
           ...commonActions
         ];
       case 'pr_coordinator':
@@ -141,7 +141,7 @@ export const ExecutiveBoardDashboard = () => {
       default:
         // For admins or other roles
         return [
-          { name: 'Executive Hub', path: '/dashboard/executive-board', icon: Crown },
+          { name: 'Executive Hub', path: '/executive-board', icon: Crown },
           { name: 'Calendar', path: '/calendar', icon: Calendar },
           { name: 'Budgets', path: '/budgets', icon: DollarSign },
           { name: 'Handbook', path: '/handbook', icon: BookOpen }
