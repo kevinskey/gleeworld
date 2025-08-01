@@ -12,7 +12,6 @@ import { WelcomeCard } from "./WelcomeCard";
 import { QuickActionsSection } from "./sections/QuickActionsSection";
 import { GleeClubSpotlightSection } from "./sections/GleeClubSpotlightSection";
 
-import { EventsAndActivitySection } from "./sections/EventsAndActivitySection";
 import { DashboardModulesSection } from "./sections/DashboardModulesSection";
 import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { NotificationsSection } from "./sections/NotificationsSection";
@@ -21,11 +20,9 @@ import { TasksSection } from "./sections/TasksSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMergedProfile } from "@/hooks/useMergedProfile";
 import { useUserDashboardContext } from "@/contexts/UserDashboardContext";
-import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
 import { useUserContracts } from "@/hooks/useUserContracts";
 import { useUsernamePermissions } from "@/hooks/useUsernamePermissions";
 import { DASHBOARD_MODULES, hasModuleAccess, hasExecutiveBoardPermissions, DashboardModule } from "@/constants/permissions";
-import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Eye, User, Home, X, Crown } from "lucide-react";
@@ -56,9 +53,6 @@ const UserDashboard = React.memo(() => {
     console.error('UserDashboard: Profile loading error:', profileError);
   }
   
-  
-  // Get real events data
-  const { events, loading: eventsLoading, getUpcomingEvents } = useGleeWorldEvents();
   
   const { contracts, loading: contractsLoading } = useUserContracts();
   const { permissions: usernamePermissions, loading: permissionsLoading } = useUsernamePermissions(user?.email);
@@ -239,26 +233,6 @@ const UserDashboard = React.memo(() => {
     return activities.slice(0, 4);
   };
 
-  // Get real data with proper filtering for valid events
-  const upcomingEventsList = getUpcomingEvents(6)
-    .filter(event => {
-      // Check for valid date
-      const eventDate = new Date(event.start_date);
-      const isValidDate = event.start_date && !isNaN(eventDate.getTime());
-      
-      if (!isValidDate) {
-        return false;
-      }
-      
-      return true; // Show all valid events
-    })
-    .map(event => ({
-      id: event.id,
-      title: event.title,
-      date: event.start_date,
-      location: event.location || event.venue_name || undefined,
-      type: event.event_type || undefined
-    }));
   const recentActivity = getRecentActivity();
 
   // Use the same historic campus background as Executive Board Dashboard
@@ -345,23 +319,6 @@ const UserDashboard = React.memo(() => {
           <TasksSection />
         </div>
 
-        {/* 5. Events Calendar */}
-        <div className="w-full">
-          <EventsAndActivitySection 
-            upcomingEvents={upcomingEventsList}
-            recentActivity={recentActivity}
-          />
-        </div>
-
-        {/* 6. Full Calendar */}
-        <div className="w-full">
-          <QuickActionsSection isAdmin={isAdmin} actionFilter="calendar" />
-        </div>
-
-        {/* 7. Music Library - At bottom for infinite scroll */}
-        <div className="w-full">
-          <QuickActionsSection isAdmin={isAdmin} actionFilter="music" />
-        </div>
 
         {/* Show Dashboard Modules for Admin/Executive Features */}
         {(isAdmin || hasExecBoardPerms) && viewMode === 'admin' && (

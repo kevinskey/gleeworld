@@ -1,27 +1,18 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { ExecutiveBoardDirectory } from "@/components/shared/ExecutiveBoardDirectory";
 import { usePublicGleeWorldEvents } from "@/hooks/usePublicGleeWorldEvents";
 import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
 import { 
   Calendar, 
   CheckCircle, 
-  DollarSign, 
   Bell, 
-  Music, 
-  BookOpen,
-  Clock,
-  Award,
   ArrowRight,
-  MapPin,
   GraduationCap,
   AlertCircle,
-  FileText,
-  CreditCard
+  FileText
 } from "lucide-react";
 
 interface MemberDashboardProps {
@@ -180,58 +171,8 @@ export const MemberDashboard = ({ user }: MemberDashboardProps) => {
         </Card>
       </div>
 
-      {/* Secondary Row - Expanded Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        
-        {/* Event Details Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Event Details
-            </CardTitle>
-            <CardDescription>Upcoming performances and rehearsals</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {eventsLoading ? (
-              <div className="animate-pulse space-y-3">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="space-y-2">
-                    <div className="h-4 bg-muted rounded"></div>
-                    <div className="h-3 bg-muted rounded w-3/4"></div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <ScrollArea className="h-48">
-                <div className="space-y-3 pr-4">
-                  {upcomingEvents.slice(0, 5).map((event) => (
-                    <div key={event.id} className="border-l-2 border-primary/30 pl-4 py-2">
-                      <div className="font-semibold text-sm">{event.title}</div>
-                      <div className="text-muted-foreground text-xs flex items-center gap-2 mt-1">
-                        <Clock className="h-3 w-3" />
-                        {format(new Date(event.start_date), 'MMM dd, h:mm a')}
-                        {event.location && (
-                          <>
-                            <MapPin className="h-3 w-3 ml-1" />
-                            <span className="truncate">{event.location}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  {upcomingEvents.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No upcoming events</p>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            )}
-          </CardContent>
-        </Card>
-
+      {/* Secondary Row - Executive Board Directory Only */}
+      <div className="grid grid-cols-1 gap-6 mt-6">
         {/* Executive Board Directory */}
         <ExecutiveBoardDirectory variant="compact" />
       </div>
