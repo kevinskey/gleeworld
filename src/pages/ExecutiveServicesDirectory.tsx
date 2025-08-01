@@ -2,6 +2,7 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { GeneralInquiryDialog } from "@/components/forms/GeneralInquiryDialog";
+import { ExecutiveBoardDirectory } from "@/components/shared/ExecutiveBoardDirectory";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -142,13 +143,6 @@ const ExecutiveServicesDirectory = () => {
     }
   ];
 
-  const contactExecutives = [
-    { position: "President", name: "Maya Johnson", email: "president@spelman.edu", icon: Crown },
-    { position: "Vice President", name: "Zara Davis", email: "vicepresident@spelman.edu", icon: Gavel },
-    { position: "Secretary", name: "Amara Wilson", email: "secretary@spelman.edu", icon: FileText },
-    { position: "Music Director", name: "Dr. Patricia Smith", email: "musicdirector@spelman.edu", icon: Music },
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -202,44 +196,7 @@ const ExecutiveServicesDirectory = () => {
         </div>
 
         {/* Executive Board Contact Directory */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Phone className="h-5 w-5" />
-              Executive Board Directory
-            </CardTitle>
-            <CardDescription>
-              Direct contact information for all executive board members
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {contactExecutives.map((exec, index) => (
-                <div key={index} className="p-4 border rounded-lg space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <exec.icon className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-sm">{exec.position}</h4>
-                      <p className="text-sm text-muted-foreground">{exec.name}</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Button size="sm" variant="outline" className="w-full justify-start text-xs">
-                      <MessageCircle className="h-3 w-3 mr-2" />
-                      Send Message
-                    </Button>
-                    <Button size="sm" variant="outline" className="w-full justify-start text-xs">
-                      <Calendar className="h-3 w-3 mr-2" />
-                      Schedule Meeting
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <ExecutiveBoardDirectory variant="full" />
 
         {/* Quick Actions */}
         <Card>

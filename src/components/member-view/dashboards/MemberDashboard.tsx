@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
+import { ExecutiveBoardDirectory } from "@/components/shared/ExecutiveBoardDirectory";
 import { usePublicGleeWorldEvents } from "@/hooks/usePublicGleeWorldEvents";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -256,6 +257,9 @@ export const MemberDashboard = ({ user }: MemberDashboardProps) => {
           )}
         </CardContent>
       </Card>
+
+      {/* Executive Board Directory */}
+      <ExecutiveBoardDirectory variant="compact" />
 
       {/* Community Hub */}
       <CommunityHubWidget />
