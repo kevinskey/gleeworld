@@ -82,6 +82,9 @@ import PresidentServices from "./pages/executive-services/PresidentServices";
 import ChaplainServices from "./pages/executive-services/ChaplainServices";
 import StudentConductorServices from "./pages/executive-services/StudentConductorServices";
 import AssistantChaplainServices from "./pages/executive-services/AssistantChaplainServices";
+import ExecutiveBoardNavigationPage from "./pages/ExecutiveBoardNavigationHub";
+import LibrarianDashboard from "./pages/LibrarianDashboard";
+import HistorianDashboard from "./pages/HistorianDashboard";
 import SetUpCrewManagerServices from "./pages/executive-services/SetUpCrewManagerServices";
 
 const queryClient = new QueryClient({
@@ -678,6 +681,70 @@ const App = () => {
                                   element={
                                     <ProtectedRoute>
                                       <SetUpCrewManagerServices />
+                                    </ProtectedRoute>
+                                  } 
+                                 />
+                                <Route 
+                                  path="/executive-navigation" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <ExecutiveBoardNavigationPage />
+                                    </ProtectedRoute>
+                                  } 
+                                />
+                                <Route 
+                                  path="/student-conductor" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <StudentConductorDashboard />
+                                    </ProtectedRoute>
+                                  } 
+                                />
+                                <Route 
+                                  path="/librarian" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <LibrarianDashboard />
+                                    </ProtectedRoute>
+                                  } 
+                                />
+                                <Route 
+                                  path="/historian" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <HistorianDashboard />
+                                    </ProtectedRoute>
+                                  } 
+                                />
+                                <Route 
+                                  path="/chaplain" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <ChaplainServices />
+                                    </ProtectedRoute>
+                                  } 
+                                />
+                                <Route 
+                                  path="/assistant-chaplain" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <AssistantChaplainServices />
+                                    </ProtectedRoute>
+                                  } 
+                                />
+                                <Route 
+                                  path="/set-up-crew-manager" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <SetUpCrewManagerServices />
+                                    </ProtectedRoute>
+                                  } 
+                                />
+                                <Route 
+                                  path="/pr-hub" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <PRHubPage />
                                     </ProtectedRoute>
                                   } 
                                 />
