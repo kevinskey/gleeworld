@@ -366,7 +366,7 @@ export const CommunityHubWidget = () => {
           <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors pb-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Heart className="h-5 w-5 text-primary" />
+                <Heart className="h-5 w-5 text-red-500" />
                 <CardTitle className="text-lg">Community Hub</CardTitle>
                 <div className="flex gap-1">
                   {unreadNotificationsCount > 0 && (
