@@ -245,9 +245,24 @@ const handler = async (req: Request): Promise<Response> => {
     
     if (!isAuthorized) {
       console.log(`❌ UNAUTHORIZED: ${smsData.From} is not authorized to send messages`);
+      
+      // Log the failed authorization attempt to the database for debugging
+      try {
+        await supabase.from('gw_sms_logs').insert({
+          from_number: smsData.From,
+          to_number: smsData.To,
+          message_body: smsData.Body,
+          message_sid: smsData.MessageSid,
+          processed_at: new Date().toISOString(),
+          notification_count: 0
+        });
+      } catch (error) {
+        console.error('Failed to log unauthorized SMS attempt:', error);
+      }
+      
       const unauthorizedResponse = `<?xml version="1.0" encoding="UTF-8"?>
         <Response>
-          <Message>❌ Unauthorized: Your number is not registered for SMS notifications</Message>
+          <Message>❌ Unauthorized: Your number ${smsData.From} is not registered for SMS notifications. Contact admin to register your number.</Message>
         </Response>`;
       return new Response(unauthorizedResponse, {
         status: 200,
