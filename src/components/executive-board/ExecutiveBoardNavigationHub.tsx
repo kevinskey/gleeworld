@@ -105,6 +105,7 @@ const EXECUTIVE_PAGE_MAPPINGS: ExecutivePageMapping[] = [
     primaryPage: '/tour-manager',
     availablePages: [
       { path: '/tour-manager', name: 'Tour Manager Dashboard', description: 'Tour coordination hub' },
+      { path: '/term-manager', name: 'Term Manager', description: 'Manage academic terms and schedules' },
       { path: '/executive-services/tour-manager', name: 'Tour Manager Services', description: 'Member travel coordination' },
       { path: '/tour-planner', name: 'Tour Planner', description: 'Plan and organize tours' },
       { path: '/contracts', name: 'Contract Management', description: 'Performance contracts' },
