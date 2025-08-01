@@ -1,0 +1,2 @@
+-- Use the secure function to update Allana's role to member
+SELECT secure_update_user_role('c9260ed4-144d-439b-be51-bd0f387b5ae6'::uuid, 'member', 'Executive board member needs member role for dashboard access');
