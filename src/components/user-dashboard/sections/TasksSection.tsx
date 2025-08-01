@@ -10,24 +10,14 @@ export const TasksSection = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [selectedItem, setSelectedItem] = useState<any>(null);
 
-  // Mock data for checked out items and dues - replace with real data
-  const [checkedOutItems, setCheckedOutItems] = useState([
-    { id: '1', title: 'Black Concert Dress', dueDate: '2024-02-15', type: 'uniform', status: 'checked_in' },
-    { id: '2', title: 'Music Folder - Spring Concert', dueDate: '2024-02-20', type: 'music', status: 'checked_in' },
-    { id: '3', title: 'Pearl Necklace', dueDate: '2024-02-18', type: 'accessory', status: 'checked_in' },
-    { id: '4', title: 'Red Lipstick - MAC Ruby Woo', dueDate: '2024-02-25', type: 'cosmetic', status: 'checked_in' },
-    { id: '5', title: 'Black Polo Shirt', dueDate: '2024-03-01', type: 'uniform', status: 'checked_in' },
-  ]);
-
-  const duesInfo = {
-    totalDue: 150.00,
-    dueDate: '2024-03-01',
-    paymentStatus: 'unpaid', // Default unpaid until treasurer marks as paid
-    items: [
-      { description: 'Membership Dues', amount: 100.00 },
-      { description: 'Concert Attire Fee', amount: 50.00 },
-    ]
-  };
+  // Real data - to be fetched from Supabase
+  const [checkedOutItems, setCheckedOutItems] = useState([]);
+  const [duesInfo, setDuesInfo] = useState({
+    totalDue: 0,
+    dueDate: null,
+    paymentStatus: 'paid',
+    items: []
+  });
 
   const totalTaskCount = checkedOutItems.length + (duesInfo.paymentStatus === 'unpaid' ? 1 : 0);
 
