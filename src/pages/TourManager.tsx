@@ -26,6 +26,7 @@ import { TourContracts } from '@/components/tour-manager/TourContracts';
 import { TourStipends } from '@/components/tour-manager/TourStipends';
 import { TourOverview } from '@/components/tour-manager/TourOverview';
 import { WardrobeMistressHub } from '@/components/tour-manager/WardrobeMistressHub';
+import { TermManager } from '@/components/term-manager/TermManager';
 
 const TourManager = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -223,13 +224,7 @@ const TourManager = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                <div className="text-center p-8">
-                  <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Term Management</h3>
-                  <p className="text-muted-foreground">Manage academic terms, schedules, and semester planning.</p>
-                </div>
-              </div>
+              <TermManager />
             </CardContent>
           </Card>
         </TabsContent>
