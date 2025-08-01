@@ -431,7 +431,7 @@ export const CommunityHubWidget = () => {
   };
 
   return (
-    <Card className="col-span-1 md:col-span-2 lg:col-span-3">
+    <Card className="col-span-1 md:col-span-2 lg:col-span-3 overflow-hidden">
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
         <CollapsibleTrigger asChild>
           <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors pb-4">
@@ -463,517 +463,388 @@ export const CommunityHubWidget = () => {
         
         <CollapsibleContent className="transition-all duration-300 ease-out data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
           <CardContent className="pt-0">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="buckets" className="text-xs">
-                  <StickyNote className="h-3 w-3 mr-1" />
-                  Buckets of Love
-                </TabsTrigger>
-                <TabsTrigger value="reflections" className="text-xs">
-                  <Book className="h-3 w-3 mr-1" />
-                  Wellness
-                </TabsTrigger>
-                <TabsTrigger value="notifications" className="text-xs">
-                  <Bell className="h-3 w-3 mr-1" />
-                  Notifications {unreadNotificationsCount > 0 && `(${unreadNotificationsCount})`}
-                </TabsTrigger>
-                <TabsTrigger value="calendar" className="text-xs">
-                  <Calendar className="h-3 w-3 mr-1" />
-                  Calendar
-                </TabsTrigger>
-                <TabsTrigger value="music" className="text-xs">
-                  <Music className="h-3 w-3 mr-1" />
-                  Music
-                </TabsTrigger>
-              </TabsList>
+            {/* Two Column Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              
+              {/* Left Column: Buckets, Wellness, Notifications */}
+              <div className="space-y-4">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="buckets" className="text-xs">
+                      <StickyNote className="h-3 w-3 mr-1" />
+                      Buckets of Love
+                    </TabsTrigger>
+                    <TabsTrigger value="reflections" className="text-xs">
+                      <Book className="h-3 w-3 mr-1" />
+                      Wellness
+                    </TabsTrigger>
+                    <TabsTrigger value="notifications" className="text-xs">
+                      <Bell className="h-3 w-3 mr-1" />
+                      Notifications {unreadNotificationsCount > 0 && `(${unreadNotificationsCount})`}
+                    </TabsTrigger>
+                  </TabsList>
 
-              {/* Buckets of Love Tab */}
-              <TabsContent value="buckets" className="space-y-3">
-                {loveMessagesLoading ? (
-                  <div className="flex justify-center p-4">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                  </div>
-                ) : (
-                  <div className="relative">
-                    {/* Header with cute bucket image */}
-                    <div className="flex flex-col items-center mb-4">
-                      <img 
-                        src="/lovable-uploads/96533996-2039-4566-887a-67eadeb076f1.png" 
-                        alt="Sending you buckets of love"
-                        className="w-32 h-auto mb-2"
-                      />
-                      
-                      {/* Add Love Note Button */}
-                      <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" className="text-xs">
-                            <Plus className="h-3 w-3 mr-1" />
-                            Add Love Note
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[525px]">
-                          <DialogHeader>
-                            <DialogTitle>Share a Love Note</DialogTitle>
-                          </DialogHeader>
-                          <Form {...loveForm}>
-                            <form onSubmit={loveForm.handleSubmit(onSubmitLoveMessage)} className="space-y-4">
-                              <FormField
-                                control={loveForm.control}
-                                name="message"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Your Message</FormLabel>
-                                    <FormControl>
-                                      <Textarea
-                                        placeholder="Share some love and encouragement..."
-                                        className="min-h-[100px]"
-                                        {...field}
-                                      />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              
-                              <FormField
-                                control={loveForm.control}
-                                name="note_color"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Note Color</FormLabel>
-                                    <FormControl>
-                                      <div className="flex gap-2 flex-wrap">
-                                        {noteColors.map((color) => (
-                                          <button
-                                            key={color.value}
-                                            type="button"
-                                            onClick={() => field.onChange(color.value)}
-                                            className={`w-8 h-8 rounded-full border-2 ${color.bg} ${color.border} ${
-                                              field.value === color.value ? 'border-gray-800 scale-110' : 'border-gray-300'
-                                            } transition-all`}
-                                            title={color.label}
-                                          />
-                                        ))}
-                                      </div>
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              
-                              <FormField
-                                control={loveForm.control}
-                                name="decorations"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Add Decorations (Optional)</FormLabel>
-                                    <FormControl>
-                                      <div className="space-y-2">
-                                        <div className="flex gap-1 flex-wrap">
-                                          {emojis.map((emoji) => (
-                                            <button
-                                              key={emoji}
-                                              type="button"
-                                              onClick={() => field.onChange(field.value + emoji)}
-                                              className="w-8 h-8 text-lg hover:bg-gray-100 rounded transition-colors"
-                                            >
-                                              {emoji}
-                                            </button>
-                                          ))}
-                                        </div>
-                                        <div className="flex gap-2">
-                                          <Input
-                                            value={field.value}
-                                            onChange={(e) => field.onChange(e.target.value)}
-                                            placeholder="✨🎵💙"
-                                            className="flex-1"
-                                          />
-                                          <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => field.onChange("")}
-                                          >
-                                            Clear
-                                          </Button>
-                                        </div>
-                                      </div>
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              
-                              <FormField
-                                control={loveForm.control}
-                                name="is_anonymous"
-                                render={({ field }) => (
-                                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                    <FormControl>
-                                      <Checkbox
-                                        checked={field.value}
-                                        onCheckedChange={field.onChange}
-                                      />
-                                    </FormControl>
-                                    <div className="space-y-1 leading-none">
-                                      <FormLabel>
-                                        Post anonymously
-                                      </FormLabel>
-                                    </div>
-                                  </FormItem>
-                                )}
-                              />
-                              
-                              <div className="flex justify-end gap-2">
-                                <Button type="button" variant="outline" onClick={() => setLoveDialogOpen(false)}>
-                                  Cancel
-                                </Button>
-                                <Button type="submit">Post Love Note</Button>
-                              </div>
-                            </form>
-                          </Form>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                    
-                    {/* 3D Interactive Bucket Container */}
-                    <div className="relative flex justify-center items-end h-64" style={{ perspective: "800px" }}>
-                      {/* 3D Bucket Structure */}
-                      <div className="relative" style={{ transformStyle: "preserve-3d" }}>
-                        {/* Bucket Body - Main Container */}
-                        <div 
-                          className="relative w-48 h-32 mx-auto"
-                          style={{
-                            background: "linear-gradient(145deg, #7dd3fc 0%, #0ea5e9 50%, #0284c7 100%)",
-                            borderRadius: "0 0 24px 24px",
-                            transform: "rotateX(10deg) rotateY(-5deg)",
-                            boxShadow: "0 15px 35px rgba(14, 165, 233, 0.3), inset 0 2px 10px rgba(255, 255, 255, 0.3)",
-                          }}
-                        >
-                          {/* Bucket Handle Left */}
-                          <div 
-                            className="absolute top-4 -left-6 w-8 h-12 border-4 border-blue-300 rounded-full"
-                            style={{
-                              borderRightColor: "transparent",
-                              transform: "rotateY(-30deg)",
-                            }}
-                          />
-                          
-                          {/* Bucket Handle Right */}
-                          <div 
-                            className="absolute top-4 -right-6 w-8 h-12 border-4 border-blue-300 rounded-full"
-                            style={{
-                              borderLeftColor: "transparent",
-                              transform: "rotateY(30deg)",
-                            }}
-                          />
-                          
-                          {/* Bucket Rim */}
-                          <div 
-                            className="absolute -top-2 left-0 right-0 h-4 bg-gradient-to-r from-blue-400 via-blue-300 to-blue-500 rounded-full"
-                            style={{
-                              boxShadow: "0 -2px 8px rgba(14, 165, 233, 0.4)",
-                            }}
-                          />
-                        </div>
+                  {/* Buckets of Love Tab */}
+                  <TabsContent value="buckets" className="space-y-3">
+                    {loveMessagesLoading ? (
+                      <div className="flex justify-center p-4">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
                       </div>
-
-                      {/* Existing Love Messages - distributed around the bucket */}
-                      {loveMessages.map((message, index) => {
-                        // Better distribution - circular arrangement around center
-                        const totalMessages = loveMessages.length;
-                        const angle = (index / totalMessages) * 2 * Math.PI;
-                        const radius = 35; // Distance from center
-                        
-                        // Convert polar to cartesian coordinates
-                        const x = 50 + Math.cos(angle) * radius * (0.8 + Math.random() * 0.4);
-                        const y = 50 + Math.sin(angle) * radius * (0.6 + Math.random() * 0.4);
-                        
-                        return (
-                          <div 
-                            key={message.id}
-                            onClick={() => handleNoteClick(message)}
-                            className={`${getNoteColorClasses(message.note_color)} border-2 rounded-lg p-2 shadow-md transition-all cursor-pointer hover:scale-110 hover:shadow-lg animate-fade-in absolute group`}
-                            style={{ 
-                              width: '101px', // 96px (w-24) + 5px = 101px
-                              height: '80px', // keeping same height (h-20)
-                              animationDelay: `${index * 0.1}s`,
-                              left: `${Math.max(5, Math.min(75, x))}%`,
-                              top: `${Math.max(5, Math.min(65, y))}%`,
-                              transform: `rotate(${(Math.random() - 0.5) * 20}deg)`,
-                              zIndex: 1,
-                              backgroundColor: message.likes >= 3 ? '#ef4444' : undefined,
-                              borderColor: message.likes >= 3 ? '#dc2626' : undefined,
-                            }}
-                          >
-                            <div className="h-full flex flex-col justify-between text-[10px]">
-                              <div className="flex-1">
-                                <p className={`text-[10px] leading-tight mb-1 line-clamp-2 ${message.likes >= 3 ? 'text-white' : 'text-gray-800'}`}>
-                                  {message.message.length > 35 ? `${message.message.substring(0, 32)}...` : message.message}
-                                </p>
-                                {(message as any).decorations && (
-                                  <div className="text-[10px] leading-none">
-                                    {(message as any).decorations}
+                    ) : (
+                      <div className="relative">
+                        {/* Header with cute bucket image */}
+                        <div className="flex flex-col items-center mb-4">
+                          <img 
+                            src="/lovable-uploads/96533996-2039-4566-887a-67eadeb076f1.png" 
+                            alt="Sending you buckets of love"
+                            className="w-32 h-auto mb-2"
+                          />
+                          
+                          {/* Add Love Note Button */}
+                          <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="text-xs">
+                                <Plus className="h-3 w-3 mr-1" />
+                                Add Love Note
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[525px]">
+                              <DialogHeader>
+                                <DialogTitle>Share a Love Note</DialogTitle>
+                              </DialogHeader>
+                              <Form {...loveForm}>
+                                <form onSubmit={loveForm.handleSubmit(onSubmitLoveMessage)} className="space-y-4">
+                                  <FormField
+                                    control={loveForm.control}
+                                    name="message"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Your Message</FormLabel>
+                                        <FormControl>
+                                          <Textarea
+                                            placeholder="Share some love and encouragement..."
+                                            className="min-h-[100px]"
+                                            {...field}
+                                          />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  
+                                  <FormField
+                                    control={loveForm.control}
+                                    name="note_color"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Note Color</FormLabel>
+                                        <FormControl>
+                                          <div className="flex gap-2 flex-wrap">
+                                            {noteColors.map((color) => (
+                                              <button
+                                                key={color.value}
+                                                type="button"
+                                                onClick={() => field.onChange(color.value)}
+                                                className={`w-8 h-8 rounded-full border-2 ${color.bg} ${color.border} ${
+                                                  field.value === color.value ? 'border-gray-800 scale-110' : 'border-gray-300'
+                                                } transition-all`}
+                                                title={color.label}
+                                              />
+                                            ))}
+                                          </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  
+                                  <FormField
+                                    control={loveForm.control}
+                                    name="decorations"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Add Decorations (Optional)</FormLabel>
+                                        <FormControl>
+                                          <div className="space-y-2">
+                                            <div className="flex gap-1 flex-wrap">
+                                              {emojis.map((emoji) => (
+                                                <button
+                                                  key={emoji}
+                                                  type="button"
+                                                  onClick={() => field.onChange(field.value + emoji)}
+                                                  className="w-8 h-8 text-lg hover:bg-gray-100 rounded transition-colors"
+                                                >
+                                                  {emoji}
+                                                </button>
+                                              ))}
+                                            </div>
+                                            <div className="flex gap-2">
+                                              <Input
+                                                value={field.value}
+                                                onChange={(e) => field.onChange(e.target.value)}
+                                                placeholder="✨🎵💙"
+                                                className="flex-1"
+                                              />
+                                              <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => field.onChange("")}
+                                              >
+                                                Clear
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  
+                                  <FormField
+                                    control={loveForm.control}
+                                    name="is_anonymous"
+                                    render={({ field }) => (
+                                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                        <FormControl>
+                                          <Checkbox
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                          />
+                                        </FormControl>
+                                        <div className="space-y-1 leading-none">
+                                          <FormLabel>
+                                            Post anonymously
+                                          </FormLabel>
+                                        </div>
+                                      </FormItem>
+                                    )}
+                                  />
+                                  
+                                  <div className="flex justify-end gap-2">
+                                    <Button type="button" variant="outline" onClick={() => setLoveDialogOpen(false)}>
+                                      Cancel
+                                    </Button>
+                                    <Button type="submit">Post Love Note</Button>
                                   </div>
-                                )}
-                              </div>
-                              <div className="flex items-center justify-between text-[10px]">
-                                <span className={`font-medium truncate mr-1 text-[9px] ${message.likes >= 3 ? 'text-white' : 'text-gray-600'}`} title={message.sender_name}>
-                                  {message.sender_name}
-                                </span>
-                                <div className="flex items-center gap-1">
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleLikeMessage(message.id);
-                                    }}
-                                    className={`flex items-center gap-1 transition-colors ${
-                                      message.user_liked 
-                                        ? (message.likes >= 3 ? 'text-white' : 'text-red-600')
-                                        : (message.likes >= 3 ? 'text-white hover:text-red-200' : 'text-red-500 hover:text-red-600')
-                                    }`}
-                                  >
-                                    <Heart className={`h-2 w-2 ${message.user_liked ? 'fill-current' : ''}`} />
-                                    {message.likes > 0 && <span className="text-[9px]">{message.likes}</span>}
-                                  </button>
+                                </form>
+                              </Form>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                        
+                        {/* 3D Interactive Bucket Container */}
+                        <div className="relative flex justify-center items-end h-64" style={{ perspective: "800px" }}>
+                          {/* 3D Bucket Structure */}
+                          <div className="relative" style={{ transformStyle: "preserve-3d" }}>
+                            {/* Bucket Body - Main Container */}
+                            <div 
+                              className="relative w-48 h-32 mx-auto"
+                              style={{
+                                background: "linear-gradient(145deg, #7dd3fc 0%, #0ea5e9 50%, #0284c7 100%)",
+                                borderRadius: "0 0 24px 24px",
+                                transform: "rotateX(10deg) rotateY(-5deg)",
+                                boxShadow: "0 15px 35px rgba(14, 165, 233, 0.3), inset 0 2px 10px rgba(255, 255, 255, 0.3)",
+                              }}
+                            >
+                              {/* Bucket Handle Left */}
+                              <div 
+                                className="absolute top-4 -left-6 w-8 h-12 border-4 border-blue-300 rounded-full"
+                                style={{
+                                  borderRightColor: "transparent",
+                                  transform: "rotateY(-30deg)",
+                                }}
+                              />
+                              
+                              {/* Bucket Handle Right */}
+                              <div 
+                                className="absolute top-4 -right-6 w-8 h-12 border-4 border-blue-300 rounded-full"
+                                style={{
+                                  borderLeftColor: "transparent",
+                                  transform: "rotateY(30deg)",
+                                }}
+                              />
+                              
+                              {/* Bucket Rim */}
+                              <div 
+                                className="absolute -top-2 left-0 right-0 h-4 bg-gradient-to-r from-blue-400 via-blue-300 to-blue-500 rounded-full"
+                                style={{
+                                  boxShadow: "0 -2px 8px rgba(14, 165, 233, 0.4)",
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Existing Love Messages - distributed around the bucket */}
+                          {loveMessages.map((message, index) => {
+                            // Better distribution - circular arrangement around center
+                            const totalMessages = loveMessages.length;
+                            const angle = (index / totalMessages) * 2 * Math.PI;
+                            const radius = 35; // Distance from center
+                            
+                            // Convert polar to cartesian coordinates
+                            const x = 50 + Math.cos(angle) * radius * (0.8 + Math.random() * 0.4);
+                            const y = 50 + Math.sin(angle) * radius * (0.6 + Math.random() * 0.4);
+                            
+                            return (
+                              <div 
+                                key={message.id}
+                                onClick={() => handleNoteClick(message)}
+                                className={`${getNoteColorClasses(message.note_color)} border-2 rounded-lg p-2 shadow-md transition-all cursor-pointer hover:scale-110 hover:shadow-lg animate-fade-in absolute group`}
+                                style={{ 
+                                  width: '101px', // 96px (w-24) + 5px = 101px
+                                  height: '80px', // keeping same height (h-20)
+                                  animationDelay: `${index * 0.1}s`,
+                                  left: `${Math.max(5, Math.min(75, x))}%`,
+                                  top: `${Math.max(5, Math.min(65, y))}%`,
+                                  transform: `rotate(${(Math.random() - 0.5) * 20}deg)`,
+                                  zIndex: 1,
+                                  backgroundColor: message.likes >= 3 ? '#ef4444' : undefined,
+                                  borderColor: message.likes >= 3 ? '#dc2626' : undefined,
+                                }}
+                              >
+                                <div className="h-full flex flex-col justify-between text-[10px]">
+                                  <div className="flex-1">
+                                    <p className={`text-[10px] leading-tight mb-1 line-clamp-2 ${message.likes >= 3 ? 'text-white' : 'text-gray-800'}`}>
+                                      {message.message.length > 35 ? `${message.message.substring(0, 32)}...` : message.message}
+                                    </p>
+                                    {(message as any).decorations && (
+                                      <div className="text-[10px] leading-none">
+                                        {(message as any).decorations}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center justify-between text-[10px]">
+                                    <span className={`font-medium truncate mr-1 text-[9px] ${message.likes >= 3 ? 'text-white' : 'text-gray-600'}`} title={message.sender_name}>
+                                      {message.sender_name}
+                                    </span>
+                                    <div className="flex items-center gap-1">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleLikeMessage(message.id);
+                                        }}
+                                        className={`flex items-center gap-1 transition-colors ${
+                                          message.user_liked 
+                                            ? (message.likes >= 3 ? 'text-white' : 'text-red-600')
+                                            : (message.likes >= 3 ? 'text-white hover:text-red-200' : 'text-red-500 hover:text-red-600')
+                                        }`}
+                                      >
+                                        <Heart className={`h-2 w-2 ${message.user_liked ? 'fill-current' : ''}`} />
+                                        {message.likes > 0 && <span className="text-[9px]">{message.likes}</span>}
+                                      </button>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
-
-              {/* Spiritual Reflections Tab */}
-              <TabsContent value="reflections" className="space-y-3">
-                {reflectionsLoading ? (
-                  <div className="flex justify-center p-4">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                  </div>
-                ) : latestReflection ? (
-                  <div className="space-y-3">
-                    <div className="border rounded-lg p-3">
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-medium text-sm leading-tight pr-2">{latestReflection.title}</h4>
-                        {latestReflection.is_featured && (
-                          <Badge variant="outline" className="text-xs flex-shrink-0">Featured</Badge>
-                        )}
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-1 mb-2">
-                        <Badge className={getReflectionTypeColor(latestReflection.reflection_type || 'daily_devotional')} variant="secondary">
-                          {(latestReflection.reflection_type || 'daily_devotional').replace('_', ' ')}
-                        </Badge>
-                        {latestReflection.scripture_reference && (
-                          <Badge variant="outline" className="text-xs">
-                            <Heart className="h-3 w-3 mr-1" />
-                            {latestReflection.scripture_reference}
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <ScrollArea className="h-16 mb-2">
-                        <p className="text-xs text-muted-foreground pr-4 leading-relaxed">
-                          {latestReflection.content}
-                        </p>
-                      </ScrollArea>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-muted-foreground">
-                          {latestReflection.shared_at 
-                            ? format(new Date(latestReflection.shared_at), 'MMM d')
-                            : 'Recent'
-                          }
+                            );
+                          })}
                         </div>
-                        {sharedReflections.length > 1 && (
-                          <span className="text-xs text-muted-foreground">
-                            +{sharedReflections.length - 1} more
-                          </span>
-                        )}
                       </div>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground text-center py-4">
-                    No spiritual reflections available
-                  </p>
-                )}
-              </TabsContent>
+                    )}
+                  </TabsContent>
 
-              {/* Enhanced Notifications Hub Tab */}
-              <TabsContent value="notifications" className="space-y-3">
-                <div className="space-y-4">
-                  {/* Quick Send Message Button */}
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-sm font-medium">Communications Hub</h3>
-                    <Dialog open={sendMessageOpen} onOpenChange={setSendMessageOpen}>
-                      <DialogTrigger asChild>
-                        <Button size="sm" className="text-xs">
-                          <Send className="h-3 w-3 mr-1" />
-                          Send Message
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[600px]">
-                        <DialogHeader>
-                          <DialogTitle>Send Message to Members</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="text-sm font-medium">Recipient</label>
-                              <select 
-                                className="w-full mt-1 rounded border border-input bg-background px-3 py-2 text-sm"
-                                value={messageForm.recipient}
-                                onChange={(e) => setMessageForm({...messageForm, recipient: e.target.value})}
-                              >
-                                <option value="all_members">All Members</option>
-                                <option value="executive_board">Executive Board</option>
-                                <option value="sophomores">Sophomores</option>
-                                <option value="juniors">Juniors</option>
-                                <option value="seniors">Seniors</option>
-                                <option value="sopranos">Sopranos</option>
-                                <option value="altos">Altos</option>
-                              </select>
+                  {/* Spiritual Reflections Tab */}
+                  <TabsContent value="reflections" className="space-y-3">
+                    {reflectionsLoading ? (
+                      <div className="flex justify-center p-4">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      </div>
+                    ) : latestReflection ? (
+                      <div className="space-y-3">
+                        <div className="border rounded-lg p-3">
+                          <div className="flex items-start justify-between mb-2">
+                            <h4 className="font-medium text-sm leading-tight pr-2">{latestReflection.title}</h4>
+                            {latestReflection.is_featured && (
+                              <Badge variant="outline" className="text-xs flex-shrink-0">Featured</Badge>
+                            )}
+                          </div>
+                          
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            <Badge className={getReflectionTypeColor(latestReflection.reflection_type || 'daily_devotional')} variant="secondary">
+                              {(latestReflection.reflection_type || 'daily_devotional').replace('_', ' ')}
+                            </Badge>
+                            {latestReflection.scripture_reference && (
+                              <Badge variant="outline" className="text-xs">
+                                <Heart className="h-3 w-3 mr-1" />
+                                {latestReflection.scripture_reference}
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          <ScrollArea className="h-16 mb-2">
+                            <p className="text-xs text-muted-foreground pr-4 leading-relaxed">
+                              {latestReflection.content}
+                            </p>
+                          </ScrollArea>
+                          
+                          <div className="flex items-center justify-between">
+                            <div className="text-xs text-muted-foreground">
+                              {latestReflection.shared_at 
+                                ? format(new Date(latestReflection.shared_at), 'MMM d')
+                                : 'No date'
+                              }
                             </div>
-                            <div>
-                              <label className="text-sm font-medium">Priority</label>
-                              <select 
-                                className="w-full mt-1 rounded border border-input bg-background px-3 py-2 text-sm"
-                                value={messageForm.priority}
-                                onChange={(e) => setMessageForm({...messageForm, priority: e.target.value})}
-                              >
-                                <option value="normal">Normal</option>
-                                <option value="high">High</option>
-                                <option value="urgent">Urgent</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium">Subject</label>
-                            <Input
-                              placeholder="Message subject..."
-                              value={messageForm.subject}
-                              onChange={(e) => setMessageForm({...messageForm, subject: e.target.value})}
-                              className="mt-1"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium">Message</label>
-                            <Textarea
-                              placeholder="Type your message here..."
-                              value={messageForm.message}
-                              onChange={(e) => setMessageForm({...messageForm, message: e.target.value})}
-                              className="mt-1 min-h-[120px]"
-                            />
-                          </div>
-                          <div className="flex justify-end gap-2">
-                            <Button variant="outline" onClick={() => setSendMessageOpen(false)}>
-                              Cancel
-                            </Button>
-                            <Button onClick={async () => {
-                              // Here you would implement the actual sending logic
-                              console.log('Sending message:', messageForm);
-                              setSendMessageOpen(false);
-                              setMessageForm({
-                                recipient: 'all_members',
-                                subject: '',
-                                message: '',
-                                priority: 'normal'
-                              });
-                            }}>
-                              <Send className="h-4 w-4 mr-2" />
-                              Send Message
-                            </Button>
+                            <Badge variant="outline" className="text-xs">
+                              <BookOpen className="h-3 w-3 mr-1" />
+                              Reflection
+                            </Badge>
                           </div>
                         </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-
-                  {/* Notifications List */}
-                  {notificationsLoading ? (
-                    <div className="flex justify-center p-4">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                    </div>
-                  ) : notifications.length > 0 ? (
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-muted-foreground">
-                          {unreadNotificationsCount} unread of {notifications.length} total
-                        </span>
-                        {unreadNotificationsCount > 0 && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => {
-                              notifications.forEach(n => {
-                                if (!n.is_read) markNotificationAsRead(n.id);
-                              });
-                            }}
-                            className="text-xs h-6"
-                          >
-                            Mark All Read
-                          </Button>
-                        )}
                       </div>
-                      <ScrollArea className="h-64">
-                        <div className="space-y-2 pr-4">
+                    ) : (
+                      <div className="text-center py-4">
+                        <BookOpen className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">No reflections shared yet</p>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  {/* Notifications Tab */}
+                  <TabsContent value="notifications" className="space-y-3">
+                    {notificationsLoading ? (
+                      <div className="flex justify-center p-4">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      </div>
+                    ) : notifications.length > 0 ? (
+                      <ScrollArea className="h-[400px]">
+                        <div className="space-y-2">
                           {notifications.map((notification) => {
-                            const CategoryIcon = getCategoryIcon(notification.category || '');
+                            const IconComponent = getCategoryIcon(notification.category || 'Executive');
                             return (
                               <div 
                                 key={notification.id} 
-                                className={`border rounded-lg p-3 space-y-2 transition-all hover:shadow-md ${
-                                  !notification.is_read ? 'bg-primary/5 border-primary/20' : 'hover:bg-muted/30'
+                                className={`border rounded-lg p-3 transition-colors cursor-pointer hover:bg-muted/50 ${
+                                  !notification.is_read ? 'bg-blue-50/50 border-blue-200' : ''
                                 }`}
+                                onClick={() => markNotificationAsRead(notification.id)}
                               >
-                                <div className="flex items-start gap-3">
-                                  <CategoryIcon className={`h-4 w-4 mt-0.5 flex-shrink-0 ${getCategoryColor(notification.category || '')}`} />
-                                  <div className="flex-1 space-y-1 min-w-0">
-                                    <div className="flex items-center justify-between gap-2">
-                                      <h4 className="font-medium text-sm truncate">{notification.title}</h4>
-                                      <div className="flex items-center gap-1 flex-shrink-0">
+                                <div className="flex items-start gap-2">
+                                  <IconComponent className={`h-4 w-4 mt-0.5 flex-shrink-0 ${getCategoryColor(notification.category || 'Executive')}`} />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <h4 className="font-medium text-sm leading-tight">{notification.title}</h4>
+                                      {!notification.is_read && (
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground leading-relaxed mb-2">
+                                      {notification.message}
+                                    </p>
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex gap-1">
+                                        <Badge variant={getPriorityColor(notification.priority)} className="text-xs">
+                                          {notification.priority}
+                                        </Badge>
                                         {notification.category && (
-                                          <Badge variant="outline" className="text-xs h-4 px-1">
+                                          <Badge variant="outline" className="text-xs">
                                             {notification.category}
                                           </Badge>
                                         )}
-                                        <Badge variant={getPriorityColor(notification.priority)} className="text-xs h-4 px-1">
-                                          {notification.priority}
-                                        </Badge>
-                                        {!notification.is_read && (
-                                          <div className="w-2 h-2 bg-primary rounded-full"></div>
-                                        )}
                                       </div>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground leading-relaxed">{notification.message}</p>
-                                    <div className="flex items-center justify-between pt-1">
                                       <span className="text-xs text-muted-foreground">
-                                        {format(new Date(notification.created_at), 'MMM d, h:mm a')}
+                                        {format(new Date(notification.created_at), 'MMM d')}
                                       </span>
-                                      <div className="flex gap-1">
-                                        {!notification.is_read && (
-                                          <Button 
-                                            variant="ghost" 
-                                            size="sm" 
-                                            onClick={() => markNotificationAsRead(notification.id)}
-                                            className="text-xs h-5 px-2"
-                                          >
-                                            <CheckCircle className="h-3 w-3 mr-1" />
-                                            Mark Read
-                                          </Button>
-                                        )}
-                                        <Button 
-                                          variant="ghost" 
-                                          size="sm" 
-                                          className="text-xs h-5 px-2"
-                                        >
-                                          <MoreVertical className="h-3 w-3" />
-                                        </Button>
-                                      </div>
                                     </div>
                                   </div>
                                 </div>
@@ -982,202 +853,207 @@ export const CommunityHubWidget = () => {
                           })}
                         </div>
                       </ScrollArea>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">No notifications</p>
-                      <p className="text-xs text-muted-foreground">New messages will appear here</p>
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
+                    ) : (
+                      <div className="text-center py-4">
+                        <Bell className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">No notifications</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
 
-              {/* Calendar Tab */}
-              <TabsContent value="calendar" className="space-y-3">
-                <div className="h-[600px] overflow-hidden rounded-lg border">
-                  <PublicCalendarViews />
-                </div>
-              </TabsContent>
-
-              {/* Music Library Tab */}
-              <TabsContent value="music" className="space-y-3">
-                <div className="relative">
-                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-                  <Input
-                    placeholder="Search music..."
-                    value={musicSearchTerm}
-                    onChange={(e) => setMusicSearchTerm(e.target.value)}
-                    className="pl-7 h-8 text-xs"
-                  />
-                </div>
-
-                {musicLoading ? (
-                  <div className="flex justify-center p-4">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                  </div>
-                ) : filteredMusic.length > 0 ? (
-                  <ScrollArea className="h-40">
-                    <div className="space-y-2 pr-4">
-                      {filteredMusic.map((music) => (
-                        <div key={music.id} className="border rounded-lg p-2">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-xs truncate">{music.title}</h4>
-                              <p className="text-xs text-muted-foreground truncate">by {music.composer || "Unknown"}</p>
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {music.voice_parts && music.voice_parts.length > 0 && (
-                                  <Badge variant="outline" className="text-xs h-4 px-1">
-                                    {music.voice_parts.join(', ')}
-                                  </Badge>
-                                )}
-                                {music.key_signature && (
-                                  <Badge variant="outline" className="text-xs h-4 px-1">
-                                    {music.key_signature}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex gap-1 flex-shrink-0">
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                <Eye className="h-3 w-3" />
-                              </Button>
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                <Download className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                ) : (
-                  <p className="text-xs text-muted-foreground text-center py-4">
-                    {musicSearchTerm ? "No music found" : "No music available"}
-                  </p>
-                )}
-              </TabsContent>
-            </Tabs>
-
-            {/* Quick Action Buttons - only show on Spirit tab */}
-            {activeTab === "reflections" && (
-              <div className="flex gap-2 mt-4">
-                <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/spiritual-reflections')}>
-                  <Book className="h-3 w-3 mr-1" />
-                  All Reflections
-                </Button>
-                <Dialog open={prayerDialogOpen} onOpenChange={setPrayerDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="flex-1 text-xs h-8">
-                      <Heart className="h-3 w-3 mr-1" />
-                      Prayer Request
+                {/* Quick Action Buttons for Left Column */}
+                {activeTab === "reflections" && (
+                  <div className="flex gap-2 mt-4">
+                    <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/spiritual-reflections')}>
+                      <Book className="h-3 w-3 mr-1" />
+                      All Reflections
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[525px]">
-                    <DialogHeader>
-                      <DialogTitle>Submit Prayer Request</DialogTitle>
-                    </DialogHeader>
-                    <Form {...prayerForm}>
-                      <form onSubmit={prayerForm.handleSubmit(onSubmitPrayerRequest)} className="space-y-4">
-                        <FormField
-                          control={prayerForm.control}
-                          name="content"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Prayer Request</FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  placeholder="Share your prayer request..."
-                                  className="min-h-[100px]"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={prayerForm.control}
-                          name="is_anonymous"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                              <div className="space-y-1 leading-none">
-                                <FormLabel>
-                                  Submit anonymously
-                                </FormLabel>
+                    <Dialog open={prayerDialogOpen} onOpenChange={setPrayerDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="flex-1 text-xs h-8">
+                          <Heart className="h-3 w-3 mr-1" />
+                          Prayer Request
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[525px]">
+                        <DialogHeader>
+                          <DialogTitle>Submit Prayer Request</DialogTitle>
+                        </DialogHeader>
+                        <Form {...prayerForm}>
+                          <form onSubmit={prayerForm.handleSubmit(onSubmitPrayerRequest)} className="space-y-4">
+                            <FormField
+                              control={prayerForm.control}
+                              name="content"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Prayer Request</FormLabel>
+                                  <FormControl>
+                                    <Textarea
+                                      placeholder="Share your prayer request..."
+                                      className="min-h-[100px]"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={prayerForm.control}
+                              name="is_anonymous"
+                              render={({ field }) => (
+                                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                    />
+                                  </FormControl>
+                                  <div className="space-y-1 leading-none">
+                                    <FormLabel>
+                                      Submit anonymously
+                                    </FormLabel>
+                                  </div>
+                                </FormItem>
+                              )}
+                            />
+                            <div className="flex justify-end gap-2">
+                              <Button type="button" variant="outline" onClick={() => setPrayerDialogOpen(false)}>
+                                Cancel
+                              </Button>
+                              <Button type="submit">Submit Request</Button>
+                            </div>
+                          </form>
+                        </Form>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                )}
+
+                {activeTab === "notifications" && (
+                  <div className="flex gap-2 mt-4">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1 text-xs h-8" 
+                      onClick={() => {
+                        setActiveTab("notifications");
+                      }}
+                    >
+                      <Bell className="h-3 w-3 mr-1" />
+                      Refresh Notifications
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/member-portal')}>
+                      <Package className="h-3 w-3 mr-1" />
+                      Member Portal
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column: Calendar and Music */}
+              <div className="space-y-4">
+                {/* Calendar Section */}
+                <div className="border rounded-lg">
+                  <div className="flex items-center gap-2 p-3 border-b">
+                    <Calendar className="h-4 w-4 text-primary" />
+                    <h3 className="font-medium text-sm">Calendar</h3>
+                  </div>
+                  <div className="h-[300px] overflow-hidden">
+                    <PublicCalendarViews />
+                  </div>
+                  <div className="p-3 border-t">
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/calendar')}>
+                        <Calendar className="h-3 w-3 mr-1" />
+                        Full Calendar
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/events')}>
+                        <Clock className="h-3 w-3 mr-1" />
+                        All Events
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Music Section */}
+                <div className="border rounded-lg">
+                  <div className="flex items-center gap-2 p-3 border-b">
+                    <Music className="h-4 w-4 text-primary" />
+                    <h3 className="font-medium text-sm">Music Library</h3>
+                  </div>
+                  <div className="p-3">
+                    <div className="relative mb-3">
+                      <Search className="absolute left-2 top-2.5 h-3 w-3 text-muted-foreground" />
+                      <Input
+                        placeholder="Search music..."
+                        value={musicSearchTerm}
+                        onChange={(e) => setMusicSearchTerm(e.target.value)}
+                        className="pl-7 h-8 text-xs"
+                      />
+                    </div>
+                    
+                    {musicLoading ? (
+                      <div className="flex justify-center p-4">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      </div>
+                    ) : filteredMusic.length > 0 ? (
+                      <ScrollArea className="h-[200px]">
+                        <div className="space-y-2">
+                          {filteredMusic.map((music) => (
+                            <div key={music.id} className="border rounded-lg p-2">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-medium text-xs leading-tight mb-1 truncate">{music.title}</h4>
+                                  <p className="text-xs text-muted-foreground truncate">{music.composer}</p>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {music.voice_parts && music.voice_parts.length > 0 && (
+                                      <Badge variant="outline" className="text-xs h-4 px-1">
+                                        {music.voice_parts.join(", ")}
+                                      </Badge>
+                                    )}
+                                    {music.difficulty_level && (
+                                      <Badge variant="outline" className="text-xs h-4 px-1">
+                                        {music.difficulty_level}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex gap-1 flex-shrink-0">
+                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                    <Eye className="h-3 w-3" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                    <Download className="h-3 w-3" />
+                                  </Button>
+                                </div>
                               </div>
-                            </FormItem>
-                          )}
-                        />
-                        <div className="flex justify-end gap-2">
-                          <Button type="button" variant="outline" onClick={() => setPrayerDialogOpen(false)}>
-                            Cancel
-                          </Button>
-                          <Button type="submit">Submit Request</Button>
+                            </div>
+                          ))}
                         </div>
-                      </form>
-                    </Form>
-                  </DialogContent>
-                </Dialog>
+                      </ScrollArea>
+                    ) : (
+                      <p className="text-xs text-muted-foreground text-center py-4">
+                        {musicSearchTerm ? "No music found" : "No music available"}
+                      </p>
+                    )}
+                  </div>
+                  <div className="p-3 border-t">
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/music-library')}>
+                        <Music className="h-3 w-3 mr-1" />
+                        Music Library
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/sheet-music')}>
+                        <BookOpen className="h-3 w-3 mr-1" />
+                        Browse All
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
-            )}
-
-            {/* Quick Action Buttons - show on Notifications tab */}
-            {activeTab === "notifications" && (
-              <div className="flex gap-2 mt-4">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1 text-xs h-8" 
-                  onClick={() => {
-                    // Expand to show more notifications within the hub
-                    setActiveTab("notifications");
-                    // Could implement pagination or "load more" functionality here
-                  }}
-                >
-                  <Bell className="h-3 w-3 mr-1" />
-                  Refresh Notifications
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/member-portal')}>
-                  <Package className="h-3 w-3 mr-1" />
-                  Member Portal
-                </Button>
-              </div>
-            )}
-
-            {/* Quick Action Buttons - show on Calendar tab */}
-            {activeTab === "calendar" && (
-              <div className="flex gap-2 mt-4">
-                <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/calendar')}>
-                  <Calendar className="h-3 w-3 mr-1" />
-                  Full Calendar
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/events')}>
-                  <Clock className="h-3 w-3 mr-1" />
-                  All Events
-                </Button>
-              </div>
-            )}
-
-            {/* Quick Action Buttons - show on Music tab */}
-            {activeTab === "music" && (
-              <div className="flex gap-2 mt-4">
-                <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/music-library')}>
-                  <Music className="h-3 w-3 mr-1" />
-                  Music Library
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/sheet-music')}>
-                  <BookOpen className="h-3 w-3 mr-1" />
-                  Browse All
-                </Button>
-              </div>
-            )}
+            </div>
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
