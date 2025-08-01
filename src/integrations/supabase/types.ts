@@ -3254,6 +3254,57 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_dues_payment_plans: {
+        Row: {
+          auto_debit: boolean | null
+          created_at: string
+          dues_record_id: string
+          end_date: string | null
+          frequency: string
+          id: string
+          installment_amount: number
+          installments: number
+          payment_method: string | null
+          start_date: string
+          status: string
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_debit?: boolean | null
+          created_at?: string
+          dues_record_id: string
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          installment_amount: number
+          installments?: number
+          payment_method?: string | null
+          start_date: string
+          status?: string
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_debit?: boolean | null
+          created_at?: string
+          dues_record_id?: string
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          installment_amount?: number
+          installments?: number
+          payment_method?: string | null
+          start_date?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_dues_records: {
         Row: {
           academic_year: string
@@ -3294,6 +3345,60 @@ export type Database = {
           payment_method?: string | null
           semester?: string
           status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      gw_dues_reminders: {
+        Row: {
+          created_at: string
+          custom_message: string | null
+          days_before_due: number
+          dues_record_id: string | null
+          id: string
+          installment_id: string | null
+          is_active: boolean | null
+          last_sent_at: string | null
+          next_send_at: string | null
+          payment_plan_id: string | null
+          reminder_frequency: string
+          reminder_type: string
+          template_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          custom_message?: string | null
+          days_before_due?: number
+          dues_record_id?: string | null
+          id?: string
+          installment_id?: string | null
+          is_active?: boolean | null
+          last_sent_at?: string | null
+          next_send_at?: string | null
+          payment_plan_id?: string | null
+          reminder_frequency?: string
+          reminder_type?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          custom_message?: string | null
+          days_before_due?: number
+          dues_record_id?: string | null
+          id?: string
+          installment_id?: string | null
+          is_active?: boolean | null
+          last_sent_at?: string | null
+          next_send_at?: string | null
+          payment_plan_id?: string | null
+          reminder_frequency?: string
+          reminder_type?: string
+          template_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -4946,6 +5051,59 @@ export type Database = {
           },
         ]
       }
+      gw_payment_plan_installments: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          id: string
+          installment_number: number
+          notes: string | null
+          paid_date: string | null
+          payment_method: string | null
+          payment_plan_id: string
+          status: string
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date: string
+          id?: string
+          installment_number: number
+          notes?: string | null
+          paid_date?: string | null
+          payment_method?: string | null
+          payment_plan_id: string
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          installment_number?: number
+          notes?: string | null
+          paid_date?: string | null
+          payment_method?: string | null
+          payment_plan_id?: string
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_payment_plan_installments_payment_plan_id_fkey"
+            columns: ["payment_plan_id"]
+            isOneToOne: false
+            referencedRelation: "gw_dues_payment_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_payment_records: {
         Row: {
           amount: number
@@ -5237,6 +5395,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gw_prayer_requests: {
+        Row: {
+          chaplain_response: string | null
+          content: string
+          created_at: string
+          id: string
+          is_anonymous: boolean
+          responded_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chaplain_response?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chaplain_response?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       gw_prayer_rotations: {
         Row: {
@@ -7761,6 +7955,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      id_document_submissions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          file_path: string
+          file_size: number
+          id: string
+          mime_type: string
+          original_filename: string
+          submission_date: string
+          updated_at: string
+          user_id: string
+          verification_notes: string | null
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          file_path: string
+          file_size: number
+          id?: string
+          mime_type: string
+          original_filename: string
+          submission_date?: string
+          updated_at?: string
+          user_id: string
+          verification_notes?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          file_path?: string
+          file_size?: number
+          id?: string
+          mime_type?: string
+          original_filename?: string
+          submission_date?: string
+          updated_at?: string
+          user_id?: string
+          verification_notes?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
       }
       library_inventory_entries: {
         Row: {

@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Navigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { 
   MapPin, 
   Bus, 
@@ -18,13 +20,17 @@ import {
   Phone,
   MessageCircle,
   FileText,
-  Route
+  Route,
+  Upload,
+  ShieldCheck
 } from "lucide-react";
 
 const TourManagerServices = () => {
   const { user } = useAuth();
   const { profile, loading } = useUserRole();
   const [activeTab, setActiveTab] = useState("upcoming-tours");
+  const [idUpload, setIdUpload] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   if (loading) {
     return (
@@ -37,6 +43,59 @@ const TourManagerServices = () => {
   if (!user || !profile || !['member', 'alumna', 'admin', 'super-admin'].includes(profile.role)) {
     return <Navigate to="/" replace />;
   }
+
+  const handleIdUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!idUpload || !user) return;
+
+    setUploading(true);
+    try {
+      // Generate unique file path
+      const fileExt = idUpload.name.split('.').pop();
+      const fileName = `${user.id}/id-document-${Date.now()}.${fileExt}`;
+
+      // Upload file to Supabase storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('id-documents')
+        .upload(fileName, idUpload);
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast.error('Failed to upload ID document. Please try again.');
+        return;
+      }
+
+      // Create submission record in database
+      const { error: dbError } = await supabase
+        .from('id_document_submissions')
+        .insert({
+          user_id: user.id,
+          file_path: uploadData.path,
+          original_filename: idUpload.name,
+          file_size: idUpload.size,
+          mime_type: idUpload.type,
+        });
+
+      if (dbError) {
+        console.error('Database error:', dbError);
+        toast.error('Failed to record submission. Please try again.');
+        return;
+      }
+
+      toast.success('ID document submitted successfully! It will be reviewed by the tour manager.');
+      setIdUpload(null);
+      
+      // Reset file input
+      const fileInput = document.getElementById('id-upload') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+
+    } catch (error) {
+      console.error('Submission error:', error);
+      toast.error('An unexpected error occurred. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-6">
@@ -138,6 +197,64 @@ const TourManagerServices = () => {
           </TabsContent>
 
           <TabsContent value="travel-info" className="space-y-6">
+            {/* ID Document Submission */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5" />
+                  Submit Your Real ID
+                </CardTitle>
+                <CardDescription>
+                  Upload a copy of your government-issued ID for tour verification
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleIdUpload} className="space-y-4">
+                  <div>
+                    <Label htmlFor="id-upload">Select ID Document</Label>
+                    <Input
+                      id="id-upload"
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(e) => setIdUpload(e.target.files?.[0] || null)}
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Accepted formats: JPG, PNG, PDF (max 10MB)
+                    </p>
+                  </div>
+                  
+                  <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                    <h5 className="font-medium text-amber-800 mb-2">Privacy & Security Notice</h5>
+                    <ul className="text-xs text-amber-700 space-y-1">
+                      <li>• Your ID will be stored securely and only accessible to authorized staff</li>
+                      <li>• Only the Tour Manager, Chief of Staff, and Administrators can view your ID</li>
+                      <li>• This information is used solely for tour verification and safety purposes</li>
+                      <li>• Your data is encrypted and will be deleted after the tour period</li>
+                    </ul>
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={!idUpload || uploading}
+                  >
+                    {uploading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Submit ID Document
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
