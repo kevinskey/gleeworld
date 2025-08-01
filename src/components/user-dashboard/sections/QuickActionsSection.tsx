@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { useNavigate } from "react-router-dom";
+import { AttendanceDashboard } from "@/components/attendance/AttendanceDashboard";
 import { 
   CheckCircle, 
   Calendar, 
@@ -107,27 +108,33 @@ export const QuickActionsSection = ({ isAdmin, actionFilter }: QuickActionsSecti
             </CollapsibleTrigger>
             
             <CollapsibleContent className="transition-all duration-300 ease-out data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
-              <CardContent className="pt-0 space-y-3">
-                {quickActions.map((action) => {
-                  const IconComponent = action.icon;
-                  return (
-                    <div key={action.route} className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <IconComponent className="h-4 w-4 flex-shrink-0 text-primary" />
-                        <span className="text-sm font-medium">{action.label}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed pl-6">
-                        {action.description}
-                      </p>
-                      <Button 
-                        className="w-full text-sm py-2 min-h-[44px]" 
-                        onClick={() => navigate(action.route)}
-                      >
-                        Open {action.label}
-                      </Button>
-                    </div>
-                  );
-                })}
+              <CardContent className="pt-0">
+                {actionFilter === 'attendance' ? (
+                  <AttendanceDashboard />
+                ) : (
+                  <div className="space-y-3">
+                    {quickActions.map((action) => {
+                      const IconComponent = action.icon;
+                      return (
+                        <div key={action.route} className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <IconComponent className="h-4 w-4 flex-shrink-0 text-primary" />
+                            <span className="text-sm font-medium">{action.label}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed pl-6">
+                            {action.description}
+                          </p>
+                          <Button 
+                            className="w-full text-sm py-2 min-h-[44px]" 
+                            onClick={() => navigate(action.route)}
+                          >
+                            Open {action.label}
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </CollapsibleContent>
           </Card>
