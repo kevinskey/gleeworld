@@ -184,32 +184,35 @@ export const BookingForm: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-background to-brand-100 p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-4">
-            Spelman College Glee Club
-          </h1>
-          <h2 className="text-2xl text-primary mb-2">Performance Booking Request</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Thank you for your interest in booking the Spelman College Glee Club. 
-            Please complete this form with as much detail as possible to help us 
-            provide you with the best possible experience.
-          </p>
+        <div className="text-center mb-8 relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-brand-400/10 via-brand-600/5 to-brand-400/10 rounded-2xl blur-3xl"></div>
+          <div className="relative bg-card/80 backdrop-blur-sm border border-brand-200 rounded-2xl p-8 shadow-glass">
+            <h1 className="text-4xl font-dancing font-bold text-brand-600 mb-4">
+              Spelman College Glee Club
+            </h1>
+            <h2 className="text-2xl font-bold text-brand-500 mb-4">Performance Booking Request</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Thank you for your interest in booking the Spelman College Glee Club. 
+              Please complete this form with as much detail as possible to help us 
+              provide you with the best possible experience.
+            </p>
+          </div>
         </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             
             {/* Contact Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
+            <Card className="border-brand-200 shadow-glass bg-card/95 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-brand-50 to-brand-100/50 border-b border-brand-200">
+                <CardTitle className="flex items-center gap-2 text-brand-600">
+                  <Users className="h-5 w-5 text-brand-500" />
                   Contact Information
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-muted-foreground">
                   Primary contact details for this booking request
                 </CardDescription>
               </CardHeader>
@@ -301,13 +304,13 @@ export const BookingForm: React.FC = () => {
             </Card>
 
             {/* Event Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Music className="h-5 w-5" />
+            <Card className="border-brand-200 shadow-glass bg-card/95 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-brand-50 to-brand-100/50 border-b border-brand-200">
+                <CardTitle className="flex items-center gap-2 text-brand-600">
+                  <Music className="h-5 w-5 text-brand-500" />
                   Event Details
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-muted-foreground">
                   Information about your event and performance requirements
                 </CardDescription>
               </CardHeader>
@@ -552,13 +555,13 @@ export const BookingForm: React.FC = () => {
             </Card>
 
             {/* Technical & Logistical Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
+            <Card className="border-brand-200 shadow-glass bg-card/95 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-brand-50 to-brand-100/50 border-b border-brand-200">
+                <CardTitle className="flex items-center gap-2 text-brand-600">
+                  <Settings className="h-5 w-5 text-brand-500" />
                   Technical & Logistical Information
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-muted-foreground">
                   Details about venue facilities and technical requirements
                 </CardDescription>
               </CardHeader>
@@ -766,13 +769,13 @@ export const BookingForm: React.FC = () => {
             </Card>
 
             {/* Hospitality & Travel */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Plane className="h-5 w-5" />
+            <Card className="border-brand-200 shadow-glass bg-card/95 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-brand-50 to-brand-100/50 border-b border-brand-200">
+                <CardTitle className="flex items-center gap-2 text-brand-600">
+                  <Plane className="h-5 w-5 text-brand-500" />
                   Hospitality & Travel
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-muted-foreground">
                   Information about compensation, travel, and accommodations
                 </CardDescription>
               </CardHeader>
@@ -955,13 +958,13 @@ export const BookingForm: React.FC = () => {
             </Card>
 
             {/* Permissions & Media */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
+            <Card className="border-brand-200 shadow-glass bg-card/95 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-brand-50 to-brand-100/50 border-b border-brand-200">
+                <CardTitle className="flex items-center gap-2 text-brand-600">
+                  <MapPin className="h-5 w-5 text-brand-500" />
                   Permissions & Media
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-muted-foreground">
                   Recording permissions and promotional material requests
                 </CardDescription>
               </CardHeader>
@@ -1084,13 +1087,13 @@ export const BookingForm: React.FC = () => {
             </Card>
 
             {/* Additional Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
+            <Card className="border-brand-200 shadow-glass bg-card/95 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-brand-50 to-brand-100/50 border-b border-brand-200">
+                <CardTitle className="flex items-center gap-2 text-brand-600">
+                  <Clock className="h-5 w-5 text-brand-500" />
                   Additional Information
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-muted-foreground">
                   Any additional details or special requests
                 </CardDescription>
               </CardHeader>
@@ -1163,7 +1166,7 @@ export const BookingForm: React.FC = () => {
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
-                className="w-full md:w-auto px-8 py-3 text-lg"
+                className="w-full md:w-auto px-8 py-3 text-lg bg-brand-600 hover:bg-brand-700 text-white border-0 shadow-glass-lg"
               >
                 {isSubmitting ? 'Submitting Request...' : 'Submit Booking Request'}
               </Button>
