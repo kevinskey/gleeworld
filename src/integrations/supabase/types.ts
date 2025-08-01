@@ -2922,6 +2922,35 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_buckets_of_love_likes: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_buckets_of_love_likes_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "gw_buckets_of_love"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_calendar_auto_sync: {
         Row: {
           calendar_id: string
@@ -10604,6 +10633,10 @@ export type Database = {
       secure_update_user_role: {
         Args: { target_user_id: string; new_role: string; reason?: string }
         Returns: boolean
+      }
+      toggle_love_message_like: {
+        Args: { message_id_param: string }
+        Returns: Json
       }
       trigger_scholarship_update: {
         Args: Record<PropertyKey, never>

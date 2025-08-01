@@ -81,6 +81,7 @@ interface LoveMessage {
   created_at: string;
   sender_name?: string;
   likes: number;
+  user_liked?: boolean;
 }
 
 interface LoveMessageForm {
@@ -215,6 +216,16 @@ export const CommunityHubWidget = () => {
         .select('user_id, full_name, first_name, last_name')
         .in('user_id', userIds);
 
+      // Get user's likes for these messages
+      const messageIds = (data || []).map(m => m.id);
+      const { data: userLikes } = await supabase
+        .from('gw_buckets_of_love_likes')
+        .select('message_id')
+        .eq('user_id', user.id)
+        .in('message_id', messageIds);
+
+      const likedMessageIds = new Set(userLikes?.map(like => like.message_id) || []);
+
       const messages: LoveMessage[] = (data || []).map(m => {
         const profile = profiles?.find(p => p.user_id === m.user_id);
         return {
@@ -225,7 +236,8 @@ export const CommunityHubWidget = () => {
           is_anonymous: m.is_anonymous,
           created_at: m.created_at,
           sender_name: m.is_anonymous ? 'Anonymous' : (profile?.full_name || profile?.first_name || 'Someone'),
-          likes: m.likes || 0
+          likes: m.likes || 0,
+          user_liked: likedMessageIds.has(m.id)
         };
       });
 
@@ -366,20 +378,27 @@ export const CommunityHubWidget = () => {
 
     try {
       const { data, error } = await supabase
-        .rpc('increment_love_message_likes', { message_id_param: messageId });
+        .rpc('toggle_love_message_like', { message_id_param: messageId });
 
       if (error) throw error;
 
-      // Update local state with the new like count
+      // Type the response data
+      const result = data as { likes_count: number; user_liked: boolean };
+
+      // Update local state with the response
       setLoveMessages(prevMessages =>
         prevMessages.map(msg =>
           msg.id === messageId
-            ? { ...msg, likes: data || msg.likes + 1 }
+            ? { 
+                ...msg, 
+                likes: result.likes_count, 
+                user_liked: result.user_liked 
+              }
             : msg
         )
       );
     } catch (error) {
-      console.error('Error liking message:', error);
+      console.error('Error toggling like:', error);
     }
   };
 
@@ -643,9 +662,13 @@ export const CommunityHubWidget = () => {
                                 </span>
                                 <button
                                   onClick={() => handleLikeMessage(message.id)}
-                                  className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 transition-colors"
+                                  className={`flex items-center gap-1 text-xs transition-colors ${
+                                    message.user_liked 
+                                      ? 'text-red-600' 
+                                      : 'text-red-500 hover:text-red-600'
+                                  }`}
                                 >
-                                  <Heart className="h-3 w-3 fill-current" />
+                                  <Heart className={`h-3 w-3 ${message.user_liked ? 'fill-current' : ''}`} />
                                   {message.likes > 0 && <span>{message.likes}</span>}
                                 </button>
                               </div>
