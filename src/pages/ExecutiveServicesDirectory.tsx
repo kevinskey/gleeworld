@@ -290,7 +290,7 @@ const ExecutiveServicesDirectory = () => {
                 <h4 className="font-semibold">Emergency Contacts</h4>
                 <div className="space-y-2 text-sm">
                   <p><strong><a href="https://www.spelman.edu/student-life/public-safety/contact-public-safety.html" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">Campus Public Safety</a>:</strong> 404-525-6401</p>
-                  <p><strong>Glee Club Emergency Line:</strong> (404) 270-GLEE</p>
+                  <p><strong><a href="https://www.spelman.edu/index.html" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">Spelman College Website</a></strong></p>
                   <p><strong>Director Emergency:</strong> 470-622-1392</p>
                 </div>
                 <Button size="sm" variant="destructive" className="w-full">
