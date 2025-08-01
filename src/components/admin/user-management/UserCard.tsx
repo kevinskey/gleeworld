@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { User } from "@/hooks/useUsers";
 import { getAvatarUrl, getInitials } from "@/utils/avatarUtils";
 import { 
@@ -25,6 +26,9 @@ interface UserCardProps {
   isPaid?: boolean;
   stipendAmount?: number;
   onPayout?: (user: User) => void;
+  isSelected?: boolean;
+  onSelectionChange?: (userId: string, selected: boolean) => void;
+  showSelection?: boolean;
 }
 
 export const UserCard = ({ 
@@ -36,7 +40,10 @@ export const UserCard = ({
   showPaymentStatus = false,
   isPaid = false,
   stipendAmount,
-  onPayout
+  onPayout,
+  isSelected = false,
+  onSelectionChange,
+  showSelection = false
 }: UserCardProps) => {
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
@@ -95,9 +102,20 @@ export const UserCard = ({
           </DropdownMenu>
         </div>
 
+        {/* Selection Checkbox - Top Left */}
+        {showSelection && (
+          <div className="absolute top-3 left-3 z-10">
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={(checked) => onSelectionChange?.(user.id, !!checked)}
+              className="border-2"
+            />
+          </div>
+        )}
+
         {/* Main User Info - Clickable */}
         <div 
-          className={`flex items-start gap-3 pr-10 ${onClick ? 'cursor-pointer' : ''}`}
+          className={`flex items-start gap-3 pr-10 ${showSelection ? 'pl-8' : ''} ${onClick ? 'cursor-pointer' : ''}`}
           onClick={() => onClick?.(user)}
         >
           <Avatar className="h-14 w-14 border-2 border-slate-300 shadow-md flex-shrink-0 ring-2 ring-slate-100">

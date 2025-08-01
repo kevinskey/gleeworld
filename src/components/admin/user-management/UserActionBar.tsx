@@ -29,10 +29,12 @@ interface UserActionBarProps {
   onSortOrderChange: (order: 'asc' | 'desc') => void;
   onCreateUser: () => void;
   onBulkOperations: () => void;
+  onBulkSelect: () => void;
   onRefresh: () => void;
   userCount: number;
   filteredCount: number;
   loading?: boolean;
+  showBulkSelect?: boolean;
 }
 
 export const UserActionBar = ({
@@ -46,10 +48,12 @@ export const UserActionBar = ({
   onSortOrderChange,
   onCreateUser,
   onBulkOperations,
+  onBulkSelect,
   onRefresh,
   userCount,
   filteredCount,
-  loading = false
+  loading = false,
+  showBulkSelect = false
 }: UserActionBarProps) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
@@ -92,6 +96,15 @@ export const UserActionBar = ({
           <Button onClick={onCreateUser} size="sm">
             <UserPlus className="h-4 w-4 mr-2" />
             Add User
+          </Button>
+
+          <Button 
+            onClick={onBulkSelect} 
+            size="sm" 
+            variant={showBulkSelect ? "default" : "outline"}
+          >
+            <Users className="h-4 w-4 mr-2" />
+            {showBulkSelect ? "Exit Bulk" : "Bulk Select"}
           </Button>
 
           <DropdownMenu>

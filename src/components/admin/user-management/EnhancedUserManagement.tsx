@@ -12,6 +12,7 @@ import { ComprehensiveUserForm } from "./ComprehensiveUserForm";
 import { MobileUserForm } from "./MobileUserForm";
 import { UserDetailPanel } from "./UserDetailPanel";
 import { BulkOperationsPanel } from "./BulkOperationsPanel";
+import { BulkSelectControls } from "./BulkSelectControls";
 import { Users, RefreshCw, UserPlus } from "lucide-react";
 
 interface EnhancedUserManagementProps {
@@ -37,6 +38,8 @@ export const EnhancedUserManagement = ({
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showDetailPanel, setShowDetailPanel] = useState(false);
   const [showBulkPanel, setShowBulkPanel] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [showBulkSelect, setShowBulkSelect] = useState(false);
   const [userPaymentData, setUserPaymentData] = useState<{
     readyToPay: Record<string, boolean>;
     stipendAmounts: Record<string, number>;
@@ -199,6 +202,20 @@ export const EnhancedUserManagement = ({
     onRefetch();
   };
 
+  const handleUserSelection = (userId: string, selected: boolean) => {
+    if (selected) {
+      setSelectedUsers(prev => [...prev, userId]);
+    } else {
+      setSelectedUsers(prev => prev.filter(id => id !== userId));
+    }
+  };
+
+  const handleBulkSelectComplete = () => {
+    setSelectedUsers([]);
+    setShowBulkSelect(false);
+    onRefetch();
+  };
+
   if (loading) {
     return (
       <Card className="border-2 border-slate-300 shadow-sm">
@@ -255,10 +272,12 @@ export const EnhancedUserManagement = ({
         onSortOrderChange={setSortOrder}
         onCreateUser={() => setShowCreateForm(!showCreateForm)}
         onBulkOperations={() => setShowBulkPanel(true)}
+        onBulkSelect={() => setShowBulkSelect(!showBulkSelect)}
         onRefresh={onRefetch}
         userCount={users.length}
         filteredCount={filteredAndSortedUsers.length}
         loading={loading}
+        showBulkSelect={showBulkSelect}
       />
 
       {/* Main Content */}
@@ -285,6 +304,16 @@ export const EnhancedUserManagement = ({
               />
             </div>
           </div>
+        )}
+
+        {/* Bulk Select Controls */}
+        {showBulkSelect && (
+          <BulkSelectControls
+            users={filteredAndSortedUsers}
+            selectedUsers={selectedUsers}
+            onSelectionChange={setSelectedUsers}
+            onBulkActionComplete={handleBulkSelectComplete}
+          />
         )}
 
         {/* Users List */}
@@ -331,6 +360,9 @@ export const EnhancedUserManagement = ({
                     isPaid={userPaymentData.paidStatus[user.id]}
                     stipendAmount={userPaymentData.stipendAmounts[user.id]}
                     onPayout={handleUserPayout}
+                    showSelection={showBulkSelect}
+                    isSelected={selectedUsers.includes(user.id)}
+                    onSelectionChange={handleUserSelection}
                   />
                 ))
               )}
@@ -349,6 +381,9 @@ export const EnhancedUserManagement = ({
                   isPaid={userPaymentData.paidStatus[user.id]}
                   stipendAmount={userPaymentData.stipendAmounts[user.id]}
                   onPayout={handleUserPayout}
+                  showSelection={showBulkSelect}
+                  isSelected={selectedUsers.includes(user.id)}
+                  onSelectionChange={handleUserSelection}
                 />
               ))}
             </TabsContent>
