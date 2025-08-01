@@ -122,71 +122,89 @@ async function isAuthorizedSender(phoneNumber: string): Promise<boolean> {
 
 // Function to get recipients based on group
 async function getRecipientsByGroup(group: string): Promise<string[]> {
+  console.log(`🎯 Getting recipients for group: "${group}"`);
+  
   switch (group.toLowerCase()) {
     case 'exec':
+      console.log('📋 Fetching president only...');
       // Get president only
-      const { data: president } = await supabase
+      const { data: president, error: presError } = await supabase
         .from('gw_executive_board_members')
         .select('user_id')
         .eq('position', 'president')
         .eq('is_active', true);
+      console.log('President query result:', { data: president, error: presError });
       return president?.map(p => p.user_id) || [];
 
     case 'admin':
+      console.log('👑 Fetching super admins only...');
       // Get super admins only
-      const { data: superAdmins } = await supabase
+      const { data: superAdmins, error: adminError } = await supabase
         .from('gw_profiles')
         .select('user_id')
         .eq('is_super_admin', true);
+      console.log('Super admin query result:', { data: superAdmins, error: adminError });
       return superAdmins?.map(admin => admin.user_id) || [];
 
     case 's1':
+      console.log('🎵 Fetching soprano 1 section members...');
       // Get soprano 1 section members
-      const { data: s1Members } = await supabase
+      const { data: s1Members, error: s1Error } = await supabase
         .from('gw_profiles')
         .select('user_id')
         .eq('voice_part', 'soprano_1');
+      console.log('S1 query result:', { data: s1Members, error: s1Error });
       return s1Members?.map(member => member.user_id) || [];
 
     case 's2':
+      console.log('🎵 Fetching soprano 2 section members...');
       // Get soprano 2 section members
-      const { data: s2Members } = await supabase
+      const { data: s2Members, error: s2Error } = await supabase
         .from('gw_profiles')
         .select('user_id')
         .eq('voice_part', 'soprano_2');
+      console.log('S2 query result:', { data: s2Members, error: s2Error });
       return s2Members?.map(member => member.user_id) || [];
 
     case 'a1':
+      console.log('🎵 Fetching alto 1 section members...');
       // Get alto 1 section members
-      const { data: a1Members } = await supabase
+      const { data: a1Members, error: a1Error } = await supabase
         .from('gw_profiles')
         .select('user_id')
         .eq('voice_part', 'alto_1');
+      console.log('A1 query result:', { data: a1Members, error: a1Error });
       return a1Members?.map(member => member.user_id) || [];
 
     case 'a2':
+      console.log('🎵 Fetching alto 2 section members...');
       // Get alto 2 section members
-      const { data: a2Members } = await supabase
+      const { data: a2Members, error: a2Error } = await supabase
         .from('gw_profiles')
         .select('user_id')
         .eq('voice_part', 'alto_2');
+      console.log('A2 query result:', { data: a2Members, error: a2Error });
       return a2Members?.map(member => member.user_id) || [];
 
     case 'pr':
+      console.log('📢 Fetching PR coordinator...');
       // Get PR coordinator
-      const { data: prCoordinator } = await supabase
+      const { data: prCoordinator, error: prError } = await supabase
         .from('gw_executive_board_members')
         .select('user_id')
         .eq('position', 'pr_coordinator')
         .eq('is_active', true);
+      console.log('PR coordinator query result:', { data: prCoordinator, error: prError });
       return prCoordinator?.map(pr => pr.user_id) || [];
 
     default:
+      console.log('🌍 Defaulting to all verified members...');
       // Default to all verified members
-      const { data: allMembers } = await supabase
+      const { data: allMembers, error: allError } = await supabase
         .from('gw_profiles')
         .select('user_id')
         .neq('role', 'guest');
+      console.log('All members query result:', { data: allMembers, error: allError, count: allMembers?.length });
       return allMembers?.map(member => member.user_id) || [];
   }
 }
