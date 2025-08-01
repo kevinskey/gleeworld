@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { AdminPanel } from "@/components/AdminPanel";
 import { HeroManagement } from "@/components/admin/HeroManagement";
 import { DashboardSettings } from "@/components/admin/DashboardSettings";
 import { YouTubeManagement } from "@/components/admin/YouTubeManagement";
@@ -11,7 +10,6 @@ import { UsernamePermissionsManager } from "@/components/admin/UsernamePermissio
 import { SpotlightManagement } from "@/components/admin/spotlight/SpotlightManagement";
 import { WelcomeCard } from "./WelcomeCard";
 import { QuickActionsSection } from "./sections/QuickActionsSection";
-import { AdminControlsSection } from "./sections/AdminControlsSection";
 import { GleeClubSpotlightSection } from "./sections/GleeClubSpotlightSection";
 
 import { EventsAndActivitySection } from "./sections/EventsAndActivitySection";
@@ -70,40 +68,14 @@ const UserDashboard = React.memo(() => {
   
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
   
-  // Check for admin tab in URL
-  const activeTab = searchParams.get('tab');
-  const showAdminPanel = isAdmin && activeTab;
-  
   const userRole = profile?.role || 'user';
   const userEmail = user?.email || '';
-
-  // Get available modules for this user
-  const getAvailableModules = () => {
-    const modules: Array<{
-      key: DashboardModule;
-      module: typeof DASHBOARD_MODULES[DashboardModule];
-      source: 'role' | 'username';
-    }> = [];
-
-    Object.entries(DASHBOARD_MODULES).forEach(([key, module]) => {
-      const moduleKey = key as DashboardModule;
-      if (hasModuleAccess(userRole, userEmail, moduleKey, usernamePermissions)) {
-        const hasRolePermission = isAdmin;
-        const source = hasRolePermission ? 'role' : 'username';
-        modules.push({ key: moduleKey, module, source });
-      }
-    });
-
-    return modules;
-  };
 
   // Check if user has executive board permissions
   const hasExecBoardPerms = hasExecutiveBoardPermissions(userRole, undefined, usernamePermissions);
   
   // Check if user is an exec board member (assigned by super admin)
   const isExecBoardMember = profile?.exec_board_role && profile.exec_board_role.trim() !== '';
-
-  const availableModules = getAvailableModules();
 
   if (!user || profileLoading) {
     console.log('UserDashboard: No user found or profile loading, showing loading spinner');
@@ -136,37 +108,6 @@ const UserDashboard = React.memo(() => {
   
   console.log('UserDashboard: User found, proceeding with render');
 
-  // Show AdminPanel if admin user has a tab parameter
-  if (showAdminPanel) {
-    return (
-      <UniversalLayout>
-        <div className="container mx-auto px-4 py-6">
-          <div className="mb-6">
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2"
-              >
-                <Home className="h-4 w-4" />
-                Back to Dashboard
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-                Exit Admin Panel
-              </Button>
-            </div>
-          </div>
-          <AdminPanel activeTab={activeTab} />
-        </div>
-      </UniversalLayout>
-    );
-  }
 
   // Dynamic module rendering based on permissions
   if (selectedModule) {
@@ -224,12 +165,10 @@ const UserDashboard = React.memo(() => {
                 </Button>
               </div>
               <div className="flex items-center gap-2">
-                {availableModules.find(m => m.key === moduleKey)?.source === 'username' && (
-                  <Badge variant="secondary" className="text-xs">
-                    <Shield className="h-3 w-3 mr-1" />
-                    Special Access
-                  </Badge>
-                )}
+                <Badge variant="secondary" className="text-xs">
+                  <Shield className="h-3 w-3 mr-1" />
+                  Admin Module
+                </Badge>
               </div>
             </div>
             {renderModuleComponent()}
@@ -429,28 +368,11 @@ const UserDashboard = React.memo(() => {
           <QuickActionsSection isAdmin={isAdmin} actionFilter="music" />
         </div>
 
-        {/* Show Admin/Executive Features Only for Those Roles and in Admin View Mode */}
+        {/* Show Dashboard Modules for Admin/Executive Features */}
         {(isAdmin || hasExecBoardPerms) && viewMode === 'admin' && (
-          <>
-            {/* Admin Controls Section */}
-            <div className="w-full">
-              {availableModules.length > 0 ? (
-                <AdminControlsSection
-                  userRole={userRole}
-                  userEmail={userEmail}
-                  usernamePermissions={usernamePermissions}
-                  profile={profile}
-                />
-              ) : (
-                <GleeClubSpotlightSection />
-              )}
-            </div>
-
-            {/* Dashboard Modules Section */}
-            <div className="w-full">
-              <DashboardModulesSection />
-            </div>
-          </>
+          <div className="w-full">
+            <DashboardModulesSection />
+          </div>
         )}
           </div>
         </UniversalLayout>
