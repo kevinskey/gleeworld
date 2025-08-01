@@ -54,6 +54,47 @@ async function isAuthorizedSender(phoneNumber: string): Promise<boolean> {
   return allAuthorizedNumbers.includes(phoneNumber);
 }
 
+// Function to get recipients based on group
+async function getRecipientsByGroup(group: string): Promise<string[]> {
+  switch (group.toLowerCase()) {
+    case 'exec':
+    case 'executive':
+      // Get executive board members
+      const { data: executives } = await supabase
+        .from('gw_executive_board_members')
+        .select('user_id')
+        .eq('is_active', true);
+      return executives?.map(exec => exec.user_id) || [];
+
+    case 'admin':
+    case 'admins':
+      // Get admins and super admins
+      const { data: admins } = await supabase
+        .from('gw_profiles')
+        .select('user_id')
+        .or('is_admin.eq.true,is_super_admin.eq.true');
+      return admins?.map(admin => admin.user_id) || [];
+
+    case 'all':
+    case 'everyone':
+    case 'members':
+      // Get all verified members
+      const { data: allMembers } = await supabase
+        .from('gw_profiles')
+        .select('user_id')
+        .neq('role', 'guest');
+      return allMembers?.map(member => member.user_id) || [];
+
+    default:
+      // Default to executive board
+      const { data: defaultExecs } = await supabase
+        .from('gw_executive_board_members')
+        .select('user_id')
+        .eq('is_active', true);
+      return defaultExecs?.map(exec => exec.user_id) || [];
+  }
+}
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -88,15 +129,22 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Parse the SMS message
-    const parsedNotification = parseSMSMessage(smsData.Body);
+    // Parse the SMS message to extract group and content
+    const parsedMessage = parseSMSMessage(smsData.Body);
+    const targetGroup = parsedMessage.group;
+    const messageContent = parsedMessage.message;
+    const title = parsedMessage.title;
+
+    console.log(`Target group: ${targetGroup}, Message: ${messageContent}`);
+
+    // Get recipients based on the specified group
+    const recipientIds = await getRecipientsByGroup(targetGroup);
     
-    if (!parsedNotification) {
-      console.log('Could not parse SMS message');
-      // Send error response back to sender
+    if (recipientIds.length === 0) {
+      console.log('No recipients found for group:', targetGroup);
       const errorResponse = `<?xml version="1.0" encoding="UTF-8"?>
         <Response>
-          <Message>Invalid format. Use: PRIORITY: Message - Category</Message>
+          <Message>❌ No recipients found for group: ${targetGroup}</Message>
         </Response>`;
       return new Response(errorResponse, {
         status: 200,
@@ -104,31 +152,20 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Get all executive board members to notify
-    const { data: executives, error: execError } = await supabase
-      .from('gw_executive_board_members')
-      .select('user_id')
-      .eq('is_active', true);
-
-    if (execError) {
-      console.error('Error fetching executives:', execError);
-      throw execError;
-    }
-
-    // Create notifications for all executive board members
-    const notifications = executives?.map(exec => ({
-      recipient_user_id: exec.user_id,
-      title: parsedNotification.title,
-      message: parsedNotification.message,
-      notification_type: parsedNotification.category.toLowerCase(),
-      priority: parsedNotification.priority.toLowerCase(),
+    // Create notifications for recipients
+    const notifications = recipientIds.map(userId => ({
+      user_id: userId,
+      title: title,
+      message: messageContent,
+      type: 'sms_notification',
+      is_read: false,
       sender_phone: smsData.From,
       created_at: new Date().toISOString()
-    })) || [];
+    }));
 
     if (notifications.length > 0) {
       const { error: notificationError } = await supabase
-        .from('gw_executive_board_notifications')
+        .from('gw_notifications')
         .insert(notifications);
 
       if (notificationError) {
@@ -136,7 +173,7 @@ const handler = async (req: Request): Promise<Response> => {
         throw notificationError;
       }
 
-      console.log(`Created ${notifications.length} notifications from SMS`);
+      console.log(`Created ${notifications.length} notifications from SMS to ${targetGroup}`);
     }
 
     // Log the SMS for audit trail
@@ -158,7 +195,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send confirmation response
     const confirmationResponse = `<?xml version="1.0" encoding="UTF-8"?>
       <Response>
-        <Message>✅ Notification sent to ${notifications.length} executive board members</Message>
+        <Message>✅ Notification sent to ${notifications.length} ${targetGroup} members</Message>
       </Response>`;
 
     return new Response(confirmationResponse, {
@@ -181,21 +218,23 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-function parseSMSMessage(body: string): { title: string; message: string; priority: string; category: string } | null {
-  // Expected format: "PRIORITY: Message - Category"
-  // Examples:
-  // "HIGH: Concert dress rehearsal moved to 6 PM Friday - Wardrobe"
-  // "URGENT: Weather update: Tour bus delayed 2 hours - Travel"
-  // "NORMAL: New sheet music available in library - Music"
+function parseSMSMessage(body: string): { title: string; message: string; group: string } {
+  // Expected format with group targeting:
+  // "@exec: Your message" → Send to executive board
+  // "@admin: Your message" → Send to admins only  
+  // "@all: Your message" → Send to all members
+  // "Your message" → Default to executive board
   
-  const regex = /^(HIGH|URGENT|NORMAL|LOW):\s*(.+?)\s*-\s*(.+)$/i;
-  const match = body.trim().match(regex);
+  const groupRegex = /^@(exec|admin|all|everyone|members|executive|admins):\s*(.+)$/i;
+  const match = body.trim().match(groupRegex);
   
-  if (!match) {
-    return null;
+  let group = 'exec'; // Default to executive board
+  let message = body.trim();
+  
+  if (match) {
+    group = match[1].toLowerCase();
+    message = match[2].trim();
   }
-  
-  const [, priority, message, category] = match;
   
   // Create a title from the first part of the message (up to first sentence or 50 chars)
   const titleMatch = message.match(/^([^.!?]{1,50})/);
@@ -203,9 +242,8 @@ function parseSMSMessage(body: string): { title: string; message: string; priori
   
   return {
     title: title + (title.length < message.length ? '...' : ''),
-    message: message.trim(),
-    priority: priority.toUpperCase(),
-    category: category.trim()
+    message: message,
+    group: group
   };
 }
 
