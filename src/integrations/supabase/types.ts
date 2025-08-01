@@ -6679,6 +6679,39 @@ export type Database = {
           },
         ]
       }
+      gw_sms_logs: {
+        Row: {
+          created_at: string
+          from_number: string
+          id: string
+          message_body: string
+          message_sid: string
+          notification_count: number | null
+          processed_at: string
+          to_number: string
+        }
+        Insert: {
+          created_at?: string
+          from_number: string
+          id?: string
+          message_body: string
+          message_sid: string
+          notification_count?: number | null
+          processed_at?: string
+          to_number: string
+        }
+        Update: {
+          created_at?: string
+          from_number?: string
+          id?: string
+          message_body?: string
+          message_sid?: string
+          notification_count?: number | null
+          processed_at?: string
+          to_number?: string
+        }
+        Relationships: []
+      }
       gw_social_media_posts: {
         Row: {
           announcement_id: string | null

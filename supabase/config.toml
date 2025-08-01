@@ -112,3 +112,6 @@ verify_jwt = false
 
 [functions.send-general-inquiry]
 verify_jwt = false
+
+[functions.receive-sms-notifications]
+verify_jwt = false
