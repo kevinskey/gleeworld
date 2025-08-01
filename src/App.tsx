@@ -48,7 +48,7 @@ import MusicLibraryPage from "./pages/MusicLibrary";
 
 import Budgets from "./pages/Budgets";
 import Treasurer from "./pages/Treasurer";
-import TourManager from "./pages/TourManager";
+import TermManager from "./pages/TermManager";
 import PerformanceSuite from "./pages/PerformanceSuite";
 import WellnessSuite from "./pages/WellnessSuite";
 import { FeedbackDashboard } from "./modules/rehearsals/feedback-dashboard/FeedbackDashboard";
@@ -411,7 +411,7 @@ const App = () => {
                          path="/tour-manager" 
                          element={
                            <ProtectedRoute>
-                             <TourManager />
+                             <TermManager />
                            </ProtectedRoute>
                          } 
                        />
