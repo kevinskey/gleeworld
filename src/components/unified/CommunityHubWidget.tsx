@@ -28,7 +28,8 @@ import {
   Download,
   DollarSign,
   Shirt,
-  Package2
+  Package2,
+  MapPin
 } from "lucide-react";
 import { useSharedSpiritualReflections } from "@/hooks/useSharedSpiritualReflections";
 import { usePrayerRequests } from "@/hooks/usePrayerRequests";
@@ -37,6 +38,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePublicGleeWorldEvents } from "@/hooks/usePublicGleeWorldEvents";
 
 interface Notification {
   id: string;
@@ -73,6 +75,7 @@ export const CommunityHubWidget = () => {
   const isMobile = useIsMobile();
   const { sharedReflections, loading: reflectionsLoading } = useSharedSpiritualReflections();
   const { createPrayerRequest } = usePrayerRequests();
+  const { events: upcomingEvents, loading: eventsLoading } = usePublicGleeWorldEvents();
   
   // State for notifications
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -298,7 +301,7 @@ export const CommunityHubWidget = () => {
         <CollapsibleContent>
           <CardContent className="pt-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="reflections" className="text-xs">
                   <Book className="h-3 w-3 mr-1" />
                   Spirit
@@ -306,6 +309,10 @@ export const CommunityHubWidget = () => {
                 <TabsTrigger value="notifications" className="text-xs">
                   <Bell className="h-3 w-3 mr-1" />
                   Alerts {unreadNotificationsCount > 0 && `(${unreadNotificationsCount})`}
+                </TabsTrigger>
+                <TabsTrigger value="calendar" className="text-xs">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  Events
                 </TabsTrigger>
                 <TabsTrigger value="music" className="text-xs">
                   <Music className="h-3 w-3 mr-1" />
@@ -490,6 +497,52 @@ export const CommunityHubWidget = () => {
                   </p>
                 )}
               </TabsContent>
+
+              {/* Calendar Events Tab */}
+              <TabsContent value="calendar" className="space-y-3">
+                {eventsLoading ? (
+                  <div className="flex justify-center p-4">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                  </div>
+                ) : upcomingEvents.length > 0 ? (
+                  <ScrollArea className="h-48">
+                    <div className="space-y-2 pr-4">
+                      {upcomingEvents.slice(0, 5).map((event) => (
+                        <div key={event.id} className="border rounded-lg p-3">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm truncate">{event.title}</h4>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                <Clock className="h-3 w-3" />
+                                {format(new Date(event.start_date), 'MMM dd, h:mm a')}
+                                {event.location && (
+                                  <>
+                                    <MapPin className="h-3 w-3 ml-1" />
+                                    <span className="truncate">{event.location}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            <Badge variant="outline" className="text-xs h-4 px-1 flex-shrink-0">
+                              {event.event_type || 'Event'}
+                            </Badge>
+                          </div>
+                          {event.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                              {event.description}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-xs">No upcoming events</p>
+                  </div>
+                )}
+              </TabsContent>
             </Tabs>
 
             {/* Quick Action Buttons - only show on Spirit tab */}
@@ -571,6 +624,34 @@ export const CommunityHubWidget = () => {
                 <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/member-portal')}>
                   <Package className="h-3 w-3 mr-1" />
                   Member Portal
+                </Button>
+              </div>
+            )}
+
+            {/* Quick Action Buttons - show on Calendar tab */}
+            {activeTab === "calendar" && (
+              <div className="flex gap-2 mt-4">
+                <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/calendar')}>
+                  <Calendar className="h-3 w-3 mr-1" />
+                  Full Calendar
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/events')}>
+                  <Clock className="h-3 w-3 mr-1" />
+                  All Events
+                </Button>
+              </div>
+            )}
+
+            {/* Quick Action Buttons - show on Music tab */}
+            {activeTab === "music" && (
+              <div className="flex gap-2 mt-4">
+                <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/music-library')}>
+                  <Music className="h-3 w-3 mr-1" />
+                  Music Library
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/sheet-music')}>
+                  <BookOpen className="h-3 w-3 mr-1" />
+                  Browse All
                 </Button>
               </div>
             )}
