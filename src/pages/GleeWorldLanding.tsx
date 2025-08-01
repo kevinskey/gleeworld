@@ -8,6 +8,8 @@ import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useMusic, Album } from "@/hooks/useMusic";
 import { useYouTubeVideos } from "@/hooks/useYouTubeVideos";
+import { useRoleBasedRedirect } from "@/hooks/useRoleBasedRedirect";
+import { useNavigate } from "react-router-dom";
 import gleeClubFallback from "@/assets/glee-club-fallback.jpg";
 import { AlbumModal } from "@/components/music/AlbumModal";
 import { YoutubeVideoSection } from "@/components/youtube/YoutubeVideoSection";
@@ -16,6 +18,8 @@ import { CountdownTimer } from "@/components/landing/CountdownTimer";
 import { FeaturedProducts } from "@/components/products/FeaturedProducts";
 import { AuditionHoverCard } from "@/components/audition/AuditionHoverCard";
 import { MusicStaffIcon } from "@/components/icons/MusicStaffIcon";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Calendar, 
   MapPin,
@@ -27,7 +31,8 @@ import {
   Music,
   Album as AlbumIcon,
   Youtube,
-  Play
+  Play,
+  AlertCircle
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PublicLayout } from "@/components/layout/PublicLayout";
@@ -76,7 +81,9 @@ interface HeroSlide {
 
 
 export const GleeWorldLanding = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { userProfile, loading: profileLoading } = useRoleBasedRedirect();
+  const navigate = useNavigate();
   const { albums } = useMusic();
   const { videos, getVideoEmbedUrl } = useYouTubeVideos();
   const [events, setEvents] = useState<Event[]>([]);
@@ -251,8 +258,57 @@ export const GleeWorldLanding = () => {
   };
 
 
+  // Show auth state indicator for logged-in users
+  const renderAuthStateIndicator = () => {
+    if (!user) return null;
+
+    return (
+      <div className="fixed top-4 right-4 z-50 max-w-sm">
+        {authLoading || profileLoading ? (
+          <Alert className="bg-primary/10 border-primary">
+            <LoadingSpinner size="sm" />
+            <AlertDescription>
+              Loading your dashboard...
+            </AlertDescription>
+          </Alert>
+        ) : userProfile ? (
+          <Alert className="bg-green-50 border-green-200">
+            <AlertCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800">
+              You're logged in! 
+              <Button 
+                variant="link" 
+                size="sm" 
+                className="text-green-800 hover:text-green-900 p-0 ml-1"
+                onClick={() => navigate('/dashboard')}
+              >
+                Go to Dashboard
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <Alert className="bg-yellow-50 border-yellow-200">
+            <AlertCircle className="h-4 w-4 text-yellow-600" />
+            <AlertDescription className="text-yellow-800">
+              Setting up your profile...
+              <Button 
+                variant="link" 
+                size="sm" 
+                className="text-yellow-800 hover:text-yellow-900 p-0 ml-1"
+                onClick={() => navigate('/dashboard')}
+              >
+                Go to Dashboard
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+      </div>
+    );
+  };
+
   return (
     <PublicLayout>
+      {renderAuthStateIndicator()}
       {/* YouTube Video Background Section */}
       <section className="fixed top-0 left-0 w-full h-screen z-0 overflow-hidden">
         {!showFallbackImage && backgroundVideo ? (

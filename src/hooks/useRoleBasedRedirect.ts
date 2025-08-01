@@ -24,8 +24,26 @@ export const useRoleBasedRedirect = () => {
       pathname: location.pathname
     });
 
-    if (loading || !user || !userProfile) {
-      console.log('useRoleBasedRedirect: Early return', { loading, hasUser: !!user, hasUserProfile: !!userProfile });
+    // Early return if still loading
+    if (loading) {
+      console.log('useRoleBasedRedirect: Still loading auth or profile');
+      return;
+    }
+
+    // If no user, don't redirect (let them stay on public pages)
+    if (!user) {
+      console.log('useRoleBasedRedirect: No user found');
+      return;
+    }
+
+    // If user exists but no profile after loading is complete, try fallback redirect
+    if (!userProfile) {
+      console.log('useRoleBasedRedirect: User exists but no profile found, attempting fallback redirect');
+      // Only redirect from root or auth pages to prevent disrupting navigation
+      if (location.pathname === '/' || location.pathname === '/auth') {
+        navigate('/dashboard', { replace: true });
+        window.scrollTo(0, 0);
+      }
       return;
     }
 
