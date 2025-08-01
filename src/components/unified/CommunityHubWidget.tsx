@@ -425,10 +425,26 @@ export const CommunityHubWidget = () => {
                       Prayer Request
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
+                  <DialogContent className="sm:max-w-[525px]">
                     <DialogHeader>
                       <DialogTitle>Submit a Prayer Request</DialogTitle>
                     </DialogHeader>
+                    
+                    {/* Privacy Statement */}
+                    <div className="bg-muted/50 rounded-lg p-4 space-y-2 border border-muted">
+                      <div className="flex items-center gap-2">
+                        <Heart className="h-4 w-4 text-primary flex-shrink-0" />
+                        <h4 className="font-medium text-sm">Privacy & Confidentiality</h4>
+                      </div>
+                      <div className="text-xs text-muted-foreground space-y-1 leading-relaxed">
+                        <p>• Your prayer requests are sent securely and directly to our chaplains only</p>
+                        <p>• All requests are treated with strict confidentiality and pastoral care</p>
+                        <p>• Anonymous requests contain no identifying information</p>
+                        <p>• Data is encrypted and stored securely following best practices</p>
+                        <p>• Requests are retained only as long as necessary for pastoral support</p>
+                      </div>
+                    </div>
+                    
                     <Form {...prayerForm}>
                       <form onSubmit={prayerForm.handleSubmit(onSubmitPrayerRequest)} className="space-y-4">
                         <FormField
