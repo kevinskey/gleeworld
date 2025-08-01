@@ -345,14 +345,9 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
                             </div>
                           </div>
                         </div>
-                        <div className="flex flex-col gap-2">
-                          <Badge className={getRoleColor(role)}>
-                            {ROLE_DISPLAY_NAMES[role]}
-                          </Badge>
-                          <div className="text-xs text-gray-500 max-w-md">
-                            {ROLE_RESPONSIBILITIES[role]}
-                          </div>
-                        </div>
+                        <Badge className={getRoleColor(role)}>
+                          {ROLE_DISPLAY_NAMES[role]}
+                        </Badge>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="text-sm text-gray-500">
