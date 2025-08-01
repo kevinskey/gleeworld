@@ -487,14 +487,22 @@ const App = () => {
                                </ProtectedRoute>
                              } 
                            />
-                           <Route 
-                             path="/dashboard/executive-board" 
-                             element={
-                               <ProtectedRoute>
-                                 <ExecutiveBoardDashboard />
-                               </ProtectedRoute>
-                             } 
-                              />
+                            <Route 
+                              path="/executive-board" 
+                              element={
+                                <ProtectedRoute>
+                                  <ExecutiveBoardDashboard />
+                                </ProtectedRoute>
+                              } 
+                               />
+                              <Route 
+                                path="/executive-board/tour-manager" 
+                                element={
+                                  <ProtectedRoute>
+                                    <TourManager />
+                                  </ProtectedRoute>
+                                } 
+                               />
                              <Route 
                                path="/dashboard/pr-hub" 
                                element={
