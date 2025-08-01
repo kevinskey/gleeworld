@@ -29,6 +29,11 @@ import { Success } from "@/pages/shop/Success";
 import BookingRequest from "@/pages/BookingRequest";
 import TourPlanner from "@/pages/TourPlanner";
 import SendNotificationPage from "@/pages/SendNotificationPage";
+import LibrarianServices from "@/pages/executive-services/LibrarianServices";
+import TreasurerServices from "@/pages/executive-services/TreasurerServices";
+import TourManagerServices from "@/pages/executive-services/TourManagerServices";
+import PRCoordinatorServices from "@/pages/executive-services/PRCoordinatorServices";
+import ExecutiveServicesDirectory from "@/pages/ExecutiveServicesDirectory";
 
 
 export const router = createBrowserRouter([
@@ -135,6 +140,26 @@ export const router = createBrowserRouter([
   {
     path: "/booking-request",
     element: <BookingRequest />,
+  },
+  {
+    path: "/executive-services",
+    element: <ExecutiveServicesDirectory />,
+  },
+  {
+    path: "/executive-services/librarian",
+    element: <LibrarianServices />,
+  },
+  {
+    path: "/executive-services/treasurer",
+    element: <TreasurerServices />,
+  },
+  {
+    path: "/executive-services/tour-manager", 
+    element: <TourManagerServices />,
+  },
+  {
+    path: "/executive-services/pr-coordinator",
+    element: <PRCoordinatorServices />,
   },
   {
     path: "*",
