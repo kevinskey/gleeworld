@@ -696,7 +696,7 @@ export const ExecutiveBoardDashboard = () => {
             {/* 4. Upcoming Events - Horizontal Scroll */}
             <div className="space-y-4">
               <h3 className="text-2xl font-semibold text-white drop-shadow-md">Upcoming Events</h3>
-              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth">
+              <div className="flex gap-4 overflow-x-auto overflow-y-hidden pb-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth touch-pan-x" style={{ WebkitOverflowScrolling: 'touch' }}>
                 {[1, 2, 3, 4, 5].map((i) => (
                   <Card key={i} className="flex-shrink-0 w-72 snap-start">
                     <CardContent className="p-4">
