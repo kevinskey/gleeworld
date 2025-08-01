@@ -44,13 +44,21 @@ export const CreateDuesRecord = ({ onSuccess, editingRecord, onCancel }: CreateD
 
   const fetchMembers = async () => {
     try {
+      console.log('Fetching members for dues record...');
+      
+      // First try to get all profiles
       const { data, error } = await supabase
         .from('gw_profiles')
         .select('user_id, full_name, email, voice_part, class_year')
         .not('user_id', 'is', null)
         .order('full_name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching members:', error);
+        throw error;
+      }
+      
+      console.log(`Successfully fetched ${data?.length || 0} members`);
       setMembers(data || []);
     } catch (error) {
       console.error('Error fetching members:', error);
