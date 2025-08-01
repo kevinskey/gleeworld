@@ -41,6 +41,7 @@ interface ExecutiveBoardManager {
 }
 
 interface BoardMember {
+  id?: string;
   user_id: string;
   email: string;
   full_name: string;
@@ -65,8 +66,8 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
     user.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const currentBoardMembers = users.filter(user => 
-    user.exec_board_role && user.exec_board_role.trim() !== ''
+  const currentBoardMembers = boardMembers.filter(member => 
+    member.exec_board_role && member.exec_board_role.trim() !== ''
   );
 
   const fetchBoardMembers = async () => {
@@ -74,7 +75,7 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
       // Fetch from both gw_profiles and gw_executive_board_members for complete data
       const { data: profileData, error: profileError } = await supabase
         .from('gw_profiles')
-        .select('user_id, email, full_name, exec_board_role')
+        .select('id, user_id, email, full_name, exec_board_role')
         .not('exec_board_role', 'is', null)
         .neq('exec_board_role', '');
 
@@ -311,7 +312,7 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
                 
                 return (
                   <div 
-                    key={member.id} 
+                    key={member.id || member.user_id} 
                     className="flex items-center justify-between p-4 border rounded-lg bg-white"
                   >
                     <div className="flex items-center gap-4">
@@ -342,7 +343,7 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleRemoveRole(member.id, member.full_name || member.email)}
+                        onClick={() => handleRemoveRole(member.user_id, member.full_name || member.email)}
                         disabled={updating}
                       >
                         <X className="h-4 w-4" />
@@ -437,7 +438,7 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
               <SelectContent className="bg-white border shadow-lg z-50">
                 {Object.entries(ROLE_DISPLAY_NAMES).map(([value, label]) => {
                   const isOccupied = currentBoardMembers.some(
-                    member => member.exec_board_role === value && member.id !== selectedUser?.id
+                    member => member.exec_board_role === value && member.user_id !== selectedUser?.id
                   );
                   
                   return (
