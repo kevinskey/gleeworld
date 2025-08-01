@@ -287,6 +287,15 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                 variant="outline" 
                 size="sm" 
                 className="w-full justify-start" 
+                onClick={() => navigate('/dues-management')}
+              >
+                <DollarSign className="mr-2 h-4 w-4" />
+                Dues Management
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full justify-start" 
                 onClick={() => navigate('/dashboard/executive-board')}
               >
                 <Shield className="mr-2 h-4 w-4" />
