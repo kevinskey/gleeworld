@@ -118,6 +118,14 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
           </p>
         </div>
       </div>
+      {/* GLEE 100 emblem positioned at bottom left */}
+      <div className="absolute bottom-4 left-4 z-20">
+        <img 
+          src="/lovable-uploads/8775a40d-2f4b-486a-b712-f11a753ba969.png"
+          alt="GLEE 100 Anniversary Emblem"
+          className="w-16 h-20 sm:w-20 sm:h-24 md:w-24 md:h-28 drop-shadow-lg opacity-90 hover:opacity-100 transition-opacity"
+        />
+      </div>
       
       {/* Notification Music Note */}
       {dashboardData?.unread_notifications > 0 && (
