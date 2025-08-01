@@ -108,10 +108,12 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
             Welcome back {displayName}!
           </h1>
         </div>
-        
-        {/* Sub text moved lower */}
-        <div className="mt-16 sm:mt-20 md:mt-24">
-          <p className="text-white/90 text-sm sm:text-base md:text-lg drop-shadow leading-relaxed">
+      </div>
+      
+      {/* Role badge positioned at bottom right */}
+      <div className="absolute bottom-4 right-4 z-20">
+        <div className="bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5 border border-white/20">
+          <p className="text-white text-xs sm:text-sm font-medium drop-shadow">
             {[profile?.exec_board_role, profile?.voice_part].filter(Boolean).join(', ') || getUserTitle()} • Member since {profile?.created_at ? format(new Date(profile.created_at), 'MMMM yyyy') : 'Recently'}
           </p>
         </div>
