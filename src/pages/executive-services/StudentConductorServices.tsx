@@ -39,7 +39,8 @@ const StudentConductorServices = () => {
         .from('gw_executive_board_members')
         .select(`
           position,
-          gw_profiles!inner(
+          user_id,
+          gw_profiles(
             first_name,
             last_name,
             full_name,
@@ -51,10 +52,15 @@ const StudentConductorServices = () => {
         .eq('is_active', true)
         .single();
 
-      if (data && !error) {
+      if (data && !error && data.gw_profiles) {
+        const profile = Array.isArray(data.gw_profiles) ? data.gw_profiles[0] : data.gw_profiles;
         const conductorData = {
           position: data.position,
-          ...data.gw_profiles
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          full_name: profile.full_name,
+          user_id: profile.user_id,
+          bio: profile.bio
         } as ExecutiveBoardMember;
         setConductor(conductorData);
 

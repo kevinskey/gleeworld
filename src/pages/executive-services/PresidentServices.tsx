@@ -39,7 +39,8 @@ const PresidentServices = () => {
         .from('gw_executive_board_members')
         .select(`
           position,
-          gw_profiles!inner(
+          user_id,
+          gw_profiles(
             first_name,
             last_name,
             full_name,
@@ -52,13 +53,14 @@ const PresidentServices = () => {
         .single();
 
       if (data && !error && data.gw_profiles) {
+        const profile = Array.isArray(data.gw_profiles) ? data.gw_profiles[0] : data.gw_profiles;
         const presidentData = {
           position: data.position,
-          first_name: data.gw_profiles.first_name,
-          last_name: data.gw_profiles.last_name,
-          full_name: data.gw_profiles.full_name,
-          user_id: data.gw_profiles.user_id,
-          bio: data.gw_profiles.bio
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          full_name: profile.full_name,
+          user_id: profile.user_id,
+          bio: profile.bio
         } as ExecutiveBoardMember;
         setPresident(presidentData);
 
