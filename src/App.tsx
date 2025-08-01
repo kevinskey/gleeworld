@@ -86,6 +86,7 @@ import ExecutiveBoardNavigationPage from "./pages/ExecutiveBoardNavigationHub";
 import LibrarianDashboard from "./pages/LibrarianDashboard";
 import HistorianDashboard from "./pages/HistorianDashboard";
 import SetUpCrewManagerServices from "./pages/executive-services/SetUpCrewManagerServices";
+import UserManagement from "./pages/UserManagement";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -486,15 +487,23 @@ const App = () => {
                                  <AdminProducts />
                                </ProtectedRoute>
                              } 
-                           />
+                            />
                             <Route 
-                              path="/executive-board" 
+                              path="/user-management" 
                               element={
                                 <ProtectedRoute>
-                                  <ExecutiveBoardDashboard />
+                                  <UserManagement />
                                 </ProtectedRoute>
                               } 
-                               />
+                            />
+                             <Route 
+                               path="/executive-board" 
+                               element={
+                                 <ProtectedRoute>
+                                   <ExecutiveBoardDashboard />
+                                 </ProtectedRoute>
+                               } 
+                                />
                               <Route 
                                 path="/executive-board/tour-manager" 
                                 element={
