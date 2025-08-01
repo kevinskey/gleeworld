@@ -116,54 +116,23 @@ export const CommunityHubWidget = () => {
         .select('*')
         .eq('recipient_user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(8);
 
       if (error) throw error;
 
-      // Add sample notifications for treasurer, wardrobe, and equipment alerts
-      const sampleNotifications = [
-        {
-          id: 'treasurer-1',
-          title: 'Outstanding Balance',
-          message: 'You have a pending payment of $75 for tour fees. Please settle by Feb 15th.',
-          notification_type: 'financial',
-          is_read: false,
-          priority: 'high',
-          created_at: new Date().toISOString(),
-          category: 'Treasurer'
-        },
-        {
-          id: 'wardrobe-1', 
-          title: 'Wardrobe Fitting',
-          message: 'Concert dress fitting scheduled for this Friday 3-5 PM. Please arrive promptly.',
-          notification_type: 'wardrobe',
-          is_read: false,
-          priority: 'normal',
-          created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-          category: 'Wardrobe'
-        },
-        {
-          id: 'equipment-1',
-          title: 'Equipment Due',
-          message: 'Music folder #127 is due back to the library by Feb 10th.',
-          notification_type: 'equipment',
-          is_read: false,
-          priority: 'normal',
-          created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          category: 'Equipment'
-        }
-      ];
-
-      // Combine all notifications
-      const allNotifications = [
-        ...(data || []).map(n => ({ ...n, category: 'Executive' })),
-        ...sampleNotifications
-      ];
-
-      // Sort by created_at
-      allNotifications.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      // Transform the data to match our Notification interface
+      const notifications: Notification[] = (data || []).map(n => ({
+        id: n.id,
+        title: n.title,
+        message: n.message,
+        notification_type: n.notification_type,
+        is_read: n.is_read,
+        priority: n.priority,
+        created_at: n.created_at,
+        category: 'Executive'
+      }));
       
-      setNotifications(allNotifications.slice(0, 8));
+      setNotifications(notifications);
     } catch (error) {
       console.error('Error fetching notifications:', error);
       setNotifications([]);
@@ -192,18 +161,15 @@ export const CommunityHubWidget = () => {
 
   const markNotificationAsRead = async (notificationId: string) => {
     try {
-      // Only update database notifications (not sample ones)
-      if (!notificationId.startsWith('treasurer-') && !notificationId.startsWith('wardrobe-') && !notificationId.startsWith('equipment-')) {
-        const { error } = await supabase
-          .from('gw_executive_board_notifications')
-          .update({ 
-            is_read: true,
-            read_at: new Date().toISOString()
-          })
-          .eq('id', notificationId);
+      const { error } = await supabase
+        .from('gw_executive_board_notifications')
+        .update({ 
+          is_read: true,
+          read_at: new Date().toISOString()
+        })
+        .eq('id', notificationId);
 
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       setNotifications(notifications.map(notification => 
         notification.id === notificationId 
