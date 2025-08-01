@@ -504,29 +504,91 @@ export const CommunityHubWidget = () => {
                       />
                     </div>
                     
-                    {/* Interactive Bucket Container */}
-                    <div className="relative bg-gradient-to-b from-blue-200 to-blue-400 rounded-b-3xl mx-8 pt-4 pb-8" style={{
-                      clipPath: "polygon(15% 0%, 85% 0%, 95% 100%, 5% 100%)"
-                    }}>
-                      {/* Bucket Handle */}
-                      <div className="absolute -left-2 top-4 w-8 h-16 border-4 border-blue-600 rounded-full border-r-transparent"></div>
-                      <div className="absolute -right-2 top-4 w-8 h-16 border-4 border-blue-600 rounded-full border-l-transparent"></div>
-                      
-                       {/* Hearts arranged in bucket shape */}
-                       <div className="relative px-4 py-2 h-40">
-                         {/* Center Add Button - Heart with Plus - Always visible */}
-                         <div className="absolute inset-0 flex items-center justify-center z-10">
-                           <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
-                             <DialogTrigger asChild>
-                               <div 
-                                 className="bg-pink-50 border-2 border-dashed border-pink-300 rounded-lg p-4 w-16 h-16 flex items-center justify-center cursor-pointer hover:bg-pink-100 transition-colors shadow-md hover:scale-110 transition-transform"
-                               >
-                                 <div className="relative">
-                                   <Heart className="h-6 w-6 text-pink-500 fill-pink-200" />
-                                   <Plus className="h-3 w-3 text-pink-600 absolute -top-1 -right-1 bg-white rounded-full" />
-                                 </div>
-                               </div>
-                             </DialogTrigger>
+                    
+                    {/* 3D Interactive Bucket Container */}
+                    <div className="relative flex justify-center items-end" style={{ perspective: "800px" }}>
+                      {/* 3D Bucket Structure */}
+                      <div className="relative" style={{ transformStyle: "preserve-3d" }}>
+                        
+                        {/* Bucket Body - Main Container */}
+                        <div 
+                          className="relative w-48 h-32 mx-auto"
+                          style={{
+                            background: "linear-gradient(145deg, #7dd3fc 0%, #0ea5e9 50%, #0284c7 100%)",
+                            borderRadius: "0 0 24px 24px",
+                            transform: "rotateX(10deg) rotateY(-5deg)",
+                            boxShadow: `
+                              inset 0 2px 8px rgba(255,255,255,0.3),
+                              inset 0 -2px 8px rgba(0,0,0,0.2),
+                              0 8px 20px rgba(0,0,0,0.15),
+                              0 4px 8px rgba(0,0,0,0.1)
+                            `,
+                            clipPath: "polygon(20% 0%, 80% 0%, 90% 100%, 10% 100%)"
+                          }}
+                        >
+                          
+                          {/* Bucket Rim - Top Edge */}
+                          <div 
+                            className="absolute -top-1 left-0 right-0 h-3 bg-gradient-to-r from-slate-400 via-slate-300 to-slate-400 rounded-full"
+                            style={{
+                              transform: "rotateX(-15deg) translateZ(2px)",
+                              boxShadow: "0 2px 4px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.3)"
+                            }}
+                          />
+                          
+                          {/* Left Handle */}
+                          <div 
+                            className="absolute -left-6 top-2 w-12 h-20 border-4 border-slate-500 rounded-full"
+                            style={{
+                              borderRight: "transparent",
+                              transform: "rotateY(-20deg) translateZ(-5px)",
+                              background: "linear-gradient(90deg, transparent 50%, rgba(148,163,184,0.1) 60%)",
+                              boxShadow: "-2px 0 4px rgba(0,0,0,0.2)"
+                            }}
+                          />
+                          
+                          {/* Right Handle */}
+                          <div 
+                            className="absolute -right-6 top-2 w-12 h-20 border-4 border-slate-500 rounded-full"
+                            style={{
+                              borderLeft: "transparent",
+                              transform: "rotateY(20deg) translateZ(-5px)",
+                              background: "linear-gradient(270deg, transparent 50%, rgba(148,163,184,0.1) 60%)",
+                              boxShadow: "2px 0 4px rgba(0,0,0,0.2)"
+                            }}
+                          />
+                          
+                          {/* Bucket Interior Gradient */}
+                          <div 
+                            className="absolute inset-2 rounded-b-2xl"
+                            style={{
+                              background: "radial-gradient(ellipse at center top, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 70%)",
+                              clipPath: "polygon(15% 0%, 85% 0%, 95% 100%, 5% 100%)"
+                            }}
+                          />
+                          
+                          {/* Hearts/Messages Container */}
+                          <div className="relative px-6 py-4 h-full overflow-hidden">
+                            {/* Center Add Button - Floating Heart */}
+                            <div className="absolute inset-0 flex items-center justify-center z-20">
+                              <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
+                                <DialogTrigger asChild>
+                                  <div 
+                                    className="group relative bg-gradient-to-br from-pink-100 to-pink-50 border-2 border-dashed border-pink-300 rounded-xl p-4 w-16 h-16 flex items-center justify-center cursor-pointer hover:from-pink-200 hover:to-pink-100 transition-all duration-300 hover:scale-110 hover:rotate-3"
+                                    style={{
+                                      transform: "translateZ(10px)",
+                                      boxShadow: "0 4px 12px rgba(244,114,182,0.2), 0 2px 4px rgba(244,114,182,0.1)"
+                                    }}
+                                  >
+                                    <div className="relative">
+                                      <Heart className="h-6 w-6 text-pink-500 fill-pink-200 group-hover:fill-pink-300 transition-colors" />
+                                      <Plus className="h-3 w-3 text-pink-600 absolute -top-1 -right-1 bg-white rounded-full border border-pink-300" />
+                                    </div>
+                                    {/* Floating sparkles */}
+                                    <div className="absolute -top-1 -left-1 w-2 h-2 bg-pink-300 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-pulse transition-opacity" />
+                                    <div className="absolute -bottom-1 -right-1 w-1.5 h-1.5 bg-pink-400 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-pulse transition-opacity delay-75" />
+                                  </div>
+                                </DialogTrigger>
                         <DialogContent className="sm:max-w-[525px]">
                           <DialogHeader>
                             <DialogTitle>Share a Message of Love & Encouragement</DialogTitle>
@@ -739,8 +801,9 @@ export const CommunityHubWidget = () => {
                                  </div>
                                </div>
                              </div>
-                           );
-                         })}
+                            );
+                          })}
+                         </div>
                         </div>
                       </div>
                     </div>
