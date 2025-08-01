@@ -15,7 +15,12 @@ export const useNotifications = () => {
 
   // Load notifications
   const loadNotifications = async (limit = 50) => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user found, cannot load notifications');
+      return;
+    }
+    
+    console.log('Loading notifications for user:', user.id);
     
     try {
       setLoading(true);
@@ -26,12 +31,15 @@ export const useNotifications = () => {
         .order('created_at', { ascending: false })
         .limit(limit);
 
+      console.log('Notifications query result:', { data, error });
+
       if (error) {
         console.error('Error loading notifications:', error);
         toast.error('Failed to load notifications');
         return;
       }
 
+      console.log('Setting notifications:', data);
       setNotifications(data || []);
       const unread = data?.filter(n => !n.is_read).length || 0;
       setUnreadCount(unread);
