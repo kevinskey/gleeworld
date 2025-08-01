@@ -202,6 +202,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    console.log('=== STARTING SMS PROCESSING ===');
     console.log('Received SMS webhook from Twilio');
     
     // Parse form data from Twilio webhook
@@ -213,13 +214,25 @@ const handler = async (req: Request): Promise<Response> => {
       MessageSid: formData.get('MessageSid') as string,
     };
 
-    console.log('SMS Data:', smsData);
+    console.log('SMS Data received:', {
+      From: smsData.From,
+      To: smsData.To,
+      Body: smsData.Body,
+      MessageSid: smsData.MessageSid
+    });
 
     // Check if sender is authorized
+    console.log('=== CHECKING AUTHORIZATION ===');
     const isAuthorized = await isAuthorizedSender(smsData.From);
+    console.log(`Authorization result: ${isAuthorized} for number: ${smsData.From}`);
+    
     if (!isAuthorized) {
-      console.log(`Unauthorized number: ${smsData.From}`);
-      return new Response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', {
+      console.log(`❌ UNAUTHORIZED: ${smsData.From} is not authorized to send messages`);
+      const unauthorizedResponse = `<?xml version="1.0" encoding="UTF-8"?>
+        <Response>
+          <Message>❌ Unauthorized: Your number is not registered for SMS notifications</Message>
+        </Response>`;
+      return new Response(unauthorizedResponse, {
         status: 200,
         headers: { 'Content-Type': 'text/xml', ...corsHeaders }
       });
@@ -245,18 +258,25 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Parse the SMS message to extract group and content
+    console.log('=== PARSING MESSAGE ===');
     const parsedMessage = parseSMSMessage(smsData.Body);
     const targetGroup = parsedMessage.group;
     const messageContent = parsedMessage.message;
     const title = parsedMessage.title;
 
-    console.log(`Target group: ${targetGroup}, Message: ${messageContent}`);
+    console.log(`📝 Parsed message:`, {
+      targetGroup,
+      title,
+      messageContent
+    });
 
     // Get recipients based on the specified group
+    console.log('=== GETTING RECIPIENTS ===');
     const recipientIds = await getRecipientsByGroup(targetGroup);
+    console.log(`👥 Found ${recipientIds.length} recipients for group "${targetGroup}":`, recipientIds);
     
     if (recipientIds.length === 0) {
-      console.log('No recipients found for group:', targetGroup);
+      console.log('❌ No recipients found for group:', targetGroup);
       const errorResponse = `<?xml version="1.0" encoding="UTF-8"?>
         <Response>
           <Message>❌ No recipients found for group: ${targetGroup}</Message>
@@ -268,6 +288,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Create notifications for recipients
+    console.log('=== CREATING NOTIFICATIONS ===');
     const notifications = recipientIds.map(userId => ({
       user_id: userId,
       title: title,
@@ -278,20 +299,23 @@ const handler = async (req: Request): Promise<Response> => {
       created_at: new Date().toISOString()
     }));
 
+    console.log(`📬 Attempting to create ${notifications.length} notifications`);
+
     if (notifications.length > 0) {
       const { error: notificationError } = await supabase
         .from('gw_notifications')
         .insert(notifications);
 
       if (notificationError) {
-        console.error('Error creating notifications:', notificationError);
+        console.error('❌ Error creating notifications:', notificationError);
         throw notificationError;
       }
 
-      console.log(`Created ${notifications.length} notifications from SMS to ${targetGroup}`);
+      console.log(`✅ Successfully created ${notifications.length} notifications`);
     }
 
     // Log the SMS for audit trail
+    console.log('=== LOGGING SMS ===');
     const { error: logError } = await supabase
       .from('gw_sms_logs')
       .insert({
@@ -304,26 +328,35 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
     if (logError) {
-      console.error('Error logging SMS:', logError);
+      console.error('⚠️ Error logging SMS (non-critical):', logError);
+    } else {
+      console.log('✅ SMS logged successfully');
     }
 
     // Send confirmation response
+    console.log('=== SENDING CONFIRMATION ===');
     const confirmationResponse = `<?xml version="1.0" encoding="UTF-8"?>
       <Response>
-        <Message>✅ Notification sent to ${notifications.length} ${targetGroup} members</Message>
+        <Message>✅ Success! Sent notification to ${notifications.length} ${targetGroup} members</Message>
       </Response>`;
 
+    console.log('📤 Sending confirmation SMS response');
     return new Response(confirmationResponse, {
       status: 200,
       headers: { 'Content-Type': 'text/xml', ...corsHeaders }
     });
 
   } catch (error: any) {
-    console.error('Error processing SMS:', error);
+    console.error('💥 CRITICAL ERROR processing SMS:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     
     const errorResponse = `<?xml version="1.0" encoding="UTF-8"?>
       <Response>
-        <Message>❌ Error processing notification. Please try again.</Message>
+        <Message>❌ System error processing your message. Please contact support.</Message>
       </Response>`;
 
     return new Response(errorResponse, {
