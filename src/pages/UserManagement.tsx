@@ -26,10 +26,10 @@ const UserManagement = () => {
     );
   }
   
-  // Redirect if not admin (only after loading is complete)
+  // Redirect if not admin (only after loading is complete) - TEMPORARILY DISABLED FOR DEBUGGING
   if (!authLoading && !profileLoading && !isAdmin) {
-    console.log('UserManagement: Redirecting non-admin user');
-    return <Navigate to="/" replace />;
+    console.log('UserManagement: Would redirect non-admin user, but debugging...');
+    // return <Navigate to="/" replace />;
   }
 
   console.log('UserManagement: Rendering main content');
