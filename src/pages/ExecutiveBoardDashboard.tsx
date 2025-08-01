@@ -118,6 +118,7 @@ interface ExecutiveMember {
 }
 
 export const ExecutiveBoardDashboard = () => {
+  console.log('ExecutiveBoardDashboard: Component rendering started');
   const { user } = useAuth();
   const navigate = useNavigate();
   const { getSettingByName } = useDashboardSettings();
@@ -127,6 +128,10 @@ export const ExecutiveBoardDashboard = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+
+  console.log('ExecutiveBoardDashboard: Current user:', user?.id);
+  console.log('ExecutiveBoardDashboard: Loading state:', loading);
+  console.log('ExecutiveBoardDashboard: Executive data:', executiveData);
 
   useEffect(() => {
     checkExecutiveMembership();
