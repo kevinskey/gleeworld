@@ -607,7 +607,7 @@ export const GleeWorldLanding = () => {
               <div className="text-center mb-4 sm:mb-6 md:mb-8">
                 <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
                   <AlbumIcon className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-secondary animate-pulse" />
-                  <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-dancing font-bold text-foreground">Our Music</h2>
+                  <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-dancing font-bold text-gray-900 dark:text-white">Our Music</h2>
                   <AlbumIcon className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-primary animate-pulse" />
                 </div>
                 <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">Discover our musical journey through our album collection</p>
@@ -684,7 +684,7 @@ export const GleeWorldLanding = () => {
             <div className="text-center mb-4 sm:mb-6 md:mb-8">
               <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
                 <Youtube className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-red-500 animate-pulse" />
-                <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-dancing font-bold text-foreground">YouTube Channel</h2>
+                <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-dancing font-bold text-gray-900 dark:text-white">YouTube Channel</h2>
                 <Youtube className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-red-600 animate-pulse" />
               </div>
               <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">Experience our performances and behind-the-scenes moments</p>
