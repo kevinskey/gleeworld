@@ -17,11 +17,42 @@ const supabaseUrl = 'https://oopmlreysjzuxzylyheb.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTA3ODk1NSwiZXhwIjoyMDY0NjU0OTU1fQ.VNf--TUVMvzSoF3tX-tDmNGFqjgBWdLj9OYv30h_Atg';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Authorized phone numbers - add your actual phone numbers here
-const AUTHORIZED_NUMBERS = [
-  // Add your authorized phone numbers here in E.164 format (e.g., '+15551234567')
-  // Executive board members and administrators who can send SMS notifications
-];
+// Function to check if phone number is authorized
+async function isAuthorizedSender(phoneNumber: string): Promise<boolean> {
+  // Check if sender is an executive board member or admin with a phone number
+  const { data: authorizedUsers, error } = await supabase
+    .from('gw_profiles')
+    .select('phone_number, is_admin, is_super_admin, user_id')
+    .or('is_admin.eq.true,is_super_admin.eq.true')
+    .not('phone_number', 'is', null);
+
+  if (error) {
+    console.error('Error checking authorized users:', error);
+    return false;
+  }
+
+  // Also check executive board members
+  const { data: execMembers, error: execError } = await supabase
+    .from('gw_executive_board_members')
+    .select(`
+      user_id,
+      gw_profiles!inner(phone_number)
+    `)
+    .eq('is_active', true)
+    .not('gw_profiles.phone_number', 'is', null);
+
+  if (execError) {
+    console.error('Error checking executive board members:', execError);
+  }
+
+  // Combine all authorized phone numbers
+  const allAuthorizedNumbers = [
+    ...(authorizedUsers?.map(user => user.phone_number).filter(Boolean) || []),
+    ...(execMembers?.map(member => member.gw_profiles?.phone_number).filter(Boolean) || [])
+  ];
+
+  return allAuthorizedNumbers.includes(phoneNumber);
+}
 
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -48,7 +79,8 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('SMS Data:', smsData);
 
     // Check if sender is authorized
-    if (!AUTHORIZED_NUMBERS.includes(smsData.From)) {
+    const isAuthorized = await isAuthorizedSender(smsData.From);
+    if (!isAuthorized) {
       console.log(`Unauthorized number: ${smsData.From}`);
       return new Response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', {
         status: 200,
