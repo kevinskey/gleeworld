@@ -17,10 +17,10 @@ const supabaseUrl = 'https://oopmlreysjzuxzylyheb.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTA3ODk1NSwiZXhwIjoyMDY0NjU0OTU1fQ.VNf--TUVMvzSoF3tX-tDmNGFqjgBWdLj9OYv30h_Atg';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Authorized phone numbers - in production, store this in database
+// Authorized phone numbers - add your actual phone numbers here
 const AUTHORIZED_NUMBERS = [
-  '+1234567890', // Replace with actual authorized numbers
-  '+0987654321', // Add more authorized numbers here
+  // Add your authorized phone numbers here in E.164 format (e.g., '+15551234567')
+  // Executive board members and administrators who can send SMS notifications
 ];
 
 const handler = async (req: Request): Promise<Response> => {
