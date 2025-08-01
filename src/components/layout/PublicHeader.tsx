@@ -21,7 +21,7 @@ export const PublicHeader = () => {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: overlayStyle }} />
-      <header className="border-b border-white/30 sticky top-0 z-[100]">
+      <header className="bg-gradient-to-r from-blue-50/90 via-white/90 to-purple-50/90 backdrop-blur-sm border-b border-white/30 sticky top-0 z-[100]">
       <div className="container mx-auto px-2 sm:px-4 lg:px-6">
         <div className="flex items-center justify-between h-14 sm:h-16 py-3">
           {/* Logo with Clock - Restored beautiful design */}
