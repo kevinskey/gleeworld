@@ -192,12 +192,29 @@ async function getRecipientsByGroup(group: string): Promise<string[]> {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log('🚀 SMS WEBHOOK TRIGGERED - Method:', req.method, 'URL:', req.url);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('📞 Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Add a simple GET endpoint for testing
+  if (req.method === 'GET') {
+    console.log('🔍 GET request received - this is a test endpoint');
+    return new Response(JSON.stringify({
+      status: 'SMS webhook is active',
+      timestamp: new Date().toISOString(),
+      message: 'Send POST request with Twilio webhook data'
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  }
+
   if (req.method !== 'POST') {
+    console.log('❌ Invalid method:', req.method);
     return new Response('Method not allowed', { status: 405, headers: corsHeaders });
   }
 
