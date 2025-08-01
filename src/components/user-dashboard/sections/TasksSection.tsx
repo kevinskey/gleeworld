@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Package, DollarSign, AlertCircle, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { Package, Clock, ChevronDown, ChevronUp } from "lucide-react";
 import { ItemDetailModal } from "../modals/ItemDetailModal";
 
 export const TasksSection = () => {
@@ -12,14 +12,6 @@ export const TasksSection = () => {
 
   // Real data - to be fetched from Supabase
   const [checkedOutItems, setCheckedOutItems] = useState([]);
-  const [duesInfo, setDuesInfo] = useState({
-    totalDue: 0,
-    dueDate: null,
-    paymentStatus: 'paid',
-    items: []
-  });
-
-  const totalTaskCount = checkedOutItems.length + (duesInfo.paymentStatus === 'unpaid' ? 1 : 0);
 
   const getItemTypeColor = (type: string) => {
     switch (type) {
@@ -29,24 +21,6 @@ export const TasksSection = () => {
       case 'accessory': return 'bg-pink-100 text-pink-800 border-pink-200';
       case 'cosmetic': return 'bg-rose-100 text-rose-800 border-rose-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getDuesStatusColor = () => {
-    if (duesInfo.paymentStatus === 'paid') {
-      return 'bg-green-50 border-green-200 text-green-900'; // Paid
-    }
-    
-    const today = new Date();
-    const dueDate = new Date(duesInfo.dueDate);
-    const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (daysUntilDue < 0) {
-      return 'bg-red-50 border-red-200 text-red-900'; // Overdue
-    } else if (daysUntilDue <= 7) {
-      return 'bg-orange-50 border-orange-200 text-orange-900'; // Due soon
-    } else {
-      return 'bg-yellow-50 border-yellow-200 text-yellow-900'; // Due later
     }
   };
 
@@ -62,18 +36,12 @@ export const TasksSection = () => {
       : 'bg-green-100 text-green-800 border-green-200';
   };
 
-  const getPaymentStatusColor = (status: string) => {
-    return status === 'paid' 
-      ? 'bg-green-100 text-green-800 border-green-200' 
-      : 'bg-red-100 text-red-800 border-red-200';
-  };
-
   return (
     <div className="w-full">
       {/* Desktop Layout */}
-      <div className="hidden md:flex gap-4 w-full">
-        {/* Checked Out Items Column */}
-        <Card className="bg-gradient-to-r from-accent/5 via-secondary/5 to-primary/5 border-accent/20 shadow-lg h-64 flex-1">
+      <div className="hidden md:block">
+        {/* Checked Out Items */}
+        <Card className="bg-gradient-to-r from-accent/5 via-secondary/5 to-primary/5 border-accent/20 shadow-lg">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-secondary-foreground text-base">
               <Package className="h-4 w-4" />
@@ -125,65 +93,6 @@ export const TasksSection = () => {
             </ScrollArea>
           </CardContent>
         </Card>
-
-        {/* Dues Column */}
-        <Card className="bg-gradient-to-r from-primary/5 via-accent/5 to-secondary/5 border-primary/20 shadow-lg h-64 flex-1">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-secondary-foreground text-base">
-              <DollarSign className="h-4 w-4" />
-              Outstanding Dues
-              {duesInfo.paymentStatus === 'unpaid' && (
-                <Badge variant="destructive" className="text-xs">
-                  <AlertCircle className="h-3 w-3 mr-1" />
-                  Due
-                </Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-44">
-              {duesInfo.paymentStatus === 'paid' ? (
-                <div className="text-center py-4">
-                  <DollarSign className="h-6 w-6 text-green-500 mx-auto mb-1" />
-                  <p className="text-sm text-green-600">All dues paid!</p>
-                </div>
-              ) : (
-                <div 
-                  className={`space-y-2 cursor-pointer hover:shadow-md p-3 rounded-lg transition-all border ${getDuesStatusColor()}`}
-                  onClick={() => setSelectedItem({
-                    id: 'dues-payment',
-                    title: 'Outstanding Dues Payment',
-                    type: 'dues' as const,
-                    amount: duesInfo.totalDue,
-                    dueDate: duesInfo.dueDate,
-                    content: `Payment required for: ${duesInfo.items.map(item => item.description).join(', ')}`
-                  })}
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold">${duesInfo.totalDue.toFixed(2)}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm opacity-80">Due: {new Date(duesInfo.dueDate).toLocaleDateString()}</span>
-                      <Badge
-                        variant="outline"
-                        className={`text-xs ${getPaymentStatusColor(duesInfo.paymentStatus)}`}
-                      >
-                        {duesInfo.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    {duesInfo.items.map((item, index) => (
-                      <div key={index} className="flex justify-between text-sm">
-                        <span className="opacity-80">{item.description}</span>
-                        <span className="font-medium">${item.amount.toFixed(2)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </ScrollArea>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Mobile Layout - Collapsible */}
@@ -193,9 +102,9 @@ export const TasksSection = () => {
             <CardTitle className="flex items-center justify-between text-secondary-foreground text-lg">
               <div className="flex items-center gap-2">
                 <Package className="h-4 w-4" />
-                Tasks & Dues
+                Checked Out Items
                 <Badge variant="secondary" className="text-xs">
-                  {totalTaskCount}
+                  {checkedOutItems.length}
                 </Badge>
               </div>
               <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
@@ -249,59 +158,6 @@ export const TasksSection = () => {
                     ))
                   )}
                 </div>
-              </div>
-
-              {/* Dues */}
-              <div>
-                <h4 className="font-medium text-sm mb-2 flex items-center gap-2">
-                  <DollarSign className="h-4 w-4" />
-                  Outstanding Dues
-                  {duesInfo.paymentStatus === 'unpaid' && (
-                    <Badge variant="destructive" className="text-xs">
-                      <AlertCircle className="h-3 w-3 mr-1" />
-                      Due
-                    </Badge>
-                  )}
-                </h4>
-                {duesInfo.paymentStatus === 'paid' ? (
-                  <div className="text-center py-2">
-                    <DollarSign className="h-6 w-6 text-green-500 mx-auto mb-1" />
-                    <p className="text-sm text-green-600">All dues paid!</p>
-                  </div>
-                ) : (
-                  <div 
-                    className={`border rounded-lg p-2 cursor-pointer hover:shadow-md transition-all ${getDuesStatusColor()}`}
-                    onClick={() => setSelectedItem({
-                      id: 'dues-payment',
-                      title: 'Outstanding Dues Payment',
-                      type: 'dues' as const,
-                      amount: duesInfo.totalDue,
-                      dueDate: duesInfo.dueDate,
-                      content: `Payment required for: ${duesInfo.items.map(item => item.description).join(', ')}`
-                    })}
-                  >
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-lg font-bold">${duesInfo.totalDue.toFixed(2)}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs opacity-80">Due: {new Date(duesInfo.dueDate).toLocaleDateString()}</span>
-                        <Badge
-                          variant="outline"
-                          className={`text-xs ${getPaymentStatusColor(duesInfo.paymentStatus)}`}
-                        >
-                          {duesInfo.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      {duesInfo.items.map((item, index) => (
-                        <div key={index} className="flex justify-between text-xs">
-                          <span className="opacity-80">{item.description}</span>
-                          <span className="font-medium">${item.amount.toFixed(2)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             </CardContent>
           )}
