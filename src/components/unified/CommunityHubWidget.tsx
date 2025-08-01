@@ -466,20 +466,35 @@ export const CommunityHubWidget = () => {
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
                   </div>
                 ) : (
-                  <ScrollArea className="h-96">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pr-4">
-                      {/* Add New Message Button */}
-                      <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
-                        <DialogTrigger asChild>
-                          <div 
-                            className="bg-blue-100 border-2 border-dashed border-blue-400 rounded-lg p-3 min-h-[120px] flex flex-col items-center justify-center cursor-pointer hover:bg-blue-200 transition-colors shadow-md transform rotate-1 hover:rotate-0 transition-transform"
-                          >
-                            <Plus className="h-6 w-6 text-blue-600 mb-2" />
-                            <span className="text-xs text-blue-700 text-center font-medium">
-                              Add Love Note
-                            </span>
-                          </div>
-                        </DialogTrigger>
+                  <div className="relative">
+                    {/* Bucket Container */}
+                    <div className="relative bg-gradient-to-b from-slate-200 to-slate-400 rounded-b-3xl mx-8 pt-4 pb-8" style={{
+                      clipPath: "polygon(15% 0%, 85% 0%, 95% 100%, 5% 100%)"
+                    }}>
+                      {/* Bucket Handle */}
+                      <div className="absolute -left-2 top-4 w-8 h-16 border-4 border-slate-500 rounded-full border-r-transparent"></div>
+                      <div className="absolute -right-2 top-4 w-8 h-16 border-4 border-slate-500 rounded-full border-l-transparent"></div>
+                      
+                      {/* Notes arranged in bucket shape */}
+                      <div className="px-4 py-2">
+                        <div className="flex flex-wrap justify-center gap-2"
+                             style={{
+                               perspective: "300px"
+                             }}>
+                        <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
+                          <DialogTrigger asChild>
+                            <div 
+                              className="bg-blue-100 border-2 border-dashed border-blue-400 rounded-lg p-3 w-24 h-20 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-200 transition-colors shadow-md transform hover:scale-105 transition-transform"
+                              style={{
+                                transform: "rotateX(10deg) rotateY(-5deg)"
+                              }}
+                            >
+                              <Plus className="h-4 w-4 text-blue-600 mb-1" />
+                              <span className="text-xs text-blue-700 text-center font-medium">
+                                Add Note
+                              </span>
+                            </div>
+                          </DialogTrigger>
                         <DialogContent className="sm:max-w-[525px]">
                           <DialogHeader>
                             <DialogTitle>Share a Message of Love & Encouragement</DialogTitle>
@@ -635,52 +650,70 @@ export const CommunityHubWidget = () => {
                         </DialogContent>
                       </Dialog>
 
-                      {/* Existing Love Messages */}
-                      {loveMessages.map((message, index) => (
-                        <div 
-                          key={message.id}
-                          className={`${getNoteColorClasses(message.note_color)} border-2 rounded-lg p-3 min-h-[120px] shadow-md transition-all cursor-pointer transform ${
-                            index % 3 === 0 ? 'rotate-1' : index % 3 === 1 ? '-rotate-1' : 'rotate-2'
-                          } hover:rotate-0 hover:scale-105 animate-fade-in`}
-                          style={{ animationDelay: `${index * 0.1}s` }}
-                        >
-                          <div className="h-full flex flex-col justify-between">
-                            <div className="flex-1">
-                              <p className="text-xs leading-relaxed text-gray-800 mb-2 line-clamp-4">
-                                {message.message}
-                              </p>
-                              {(message as any).decorations && (
-                                <div className="mt-2 text-lg leading-none">
-                                  {(message as any).decorations}
+                        {/* Existing Love Messages */}
+                        {loveMessages.map((message, index) => {
+                          // Calculate position for bucket arrangement
+                          const row = Math.floor(index / 4);
+                          const col = index % 4;
+                          const bucketWidth = Math.max(3 - row * 0.3, 1); // Narrower at bottom
+                          const offsetX = (col - 1.5) * (bucketWidth * 20); // Spread based on bucket width
+                          const rotateX = 10 + row * 5; // More tilt as notes go down
+                          const rotateY = (col - 1.5) * 8; // Side tilt
+                          const rotateZ = (Math.random() - 0.5) * 15; // Random rotation
+                          
+                          return (
+                            <div 
+                              key={message.id}
+                              className={`${getNoteColorClasses(message.note_color)} border-2 rounded-lg p-2 w-24 h-20 shadow-md transition-all cursor-pointer hover:scale-110 animate-fade-in relative`}
+                              style={{ 
+                                animationDelay: `${index * 0.1}s`,
+                                transform: `
+                                  translateX(${offsetX}px) 
+                                  translateY(${row * -8}px)
+                                  rotateX(${rotateX}deg) 
+                                  rotateY(${rotateY}deg) 
+                                  rotateZ(${rotateZ}deg)
+                                `,
+                                transformStyle: "preserve-3d"
+                              }}
+                            >
+                              <div className="h-full flex flex-col justify-between text-xs">
+                                <div className="flex-1">
+                                  <p className="text-xs leading-tight text-gray-800 mb-1 line-clamp-2">
+                                    {message.message}
+                                  </p>
+                                  {(message as any).decorations && (
+                                    <div className="text-sm leading-none">
+                                      {(message as any).decorations}
+                                    </div>
+                                  )}
                                 </div>
-                              )}
-                            </div>
-                            <div className="flex items-end justify-between mt-2">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-600 font-medium">
-                                  {message.sender_name}
-                                </span>
-                                <button
-                                  onClick={() => handleLikeMessage(message.id)}
-                                  className={`flex items-center gap-1 text-xs transition-colors ${
-                                    message.user_liked 
-                                      ? 'text-red-600' 
-                                      : 'text-red-500 hover:text-red-600'
-                                  }`}
-                                >
-                                  <Heart className={`h-3 w-3 ${message.user_liked ? 'fill-current' : ''}`} />
-                                  {message.likes > 0 && <span>{message.likes}</span>}
-                                </button>
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-gray-600 font-medium truncate mr-1" title={message.sender_name}>
+                                    {message.sender_name}
+                                  </span>
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      onClick={() => handleLikeMessage(message.id)}
+                                      className={`flex items-center gap-1 transition-colors ${
+                                        message.user_liked 
+                                          ? 'text-red-600' 
+                                          : 'text-red-500 hover:text-red-600'
+                                      }`}
+                                    >
+                                      <Heart className={`h-2 w-2 ${message.user_liked ? 'fill-current' : ''}`} />
+                                      {message.likes > 0 && <span className="text-xs">{message.likes}</span>}
+                                    </button>
+                                  </div>
+                                </div>
                               </div>
-                              <span className="text-xs text-gray-500">
-                                {format(new Date(message.created_at), 'MMM d')}
-                              </span>
                             </div>
-                          </div>
+                          );
+                        })}
                         </div>
-                      ))}
+                      </div>
                     </div>
-                  </ScrollArea>
+                  </div>
                 )}
               </TabsContent>
 
