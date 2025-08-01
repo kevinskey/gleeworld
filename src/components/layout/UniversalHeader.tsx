@@ -79,13 +79,8 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
             </EnhancedTooltip>
           </div>
 
-          {/* Center area with page indicator */}
+          {/* Center area */}
           <div className="flex items-center justify-center flex-1">
-            {pageName !== 'GleeWorld' && (
-              <span className="text-slate-700 font-bold text-[10px] px-2 py-1 rounded-md bg-blue-100 border border-blue-200 shadow-sm truncate max-w-32">
-                {pageName}
-              </span>
-            )}
           </div>
 
           {/* Right side actions */}
@@ -179,7 +174,7 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
 
             {!user && (
               <EnhancedTooltip content="Sign in to access your dashboard">
-                <Button asChild variant="default" size="sm" className="text-xs sm:text-sm px-3 sm:px-6 min-w-[70px] sm:min-w-[80px] whitespace-nowrap bg-blue-600 hover:bg-blue-700 text-white font-medium">
+                <Button asChild variant="default" size="sm" className="text-xs sm:text-sm px-3 sm:px-6 min-w-[70px] sm:min-w-[80px] whitespace-nowrap">
                   <Link to="/auth">Sign In</Link>
                 </Button>
               </EnhancedTooltip>
