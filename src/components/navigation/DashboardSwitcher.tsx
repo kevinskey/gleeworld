@@ -30,18 +30,18 @@ export const DashboardSwitcher = () => {
   };
 
   const getCurrentIcon = () => {
-    if (isOnAdminDashboard) return <Shield className="h-3 w-3 sm:h-4 sm:w-4" />;
-    if (isOnUserDashboard) return <User className="h-3 w-3 sm:h-4 sm:w-4" />;
-    return <Home className="h-3 w-3 sm:h-4 sm:w-4" />;
+    if (isOnAdminDashboard) return <Shield className="h-5 w-5 sm:h-6 sm:w-6" />;
+    if (isOnUserDashboard) return <User className="h-5 w-5 sm:h-6 sm:w-6" />;
+    return <Home className="h-5 w-5 sm:h-6 sm:w-6" />;
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex items-center gap-1 sm:gap-2 text-white hover:bg-white/10 text-xs sm:text-sm px-1 sm:px-2 md:px-3 h-8 sm:h-9">
+        <Button variant="ghost" className="flex items-center gap-2 sm:gap-4 text-white hover:bg-white/10 text-sm sm:text-base px-3 sm:px-6 md:px-8 h-10 sm:h-12 min-w-0 flex-1 max-w-xs">
           {getCurrentIcon()}
-          {!isMobile && <span className="hidden sm:inline">{getCurrentContext()}</span>}
-          <Badge variant="secondary" className="bg-white/20 text-white border-0 text-xs px-1 sm:px-2">
+          <span className="truncate flex-1">{getCurrentContext()}</span>
+          <Badge variant="secondary" className="bg-white/20 text-white border-0 text-xs sm:text-sm px-2 sm:px-3">
             {userProfile.role}
           </Badge>
         </Button>
