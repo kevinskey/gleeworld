@@ -271,6 +271,102 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
     }
   };
 
+  const handleChangeRole = async (userId: string, newRole: ExecutiveBoardRole, userName: string) => {
+    setUpdating(true);
+    try {
+      console.log('Changing role for user:', userId, 'to:', newRole);
+      
+      // Get current role to check admin privilege changes
+      const { data: currentProfile } = await supabase
+        .from('gw_profiles')
+        .select('exec_board_role')
+        .eq('user_id', userId)
+        .single();
+
+      const wasPresident = currentProfile?.exec_board_role === 'president';
+      const willBePresident = newRole === 'president';
+      
+      const updates: any = {
+        exec_board_role: newRole,
+        is_exec_board: true,
+      };
+
+      // Handle admin privileges
+      if (willBePresident && !wasPresident) {
+        updates.is_admin = true;
+      } else if (wasPresident && !willBePresident) {
+        updates.is_admin = false;
+      }
+
+      // Update gw_profiles table
+      const { error: gwProfileError } = await supabase
+        .from('gw_profiles')
+        .update(updates)
+        .eq('user_id', userId);
+
+      if (gwProfileError) throw gwProfileError;
+
+      // Also update profiles table for backward compatibility
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          exec_board_role: newRole,
+          is_exec_board: true,
+        } as any)
+        .eq('id', userId);
+
+      if (profileError) {
+        console.warn('Profile table update failed (may not exist):', profileError);
+      }
+
+      // Convert role name to match database enum
+      const validEnumRoles = [
+        'president', 'secretary', 'treasurer', 'tour_manager', 'wardrobe_manager', 
+        'librarian', 'historian', 'pr_coordinator', 'chaplain', 'data_analyst', 
+        'assistant_chaplain', 'student_conductor', 'section_leader_s1', 'section_leader_s2', 
+        'section_leader_a1', 'section_leader_a2'
+      ];
+      
+      const dbRoleName = newRole.replace(/-/g, '_');
+      
+      // Update in gw_executive_board_members table only if role exists in enum
+      if (validEnumRoles.includes(dbRoleName)) {
+        const { error: boardMemberError } = await supabase
+          .from('gw_executive_board_members')
+          .upsert({
+            user_id: userId,
+            position: dbRoleName as any,
+            is_active: true,
+            academic_year: new Date().getFullYear().toString(),
+            appointed_date: new Date().toISOString().split('T')[0],
+          });
+
+        if (boardMemberError) {
+          console.warn('Board member table update failed:', boardMemberError);
+        }
+      } else {
+        console.warn(`Role ${newRole} (${dbRoleName}) not found in database enum, skipping board member table update`);
+      }
+
+      toast({
+        title: "Role Changed",
+        description: `${userName} has been changed to ${ROLE_DISPLAY_NAMES[newRole]}${willBePresident ? ' with admin privileges' : ''}${wasPresident && !willBePresident ? ' (admin privileges removed)' : ''}`,
+      });
+
+      onRefetch();
+      fetchBoardMembers();
+    } catch (err: any) {
+      console.error('Error changing role:', err);
+      toast({
+        title: "Error",
+        description: `Failed to change executive board role: ${err.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const getRoleColor = (role: string): string => {
     const colorMap: Record<string, string> = {
       'president': 'bg-purple-100 text-purple-800 border-purple-200',
@@ -354,6 +450,37 @@ export const ExecutiveBoardManager = ({ users, loading, onRefetch }: ExecutiveBo
                         <div className="text-sm text-gray-500">
                           {quickActions.length} quick actions available
                         </div>
+                        <Select 
+                          value={role} 
+                          onValueChange={(newRole) => handleChangeRole(member.user_id, newRole as ExecutiveBoardRole, member.full_name || member.email)}
+                        >
+                          <SelectTrigger className="w-48">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white border shadow-lg z-50">
+                            {Object.entries(ROLE_DISPLAY_NAMES).map(([value, label]) => {
+                              const isOccupiedByOther = currentBoardMembers.some(
+                                otherMember => otherMember.exec_board_role === value && otherMember.user_id !== member.user_id
+                              );
+                              
+                              return (
+                                <SelectItem 
+                                  key={value} 
+                                  value={value}
+                                  disabled={isOccupiedByOther}
+                                  className="bg-white hover:bg-gray-100"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    {getRoleIcon(value)}
+                                    <span>{label}</span>
+                                    {value === 'president' && <Badge variant="outline" className="text-xs">Admin Access</Badge>}
+                                    {isOccupiedByOther && <Badge variant="secondary">Occupied</Badge>}
+                                  </div>
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
                         <Button
                           variant="outline"
                           size="sm"
