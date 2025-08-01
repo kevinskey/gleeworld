@@ -61,10 +61,10 @@ export const ExecutiveBoardDashboard = ({ user }: ExecutiveBoardDashboardProps) 
   };
 
   return (
-    <div className="min-h-screen bg-muted/30 p-6 -m-6">
+    <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {/* Personal Attendance Card */}
-      <Card className="bg-muted">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">My Attendance</CardTitle>
           <CheckCircle className="h-4 w-4 text-muted-foreground" />
@@ -79,7 +79,7 @@ export const ExecutiveBoardDashboard = ({ user }: ExecutiveBoardDashboardProps) 
       </Card>
 
       {/* Team Overview Card */}
-      <Card className="bg-muted">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Team Overview</CardTitle>
           <Users className="h-4 w-4 text-muted-foreground" />
@@ -94,7 +94,7 @@ export const ExecutiveBoardDashboard = ({ user }: ExecutiveBoardDashboardProps) 
       </Card>
 
       {/* Management Tasks Card */}
-      <Card className="bg-muted">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Management Tasks</CardTitle>
           <Star className="h-4 w-4 text-muted-foreground" />
@@ -116,7 +116,7 @@ export const ExecutiveBoardDashboard = ({ user }: ExecutiveBoardDashboardProps) 
       </Card>
 
       {/* Budget Overview Card */}
-      <Card className="bg-muted">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Budget Overview</CardTitle>
           <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -138,7 +138,7 @@ export const ExecutiveBoardDashboard = ({ user }: ExecutiveBoardDashboardProps) 
       </Card>
 
       {/* Upcoming Events Card */}
-      <Card className="bg-muted">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
           <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -158,7 +158,7 @@ export const ExecutiveBoardDashboard = ({ user }: ExecutiveBoardDashboardProps) 
       </Card>
 
       {/* Leadership Tools Card */}
-      <Card className="bg-muted">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Leadership Tools</CardTitle>
           <Settings className="h-4 w-4 text-muted-foreground" />
@@ -182,7 +182,7 @@ export const ExecutiveBoardDashboard = ({ user }: ExecutiveBoardDashboardProps) 
       </Card>
 
       {/* Executive Board Activity Card */}
-      <Card className="md:col-span-2 bg-muted">
+      <Card className="md:col-span-2">
         <CardHeader>
           <CardTitle>Executive Board Activity</CardTitle>
           <CardDescription>Recent leadership actions and updates</CardDescription>
@@ -215,7 +215,7 @@ export const ExecutiveBoardDashboard = ({ user }: ExecutiveBoardDashboardProps) 
       </Card>
 
       {/* Role-Specific Metrics Card */}
-      <Card className="bg-muted">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">{user.exec_board_role} Metrics</CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
