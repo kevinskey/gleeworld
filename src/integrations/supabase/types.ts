@@ -9933,6 +9933,101 @@ export type Database = {
         }
         Relationships: []
       }
+      wardrobe_checkouts: {
+        Row: {
+          checked_in_at: string | null
+          checked_in_by: string | null
+          checked_out_at: string
+          checked_out_by: string | null
+          color: string | null
+          due_date: string | null
+          id: string
+          item_id: string
+          notes: string | null
+          quantity: number
+          size: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          checked_in_at?: string | null
+          checked_in_by?: string | null
+          checked_out_at?: string
+          checked_out_by?: string | null
+          color?: string | null
+          due_date?: string | null
+          id?: string
+          item_id: string
+          notes?: string | null
+          quantity?: number
+          size?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          checked_in_at?: string | null
+          checked_in_by?: string | null
+          checked_out_at?: string
+          checked_out_by?: string | null
+          color?: string | null
+          due_date?: string | null
+          id?: string
+          item_id?: string
+          notes?: string | null
+          quantity?: number
+          size?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wardrobe_checkouts_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "wardrobe_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wardrobe_items: {
+        Row: {
+          available_quantity: number
+          category: string
+          color_options: string[] | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          size_options: string[] | null
+          total_quantity: number
+          updated_at: string
+        }
+        Insert: {
+          available_quantity?: number
+          category: string
+          color_options?: string[] | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          size_options?: string[] | null
+          total_quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          available_quantity?: number
+          category?: string
+          color_options?: string[] | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          size_options?: string[] | null
+          total_quantity?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       youtube_channels: {
         Row: {
           auto_sync: boolean | null
