@@ -693,8 +693,10 @@ export const CommunityHubWidget = () => {
                           <div 
                             key={message.id}
                             onClick={() => handleNoteClick(message)}
-                            className={`${getNoteColorClasses(message.note_color)} border-2 rounded-lg p-2 w-24 h-20 shadow-md transition-all cursor-pointer hover:scale-110 hover:shadow-lg animate-fade-in absolute group`}
+                            className={`${getNoteColorClasses(message.note_color)} border-2 rounded-lg p-2 shadow-md transition-all cursor-pointer hover:scale-110 hover:shadow-lg animate-fade-in absolute group`}
                             style={{ 
+                              width: '101px', // 96px (w-24) + 5px = 101px
+                              height: '80px', // keeping same height (h-20)
                               animationDelay: `${index * 0.1}s`,
                               left: `${Math.max(5, Math.min(75, x))}%`,
                               top: `${Math.max(5, Math.min(65, y))}%`,
@@ -704,19 +706,19 @@ export const CommunityHubWidget = () => {
                               borderColor: message.likes >= 3 ? '#dc2626' : undefined,
                             }}
                           >
-                            <div className="h-full flex flex-col justify-between text-xs">
+                            <div className="h-full flex flex-col justify-between text-[10px]">
                               <div className="flex-1">
-                                <p className={`text-xs leading-tight mb-1 line-clamp-2 ${message.likes >= 3 ? 'text-white' : 'text-gray-800'}`}>
+                                <p className={`text-[10px] leading-tight mb-1 line-clamp-2 ${message.likes >= 3 ? 'text-white' : 'text-gray-800'}`}>
                                   {message.message.length > 35 ? `${message.message.substring(0, 32)}...` : message.message}
                                 </p>
                                 {(message as any).decorations && (
-                                  <div className="text-sm leading-none">
+                                  <div className="text-[10px] leading-none">
                                     {(message as any).decorations}
                                   </div>
                                 )}
                               </div>
-                              <div className="flex items-center justify-between text-xs">
-                                <span className={`font-medium truncate mr-1 ${message.likes >= 3 ? 'text-white' : 'text-gray-600'}`} title={message.sender_name}>
+                              <div className="flex items-center justify-between text-[10px]">
+                                <span className={`font-medium truncate mr-1 text-[9px] ${message.likes >= 3 ? 'text-white' : 'text-gray-600'}`} title={message.sender_name}>
                                   {message.sender_name}
                                 </span>
                                 <div className="flex items-center gap-1">
@@ -732,7 +734,7 @@ export const CommunityHubWidget = () => {
                                     }`}
                                   >
                                     <Heart className={`h-2 w-2 ${message.user_liked ? 'fill-current' : ''}`} />
-                                    {message.likes > 0 && <span className="text-xs">{message.likes}</span>}
+                                    {message.likes > 0 && <span className="text-[9px]">{message.likes}</span>}
                                   </button>
                                 </div>
                               </div>
