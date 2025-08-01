@@ -41,6 +41,7 @@ import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePublicGleeWorldEvents } from "@/hooks/usePublicGleeWorldEvents";
+import { PublicCalendarViews } from "@/components/calendar/PublicCalendarViews";
 
 interface Notification {
   id: string;
@@ -399,7 +400,7 @@ export const CommunityHubWidget = () => {
                 </TabsTrigger>
                 <TabsTrigger value="calendar" className="text-xs">
                   <Calendar className="h-3 w-3 mr-1" />
-                  Events
+                  Calendar
                 </TabsTrigger>
                 <TabsTrigger value="music" className="text-xs">
                   <Music className="h-3 w-3 mr-1" />
@@ -716,50 +717,11 @@ export const CommunityHubWidget = () => {
                 )}
               </TabsContent>
 
-              {/* Calendar Events Tab */}
+              {/* Calendar Tab */}
               <TabsContent value="calendar" className="space-y-3">
-                {eventsLoading ? (
-                  <div className="flex justify-center p-4">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                  </div>
-                ) : upcomingEvents.length > 0 ? (
-                  <ScrollArea className="h-48">
-                    <div className="space-y-2 pr-4">
-                      {upcomingEvents.slice(0, 5).map((event) => (
-                        <div key={event.id} className="border rounded-lg p-3">
-                          <div className="flex items-start justify-between gap-2 mb-2">
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-sm truncate">{event.title}</h4>
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                                <Clock className="h-3 w-3" />
-                                {format(new Date(event.start_date), 'MMM dd, h:mm a')}
-                                {event.location && (
-                                  <>
-                                    <MapPin className="h-3 w-3 ml-1" />
-                                    <span className="truncate">{event.location}</span>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                            <Badge variant="outline" className="text-xs h-4 px-1 flex-shrink-0">
-                              {event.event_type || 'Event'}
-                            </Badge>
-                          </div>
-                          {event.description && (
-                            <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                              {event.description}
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-xs">No upcoming events</p>
-                  </div>
-                )}
+                <div className="h-[600px] overflow-hidden rounded-lg border">
+                  <PublicCalendarViews />
+                </div>
               </TabsContent>
             </Tabs>
 
