@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Navigate } from "react-router-dom";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 import { 
   BookOpen, 
@@ -61,19 +62,11 @@ const LibrarianServices = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center gap-3">
-            <BookOpen className="h-8 w-8 text-primary" />
-            <h1 className="text-4xl font-bold">Librarian Services</h1>
-          </div>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Access music library, request scores, and manage your musical resources
-          </p>
-          <Badge variant="secondary" className="text-sm">
-            Member Access Only
-          </Badge>
-        </div>
+        <PageHeader
+          title="Librarian Services"
+          description="Access music library, request scores, and manage your musical resources"
+          backTo="/executive-services"
+        />
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

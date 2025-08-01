@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Navigate } from "react-router-dom";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { 
