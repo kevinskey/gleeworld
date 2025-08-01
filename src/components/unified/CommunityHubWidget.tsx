@@ -461,7 +461,11 @@ export const CommunityHubWidget = () => {
                   <Book className="h-3 w-3 mr-1" />
                   Wellness
                 </TabsTrigger>
-                <TabsTrigger value="notifications" className="text-xs">
+                <TabsTrigger 
+                  value="notifications" 
+                  className="text-xs cursor-pointer" 
+                  onClick={() => navigate('/notifications')}
+                >
                   <Bell className="h-3 w-3 mr-1" />
                   Notifications {unreadNotificationsCount > 0 && `(${unreadNotificationsCount})`}
                 </TabsTrigger>
