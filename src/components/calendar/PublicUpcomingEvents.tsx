@@ -102,10 +102,11 @@ export const PublicUpcomingEvents = ({ limit = 6, showHeader = true }: PublicUpc
         {/* Events Container */}
         <div 
           id="events-container"
-          className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth"
+          className="flex gap-4 overflow-x-auto overflow-y-hidden pb-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth touch-pan-x"
           style={{ 
             scrollbarWidth: 'thin',
-            WebkitOverflowScrolling: 'touch'
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-x'
           }}
         >
           {upcomingEvents.length === 0 ? (
