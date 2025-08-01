@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import { 
   Phone, 
   MessageCircle, 
@@ -27,12 +28,33 @@ export const ExecutiveBoardDirectory: React.FC<ExecutiveBoardDirectoryProps> = (
   variant = 'full',
   showActions = true 
 }) => {
+  const navigate = useNavigate();
+  
   const contactExecutives: ExecutiveBoardMember[] = [
     { position: "President", name: "Maya Johnson", email: "president@spelman.edu", icon: Crown },
     { position: "Vice President", name: "Zara Davis", email: "vicepresident@spelman.edu", icon: Gavel },
     { position: "Secretary", name: "Amara Wilson", email: "secretary@spelman.edu", icon: FileText },
     { position: "Music Director", name: "Dr. Patricia Smith", email: "musicdirector@spelman.edu", icon: Music },
   ];
+
+  const getServiceRoute = (position: string) => {
+    switch (position.toLowerCase()) {
+      case 'president':
+        return '/executive-services/president';
+      case 'vice president':
+        return '/executive-services/vice-president';
+      case 'secretary':
+        return '/executive-services/secretary';
+      case 'music director':
+        return '/executive-services/librarian';
+      default:
+        return '/executive-services';
+    }
+  };
+
+  const handleViewServices = (exec: ExecutiveBoardMember) => {
+    navigate(getServiceRoute(exec.position));
+  };
 
   const handleSendMessage = (exec: ExecutiveBoardMember) => {
     // Create mailto link
@@ -63,7 +85,11 @@ export const ExecutiveBoardDirectory: React.FC<ExecutiveBoardDirectoryProps> = (
         <CardContent>
           <div className="space-y-3">
             {contactExecutives.map((exec, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+              <div 
+                key={index} 
+                className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => handleViewServices(exec)}
+              >
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-primary/10 rounded-lg">
                     <exec.icon className="h-4 w-4 text-primary" />
@@ -74,7 +100,7 @@ export const ExecutiveBoardDirectory: React.FC<ExecutiveBoardDirectoryProps> = (
                   </div>
                 </div>
                 {showActions && (
-                  <div className="flex gap-1">
+                  <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                     <Button 
                       size="sm" 
                       variant="ghost" 
