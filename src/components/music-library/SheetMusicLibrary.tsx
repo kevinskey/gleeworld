@@ -18,6 +18,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { SheetMusicEditDialog } from "./SheetMusicEditDialog";
 import { SheetMusicViewDialog } from "./SheetMusicViewDialog";
 import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
@@ -61,6 +62,7 @@ export const SheetMusicLibrary = ({
   onPdfSelect,
 }: SheetMusicLibraryProps) => {
   const { user } = useAuth();
+  const { profile } = useUserRole();
   const { toast } = useToast();
   const [sheetMusic, setSheetMusic] = useState<SheetMusic[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,6 +79,9 @@ export const SheetMusicLibrary = ({
     open: false,
     item: null,
   });
+
+  // Check if user can edit music (admins and librarians only)
+  const canEditMusic = profile?.role && ['admin', 'super-admin', 'librarian'].includes(profile.role);
 
   useEffect(() => {
     fetchSheetMusic();
@@ -355,16 +360,18 @@ export const SheetMusicLibrary = ({
                 >
                   <Eye className="h-3 w-3" />
                 </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEdit(item);
-                  }}
-                >
-                  <Edit className="h-3 w-3" />
-                </Button>
+                {canEditMusic && (
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(item);
+                    }}
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                )}
                 {item.pdf_url && (
                   <Button size="sm" variant="outline" asChild>
                     <a href={item.pdf_url} download target="_blank" rel="noopener noreferrer">
@@ -372,17 +379,19 @@ export const SheetMusicLibrary = ({
                     </a>
                   </Button>
                 )}
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(item);
-                  }}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
+                {canEditMusic && (
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(item);
+                    }}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -466,16 +475,18 @@ export const SheetMusicLibrary = ({
                       >
                         <Eye className="h-3 w-3" />
                       </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEdit(item);
-                        }}
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
+                      {canEditMusic && (
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(item);
+                          }}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                      )}
                       {item.pdf_url && (
                         <Button size="sm" variant="outline" asChild>
                           <a href={item.pdf_url} download target="_blank" rel="noopener noreferrer">
@@ -483,17 +494,19 @@ export const SheetMusicLibrary = ({
                           </a>
                         </Button>
                       )}
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(item);
-                        }}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      {canEditMusic && (
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(item);
+                          }}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
