@@ -21,7 +21,7 @@ export const PublicHeader = () => {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: overlayStyle }} />
-      <header className="bg-gradient-to-r from-blue-50/90 via-white/90 to-purple-50/90 backdrop-blur-sm border-b border-white/30 sticky top-0 z-[100]">
+      <header className="bg-card border-b-2 border-border sticky top-0 z-[100] shadow-lg">
       <div className="container mx-auto px-2 sm:px-4 lg:px-6">
         <div className="flex items-center justify-between h-14 sm:h-16 py-3">
           {/* Logo with Clock - Restored beautiful design */}
@@ -33,10 +33,10 @@ export const PublicHeader = () => {
             />
             <div className="flex items-center gap-4 relative z-[111]">
               <div className="flex flex-col">
-                <span className="text-gray-900 font-bold text-lg sm:text-xl lg:text-2xl whitespace-nowrap leading-tight">
+                <span className="text-foreground font-bold text-lg sm:text-xl lg:text-2xl whitespace-nowrap leading-tight">
                   GleeWorld
                 </span>
-                <span className="text-gray-700 text-xs sm:text-sm font-medium whitespace-nowrap leading-tight -mt-1">
+                <span className="text-muted-foreground text-xs sm:text-sm font-medium whitespace-nowrap leading-tight -mt-1">
                   Spelman Glee Club
                 </span>
               </div>
@@ -52,7 +52,7 @@ export const PublicHeader = () => {
           {/* Right side actions */}
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             {/* Auth Button - Responsive sizing */}
-            <Button asChild variant="default" size="sm" className="hidden lg:flex text-sm px-5 py-1 bg-blue-600 hover:bg-blue-700 text-white">
+            <Button asChild variant="default" size="sm" className="hidden lg:flex text-sm px-5 py-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
               <Link to="/auth">Sign In</Link>
             </Button>
             
@@ -63,7 +63,7 @@ export const PublicHeader = () => {
               </SheetTrigger>
               <SheetContent 
                 side="top" 
-                className="max-w-xs w-80 mx-auto mt-16 bg-white/90 backdrop-blur-md border border-white/30 shadow-lg rounded-lg z-[110] data-[state=open]:animate-none data-[state=closed]:animate-none [&_~_[data-radix-dialog-overlay]]:bg-transparent"
+                className="max-w-xs w-80 mx-auto mt-16 bg-card border-2 border-border shadow-xl rounded-lg z-[110] data-[state=open]:animate-none data-[state=closed]:animate-none [&_~_[data-radix-dialog-overlay]]:bg-transparent"
                 style={{
                   position: 'fixed',
                   top: '4rem',
@@ -78,9 +78,9 @@ export const PublicHeader = () => {
                 onCloseAutoFocus={(e) => e.preventDefault()}
               >
                 <div className="flex flex-col gap-2 py-2 animate-fade-in">
-                  <div className="flex items-center justify-center gap-2 pb-1 border-b border-gray-200/50">
-                    <Music className="h-4 w-4 text-spelman-blue-dark" />
-                    <span className="font-semibold text-sm text-gray-800">Menu</span>
+                  <div className="flex items-center justify-center gap-2 pb-1 border-b border-border">
+                    <Music className="h-4 w-4 text-primary" />
+                    <span className="font-semibold text-sm text-foreground">Menu</span>
                   </div>
                   
                   <nav className="flex flex-col gap-0">

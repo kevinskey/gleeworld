@@ -7,127 +7,135 @@
 
 @layer base {
   :root {
-    /* Spelman College Official Colors */
-    --spelman-blue-dark: 220 80% 30%; /* Pure blue - dark */
-    --spelman-blue-light: 220 85% 65%; /* Pure blue - light */
+    /* High-Contrast Design System for GleeWorld */
     
-    /* Primary Brand Color - Spelman Dark Blue */
+    /* Core Brand Colors - Bold and Professional */
+    --spelman-blue-dark: 212 100% 15%; /* Deep navy blue - maximum impact */
+    --spelman-blue-light: 212 100% 45%; /* Vibrant blue - high visibility */
+    --spelman-gold: 45 100% 55%; /* Elegant gold accent */
+    
+    /* Primary Brand Palette */
     --primary: var(--spelman-blue-dark);
-    --primary-foreground: 0 0% 100%; /* White text */
+    --primary-foreground: 0 0% 100%; /* Pure white for maximum contrast */
 
-    /* Secondary Accent - Spelman Light Blue */
-    --secondary: var(--spelman-blue-light);
-    --secondary-foreground: 0 0% 0%; /* Black text for better contrast */
+    /* Secondary Accent Colors */
+    --secondary: var(--spelman-gold);
+    --secondary-foreground: var(--spelman-blue-dark); /* Dark blue on gold */
     
-    /* Neutrals - Softer backgrounds for better contrast */
+    /* High-Contrast Backgrounds */
     --background: 0 0% 100%; /* Pure white background */
-    --foreground: 0 0% 0%; /* Pure black text */
+    --foreground: 0 0% 8%; /* Near-black text for readability */
 
-    --card: 0 0% 96%; /* Softer background with transparency effect */
-    --card-foreground: 0 0% 15%; /* Softer black text */
+    /* Card System - Clean and Bold */
+    --card: 0 0% 100%; /* Pure white cards */
+    --card-foreground: 0 0% 8%; /* Dark text on white */
 
-    --popover: 0 0% 100%; /* Pure white */
-    --popover-foreground: 0 0% 0%; /* Pure black text */
+    /* Popover and Dropdown Elements */
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 8%;
 
-    --muted: 0 0% 95%; /* Light gray background */
-    --muted-foreground: 0 0% 20%; /* Dark gray text for better readability */
+    /* Muted Elements - Subtle but Readable */
+    --muted: 0 0% 96%; /* Very light gray */
+    --muted-foreground: 0 0% 25%; /* Medium dark gray */
 
-    --accent: var(--spelman-blue-light); /* Spelman light blue accent */
-    --accent-foreground: 0 0% 0%; /* Black text for better contrast */
+    /* Accent for Interactive Elements */
+    --accent: var(--spelman-blue-light);
+    --accent-foreground: 0 0% 100%; /* White text on blue */
 
+    /* System Colors */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 85%; /* Slightly darker borders for better definition */
-    --input: 0 0% 100%; /* Pure white input background */
-    --ring: var(--spelman-blue-light); /* Spelman light blue focus ring */
+    /* Border and Input Styling */
+    --border: 0 0% 85%; /* Visible but subtle borders */
+    --input: 0 0% 100%; /* White input backgrounds */
+    --ring: var(--spelman-blue-light); /* Blue focus rings */
 
     --radius: 0.75rem;
 
-    /* Disabled states */
-    --disabled-bg: 0 0% 93%; /* #EEEEEE */
-    --disabled-text: 0 0% 67%; /* #AAAAAA */
+    /* Enhanced Color Tokens */
+    --text-secondary: 0 0% 30%; /* Readable secondary text */
+    --hover-accent: 212 100% 50%; /* Bright blue for hovers */
+    
+    /* Professional Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(var(--spelman-blue-dark)), hsl(var(--spelman-blue-light)));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(0 0% 98%));
+    --gradient-accent: linear-gradient(90deg, hsl(var(--spelman-gold)), hsl(45 100% 60%));
+    
+    /* Professional Shadows */
+    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
+    --shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    
+    /* Animation Variables */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-    /* Custom color tokens */
-    --text-secondary: 0 0% 33%; /* #555555 */
-    --hover-tint: 203 85% 94%; /* #D6F0FB */
+    /* Event type colors - High contrast system */
+    --event-performance: 212 100% 92%; /* Light blue background */
+    --event-performance-fg: 212 100% 25%; /* Dark blue text */
+    --event-rehearsal: 142 76% 92%; /* Light green background */
+    --event-rehearsal-fg: 142 76% 25%; /* Dark green text */
+    --event-sectional: 267 57% 92%; /* Light purple background */
+    --event-sectional-fg: 267 57% 25%; /* Dark purple text */
+    --event-meeting: 34 100% 92%; /* Light orange background */
+    --event-meeting-fg: 34 100% 25%; /* Dark orange text */
+    --event-member-meeting: 142 76% 92%; /* Light green background */
+    --event-member-meeting-fg: 142 76% 25%; /* Dark green text */
+    --event-exec-meeting: 267 57% 92%; /* Light purple background */
+    --event-exec-meeting-fg: 267 57% 25%; /* Dark purple text */
+    --event-voice-lesson: 320 70% 92%; /* Light pink background */
+    --event-voice-lesson-fg: 320 70% 25%; /* Dark pink text */
+    --event-tutorial: 290 100% 92%; /* Light violet background */
+    --event-tutorial-fg: 290 100% 25%; /* Dark violet text */
+    --event-social: 320 70% 92%; /* Light pink background */
+    --event-social-fg: 320 70% 25%; /* Dark pink text */
+    --event-workshop: 34 100% 92%; /* Light orange background */
+    --event-workshop-fg: 34 100% 25%; /* Dark orange text */
+    --event-audition: 0 84% 92%; /* Light red background */
+    --event-audition-fg: 0 84% 25%; /* Dark red text */
+    --event-general: 210 20% 92%; /* Light gray background */
+    --event-general-fg: 210 20% 25%; /* Dark gray text */
     
-    /* Promotional gradients and effects */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--spelman-blue-light)), hsl(var(--spelman-blue-dark)));
-    --gradient-hero: linear-gradient(135deg, hsl(var(--spelman-blue-dark)), hsl(var(--spelman-blue-light)), hsl(220 100% 85%));
-    --gradient-card: linear-gradient(145deg, rgba(85, 187, 238, 0.1), rgba(17, 68, 139, 0.05));
-    --shadow-promotional: 0 20px 40px -10px rgba(85, 187, 238, 0.3);
-    --shadow-hover: 0 25px 50px -12px rgba(85, 187, 238, 0.4);
-    
-    /* Animation variables */
-    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    
-    /* Event type colors */
-    --event-performance: 203 85% 83%; /* Light blue */
-    --event-performance-fg: 203 85% 30%; /* Dark blue */
-    --event-rehearsal: 203 85% 83%; /* Light blue */
-    --event-rehearsal-fg: 203 85% 30%; /* Dark blue */
-    --event-sectional: 250 100% 83%; /* Light indigo */
-    --event-sectional-fg: 250 100% 30%; /* Dark indigo */
-    --event-meeting: 34 100% 83%; /* Light orange */
-    --event-meeting-fg: 34 100% 30%; /* Dark orange */
-    --event-member-meeting: 142 76% 83%; /* Light green */
-    --event-member-meeting-fg: 142 76% 30%; /* Dark green */
-    --event-exec-meeting: 267 57% 83%; /* Light purple */
-    --event-exec-meeting-fg: 267 57% 30%; /* Dark purple */
-    --event-voice-lesson: 320 70% 83%; /* Light pink */
-    --event-voice-lesson-fg: 320 70% 30%; /* Dark pink */
-    --event-tutorial: 290 100% 83%; /* Light violet */
-    --event-tutorial-fg: 290 100% 30%; /* Dark violet */
-    --event-social: 320 70% 83%; /* Light pink */
-    --event-social-fg: 320 70% 30%; /* Dark pink */
-    --event-workshop: 34 100% 83%; /* Light orange */
-    --event-workshop-fg: 34 100% 30%; /* Dark orange */
-    --event-audition: 0 84% 83%; /* Light red */
-    --event-audition-fg: 0 84% 30%; /* Dark red */
-    --event-general: 210 20% 83%; /* Light gray */
-    --event-general-fg: 210 20% 30%; /* Dark gray */
-    
-    /* Status colors */
-    --status-scheduled: 203 85% 83%; /* Light blue */
-    --status-scheduled-fg: 203 85% 30%; /* Dark blue */
-    --status-confirmed: 142 76% 83%; /* Light green */
-    --status-confirmed-fg: 142 76% 30%; /* Dark green */
-    --status-cancelled: 0 84% 83%; /* Light red */
-    --status-cancelled-fg: 0 84% 30%; /* Dark red */
-    --status-completed: 210 20% 83%; /* Light gray */
-    --status-completed-fg: 210 20% 30%; /* Dark gray */
+    /* Status colors - High contrast */
+    --status-scheduled: 212 100% 92%; /* Light blue */
+    --status-scheduled-fg: 212 100% 25%; /* Dark blue */
+    --status-confirmed: 142 76% 92%; /* Light green */
+    --status-confirmed-fg: 142 76% 25%; /* Dark green */
+    --status-cancelled: 0 84% 92%; /* Light red */
+    --status-cancelled-fg: 0 84% 25%; /* Dark red */
+    --status-completed: 210 20% 92%; /* Light gray */
+    --status-completed-fg: 210 20% 25%; /* Dark gray */
   }
 
   .light {
-    /* Pure light theme colors for maximum contrast */
+    /* High-contrast light theme - everything already optimized in root */
     --background: 0 0% 100%; /* Pure white */
-    --foreground: 0 0% 0%; /* Pure black */
+    --foreground: 0 0% 8%; /* Near-black text */
 
-    --card: 0 0% 98%; /* Softer off-white */
-    --card-foreground: 0 0% 10%; /* Slightly softer black */
+    --card: 0 0% 100%; /* Pure white cards */
+    --card-foreground: 0 0% 8%; /* Dark text */
 
     --popover: 0 0% 100%; /* Pure white */
-    --popover-foreground: 0 0% 0%; /* Pure black */
+    --popover-foreground: 0 0% 8%; /* Dark text */
 
     --primary: var(--spelman-blue-dark);
     --primary-foreground: 0 0% 100%;
 
-    --secondary: var(--spelman-blue-light);
-    --secondary-foreground: 0 0% 0%; /* Black text for better contrast */
+    --secondary: var(--spelman-gold);
+    --secondary-foreground: var(--spelman-blue-dark);
 
-    --muted: 0 0% 95%; /* Light gray */
-    --muted-foreground: 0 0% 20%; /* Dark gray */
+    --muted: 0 0% 96%; /* Very light gray */
+    --muted-foreground: 0 0% 25%; /* Medium dark gray */
 
     --accent: var(--spelman-blue-light);
-    --accent-foreground: 0 0% 0%; /* Black text for better contrast */
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 0 0% 85%;
-    --input: 0 0% 100%; /* Pure white */
+    --input: 0 0% 100%;
     --ring: var(--spelman-blue-light);
   }
 }
@@ -388,16 +396,21 @@
   }
 }
 
-/* Enhanced Card Styling - Less Blinding */
+/* High-Contrast Card System - Professional and Clean */
 .card {
-  background: rgba(255, 255, 255, 0.85) !important;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+  background: hsl(var(--card)) !important;
+  border: 2px solid hsl(var(--border)) !important;
+  box-shadow: var(--shadow-card) !important;
+  transition: var(--transition-smooth) !important;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-hover) !important;
+  border-color: hsl(var(--accent)) !important;
 }
 
 .bg-muted {
-  background: rgba(245, 245, 245, 0.8) !important;
+  background: hsl(var(--muted)) !important;
 }
 
 /* Desktop Typography Enhancements */

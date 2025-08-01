@@ -83,8 +83,8 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
             to={item.href}
             className={cn(
               "px-4 py-2 rounded-lg text-base font-medium transition-all duration-200",
-              "text-gray-700 hover:text-gray-900",
-              isActivePath(item.href) && "text-gray-900"
+              "text-foreground hover:text-primary hover:bg-accent/10",
+              isActivePath(item.href) && "text-primary bg-accent/20 font-semibold"
             )}
           >
             {item.label}
@@ -100,8 +100,8 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
             to={item.href}
             className={cn(
               "px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-              "text-gray-700 hover:text-gray-900",
-              isActivePath(item.href) && "text-gray-900"
+              "text-foreground hover:text-primary hover:bg-accent/10",
+              isActivePath(item.href) && "text-primary bg-accent/20 font-semibold"
             )}
           >
             {item.shortLabel}
@@ -117,8 +117,8 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
             to={item.href}
             className={cn(
               "px-3 py-2 rounded text-base font-medium transition-all duration-200",
-              "text-gray-700 hover:text-gray-900",
-              isActivePath(item.href) && "text-gray-900"
+              "text-foreground hover:text-primary hover:bg-accent/10",
+              isActivePath(item.href) && "text-primary bg-accent/20 font-semibold"
             )}
             title={item.label}
           >
