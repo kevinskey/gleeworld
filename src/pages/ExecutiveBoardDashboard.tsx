@@ -10,7 +10,18 @@ import {
   Crown,
   Shield,
   Home,
-  Settings
+  Settings,
+  Calendar,
+  DollarSign,
+  MapPin,
+  BookOpen,
+  FileText,
+  Music2,
+  Heart,
+  Camera,
+  MessageSquare,
+  BarChart3,
+  Shirt
 } from "lucide-react";
 
 export const ExecutiveBoardDashboard = () => {
@@ -70,6 +81,91 @@ export const ExecutiveBoardDashboard = () => {
     } finally {
       setLoading(false);
       console.log('ExecutiveBoardDashboard: Loading complete');
+    }
+  };
+
+  const getQuickActionsForRole = (role: string) => {
+    const commonActions = [
+      { name: 'Calendar', path: '/calendar', icon: Calendar },
+      { name: 'Handbook', path: '/handbook', icon: BookOpen }
+    ];
+
+    switch (role) {
+      case 'president':
+        return [
+          { name: 'Executive Hub', path: '/dashboard/executive-board', icon: Crown },
+          { name: 'Event Planner', path: '/event-planner', icon: Calendar },
+          { name: 'Budget Management', path: '/budgets', icon: DollarSign },
+          { name: 'Announcements', path: '/admin/announcements/new', icon: MessageSquare }
+        ];
+      case 'secretary':
+        return [
+          { name: 'Executive Hub', path: '/dashboard/executive-board', icon: Crown },
+          { name: 'Attendance', path: '/attendance', icon: FileText },
+          { name: 'Meeting Minutes', path: '/calendar', icon: Calendar },
+          { name: 'Communications', path: '/admin/announcements/new', icon: MessageSquare }
+        ];
+      case 'treasurer':
+        return [
+          { name: 'Treasurer Dashboard', path: '/treasurer', icon: DollarSign },
+          { name: 'Budget Management', path: '/budgets', icon: DollarSign },
+          { name: 'Payments', path: '/payments', icon: DollarSign },
+          { name: 'Accounting', path: '/accounting', icon: BarChart3 }
+        ];
+      case 'tour_manager':
+        return [
+          { name: 'Tour Manager', path: '/tour-manager', icon: MapPin },
+          { name: 'Tour Planner', path: '/tour-planner', icon: MapPin },
+          { name: 'Contracts', path: '/contracts', icon: FileText },
+          { name: 'Budgets', path: '/budgets', icon: DollarSign }
+        ];
+      case 'librarian':
+        return [
+          { name: 'Librarian Dashboard', path: '/librarian', icon: BookOpen },
+          { name: 'Music Library', path: '/music-library', icon: Music2 },
+          ...commonActions
+        ];
+      case 'historian':
+        return [
+          { name: 'Historian Dashboard', path: '/historian', icon: Camera },
+          { name: 'Archives', path: '/dashboard/executive-board', icon: Camera },
+          ...commonActions
+        ];
+      case 'pr_coordinator':
+        return [
+          { name: 'PR Hub', path: '/pr-hub', icon: MessageSquare },
+          { name: 'Announcements', path: '/admin/announcements/new', icon: MessageSquare },
+          { name: 'Press Kit', path: '/press-kit', icon: FileText },
+          ...commonActions
+        ];
+      case 'chaplain':
+        return [
+          { name: 'Chaplain Hub', path: '/chaplain', icon: Heart },
+          { name: 'Wellness', path: '/wellness', icon: Heart },
+          { name: 'Spiritual Messages', path: '/admin/announcements/new', icon: MessageSquare },
+          ...commonActions
+        ];
+      case 'student_conductor':
+        return [
+          { name: 'Conductor Dashboard', path: '/student-conductor', icon: Music2 },
+          { name: 'Music Library', path: '/music-library', icon: BookOpen },
+          { name: 'Attendance', path: '/attendance', icon: FileText },
+          { name: 'Performance Suite', path: '/performance', icon: Music2 }
+        ];
+      case 'wardrobe_manager':
+        return [
+          { name: 'Wardrobe Hub', path: '/wardrobe', icon: Shirt },
+          { name: 'Inventory', path: '/wardrobe', icon: Shirt },
+          ...commonActions
+        ];
+      default:
+        // For admins or other roles
+        return [
+          { name: 'Executive Hub', path: '/dashboard/executive-board', icon: Crown },
+          { name: 'Calendar', path: '/calendar', icon: Calendar },
+          { name: 'Budgets', path: '/budgets', icon: DollarSign },
+          { name: 'Handbook', path: '/handbook', icon: BookOpen }
+        ];
     }
   };
 
@@ -191,38 +287,17 @@ export const ExecutiveBoardDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/tour-manager')}
-                className="h-auto flex-col gap-2 p-4"
-              >
-                <Crown className="h-5 w-5" />
-                <span className="text-xs">Tour Manager</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/calendar')}
-                className="h-auto flex-col gap-2 p-4"
-              >
-                <Settings className="h-5 w-5" />
-                <span className="text-xs">Calendar</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/budgets')}
-                className="h-auto flex-col gap-2 p-4"
-              >
-                <Settings className="h-5 w-5" />
-                <span className="text-xs">Budgets</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/handbook')}
-                className="h-auto flex-col gap-2 p-4"
-              >
-                <Settings className="h-5 w-5" />
-                <span className="text-xs">Handbook</span>
-              </Button>
+              {getQuickActionsForRole(userRole).map((action, index) => (
+                <Button 
+                  key={index}
+                  variant="outline" 
+                  onClick={() => navigate(action.path)}
+                  className="h-auto flex-col gap-2 p-4"
+                >
+                  <action.icon className="h-5 w-5" />
+                  <span className="text-xs">{action.name}</span>
+                </Button>
+              ))}
             </div>
           </CardContent>
         </Card>
