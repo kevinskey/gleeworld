@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { 
   Book, 
   Bell, 
@@ -87,6 +88,7 @@ interface LoveMessage {
   sender_name?: string;
   likes: number;
   user_liked?: boolean;
+  decorations?: string;
 }
 
 interface LoveMessageForm {
@@ -430,6 +432,516 @@ export const CommunityHubWidget = () => {
     }
   };
 
+  const LeftColumnContent = () => (
+    <div className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="buckets" className="text-xs">
+            <StickyNote className="h-3 w-3 mr-1" />
+            Buckets of Love
+          </TabsTrigger>
+          <TabsTrigger value="reflections" className="text-xs">
+            <Book className="h-3 w-3 mr-1" />
+            Wellness
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="text-xs">
+            <Bell className="h-3 w-3 mr-1" />
+            Notifications {unreadNotificationsCount > 0 && `(${unreadNotificationsCount})`}
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Buckets of Love Tab */}
+        <TabsContent value="buckets" className="space-y-3">
+          {loveMessagesLoading ? (
+            <div className="flex justify-center p-4">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <div className="relative">
+              {/* Header with cute bucket image */}
+              <div className="flex flex-col items-center mb-4">
+                <img 
+                  src="/lovable-uploads/96533996-2039-4566-887a-67eadeb076f1.png" 
+                  alt="Sending you buckets of love"
+                  className="w-32 h-auto mb-2"
+                />
+                <p className="text-xs text-muted-foreground text-center leading-relaxed">
+                  Share love, encouragement, and positive vibes with the Glee Club family
+                </p>
+              </div>
+
+              {/* Love Notes Grid */}
+              <div className="grid grid-cols-7 gap-1 mb-4 h-48 overflow-y-auto">
+                {loveMessages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`
+                      relative w-[101px] h-[72px] p-1.5 rounded-lg border-2 cursor-pointer transition-all duration-200 
+                      ${getNoteColorClasses(message.note_color)}
+                      shadow-sm hover:shadow-md transform hover:scale-105
+                    `}
+                    onClick={() => handleNoteClick(message)}
+                    style={{
+                      background: `linear-gradient(135deg, ${getNoteGradientColors(message.note_color)})`,
+                    }}
+                  >
+                    {/* Message text - truncated */}
+                    <div className="text-[9px] text-gray-800 leading-tight mb-1 overflow-hidden h-8">
+                      {message.message.length > 40 ? `${message.message.substring(0, 40)}...` : message.message}
+                    </div>
+                    
+                    {/* Decorations */}
+                    <div className="text-[9px] mb-0.5">
+                      {message.decorations || '💙'}
+                    </div>
+                    
+                    {/* Bottom section */}
+                    <div className="absolute bottom-0.5 left-1 right-1 flex justify-between items-center">
+                      <div className="text-[9px] text-gray-600 truncate flex-1 mr-1">
+                        {message.sender_name}
+                      </div>
+                      <div className="flex items-center gap-0.5">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleLikeMessage(message.id);
+                          }}
+                          className={`text-[10px] flex items-center gap-0.5 px-1 py-0.5 rounded transition-colors ${
+                            message.user_liked 
+                              ? 'text-red-600 bg-red-100 hover:bg-red-200' 
+                              : 'text-gray-500 hover:text-red-600 hover:bg-red-50'
+                          }`}
+                        >
+                          <Heart className={`h-2 w-2 ${message.user_liked ? 'fill-current' : ''}`} />
+                          <span>{message.likes}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add Love Message Button */}
+              <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full text-xs h-8">
+                    <Plus className="h-3 w-3 mr-1" />
+                    Send Love
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Heart className="h-4 w-4 text-red-500" />
+                      Send a Love Message
+                    </DialogTitle>
+                  </DialogHeader>
+                  <Form {...loveForm}>
+                    <form onSubmit={loveForm.handleSubmit(onSubmitLoveMessage)} className="space-y-4">
+                      <FormField
+                        control={loveForm.control}
+                        name="message"
+                        rules={{ required: "Message is required" }}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Your Message</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Share something positive..."
+                                className="resize-none"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={loveForm.control}
+                        name="note_color"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Note Color</FormLabel>
+                            <FormControl>
+                              <div className="grid grid-cols-5 gap-2">
+                                {noteColors.map((color) => (
+                                  <label key={color.value} className="cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      value={color.value}
+                                      checked={field.value === color.value}
+                                      onChange={field.onChange}
+                                      className="sr-only"
+                                    />
+                                    <div className={`
+                                      w-full h-12 rounded-lg border-2 flex items-center justify-center text-xs font-medium
+                                      ${field.value === color.value ? `${color.border} ring-2 ring-primary` : 'border-gray-200'}
+                                      ${color.bg} hover:opacity-80 transition-opacity
+                                    `}>
+                                      {color.label}
+                                    </div>
+                                  </label>
+                                ))}
+                              </div>
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={loveForm.control}
+                        name="decorations"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Decorations (optional)</FormLabel>
+                            <FormControl>
+                              <div className="space-y-2">
+                                <div className="grid grid-cols-8 gap-1">
+                                  {emojis.slice(0, 8).map((emoji) => (
+                                    <button
+                                      key={emoji}
+                                      type="button"
+                                      onClick={() => field.onChange(field.value + emoji)}
+                                      className="p-2 text-lg hover:bg-muted rounded"
+                                    >
+                                      {emoji}
+                                    </button>
+                                  ))}
+                                </div>
+                                <Input
+                                  placeholder="Or type your own..."
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                />
+                              </div>
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={loveForm.control}
+                        name="is_anonymous"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>Send anonymously</FormLabel>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="flex gap-2">
+                        <Button type="button" variant="outline" onClick={() => setLoveDialogOpen(false)} className="flex-1">
+                          Cancel
+                        </Button>
+                        <Button type="submit" className="flex-1">
+                          <Send className="h-4 w-4 mr-2" />
+                          Send Love
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Wellness/Reflections Tab */}
+        <TabsContent value="reflections" className="space-y-3">
+          {reflectionsLoading ? (
+            <div className="flex justify-center p-4">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+            </div>
+          ) : sharedReflections.length > 0 ? (
+            <div className="space-y-3">
+              {/* Latest Reflection */}
+              {latestReflection && (
+                <div className="border rounded-lg p-3">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Book className="h-4 w-4 text-primary" />
+                      <h3 className="font-medium text-sm">{latestReflection.title}</h3>
+                    </div>
+                    <Badge className={`text-xs ${getReflectionTypeColor(latestReflection.reflection_type)}`}>
+                      {latestReflection.reflection_type?.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2 line-clamp-3">
+                    {latestReflection.content}
+                  </p>
+                  <div className="flex justify-between items-center text-xs text-muted-foreground">
+                    <span>By Staff</span>
+                    <span>{format(new Date(), 'MMM d')}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Quick Prayer Request */}
+              <div className="border rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Heart className="h-4 w-4 text-red-500" />
+                  <h3 className="font-medium text-sm">Prayer Requests</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Submit a prayer request for the community to lift up in prayer.
+                </p>
+                
+                <Dialog open={prayerDialogOpen} onOpenChange={setPrayerDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="w-full text-xs h-8">
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add Prayer Request
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2">
+                        <Heart className="h-4 w-4 text-red-500" />
+                        Submit Prayer Request
+                      </DialogTitle>
+                    </DialogHeader>
+                    <Form {...prayerForm}>
+                      <form onSubmit={prayerForm.handleSubmit(onSubmitPrayerRequest)} className="space-y-4">
+                        <FormField
+                          control={prayerForm.control}
+                          name="content"
+                          rules={{ required: "Prayer request is required" }}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Prayer Request</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Please pray for..."
+                                  className="resize-none"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={prayerForm.control}
+                          name="is_anonymous"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel>Submit anonymously</FormLabel>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+
+                        <div className="flex gap-2">
+                          <Button type="button" variant="outline" onClick={() => setPrayerDialogOpen(false)} className="flex-1">
+                            Cancel
+                          </Button>
+                          <Button type="submit" className="flex-1">
+                            <Send className="h-4 w-4 mr-2" />
+                            Submit
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              {/* View All Button */}
+              <Button variant="outline" size="sm" className="w-full text-xs h-8" onClick={() => navigate('/wellness')}>
+                <Book className="h-3 w-3 mr-1" />
+                View All Reflections
+              </Button>
+            </div>
+          ) : (
+            <div className="text-center p-4">
+              <Book className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-xs text-muted-foreground">No reflections available</p>
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Notifications Tab */}
+        <TabsContent value="notifications" className="space-y-3">
+          {notificationsLoading ? (
+            <div className="flex justify-center p-4">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+            </div>
+          ) : notifications.length > 0 ? (
+            <ScrollArea className="h-[300px]">
+              <div className="space-y-2">
+                {notifications.map((notification) => {
+                  const CategoryIcon = getCategoryIcon(notification.category || '');
+                  return (
+                    <div
+                      key={notification.id}
+                      className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                        notification.is_read ? 'bg-background' : 'bg-blue-50 hover:bg-blue-100'
+                      }`}
+                      onClick={() => markNotificationAsRead(notification.id)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <CategoryIcon className={`h-4 w-4 mt-0.5 ${getCategoryColor(notification.category || '')}`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between mb-1">
+                            <h4 className="font-medium text-sm leading-tight">{notification.title}</h4>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <Badge variant={getPriorityColor(notification.priority)} className="text-xs h-4 px-1">
+                                {notification.priority}
+                              </Badge>
+                              {!notification.is_read && (
+                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-2">
+                            {notification.message}
+                          </p>
+                          <div className="flex items-center justify-between mt-2">
+                            <Badge variant="outline" className="text-xs h-4 px-1">
+                              {notification.category}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(notification.created_at), 'MMM d, h:mm a')}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          ) : (
+            <div className="text-center p-4">
+              <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-xs text-muted-foreground">No notifications</p>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+
+  const RightColumnContent = () => (
+    <div className="space-y-4">
+      {/* Calendar Section */}
+      <div className="border rounded-lg">
+        <div className="flex items-center gap-2 p-3 border-b">
+          <Calendar className="h-4 w-4 text-primary" />
+          <h3 className="font-medium text-sm">Calendar</h3>
+        </div>
+        <div className="h-[300px] overflow-hidden">
+          <PublicCalendarViews />
+        </div>
+        <div className="p-3 border-t">
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/calendar')}>
+              <Calendar className="h-3 w-3 mr-1" />
+              Full Calendar
+            </Button>
+            <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/events')}>
+              <Clock className="h-3 w-3 mr-1" />
+              All Events
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Music Section */}
+      <div className="border rounded-lg">
+        <div className="flex items-center gap-2 p-3 border-b">
+          <Music className="h-4 w-4 text-primary" />
+          <h3 className="font-medium text-sm">Music Library</h3>
+        </div>
+        <div className="p-3">
+          <div className="relative mb-3">
+            <Search className="absolute left-2 top-2.5 h-3 w-3 text-muted-foreground" />
+            <Input
+              placeholder="Search music..."
+              value={musicSearchTerm}
+              onChange={(e) => setMusicSearchTerm(e.target.value)}
+              className="pl-7 h-8 text-xs"
+            />
+          </div>
+          
+          {musicLoading ? (
+            <div className="flex justify-center p-4">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+            </div>
+          ) : filteredMusic.length > 0 ? (
+            <ScrollArea className="h-[200px]">
+              <div className="space-y-2">
+                {filteredMusic.map((music) => (
+                  <div key={music.id} className="border rounded-lg p-2">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-xs leading-tight mb-1 truncate">{music.title}</h4>
+                        <p className="text-xs text-muted-foreground truncate">{music.composer}</p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {music.voice_parts && music.voice_parts.length > 0 && (
+                            <Badge variant="outline" className="text-xs h-4 px-1">
+                              {music.voice_parts.join(", ")}
+                            </Badge>
+                          )}
+                          {music.difficulty_level && (
+                            <Badge variant="outline" className="text-xs h-4 px-1">
+                              {music.difficulty_level}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-1 flex-shrink-0">
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                          <Eye className="h-3 w-3" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                          <Download className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          ) : (
+            <p className="text-xs text-muted-foreground text-center py-4">
+              {musicSearchTerm ? "No music found" : "No music available"}
+            </p>
+          )}
+        </div>
+        <div className="p-3 border-t">
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/music-library')}>
+              <Music className="h-3 w-3 mr-1" />
+              Music Library
+            </Button>
+            <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/sheet-music')}>
+              <BookOpen className="h-3 w-3 mr-1" />
+              Browse All
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <Card className="col-span-1 md:col-span-2 lg:col-span-3 overflow-hidden">
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
@@ -463,597 +975,25 @@ export const CommunityHubWidget = () => {
         
         <CollapsibleContent className="transition-all duration-300 ease-out data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
           <CardContent className="pt-0">
-            {/* Two Column Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              
-              {/* Left Column: Buckets, Wellness, Notifications */}
+            {/* Responsive Layout */}
+            {isMobile ? (
               <div className="space-y-4">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="buckets" className="text-xs">
-                      <StickyNote className="h-3 w-3 mr-1" />
-                      Buckets of Love
-                    </TabsTrigger>
-                    <TabsTrigger value="reflections" className="text-xs">
-                      <Book className="h-3 w-3 mr-1" />
-                      Wellness
-                    </TabsTrigger>
-                    <TabsTrigger value="notifications" className="text-xs">
-                      <Bell className="h-3 w-3 mr-1" />
-                      Notifications {unreadNotificationsCount > 0 && `(${unreadNotificationsCount})`}
-                    </TabsTrigger>
-                  </TabsList>
-
-                  {/* Buckets of Love Tab */}
-                  <TabsContent value="buckets" className="space-y-3">
-                    {loveMessagesLoading ? (
-                      <div className="flex justify-center p-4">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                      </div>
-                    ) : (
-                      <div className="relative">
-                        {/* Header with cute bucket image */}
-                        <div className="flex flex-col items-center mb-4">
-                          <img 
-                            src="/lovable-uploads/96533996-2039-4566-887a-67eadeb076f1.png" 
-                            alt="Sending you buckets of love"
-                            className="w-32 h-auto mb-2"
-                          />
-                          
-                          {/* Add Love Note Button */}
-                          <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
-                            <DialogTrigger asChild>
-                              <Button variant="outline" size="sm" className="text-xs">
-                                <Plus className="h-3 w-3 mr-1" />
-                                Add Love Note
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-[525px]">
-                              <DialogHeader>
-                                <DialogTitle>Share a Love Note</DialogTitle>
-                              </DialogHeader>
-                              <Form {...loveForm}>
-                                <form onSubmit={loveForm.handleSubmit(onSubmitLoveMessage)} className="space-y-4">
-                                  <FormField
-                                    control={loveForm.control}
-                                    name="message"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Your Message</FormLabel>
-                                        <FormControl>
-                                          <Textarea
-                                            placeholder="Share some love and encouragement..."
-                                            className="min-h-[100px]"
-                                            {...field}
-                                          />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  
-                                  <FormField
-                                    control={loveForm.control}
-                                    name="note_color"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Note Color</FormLabel>
-                                        <FormControl>
-                                          <div className="flex gap-2 flex-wrap">
-                                            {noteColors.map((color) => (
-                                              <button
-                                                key={color.value}
-                                                type="button"
-                                                onClick={() => field.onChange(color.value)}
-                                                className={`w-8 h-8 rounded-full border-2 ${color.bg} ${color.border} ${
-                                                  field.value === color.value ? 'border-gray-800 scale-110' : 'border-gray-300'
-                                                } transition-all`}
-                                                title={color.label}
-                                              />
-                                            ))}
-                                          </div>
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  
-                                  <FormField
-                                    control={loveForm.control}
-                                    name="decorations"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Add Decorations (Optional)</FormLabel>
-                                        <FormControl>
-                                          <div className="space-y-2">
-                                            <div className="flex gap-1 flex-wrap">
-                                              {emojis.map((emoji) => (
-                                                <button
-                                                  key={emoji}
-                                                  type="button"
-                                                  onClick={() => field.onChange(field.value + emoji)}
-                                                  className="w-8 h-8 text-lg hover:bg-gray-100 rounded transition-colors"
-                                                >
-                                                  {emoji}
-                                                </button>
-                                              ))}
-                                            </div>
-                                            <div className="flex gap-2">
-                                              <Input
-                                                value={field.value}
-                                                onChange={(e) => field.onChange(e.target.value)}
-                                                placeholder="✨🎵💙"
-                                                className="flex-1"
-                                              />
-                                              <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => field.onChange("")}
-                                              >
-                                                Clear
-                                              </Button>
-                                            </div>
-                                          </div>
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  
-                                  <FormField
-                                    control={loveForm.control}
-                                    name="is_anonymous"
-                                    render={({ field }) => (
-                                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                        <FormControl>
-                                          <Checkbox
-                                            checked={field.value}
-                                            onCheckedChange={field.onChange}
-                                          />
-                                        </FormControl>
-                                        <div className="space-y-1 leading-none">
-                                          <FormLabel>
-                                            Post anonymously
-                                          </FormLabel>
-                                        </div>
-                                      </FormItem>
-                                    )}
-                                  />
-                                  
-                                  <div className="flex justify-end gap-2">
-                                    <Button type="button" variant="outline" onClick={() => setLoveDialogOpen(false)}>
-                                      Cancel
-                                    </Button>
-                                    <Button type="submit">Post Love Note</Button>
-                                  </div>
-                                </form>
-                              </Form>
-                            </DialogContent>
-                          </Dialog>
-                        </div>
-                        
-                        {/* 3D Interactive Bucket Container */}
-                        <div className="relative flex justify-center items-end h-64" style={{ perspective: "800px" }}>
-                          {/* 3D Bucket Structure */}
-                          <div className="relative" style={{ transformStyle: "preserve-3d" }}>
-                            {/* Bucket Body - Main Container */}
-                            <div 
-                              className="relative w-48 h-32 mx-auto"
-                              style={{
-                                background: "linear-gradient(145deg, #7dd3fc 0%, #0ea5e9 50%, #0284c7 100%)",
-                                borderRadius: "0 0 24px 24px",
-                                transform: "rotateX(10deg) rotateY(-5deg)",
-                                boxShadow: "0 15px 35px rgba(14, 165, 233, 0.3), inset 0 2px 10px rgba(255, 255, 255, 0.3)",
-                              }}
-                            >
-                              {/* Bucket Handle Left */}
-                              <div 
-                                className="absolute top-4 -left-6 w-8 h-12 border-4 border-blue-300 rounded-full"
-                                style={{
-                                  borderRightColor: "transparent",
-                                  transform: "rotateY(-30deg)",
-                                }}
-                              />
-                              
-                              {/* Bucket Handle Right */}
-                              <div 
-                                className="absolute top-4 -right-6 w-8 h-12 border-4 border-blue-300 rounded-full"
-                                style={{
-                                  borderLeftColor: "transparent",
-                                  transform: "rotateY(30deg)",
-                                }}
-                              />
-                              
-                              {/* Bucket Rim */}
-                              <div 
-                                className="absolute -top-2 left-0 right-0 h-4 bg-gradient-to-r from-blue-400 via-blue-300 to-blue-500 rounded-full"
-                                style={{
-                                  boxShadow: "0 -2px 8px rgba(14, 165, 233, 0.4)",
-                                }}
-                              />
-                            </div>
-                          </div>
-
-                          {/* Existing Love Messages - distributed around the bucket */}
-                          {loveMessages.map((message, index) => {
-                            // Better distribution - circular arrangement around center
-                            const totalMessages = loveMessages.length;
-                            const angle = (index / totalMessages) * 2 * Math.PI;
-                            const radius = 35; // Distance from center
-                            
-                            // Convert polar to cartesian coordinates
-                            const x = 50 + Math.cos(angle) * radius * (0.8 + Math.random() * 0.4);
-                            const y = 50 + Math.sin(angle) * radius * (0.6 + Math.random() * 0.4);
-                            
-                            return (
-                              <div 
-                                key={message.id}
-                                onClick={() => handleNoteClick(message)}
-                                className={`${getNoteColorClasses(message.note_color)} border-2 rounded-lg p-2 shadow-md transition-all cursor-pointer hover:scale-110 hover:shadow-lg animate-fade-in absolute group`}
-                                style={{ 
-                                  width: '101px', // 96px (w-24) + 5px = 101px
-                                  height: '80px', // keeping same height (h-20)
-                                  animationDelay: `${index * 0.1}s`,
-                                  left: `${Math.max(5, Math.min(75, x))}%`,
-                                  top: `${Math.max(5, Math.min(65, y))}%`,
-                                  transform: `rotate(${(Math.random() - 0.5) * 20}deg)`,
-                                  zIndex: 1,
-                                  backgroundColor: message.likes >= 3 ? '#ef4444' : undefined,
-                                  borderColor: message.likes >= 3 ? '#dc2626' : undefined,
-                                }}
-                              >
-                                <div className="h-full flex flex-col justify-between text-[10px]">
-                                  <div className="flex-1">
-                                    <p className={`text-[10px] leading-tight mb-1 line-clamp-2 ${message.likes >= 3 ? 'text-white' : 'text-gray-800'}`}>
-                                      {message.message.length > 35 ? `${message.message.substring(0, 32)}...` : message.message}
-                                    </p>
-                                    {(message as any).decorations && (
-                                      <div className="text-[10px] leading-none">
-                                        {(message as any).decorations}
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center justify-between text-[10px]">
-                                    <span className={`font-medium truncate mr-1 text-[9px] ${message.likes >= 3 ? 'text-white' : 'text-gray-600'}`} title={message.sender_name}>
-                                      {message.sender_name}
-                                    </span>
-                                    <div className="flex items-center gap-1">
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleLikeMessage(message.id);
-                                        }}
-                                        className={`flex items-center gap-1 transition-colors ${
-                                          message.user_liked 
-                                            ? (message.likes >= 3 ? 'text-white' : 'text-red-600')
-                                            : (message.likes >= 3 ? 'text-white hover:text-red-200' : 'text-red-500 hover:text-red-600')
-                                        }`}
-                                      >
-                                        <Heart className={`h-2 w-2 ${message.user_liked ? 'fill-current' : ''}`} />
-                                        {message.likes > 0 && <span className="text-[9px]">{message.likes}</span>}
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  {/* Spiritual Reflections Tab */}
-                  <TabsContent value="reflections" className="space-y-3">
-                    {reflectionsLoading ? (
-                      <div className="flex justify-center p-4">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                      </div>
-                    ) : latestReflection ? (
-                      <div className="space-y-3">
-                        <div className="border rounded-lg p-3">
-                          <div className="flex items-start justify-between mb-2">
-                            <h4 className="font-medium text-sm leading-tight pr-2">{latestReflection.title}</h4>
-                            {latestReflection.is_featured && (
-                              <Badge variant="outline" className="text-xs flex-shrink-0">Featured</Badge>
-                            )}
-                          </div>
-                          
-                          <div className="flex flex-wrap gap-1 mb-2">
-                            <Badge className={getReflectionTypeColor(latestReflection.reflection_type || 'daily_devotional')} variant="secondary">
-                              {(latestReflection.reflection_type || 'daily_devotional').replace('_', ' ')}
-                            </Badge>
-                            {latestReflection.scripture_reference && (
-                              <Badge variant="outline" className="text-xs">
-                                <Heart className="h-3 w-3 mr-1" />
-                                {latestReflection.scripture_reference}
-                              </Badge>
-                            )}
-                          </div>
-                          
-                          <ScrollArea className="h-16 mb-2">
-                            <p className="text-xs text-muted-foreground pr-4 leading-relaxed">
-                              {latestReflection.content}
-                            </p>
-                          </ScrollArea>
-                          
-                          <div className="flex items-center justify-between">
-                            <div className="text-xs text-muted-foreground">
-                              {latestReflection.shared_at 
-                                ? format(new Date(latestReflection.shared_at), 'MMM d')
-                                : 'No date'
-                              }
-                            </div>
-                            <Badge variant="outline" className="text-xs">
-                              <BookOpen className="h-3 w-3 mr-1" />
-                              Reflection
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-4">
-                        <BookOpen className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">No reflections shared yet</p>
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  {/* Notifications Tab */}
-                  <TabsContent value="notifications" className="space-y-3">
-                    {notificationsLoading ? (
-                      <div className="flex justify-center p-4">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                      </div>
-                    ) : notifications.length > 0 ? (
-                      <ScrollArea className="h-[400px]">
-                        <div className="space-y-2">
-                          {notifications.map((notification) => {
-                            const IconComponent = getCategoryIcon(notification.category || 'Executive');
-                            return (
-                              <div 
-                                key={notification.id} 
-                                className={`border rounded-lg p-3 transition-colors cursor-pointer hover:bg-muted/50 ${
-                                  !notification.is_read ? 'bg-blue-50/50 border-blue-200' : ''
-                                }`}
-                                onClick={() => markNotificationAsRead(notification.id)}
-                              >
-                                <div className="flex items-start gap-2">
-                                  <IconComponent className={`h-4 w-4 mt-0.5 flex-shrink-0 ${getCategoryColor(notification.category || 'Executive')}`} />
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <h4 className="font-medium text-sm leading-tight">{notification.title}</h4>
-                                      {!notification.is_read && (
-                                        <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
-                                      )}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground leading-relaxed mb-2">
-                                      {notification.message}
-                                    </p>
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex gap-1">
-                                        <Badge variant={getPriorityColor(notification.priority)} className="text-xs">
-                                          {notification.priority}
-                                        </Badge>
-                                        {notification.category && (
-                                          <Badge variant="outline" className="text-xs">
-                                            {notification.category}
-                                          </Badge>
-                                        )}
-                                      </div>
-                                      <span className="text-xs text-muted-foreground">
-                                        {format(new Date(notification.created_at), 'MMM d')}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </ScrollArea>
-                    ) : (
-                      <div className="text-center py-4">
-                        <Bell className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">No notifications</p>
-                      </div>
-                    )}
-                  </TabsContent>
-                </Tabs>
-
-                {/* Quick Action Buttons for Left Column */}
-                {activeTab === "reflections" && (
-                  <div className="flex gap-2 mt-4">
-                    <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/spiritual-reflections')}>
-                      <Book className="h-3 w-3 mr-1" />
-                      All Reflections
-                    </Button>
-                    <Dialog open={prayerDialogOpen} onOpenChange={setPrayerDialogOpen}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="flex-1 text-xs h-8">
-                          <Heart className="h-3 w-3 mr-1" />
-                          Prayer Request
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[525px]">
-                        <DialogHeader>
-                          <DialogTitle>Submit Prayer Request</DialogTitle>
-                        </DialogHeader>
-                        <Form {...prayerForm}>
-                          <form onSubmit={prayerForm.handleSubmit(onSubmitPrayerRequest)} className="space-y-4">
-                            <FormField
-                              control={prayerForm.control}
-                              name="content"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Prayer Request</FormLabel>
-                                  <FormControl>
-                                    <Textarea
-                                      placeholder="Share your prayer request..."
-                                      className="min-h-[100px]"
-                                      {...field}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={prayerForm.control}
-                              name="is_anonymous"
-                              render={({ field }) => (
-                                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value}
-                                      onCheckedChange={field.onChange}
-                                    />
-                                  </FormControl>
-                                  <div className="space-y-1 leading-none">
-                                    <FormLabel>
-                                      Submit anonymously
-                                    </FormLabel>
-                                  </div>
-                                </FormItem>
-                              )}
-                            />
-                            <div className="flex justify-end gap-2">
-                              <Button type="button" variant="outline" onClick={() => setPrayerDialogOpen(false)}>
-                                Cancel
-                              </Button>
-                              <Button type="submit">Submit Request</Button>
-                            </div>
-                          </form>
-                        </Form>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                )}
-
-                {activeTab === "notifications" && (
-                  <div className="flex gap-2 mt-4">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex-1 text-xs h-8" 
-                      onClick={() => {
-                        setActiveTab("notifications");
-                      }}
-                    >
-                      <Bell className="h-3 w-3 mr-1" />
-                      Refresh Notifications
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/member-portal')}>
-                      <Package className="h-3 w-3 mr-1" />
-                      Member Portal
-                    </Button>
-                  </div>
-                )}
+                <LeftColumnContent />
+                <RightColumnContent />
               </div>
-
-              {/* Right Column: Calendar and Music */}
-              <div className="space-y-4">
-                {/* Calendar Section */}
-                <div className="border rounded-lg">
-                  <div className="flex items-center gap-2 p-3 border-b">
-                    <Calendar className="h-4 w-4 text-primary" />
-                    <h3 className="font-medium text-sm">Calendar</h3>
+            ) : (
+              <ResizablePanelGroup direction="horizontal" className="min-h-[500px]">
+                <ResizablePanel defaultSize={50} minSize={30}>
+                  <LeftColumnContent />
+                </ResizablePanel>
+                <ResizableHandle withHandle />
+                <ResizablePanel defaultSize={50} minSize={30}>
+                  <div className="pl-4">
+                    <RightColumnContent />
                   </div>
-                  <div className="h-[300px] overflow-hidden">
-                    <PublicCalendarViews />
-                  </div>
-                  <div className="p-3 border-t">
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/calendar')}>
-                        <Calendar className="h-3 w-3 mr-1" />
-                        Full Calendar
-                      </Button>
-                      <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/events')}>
-                        <Clock className="h-3 w-3 mr-1" />
-                        All Events
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Music Section */}
-                <div className="border rounded-lg">
-                  <div className="flex items-center gap-2 p-3 border-b">
-                    <Music className="h-4 w-4 text-primary" />
-                    <h3 className="font-medium text-sm">Music Library</h3>
-                  </div>
-                  <div className="p-3">
-                    <div className="relative mb-3">
-                      <Search className="absolute left-2 top-2.5 h-3 w-3 text-muted-foreground" />
-                      <Input
-                        placeholder="Search music..."
-                        value={musicSearchTerm}
-                        onChange={(e) => setMusicSearchTerm(e.target.value)}
-                        className="pl-7 h-8 text-xs"
-                      />
-                    </div>
-                    
-                    {musicLoading ? (
-                      <div className="flex justify-center p-4">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                      </div>
-                    ) : filteredMusic.length > 0 ? (
-                      <ScrollArea className="h-[200px]">
-                        <div className="space-y-2">
-                          {filteredMusic.map((music) => (
-                            <div key={music.id} className="border rounded-lg p-2">
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1 min-w-0">
-                                  <h4 className="font-medium text-xs leading-tight mb-1 truncate">{music.title}</h4>
-                                  <p className="text-xs text-muted-foreground truncate">{music.composer}</p>
-                                  <div className="flex flex-wrap gap-1 mt-1">
-                                    {music.voice_parts && music.voice_parts.length > 0 && (
-                                      <Badge variant="outline" className="text-xs h-4 px-1">
-                                        {music.voice_parts.join(", ")}
-                                      </Badge>
-                                    )}
-                                    {music.difficulty_level && (
-                                      <Badge variant="outline" className="text-xs h-4 px-1">
-                                        {music.difficulty_level}
-                                      </Badge>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="flex gap-1 flex-shrink-0">
-                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                    <Eye className="h-3 w-3" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                    <Download className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                    ) : (
-                      <p className="text-xs text-muted-foreground text-center py-4">
-                        {musicSearchTerm ? "No music found" : "No music available"}
-                      </p>
-                    )}
-                  </div>
-                  <div className="p-3 border-t">
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/music-library')}>
-                        <Music className="h-3 w-3 mr-1" />
-                        Music Library
-                      </Button>
-                      <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/sheet-music')}>
-                        <BookOpen className="h-3 w-3 mr-1" />
-                        Browse All
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+                </ResizablePanel>
+              </ResizablePanelGroup>
+            )}
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
