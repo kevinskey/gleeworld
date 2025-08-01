@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CommunicationCenterModule } from "@/components/admin/CommunicationCenterModule";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { SpiritualReflectionsCard } from "../SpiritualReflectionsCard";
+import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { NotificationCenter } from "@/components/admin/NotificationCenter";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -551,8 +551,8 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
       {/* Communication Center Module */}
       <CommunicationCenterModule />
 
-      {/* Spiritual Reflections Card */}
-      <SpiritualReflectionsCard />
+      {/* Community Hub */}
+      <CommunityHubWidget />
       
       {/* Audition Dialog */}
       <AuditionDialog

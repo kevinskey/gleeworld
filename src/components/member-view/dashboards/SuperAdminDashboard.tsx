@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { SpiritualReflectionsSection } from "@/components/user-dashboard/sections/SpiritualReflectionsSection";
+import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { AnnouncementsEventsSection } from "@/components/user-dashboard/sections/AnnouncementsEventsSection";
 import { usePublicGleeWorldEvents } from "@/hooks/usePublicGleeWorldEvents";
 import { Button } from "@/components/ui/button";
@@ -323,10 +323,10 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
         </CardContent>
       </Card>
 
-      {/* Spiritual Reflections & Announcements Section */}
+      {/* Community Hub & Announcements Section */}
       <div className="md:col-span-2 lg:col-span-3">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <SpiritualReflectionsSection />
+          <CommunityHubWidget />
           <AnnouncementsEventsSection upcomingEvents={formattedUpcomingEvents} />
         </div>
       </div>
