@@ -1,5 +1,6 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,9 +31,32 @@ export const AdminSummaryStats = ({ users, loading, activityLogs }: AdminSummary
   const [isOpen, setIsOpen] = useState(false);
   // Calculate stats
   const totalUsers = users?.length || 0;
-  const activeUsers = users?.filter(user => user.email)?.length || 0; // Filter by users with email
-  const totalContracts = 247; // Mock data - replace with real data
-  const pendingContracts = 12;
+  const activeUsers = users?.filter(user => user.email)?.length || 0;
+  
+  // Fetch real contract data from Supabase
+  const [contractStats, setContractStats] = useState({ total: 0, pending: 0 });
+  
+  useEffect(() => {
+    const fetchContractStats = async () => {
+      try {
+        const { data: contracts } = await supabase
+          .from('contracts_v2')
+          .select('status');
+        
+        const total = contracts?.length || 0;
+        const pending = contracts?.filter(c => c.status === 'pending_signatures')?.length || 0;
+        
+        setContractStats({ total, pending });
+      } catch (error) {
+        console.error('Error fetching contract stats:', error);
+      }
+    };
+    
+    fetchContractStats();
+  }, []);
+  
+  const totalContracts = contractStats.total;
+  const pendingContracts = contractStats.pending;
   const totalRevenue = 45250;
   const recentActivity = activityLogs?.slice(0, 5) || [];
 

@@ -6,6 +6,8 @@ import { AnnouncementsEventsSection } from "@/components/user-dashboard/sections
 import { usePublicGleeWorldEvents } from "@/hooks/usePublicGleeWorldEvents";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Calendar, 
   CheckCircle, 
@@ -67,66 +69,126 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
       type: event.event_type || undefined
     }));
   
-  // Mock data for super admin dashboard
-  const superAdminData = {
+  const [superAdminData, setSuperAdminData] = useState({
     systemOverview: {
-      totalUsers: 124,
-      activeUsers: 89,
+      totalUsers: 0,
+      activeUsers: 0,
       systemUptime: 99.9,
-      totalStorage: 500, // GB
-      usedStorage: 287 // GB
+      totalStorage: 500,
+      usedStorage: 0
     },
     securityMetrics: {
-      activeLogins: 45,
-      failedLoginAttempts: 3,
+      activeLogins: 0,
+      failedLoginAttempts: 0,
       suspiciousActivity: 0,
       lastSecurityAudit: '2024-01-15'
     },
     administrativeStats: {
-      totalAdmins: 8,
-      superAdmins: 2,
-      pendingPermissions: 5,
-      systemAlerts: 2
+      totalAdmins: 0,
+      superAdmins: 0,
+      pendingPermissions: 0,
+      systemAlerts: 0
     },
     globalMetrics: {
-      totalEvents: 156,
-      totalContracts: 89,
-      totalRevenue: 45000,
-      membershipGrowth: 12.5
+      totalEvents: 0,
+      totalContracts: 0,
+      totalRevenue: 0,
+      membershipGrowth: 0
     },
-    criticalTasks: [
-      {
-        id: '1',
-        title: 'System Security Update',
-        priority: 'critical',
-        dueDate: '2024-01-20',
-        category: 'security'
-      },
-      {
-        id: '2',
-        title: 'Database Backup Verification',
-        priority: 'high',
-        dueDate: '2024-01-22',
-        category: 'maintenance'
+    criticalTasks: [],
+    recentActions: []
+  });
+
+  useEffect(() => {
+    const fetchSuperAdminData = async () => {
+      try {
+        // Fetch user statistics
+        const { count: totalUsers } = await supabase
+          .from('gw_profiles')
+          .select('*', { count: 'exact', head: true });
+
+        const { count: activeUsers } = await supabase
+          .from('gw_profiles')
+          .select('*', { count: 'exact', head: true })
+          .not('last_sign_in_at', 'is', null);
+
+        const { count: totalAdmins } = await supabase
+          .from('gw_profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_admin', true);
+
+        const { count: superAdmins } = await supabase
+          .from('gw_profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_super_admin', true);
+
+        // Fetch global metrics
+        const { count: totalEvents } = await supabase
+          .from('gw_events')
+          .select('*', { count: 'exact', head: true });
+
+        const { count: totalContracts } = await supabase
+          .from('contracts_v2')
+          .select('*', { count: 'exact', head: true });
+
+        // Fetch security events
+        const { data: securityEvents } = await supabase
+          .from('gw_security_audit_log')
+          .select('action_type, created_at')
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        const failedLogins = securityEvents?.filter(e => 
+          e.action_type.includes('failed') || e.action_type.includes('unauthorized')
+        ).length || 0;
+
+        // Fetch recent admin actions
+        const { data: adminActions } = await supabase
+          .from('activity_logs')
+          .select('action_type, created_at, user_id')
+          .in('action_type', ['role_changed', 'user_created', 'user_deleted', 'admin_action'])
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        setSuperAdminData(prev => ({
+          ...prev,
+          systemOverview: {
+            ...prev.systemOverview,
+            totalUsers: totalUsers || 0,
+            activeUsers: activeUsers || 0,
+            usedStorage: Math.round((totalUsers || 0) * 0.5), // Rough calculation
+          },
+          securityMetrics: {
+            ...prev.securityMetrics,
+            activeLogins: activeUsers || 0,
+            failedLoginAttempts: failedLogins,
+          },
+          administrativeStats: {
+            ...prev.administrativeStats,
+            totalAdmins: totalAdmins || 0,
+            superAdmins: superAdmins || 0,
+          },
+          globalMetrics: {
+            ...prev.globalMetrics,
+            totalEvents: totalEvents || 0,
+            totalContracts: totalContracts || 0,
+            membershipGrowth: 12.5, // TODO: Calculate real growth
+          },
+          recentActions: adminActions?.map((action, index) => ({
+            id: String(index + 1),
+            action: action.action_type.replace('_', ' '),
+            target: 'User',
+            timestamp: new Date(action.created_at).toLocaleString(),
+            type: 'system'
+          })) || []
+        }));
+      } catch (error) {
+        console.error('Error fetching super admin data:', error);
       }
-    ],
-    recentActions: [
-      {
-        id: '1',
-        action: 'Granted Super Admin Access',
-        target: 'Dr. Rebecca Smith',
-        timestamp: '2024-01-18 16:45',
-        type: 'permission'
-      },
-      {
-        id: '2',
-        action: 'System Configuration Updated',
-        target: 'Email Settings',
-        timestamp: '2024-01-18 14:20',
-        type: 'system'
-      }
-    ]
-  };
+    };
+
+    fetchSuperAdminData();
+  }, []);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

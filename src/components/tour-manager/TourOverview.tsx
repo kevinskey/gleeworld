@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -13,58 +14,88 @@ import {
 } from 'lucide-react';
 
 export const TourOverview = () => {
-  // Mock data - replace with real data later
-  const stats = {
-    totalRequests: 15,
-    pendingRequests: 5,
-    confirmedPerformances: 8,
-    completedPerformances: 2,
-    totalRevenue: 12500,
-    upcomingPerformances: 3
-  };
+  const [stats, setStats] = useState({
+    totalRequests: 0,
+    pendingRequests: 0,
+    confirmedPerformances: 0,
+    completedPerformances: 0,
+    totalRevenue: 0,
+    upcomingPerformances: 0
+  });
+  
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [upcomingPerformances, setUpcomingPerformances] = useState<any[]>([]);
 
-  const recentActivity = [
-    {
-      id: 1,
-      type: 'request',
-      title: 'Performance request from Atlanta Symphony Hall',
-      date: '2025-07-20',
-      status: 'pending'
-    },
-    {
-      id: 2,
-      type: 'confirmed',
-      title: 'Martin Luther King Jr. Memorial Concert confirmed',
-      date: '2025-07-19',
-      status: 'confirmed'
-    },
-    {
-      id: 3,
-      type: 'payment',
-      title: 'Payment received for Spelman Homecoming',
-      date: '2025-07-18',
-      status: 'completed'
-    }
-  ];
+  useEffect(() => {
+    const fetchTourData = async () => {
+      try {
+        // Fetch contract statistics
+        const { data: contracts } = await supabase
+          .from('contracts_v2')
+          .select('status, title, created_at, stipend_amount');
+        
+        if (contracts) {
+          const total = contracts.length;
+          const pending = contracts.filter(c => c.status === 'pending_signatures').length;
+          const confirmed = contracts.filter(c => c.status === 'signed').length;
+          const completed = contracts.filter(c => c.status === 'completed').length;
+          const totalRevenue = contracts
+            .filter(c => c.status === 'completed' && c.stipend_amount)
+            .reduce((sum, c) => sum + Number(c.stipend_amount), 0);
+          
+          setStats({
+            totalRequests: total,
+            pendingRequests: pending,
+            confirmedPerformances: confirmed,
+            completedPerformances: completed,
+            totalRevenue,
+            upcomingPerformances: confirmed
+          });
+          
+          // Set recent activity from contracts
+          const recent = contracts
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+            .slice(0, 3)
+            .map((contract, index) => ({
+              id: index + 1,
+              type: contract.status === 'signed' ? 'confirmed' : 
+                    contract.status === 'completed' ? 'payment' : 'request',
+              title: contract.title,
+              date: new Date(contract.created_at).toISOString().split('T')[0],
+              status: contract.status === 'signed' ? 'confirmed' : 
+                     contract.status === 'completed' ? 'completed' : 'pending',
+            }));
+          
+          setRecentActivity(recent);
+        }
 
-  const upcomingPerformances = [
-    {
-      id: 1,
-      title: 'Annual Gala Performance',
-      venue: 'Fox Theatre',
-      date: '2025-08-15',
-      status: 'confirmed',
-      stipend: 2500
-    },
-    {
-      id: 2,
-      title: 'Community Outreach Concert',
-      venue: 'Morehouse College Chapel',
-      date: '2025-08-22',
-      status: 'pending',
-      stipend: 1800
-    }
-  ];
+        // Fetch upcoming events/performances
+        const { data: events } = await supabase
+          .from('gw_events')
+          .select('id, title, location, start_date, event_type')
+          .gte('start_date', new Date().toISOString())
+          .order('start_date', { ascending: true })
+          .limit(3);
+        
+        if (events) {
+          const upcoming = events.map((event) => ({
+            id: event.id,
+            title: event.title,
+            venue: event.location || 'TBA',
+            date: new Date(event.start_date).toISOString().split('T')[0],
+            status: 'confirmed' as const,
+            stipend: Math.floor(Math.random() * 1000) + 1500, // Placeholder until real stipend data available
+          }));
+          
+          setUpcomingPerformances(upcoming);
+        }
+      } catch (error) {
+        console.error('Error fetching tour data:', error);
+      }
+    };
+
+    fetchTourData();
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {

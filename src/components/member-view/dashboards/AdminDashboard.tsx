@@ -10,7 +10,8 @@ import { useAuditionManagement } from "@/hooks/useAuditionManagement";
 import { useSRFAssignments } from "@/hooks/useSRFAssignments";
 import { AuditionDialog } from "@/components/audition/AuditionDialog";
 import { AuditionEntry } from "@/hooks/useAuditionManagement";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { 
   Calendar, 
@@ -97,73 +98,115 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
     }
   };
 
-  // Mock data for admin dashboard
-  const adminData = {
+  const [adminData, setAdminData] = useState({
     systemStats: {
-      totalUsers: 124,
-      activeUsers: 89,
-      pendingTasks: 15,
+      totalUsers: 0,
+      activeUsers: 0,
+      pendingTasks: 0,
       systemHealth: 98
     },
     userMetrics: {
-      newRegistrations: 12,
-      totalMembers: 89,
-      alumnaeMembersCount: 35,
+      newRegistrations: 0,
+      totalMembers: 0,
+      alumnaeMembersCount: 0,
       attendanceRate: 87
     },
-    upcomingEvents: [
-      {
-        id: '1',
-        title: 'Admin Review Meeting',
-        date: '2024-01-19',
-        time: '3:00 PM',
-        location: 'Admin Office'
-      },
-      {
-        id: '2',
-        title: 'System Maintenance',
-        date: '2024-01-21',
-        time: '12:00 AM',
-        location: 'Remote'
-      }
-    ],
-    pendingApprovals: [
-      {
-        id: '1',
-        type: 'Event Request',
-        title: 'Spring Concert Venue Booking',
-        requester: 'Event Planning Team',
-        priority: 'high'
-      },
-      {
-        id: '2',
-        type: 'Budget Request',
-        title: 'Equipment Purchase',
-        requester: 'Music Director',
-        priority: 'medium'
-      }
-    ],
-    recentActivity: [
-      {
-        id: '1',
-        action: 'User Role Updated',
-        target: 'Sarah Johnson',
-        timestamp: '2024-01-18 14:30'
-      },
-      {
-        id: '2',
-        action: 'System Backup Completed',
-        target: 'Database',
-        timestamp: '2024-01-18 02:00'
-      }
-    ],
+    upcomingEvents: [],
+    pendingApprovals: [],
+    recentActivity: [],
     financialOverview: {
-      totalBudget: 25000,
-      allocated: 18500,
-      spent: 12300,
-      remaining: 12700
+      totalBudget: 0,
+      allocated: 0,
+      spent: 0,
+      remaining: 0
     }
-  };
+  });
+
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      try {
+        // Fetch user statistics
+        const { count: totalUsers } = await supabase
+          .from('gw_profiles')
+          .select('*', { count: 'exact', head: true });
+
+        const { count: activeUsers } = await supabase
+          .from('gw_profiles')
+          .select('*', { count: 'exact', head: true })
+          .not('last_sign_in_at', 'is', null);
+
+        const { count: alumnaeCount } = await supabase
+          .from('gw_profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'alumna');
+
+        // Note: gw_tasks table doesn't exist yet, using placeholder
+        const pendingTasks = 0;
+
+        // Fetch upcoming events
+        const { data: events } = await supabase
+          .from('gw_events')
+          .select('id, title, start_date, location')
+          .gte('start_date', new Date().toISOString())
+          .order('start_date', { ascending: true })
+          .limit(5);
+
+        // Fetch recent activity
+        const { data: activities } = await supabase
+          .from('activity_logs')
+          .select('action_type, created_at, user_id')
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        // Fetch budget data
+        const { data: budgets } = await supabase
+          .from('budgets')
+          .select('total_amount, spent_amount')
+          .eq('status', 'active');
+
+        const totalBudget = budgets?.reduce((sum, b) => sum + Number(b.total_amount), 0) || 0;
+        const spent = budgets?.reduce((sum, b) => sum + Number(b.spent_amount), 0) || 0;
+
+        setAdminData(prev => ({
+          ...prev,
+          systemStats: {
+            ...prev.systemStats,
+            totalUsers: totalUsers || 0,
+            activeUsers: activeUsers || 0,
+            pendingTasks: pendingTasks || 0,
+          },
+          userMetrics: {
+            ...prev.userMetrics,
+            totalMembers: totalUsers || 0,
+            alumnaeMembersCount: alumnaeCount || 0,
+          },
+          upcomingEvents: events?.map(event => ({
+            id: event.id,
+            title: event.title,
+            date: new Date(event.start_date).toISOString().split('T')[0],
+            time: new Date(event.start_date).toLocaleTimeString(),
+            location: event.location || 'TBA'
+          })) || [],
+          recentActivity: activities?.map((activity, index) => ({
+            id: String(index + 1),
+            action: activity.action_type.replace('_', ' '),
+            target: 'System',
+            timestamp: new Date(activity.created_at).toLocaleString(),
+          })) || [],
+          financialOverview: {
+            totalBudget,
+            allocated: totalBudget,
+            spent,
+            remaining: totalBudget - spent
+          }
+        }));
+      } catch (error) {
+        console.error('Error fetching admin data:', error);
+      }
+    };
+
+    fetchAdminData();
+  }, []);
 
   return (
     <div className="space-y-6">
