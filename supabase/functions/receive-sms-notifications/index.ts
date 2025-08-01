@@ -295,7 +295,11 @@ const handler = async (req: Request): Promise<Response> => {
       message: messageContent,
       type: 'sms_notification',
       is_read: false,
-      sender_phone: smsData.From,
+      metadata: {
+        sender_phone: smsData.From,
+        message_sid: smsData.MessageSid,
+        original_message: smsData.Body
+      },
       created_at: new Date().toISOString()
     }));
 
