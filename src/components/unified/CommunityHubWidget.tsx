@@ -298,7 +298,7 @@ export const CommunityHubWidget = () => {
           </CardHeader>
         </CollapsibleTrigger>
         
-        <CollapsibleContent>
+        <CollapsibleContent className="transition-all duration-300 ease-out data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
           <CardContent className="pt-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
               <TabsList className="grid w-full grid-cols-4">

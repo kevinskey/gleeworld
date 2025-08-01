@@ -108,7 +108,7 @@ export const QuickActionsSection = ({ isAdmin, actionFilter }: QuickActionsSecti
               </CardHeader>
               
               {!isActionCollapsed && (
-                <CardContent>
+                <CardContent className="transition-all duration-300 ease-out animate-accordion-down">
                   <div className="space-y-2">
                     <p className="text-xs text-muted-foreground leading-relaxed">
                       {action.description}

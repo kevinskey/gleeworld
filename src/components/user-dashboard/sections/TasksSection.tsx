@@ -215,7 +215,7 @@ export const TasksSection = () => {
           </CardHeader>
           
           {!isCollapsed && (
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 transition-all duration-300 ease-out animate-accordion-down">
               {/* Checked Out Items */}
               <div>
                 <h4 className="font-medium text-sm mb-2 flex items-center gap-2">
