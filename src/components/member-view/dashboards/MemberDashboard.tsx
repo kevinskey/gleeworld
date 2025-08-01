@@ -51,10 +51,6 @@ export const MemberDashboard = ({ user }: MemberDashboardProps) => {
       { id: 1, title: "Spring Concert Agreement", status: "pending", dueDate: "2024-02-15" },
       { id: 2, title: "Tour Participation Form", status: "completed", dueDate: "2024-01-30" }
     ],
-    payments: [
-      { id: 1, amount: 75, description: "Tour Fee", status: "overdue", dueDate: "2024-02-01" },
-      { id: 2, amount: 25, description: "Music Folder", status: "pending", dueDate: "2024-02-10" }
-    ],
     announcements: [
       { id: 1, title: "Spring Tour Rehearsal Schedule", content: "Updated rehearsal times for tour preparation", date: "Feb 8", priority: "high" },
       { id: 2, title: "Music Library Update", content: "New sheet music available for checkout", date: "Feb 5", priority: "normal" }
@@ -63,7 +59,6 @@ export const MemberDashboard = ({ user }: MemberDashboardProps) => {
 
   const getTotalNotifications = () => {
     return memberData.contracts.filter(c => c.status === 'pending').length +
-           memberData.payments.filter(p => p.status !== 'completed').length +
            memberData.announcements.length;
   };
 
@@ -160,17 +155,6 @@ export const MemberDashboard = ({ user }: MemberDashboardProps) => {
                     <div className="flex-1 min-w-0">
                       <span className="font-medium truncate">{contract.title}</span>
                       <span className="text-muted-foreground ml-1">• Due {contract.dueDate}</span>
-                    </div>
-                  </div>
-                ))}
-                
-                {/* Outstanding Payments */}
-                {memberData.payments.filter(p => p.status !== 'completed').map(payment => (
-                  <div key={payment.id} className="flex items-center gap-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-xs">
-                    <CreditCard className="h-3 w-3 text-red-600" />
-                    <div className="flex-1 min-w-0">
-                      <span className="font-medium">${payment.amount} - {payment.description}</span>
-                      <span className="text-muted-foreground ml-1">• {payment.status === 'overdue' ? 'Overdue' : 'Due'} {payment.dueDate}</span>
                     </div>
                   </div>
                 ))}

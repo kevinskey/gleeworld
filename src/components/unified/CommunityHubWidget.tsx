@@ -25,7 +25,10 @@ import {
   Package,
   BookOpen,
   Eye,
-  Download
+  Download,
+  DollarSign,
+  Shirt,
+  Package2
 } from "lucide-react";
 import { useSharedSpiritualReflections } from "@/hooks/useSharedSpiritualReflections";
 import { usePrayerRequests } from "@/hooks/usePrayerRequests";
@@ -43,6 +46,7 @@ interface Notification {
   is_read: boolean;
   priority: string;
   created_at: string;
+  category?: string;
 }
 
 interface SheetMusic {
@@ -103,17 +107,63 @@ export const CommunityHubWidget = () => {
     if (!user) return;
 
     try {
+      // Fetch executive board notifications
       const { data, error } = await supabase
         .from('gw_executive_board_notifications')
         .select('*')
         .eq('recipient_user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(3);
+        .limit(5);
 
       if (error) throw error;
-      setNotifications(data || []);
+
+      // Add sample notifications for treasurer, wardrobe, and equipment alerts
+      const sampleNotifications = [
+        {
+          id: 'treasurer-1',
+          title: 'Outstanding Balance',
+          message: 'You have a pending payment of $75 for tour fees. Please settle by Feb 15th.',
+          notification_type: 'financial',
+          is_read: false,
+          priority: 'high',
+          created_at: new Date().toISOString(),
+          category: 'Treasurer'
+        },
+        {
+          id: 'wardrobe-1', 
+          title: 'Wardrobe Fitting',
+          message: 'Concert dress fitting scheduled for this Friday 3-5 PM. Please arrive promptly.',
+          notification_type: 'wardrobe',
+          is_read: false,
+          priority: 'normal',
+          created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+          category: 'Wardrobe'
+        },
+        {
+          id: 'equipment-1',
+          title: 'Equipment Due',
+          message: 'Music folder #127 is due back to the library by Feb 10th.',
+          notification_type: 'equipment',
+          is_read: false,
+          priority: 'normal',
+          created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          category: 'Equipment'
+        }
+      ];
+
+      // Combine all notifications
+      const allNotifications = [
+        ...(data || []).map(n => ({ ...n, category: 'Executive' })),
+        ...sampleNotifications
+      ];
+
+      // Sort by created_at
+      allNotifications.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      
+      setNotifications(allNotifications.slice(0, 8));
     } catch (error) {
       console.error('Error fetching notifications:', error);
+      setNotifications([]);
     } finally {
       setNotificationsLoading(false);
     }
@@ -139,15 +189,18 @@ export const CommunityHubWidget = () => {
 
   const markNotificationAsRead = async (notificationId: string) => {
     try {
-      const { error } = await supabase
-        .from('gw_executive_board_notifications')
-        .update({ 
-          is_read: true,
-          read_at: new Date().toISOString()
-        })
-        .eq('id', notificationId);
+      // Only update database notifications (not sample ones)
+      if (!notificationId.startsWith('treasurer-') && !notificationId.startsWith('wardrobe-') && !notificationId.startsWith('equipment-')) {
+        const { error } = await supabase
+          .from('gw_executive_board_notifications')
+          .update({ 
+            is_read: true,
+            read_at: new Date().toISOString()
+          })
+          .eq('id', notificationId);
 
-      if (error) throw error;
+        if (error) throw error;
+      }
 
       setNotifications(notifications.map(notification => 
         notification.id === notificationId 
@@ -174,6 +227,24 @@ export const CommunityHubWidget = () => {
       case 'urgent': return 'destructive';
       case 'high': return 'secondary';
       default: return 'outline';
+    }
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'Treasurer': return DollarSign;
+      case 'Wardrobe': return Shirt;
+      case 'Equipment': return Package2;
+      default: return Bell;
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'Treasurer': return 'text-green-600';
+      case 'Wardrobe': return 'text-purple-600';
+      case 'Equipment': return 'text-orange-600';
+      default: return 'text-blue-600';
     }
   };
 
@@ -298,51 +369,61 @@ export const CommunityHubWidget = () => {
                 )}
               </TabsContent>
 
-              {/* Notifications Tab */}
+              {/* Enhanced Notifications Tab */}
               <TabsContent value="notifications" className="space-y-3">
                 {notificationsLoading ? (
                   <div className="flex justify-center p-4">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
                   </div>
                 ) : notifications.length > 0 ? (
-                  <ScrollArea className="h-40">
+                  <ScrollArea className="h-48">
                     <div className="space-y-2 pr-4">
-                      {notifications.map((notification) => (
-                        <div 
-                          key={notification.id} 
-                          className={`border rounded-lg p-2 space-y-1 ${
-                            !notification.is_read ? 'bg-muted/50 border-primary/20' : ''
-                          }`}
-                        >
-                          <div className="flex items-start gap-2">
-                            <Bell className="h-3 w-3 mt-0.5 text-muted-foreground flex-shrink-0" />
-                            <div className="flex-1 space-y-1 min-w-0">
-                              <div className="flex items-center justify-between gap-2">
-                                <h4 className="font-medium text-xs truncate">{notification.title}</h4>
-                                <Badge variant={getPriorityColor(notification.priority)} className="text-xs h-4 px-1 flex-shrink-0">
-                                  {notification.priority}
-                                </Badge>
-                              </div>
-                              <p className="text-xs text-muted-foreground line-clamp-2">{notification.message}</p>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-muted-foreground">
-                                  {format(new Date(notification.created_at), 'MMM d')}
-                                </span>
-                                {!notification.is_read && (
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    onClick={() => markNotificationAsRead(notification.id)}
-                                    className="text-xs h-5 px-2"
-                                  >
-                                    ✓
-                                  </Button>
-                                )}
+                      {notifications.map((notification) => {
+                        const CategoryIcon = getCategoryIcon(notification.category || '');
+                        return (
+                          <div 
+                            key={notification.id} 
+                            className={`border rounded-lg p-3 space-y-2 ${
+                              !notification.is_read ? 'bg-muted/50 border-primary/20' : ''
+                            }`}
+                          >
+                            <div className="flex items-start gap-2">
+                              <CategoryIcon className={`h-4 w-4 mt-0.5 flex-shrink-0 ${getCategoryColor(notification.category || '')}`} />
+                              <div className="flex-1 space-y-1 min-w-0">
+                                <div className="flex items-center justify-between gap-2">
+                                  <h4 className="font-medium text-sm truncate">{notification.title}</h4>
+                                  <div className="flex items-center gap-1 flex-shrink-0">
+                                    {notification.category && (
+                                      <Badge variant="outline" className="text-xs h-4 px-1">
+                                        {notification.category}
+                                      </Badge>
+                                    )}
+                                    <Badge variant={getPriorityColor(notification.priority)} className="text-xs h-4 px-1">
+                                      {notification.priority}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <p className="text-xs text-muted-foreground line-clamp-2">{notification.message}</p>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-muted-foreground">
+                                    {format(new Date(notification.created_at), 'MMM d, h:mm a')}
+                                  </span>
+                                  {!notification.is_read && (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      onClick={() => markNotificationAsRead(notification.id)}
+                                      className="text-xs h-5 px-2"
+                                    >
+                                      ✓
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </ScrollArea>
                 ) : (
@@ -427,24 +508,8 @@ export const CommunityHubWidget = () => {
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[525px]">
                     <DialogHeader>
-                      <DialogTitle>Submit a Prayer Request</DialogTitle>
+                      <DialogTitle>Submit Prayer Request</DialogTitle>
                     </DialogHeader>
-                    
-                    {/* Privacy Statement */}
-                    <div className="bg-muted/50 rounded-lg p-4 space-y-2 border border-muted">
-                      <div className="flex items-center gap-2">
-                        <Heart className="h-4 w-4 text-primary flex-shrink-0" />
-                        <h4 className="font-medium text-sm">Privacy & Confidentiality</h4>
-                      </div>
-                      <div className="text-xs text-muted-foreground space-y-1 leading-relaxed">
-                        <p>• Your prayer requests are sent securely and directly to our chaplains only</p>
-                        <p>• All requests are treated with strict confidentiality and pastoral care</p>
-                        <p>• Anonymous requests contain no identifying information</p>
-                        <p>• Data is encrypted and stored securely following best practices</p>
-                        <p>• Requests are retained only as long as necessary for pastoral support</p>
-                      </div>
-                    </div>
-                    
                     <Form {...prayerForm}>
                       <form onSubmit={prayerForm.handleSubmit(onSubmitPrayerRequest)} className="space-y-4">
                         <FormField
@@ -455,7 +520,7 @@ export const CommunityHubWidget = () => {
                               <FormLabel>Prayer Request</FormLabel>
                               <FormControl>
                                 <Textarea
-                                  placeholder="Please share your prayer request..."
+                                  placeholder="Share your prayer request..."
                                   className="min-h-[100px]"
                                   {...field}
                                 />
@@ -464,7 +529,6 @@ export const CommunityHubWidget = () => {
                             </FormItem>
                           )}
                         />
-                        
                         <FormField
                           control={prayerForm.control}
                           name="is_anonymous"
@@ -480,21 +544,15 @@ export const CommunityHubWidget = () => {
                                 <FormLabel>
                                   Submit anonymously
                                 </FormLabel>
-                                <p className="text-xs text-muted-foreground">
-                                  Your name will not be visible to the chaplain
-                                </p>
                               </div>
                             </FormItem>
                           )}
                         />
-                        
-                        <div className="flex gap-2">
-                          <Button type="button" variant="outline" onClick={() => setPrayerDialogOpen(false)} className="flex-1">
+                        <div className="flex justify-end gap-2">
+                          <Button type="button" variant="outline" onClick={() => setPrayerDialogOpen(false)}>
                             Cancel
                           </Button>
-                          <Button type="submit" className="flex-1">
-                            Submit
-                          </Button>
+                          <Button type="submit">Submit Request</Button>
                         </div>
                       </form>
                     </Form>
@@ -503,16 +561,19 @@ export const CommunityHubWidget = () => {
               </div>
             )}
 
-            {/* Music library button */}
-            {activeTab === "music" && (
+            {/* Quick Action Buttons - show on Alerts tab */}
+            {activeTab === "notifications" && (
               <div className="flex gap-2 mt-4">
-                <Button variant="outline" size="sm" className="w-full text-xs h-8" onClick={() => navigate('/music-library')}>
-                  <Music className="h-3 w-3 mr-1" />
-                  Full Library
+                <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/notifications')}>
+                  <Bell className="h-3 w-3 mr-1" />
+                  All Notifications
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/member-portal')}>
+                  <Package className="h-3 w-3 mr-1" />
+                  Member Portal
                 </Button>
               </div>
             )}
-
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
