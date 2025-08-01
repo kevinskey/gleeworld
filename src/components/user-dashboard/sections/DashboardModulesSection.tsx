@@ -33,7 +33,11 @@ import {
   Wrench,
   BarChart3,
   Heart,
-  ShieldCheck
+  ShieldCheck,
+  Crown,
+  Gavel,
+  FileText,
+  Headphones
 } from "lucide-react";
 
 export const DashboardModulesSection = () => {
@@ -46,7 +50,7 @@ export const DashboardModulesSection = () => {
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
   const isPRCoordinator = userProfile?.exec_board_role === 'pr_coordinator';
   const canAccessPR = isAdmin || isPRCoordinator;
-  const isExecutive = userProfile?.role === 'executive';
+  const isExecutive = userProfile?.role === 'executive' || userProfile?.is_exec_board || isAdmin;
 
   type Module = {
     name: string;
@@ -74,6 +78,23 @@ export const DashboardModulesSection = () => {
   };
 
   const moduleCategories: Category[] = [
+    {
+      title: "Executive Board Services",
+      icon: Crown,
+      iconColor: "text-amber-600",
+      modules: [
+        { name: "President Services", description: "Leadership guidance & strategic planning", icon: Crown, route: "/executive-services/president", requiresExecutive: true },
+        { name: "Chaplain Services", description: "Spiritual care & wellness support", icon: Heart, route: "/executive-services/chaplain", requiresExecutive: true },
+        { name: "Student Conductor Services", description: "Musical leadership & rehearsal management", icon: Music, route: "/executive-services/student-conductor", requiresExecutive: true },
+        { name: "Assistant Chaplain Services", description: "Supporting spiritual care initiatives", icon: Users, route: "/executive-services/assistant-chaplain", requiresExecutive: true },
+        { name: "Setup Crew Manager Services", description: "Event logistics & equipment management", icon: Wrench, route: "/executive-services/setup-crew-manager", requiresExecutive: true },
+        { name: "Librarian Services", description: "Music library & resource management", icon: BookIcon, route: "/executive-services/librarian", requiresExecutive: true },
+        { name: "Treasurer Services", description: "Financial management & reporting", icon: DollarSign, route: "/executive-services/treasurer", requiresExecutive: true },
+        { name: "Tour Manager Services", description: "Travel coordination & logistics", icon: Plane, route: "/executive-services/tour-manager", requiresExecutive: true },
+        { name: "PR Coordinator Services", description: "Social media & event promotion", icon: Megaphone, route: "/executive-services/pr-coordinator", requiresExecutive: true },
+        { name: "Executive Services Directory", description: "Access all executive board services", icon: ShieldCheck, route: "/executive-services" }
+      ]
+    },
     {
       title: "Member Management & Administration",
       icon: Users,
