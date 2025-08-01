@@ -34,11 +34,27 @@ const ExecutiveServicesDirectory = () => {
   }
 
   if (!user) {
-    return <Navigate to="/" replace />;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold">Authentication Required</h1>
+          <p className="text-muted-foreground">Please log in to access Executive Services.</p>
+          <Button onClick={() => navigate("/")}>Go to Home</Button>
+        </div>
+      </div>
+    );
   }
 
   if (!profile || !['member', 'alumna', 'admin', 'super-admin'].includes(profile.role)) {
-    return <Navigate to="/" replace />;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold">Access Restricted</h1>
+          <p className="text-muted-foreground">This page is only accessible to Glee Club members.</p>
+          <Button onClick={() => navigate("/")}>Go to Home</Button>
+        </div>
+      </div>
+    );
   }
 
   const executiveServices = [
