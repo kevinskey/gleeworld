@@ -308,7 +308,7 @@ export const CommunityHubWidget = () => {
                 </TabsTrigger>
                 <TabsTrigger value="notifications" className="text-xs">
                   <Bell className="h-3 w-3 mr-1" />
-                  Alerts {unreadNotificationsCount > 0 && `(${unreadNotificationsCount})`}
+                  Notifications {unreadNotificationsCount > 0 && `(${unreadNotificationsCount})`}
                 </TabsTrigger>
                 <TabsTrigger value="calendar" className="text-xs">
                   <Calendar className="h-3 w-3 mr-1" />
