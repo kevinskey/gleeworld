@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { SpiritualReflectionsCard } from "@/components/member-view/SpiritualReflectionsCard";
+import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
@@ -682,40 +682,9 @@ export const ExecutiveBoardDashboard = () => {
           <TabsContent value="dashboard" className="space-y-6">
             {/* Member Dashboard Layout - Same as regular dashboard */}
             
-            {/* 1. Spiritual Gleeflections */}
+            {/* Community Hub - Combined spiritual reflections, notifications, and music */}
             <div className="grid grid-cols-1 gap-6">
-              <SpiritualReflectionsCard />
-            </div>
-
-            {/* 2. Notifications and Check In/Out - 50%/50% layout on desktop/iPad */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <NotificationsPanel />
-              <CheckInOutTool />
-            </div>
-
-            {/* 4. Upcoming Events - Horizontal Scroll */}
-            <div className="space-y-4">
-              <h3 className="text-2xl font-semibold text-white drop-shadow-md">Upcoming Events</h3>
-              <div className="flex gap-4 overflow-x-auto overflow-y-hidden pb-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth touch-pan-x" style={{ WebkitOverflowScrolling: 'touch' }}>
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Card key={i} className="flex-shrink-0 w-72 snap-start">
-                    <CardContent className="p-4">
-                      <h4 className="text-lg font-semibold mb-2">Spring Concert {i}</h4>
-                      <p className="text-base text-muted-foreground mb-2">March {15 + i}, 2024</p>
-                      <p className="text-base">Sisters Chapel</p>
-                      <Badge variant="secondary" className="mt-2">Performance</Badge>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
-            {/* 5. Music Library - Horizontal Scroll */}
-            <div className="space-y-4">
-              <h3 className="text-2xl font-semibold text-white drop-shadow-md">Our Music</h3>
-              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth">
-                <MusicLibraryViewer />
-              </div>
+              <CommunityHubWidget />
             </div>
 
             {/* 6. Glee Store - Horizontal Scroll */}
