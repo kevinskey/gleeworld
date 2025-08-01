@@ -225,35 +225,6 @@ export const WardrobeInventoryDashboard = () => {
         </Card>
       </div>
 
-      {/* Out of Stock Alert */}
-      {lowStockItems.length > 0 && (
-        <Card className="border-red-200 bg-red-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-800">
-              <AlertTriangle className="h-5 w-5" />
-              Out of Stock Items ({lowStockItems.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {lowStockItems.map(item => (
-                <div key={item.id} className="flex justify-between items-center p-2 bg-white rounded border">
-                  <span className="font-medium">{item.name}</span>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="destructive">Out of Stock</Badge>
-                    <Button
-                      size="sm"
-                      onClick={() => openUpdateDialog(item)}
-                    >
-                      Add Stock
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Controls */}
       <div className="flex flex-col sm:flex-row gap-4">
