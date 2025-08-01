@@ -59,6 +59,51 @@ const ExecutiveServicesDirectory = () => {
 
   const executiveServices = [
     {
+      title: "President Services",
+      description: "Leadership guidance, organizational oversight, and strategic planning",
+      icon: Crown,
+      path: "/executive-services/president",
+      color: "text-yellow-500",
+      bgColor: "bg-yellow-50",
+      services: ["Leadership Guidance", "Strategic Planning", "Member Support", "Organization Oversight"]
+    },
+    {
+      title: "Chaplain Services",
+      description: "Spiritual care, devotionals, wellness support, and prayer requests",
+      icon: MessageCircle,
+      path: "/executive-services/chaplain",
+      color: "text-indigo-500",
+      bgColor: "bg-indigo-50",
+      services: ["Spiritual Care", "Devotionals", "Wellness Support", "Prayer Requests"]
+    },
+    {
+      title: "Student Conductor Services",
+      description: "Musical leadership, rehearsal management, and performance preparation",
+      icon: Music,
+      path: "/executive-services/student-conductor",
+      color: "text-red-500",
+      bgColor: "bg-red-50",
+      services: ["Rehearsal Management", "Music Library", "Sectionals", "Development Programs"]
+    },
+    {
+      title: "Assistant Chaplain Services",
+      description: "Supporting spiritual care and wellness initiatives",
+      icon: Users,
+      path: "/executive-services/assistant-chaplain",
+      color: "text-teal-500",
+      bgColor: "bg-teal-50",
+      services: ["Prayer Support", "Wellness Programs", "Spiritual Guidance", "Member Care"]
+    },
+    {
+      title: "Setup Crew Manager Services",
+      description: "Event logistics, equipment management, and venue coordination",
+      icon: Calendar,
+      path: "/executive-services/setup-crew-manager",
+      color: "text-orange-500",
+      bgColor: "bg-orange-50",
+      services: ["Event Setup", "Equipment Management", "Venue Coordination", "Logistics Planning"]
+    },
+    {
       title: "Librarian Services",
       description: "Access music library, request scores, and manage musical resources",
       icon: BookOpen,

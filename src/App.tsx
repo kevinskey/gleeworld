@@ -633,14 +633,54 @@ const App = () => {
                                    </ProtectedRoute>
                                  } 
                                />
-                               <Route 
-                                 path="/executive-services/pr-coordinator" 
-                                 element={
-                                   <ProtectedRoute>
-                                     <PRCoordinatorServices />
-                                   </ProtectedRoute>
-                                 } 
-                               />
+                                <Route 
+                                  path="/executive-services/pr-coordinator" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <PRCoordinatorServices />
+                                    </ProtectedRoute>
+                                  } 
+                                />
+                                <Route 
+                                  path="/executive-services/president" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <PresidentServices />
+                                    </ProtectedRoute>
+                                  } 
+                                />
+                                <Route 
+                                  path="/executive-services/chaplain" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <ChaplainServices />
+                                    </ProtectedRoute>
+                                  } 
+                                />
+                                <Route 
+                                  path="/executive-services/student-conductor" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <StudentConductorServices />
+                                    </ProtectedRoute>
+                                  } 
+                                />
+                                <Route 
+                                  path="/executive-services/assistant-chaplain" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <AssistantChaplainServices />
+                                    </ProtectedRoute>
+                                  } 
+                                />
+                                <Route 
+                                  path="/executive-services/setup-crew-manager" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <SetUpCrewManagerServices />
+                                    </ProtectedRoute>
+                                  } 
+                                />
                    </Routes>
                    <GlobalMusicPlayer />
                 </div>
