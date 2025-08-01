@@ -5,6 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   Book, 
@@ -23,6 +28,7 @@ import {
   Download
 } from "lucide-react";
 import { useSharedSpiritualReflections } from "@/hooks/useSharedSpiritualReflections";
+import { usePrayerRequests } from "@/hooks/usePrayerRequests";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -52,11 +58,17 @@ interface SheetMusic {
   tempo?: string;
 }
 
+interface PrayerRequestForm {
+  content: string;
+  is_anonymous: boolean;
+}
+
 export const CommunityHubWidget = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { sharedReflections, loading: reflectionsLoading } = useSharedSpiritualReflections();
+  const { createPrayerRequest } = usePrayerRequests();
   
   // State for notifications
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -70,6 +82,15 @@ export const CommunityHubWidget = () => {
   // State for collapsible
   const [isExpanded, setIsExpanded] = useState(!isMobile);
   const [activeTab, setActiveTab] = useState("reflections");
+  const [prayerDialogOpen, setPrayerDialogOpen] = useState(false);
+
+  // Prayer request form
+  const prayerForm = useForm<PrayerRequestForm>({
+    defaultValues: {
+      content: "",
+      is_anonymous: false,
+    },
+  });
 
   useEffect(() => {
     if (user) {
@@ -163,6 +184,14 @@ export const CommunityHubWidget = () => {
 
   const unreadNotificationsCount = notifications.filter(n => !n.is_read).length;
   const latestReflection = sharedReflections[0];
+
+  const onSubmitPrayerRequest = async (data: PrayerRequestForm) => {
+    const result = await createPrayerRequest(data.content, data.is_anonymous);
+    if (result) {
+      prayerForm.reset();
+      setPrayerDialogOpen(false);
+    }
+  };
 
   return (
     <Card className="col-span-1 md:col-span-2 lg:col-span-3">
@@ -382,17 +411,92 @@ export const CommunityHubWidget = () => {
               </TabsContent>
             </Tabs>
 
-            {/* Quick Action Buttons */}
-            <div className="flex gap-2 mt-4">
-              <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/spiritual-reflections')}>
-                <Book className="h-3 w-3 mr-1" />
-                All Reflections
-              </Button>
-              <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/music-library')}>
-                <Music className="h-3 w-3 mr-1" />
-                Full Library
-              </Button>
-            </div>
+            {/* Quick Action Buttons - only show on Spirit tab */}
+            {activeTab === "reflections" && (
+              <div className="flex gap-2 mt-4">
+                <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/spiritual-reflections')}>
+                  <Book className="h-3 w-3 mr-1" />
+                  All Reflections
+                </Button>
+                <Dialog open={prayerDialogOpen} onOpenChange={setPrayerDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex-1 text-xs h-8">
+                      <Heart className="h-3 w-3 mr-1" />
+                      Prayer Request
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Submit a Prayer Request</DialogTitle>
+                    </DialogHeader>
+                    <Form {...prayerForm}>
+                      <form onSubmit={prayerForm.handleSubmit(onSubmitPrayerRequest)} className="space-y-4">
+                        <FormField
+                          control={prayerForm.control}
+                          name="content"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Prayer Request</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Please share your prayer request..."
+                                  className="min-h-[100px]"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={prayerForm.control}
+                          name="is_anonymous"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel>
+                                  Submit anonymously
+                                </FormLabel>
+                                <p className="text-xs text-muted-foreground">
+                                  Your name will not be visible to the chaplain
+                                </p>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <div className="flex gap-2">
+                          <Button type="button" variant="outline" onClick={() => setPrayerDialogOpen(false)} className="flex-1">
+                            Cancel
+                          </Button>
+                          <Button type="submit" className="flex-1">
+                            Submit
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
+
+            {/* Music library button */}
+            {activeTab === "music" && (
+              <div className="flex gap-2 mt-4">
+                <Button variant="outline" size="sm" className="w-full text-xs h-8" onClick={() => navigate('/music-library')}>
+                  <Music className="h-3 w-3 mr-1" />
+                  Full Library
+                </Button>
+              </div>
+            )}
+
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
