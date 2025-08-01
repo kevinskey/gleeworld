@@ -78,6 +78,11 @@ import LibrarianServices from "./pages/executive-services/LibrarianServices";
 import TreasurerServices from "./pages/executive-services/TreasurerServices";
 import TourManagerServices from "./pages/executive-services/TourManagerServices";
 import PRCoordinatorServices from "./pages/executive-services/PRCoordinatorServices";
+import PresidentServices from "./pages/executive-services/PresidentServices";
+import ChaplainServices from "./pages/executive-services/ChaplainServices";
+import StudentConductorServices from "./pages/executive-services/StudentConductorServices";
+import AssistantChaplainServices from "./pages/executive-services/AssistantChaplainServices";
+import SetUpCrewManagerServices from "./pages/executive-services/SetUpCrewManagerServices";
 
 const queryClient = new QueryClient({
   defaultOptions: {
