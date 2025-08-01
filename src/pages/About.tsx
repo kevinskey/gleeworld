@@ -37,6 +37,14 @@ export default function About() {
               The Digital Home of the Spelman College Glee Club and Beyond
             </p>
           </div>
+          
+          {/* Right corner text - cursive, bold, with drop shadow, moved up 30px */}
+          <div className="absolute top-16 right-8 z-20 text-right">
+            <p className="font-dancing text-2xl md:text-3xl font-bold text-white drop-shadow-lg leading-tight">
+              Above the choir,<br />
+              beyond the music
+            </p>
+          </div>
         </section>
 
         {/* Intro Block */}
