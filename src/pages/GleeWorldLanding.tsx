@@ -302,7 +302,7 @@ export const GleeWorldLanding = () => {
       <FAQSlider />
 
       {/* Hero Section */}
-      <section className="pt-1 pb-2 sm:pt-2 sm:pb-4 md:pt-4 md:pb-6 px-2 sm:px-4 md:px-6 lg:px-8">
+      <section className="relative z-30 pt-1 pb-2 sm:pt-2 sm:pb-4 md:pt-4 md:pb-6 px-2 sm:px-4 md:px-6 lg:px-8">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="overflow-hidden bg-card border-2 border-border shadow-xl">
             <div className="min-h-[250px] sm:min-h-[350px] md:min-h-[400px] lg:min-h-[500px] h-auto overflow-auto relative">
@@ -407,7 +407,7 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Upcoming Events Section */}
-      <section className="pt-4 pb-6 sm:pt-6 sm:pb-8 md:pt-8 md:pb-10 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section className="relative z-30 pt-4 pb-6 sm:pt-6 sm:pb-8 md:pt-8 md:pb-10 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="p-4 sm:p-6 md:p-8 bg-card border-2 border-border shadow-xl">
             <div className="text-center mb-4 sm:mb-6 md:mb-8">
@@ -584,7 +584,7 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Featured Products Section */}
-      <section className="pt-4 pb-6 sm:pt-6 sm:pb-8 md:pt-8 md:pb-10 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section className="relative z-30 pt-4 pb-6 sm:pt-6 sm:pb-8 md:pt-8 md:pb-10 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="p-4 sm:p-6 md:p-8 bg-card border-2 border-border shadow-xl">
             {/* The Glee Store Title */}
@@ -605,7 +605,7 @@ export const GleeWorldLanding = () => {
 
       {/* Albums Section */}
       {albums.length > 0 && (
-        <section className="pt-4 pb-6 sm:pt-6 sm:pb-8 md:pt-8 md:pb-10 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
+        <section className="relative z-30 pt-4 pb-6 sm:pt-6 sm:pb-8 md:pt-8 md:pb-10 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
           <div className="w-full max-w-screen-2xl mx-auto">
             <Card className="p-4 sm:p-6 md:p-8 bg-card border-2 border-border shadow-xl">
               <div className="text-center mb-4 sm:mb-6 md:mb-8">
@@ -684,7 +684,7 @@ export const GleeWorldLanding = () => {
       />
 
       {/* YouTube Section */}
-      <section className="pt-4 pb-6 sm:pt-6 sm:pb-8 md:pt-8 md:pb-10 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section className="relative z-30 pt-4 pb-6 sm:pt-6 sm:pb-8 md:pt-8 md:pb-10 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="p-4 sm:p-6 md:p-8 bg-card border-2 border-border shadow-xl">
             <div className="text-center mb-4 sm:mb-6 md:mb-8">
@@ -704,7 +704,7 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Footer */}
-      <section className="pt-4 pb-6 px-2 sm:px-4 md:px-6 lg:px-8">
+      <section className="relative z-30 pt-4 pb-6 px-2 sm:px-4 md:px-6 lg:px-8">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="bg-primary text-primary-foreground p-6 sm:p-8 md:p-12 border-2 border-border shadow-xl">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
