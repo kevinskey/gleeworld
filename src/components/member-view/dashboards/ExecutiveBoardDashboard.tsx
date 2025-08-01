@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { SpiritualReflectionsCard } from "../SpiritualReflectionsCard";
+import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { PRCoordinatorHub } from "@/components/pr-coordinator/PRCoordinatorHub";
 import { 
   Calendar, 
@@ -240,6 +241,11 @@ export const ExecutiveBoardDashboard = ({ user }: ExecutiveBoardDashboardProps) 
 
       {/* Spiritual Reflections Card */}
       <SpiritualReflectionsCard />
+      </div>
+
+      {/* Community Hub */}
+      <div className="mt-6">
+        <CommunityHubWidget />
       </div>
     </div>
   );
