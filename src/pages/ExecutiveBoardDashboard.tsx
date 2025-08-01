@@ -35,6 +35,7 @@ export const ExecutiveBoardDashboard = () => {
   const [userRole, setUserRole] = useState<string>('');
 
   useEffect(() => {
+    console.log('ExecutiveBoardDashboard: useEffect triggered, user:', user?.id);
     fetchUserRole();
   }, [user]);
 
@@ -53,8 +54,12 @@ export const ExecutiveBoardDashboard = () => {
         .single();
 
       if (profileData) {
-        setUserRole(profileData.exec_board_role || profileData.role || 'member');
+        console.log('ExecutiveBoardDashboard: Profile data found:', profileData);
+        const role = profileData.exec_board_role || profileData.role || 'member';
+        console.log('ExecutiveBoardDashboard: Setting user role to:', role);
+        setUserRole(role);
       } else {
+        console.log('ExecutiveBoardDashboard: No profile data found, setting to member');
         setUserRole('member');
       }
     } catch (err) {
