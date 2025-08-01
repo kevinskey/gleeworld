@@ -31,7 +31,12 @@ import {
   Package2,
   MapPin,
   Plus,
-  StickyNote
+  StickyNote,
+  Send,
+  MessageSquare,
+  Users,
+  Trash2,
+  MoreVertical
 } from "lucide-react";
 import { useSharedSpiritualReflections } from "@/hooks/useSharedSpiritualReflections";
 import { usePrayerRequests } from "@/hooks/usePrayerRequests";
@@ -102,6 +107,13 @@ export const CommunityHubWidget = () => {
   // State for notifications
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationsLoading, setNotificationsLoading] = useState(true);
+  const [sendMessageOpen, setSendMessageOpen] = useState(false);
+  const [messageForm, setMessageForm] = useState({
+    recipient: 'all_members',
+    subject: '',
+    message: '',
+    priority: 'normal'
+  });
   
   // State for love messages
   const [loveMessages, setLoveMessages] = useState<LoveMessage[]>([]);
@@ -461,11 +473,7 @@ export const CommunityHubWidget = () => {
                   <Book className="h-3 w-3 mr-1" />
                   Wellness
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="notifications" 
-                  className="text-xs cursor-pointer" 
-                  onClick={() => navigate('/notifications')}
-                >
+                <TabsTrigger value="notifications" className="text-xs">
                   <Bell className="h-3 w-3 mr-1" />
                   Notifications {unreadNotificationsCount > 0 && `(${unreadNotificationsCount})`}
                 </TabsTrigger>
@@ -790,68 +798,194 @@ export const CommunityHubWidget = () => {
                 )}
               </TabsContent>
 
-              {/* Enhanced Notifications Tab */}
+              {/* Enhanced Notifications Hub Tab */}
               <TabsContent value="notifications" className="space-y-3">
-                {notificationsLoading ? (
-                  <div className="flex justify-center p-4">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                  </div>
-                ) : notifications.length > 0 ? (
-                  <ScrollArea className="h-48">
-                    <div className="space-y-2 pr-4">
-                      {notifications.map((notification) => {
-                        const CategoryIcon = getCategoryIcon(notification.category || '');
-                        return (
-                          <div 
-                            key={notification.id} 
-                            className={`border rounded-lg p-3 space-y-2 ${
-                              !notification.is_read ? 'bg-muted/50 border-primary/20' : ''
-                            }`}
-                          >
-                            <div className="flex items-start gap-2">
-                              <CategoryIcon className={`h-4 w-4 mt-0.5 flex-shrink-0 ${getCategoryColor(notification.category || '')}`} />
-                              <div className="flex-1 space-y-1 min-w-0">
-                                <div className="flex items-center justify-between gap-2">
-                                  <h4 className="font-medium text-sm truncate">{notification.title}</h4>
-                                  <div className="flex items-center gap-1 flex-shrink-0">
-                                    {notification.category && (
-                                      <Badge variant="outline" className="text-xs h-4 px-1">
-                                        {notification.category}
-                                      </Badge>
-                                    )}
-                                    <Badge variant={getPriorityColor(notification.priority)} className="text-xs h-4 px-1">
-                                      {notification.priority}
-                                    </Badge>
-                                  </div>
-                                </div>
-                                <p className="text-xs text-muted-foreground line-clamp-2">{notification.message}</p>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs text-muted-foreground">
-                                    {format(new Date(notification.created_at), 'MMM d, h:mm a')}
-                                  </span>
-                                  {!notification.is_read && (
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      onClick={() => markNotificationAsRead(notification.id)}
-                                      className="text-xs h-5 px-2"
-                                    >
-                                      ✓
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
+                <div className="space-y-4">
+                  {/* Quick Send Message Button */}
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-sm font-medium">Communications Hub</h3>
+                    <Dialog open={sendMessageOpen} onOpenChange={setSendMessageOpen}>
+                      <DialogTrigger asChild>
+                        <Button size="sm" className="text-xs">
+                          <Send className="h-3 w-3 mr-1" />
+                          Send Message
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[600px]">
+                        <DialogHeader>
+                          <DialogTitle>Send Message to Members</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-sm font-medium">Recipient</label>
+                              <select 
+                                className="w-full mt-1 rounded border border-input bg-background px-3 py-2 text-sm"
+                                value={messageForm.recipient}
+                                onChange={(e) => setMessageForm({...messageForm, recipient: e.target.value})}
+                              >
+                                <option value="all_members">All Members</option>
+                                <option value="executive_board">Executive Board</option>
+                                <option value="sophomores">Sophomores</option>
+                                <option value="juniors">Juniors</option>
+                                <option value="seniors">Seniors</option>
+                                <option value="sopranos">Sopranos</option>
+                                <option value="altos">Altos</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Priority</label>
+                              <select 
+                                className="w-full mt-1 rounded border border-input bg-background px-3 py-2 text-sm"
+                                value={messageForm.priority}
+                                onChange={(e) => setMessageForm({...messageForm, priority: e.target.value})}
+                              >
+                                <option value="normal">Normal</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                              </select>
                             </div>
                           </div>
-                        );
-                      })}
+                          <div>
+                            <label className="text-sm font-medium">Subject</label>
+                            <Input
+                              placeholder="Message subject..."
+                              value={messageForm.subject}
+                              onChange={(e) => setMessageForm({...messageForm, subject: e.target.value})}
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium">Message</label>
+                            <Textarea
+                              placeholder="Type your message here..."
+                              value={messageForm.message}
+                              onChange={(e) => setMessageForm({...messageForm, message: e.target.value})}
+                              className="mt-1 min-h-[120px]"
+                            />
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <Button variant="outline" onClick={() => setSendMessageOpen(false)}>
+                              Cancel
+                            </Button>
+                            <Button onClick={async () => {
+                              // Here you would implement the actual sending logic
+                              console.log('Sending message:', messageForm);
+                              setSendMessageOpen(false);
+                              setMessageForm({
+                                recipient: 'all_members',
+                                subject: '',
+                                message: '',
+                                priority: 'normal'
+                              });
+                            }}>
+                              <Send className="h-4 w-4 mr-2" />
+                              Send Message
+                            </Button>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+
+                  {/* Notifications List */}
+                  {notificationsLoading ? (
+                    <div className="flex justify-center p-4">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
                     </div>
-                  </ScrollArea>
-                ) : (
-                  <p className="text-xs text-muted-foreground text-center py-4">
-                    No notifications
-                  </p>
-                )}
+                  ) : notifications.length > 0 ? (
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-muted-foreground">
+                          {unreadNotificationsCount} unread of {notifications.length} total
+                        </span>
+                        {unreadNotificationsCount > 0 && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => {
+                              notifications.forEach(n => {
+                                if (!n.is_read) markNotificationAsRead(n.id);
+                              });
+                            }}
+                            className="text-xs h-6"
+                          >
+                            Mark All Read
+                          </Button>
+                        )}
+                      </div>
+                      <ScrollArea className="h-64">
+                        <div className="space-y-2 pr-4">
+                          {notifications.map((notification) => {
+                            const CategoryIcon = getCategoryIcon(notification.category || '');
+                            return (
+                              <div 
+                                key={notification.id} 
+                                className={`border rounded-lg p-3 space-y-2 transition-all hover:shadow-md ${
+                                  !notification.is_read ? 'bg-primary/5 border-primary/20' : 'hover:bg-muted/30'
+                                }`}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <CategoryIcon className={`h-4 w-4 mt-0.5 flex-shrink-0 ${getCategoryColor(notification.category || '')}`} />
+                                  <div className="flex-1 space-y-1 min-w-0">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <h4 className="font-medium text-sm truncate">{notification.title}</h4>
+                                      <div className="flex items-center gap-1 flex-shrink-0">
+                                        {notification.category && (
+                                          <Badge variant="outline" className="text-xs h-4 px-1">
+                                            {notification.category}
+                                          </Badge>
+                                        )}
+                                        <Badge variant={getPriorityColor(notification.priority)} className="text-xs h-4 px-1">
+                                          {notification.priority}
+                                        </Badge>
+                                        {!notification.is_read && (
+                                          <div className="w-2 h-2 bg-primary rounded-full"></div>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground leading-relaxed">{notification.message}</p>
+                                    <div className="flex items-center justify-between pt-1">
+                                      <span className="text-xs text-muted-foreground">
+                                        {format(new Date(notification.created_at), 'MMM d, h:mm a')}
+                                      </span>
+                                      <div className="flex gap-1">
+                                        {!notification.is_read && (
+                                          <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            onClick={() => markNotificationAsRead(notification.id)}
+                                            className="text-xs h-5 px-2"
+                                          >
+                                            <CheckCircle className="h-3 w-3 mr-1" />
+                                            Mark Read
+                                          </Button>
+                                        )}
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          className="text-xs h-5 px-2"
+                                        >
+                                          <MoreVertical className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">No notifications</p>
+                      <p className="text-xs text-muted-foreground">New messages will appear here</p>
+                    </div>
+                  )}
+                </div>
               </TabsContent>
 
               {/* Music Library Tab */}
