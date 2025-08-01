@@ -7,123 +7,140 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Package, AlertTriangle, Edit, Archive } from 'lucide-react';
+import { Plus, Package, AlertTriangle, Edit, Minus, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface InventoryItem {
+interface WardrobeItem {
   id: string;
+  name: string;
   category: string;
-  item_name: string;
-  size_available: string[];
-  color_available: string[];
-  quantity_total: number;
-  quantity_available: number;
-  quantity_checked_out: number;
-  condition: string;
-  low_stock_threshold: number;
+  size_options: string[];
+  color_options: string[];
+  total_quantity: number;
+  available_quantity: number;
   notes?: string;
+  created_at: string;
+  updated_at: string;
 }
 
-const categoryLabels = {
-  formal_dress: 'Formal Dress',
-  lipstick: 'Lipstick',
-  pearls: 'Pearls',
-  semi_formal_polo: 'Semi-Formal Polo',
-  casual_tshirt: 'Casual T-Shirt'
-};
-
-const conditionColors = {
-  new: 'bg-green-100 text-green-800',
-  good: 'bg-blue-100 text-blue-800',
-  fair: 'bg-yellow-100 text-yellow-800',
-  needs_repair: 'bg-orange-100 text-orange-800',
-  retired: 'bg-gray-100 text-gray-800'
+const categoryColors = {
+  formal: 'bg-purple-100 text-purple-800 border-purple-200',
+  accessories: 'bg-pink-100 text-pink-800 border-pink-200',
+  cosmetics: 'bg-rose-100 text-rose-800 border-rose-200',
+  casual: 'bg-blue-100 text-blue-800 border-blue-200',
+  performance: 'bg-green-100 text-green-800 border-green-200',
+  shoes: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  travel: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+  special: 'bg-amber-100 text-amber-800 border-amber-200',
 };
 
 export const WardrobeInventoryDashboard = () => {
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [items, setItems] = useState<WardrobeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [showUpdateDialog, setShowUpdateDialog] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<WardrobeItem | null>(null);
 
-  const [newItem, setNewItem] = useState({
-    category: '',
-    item_name: '',
-    size_available: '',
-    color_available: '',
-    quantity_total: 0,
-    condition: 'new',
-    low_stock_threshold: 5,
+  const [updateForm, setUpdateForm] = useState({
+    action: 'add',
+    quantity: 0,
     notes: ''
   });
 
   useEffect(() => {
-    fetchInventory();
+    fetchItems();
   }, []);
 
-  const fetchInventory = async () => {
+  const fetchItems = async () => {
     try {
       const { data, error } = await supabase
-        .from('gw_wardrobe_inventory')
+        .from('wardrobe_items')
         .select('*')
         .order('category', { ascending: true });
 
       if (error) throw error;
-      setInventory(data || []);
+      setItems(data || []);
     } catch (error) {
-      console.error('Error fetching inventory:', error);
+      console.error('Error fetching items:', error);
       toast.error('Failed to load inventory');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddItem = async () => {
+  const handleUpdateQuantity = async () => {
+    if (!selectedItem || updateForm.quantity <= 0) return;
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      let newTotalQuantity = selectedItem.total_quantity;
+      let newAvailableQuantity = selectedItem.available_quantity;
+
+      if (updateForm.action === 'add') {
+        newTotalQuantity += updateForm.quantity;
+        newAvailableQuantity += updateForm.quantity;
+      } else if (updateForm.action === 'remove') {
+        if (updateForm.quantity > selectedItem.available_quantity) {
+          toast.error('Cannot remove more items than available');
+          return;
+        }
+        newTotalQuantity -= updateForm.quantity;
+        newAvailableQuantity -= updateForm.quantity;
+      } else if (updateForm.action === 'set') {
+        const checkedOut = selectedItem.total_quantity - selectedItem.available_quantity;
+        newTotalQuantity = updateForm.quantity;
+        newAvailableQuantity = Math.max(0, updateForm.quantity - checkedOut);
+      }
+
       const { error } = await supabase
-        .from('gw_wardrobe_inventory')
-        .insert({
-          ...newItem,
-          size_available: newItem.size_available.split(',').map(s => s.trim()),
-          color_available: newItem.color_available.split(',').map(s => s.trim()),
-          quantity_available: newItem.quantity_total,
-          created_by: user.id
-        });
+        .from('wardrobe_items')
+        .update({
+          total_quantity: Math.max(0, newTotalQuantity),
+          available_quantity: Math.max(0, newAvailableQuantity),
+          notes: updateForm.notes || selectedItem.notes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedItem.id);
 
       if (error) throw error;
 
-      toast.success('Item added successfully');
-      setShowAddDialog(false);
-      setNewItem({
-        category: '',
-        item_name: '',
-        size_available: '',
-        color_available: '',
-        quantity_total: 0,
-        condition: 'new',
-        low_stock_threshold: 5,
+      toast.success('Inventory updated successfully');
+      setShowUpdateDialog(false);
+      setSelectedItem(null);
+      setUpdateForm({
+        action: 'add',
+        quantity: 0,
         notes: ''
       });
-      fetchInventory();
+      fetchItems();
     } catch (error) {
-      console.error('Error adding item:', error);
-      toast.error('Failed to add item');
+      console.error('Error updating inventory:', error);
+      toast.error('Failed to update inventory');
     }
   };
 
-  const filteredInventory = inventory.filter(item => {
+  const openUpdateDialog = (item: WardrobeItem) => {
+    setSelectedItem(item);
+    setUpdateForm({
+      action: 'add',
+      quantity: 0,
+      notes: item.notes || ''
+    });
+    setShowUpdateDialog(true);
+  };
+
+  const filteredItems = items.filter(item => {
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
-    const matchesSearch = item.item_name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
-  const lowStockItems = inventory.filter(item => item.quantity_available <= item.low_stock_threshold);
+  const lowStockItems = items.filter(item => item.available_quantity === 0);
+  const categories = [...new Set(items.map(item => item.category))];
 
   if (loading) {
     return <div className="flex justify-center p-8">Loading inventory...</div>;
@@ -131,23 +148,84 @@ export const WardrobeInventoryDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Low Stock Alerts */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border">
+        <h2 className="text-xl font-semibold text-blue-800 mb-2">Inventory Management</h2>
+        <p className="text-blue-600 text-sm">
+          Manage wardrobe item quantities and track availability
+        </p>
+      </div>
+
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total Items</p>
+                <p className="text-2xl font-bold">{items.length}</p>
+              </div>
+              <Package className="h-8 w-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Out of Stock</p>
+                <p className="text-2xl font-bold text-red-600">{lowStockItems.length}</p>
+              </div>
+              <AlertTriangle className="h-8 w-8 text-red-500" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total Stock</p>
+                <p className="text-2xl font-bold">{items.reduce((sum, item) => sum + item.total_quantity, 0)}</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Available</p>
+                <p className="text-2xl font-bold text-green-600">{items.reduce((sum, item) => sum + item.available_quantity, 0)}</p>
+              </div>
+              <Package className="h-8 w-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Out of Stock Alert */}
       {lowStockItems.length > 0 && (
-        <Card className="border-orange-200 bg-orange-50">
+        <Card className="border-red-200 bg-red-50">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-orange-800">
+            <CardTitle className="flex items-center gap-2 text-red-800">
               <AlertTriangle className="h-5 w-5" />
-              Low Stock Alerts ({lowStockItems.length})
+              Out of Stock Items ({lowStockItems.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               {lowStockItems.map(item => (
                 <div key={item.id} className="flex justify-between items-center p-2 bg-white rounded border">
-                  <span className="font-medium">{item.item_name}</span>
-                  <Badge variant="destructive">
-                    {item.quantity_available} remaining
-                  </Badge>
+                  <span className="font-medium">{item.name}</span>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="destructive">Out of Stock</Badge>
+                    <Button
+                      size="sm"
+                      onClick={() => openUpdateDialog(item)}
+                    >
+                      Add Stock
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -169,131 +247,66 @@ export const WardrobeInventoryDashboard = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
-            {Object.entries(categoryLabels).map(([value, label]) => (
-              <SelectItem key={value} value={value}>{label}</SelectItem>
+            {categories.map(category => (
+              <SelectItem key={category} value={category}>
+                {category.charAt(0).toUpperCase() + category.slice(1)}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Add Item
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add New Inventory Item</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Category</Label>
-                <Select value={newItem.category} onValueChange={(value) => {
-                  const updates: Partial<typeof newItem> = { category: value };
-                  // Auto-populate item name for specific categories
-                  if (value === 'lipstick') {
-                    updates.item_name = 'Revlon Super Lustrous Lipstick';
-                  }
-                  setNewItem({...newItem, ...updates});
-                }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(categoryLabels).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>{label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Item Name</Label>
-                <Input
-                  value={newItem.item_name}
-                  onChange={(e) => setNewItem({...newItem, item_name: e.target.value})}
-                  placeholder="e.g., Black Formal Dress"
-                />
-              </div>
-              <div>
-                <Label>Available Sizes (comma-separated)</Label>
-                <Input
-                  value={newItem.size_available}
-                  onChange={(e) => setNewItem({...newItem, size_available: e.target.value})}
-                  placeholder="e.g., XS, S, M, L, XL"
-                />
-              </div>
-              <div>
-                <Label>Available Colors (comma-separated)</Label>
-                <Input
-                  value={newItem.color_available}
-                  onChange={(e) => setNewItem({...newItem, color_available: e.target.value})}
-                  placeholder="e.g., Black, Navy, Red"
-                />
-              </div>
-              <div>
-                <Label>Total Quantity</Label>
-                <Input
-                  type="number"
-                  value={newItem.quantity_total}
-                  onChange={(e) => setNewItem({...newItem, quantity_total: parseInt(e.target.value) || 0})}
-                />
-              </div>
-              <div>
-                <Label>Low Stock Threshold</Label>
-                <Input
-                  type="number"
-                  value={newItem.low_stock_threshold}
-                  onChange={(e) => setNewItem({...newItem, low_stock_threshold: parseInt(e.target.value) || 5})}
-                />
-              </div>
-              <div>
-                <Label>Notes</Label>
-                <Textarea
-                  value={newItem.notes}
-                  onChange={(e) => setNewItem({...newItem, notes: e.target.value})}
-                  placeholder="Additional notes..."
-                />
-              </div>
-              <Button onClick={handleAddItem} className="w-full">
-                Add Item
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
 
       {/* Inventory Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredInventory.map(item => (
+        {filteredItems.map(item => (
           <Card key={item.id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="text-lg">{item.item_name}</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    {categoryLabels[item.category as keyof typeof categoryLabels]}
-                  </p>
+                  <CardTitle className="text-lg">{item.name}</CardTitle>
+                  <Badge className={categoryColors[item.category as keyof typeof categoryColors] || 'bg-gray-100 text-gray-800'}>
+                    {item.category}
+                  </Badge>
                 </div>
-                <Badge className={conditionColors[item.condition as keyof typeof conditionColors]}>
-                  {item.condition}
-                </Badge>
+                {item.available_quantity === 0 && (
+                  <Badge variant="destructive">
+                    Out of Stock
+                  </Badge>
+                )}
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <div className="flex justify-between">
+                  <span className="text-sm font-medium">Total Stock:</span>
+                  <span className="text-sm font-bold">{item.total_quantity}</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-sm font-medium">Available:</span>
-                  <span className="text-sm">{item.quantity_available}/{item.quantity_total}</span>
+                  <span className={`text-sm font-bold ${item.available_quantity === 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    {item.available_quantity}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm font-medium">Checked Out:</span>
-                  <span className="text-sm">{item.quantity_checked_out}</span>
+                  <span className="text-sm">{item.total_quantity - item.available_quantity}</span>
                 </div>
-                {item.size_available.length > 0 && (
+                
+                {/* Progress Bar */}
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-green-600 h-2 rounded-full" 
+                    style={{
+                      width: item.total_quantity > 0 ? `${(item.available_quantity / item.total_quantity) * 100}%` : '0%'
+                    }}
+                  ></div>
+                </div>
+
+                {item.size_options?.length > 0 && (
                   <div>
                     <span className="text-sm font-medium">Sizes:</span>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {item.size_available.map(size => (
+                      {item.size_options.map(size => (
                         <Badge key={size} variant="outline" className="text-xs">
                           {size}
                         </Badge>
@@ -301,11 +314,12 @@ export const WardrobeInventoryDashboard = () => {
                     </div>
                   </div>
                 )}
-                {item.color_available.length > 0 && (
+                
+                {item.color_options?.length > 0 && (
                   <div>
                     <span className="text-sm font-medium">Colors:</span>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {item.color_available.map(color => (
+                      {item.color_options.map(color => (
                         <Badge key={color} variant="outline" className="text-xs">
                           {color}
                         </Badge>
@@ -313,36 +327,109 @@ export const WardrobeInventoryDashboard = () => {
                     </div>
                   </div>
                 )}
+
                 {item.notes && (
                   <p className="text-xs text-muted-foreground mt-2">{item.notes}</p>
                 )}
-                <div className="flex gap-2 pt-2">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <Edit className="h-3 w-3 mr-1" />
-                    Edit
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <Archive className="h-3 w-3 mr-1" />
-                    Retire
-                  </Button>
-                </div>
+
+                <Button 
+                  onClick={() => openUpdateDialog(item)} 
+                  className="w-full mt-3"
+                  size="sm"
+                >
+                  <Edit className="h-3 w-3 mr-1" />
+                  Update Inventory
+                </Button>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {filteredInventory.length === 0 && (
+      {filteredItems.length === 0 && (
         <Card>
           <CardContent className="text-center py-8">
             <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">No inventory items found</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Add items to start tracking your wardrobe inventory
+              Items are already set up - use the update button to add quantities
             </p>
           </CardContent>
         </Card>
       )}
+
+      {/* Update Inventory Dialog */}
+      <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update Inventory</DialogTitle>
+          </DialogHeader>
+          {selectedItem && (
+            <div className="space-y-4">
+              <div className="p-3 bg-gray-50 rounded">
+                <h4 className="font-medium">{selectedItem.name}</h4>
+                <p className="text-sm text-gray-600">Current stock: {selectedItem.total_quantity}</p>
+                <p className="text-sm text-gray-600">Available: {selectedItem.available_quantity}</p>
+                <p className="text-sm text-gray-600">Checked out: {selectedItem.total_quantity - selectedItem.available_quantity}</p>
+              </div>
+
+              <div>
+                <Label>Action</Label>
+                <Select value={updateForm.action} onValueChange={(value) => setUpdateForm({...updateForm, action: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="add">Add to inventory</SelectItem>
+                    <SelectItem value="remove">Remove from inventory</SelectItem>
+                    <SelectItem value="set">Set total quantity</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>
+                  {updateForm.action === 'add' ? 'Quantity to Add' : 
+                   updateForm.action === 'remove' ? 'Quantity to Remove' : 
+                   'Set Total Quantity'}
+                </Label>
+                <Input
+                  type="number"
+                  min="1"
+                  value={updateForm.quantity}
+                  onChange={(e) => setUpdateForm({...updateForm, quantity: parseInt(e.target.value) || 0})}
+                  placeholder="Enter quantity"
+                />
+              </div>
+
+              <div>
+                <Label>Notes (optional)</Label>
+                <Textarea
+                  value={updateForm.notes}
+                  onChange={(e) => setUpdateForm({...updateForm, notes: e.target.value})}
+                  placeholder="Add notes about this inventory update..."
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleUpdateQuantity} 
+                  className="flex-1"
+                  disabled={updateForm.quantity <= 0}
+                >
+                  {updateForm.action === 'add' ? <Plus className="h-4 w-4 mr-2" /> : 
+                   updateForm.action === 'remove' ? <Minus className="h-4 w-4 mr-2" /> : 
+                   <Edit className="h-4 w-4 mr-2" />}
+                  Update Inventory
+                </Button>
+                <Button variant="outline" onClick={() => setShowUpdateDialog(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
