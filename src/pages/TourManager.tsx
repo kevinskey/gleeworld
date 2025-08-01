@@ -27,6 +27,7 @@ import { TourStipends } from '@/components/tour-manager/TourStipends';
 import { TourOverview } from '@/components/tour-manager/TourOverview';
 import { WardrobeMistressHub } from '@/components/tour-manager/WardrobeMistressHub';
 import { TermManager } from '@/components/term-manager/TermManager';
+import { CommunityHubWidget } from '@/components/unified/CommunityHubWidget';
 
 const TourManager = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -229,6 +230,11 @@ const TourManager = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Community Hub */}
+      <div className="mt-6">
+        <CommunityHubWidget />
+      </div>
     </div>
   );
 };
