@@ -18,7 +18,10 @@ import {
   Award,
   ArrowRight,
   MapPin,
-  GraduationCap
+  GraduationCap,
+  AlertCircle,
+  FileText,
+  CreditCard
 } from "lucide-react";
 
 interface MemberDashboardProps {
@@ -44,225 +47,214 @@ export const MemberDashboard = ({ user }: MemberDashboardProps) => {
       present: 0,
       percentage: 0
     },
-    contracts: [],
-    payments: [],
-    announcements: []
+    contracts: [
+      { id: 1, title: "Spring Concert Agreement", status: "pending", dueDate: "2024-02-15" },
+      { id: 2, title: "Tour Participation Form", status: "completed", dueDate: "2024-01-30" }
+    ],
+    payments: [
+      { id: 1, amount: 75, description: "Tour Fee", status: "overdue", dueDate: "2024-02-01" },
+      { id: 2, amount: 25, description: "Music Folder", status: "pending", dueDate: "2024-02-10" }
+    ],
+    announcements: [
+      { id: 1, title: "Spring Tour Rehearsal Schedule", content: "Updated rehearsal times for tour preparation", date: "Feb 8", priority: "high" },
+      { id: 2, title: "Music Library Update", content: "New sheet music available for checkout", date: "Feb 5", priority: "normal" }
+    ]
+  };
+
+  const getTotalNotifications = () => {
+    return memberData.contracts.filter(c => c.status === 'pending').length +
+           memberData.payments.filter(p => p.status !== 'completed').length +
+           memberData.announcements.length;
   };
 
   return (
     <div className="min-h-screen bg-muted/30 p-6 -m-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {/* SCGC Handbook Card */}
-      <Card 
-        className="cursor-pointer hover:shadow-md transition-all duration-200 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10" 
-        onClick={() => navigate('/handbook')}
-      >
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-base md:text-lg font-semibold text-primary">SCGC Handbook</CardTitle>
-          <div className="flex items-center gap-2">
-            <GraduationCap className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-            <ArrowRight className="h-4 w-4 text-primary" />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl md:text-4xl font-bold text-primary">2024</div>
-          <p className="text-sm md:text-base text-muted-foreground">Official member guide</p>
-          <div className="mt-3 p-3 bg-white/50 dark:bg-black/20 rounded-lg border border-primary/10">
-            <div className="text-sm font-medium text-foreground mb-1">Quick Access</div>
-            <div className="text-xs text-muted-foreground">
-              • Requirements & policies<br/>
-              • Traditions & history<br/>
-              • Take handbook exam
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        {/* SCGC Handbook Card */}
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-all duration-200 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10" 
+          onClick={() => navigate('/handbook')}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-base font-semibold text-primary">SCGC Handbook</CardTitle>
+            <div className="flex items-center gap-2">
+              <GraduationCap className="h-5 w-5 text-primary" />
+              <ArrowRight className="h-4 w-4 text-primary" />
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">2024</div>
+            <p className="text-sm text-muted-foreground">Official guide & exam</p>
+          </CardContent>
+        </Card>
 
-      {/* Attendance Card */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-base md:text-lg font-semibold">Attendance</CardTitle>
-          <CheckCircle className="h-5 w-5 md:h-6 md:w-6 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl md:text-4xl font-bold">{memberData.attendance.percentage}%</div>
-          <p className="text-sm md:text-base text-muted-foreground">
-            {memberData.attendance.present} of {memberData.attendance.total} rehearsals
-          </p>
-          <Progress value={memberData.attendance.percentage} className="mt-2" />
-        </CardContent>
-      </Card>
+        {/* Attendance Card */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-base font-semibold">Attendance</CardTitle>
+            <CheckCircle className="h-5 w-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{memberData.attendance.percentage}%</div>
+            <p className="text-sm text-muted-foreground">
+              {memberData.attendance.present} of {memberData.attendance.total} rehearsals
+            </p>
+            <Progress value={memberData.attendance.percentage} className="mt-2" />
+          </CardContent>
+        </Card>
 
-      {/* Upcoming Events Card */}
-      <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/calendar')}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-base md:text-lg font-semibold">Upcoming Events</CardTitle>
-          <div className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 md:h-6 md:w-6 text-muted-foreground" />
-            <ArrowRight className="h-4 w-4 text-muted-foreground" />
-          </div>
-        </CardHeader>
-        <CardContent>
-          {eventsLoading ? (
-            <div className="animate-pulse">
-              <div className="h-8 bg-muted rounded mb-2"></div>
-              <div className="h-4 bg-muted rounded mb-4"></div>
-              <div className="space-y-2">
-                <div className="h-3 bg-muted rounded"></div>
-                <div className="h-3 bg-muted rounded"></div>
+        {/* Upcoming Events Card */}
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/calendar')}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-base font-semibold">Upcoming Events</CardTitle>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-muted-foreground" />
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {eventsLoading ? (
+              <div className="animate-pulse">
+                <div className="h-6 bg-muted rounded mb-2"></div>
+                <div className="h-4 bg-muted rounded"></div>
               </div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{upcomingEvents.length}</div>
+                <p className="text-sm text-muted-foreground">Public events</p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Consolidated Notifications & Tasks Card */}
+        <Card className="relative overflow-hidden border-orange-200 dark:border-orange-800">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-orange-100 to-orange-50 dark:from-orange-900/20 dark:to-orange-800/10 rounded-bl-full"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <div>
+              <CardTitle className="text-base font-bold text-orange-700 dark:text-orange-300">Action Items</CardTitle>
+              <p className="text-sm text-muted-foreground">Tasks & notifications</p>
             </div>
-          ) : (
-            <>
-              <div className="text-3xl md:text-4xl font-bold">{upcomingEvents.length}</div>
-              <p className="text-sm md:text-base text-muted-foreground">Public events</p>
-              <ScrollArea className="mt-3 h-20">
-                <div className="space-y-2 pr-4">
-                  {upcomingEvents.slice(0, 3).map((event) => (
-                    <div key={event.id} className="text-sm md:text-base border-l-2 border-primary/30 pl-3">
-                      <div className="font-semibold line-clamp-1">{event.title}</div>
-                      <div className="text-muted-foreground flex items-center gap-2 text-xs">
+            <div className="relative">
+              <Bell className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              {getTotalNotifications() > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs flex items-center justify-center text-white font-medium">
+                  {getTotalNotifications()}
+                </span>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-700 dark:text-orange-300 mb-2">
+              {getTotalNotifications()}
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">Items need attention</p>
+            
+            {getTotalNotifications() > 0 ? (
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {/* Pending Contracts */}
+                {memberData.contracts.filter(c => c.status === 'pending').map(contract => (
+                  <div key={contract.id} className="flex items-center gap-2 p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-xs">
+                    <FileText className="h-3 w-3 text-orange-600" />
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium truncate">{contract.title}</span>
+                      <span className="text-muted-foreground ml-1">• Due {contract.dueDate}</span>
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Outstanding Payments */}
+                {memberData.payments.filter(p => p.status !== 'completed').map(payment => (
+                  <div key={payment.id} className="flex items-center gap-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-xs">
+                    <CreditCard className="h-3 w-3 text-red-600" />
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium">${payment.amount} - {payment.description}</span>
+                      <span className="text-muted-foreground ml-1">• {payment.status === 'overdue' ? 'Overdue' : 'Due'} {payment.dueDate}</span>
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Recent Announcements */}
+                {memberData.announcements.slice(0, 2).map(announcement => (
+                  <div key={announcement.id} className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs">
+                    <AlertCircle className="h-3 w-3 text-blue-600" />
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium truncate">{announcement.title}</span>
+                      <span className="text-muted-foreground ml-1">• {announcement.date}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-2 text-muted-foreground">
+                <CheckCircle className="h-6 w-6 mx-auto mb-1 opacity-50" />
+                <p className="text-xs">All caught up!</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Secondary Row - Expanded Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        
+        {/* Event Details Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Event Details
+            </CardTitle>
+            <CardDescription>Upcoming performances and rehearsals</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {eventsLoading ? (
+              <div className="animate-pulse space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="space-y-2">
+                    <div className="h-4 bg-muted rounded"></div>
+                    <div className="h-3 bg-muted rounded w-3/4"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <ScrollArea className="h-48">
+                <div className="space-y-3 pr-4">
+                  {upcomingEvents.slice(0, 5).map((event) => (
+                    <div key={event.id} className="border-l-2 border-primary/30 pl-4 py-2">
+                      <div className="font-semibold text-sm">{event.title}</div>
+                      <div className="text-muted-foreground text-xs flex items-center gap-2 mt-1">
                         <Clock className="h-3 w-3" />
                         {format(new Date(event.start_date), 'MMM dd, h:mm a')}
                         {event.location && (
                           <>
                             <MapPin className="h-3 w-3 ml-1" />
-                            <span className="line-clamp-1">{event.location}</span>
+                            <span className="truncate">{event.location}</span>
                           </>
                         )}
                       </div>
                     </div>
                   ))}
                   {upcomingEvents.length === 0 && (
-                    <div className="text-center py-2 text-muted-foreground">
-                      <Calendar className="h-6 w-6 mx-auto mb-1 opacity-50" />
-                      <p className="text-xs">No upcoming events</p>
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No upcoming events</p>
                     </div>
                   )}
                 </div>
               </ScrollArea>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Contracts Card */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Contracts</CardTitle>
-          <BookOpen className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{memberData.contracts.length}</div>
-          <p className="text-xs text-muted-foreground">Active contracts</p>
-          <div className="mt-2 space-y-1">
-            {memberData.contracts.map((contract) => (
-              <div key={contract.id} className="flex items-center justify-between text-xs">
-                <span className="font-medium truncate">{contract.title}</span>
-                <Badge variant="outline" className="text-xs">
-                  {contract.status}
-                </Badge>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Payments Card */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Payments</CardTitle>
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">${memberData.payments.reduce((sum, p) => sum + p.amount, 0)}</div>
-          <p className="text-xs text-muted-foreground">Total pending</p>
-          <div className="mt-2 space-y-1">
-            {memberData.payments.map((payment) => (
-              <div key={payment.id} className="flex items-center justify-between text-xs">
-                <span className="font-medium">${payment.amount}</span>
-                <Badge variant="outline" className="text-xs">
-                  {payment.status}
-                </Badge>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Recent Activity Card */}
-      <Card className="md:col-span-2">
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>Your recent actions and updates</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <div className="flex-1">
-                <p className="text-sm font-medium">Attended Weekly Rehearsal</p>
-                <p className="text-xs text-muted-foreground">January 18, 2024</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <BookOpen className="h-5 w-5 text-blue-500" />
-              <div className="flex-1">
-                <p className="text-sm font-medium">Signed Spring Concert Contract</p>
-                <p className="text-xs text-muted-foreground">January 15, 2024</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Music className="h-5 w-5 text-purple-500" />
-              <div className="flex-1">
-                <p className="text-sm font-medium">Accessed Sheet Music Library</p>
-                <p className="text-xs text-muted-foreground">January 14, 2024</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Announcements Card - Redesigned */}
-      <Card className="relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/5 rounded-bl-full"></div>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-          <div>
-            <CardTitle className="text-lg font-bold text-primary">Latest News</CardTitle>
-            <p className="text-sm text-muted-foreground">Club announcements</p>
-          </div>
-          <div className="relative">
-            <Bell className="h-6 w-6 text-primary" />
-            {memberData.announcements.length > 0 && (
-              <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white text-[10px]">
-                {memberData.announcements.length}
-              </span>
             )}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {memberData.announcements.length > 0 ? (
-            memberData.announcements.map((announcement) => (
-              <div key={announcement.id} className="p-3 bg-gradient-to-r from-primary/5 to-transparent rounded-lg border-l-3 border-primary">
-                <div className="font-semibold text-foreground mb-1">{announcement.title}</div>
-                <div className="text-sm text-muted-foreground line-clamp-2 mb-2">{announcement.content}</div>
-                <div className="text-xs text-primary font-medium">{announcement.date}</div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center py-4 text-muted-foreground">
-              <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No announcements yet</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Executive Board Directory */}
-      <ExecutiveBoardDirectory variant="compact" />
+        {/* Executive Board Directory */}
+        <ExecutiveBoardDirectory variant="compact" />
+      </div>
 
-      {/* Community Hub */}
-      <CommunityHubWidget />
+      {/* Bottom Row - Community Hub */}
+      <div className="mt-6">
+        <CommunityHubWidget />
       </div>
     </div>
   );
