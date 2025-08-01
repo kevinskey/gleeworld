@@ -73,7 +73,7 @@ const TourManager = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-9">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4" />
             Overview
@@ -105,6 +105,10 @@ const TourManager = () => {
           <TabsTrigger value="wardrobe" className="flex items-center gap-2">
             <Shirt className="h-4 w-4" />
             Wardrobe
+          </TabsTrigger>
+          <TabsTrigger value="term-manager" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Term Manager
           </TabsTrigger>
         </TabsList>
 
@@ -206,6 +210,26 @@ const TourManager = () => {
             </CardHeader>
             <CardContent>
               <WardrobeMistressHub />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="term-manager">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Term Manager
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="text-center p-8">
+                  <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Term Management</h3>
+                  <p className="text-muted-foreground">Manage academic terms, schedules, and semester planning.</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
