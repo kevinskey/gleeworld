@@ -174,27 +174,6 @@ export const ExecutiveBoardDashboard = () => {
         {/* Community Hub */}
         <CommunityHubWidget />
 
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {getQuickActionsForRole(userRole).map((action, index) => (
-                <Button 
-                  key={index}
-                  variant="outline" 
-                  onClick={() => navigate(action.path)}
-                  className="h-auto flex-col gap-2 p-4"
-                >
-                  <action.icon className="h-5 w-5" />
-                  <span className="text-xs">{action.name}</span>
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </UniversalLayout>
   );
