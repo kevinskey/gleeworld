@@ -12,6 +12,8 @@ const UserManagement = () => {
   // Check if user is admin or super admin
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
   
+  console.log('UserManagement page loaded - user:', user?.id, 'isAdmin:', isAdmin, 'userProfile:', userProfile);
+  
   if (!isAdmin) {
     return <Navigate to="/" replace />;
   }

@@ -272,7 +272,10 @@ export const DashboardModulesSection = () => {
                           key={module.route}
                           variant="ghost" 
                           className="justify-start h-auto p-3 hover:bg-background border hover:border-border/50"
-                          onClick={() => navigate(module.route)}
+                          onClick={() => {
+                            console.log('DashboardModulesSection: Navigating to:', module.route, 'Module name:', module.name);
+                            navigate(module.route);
+                          }}
                         >
                           <ModuleIcon className="h-4 w-4 mr-2" />
                           <div className="text-left">
