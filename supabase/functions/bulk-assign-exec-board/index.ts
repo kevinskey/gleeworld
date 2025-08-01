@@ -173,7 +173,27 @@ Deno.serve(async (req) => {
           'section_leader_a1', 'section_leader_a2'
         ];
         
-        const dbRoleName = assignment.role.replace(/-/g, '_');
+        // Map assignment roles to database enum values
+        const roleMapping: Record<string, string> = {
+          'president': 'president',
+          'secretary': 'secretary', 
+          'treasurer': 'treasurer',
+          'tour_manager': 'tour_manager',
+          'wardrobe_manager': 'wardrobe_manager',
+          'librarian': 'librarian',
+          'historian': 'historian',
+          'pr_coordinator': 'pr_coordinator',
+          'chaplain': 'chaplain',
+          'data_analyst': 'data_analyst',
+          'assistant_chaplain': 'assistant_chaplain',
+          'student_conductor': 'student_conductor',
+          'section_leader_s1': 'section_leader_s1',
+          'section_leader_s2': 'section_leader_s2',
+          'section_leader_a1': 'section_leader_a1',
+          'section_leader_a2': 'section_leader_a2'
+        };
+        
+        const dbRoleName = roleMapping[assignment.role] || assignment.role.replace(/-/g, '_');
         
         // Add/update in gw_executive_board_members table only if role exists in enum
         if (validEnumRoles.includes(dbRoleName)) {
