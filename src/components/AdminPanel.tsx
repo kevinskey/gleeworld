@@ -23,6 +23,7 @@ import { MusicManagement } from "./admin/MusicManagement";
 import { ExecutiveBoardManager } from "./admin/ExecutiveBoardManager";
 import { ProductManager } from "./admin/ProductManager";
 import { AnnouncementManagement } from "./admin/AnnouncementManagement";
+import { AdminPanelHeader } from "./admin/AdminPanelHeader";
 // Square integration removed - using Stripe instead
 
 interface AdminPanelProps {
@@ -93,30 +94,16 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
     switch (currentTab) {
       case 'overview':
         return (
-          <>
+          <div className="space-y-6">
             <AdminSummaryStats 
               users={users}
               loading={usersLoading}
               activityLogs={activityLogs}
             />
-            <div className="mt-6 space-y-6">
-              <div className="glass-card p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-xl font-semibold text-white mb-2">W9 Forms Management</h3>
-                    <p className="text-white/70">Send W9 tax forms to users and track completion</p>
-                  </div>
-                  <Button
-                    onClick={() => setBulkW9EmailOpen(true)}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Mail className="h-4 w-4 mr-2" />
-                    Send W9 Forms
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </>
+            <AdminPanelHeader 
+              onSendW9Forms={() => setBulkW9EmailOpen(true)}
+            />
+          </div>
         );
       case 'products':
         return <ProductManager />;
@@ -198,30 +185,16 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
         return <SystemSettings />;
       default:
         return (
-          <>
+          <div className="space-y-6">
             <AdminSummaryStats 
               users={users}
               loading={usersLoading}
               activityLogs={activityLogs}
             />
-            <div className="mt-6">
-              <div className="glass-card p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-xl font-semibold text-white mb-2">W9 Forms Management</h3>
-                    <p className="text-white/70">Send W9 tax forms to users and track completion</p>
-                  </div>
-                  <Button
-                    onClick={() => setBulkW9EmailOpen(true)}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Mail className="h-4 w-4 mr-2" />
-                    Send W9 Forms
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </>
+            <AdminPanelHeader 
+              onSendW9Forms={() => setBulkW9EmailOpen(true)}
+            />
+          </div>
         );
     }
   };
