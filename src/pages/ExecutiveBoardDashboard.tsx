@@ -162,9 +162,6 @@ export const ExecutiveBoardDashboard = () => {
   return (
     <UniversalLayout>
       <div className="space-y-6">
-        {/* Community Hub at the top */}
-        <CommunityHubWidget />
-
         {/* Header */}
         <div className="text-center py-8">
           <Crown className="h-16 w-16 text-primary mx-auto mb-4" />
@@ -173,6 +170,9 @@ export const ExecutiveBoardDashboard = () => {
             Welcome back! Your role: {userRole}
           </p>
         </div>
+
+        {/* Community Hub */}
+        <CommunityHubWidget />
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
