@@ -73,6 +73,11 @@ import PRHubPage from "./pages/PRHubPage";
 import { SharedAnnotation } from "./pages/SharedAnnotation";
 import BulkAssignmentPage from "./pages/BulkAssignmentPage";
 import MobileScoring from "./pages/MobileScoring";
+import ExecutiveServicesDirectory from "./pages/ExecutiveServicesDirectory";
+import LibrarianServices from "./pages/executive-services/LibrarianServices";
+import TreasurerServices from "./pages/executive-services/TreasurerServices";
+import TourManagerServices from "./pages/executive-services/TourManagerServices";
+import PRCoordinatorServices from "./pages/executive-services/PRCoordinatorServices";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -583,14 +588,54 @@ const App = () => {
                                  </ProtectedRoute>
                                } 
                               />
-                              <Route 
-                                path="/mobile-scoring" 
-                                element={
-                                  <ProtectedRoute>
-                                    <MobileScoring />
-                                  </ProtectedRoute>
-                                } 
-                              />
+                               <Route 
+                                 path="/mobile-scoring" 
+                                 element={
+                                   <ProtectedRoute>
+                                     <MobileScoring />
+                                   </ProtectedRoute>
+                                 } 
+                               />
+                               <Route 
+                                 path="/executive-services" 
+                                 element={
+                                   <ProtectedRoute>
+                                     <ExecutiveServicesDirectory />
+                                   </ProtectedRoute>
+                                 } 
+                               />
+                               <Route 
+                                 path="/executive-services/librarian" 
+                                 element={
+                                   <ProtectedRoute>
+                                     <LibrarianServices />
+                                   </ProtectedRoute>
+                                 } 
+                               />
+                               <Route 
+                                 path="/executive-services/treasurer" 
+                                 element={
+                                   <ProtectedRoute>
+                                     <TreasurerServices />
+                                   </ProtectedRoute>
+                                 } 
+                               />
+                               <Route 
+                                 path="/executive-services/tour-manager" 
+                                 element={
+                                   <ProtectedRoute>
+                                     <TourManagerServices />
+                                   </ProtectedRoute>
+                                 } 
+                               />
+                               <Route 
+                                 path="/executive-services/pr-coordinator" 
+                                 element={
+                                   <ProtectedRoute>
+                                     <PRCoordinatorServices />
+                                   </ProtectedRoute>
+                                 } 
+                               />
                    </Routes>
                    <GlobalMusicPlayer />
                 </div>
