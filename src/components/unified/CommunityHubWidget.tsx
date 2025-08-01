@@ -503,26 +503,21 @@ export const CommunityHubWidget = () => {
                       <div className="absolute -left-2 top-4 w-8 h-16 border-4 border-slate-500 rounded-full border-r-transparent"></div>
                       <div className="absolute -right-2 top-4 w-8 h-16 border-4 border-slate-500 rounded-full border-l-transparent"></div>
                       
-                      {/* Notes arranged in bucket shape */}
-                      <div className="px-4 py-2">
-                        <div className="flex flex-wrap justify-center gap-2"
-                             style={{
-                               perspective: "300px"
-                             }}>
-                        <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
-                          <DialogTrigger asChild>
-                            <div 
-                              className="bg-blue-100 border-2 border-dashed border-blue-400 rounded-lg p-3 w-24 h-20 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-200 transition-colors shadow-md transform hover:scale-105 transition-transform"
-                              style={{
-                                transform: "rotateX(10deg) rotateY(-5deg)"
-                              }}
-                            >
-                              <Plus className="h-4 w-4 text-blue-600 mb-1" />
-                              <span className="text-xs text-blue-700 text-center font-medium">
-                                Add Note
-                              </span>
-                            </div>
-                          </DialogTrigger>
+                       {/* Notes arranged in bucket shape */}
+                       <div className="relative px-4 py-2 h-32">
+                         {/* Center Add Button - Heart with Plus - Always visible */}
+                         <div className="absolute inset-0 flex items-center justify-center z-10">
+                           <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
+                             <DialogTrigger asChild>
+                               <div 
+                                 className="bg-red-50 border-2 border-dashed border-red-300 rounded-lg p-4 w-16 h-16 flex items-center justify-center cursor-pointer hover:bg-red-100 transition-colors shadow-md hover:scale-110 transition-transform"
+                               >
+                                 <div className="relative">
+                                   <Heart className="h-6 w-6 text-red-500 fill-red-200" />
+                                   <Plus className="h-3 w-3 text-red-600 absolute -top-1 -right-1 bg-white rounded-full" />
+                                 </div>
+                               </div>
+                             </DialogTrigger>
                         <DialogContent className="sm:max-w-[525px]">
                           <DialogHeader>
                             <DialogTitle>Share a Message of Love & Encouragement</DialogTitle>
@@ -678,30 +673,30 @@ export const CommunityHubWidget = () => {
                         </DialogContent>
                       </Dialog>
 
-                        {/* Existing Love Messages */}
-                        {loveMessages.map((message, index) => {
-                          // Calculate position for bucket arrangement
-                          const row = Math.floor(index / 4);
-                          const col = index % 4;
-                          const bucketWidth = Math.max(3 - row * 0.3, 1); // Narrower at bottom
-                          const offsetX = (col - 1.5) * (bucketWidth * 20); // Spread based on bucket width
-                          const rotateX = 10 + row * 5; // More tilt as notes go down
-                          const rotateY = (col - 1.5) * 8; // Side tilt
-                          const rotateZ = (Math.random() - 0.5) * 15; // Random rotation
-                          
-                          return (
-                            <div 
-                              key={message.id}
-                              onClick={() => handleNoteClick(message)}
-                              className={`${getNoteColorClasses(message.note_color)} border-2 rounded-lg p-2 w-24 h-20 shadow-md transition-all cursor-pointer hover:scale-110 hover:shadow-lg animate-fade-in relative group`}
-                              style={{ 
-                                animationDelay: `${index * 0.1}s`,
-                                transform: `
-                                  translateX(${offsetX}px) 
-                                  translateY(${row * -8}px)
-                                `,
-                              }}
-                            >
+                         {/* Existing Love Messages - distributed around the bucket */}
+                         {loveMessages.map((message, index) => {
+                           // Better distribution - circular arrangement around center
+                           const totalMessages = loveMessages.length;
+                           const angle = (index / totalMessages) * 2 * Math.PI;
+                           const radius = 35; // Distance from center
+                           
+                           // Convert polar to cartesian coordinates
+                           const x = 50 + Math.cos(angle) * radius * (0.8 + Math.random() * 0.4);
+                           const y = 50 + Math.sin(angle) * radius * (0.6 + Math.random() * 0.4);
+                           
+                           return (
+                             <div 
+                               key={message.id}
+                               onClick={() => handleNoteClick(message)}
+                               className={`${getNoteColorClasses(message.note_color)} border-2 rounded-lg p-2 w-20 h-16 shadow-md transition-all cursor-pointer hover:scale-110 hover:shadow-lg animate-fade-in absolute group`}
+                               style={{ 
+                                 animationDelay: `${index * 0.1}s`,
+                                 left: `${Math.max(5, Math.min(80, x))}%`,
+                                 top: `${Math.max(5, Math.min(70, y))}%`,
+                                 transform: `rotate(${(Math.random() - 0.5) * 20}deg)`,
+                                 zIndex: 1,
+                               }}
+                             >
                               <div className="h-full flex flex-col justify-between text-xs">
                                 <div className="flex-1">
                                   <p className="text-xs leading-tight text-gray-800 mb-1 line-clamp-2">
