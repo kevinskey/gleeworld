@@ -291,12 +291,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Parse the SMS message to extract group and content
     console.log('=== PARSING MESSAGE ===');
+    console.log(`📥 Original SMS body: "${smsData.Body}"`);
     const parsedMessage = parseSMSMessage(smsData.Body);
     const targetGroup = parsedMessage.group;
     const messageContent = parsedMessage.message;
     const title = parsedMessage.title;
 
     console.log(`📝 Parsed message:`, {
+      originalBody: smsData.Body,
       targetGroup,
       title,
       messageContent
