@@ -31,7 +31,7 @@ export const PAGE_NAMES: Record<string, string> = {
   '/payments': 'Payments',
   '/budget-approvals': 'Budget Approvals',
   '/budgets': 'Budget Management',
-  '/tour-manager': 'Tour Manager',
+  '/tour-manager': 'Tour Manager Dashboard',
   '/treasurer': 'Treasurer Dashboard',
   '/tour-planner': 'Tour Planner'
 };
