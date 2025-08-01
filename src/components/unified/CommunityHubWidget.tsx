@@ -365,18 +365,16 @@ export const CommunityHubWidget = () => {
     if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('gw_buckets_of_love')
-        .update({ likes: supabase.raw('likes + 1') })
-        .eq('id', messageId);
+      const { data, error } = await supabase
+        .rpc('increment_love_message_likes', { message_id_param: messageId });
 
       if (error) throw error;
 
-      // Update local state
+      // Update local state with the new like count
       setLoveMessages(prevMessages =>
         prevMessages.map(msg =>
           msg.id === messageId
-            ? { ...msg, likes: msg.likes + 1 }
+            ? { ...msg, likes: data || msg.likes + 1 }
             : msg
         )
       );

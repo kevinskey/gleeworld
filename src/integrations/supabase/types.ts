@@ -10450,6 +10450,10 @@ export type Database = {
         Args: { share_token_param: string }
         Returns: undefined
       }
+      increment_love_message_likes: {
+        Args: { message_id_param: string }
+        Returns: number
+      }
       increment_play_count: {
         Args: { track_uuid: string }
         Returns: undefined
