@@ -801,9 +801,9 @@ export const CommunityHubWidget = () => {
                                  </div>
                                </div>
                              </div>
-                            );
-                          })}
-                         </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                     </div>
