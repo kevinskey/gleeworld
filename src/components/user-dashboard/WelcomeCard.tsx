@@ -103,7 +103,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
       {/* Content Layer */}
       <div className="relative z-10 text-center w-full px-4 sm:px-6 py-6 sm:py-8">
         {/* Welcome text positioned at center top */}
-        <div className="absolute top-0 left-0 right-0 text-center">
+        <div className="absolute -top-5 left-0 right-0 text-center">
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-dancing font-bold text-white drop-shadow-lg leading-tight">
             Welcome back {displayName}!
           </h1>
