@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -87,44 +88,50 @@ export const QuickActionsSection = ({ isAdmin, actionFilter }: QuickActionsSecti
         </div>
       </div>
 
-      {/* Mobile Layout - Individual Collapsible Cards */}
-      <div className="md:hidden space-y-1.5 px-0.5">
-        {quickActions.map((action) => {
-          const IconComponent = action.icon;
-          const [isActionCollapsed, setIsActionCollapsed] = useState(actionFilter === 'music' ? false : true);
-          
-          return (
-            <Card key={action.route} className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 border-primary/20 shadow-sm">
-              <CardHeader className="pb-1.5 cursor-pointer touch-manipulation min-h-[60px]" onClick={() => setIsActionCollapsed(!isActionCollapsed)}>
+      {/* Mobile Layout - Single Collapsible Card */}
+      <div className="md:hidden">
+        <Collapsible open={!isCollapsed} onOpenChange={(open) => setIsCollapsed(!open)}>
+          <Card className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 border-primary/20 shadow-sm">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="pb-1.5 cursor-pointer touch-manipulation min-h-[60px]">
                 <CardTitle className="flex items-center justify-between text-secondary-foreground text-sm">
                   <div className="flex items-center gap-2">
-                    <IconComponent className="h-4 w-4 flex-shrink-0" />
-                    <span className="truncate">{action.label}</span>
+                    <Zap className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">{getSectionTitle()}</span>
                   </div>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0 flex-shrink-0 min-h-[44px]">
-                    {isActionCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                    {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                   </Button>
                 </CardTitle>
               </CardHeader>
-              
-              {!isActionCollapsed && (
-                <CardContent className="transition-all duration-300 ease-out animate-accordion-down">
-                  <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      {action.description}
-                    </p>
-                    <Button 
-                      className="w-full text-sm py-2 min-h-[44px]" 
-                      onClick={() => navigate(action.route)}
-                    >
-                      Open {action.label}
-                    </Button>
-                  </div>
-                </CardContent>
-              )}
-            </Card>
-          );
-        })}
+            </CollapsibleTrigger>
+            
+            <CollapsibleContent className="transition-all duration-300 ease-out data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
+              <CardContent className="pt-0 space-y-3">
+                {quickActions.map((action) => {
+                  const IconComponent = action.icon;
+                  return (
+                    <div key={action.route} className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <IconComponent className="h-4 w-4 flex-shrink-0 text-primary" />
+                        <span className="text-sm font-medium">{action.label}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed pl-6">
+                        {action.description}
+                      </p>
+                      <Button 
+                        className="w-full text-sm py-2 min-h-[44px]" 
+                        onClick={() => navigate(action.route)}
+                      >
+                        Open {action.label}
+                      </Button>
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       </div>
     </div>
   );
