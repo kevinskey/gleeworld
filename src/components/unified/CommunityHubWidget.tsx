@@ -800,10 +800,9 @@ export const CommunityHubWidget = () => {
                                    </div>
                                  </div>
                                </div>
-                             </div>
-                              );
-                            })}
-                          </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
@@ -1057,6 +1056,13 @@ export const CommunityHubWidget = () => {
                 </div>
               </TabsContent>
 
+              {/* Calendar Tab */}
+              <TabsContent value="calendar" className="space-y-3">
+                <div className="h-[600px] overflow-hidden rounded-lg border">
+                  <PublicCalendarViews />
+                </div>
+              </TabsContent>
+
               {/* Music Library Tab */}
               <TabsContent value="music" className="space-y-3">
                 <div className="relative">
@@ -1113,13 +1119,6 @@ export const CommunityHubWidget = () => {
                     {musicSearchTerm ? "No music found" : "No music available"}
                   </p>
                 )}
-              </TabsContent>
-
-              {/* Calendar Tab */}
-              <TabsContent value="calendar" className="space-y-3">
-                <div className="h-[600px] overflow-hidden rounded-lg border">
-                  <PublicCalendarViews />
-                </div>
               </TabsContent>
             </Tabs>
 
