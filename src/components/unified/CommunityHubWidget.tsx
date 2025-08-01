@@ -1123,12 +1123,21 @@ export const CommunityHubWidget = () => {
               </div>
             )}
 
-            {/* Quick Action Buttons - show on Alerts tab */}
+            {/* Quick Action Buttons - show on Notifications tab */}
             {activeTab === "notifications" && (
               <div className="flex gap-2 mt-4">
-                <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/notifications')}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1 text-xs h-8" 
+                  onClick={() => {
+                    // Expand to show more notifications within the hub
+                    setActiveTab("notifications");
+                    // Could implement pagination or "load more" functionality here
+                  }}
+                >
                   <Bell className="h-3 w-3 mr-1" />
-                  All Notifications
+                  Refresh Notifications
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/member-portal')}>
                   <Package className="h-3 w-3 mr-1" />
