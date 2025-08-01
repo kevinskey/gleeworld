@@ -72,6 +72,19 @@ const EXECUTIVE_PAGE_MAPPINGS: ExecutivePageMapping[] = [
     ]
   },
   {
+    position: 'secretary',
+    displayName: 'Secretary',
+    icon: FileText,
+    primaryPage: '/dashboard/executive-board',
+    availablePages: [
+      { path: '/dashboard/executive-board', name: 'Executive Dashboard', description: 'Meeting coordination' },
+      { path: '/attendance', name: 'Attendance Tracking', description: 'Member attendance' },
+      { path: '/contracts', name: 'Document Management', description: 'Club documents' },
+      { path: '/admin/announcements/new', name: 'Send Communications', description: 'Club communications' },
+      { path: '/handbook', name: 'Handbook', description: 'Documentation procedures' }
+    ]
+  },
+  {
     position: 'treasurer',
     displayName: 'Treasurer',
     icon: DollarSign,
@@ -153,19 +166,6 @@ const EXECUTIVE_PAGE_MAPPINGS: ExecutivePageMapping[] = [
       { path: '/event-planner', name: 'Event Planning', description: 'Setup requirements' },
       { path: '/dashboard/executive-board', name: 'Executive Dashboard', description: 'Board overview' },
       { path: '/handbook', name: 'Handbook', description: 'Setup procedures' }
-    ]
-  },
-  {
-    position: 'secretary',
-    displayName: 'Secretary',
-    icon: FileText,
-    primaryPage: '/dashboard/executive-board',
-    availablePages: [
-      { path: '/dashboard/executive-board', name: 'Executive Dashboard', description: 'Meeting coordination' },
-      { path: '/attendance', name: 'Attendance Tracking', description: 'Member attendance' },
-      { path: '/contracts', name: 'Document Management', description: 'Club documents' },
-      { path: '/admin/announcements/new', name: 'Send Communications', description: 'Club communications' },
-      { path: '/handbook', name: 'Handbook', description: 'Documentation procedures' }
     ]
   },
   {
