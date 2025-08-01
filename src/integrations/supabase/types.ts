@@ -10195,6 +10195,7 @@ export type Database = {
         | "section_leader_s2"
         | "section_leader_a1"
         | "section_leader_a2"
+        | "set_up_crew_manager"
       feedback_category_enum:
         | "Vocal Blend"
         | "Rhythmic Precision"
@@ -10356,6 +10357,7 @@ export const Constants = {
         "section_leader_s2",
         "section_leader_a1",
         "section_leader_a2",
+        "set_up_crew_manager",
       ],
       feedback_category_enum: [
         "Vocal Blend",
