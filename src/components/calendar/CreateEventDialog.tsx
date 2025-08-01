@@ -18,9 +18,10 @@ import { UserPicker } from "./UserPicker";
 
 interface CreateEventDialogProps {
   onEventCreated: () => void;
+  initialDate?: Date;
 }
 
-export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) => {
+export const CreateEventDialog = ({ onEventCreated, initialDate }: CreateEventDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -171,8 +172,13 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
   useEffect(() => {
     if (open) {
       loadCalendars();
+      // Pre-fill date if initialDate is provided
+      if (initialDate) {
+        const dateString = initialDate.toISOString().slice(0, 16);
+        setFormData(prev => ({ ...prev, start_date: dateString }));
+      }
     }
-  }, [open]);
+  }, [open, initialDate]);
 
   // Team member management functions
   const { users, loading: usersLoading } = useUsers();

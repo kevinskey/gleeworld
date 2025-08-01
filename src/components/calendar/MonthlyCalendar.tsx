@@ -7,6 +7,7 @@ import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EventDetailDialog } from "./EventDetailDialog";
 import { EditEventDialog } from "./EditEventDialog";
 import { EventHoverCard } from "./EventHoverCard";
+import { CreateEventDialog } from "./CreateEventDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -22,6 +23,7 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
   const [editingEvent, setEditingEvent] = useState<GleeWorldEvent | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [userPermissions, setUserPermissions] = useState<{isAdmin: boolean, isSuperAdmin: boolean} | null>(null);
+  const [createEventDate, setCreateEventDate] = useState<Date | null>(null);
 
   console.log('MonthlyCalendar received events:', events.length, events.map(e => ({ title: e.title, date: e.start_date })));
   
@@ -134,6 +136,12 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
     }
   };
 
+  const handleDateClick = (date: Date) => {
+    if (user) {
+      setCreateEventDate(date);
+    }
+  };
+
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentDate(direction === 'prev' ? subMonths(currentDate, 1) : addMonths(currentDate, 1));
   };
@@ -217,10 +225,12 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
             <div
               key={day.toString()}
               className={`
-                min-h-[60px] md:min-h-[100px] p-1 md:p-2 border border-border
-                ${isCurrentMonth ? 'bg-background' : 'bg-muted/30'}
+                min-h-[60px] md:min-h-[100px] p-1 md:p-2 border border-border cursor-pointer
+                ${isCurrentMonth ? 'bg-background hover:bg-muted/20' : 'bg-muted/30 hover:bg-muted/40'}
                 ${isToday ? 'bg-primary/10 border-primary' : ''}
+                transition-colors duration-150
               `}
+              onClick={() => handleDateClick(day)}
             >
               <div className={`text-xs md:text-sm ${isCurrentMonth ? 'text-foreground' : 'text-muted-foreground'}`}>
                 {format(day, 'd')}
@@ -289,6 +299,16 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
           onEventUpdated?.();
         }}
       />
+
+      {createEventDate && (
+        <CreateEventDialog
+          onEventCreated={() => {
+            setCreateEventDate(null);
+            onEventUpdated?.();
+          }}
+          initialDate={createEventDate}
+        />
+      )}
     </div>
   );
 };
