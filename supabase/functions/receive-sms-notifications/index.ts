@@ -59,12 +59,33 @@ async function handleSMSImages(formData: FormData, smsData: SMSMessage): Promise
   }
 }
 
+// Function to normalize phone number format
+function normalizePhoneNumber(phone: string): string {
+  // Remove all non-digit characters
+  const digits = phone.replace(/\D/g, '');
+  
+  // If it starts with 1 and has 11 digits, it's a US number with country code
+  if (digits.length === 11 && digits.startsWith('1')) {
+    return digits.substring(1); // Remove the country code
+  }
+  
+  // If it has 10 digits, it's already in the format we want
+  if (digits.length === 10) {
+    return digits;
+  }
+  
+  return digits; // Return as-is for other cases
+}
+
 // Function to check if phone number is authorized
 async function isAuthorizedSender(phoneNumber: string): Promise<boolean> {
+  const normalizedIncoming = normalizePhoneNumber(phoneNumber);
+  console.log(`Checking authorization for: ${phoneNumber} (normalized: ${normalizedIncoming})`);
+  
   // Check if sender is an executive board member or admin with a phone number
   const { data: authorizedUsers, error } = await supabase
     .from('gw_profiles')
-    .select('phone_number, is_admin, is_super_admin, user_id')
+    .select('phone_number, is_admin, is_super_admin, user_id, email')
     .or('is_admin.eq.true,is_super_admin.eq.true')
     .not('phone_number', 'is', null);
 
@@ -78,7 +99,7 @@ async function isAuthorizedSender(phoneNumber: string): Promise<boolean> {
     .from('gw_executive_board_members')
     .select(`
       user_id,
-      gw_profiles!inner(phone_number)
+      gw_profiles!inner(phone_number, email)
     `)
     .eq('is_active', true)
     .not('gw_profiles.phone_number', 'is', null);
@@ -87,13 +108,16 @@ async function isAuthorizedSender(phoneNumber: string): Promise<boolean> {
     console.error('Error checking executive board members:', execError);
   }
 
-  // Combine all authorized phone numbers
+  // Combine all authorized phone numbers and normalize them
   const allAuthorizedNumbers = [
-    ...(authorizedUsers?.map(user => user.phone_number).filter(Boolean) || []),
-    ...(execMembers?.map(member => member.gw_profiles?.phone_number).filter(Boolean) || [])
+    ...(authorizedUsers?.map(user => normalizePhoneNumber(user.phone_number)).filter(Boolean) || []),
+    ...(execMembers?.map(member => normalizePhoneNumber(member.gw_profiles?.phone_number || '')).filter(Boolean) || [])
   ];
 
-  return allAuthorizedNumbers.includes(phoneNumber);
+  console.log(`Authorized numbers (normalized):`, allAuthorizedNumbers);
+  console.log(`Incoming number matches:`, allAuthorizedNumbers.includes(normalizedIncoming));
+
+  return allAuthorizedNumbers.includes(normalizedIncoming);
 }
 
 // Function to get recipients based on group
