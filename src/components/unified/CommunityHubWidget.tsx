@@ -304,7 +304,7 @@ export const CommunityHubWidget = () => {
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="reflections" className="text-xs">
                   <Book className="h-3 w-3 mr-1" />
-                  Spirit
+                  Wellness
                 </TabsTrigger>
                 <TabsTrigger value="notifications" className="text-xs">
                   <Bell className="h-3 w-3 mr-1" />
