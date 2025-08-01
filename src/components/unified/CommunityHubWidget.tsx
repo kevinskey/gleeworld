@@ -504,7 +504,7 @@ export const CommunityHubWidget = () => {
                       <div className="absolute -right-2 top-4 w-8 h-16 border-4 border-slate-500 rounded-full border-l-transparent"></div>
                       
                        {/* Notes arranged in bucket shape */}
-                       <div className="relative px-4 py-2 h-32">
+                       <div className="relative px-4 py-2 h-40">
                          {/* Center Add Button - Heart with Plus - Always visible */}
                          <div className="absolute inset-0 flex items-center justify-center z-10">
                            <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
@@ -673,63 +673,65 @@ export const CommunityHubWidget = () => {
                         </DialogContent>
                       </Dialog>
 
-                         {/* Existing Love Messages - distributed around the bucket */}
-                         {loveMessages.map((message, index) => {
-                           // Better distribution - circular arrangement around center
-                           const totalMessages = loveMessages.length;
-                           const angle = (index / totalMessages) * 2 * Math.PI;
-                           const radius = 35; // Distance from center
-                           
-                           // Convert polar to cartesian coordinates
-                           const x = 50 + Math.cos(angle) * radius * (0.8 + Math.random() * 0.4);
-                           const y = 50 + Math.sin(angle) * radius * (0.6 + Math.random() * 0.4);
-                           
-                           return (
-                             <div 
-                               key={message.id}
-                               onClick={() => handleNoteClick(message)}
-                               className={`${getNoteColorClasses(message.note_color)} border-2 rounded-lg p-2 w-20 h-16 shadow-md transition-all cursor-pointer hover:scale-110 hover:shadow-lg animate-fade-in absolute group`}
-                               style={{ 
-                                 animationDelay: `${index * 0.1}s`,
-                                 left: `${Math.max(5, Math.min(80, x))}%`,
-                                 top: `${Math.max(5, Math.min(70, y))}%`,
-                                 transform: `rotate(${(Math.random() - 0.5) * 20}deg)`,
-                                 zIndex: 1,
-                               }}
-                             >
-                              <div className="h-full flex flex-col justify-between text-xs">
-                                <div className="flex-1">
-                                  <p className="text-xs leading-tight text-gray-800 mb-1 line-clamp-2">
-                                    {message.message}
-                                  </p>
-                                  {(message as any).decorations && (
-                                    <div className="text-sm leading-none">
-                                      {(message as any).decorations}
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="flex items-center justify-between text-xs">
-                                  <span className="text-gray-600 font-medium truncate mr-1" title={message.sender_name}>
-                                    {message.sender_name}
-                                  </span>
-                                  <div className="flex items-center gap-1">
-                                    <button
-                                      onClick={() => handleLikeMessage(message.id)}
-                                      className={`flex items-center gap-1 transition-colors ${
-                                        message.user_liked 
-                                          ? 'text-red-600' 
-                                          : 'text-red-500 hover:text-red-600'
-                                      }`}
-                                    >
-                                      <Heart className={`h-2 w-2 ${message.user_liked ? 'fill-current' : ''}`} />
-                                      {message.likes > 0 && <span className="text-xs">{message.likes}</span>}
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
+                          {/* Existing Love Messages - distributed around the bucket */}
+                          {loveMessages.map((message, index) => {
+                            // Better distribution - circular arrangement around center
+                            const totalMessages = loveMessages.length;
+                            const angle = (index / totalMessages) * 2 * Math.PI;
+                            const radius = 35; // Distance from center
+                            
+                            // Convert polar to cartesian coordinates
+                            const x = 50 + Math.cos(angle) * radius * (0.8 + Math.random() * 0.4);
+                            const y = 50 + Math.sin(angle) * radius * (0.6 + Math.random() * 0.4);
+                            
+                            return (
+                              <div 
+                                key={message.id}
+                                onClick={() => handleNoteClick(message)}
+                                className={`${getNoteColorClasses(message.note_color)} border-2 rounded-lg p-2 w-24 h-20 shadow-md transition-all cursor-pointer hover:scale-110 hover:shadow-lg animate-fade-in absolute group`}
+                                style={{ 
+                                  animationDelay: `${index * 0.1}s`,
+                                  left: `${Math.max(5, Math.min(75, x))}%`,
+                                  top: `${Math.max(5, Math.min(65, y))}%`,
+                                  transform: `rotate(${(Math.random() - 0.5) * 20}deg)`,
+                                  zIndex: 1,
+                                  backgroundColor: message.likes >= 3 ? '#ef4444' : undefined, // Red for completed love (3+ likes)
+                                  borderColor: message.likes >= 3 ? '#dc2626' : undefined,
+                                }}
+                              >
+                               <div className="h-full flex flex-col justify-between text-xs">
+                                 <div className="flex-1">
+                                   <p className={`text-xs leading-tight mb-1 line-clamp-2 ${message.likes >= 3 ? 'text-white' : 'text-gray-800'}`}>
+                                     {message.message.length > 35 ? `${message.message.substring(0, 32)}...` : message.message}
+                                   </p>
+                                   {(message as any).decorations && (
+                                     <div className="text-sm leading-none">
+                                       {(message as any).decorations}
+                                     </div>
+                                   )}
+                                 </div>
+                                 <div className="flex items-center justify-between text-xs">
+                                   <span className={`font-medium truncate mr-1 ${message.likes >= 3 ? 'text-white' : 'text-gray-600'}`} title={message.sender_name}>
+                                     {message.sender_name}
+                                   </span>
+                                   <div className="flex items-center gap-1">
+                                     <button
+                                       onClick={() => handleLikeMessage(message.id)}
+                                       className={`flex items-center gap-1 transition-colors ${
+                                         message.user_liked 
+                                           ? (message.likes >= 3 ? 'text-white' : 'text-red-600')
+                                           : (message.likes >= 3 ? 'text-white hover:text-red-200' : 'text-red-500 hover:text-red-600')
+                                       }`}
+                                     >
+                                       <Heart className={`h-2 w-2 ${message.user_liked ? 'fill-current' : ''}`} />
+                                       {message.likes > 0 && <span className="text-xs">{message.likes}</span>}
+                                     </button>
+                                   </div>
+                                 </div>
+                               </div>
+                             </div>
+                           );
+                         })}
                         </div>
                       </div>
                     </div>
