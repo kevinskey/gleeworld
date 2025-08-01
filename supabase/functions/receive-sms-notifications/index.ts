@@ -17,6 +17,48 @@ const supabaseUrl = 'https://oopmlreysjzuxzylyheb.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTA3ODk1NSwiZXhwIjoyMDY0NjU0OTU1fQ.VNf--TUVMvzSoF3tX-tDmNGFqjgBWdLj9OYv30h_Atg';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Function to handle SMS images
+async function handleSMSImages(formData: FormData, smsData: SMSMessage): Promise<void> {
+  const numMedia = parseInt(formData.get('NumMedia') as string || '0');
+  
+  for (let i = 0; i < numMedia; i++) {
+    const mediaUrl = formData.get(`MediaUrl${i}`) as string;
+    const mediaContentType = formData.get(`MediaContentType${i}`) as string;
+    
+    if (mediaUrl && mediaContentType.startsWith('image/')) {
+      try {
+        // Download the image from Twilio
+        const imageResponse = await fetch(mediaUrl);
+        const imageBlob = await imageResponse.blob();
+        
+        // Generate filename
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const fileExtension = mediaContentType.split('/')[1];
+        const fileName = `sms-image-${timestamp}-${smsData.MessageSid}.${fileExtension}`;
+        
+        // Convert blob to ArrayBuffer for Supabase storage
+        const arrayBuffer = await imageBlob.arrayBuffer();
+        
+        // Upload to Supabase storage bucket
+        const { error: uploadError } = await supabase.storage
+          .from('sms-images')
+          .upload(fileName, arrayBuffer, {
+            contentType: mediaContentType,
+            upsert: false
+          });
+        
+        if (uploadError) {
+          console.error('Error uploading image:', uploadError);
+        } else {
+          console.log(`Successfully uploaded image: ${fileName}`);
+        }
+      } catch (error) {
+        console.error('Error processing image:', error);
+      }
+    }
+  }
+}
+
 // Function to check if phone number is authorized
 async function isAuthorizedSender(phoneNumber: string): Promise<boolean> {
   // Check if sender is an executive board member or admin with a phone number
@@ -58,40 +100,70 @@ async function isAuthorizedSender(phoneNumber: string): Promise<boolean> {
 async function getRecipientsByGroup(group: string): Promise<string[]> {
   switch (group.toLowerCase()) {
     case 'exec':
-    case 'executive':
-      // Get executive board members
-      const { data: executives } = await supabase
+      // Get president only
+      const { data: president } = await supabase
         .from('gw_executive_board_members')
         .select('user_id')
+        .eq('position', 'president')
         .eq('is_active', true);
-      return executives?.map(exec => exec.user_id) || [];
+      return president?.map(p => p.user_id) || [];
 
     case 'admin':
-    case 'admins':
-      // Get admins and super admins
-      const { data: admins } = await supabase
+      // Get super admins only
+      const { data: superAdmins } = await supabase
         .from('gw_profiles')
         .select('user_id')
-        .or('is_admin.eq.true,is_super_admin.eq.true');
-      return admins?.map(admin => admin.user_id) || [];
+        .eq('is_super_admin', true);
+      return superAdmins?.map(admin => admin.user_id) || [];
 
-    case 'all':
-    case 'everyone':
-    case 'members':
-      // Get all verified members
+    case 's1':
+      // Get soprano 1 section members
+      const { data: s1Members } = await supabase
+        .from('gw_profiles')
+        .select('user_id')
+        .eq('voice_part', 'soprano_1');
+      return s1Members?.map(member => member.user_id) || [];
+
+    case 's2':
+      // Get soprano 2 section members
+      const { data: s2Members } = await supabase
+        .from('gw_profiles')
+        .select('user_id')
+        .eq('voice_part', 'soprano_2');
+      return s2Members?.map(member => member.user_id) || [];
+
+    case 'a1':
+      // Get alto 1 section members
+      const { data: a1Members } = await supabase
+        .from('gw_profiles')
+        .select('user_id')
+        .eq('voice_part', 'alto_1');
+      return a1Members?.map(member => member.user_id) || [];
+
+    case 'a2':
+      // Get alto 2 section members
+      const { data: a2Members } = await supabase
+        .from('gw_profiles')
+        .select('user_id')
+        .eq('voice_part', 'alto_2');
+      return a2Members?.map(member => member.user_id) || [];
+
+    case 'pr':
+      // Get PR coordinator
+      const { data: prCoordinator } = await supabase
+        .from('gw_executive_board_members')
+        .select('user_id')
+        .eq('position', 'pr_coordinator')
+        .eq('is_active', true);
+      return prCoordinator?.map(pr => pr.user_id) || [];
+
+    default:
+      // Default to all verified members
       const { data: allMembers } = await supabase
         .from('gw_profiles')
         .select('user_id')
         .neq('role', 'guest');
       return allMembers?.map(member => member.user_id) || [];
-
-    default:
-      // Default to executive board
-      const { data: defaultExecs } = await supabase
-        .from('gw_executive_board_members')
-        .select('user_id')
-        .eq('is_active', true);
-      return defaultExecs?.map(exec => exec.user_id) || [];
   }
 }
 
@@ -124,6 +196,25 @@ const handler = async (req: Request): Promise<Response> => {
     if (!isAuthorized) {
       console.log(`Unauthorized number: ${smsData.From}`);
       return new Response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', {
+        status: 200,
+        headers: { 'Content-Type': 'text/xml', ...corsHeaders }
+      });
+    }
+
+    // Check if SMS contains images
+    const hasImages = formData.has('NumMedia') && parseInt(formData.get('NumMedia') as string || '0') > 0;
+    
+    if (hasImages) {
+      // Handle image processing
+      await handleSMSImages(formData, smsData);
+      
+      // Send thank you response for images
+      const imageResponse = `<?xml version="1.0" encoding="UTF-8"?>
+        <Response>
+          <Message>Thank you for the pic! The Spelman College Glee Club</Message>
+        </Response>`;
+      
+      return new Response(imageResponse, {
         status: 200,
         headers: { 'Content-Type': 'text/xml', ...corsHeaders }
       });
@@ -220,15 +311,19 @@ const handler = async (req: Request): Promise<Response> => {
 
 function parseSMSMessage(body: string): { title: string; message: string; group: string } {
   // Expected format with group targeting:
-  // "@exec: Your message" → Send to executive board
-  // "@admin: Your message" → Send to admins only  
-  // "@all: Your message" → Send to all members
-  // "Your message" → Default to executive board
+  // "@exec: Your message" → Send to president
+  // "@admin: Your message" → Send to super admin
+  // "@s1: Your message" → Send to soprano 1 section
+  // "@s2: Your message" → Send to soprano 2 section
+  // "@a1: Your message" → Send to alto 1 section
+  // "@a2: Your message" → Send to alto 2 section
+  // "@pr: Your message" → Send to PR coordinator
+  // "Your message" → Default to all members
   
-  const groupRegex = /^@(exec|admin|all|everyone|members|executive|admins):\s*(.+)$/i;
+  const groupRegex = /^@(exec|admin|s1|s2|a1|a2|pr):\s*(.+)$/i;
   const match = body.trim().match(groupRegex);
   
-  let group = 'exec'; // Default to executive board
+  let group = 'all'; // Default to all members
   let message = body.trim();
   
   if (match) {
