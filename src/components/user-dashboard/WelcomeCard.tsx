@@ -11,6 +11,7 @@ interface WelcomeCardProps {
     voice_part?: string | null;
     role?: string;
     created_at?: string;
+    class_year?: number;
   } | null;
 }
 
@@ -114,7 +115,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
       <div className="absolute bottom-4 right-4 z-20">
         <div className="bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5 border border-white/20">
           <p className="text-white text-xs sm:text-sm font-medium drop-shadow">
-            {getUserTitle()} • Class of {profile?.created_at ? format(new Date(profile.created_at), 'yyyy') : new Date().getFullYear()}
+            {getUserTitle()} • Class of {profile?.class_year || 'Unknown'}
           </p>
         </div>
       </div>
