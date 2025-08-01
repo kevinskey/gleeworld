@@ -80,6 +80,7 @@ interface LoveMessage {
   is_anonymous: boolean;
   created_at: string;
   sender_name?: string;
+  likes: number;
 }
 
 interface LoveMessageForm {
@@ -223,7 +224,8 @@ export const CommunityHubWidget = () => {
           note_color: m.note_color,
           is_anonymous: m.is_anonymous,
           created_at: m.created_at,
-          sender_name: m.is_anonymous ? 'Anonymous' : (profile?.full_name || profile?.first_name || 'Someone')
+          sender_name: m.is_anonymous ? 'Anonymous' : (profile?.full_name || profile?.first_name || 'Someone'),
+          likes: m.likes || 0
         };
       });
 
@@ -356,6 +358,30 @@ export const CommunityHubWidget = () => {
       case 'cyan': return 'bg-cyan-200 border-cyan-300 hover:bg-cyan-300';
       case 'slate': return 'bg-slate-200 border-slate-300 hover:bg-slate-300';
       default: return 'bg-blue-200 border-blue-300 hover:bg-blue-300';
+    }
+  };
+
+  const handleLikeMessage = async (messageId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('gw_buckets_of_love')
+        .update({ likes: supabase.raw('likes + 1') })
+        .eq('id', messageId);
+
+      if (error) throw error;
+
+      // Update local state
+      setLoveMessages(prevMessages =>
+        prevMessages.map(msg =>
+          msg.id === messageId
+            ? { ...msg, likes: msg.likes + 1 }
+            : msg
+        )
+      );
+    } catch (error) {
+      console.error('Error liking message:', error);
     }
   };
 
@@ -613,9 +639,18 @@ export const CommunityHubWidget = () => {
                               )}
                             </div>
                             <div className="flex items-end justify-between mt-2">
-                              <span className="text-xs text-gray-600 font-medium">
-                                {message.sender_name}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-600 font-medium">
+                                  {message.sender_name}
+                                </span>
+                                <button
+                                  onClick={() => handleLikeMessage(message.id)}
+                                  className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 transition-colors"
+                                >
+                                  <Heart className="h-3 w-3 fill-current" />
+                                  {message.likes > 0 && <span>{message.likes}</span>}
+                                </button>
+                              </div>
                               <span className="text-xs text-gray-500">
                                 {format(new Date(message.created_at), 'MMM d')}
                               </span>

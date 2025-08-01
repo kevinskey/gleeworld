@@ -2891,6 +2891,7 @@ export type Database = {
           created_at: string
           id: string
           is_anonymous: boolean
+          likes: number | null
           message: string
           note_color: string
           recipient_user_id: string | null
@@ -2901,6 +2902,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_anonymous?: boolean
+          likes?: number | null
           message: string
           note_color?: string
           recipient_user_id?: string | null
@@ -2911,6 +2913,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_anonymous?: boolean
+          likes?: number | null
           message?: string
           note_color?: string
           recipient_user_id?: string | null
