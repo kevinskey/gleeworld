@@ -495,26 +495,35 @@ export const CommunityHubWidget = () => {
                   </div>
                 ) : (
                   <div className="relative">
-                    {/* Bucket Container */}
-                    <div className="relative bg-gradient-to-b from-slate-200 to-slate-400 rounded-b-3xl mx-8 pt-4 pb-8" style={{
+                    {/* Header with cute bucket image */}
+                    <div className="flex flex-col items-center mb-4">
+                      <img 
+                        src="/lovable-uploads/96533996-2039-4566-887a-67eadeb076f1.png" 
+                        alt="Sending you buckets of love"
+                        className="w-32 h-auto mb-2"
+                      />
+                    </div>
+                    
+                    {/* Interactive Bucket Container */}
+                    <div className="relative bg-gradient-to-b from-blue-200 to-blue-400 rounded-b-3xl mx-8 pt-4 pb-8" style={{
                       clipPath: "polygon(15% 0%, 85% 0%, 95% 100%, 5% 100%)"
                     }}>
                       {/* Bucket Handle */}
-                      <div className="absolute -left-2 top-4 w-8 h-16 border-4 border-slate-500 rounded-full border-r-transparent"></div>
-                      <div className="absolute -right-2 top-4 w-8 h-16 border-4 border-slate-500 rounded-full border-l-transparent"></div>
+                      <div className="absolute -left-2 top-4 w-8 h-16 border-4 border-blue-600 rounded-full border-r-transparent"></div>
+                      <div className="absolute -right-2 top-4 w-8 h-16 border-4 border-blue-600 rounded-full border-l-transparent"></div>
                       
-                       {/* Notes arranged in bucket shape */}
+                       {/* Hearts arranged in bucket shape */}
                        <div className="relative px-4 py-2 h-40">
                          {/* Center Add Button - Heart with Plus - Always visible */}
                          <div className="absolute inset-0 flex items-center justify-center z-10">
                            <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
                              <DialogTrigger asChild>
                                <div 
-                                 className="bg-red-50 border-2 border-dashed border-red-300 rounded-lg p-4 w-16 h-16 flex items-center justify-center cursor-pointer hover:bg-red-100 transition-colors shadow-md hover:scale-110 transition-transform"
+                                 className="bg-pink-50 border-2 border-dashed border-pink-300 rounded-lg p-4 w-16 h-16 flex items-center justify-center cursor-pointer hover:bg-pink-100 transition-colors shadow-md hover:scale-110 transition-transform"
                                >
                                  <div className="relative">
-                                   <Heart className="h-6 w-6 text-red-500 fill-red-200" />
-                                   <Plus className="h-3 w-3 text-red-600 absolute -top-1 -right-1 bg-white rounded-full" />
+                                   <Heart className="h-6 w-6 text-pink-500 fill-pink-200" />
+                                   <Plus className="h-3 w-3 text-pink-600 absolute -top-1 -right-1 bg-white rounded-full" />
                                  </div>
                                </div>
                              </DialogTrigger>
