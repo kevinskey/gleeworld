@@ -373,6 +373,22 @@ export const CommunityHubWidget = () => {
     }
   };
 
+  const getNoteGradientColors = (color: string) => {
+    switch (color) {
+      case 'sky': return '#e0f2fe, #bae6fd';
+      case 'blue': return '#dbeafe, #bfdbfe';
+      case 'indigo': return '#e0e7ff, #c7d2fe';
+      case 'cyan': return '#cffafe, #a5f3fc';
+      case 'slate': return '#e2e8f0, #cbd5e1';
+      default: return '#dbeafe, #bfdbfe';
+    }
+  };
+
+  const handleNoteClick = (message: LoveMessage) => {
+    // Display message in a simple alert for now - could be enhanced with a proper modal
+    alert(`${message.sender_name}: ${message.message}`);
+  };
+
   const handleLikeMessage = async (messageId: string) => {
     if (!user) return;
 
@@ -664,7 +680,8 @@ export const CommunityHubWidget = () => {
                           return (
                             <div 
                               key={message.id}
-                              className={`${getNoteColorClasses(message.note_color)} border-2 rounded-lg p-2 w-24 h-20 shadow-md transition-all cursor-pointer hover:scale-110 animate-fade-in relative`}
+                              onClick={() => handleNoteClick(message)}
+                              className={`${getNoteColorClasses(message.note_color)} border-2 rounded-lg p-3 w-28 h-24 shadow-lg transition-all cursor-pointer hover:scale-125 hover:shadow-2xl animate-fade-in relative group`}
                               style={{ 
                                 animationDelay: `${index * 0.1}s`,
                                 transform: `
@@ -674,9 +691,25 @@ export const CommunityHubWidget = () => {
                                   rotateY(${rotateY}deg) 
                                   rotateZ(${rotateZ}deg)
                                 `,
-                                transformStyle: "preserve-3d"
+                                transformStyle: "preserve-3d",
+                                background: `linear-gradient(135deg, ${getNoteGradientColors(message.note_color)})`,
+                                boxShadow: '0 8px 16px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3)',
                               }}
                             >
+                              {/* Post-it note corner fold effect */}
+                              <div 
+                                className="absolute top-0 right-0 w-4 h-4 bg-white opacity-20 rounded-bl-lg"
+                                style={{ 
+                                  clipPath: 'polygon(0 0, 100% 0, 0 100%)' 
+                                }}
+                              ></div>
+                              
+                              {/* Subtle lines like real post-it notes */}
+                              <div className="absolute inset-0 opacity-10 pointer-events-none">
+                                <div className="h-full w-full bg-gradient-to-b from-transparent via-gray-600 to-transparent" 
+                                     style={{ backgroundSize: '100% 6px', backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 5px, rgba(0,0,0,0.1) 6px)' }}>
+                                </div>
+                              </div>
                               <div className="h-full flex flex-col justify-between text-xs">
                                 <div className="flex-1">
                                   <p className="text-xs leading-tight text-gray-800 mb-1 line-clamp-2">
