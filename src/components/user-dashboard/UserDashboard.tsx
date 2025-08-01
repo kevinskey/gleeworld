@@ -14,7 +14,7 @@ import { GleeClubSpotlightSection } from "./sections/GleeClubSpotlightSection";
 
 import { EventsAndActivitySection } from "./sections/EventsAndActivitySection";
 import { DashboardModulesSection } from "./sections/DashboardModulesSection";
-import { SpiritualReflectionsSection } from "./sections/SpiritualReflectionsSection";
+import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { NotificationsSection } from "./sections/NotificationsSection";
 import { TasksSection } from "./sections/TasksSection";
 
@@ -330,14 +330,9 @@ const UserDashboard = React.memo(() => {
 
         {/* Member Dashboard Elements Only */}
         
-        {/* 1. Spiritual Gleeflections */}
+        {/* Community Hub - Unified spiritual reflections, notifications, and music */}
         <div className="w-full">
-          <SpiritualReflectionsSection />
-        </div>
-
-        {/* 2. Notifications */}
-        <div className="w-full">
-          <NotificationsSection />
+          <CommunityHubWidget />
         </div>
 
         {/* 3. Attendance */}
