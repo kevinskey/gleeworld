@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
 import { 
   Calendar,
@@ -36,8 +37,6 @@ import {
   Music2,
   UserCheck,
   Home,
-  X,
-  Music,
   Settings,
   Send,
   PenTool,
@@ -45,8 +44,18 @@ import {
   Target,
   Clock,
   ClipboardList,
-  Play
+  Play,
+  Bell,
+  ArrowUpRight,
+  Plus,
+  Activity,
+  PieChart,
+  CalendarDays,
+  Briefcase,
+  Zap
 } from "lucide-react";
+
+// Import all the position-specific components
 import { HandbookModule } from "@/components/handbook/HandbookModule";
 import { EventCreator } from "@/components/executive-board/EventCreator";
 import { BudgetTracker } from "@/components/executive-board/BudgetTracker";
@@ -80,7 +89,6 @@ import { ChaplainWorkHub } from "@/components/chaplain/ChaplainWorkHub";
 import { PRCoordinatorHub } from "@/components/pr-coordinator/PRCoordinatorHub";
 import { AuditionLogs } from "@/components/executive-board/AuditionLogs";
 import { CommunicationsHub } from "@/components/executive-board/CommunicationsHub";
-
 
 export type ExecutivePosition = 
   | 'president'
@@ -118,7 +126,7 @@ export const ExecutiveBoardDashboard = () => {
   const [selectedPosition, setSelectedPosition] = useState<ExecutivePosition>('president');
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     checkExecutiveMembership();
@@ -138,16 +146,14 @@ export const ExecutiveBoardDashboard = () => {
         .single();
 
       console.log('Profile data:', profileData);
-      console.log('Profile error:', profileError);
 
       if (profileData?.is_super_admin || profileData?.is_admin) {
         console.log('User has admin access');
-        // Super admin/admin gets access with a special "admin" position
         setIsAdmin(true);
         setExecutiveData({
           id: 'admin-access',
           user_id: user.id,
-          position: 'president', // Default to president view for admins
+          position: 'president',
           academic_year: new Date().getFullYear().toString(),
           is_active: true
         });
@@ -178,7 +184,6 @@ export const ExecutiveBoardDashboard = () => {
         .single();
 
       console.log('Executive board data:', data);
-      console.log('Executive board error:', error);
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error checking executive membership:', error);
@@ -205,25 +210,25 @@ export const ExecutiveBoardDashboard = () => {
   // Map positions to their primary tabs
   const getPositionPrimaryTab = (position: ExecutivePosition): string => {
     const primaryTabMapping: Record<ExecutivePosition, string> = {
-      president: 'dashboard',
+      president: 'overview',
       secretary: 'attendance',
       treasurer: 'finances',
       tour_manager: 'tour-overview',
       pr_coordinator: 'pr-hub',
       librarian: 'music-library',
       historian: 'historian-hub',
-      data_analyst: 'dashboard', // reports would be better but not available
+      data_analyst: 'overview',
       chaplain: 'chaplain-hub',
       assistant_chaplain: 'chaplain-hub',
       student_conductor: 'conductor-overview',
       wardrobe_manager: 'wardrobe',
-      section_leader_s1: 'dashboard',
-      section_leader_s2: 'dashboard',
-      section_leader_a1: 'dashboard',
-      section_leader_a2: 'dashboard',
-      set_up_crew_manager: 'dashboard'
+      section_leader_s1: 'overview',
+      section_leader_s2: 'overview',
+      section_leader_a1: 'overview',
+      section_leader_a2: 'overview',
+      set_up_crew_manager: 'overview'
     };
-    return primaryTabMapping[position] || 'dashboard';
+    return primaryTabMapping[position] || 'overview';
   };
 
   // Handle position change and automatically switch to primary tab
@@ -280,6 +285,67 @@ export const ExecutiveBoardDashboard = () => {
     return names[position] || position;
   };
 
+  // Mock data for overview cards
+  const getPositionOverview = (position: ExecutivePosition) => {
+    const overviewData = {
+      president: {
+        upcomingTasks: 5,
+        meetingsScheduled: 3,
+        pendingDecisions: 2,
+        boardMembers: 12
+      },
+      secretary: {
+        meetingsScheduled: 4,
+        minutesToReview: 2,
+        attendanceRate: 87,
+        documentsToFile: 6
+      },
+      treasurer: {
+        budgetRemaining: 15400,
+        pendingExpenses: 3,
+        duesToCollect: 12,
+        recentTransactions: 8
+      },
+      tour_manager: {
+        upcomingEvents: 4,
+        contractsPending: 2,
+        stipendsToProcess: 15,
+        venueConfirmed: 3
+      },
+      pr_coordinator: {
+        socialMediaPosts: 12,
+        pressReleases: 2,
+        eventPromotion: 4,
+        mediaRequests: 1
+      },
+      librarian: {
+        newMusicAdded: 8,
+        catalogUpdates: 3,
+        practiceRooms: 4,
+        equipmentIssues: 1
+      },
+      historian: {
+        photosToProcess: 45,
+        eventsDocumented: 6,
+        archiveUpdates: 3,
+        videoProjects: 2
+      },
+      chaplain: {
+        prayerRequests: 8,
+        spiritualEvents: 3,
+        counselingSessions: 5,
+        devotionalPosts: 4
+      }
+    };
+
+    return overviewData[position] || {
+      tasks: 0,
+      events: 0,
+      updates: 0,
+      notifications: 0
+    };
+  };
+
   if (loading) {
     return (
       <UniversalLayout>
@@ -310,13 +376,8 @@ export const ExecutiveBoardDashboard = () => {
                   <li>Active membership in the Executive Board</li>
                 </ul>
                 <p className="text-sm text-muted-foreground">
-                  If you believe you should have access, please contact your administrator to:
+                  If you believe you should have access, please contact your administrator.
                 </p>
-                <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                  <li>Set your <code>is_exec_board</code> flag to true</li>
-                  <li>Assign your <code>exec_board_role</code> (e.g., president, secretary, treasurer)</li>
-                  <li>Or grant admin/super admin permissions</li>
-                </ul>
               </div>
             </AlertDescription>
           </Alert>
@@ -345,934 +406,363 @@ export const ExecutiveBoardDashboard = () => {
   }
 
   const PositionIcon = getPositionIcon(selectedPosition);
-  
-  // Use the uploaded historic campus image as background
-  const backgroundImage = "/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png";
+  const overviewData = getPositionOverview(selectedPosition);
 
   return (
-    <div className="min-h-screen relative">
-      {/* Background Image */}
-      {backgroundImage && (
-        <div 
-          className="fixed inset-0 bg-cover bg-center z-0 after:absolute after:inset-0 after:bg-white after:opacity-20"
-          style={{ backgroundImage: `url(${backgroundImage})` }}
-        />
-      )}
-      
-      {/* Content overlay */}
-      <div className="relative z-10">
-        <UniversalLayout className="bg-transparent">
-          <div className="space-y-6 p-4 md:px-8 lg:px-12 xl:px-16 max-w-full overflow-hidden">
-        {/* Mobile-First Navigation Layout */}
-        {isMobile ? (
-          <div className="space-y-4">
-            {/* View Mode Toggle - Full Width on Mobile */}
-            <div className="w-full mobile-stable">
-              <div className="flex items-center gap-2 p-2 bg-white/90 rounded-lg border shadow-sm">
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="flex-1 flex items-center justify-center gap-2 text-xs sm:text-sm px-2 sm:px-4 h-10 bg-primary text-primary-foreground mobile-control"
-                >
-                  <Crown className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="truncate">Exec Board View</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate('/dashboard')}
-                  className="flex-1 flex items-center justify-center gap-2 text-xs sm:text-sm px-2 sm:px-4 h-10 text-primary hover:bg-primary/10 mobile-control"
-                >
-                  <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="truncate">Member View</span>
-                </Button>
-              </div>
+    <UniversalLayout>
+      <div className="space-y-6">
+        {/* Header Section */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <PositionIcon className="h-8 w-8 text-primary" />
+              <h1 className="text-3xl font-bold tracking-tight">Executive Board Hub</h1>
             </div>
+            <p className="text-muted-foreground">
+              Welcome back, {user?.user_metadata?.full_name || 'Executive Member'}! 
+              Managing your role as {getPositionName(selectedPosition)}.
+            </p>
           </div>
-        ) : (
-          /* Desktop Navigation Layout */
-          <div className="flex items-center justify-end">
-            {/* View Mode Toggle - Desktop */}
-            <div className="flex items-center gap-2 p-1 bg-white/90 backdrop-blur-sm rounded-lg border border-white/50 shadow-lg">
+          
+          <div className="flex items-center gap-3">
+            {/* Position Switcher - Admin Only */}
+            {isAdmin && (
+              <Select value={selectedPosition} onValueChange={handlePositionChange}>
+                <SelectTrigger className="w-[220px]">
+                  <div className="flex items-center gap-2">
+                    <PositionIcon className="h-4 w-4" />
+                    <span>{getPositionName(selectedPosition)}</span>
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries({
+                    president: 'President',
+                    secretary: 'Secretary',
+                    treasurer: 'Treasurer',
+                    tour_manager: 'Tour Manager',
+                    pr_coordinator: 'PR Coordinator',
+                    librarian: 'Librarian',
+                    historian: 'Historian',
+                    chaplain: 'Chaplain',
+                    wardrobe_manager: 'Wardrobe Manager',
+                    student_conductor: 'Student Conductor'
+                  }).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      <div className="flex items-center gap-2">
+                        {React.createElement(getPositionIcon(value as ExecutivePosition), { className: "h-4 w-4" })}
+                        {label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            
+            {/* View Toggle */}
+            <div className="flex items-center gap-2 p-1 bg-muted rounded-lg">
               <Button
                 variant="default"
                 size="sm"
-                className="flex items-center gap-2 text-sm px-3 h-9 bg-primary text-primary-foreground hover:bg-primary/90"
+                className="h-8"
               >
-                <Crown className="h-4 w-4" />
-                Exec Board View
+                <Crown className="h-4 w-4 mr-2" />
+                Exec View
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 text-sm px-3 h-9 text-gray-700 hover:bg-gray-100"
+                className="h-8"
               >
-                <Users className="h-4 w-4" />
+                <Users className="h-4 w-4 mr-2" />
                 Member View
               </Button>
             </div>
           </div>
-        )}
-
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="font-bebas font-bold tracking-wide">
-              <span className="block sm:hidden text-5xl text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">Exec Board Hub</span>
-              <span className="hidden sm:block text-4xl md:text-6xl lg:text-7xl xl:text-8xl text-foreground md:text-white md:drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">Executive Board Hub</span>
-            </h1>
-            
-            {/* Welcome message with user's name */}
-            {user?.user_metadata?.full_name && (
-              <div className="bg-black/30 backdrop-blur-sm rounded-lg px-4 py-2 mt-2 border border-white/20">
-                <p className="text-lg md:text-xl text-white font-medium">
-                  Welcome back, {user.user_metadata.full_name}! 👋
-                </p>
-              </div>
-            )}
-            
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
-              {isAdmin ? (
-                <Select value={selectedPosition} onValueChange={handlePositionChange}>
-                  <SelectTrigger className="w-[200px]">
-                    <div className="flex items-center gap-2">
-                      <PositionIcon className="h-4 w-4" />
-                      <SelectValue />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="president">
-                      <div className="flex items-center gap-2">
-                        <Crown className="h-4 w-4" />
-                        President
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="secretary">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        Secretary
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="treasurer">
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4" />
-                        Treasurer
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="tour_manager">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
-                        Tour Manager
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="wardrobe_manager">
-                      <div className="flex items-center gap-2">
-                        <Shirt className="h-4 w-4" />
-                        Wardrobe Manager
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="librarian">
-                      <div className="flex items-center gap-2">
-                        <BookOpen className="h-4 w-4" />
-                        Librarian
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="historian">
-                      <div className="flex items-center gap-2">
-                        <Camera className="h-4 w-4" />
-                        Historian
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="pr_coordinator">
-                      <div className="flex items-center gap-2">
-                        <MessageSquare className="h-4 w-4" />
-                        PR Coordinator
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="chaplain">
-                      <div className="flex items-center gap-2">
-                        <Heart className="h-4 w-4" />
-                        Chaplain
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="data_analyst">
-                      <div className="flex items-center gap-2">
-                        <BarChart3 className="h-4 w-4" />
-                        Data Analyst
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="assistant_chaplain">
-                      <div className="flex items-center gap-2">
-                        <Heart className="h-4 w-4" />
-                        Assistant Chaplain
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="section_leader_s1">
-                      <div className="flex items-center gap-2">
-                        <UserCheck className="h-4 w-4" />
-                        Section Leader
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="student_conductor">
-                      <div className="flex items-center gap-2">
-                        <Music2 className="h-4 w-4" />
-                        Student Conductor
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="flex items-center gap-1">
-                    <PositionIcon className="h-3 w-3" />
-                    {getPositionName(selectedPosition)}
-                  </Badge>
-                  <Badge variant="outline" className="block sm:hidden">
-                    2025/26
-                  </Badge>
-                </div>
-              )}
-              <Badge variant="outline" className="hidden sm:block">
-                2025/26
-              </Badge>
-            </div>
-          </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mobile-stable">
-          <TabsList className="w-full overflow-x-auto scrollbar-hide mobile-tabs"
-            style={{ 
-              display: 'flex',
-              flexWrap: 'nowrap',
-              gap: '0.125rem',
-              padding: '0.25rem',
-              minHeight: '2.5rem'
-            }}
-          >
-            <TabsTrigger value="dashboard" className="text-sm px-2 py-1 whitespace-nowrap flex-shrink-0 min-w-fit">
-              <Users className="h-3 w-3 mr-1" />
-              <span className="hidden xs:inline sm:inline">Dashboard</span>
+        {/* Main Content Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+            <TabsTrigger value="overview" className="text-xs lg:text-sm">
+              <Activity className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
+              Overview
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="text-sm px-2 py-1 whitespace-nowrap flex-shrink-0 min-w-fit">
-              <Calendar className="h-3 w-3 mr-1" />
-              <span>Calendar</span>
+            <TabsTrigger value="tasks" className="text-xs lg:text-sm">
+              <CheckCircle className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
+              Tasks
             </TabsTrigger>
-            <TabsTrigger value="announcements" className="text-sm px-2 py-1 whitespace-nowrap flex-shrink-0 min-w-fit">
-              <Megaphone className="h-3 w-3 mr-1" />
-              <span>Minutes</span>
+            <TabsTrigger value="calendar" className="text-xs lg:text-sm">
+              <CalendarDays className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
+              Calendar
             </TabsTrigger>
-            {selectedPosition === 'secretary' && (
-              <TabsTrigger value="attendance" className="text-xs">
-                <Users className="h-4 w-4 mr-1" />
-                Attendance
-              </TabsTrigger>
-            )}
-            {selectedPosition === 'treasurer' && (
-              <>
-                <TabsTrigger value="ledger" className="text-xs">
-                  <BookOpen className="h-4 w-4 mr-1" />
-                  Ledger
-                </TabsTrigger>
-                <TabsTrigger value="budget-manager" className="text-xs">
-                  <DollarSign className="h-4 w-4 mr-1" />
-                  Budget
-                </TabsTrigger>
-                <TabsTrigger value="finances" className="text-xs">
-                  <FileText className="h-4 w-4 mr-1" />
-                  Finances
-                </TabsTrigger>
-              </>
-            )}
-            {selectedPosition === 'tour_manager' && (
-              <>
-                <TabsTrigger value="tour-overview" className="text-xs">
-                  <CheckCircle className="h-4 w-4 mr-1" />
-                  Overview
-                </TabsTrigger>
-                <TabsTrigger value="tour-requests" className="text-xs">
-                  <Mail className="h-4 w-4 mr-1" />
-                  Requests
-                </TabsTrigger>
-                <TabsTrigger value="tour-tracker" className="text-xs">
-                  <Calendar className="h-4 w-4 mr-1" />
-                  Tracker
-                </TabsTrigger>
-                <TabsTrigger value="tour-planner-new" className="text-xs">
-                  <Route className="h-4 w-4 mr-1" />
-                  Tour Planner
-                </TabsTrigger>
-                <TabsTrigger value="tour-contracts" className="text-xs">
-                  <FileText className="h-4 w-4 mr-1" />
-                  Contracts
-                </TabsTrigger>
-                <TabsTrigger value="tour-stipends" className="text-xs">
-                  <DollarSign className="h-4 w-4 mr-1" />
-                  Stipends
-                </TabsTrigger>
-              </>
-            )}
-            {selectedPosition === 'wardrobe_manager' && (
-              <TabsTrigger value="wardrobe" className="text-xs">
-                <Shirt className="h-4 w-4 mr-1" />
-                Wardrobe Hub
-              </TabsTrigger>
-            )}
-            {selectedPosition === 'librarian' && (
-              <TabsTrigger value="music-library" className="text-xs">
-                <BookOpen className="h-4 w-4 mr-1" />
-                Music Library
-              </TabsTrigger>
-            )}
-            {selectedPosition === 'historian' && (
-              <TabsTrigger value="historian-hub" className="text-xs">
-                <Camera className="h-4 w-4 mr-1" />
-                Historian Hub
-              </TabsTrigger>
-            )}
-            {selectedPosition === 'pr_coordinator' && (
-              <TabsTrigger value="pr-hub" className="text-xs">
-                <MessageSquare className="h-4 w-4 mr-1" />
-                PR Hub
-              </TabsTrigger>
-            )}
-            {(selectedPosition === 'chaplain' || selectedPosition === 'assistant_chaplain') && (
-              <TabsTrigger value="chaplain-hub" className="text-xs">
-                <Heart className="h-4 w-4 mr-1" />
-                Chaplain Hub
-              </TabsTrigger>
-            )}
-            {selectedPosition === 'student_conductor' && (
-              <>
-                <TabsTrigger value="conductor-overview" className="text-xs">
-                  <Music className="h-4 w-4 mr-1" />
-                  Overview
-                </TabsTrigger>
-                <TabsTrigger value="sections-srf" className="text-xs">
-                  <UserCheck className="h-4 w-4 mr-1" />
-                  Sections & SRF
-                </TabsTrigger>
-                <TabsTrigger value="auditions-reviews" className="text-xs">
-                  <Users className="h-4 w-4 mr-1" />
-                  Auditions & Reviews
-                </TabsTrigger>
-                <TabsTrigger value="communication-journal" className="text-xs">
-                  <MessageSquare className="h-4 w-4 mr-1" />
-                  Communication
-                </TabsTrigger>
-              </>
-            )}
-            <TabsTrigger value="audition-logs" className="text-sm">
-              <Music className="h-4 w-4 mr-1" />
-              Audition Logs
+            <TabsTrigger value="communications" className="text-xs lg:text-sm">
+              <MessageSquare className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
+              Comms
             </TabsTrigger>
-            <TabsTrigger value="communications" className="text-sm">
-              <Mail className="h-4 w-4 mr-1" />
-              Communications
+            <TabsTrigger value="finances" className="text-xs lg:text-sm">
+              <DollarSign className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
+              Budget
             </TabsTrigger>
-            <TabsTrigger value="handbook" className="text-sm">
-              <BookOpen className="h-4 w-4 mr-1" />
-              Handbook
+            <TabsTrigger value="attendance" className="text-xs lg:text-sm">
+              <Users className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
+              Attendance
             </TabsTrigger>
-            <TabsTrigger value="position" className="text-sm">
-              <PositionIcon className="h-4 w-4 mr-1" />
+            <TabsTrigger value="music-library" className="text-xs lg:text-sm">
+              <Music2 className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
+              Music
+            </TabsTrigger>
+            <TabsTrigger value="position-specific" className="text-xs lg:text-sm">
+              <Briefcase className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
               My Role
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="dashboard" className="space-y-6">
-            {/* Member Dashboard Layout - Same as regular dashboard */}
-            
-            {/* Community Hub - Combined spiritual reflections, notifications, and music */}
-            <div className="grid grid-cols-1 gap-6">
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            {/* Overview Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {selectedPosition === 'president' && (
+                <>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Upcoming Tasks</CardTitle>
+                      <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{overviewData.upcomingTasks}</div>
+                      <p className="text-xs text-muted-foreground">Tasks requiring attention</p>
+                      <Progress value={65} className="mt-2" />
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Board Members</CardTitle>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{overviewData.boardMembers}</div>
+                      <p className="text-xs text-muted-foreground">Active executive members</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Meetings Scheduled</CardTitle>
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{overviewData.meetingsScheduled}</div>
+                      <p className="text-xs text-muted-foreground">This week</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Pending Decisions</CardTitle>
+                      <Zap className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{overviewData.pendingDecisions}</div>
+                      <p className="text-xs text-muted-foreground">Requiring approval</p>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+
+              {selectedPosition === 'treasurer' && (
+                <>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Budget Remaining</CardTitle>
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">${overviewData.budgetRemaining?.toLocaleString()}</div>
+                      <p className="text-xs text-muted-foreground">Available funds</p>
+                      <Progress value={78} className="mt-2" />
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Dues to Collect</CardTitle>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{overviewData.duesToCollect}</div>
+                      <p className="text-xs text-muted-foreground">Outstanding payments</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Pending Expenses</CardTitle>
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{overviewData.pendingExpenses}</div>
+                      <p className="text-xs text-muted-foreground">Awaiting approval</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Recent Transactions</CardTitle>
+                      <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{overviewData.recentTransactions}</div>
+                      <p className="text-xs text-muted-foreground">This week</p>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+
+              {/* Add similar sections for other positions... */}
+              
+              {/* Default generic cards for other positions */}
+              {!['president', 'treasurer'].includes(selectedPosition) && (
+                <>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Active Tasks</CardTitle>
+                      <Target className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">8</div>
+                      <p className="text-xs text-muted-foreground">Tasks in progress</p>
+                      <Progress value={60} className="mt-2" />
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">4</div>
+                      <p className="text-xs text-muted-foreground">This month</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Notifications</CardTitle>
+                      <Bell className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">3</div>
+                      <p className="text-xs text-muted-foreground">Unread messages</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Team Progress</CardTitle>
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">92%</div>
+                      <p className="text-xs text-muted-foreground">Goals completed</p>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
+
+            {/* Quick Actions & Community Hub */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Quick Actions */}
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="h-5 w-5" />
+                    Quick Actions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <Button variant="outline" className="h-auto flex-col gap-2 p-4">
+                      <Plus className="h-5 w-5" />
+                      <span className="text-xs">Create Event</span>
+                    </Button>
+                    <Button variant="outline" className="h-auto flex-col gap-2 p-4">
+                      <Send className="h-5 w-5" />
+                      <span className="text-xs">Send Message</span>
+                    </Button>
+                    <Button variant="outline" className="h-auto flex-col gap-2 p-4">
+                      <PieChart className="h-5 w-5" />
+                      <span className="text-xs">View Reports</span>
+                    </Button>
+                    <Button variant="outline" className="h-auto flex-col gap-2 p-4">
+                      <Settings className="h-5 w-5" />
+                      <span className="text-xs">Settings</span>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Community Hub Widget */}
               <CommunityHubWidget />
-            </div>
-
-            {/* 6. Glee Store - Horizontal Scroll */}
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-white drop-shadow-md">Glee Store</h3>
-              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Card key={i} className="flex-shrink-0 w-64 snap-start">
-                    <div className="aspect-square bg-muted overflow-hidden">
-                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
-                        <span className="text-lg font-semibold">Product {i}</span>
-                      </div>
-                    </div>
-                    <CardContent className="p-4">
-                      <h4 className="font-semibold mb-1">Glee Club T-Shirt</h4>
-                      <p className="text-sm text-muted-foreground mb-2">$25.00</p>
-                      <Button size="sm" className="w-full">Add to Cart</Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
-            {/* 7. YouTube Videos - Horizontal Scroll */}
-            <div className="space-y-4">
-              <h3 className="text-2xl font-semibold text-white drop-shadow-md">YouTube</h3>
-              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent snap-x snap-mandatory scroll-smooth">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Card key={i} className="flex-shrink-0 w-80 snap-start">
-                    <div className="aspect-video bg-muted overflow-hidden">
-                      <div className="w-full h-full bg-gradient-to-br from-red-500/20 to-red-600/40 flex items-center justify-center">
-                        <span className="text-xl font-semibold">Video {i}</span>
-                      </div>
-                    </div>
-                    <CardContent className="p-4">
-                      <h4 className="text-lg font-semibold mb-1">Concert Performance</h4>
-                      <p className="text-base text-muted-foreground">2 days ago • 1.2K views</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
-            {/* 8. Tasks and Calendar */}
-            <div className="grid grid-cols-1 gap-6">
-              <TaskChecklist />
-            </div>
-
-            {/* 9. Full Calendar */}
-            <div className="grid grid-cols-1 gap-6">
-              <CalendarViews />
             </div>
           </TabsContent>
 
+          {/* Tasks Tab */}
+          <TabsContent value="tasks">
+            <TaskChecklist />
+          </TabsContent>
+
+          {/* Calendar Tab */}
           <TabsContent value="calendar">
             <CalendarViews />
           </TabsContent>
 
-          <TabsContent value="announcements">
-            <MeetingMinutes />
+          {/* Communications Tab */}
+          <TabsContent value="communications">
+            <CommunicationHub />
           </TabsContent>
 
-          {selectedPosition === 'secretary' && (
-            <TabsContent value="attendance">
-              <AttendanceDashboard />
-            </TabsContent>
-          )}
-
-          {selectedPosition === 'treasurer' && (
-            <>
-              <TabsContent value="ledger">
-                <div className="space-y-6">
-                  <StripeSalesSync />
+          {/* Finances Tab */}
+          <TabsContent value="finances">
+            {selectedPosition === 'treasurer' ? (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <BudgetManager />
+                  <DuesManager />
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <ReceiptKeeper />
                   <RunningLedger />
                 </div>
-              </TabsContent>
-              
-              <TabsContent value="budget-manager">
-                <div className="space-y-6">
-                  <BudgetManager />
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="finances">
-                <div className="space-y-8">
-                  <DuesManager />
-                  <GeneralBudgetManager />
-                  <StipendPayer />
-                  <ReceiptKeeper />
-                </div>
-              </TabsContent>
-            </>
-          )}
+              </div>
+            ) : (
+              <BudgetTracker />
+            )}
+          </TabsContent>
 
-          {selectedPosition === 'tour_manager' && (
-            <>
-              <TabsContent value="tour-overview">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <CheckCircle className="h-5 w-5" />
-                      Tour Management Overview
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <TourOverview />
-                  </CardContent>
-                </Card>
-              </TabsContent>
+          {/* Attendance Tab */}
+          <TabsContent value="attendance">
+            <AttendanceDashboard />
+          </TabsContent>
 
-              <TabsContent value="tour-requests">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Mail className="h-5 w-5" />
-                      Performance Email Requests
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <PerformanceRequestsList />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="tour-tracker">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5" />
-                      Request to Completion Tracker
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <RequestTracker />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="tour-planner-new">
-                <TourPlanner />
-              </TabsContent>
-
-              <TabsContent value="tour-contracts">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <FileText className="h-5 w-5" />
-                      Tour Contracts
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <TourContracts />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="tour-stipends">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5" />
-                      Tour Stipends
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <TourStipends />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </>
-          )}
-
-          {selectedPosition === 'wardrobe_manager' && (
-            <TabsContent value="wardrobe">
-              <WardrobeMistressHub />
-            </TabsContent>
-          )}
-
-          {selectedPosition === 'librarian' && (
-            <TabsContent value="music-library">
+          {/* Music Library Tab */}
+          <TabsContent value="music-library">
+            {selectedPosition === 'librarian' ? (
               <LibraryManagement />
-            </TabsContent>
-          )}
-
-          {selectedPosition === 'historian' && (
-            <TabsContent value="historian-hub">
-              <HistorianWorkpage />
-            </TabsContent>
-          )}
-
-          {selectedPosition === 'pr_coordinator' && (
-            <TabsContent value="pr-hub">
-              <PRCoordinatorHub />
-            </TabsContent>
-          )}
-
-          {(selectedPosition === 'chaplain' || selectedPosition === 'assistant_chaplain') && (
-            <TabsContent value="chaplain-hub">
-              <ChaplainWorkHub />
-            </TabsContent>
-          )}
-
-          {selectedPosition === 'student_conductor' && (
-            <>
-              <TabsContent value="conductor-overview" className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <UserCheck className="h-5 w-5" />
-                        Section Leadership
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold">3</div>
-                      <p className="text-base text-muted-foreground">Plans awaiting review</p>
-                      <Button size="sm" className="mt-3" onClick={() => setActiveTab("sections-srf")}>
-                        Review Plans
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <BookOpen className="h-5 w-5" />
-                        Sight Reading
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">68%</div>
-                      <p className="text-sm text-muted-foreground">Average completion rate</p>
-                      <Button size="sm" className="mt-3" onClick={() => setActiveTab("sections-srf")}>
-                        Manage SRF
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Users className="h-5 w-5" />
-                        Upcoming Auditions
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">3</div>
-                      <p className="text-sm text-muted-foreground">Scheduled for Feb 5</p>
-                      <Button size="sm" className="mt-3" onClick={() => setActiveTab("auditions-reviews")}>
-                        View Schedule
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="sections-srf">
-                <div className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <UserCheck className="h-5 w-5" />
-                        Section Leader Oversight
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {[
-                          { id: 1, sectionLeader: "Sarah Johnson", section: "Soprano 1", week: "Week 3", status: "Pending Review", uploadDate: "2024-01-26", focus: "Breath control, high notes" },
-                          { id: 2, sectionLeader: "Maria Garcia", section: "Alto 2", week: "Week 3", status: "Approved", uploadDate: "2024-01-25", focus: "Rhythm in measures 32-48" },
-                          { id: 3, sectionLeader: "Ashley Brown", section: "Soprano 2", week: "Week 3", status: "Needs Revision", uploadDate: "2024-01-24", focus: "Vowel placement" }
-                        ].map((plan) => (
-                          <Card key={plan.id} className="hover:shadow-md transition-shadow">
-                            <CardContent className="pt-4">
-                              <div className="flex items-start justify-between mb-3">
-                                <div>
-                                  <h4 className="font-semibold">{plan.sectionLeader} - {plan.section}</h4>
-                                  <p className="text-sm text-muted-foreground">{plan.week} • Uploaded {plan.uploadDate}</p>
-                                </div>
-                                <Badge variant="outline">{plan.status}</Badge>
-                              </div>
-                              <p className="text-sm mb-3">Focus: {plan.focus}</p>
-                              <div className="flex gap-2">
-                                <Button size="sm">
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  Review Plan
-                                </Button>
-                                <Button size="sm" variant="outline">
-                                  <CheckCircle className="h-4 w-4 mr-2" />
-                                  Approve
-                                </Button>
-                                <Button size="sm" variant="outline">
-                                  <MessageSquare className="h-4 w-4 mr-2" />
-                                  Add Comment
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <BookOpen className="h-5 w-5" />
-                        Sight Reading Manager (SRF Integration)
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div className="flex gap-3 mb-4">
-                          <Button>
-                            <Play className="h-4 w-4 mr-2" />
-                            Create Assignment
-                          </Button>
-                          <Button variant="outline">
-                            <ClipboardList className="h-4 w-4 mr-2" />
-                            Placement Test
-                          </Button>
-                          <Button variant="outline">
-                            <Settings className="h-4 w-4 mr-2" />
-                            Template Builder
-                          </Button>
-                        </div>
-                        {[
-                          { id: 1, title: "Bach Chorale #47", assigned: "15 students", completed: "12 students", dueDate: "2024-01-30", difficulty: "Intermediate" },
-                          { id: 2, title: "Sight-reading Test #3", assigned: "15 students", completed: "8 students", dueDate: "2024-02-02", difficulty: "Advanced" },
-                          { id: 3, title: "Major Scale Practice", assigned: "15 students", completed: "15 students", dueDate: "2024-01-28", difficulty: "Beginner" }
-                        ].map((assignment) => (
-                          <Card key={assignment.id} className="hover:shadow-md transition-shadow">
-                            <CardContent className="pt-4">
-                              <div className="flex items-start justify-between mb-3">
-                                <div>
-                                  <h4 className="font-semibold">{assignment.title}</h4>
-                                  <p className="text-sm text-muted-foreground">Due: {assignment.dueDate}</p>
-                                </div>
-                                <Badge variant="outline">{assignment.difficulty}</Badge>
-                              </div>
-                              <div className="grid grid-cols-2 gap-4 mb-3">
-                                <div>
-                                  <p className="text-sm text-muted-foreground">Assigned</p>
-                                  <p className="font-medium">{assignment.assigned}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm text-muted-foreground">Completed</p>
-                                  <p className="font-medium">{assignment.completed}</p>
-                                </div>
-                              </div>
-                              <div className="flex gap-2">
-                                <Button size="sm">
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  View Results
-                                </Button>
-                                <Button size="sm" variant="outline">
-                                  <Send className="h-4 w-4 mr-2" />
-                                  Send Reminder
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="auditions-reviews">
-                <div className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Users className="h-5 w-5" />
-                        Auditions & Solos Hub
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {[
-                          { id: 1, name: "Jennifer Wilson", timeSlot: "3:00 PM", date: "2024-02-05", type: "New Member", status: "Scheduled", notes: "Strong sight-reading background" },
-                          { id: 2, name: "Taylor Davis", timeSlot: "3:15 PM", date: "2024-02-05", type: "Solo Audition", status: "Callback", notes: "Excellent tone quality" },
-                          { id: 3, name: "Morgan Lee", timeSlot: "3:30 PM", date: "2024-02-05", type: "New Member", status: "Pending", notes: "Needs vocal technique work" }
-                        ].map((audition) => (
-                          <Card key={audition.id} className="hover:shadow-md transition-shadow">
-                            <CardContent className="pt-4">
-                              <div className="flex items-start justify-between mb-3">
-                                <div>
-                                  <h4 className="font-semibold">{audition.name}</h4>
-                                  <p className="text-sm text-muted-foreground">{audition.date} at {audition.timeSlot}</p>
-                                </div>
-                                <div className="flex gap-2">
-                                  <Badge variant="outline">{audition.type}</Badge>
-                                  <Badge variant="outline">{audition.status}</Badge>
-                                </div>
-                              </div>
-                              <p className="text-sm mb-3">Notes: {audition.notes}</p>
-                              <div className="flex gap-2">
-                                <Button size="sm">
-                                  <FileText className="h-4 w-4 mr-2" />
-                                  Score Sheet
-                                </Button>
-                                <Button size="sm" variant="outline">
-                                  <Clock className="h-4 w-4 mr-2" />
-                                  Reschedule
-                                </Button>
-                                <Button size="sm" variant="outline">
-                                  <MessageSquare className="h-4 w-4 mr-2" />
-                                  Add Notes
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <FileText className="h-5 w-5" />
-                        Submission Review Panel
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {[
-                          { id: 1, from: "Section Leaders", title: "Weekly Progress Reports", date: "2024-01-26", status: "New", type: "Report" },
-                          { id: 2, from: "Sarah Johnson", title: "Sectional Recording - S1", date: "2024-01-25", status: "Reviewed", type: "Audio" },
-                          { id: 3, from: "Music Committee", title: "Spring Concert Repertoire Suggestions", date: "2024-01-24", status: "Forwarded", type: "Document" }
-                        ].map((submission) => (
-                          <Card key={submission.id} className="hover:shadow-md transition-shadow">
-                            <CardContent className="pt-4">
-                              <div className="flex items-start justify-between mb-3">
-                                <div>
-                                  <h4 className="font-semibold">{submission.title}</h4>
-                                  <p className="text-sm text-muted-foreground">From: {submission.from} • {submission.date}</p>
-                                </div>
-                                <div className="flex gap-2">
-                                  <Badge variant="outline">{submission.type}</Badge>
-                                  <Badge variant="outline">{submission.status}</Badge>
-                                </div>
-                              </div>
-                              <div className="flex gap-2">
-                                <Button size="sm">
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  Review
-                                </Button>
-                                <Button size="sm" variant="outline">
-                                  <CheckCircle className="h-4 w-4 mr-2" />
-                                  Complete
-                                </Button>
-                                <Button size="sm" variant="outline">
-                                  <Send className="h-4 w-4 mr-2" />
-                                  Forward to Director
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="communication-journal">
-                <div className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Send className="h-5 w-5" />
-                        Communication Panel
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                          <h3 className="font-semibold">Quick Messages</h3>
-                          <Button className="w-full justify-start">
-                            <Users className="h-4 w-4 mr-2" />
-                            Message All Sections
-                          </Button>
-                          <Button className="w-full justify-start" variant="outline">
-                            <UserCheck className="h-4 w-4 mr-2" />
-                            Message Section Leaders
-                          </Button>
-                          <Button className="w-full justify-start" variant="outline">
-                            <BookOpen className="h-4 w-4 mr-2" />
-                            SRF Reminder
-                          </Button>
-                        </div>
-                        
-                        <div className="space-y-4">
-                          <h3 className="font-semibold">Message Templates</h3>
-                          <div className="space-y-2">
-                            <p className="text-sm text-muted-foreground">• SRF Assignment Reminder</p>
-                            <p className="text-sm text-muted-foreground">• Solo Audition Updates</p>
-                            <p className="text-sm text-muted-foreground">• Sectional Schedule Changes</p>
-                            <p className="text-sm text-muted-foreground">• Rehearsal Preparation</p>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <PenTool className="h-5 w-5" />
-                        Assistant Conductor Journal
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <h3 className="font-semibold mb-3">Private Activity Log</h3>
-                            <textarea 
-                              className="w-full h-32 p-3 border rounded-md resize-none" 
-                              placeholder="Record daily activities, observations, and notes..."
-                            />
-                            <Button size="sm" className="mt-2">Save Entry</Button>
-                          </div>
-                          
-                          <div>
-                            <h3 className="font-semibold mb-3">Notes to Director</h3>
-                            <textarea 
-                              className="w-full h-32 p-3 border rounded-md resize-none" 
-                              placeholder="Internal communication with Doc Johnson..."
-                            />
-                            <Button size="sm" className="mt-2">
-                              <Send className="h-4 w-4 mr-2" />
-                              Send to Director
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        <div className="border-t pt-4">
-                          <h3 className="font-semibold mb-3">Recent Entries</h3>
-                          <div className="space-y-2">
-                            <div className="p-3 bg-muted rounded-md">
-                              <p className="text-sm"><strong>Jan 26:</strong> Reviewed S1 sectional plan. Recommended focus on breath support.</p>
-                            </div>
-                            <div className="p-3 bg-muted rounded-md">
-                              <p className="text-sm"><strong>Jan 25:</strong> SRF completion rates improving. Consider advanced assignments for top performers.</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-            </>
-          )}
-
-          <TabsContent value="audition-logs">
-            <AuditionLogs />
+            ) : (
+              <MusicLibraryViewer />
+            )}
           </TabsContent>
 
-          <TabsContent value="communications">
-            <CommunicationsHub />
-          </TabsContent>
-
-          <TabsContent value="handbook">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5" />
-                  SCGC Handbook 2024
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <HandbookModule />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="position">
+          {/* Position-Specific Tab */}
+          <TabsContent value="position-specific">
             <PositionTab position={selectedPosition} />
           </TabsContent>
         </Tabs>
-          </div>
-        </UniversalLayout>
       </div>
-    </div>
+    </UniversalLayout>
   );
 };
