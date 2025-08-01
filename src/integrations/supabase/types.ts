@@ -2886,6 +2886,39 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_buckets_of_love: {
+        Row: {
+          created_at: string
+          id: string
+          is_anonymous: boolean
+          message: string
+          note_color: string
+          recipient_user_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          message: string
+          note_color?: string
+          recipient_user_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          message?: string
+          note_color?: string
+          recipient_user_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_calendar_auto_sync: {
         Row: {
           calendar_id: string
@@ -6709,6 +6742,51 @@ export type Database = {
           notification_count?: number | null
           processed_at?: string
           to_number?: string
+        }
+        Relationships: []
+      }
+      gw_sms_notifications: {
+        Row: {
+          category: string | null
+          created_at: string
+          direction: string
+          id: string
+          is_read: boolean
+          message: string
+          phone_number: string
+          priority: string
+          sender_name: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          direction?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          phone_number: string
+          priority?: string
+          sender_name?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          direction?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          phone_number?: string
+          priority?: string
+          sender_name?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }

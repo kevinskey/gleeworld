@@ -29,7 +29,9 @@ import {
   DollarSign,
   Shirt,
   Package2,
-  MapPin
+  MapPin,
+  Plus,
+  StickyNote
 } from "lucide-react";
 import { useSharedSpiritualReflections } from "@/hooks/useSharedSpiritualReflections";
 import { usePrayerRequests } from "@/hooks/usePrayerRequests";
@@ -69,6 +71,22 @@ interface PrayerRequestForm {
   is_anonymous: boolean;
 }
 
+interface LoveMessage {
+  id: string;
+  user_id: string;
+  message: string;
+  note_color: string;
+  is_anonymous: boolean;
+  created_at: string;
+  sender_name?: string;
+}
+
+interface LoveMessageForm {
+  message: string;
+  note_color: string;
+  is_anonymous: boolean;
+}
+
 export const CommunityHubWidget = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -81,6 +99,11 @@ export const CommunityHubWidget = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationsLoading, setNotificationsLoading] = useState(true);
   
+  // State for love messages
+  const [loveMessages, setLoveMessages] = useState<LoveMessage[]>([]);
+  const [loveMessagesLoading, setLoveMessagesLoading] = useState(true);
+  const [loveDialogOpen, setLoveDialogOpen] = useState(false);
+  
   // State for music library
   const [sheetMusic, setSheetMusic] = useState<SheetMusic[]>([]);
   const [musicLoading, setMusicLoading] = useState(true);
@@ -88,7 +111,7 @@ export const CommunityHubWidget = () => {
   
   // State for collapsible
   const [isExpanded, setIsExpanded] = useState(!isMobile);
-  const [activeTab, setActiveTab] = useState("reflections");
+  const [activeTab, setActiveTab] = useState("buckets");
   const [prayerDialogOpen, setPrayerDialogOpen] = useState(false);
 
   // Prayer request form
@@ -99,10 +122,20 @@ export const CommunityHubWidget = () => {
     },
   });
 
+  // Love message form
+  const loveForm = useForm<LoveMessageForm>({
+    defaultValues: {
+      message: "",
+      note_color: "yellow",
+      is_anonymous: false,
+    },
+  });
+
   useEffect(() => {
     if (user) {
       fetchNotifications();
       fetchSheetMusic();
+      fetchLoveMessages();
     }
   }, [user]);
 
@@ -156,6 +189,47 @@ export const CommunityHubWidget = () => {
       console.error('Error fetching sheet music:', error);
     } finally {
       setMusicLoading(false);
+    }
+  };
+
+  const fetchLoveMessages = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('gw_buckets_of_love')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(12);
+
+      if (error) throw error;
+
+      // Get profiles for non-anonymous messages
+      const userIds = [...new Set((data || []).filter(m => !m.is_anonymous).map(m => m.user_id))];
+      const { data: profiles } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, first_name, last_name')
+        .in('user_id', userIds);
+
+      const messages: LoveMessage[] = (data || []).map(m => {
+        const profile = profiles?.find(p => p.user_id === m.user_id);
+        return {
+          id: m.id,
+          user_id: m.user_id,
+          message: m.message,
+          note_color: m.note_color,
+          is_anonymous: m.is_anonymous,
+          created_at: m.created_at,
+          sender_name: m.is_anonymous ? 'Anonymous' : (profile?.full_name || profile?.first_name || 'Someone')
+        };
+      });
+
+      setLoveMessages(messages);
+    } catch (error) {
+      console.error('Error fetching love messages:', error);
+      setLoveMessages([]);
+    } finally {
+      setLoveMessagesLoading(false);
     }
   };
 
@@ -233,6 +307,49 @@ export const CommunityHubWidget = () => {
     }
   };
 
+  const onSubmitLoveMessage = async (data: LoveMessageForm) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('gw_buckets_of_love')
+        .insert({
+          user_id: user.id,
+          message: data.message,
+          note_color: data.note_color,
+          is_anonymous: data.is_anonymous
+        });
+
+      if (error) throw error;
+
+      // Refresh messages
+      await fetchLoveMessages();
+      loveForm.reset();
+      setLoveDialogOpen(false);
+    } catch (error) {
+      console.error('Error creating love message:', error);
+    }
+  };
+
+  const noteColors = [
+    { value: 'yellow', label: 'Yellow', bg: 'bg-yellow-200', border: 'border-yellow-300' },
+    { value: 'pink', label: 'Pink', bg: 'bg-pink-200', border: 'border-pink-300' },
+    { value: 'blue', label: 'Blue', bg: 'bg-blue-200', border: 'border-blue-300' },
+    { value: 'green', label: 'Green', bg: 'bg-green-200', border: 'border-green-300' },
+    { value: 'purple', label: 'Purple', bg: 'bg-purple-200', border: 'border-purple-300' },
+  ];
+
+  const getNoteColorClasses = (color: string) => {
+    switch (color) {
+      case 'yellow': return 'bg-yellow-200 border-yellow-300 hover:bg-yellow-300';
+      case 'pink': return 'bg-pink-200 border-pink-300 hover:bg-pink-300';
+      case 'blue': return 'bg-blue-200 border-blue-300 hover:bg-blue-300';
+      case 'green': return 'bg-green-200 border-green-300 hover:bg-green-300';
+      case 'purple': return 'bg-purple-200 border-purple-300 hover:bg-purple-300';
+      default: return 'bg-yellow-200 border-yellow-300 hover:bg-yellow-300';
+    }
+  };
+
   return (
     <Card className="col-span-1 md:col-span-2 lg:col-span-3">
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
@@ -267,7 +384,11 @@ export const CommunityHubWidget = () => {
         <CollapsibleContent className="transition-all duration-300 ease-out data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
           <CardContent className="pt-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
+                <TabsTrigger value="buckets" className="text-xs">
+                  <StickyNote className="h-3 w-3 mr-1" />
+                  Buckets of Love
+                </TabsTrigger>
                 <TabsTrigger value="reflections" className="text-xs">
                   <Book className="h-3 w-3 mr-1" />
                   Wellness
@@ -285,6 +406,137 @@ export const CommunityHubWidget = () => {
                   Music
                 </TabsTrigger>
               </TabsList>
+
+              {/* Buckets of Love Tab */}
+              <TabsContent value="buckets" className="space-y-3">
+                {loveMessagesLoading ? (
+                  <div className="flex justify-center p-4">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                  </div>
+                ) : (
+                  <ScrollArea className="h-96">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pr-4">
+                      {/* Add New Message Button */}
+                      <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
+                        <DialogTrigger asChild>
+                          <div 
+                            className="bg-yellow-100 border-2 border-dashed border-yellow-400 rounded-lg p-3 min-h-[120px] flex flex-col items-center justify-center cursor-pointer hover:bg-yellow-200 transition-colors shadow-md transform rotate-1 hover:rotate-0 transition-transform"
+                          >
+                            <Plus className="h-6 w-6 text-yellow-600 mb-2" />
+                            <span className="text-xs text-yellow-700 text-center font-medium">
+                              Add Love Note
+                            </span>
+                          </div>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[525px]">
+                          <DialogHeader>
+                            <DialogTitle>Share a Message of Love & Encouragement</DialogTitle>
+                          </DialogHeader>
+                          <Form {...loveForm}>
+                            <form onSubmit={loveForm.handleSubmit(onSubmitLoveMessage)} className="space-y-4">
+                              <FormField
+                                control={loveForm.control}
+                                name="message"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Your Message</FormLabel>
+                                    <FormControl>
+                                      <Textarea
+                                        placeholder="Write an encouraging message for your fellow Glee Club members..."
+                                        className="min-h-[100px]"
+                                        {...field}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={loveForm.control}
+                                name="note_color"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Note Color</FormLabel>
+                                    <FormControl>
+                                      <div className="flex gap-2">
+                                        {noteColors.map((color) => (
+                                          <button
+                                            key={color.value}
+                                            type="button"
+                                            onClick={() => field.onChange(color.value)}
+                                            className={`w-8 h-8 rounded-full border-2 ${color.bg} ${color.border} ${
+                                              field.value === color.value ? 'ring-2 ring-primary' : ''
+                                            }`}
+                                            title={color.label}
+                                          />
+                                        ))}
+                                      </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={loveForm.control}
+                                name="is_anonymous"
+                                render={({ field }) => (
+                                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                    <FormControl>
+                                      <Checkbox
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                      />
+                                    </FormControl>
+                                    <div className="space-y-1 leading-none">
+                                      <FormLabel>
+                                        Post anonymously
+                                      </FormLabel>
+                                    </div>
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <div className="flex justify-end gap-2">
+                                <Button type="button" variant="outline" onClick={() => setLoveDialogOpen(false)}>
+                                  Cancel
+                                </Button>
+                                <Button type="submit">Post Love Note</Button>
+                              </div>
+                            </form>
+                          </Form>
+                        </DialogContent>
+                      </Dialog>
+
+                      {/* Existing Love Messages */}
+                      {loveMessages.map((message, index) => (
+                        <div 
+                          key={message.id}
+                          className={`${getNoteColorClasses(message.note_color)} border-2 rounded-lg p-3 min-h-[120px] shadow-md transition-all cursor-pointer transform ${
+                            index % 3 === 0 ? 'rotate-1' : index % 3 === 1 ? '-rotate-1' : 'rotate-2'
+                          } hover:rotate-0 hover:scale-105 animate-fade-in`}
+                          style={{ animationDelay: `${index * 0.1}s` }}
+                        >
+                          <div className="h-full flex flex-col justify-between">
+                            <p className="text-xs leading-relaxed text-gray-800 mb-2 line-clamp-4">
+                              {message.message}
+                            </p>
+                            <div className="flex items-end justify-between">
+                              <span className="text-xs text-gray-600 font-medium">
+                                {message.sender_name}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {format(new Date(message.created_at), 'MMM d')}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                )}
+              </TabsContent>
 
               {/* Spiritual Reflections Tab */}
               <TabsContent value="reflections" className="space-y-3">
