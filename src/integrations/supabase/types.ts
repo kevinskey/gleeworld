@@ -2889,6 +2889,7 @@ export type Database = {
       gw_buckets_of_love: {
         Row: {
           created_at: string
+          decorations: string | null
           id: string
           is_anonymous: boolean
           likes: number | null
@@ -2900,6 +2901,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          decorations?: string | null
           id?: string
           is_anonymous?: boolean
           likes?: number | null
@@ -2911,6 +2913,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          decorations?: string | null
           id?: string
           is_anonymous?: boolean
           likes?: number | null
