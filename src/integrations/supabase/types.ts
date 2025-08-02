@@ -10669,6 +10669,10 @@ export type Database = {
         Args: { password_text: string }
         Returns: Json
       }
+      verify_admin_access: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "user" | "super-admin"
