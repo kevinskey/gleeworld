@@ -306,11 +306,7 @@ export const GleeWorldLanding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-yellow-500 p-8">
-      <h1 className="text-black text-4xl font-bold mb-4">DEBUG: GleeWorldLanding IS RENDERING</h1>
-      <p className="text-black text-xl">User: {user ? 'LOGGED IN' : 'NOT LOGGED IN'}</p>
-      <p className="text-black text-xl">heroSlides.length: {heroSlides.length}</p>
-      <div className="min-h-screen bg-gradient-to-br from-spelman-blue-light/10 via-background to-spelman-blue-dark/10 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-spelman-blue-light/10 via-background to-spelman-blue-dark/10 relative overflow-hidden">
       {/* Liquid glass background elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5"></div>
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl"></div>
@@ -367,13 +363,10 @@ export const GleeWorldLanding = () => {
       <FAQSlider />
 
       {/* Hero Section */}
-      <section className="relative z-30 pt-1 pb-14 sm:pt-2 sm:pb-16 md:pt-4 md:pb-18 px-2 sm:px-4 md:px-6 lg:px-8 border-4 border-blue-500">
-        <div className="w-full max-w-screen-2xl mx-auto border-4 border-green-500">
+      <section className="relative z-30 pt-1 pb-14 sm:pt-2 sm:pb-16 md:pt-4 md:pb-18 px-2 sm:px-4 md:px-6 lg:px-8">
+        <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="overflow-hidden bg-card border-2 border-border shadow-xl">
-            <div className="min-h-[500px] sm:min-h-[600px] md:min-h-[700px] lg:min-h-[800px] h-auto overflow-auto relative border-8 border-red-500" style={{ minHeight: '800px', backgroundColor: 'rgba(255,0,0,0.1)' }}>
-              <div className="w-full h-full bg-yellow-500 p-4">
-                <h2 className="text-black text-2xl">HERO SECTION DEBUG: heroSlides.length = {heroSlides.length}</h2>
-              </div>
+            <div className="min-h-[500px] sm:min-h-[600px] md:min-h-[700px] lg:min-h-[800px] h-auto overflow-auto relative">
               {heroSlides.length > 0 ? (
                 <>
                   {/* Desktop Image */}
@@ -816,7 +809,6 @@ export const GleeWorldLanding = () => {
         </div>
       </section>
       </PublicLayout>
-      </div>
     </div>
   );
 };
