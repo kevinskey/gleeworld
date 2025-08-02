@@ -304,15 +304,8 @@ const UserDashboard = React.memo(() => {
         />
 
         {/* Calendar - Half viewport height */}
-        <div className="w-full h-[50vh] min-h-[400px]">
-          <Card className="h-full">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Calendar</CardTitle>
-            </CardHeader>
-            <CardContent className="h-[calc(100%-60px)] p-2">
-              <CalendarViews />
-            </CardContent>
-          </Card>
+        <div className="w-full h-[50vh] min-h-[400px] mb-4">
+          <CalendarViews />
         </div>
 
         {/* Member Dashboard Elements Only */}
