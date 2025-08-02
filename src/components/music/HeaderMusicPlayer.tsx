@@ -129,14 +129,14 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
           {!selectedAlbum ? (
             // Show album selection first
             <>
-              <div className="px-2 py-1.5 text-xs font-semibold text-gray-600 bg-gray-50/50 border-b">
+              <div className="px-2 py-1.5 text-[10px] font-semibold text-gray-600 bg-gray-50/50 border-b">
                 Choose Album
               </div>
                {albums.map((album) => (
                 <DropdownMenuItem
                   key={album.id}
                   onClick={() => handleAlbumSelect(album)}
-                  className="text-sm flex items-center gap-2 p-2"
+                  className="text-[10px] flex items-center gap-2 p-2"
                 >
                   {/* Album Art */}
                   <div className="w-6 h-6 rounded bg-muted flex items-center justify-center flex-shrink-0">
@@ -153,7 +153,7 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
                   {/* Album Title */}
                   <div className="flex flex-col flex-1">
                     <span className="font-medium">{album.title}</span>
-                    <span className="text-xs text-muted-foreground">
+                     <span className="text-[8px] text-muted-foreground">
                       {album.tracks?.length || 0} tracks
                     </span>
                   </div>
@@ -165,11 +165,11 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
                   <div className="border-t my-1"></div>
                   <DropdownMenuItem
                     onClick={() => setSelectedAlbum({ id: 'all', title: 'All Tracks', tracks: tracks })}
-                    className="text-sm flex items-center justify-between"
+                    className="text-[10px] flex items-center justify-between"
                   >
                     <div className="flex flex-col">
                       <span className="font-medium">All Tracks</span>
-                       <span className="text-xs text-muted-foreground">
+                       <span className="text-[8px] text-muted-foreground">
                         {tracks.length} tracks
                       </span>
                     </div>
@@ -181,7 +181,7 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
           ) : (
             // Show track selection from selected album
             <>
-              <div className="px-2 py-1.5 text-xs font-semibold text-gray-600 bg-gray-50/50 border-b flex items-center justify-between">
+              <div className="px-2 py-1.5 text-[10px] font-semibold text-gray-600 bg-gray-50/50 border-b flex items-center justify-between">
                 <span>{selectedAlbum.title}</span>
                 <Button
                   variant="ghost"
@@ -196,11 +196,11 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
                 <DropdownMenuItem
                   key={track.id}
                   onClick={() => handleTrackSelect(track)}
-                  className="text-sm"
+                  className="text-[10px]"
                 >
                   <div className="flex flex-col">
                     <span className="font-medium">{track.title}</span>
-                    <span className="text-xs text-muted-foreground">{track.artist}</span>
+                    <span className="text-[8px] text-muted-foreground">{track.artist}</span>
                   </div>
                 </DropdownMenuItem>
               ))}
