@@ -31,12 +31,26 @@ interface ExecutiveBoardMember {
   bio: string;
 }
 
+interface MeetingMinute {
+  id: string;
+  title: string;
+  meeting_date: string;
+  meeting_type: string;
+  status: string;
+  attendees: string[];
+  agenda_items: string[];
+  action_items: string[];
+  discussion_points: string;
+}
+
 const SecretaryServices = () => {
   const { user } = useAuth();
   const { profile, loading } = useUserRole();
   const navigate = useNavigate();
   const [secretary, setSecretary] = useState<ExecutiveBoardMember | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [meetingMinutes, setMeetingMinutes] = useState<MeetingMinute[]>([]);
+  const [minutesLoading, setMinutesLoading] = useState(true);
   const { data: artisticDirectorData } = useArtisticDirectorAvatar();
 
   useEffect(() => {
@@ -90,7 +104,25 @@ const SecretaryServices = () => {
       }
     };
 
+    const fetchMeetingMinutes = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('gw_meeting_minutes')
+          .select('*')
+          .order('meeting_date', { ascending: false })
+          .limit(10);
+
+        if (error) throw error;
+        setMeetingMinutes(data || []);
+      } catch (error) {
+        console.error('Error fetching meeting minutes:', error);
+      } finally {
+        setMinutesLoading(false);
+      }
+    };
+
     fetchSecretary();
+    fetchMeetingMinutes();
   }, []);
 
   if (loading) {
@@ -139,6 +171,49 @@ const SecretaryServices = () => {
           </Card>
         )}
 
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Meeting Minutes</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{meetingMinutes.length}</div>
+              <p className="text-xs text-muted-foreground">This semester</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Approved Minutes</CardTitle>
+              <Archive className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{meetingMinutes.filter(m => m.status === 'approved').length}</div>
+              <p className="text-xs text-muted-foreground">Ready for access</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Records Maintained</CardTitle>
+              <Archive className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">98%</div>
+              <p className="text-xs text-muted-foreground">Completion rate</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Response Time</CardTitle>
+              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">2.3h</div>
+              <p className="text-xs text-muted-foreground">Average response</p>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Main Services */}
         <Tabs defaultValue="minutes" className="space-y-6">
@@ -180,8 +255,50 @@ const SecretaryServices = () => {
                   </Button>
                 </div>
 
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">No recent meeting minutes to display</p>
+                <div className="space-y-3">
+                  <h4 className="font-semibold">Recent Meetings</h4>
+                  {minutesLoading ? (
+                    <div className="flex justify-center p-4">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    </div>
+                  ) : meetingMinutes.length > 0 ? (
+                    <div className="space-y-2">
+                      {meetingMinutes.slice(0, 5).map((minute) => (
+                        <div key={minute.id} className="p-3 border rounded-lg flex justify-between items-center">
+                          <div className="flex-1">
+                            <p className="font-medium">{minute.title}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(minute.meeting_date).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </p>
+                            <div className="flex gap-2 mt-1">
+                              <span className={`text-xs px-2 py-1 rounded-full ${
+                                minute.status === 'approved' ? 'bg-green-100 text-green-800' : 
+                                minute.status === 'draft' ? 'bg-yellow-100 text-yellow-800' : 
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {minute.status}
+                              </span>
+                              <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                                {minute.meeting_type.replace('_', ' ')}
+                              </span>
+                            </div>
+                          </div>
+                          <Button size="sm" variant="outline" disabled={minute.status !== 'approved'}>
+                            <Download className="h-4 w-4 mr-2" />
+                            {minute.status === 'approved' ? 'Download' : 'Pending'}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">No meeting minutes available</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
