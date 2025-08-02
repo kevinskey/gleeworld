@@ -127,7 +127,7 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
   // Mobile view: Show only play button or expanded mini player
   if (isMobile) {
     if (!isExpanded) {
-      // Show only play button on mobile
+      // Show only play button on mobile - styled as vintage Victrola
       return (
         <Button
           variant="ghost"
@@ -138,17 +138,24 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
             }
             onToggleExpanded?.(true);
           }}
-          className={`h-8 w-8 p-0 rounded-full bg-white/40 backdrop-blur-md border border-spelman-blue-light/30 hover:bg-white/50 shadow-md ${className}`}
+          className={`h-10 w-10 p-0 rounded-full bg-gradient-to-br from-amber-800 via-amber-700 to-amber-900 hover:from-amber-700 hover:via-amber-600 hover:to-amber-800 shadow-lg border-2 border-amber-600 mr-2 ${className}`}
+          style={{
+            boxShadow: 'inset 0 2px 4px rgba(245, 158, 11, 0.3), 0 4px 8px rgba(0, 0, 0, 0.3)'
+          }}
         >
-          <Play className="w-4 h-4 text-gray-800" />
+          <Play className="w-5 h-5 text-amber-100 drop-shadow-sm" />
         </Button>
       );
     }
 
-    // Expanded mobile mini player - replaces entire header
+    // Expanded mobile mini player - vintage Victrola style replacing header
     return (
       <div 
-        className="fixed left-0 right-0 top-0 bg-gradient-to-r from-white/95 via-white/90 to-white/95 backdrop-blur-lg border-b border-spelman-blue-light/30 shadow-xl z-[101] min-h-[60px] flex items-center px-4 gap-3"
+        className="fixed left-0 right-0 top-0 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 backdrop-blur-lg border-b-4 border-amber-600 shadow-2xl z-[101] min-h-[60px] flex items-center px-4 gap-3"
+        style={{
+          backgroundImage: 'radial-gradient(circle at 25% 25%, rgba(245, 158, 11, 0.2) 0%, transparent 50%), linear-gradient(90deg, rgba(180, 83, 9, 0.1) 0%, rgba(245, 158, 11, 0.1) 50%, rgba(180, 83, 9, 0.1) 100%)',
+          boxShadow: 'inset 0 2px 4px rgba(245, 158, 11, 0.2), 0 4px 12px rgba(0, 0, 0, 0.4)'
+        }}
         onClick={(e) => e.stopPropagation()} // Prevent auto-hide when clicking player itself
       >
         {currentTrack && (
@@ -159,45 +166,48 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
           />
         )}
         
-        {/* Logo - small version */}
+        {/* Vintage Logo with ornate border */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          <img 
-            src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
-            alt="Spelman College Glee Club" 
-            className="w-8 h-8 object-contain drop-shadow-md"
-          />
+          <div className="p-1 rounded-full bg-gradient-to-br from-amber-600 to-amber-800 border-2 border-amber-500">
+            <img 
+              src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
+              alt="Spelman College Glee Club" 
+              className="w-8 h-8 object-contain drop-shadow-md rounded-full"
+              style={{ filter: 'sepia(20%) brightness(1.1)' }}
+            />
+          </div>
         </div>
         
-        {/* Track Info */}
+        {/* Track Info with vintage typography */}
         <div className="flex-1 min-w-0 mx-2">
-          <div className="text-sm font-semibold text-gray-800 truncate">
+          <div className="text-sm font-bold text-amber-100 truncate drop-shadow-sm" style={{ fontFamily: 'serif' }}>
             {currentTrack?.title || 'Select Track'}
           </div>
-          <div className="text-xs text-gray-600 truncate">
+          <div className="text-xs text-amber-200 truncate" style={{ fontFamily: 'serif' }}>
             {currentTrack?.artist || 'No track selected'}
           </div>
           
-          {/* Progress Bar */}
+          {/* Vintage Progress Bar */}
           {currentTrack && duration > 0 && (
-            <div className="w-full h-1 bg-gray-200 rounded-full mt-1">
+            <div className="w-full h-2 bg-amber-950 rounded-full mt-1 border border-amber-700">
               <div 
-                className="h-full bg-spelman-blue-light rounded-full transition-all duration-300"
+                className="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all duration-300 shadow-inner"
                 style={{ width: `${(currentTime / duration) * 100}%` }}
               />
             </div>
           )}
         </div>
 
-        {/* Controls */}
+        {/* Vintage Controls */}
         <div className="flex items-center gap-1 flex-shrink-0">
           <Button
             variant="ghost"
             size="sm"
             onClick={handlePrevious}
             disabled={!currentTrack}
-            className="h-7 w-7 p-0 rounded-full"
+            className="h-8 w-8 p-0 rounded-full bg-amber-800 hover:bg-amber-700 border border-amber-600 shadow-md"
           >
-            <SkipBack className="w-3 h-3" />
+            <SkipBack className="w-3 h-3 text-amber-100" />
           </Button>
 
           <Button
@@ -205,12 +215,15 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
             size="sm"
             onClick={handlePlayPause}
             disabled={!currentTrack}
-            className="h-9 w-9 p-0 rounded-full bg-spelman-blue-light/20"
+            className="h-10 w-10 p-0 rounded-full bg-gradient-to-br from-amber-600 to-amber-800 hover:from-amber-500 hover:to-amber-700 border-2 border-amber-500 shadow-lg"
+            style={{
+              boxShadow: 'inset 0 2px 4px rgba(245, 158, 11, 0.3), 0 4px 8px rgba(0, 0, 0, 0.3)'
+            }}
           >
             {isPlaying ? (
-              <Pause className="w-4 h-4" />
+              <Pause className="w-4 h-4 text-amber-100 drop-shadow-sm" />
             ) : (
-              <Play className="w-4 h-4" />
+              <Play className="w-4 h-4 text-amber-100 drop-shadow-sm" />
             )}
           </Button>
 
@@ -219,52 +232,57 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
             size="sm"
             onClick={handleNext}
             disabled={!currentTrack}
-            className="h-7 w-7 p-0 rounded-full"
+            className="h-8 w-8 p-0 rounded-full bg-amber-800 hover:bg-amber-700 border border-amber-600 shadow-md"
           >
-            <SkipForward className="w-3 h-3" />
+            <SkipForward className="w-3 h-3 text-amber-100" />
           </Button>
         </div>
 
-        {/* Track Selection */}
+        {/* Vintage Track Selection */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-full">
-              <Music className="w-3 h-3" />
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full bg-amber-800 hover:bg-amber-700 border border-amber-600 shadow-md">
+              <Music className="w-3 h-3 text-amber-100" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 max-h-60 overflow-y-auto">
+          <DropdownMenuContent align="end" className="w-56 max-h-60 overflow-y-auto bg-amber-50 border-2 border-amber-600">
             {tracks.map((track) => (
               <DropdownMenuItem
                 key={track.id}
                 onClick={() => handleTrackSelect(track)}
-                className="flex flex-col items-start"
+                className="flex flex-col items-start hover:bg-amber-100"
               >
-                <span className="font-medium text-xs">{track.title}</span>
-                <span className="text-xs text-muted-foreground">{track.artist}</span>
+                <span className="font-medium text-xs text-amber-900" style={{ fontFamily: 'serif' }}>{track.title}</span>
+                <span className="text-xs text-amber-700" style={{ fontFamily: 'serif' }}>{track.artist}</span>
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Close/Minimize Button */}
+        {/* Vintage Close/Minimize Button */}
         <Button
           variant="ghost"
           size="sm"
           onClick={() => onToggleExpanded?.(false)}
-          className="h-7 w-7 p-0 rounded-full"
+          className="h-8 w-8 p-0 rounded-full bg-amber-800 hover:bg-amber-700 border border-amber-600 shadow-md"
         >
-          <ChevronDown className="w-3 h-3" />
+          <ChevronDown className="w-3 h-3 text-amber-100" />
         </Button>
       </div>
     );
   }
 
-  // Desktop view: Original compact player
+  // Desktop view: Vintage Victrola compact player moved to the right
   return (
-    <div className={`relative flex items-center gap-1 bg-white/40 backdrop-blur-md border border-spelman-blue-light/30 hover:bg-white/50 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md rounded-full px-3 py-0.5 w-full max-w-[200px] sm:max-w-[280px] md:max-w-[320px] overflow-hidden group ${className}`}>
-      {/* Animated Background - Only on Hover */}
-      <div className="absolute inset-0 bg-gradient-to-r from-spelman-blue-light/10 via-white/5 to-spelman-blue-light/10 opacity-0 group-hover:opacity-100 group-hover:animate-pulse transition-opacity duration-300"></div>
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-[slide-in-right_3s_ease-in-out_infinite] transition-opacity duration-300"></div>
+    <div className={`relative flex items-center gap-1 bg-gradient-to-br from-amber-800 via-amber-700 to-amber-900 hover:from-amber-700 hover:via-amber-600 hover:to-amber-800 backdrop-blur-md border-2 border-amber-600 hover:border-amber-500 transition-all duration-300 hover:scale-105 shadow-lg rounded-lg px-3 py-1 w-full max-w-[200px] sm:max-w-[280px] md:max-w-[320px] overflow-hidden group ml-4 ${className}`}
+      style={{
+        backgroundImage: 'radial-gradient(circle at 25% 25%, rgba(245, 158, 11, 0.2) 0%, transparent 50%)',
+        boxShadow: 'inset 0 2px 4px rgba(245, 158, 11, 0.2), 0 4px 8px rgba(0, 0, 0, 0.3)'
+      }}
+    >
+      {/* Vintage Animated Background - Only on Hover */}
+      <div className="absolute inset-0 bg-gradient-to-r from-amber-600/10 via-amber-500/5 to-amber-600/10 opacity-0 group-hover:opacity-100 group-hover:animate-pulse transition-opacity duration-300"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/10 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-[slide-in-right_3s_ease-in-out_infinite] transition-opacity duration-300"></div>
       
       {/* Content overlay */}
       <div className="relative z-10 flex items-center gap-1 w-full">
@@ -276,24 +294,24 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
         />
       )}
       
-      {/* Compact Track Info - Hover to open dropdown */}
+      {/* Vintage Compact Track Info - Hover to open dropdown */}
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
         <DropdownMenuTrigger asChild>
           <div 
-            className="flex-1 min-w-0 max-w-[140px] sm:max-w-[180px] md:max-w-[220px] cursor-pointer hover:bg-white/20 rounded px-1 py-0.5 transition-colors"
+            className="flex-1 min-w-0 max-w-[140px] sm:max-w-[180px] md:max-w-[220px] cursor-pointer hover:bg-amber-600/20 rounded px-1 py-0.5 transition-colors"
             onMouseEnter={() => setDropdownOpen(true)}
             onMouseLeave={() => setDropdownOpen(false)}
           >
             <div className="overflow-hidden">
-              <div className="text-sm font-bold text-gray-800 uppercase tracking-wide truncate font-['Bebas_Neue']">
-                MUSIC PLAYER
+              <div className="text-sm font-bold text-amber-100 uppercase tracking-wide truncate drop-shadow-sm" style={{ fontFamily: 'serif' }}>
+                ♪ MUSIC PLAYER ♪
               </div>
             </div>
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="start" 
-          className="w-56 max-h-80 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl"
+          className="w-56 max-h-80 overflow-y-auto bg-amber-50/95 backdrop-blur-md border-2 border-amber-600 shadow-xl"
           onMouseEnter={() => setDropdownOpen(true)}
           onMouseLeave={() => {
             setDropdownOpen(false);
@@ -301,8 +319,8 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
           }}
         >
           {/* Show albums with custom hover flyouts */}
-          <div className="px-2 py-1.5 text-[10px] font-semibold text-gray-600 bg-gray-50/50 border-b">
-            Choose Album
+          <div className="px-2 py-1.5 text-[10px] font-semibold text-amber-900 bg-amber-100/50 border-b" style={{ fontFamily: 'serif' }}>
+            🎼 Choose Album 🎼
           </div>
           {albums.map((album) => (
             <div key={album.id} className="relative">
@@ -324,10 +342,8 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
                 </div>
                 {/* Album Title */}
                 <div className="flex flex-col flex-1">
-                  <span className="font-medium">{album.title}</span>
-                  <span className="text-[8px] text-muted-foreground">
-                    {album.tracks?.length || 0} tracks
-                  </span>
+                  <span className="font-medium text-amber-900" style={{ fontFamily: 'serif' }}>{album.title}</span>
+                  <span className="text-[8px] text-amber-700">{album.tracks?.length || 0} tracks</span>
                 </div>
                 <ChevronDown className="w-3 h-3 rotate-[-90deg]" />
               </div>
@@ -410,16 +426,16 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Compact Controls */}
+      {/* Vintage Compact Controls */}
       <div className="flex items-center gap-0.5">
         <Button
           variant="ghost"
           size="sm"
           onClick={handlePrevious}
           disabled={!currentTrack}
-          className="h-5 w-5 p-0 hover:bg-white/30 rounded-full"
+          className="h-6 w-6 p-0 hover:bg-amber-600/30 rounded-full border border-amber-600"
         >
-          <SkipBack className="w-2.5 h-2.5" />
+          <SkipBack className="w-2.5 h-2.5 text-amber-100" />
         </Button>
 
         <Button
@@ -427,12 +443,12 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
           size="sm"
           onClick={handlePlayPause}
           disabled={!currentTrack}
-          className="h-6 w-6 p-0 hover:bg-white/30 rounded-full"
+          className="h-7 w-7 p-0 hover:bg-amber-600/30 rounded-full border-2 border-amber-500 bg-amber-700"
         >
           {isPlaying ? (
-            <Pause className="w-3 h-3" />
+            <Pause className="w-3 h-3 text-amber-100" />
           ) : (
-            <Play className="w-3 h-3" />
+            <Play className="w-3 h-3 text-amber-100" />
           )}
         </Button>
 
@@ -441,18 +457,18 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
           size="sm"
           onClick={handleNext}
           disabled={!currentTrack}
-          className="h-5 w-5 p-0 hover:bg-white/30 rounded-full"
+          className="h-6 w-6 p-0 hover:bg-amber-600/30 rounded-full border border-amber-600"
         >
-          <SkipForward className="w-2.5 h-2.5" />
+          <SkipForward className="w-2.5 h-2.5 text-amber-100" />
         </Button>
       </div>
 
 
-      {/* Compact Progress indicator */}
+      {/* Vintage Compact Progress indicator */}
       {currentTrack && duration > 0 && (
-        <div className="w-8 h-0.5 bg-white/30 rounded-full overflow-hidden ml-1">
+        <div className="w-8 h-1 bg-amber-950 rounded-full overflow-hidden ml-1 border border-amber-700">
           <div 
-            className="h-full bg-spelman-blue-light transition-all duration-300"
+            className="h-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-300"
             style={{ width: `${(currentTime / duration) * 100}%` }}
           />
         </div>
