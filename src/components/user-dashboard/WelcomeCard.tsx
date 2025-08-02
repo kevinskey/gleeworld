@@ -87,7 +87,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
             style={{
               backgroundImage: `url("${welcomeCardSetting?.image_url}")`,
               backgroundAttachment: 'scroll',
-              backgroundPosition: 'center calc(100% + 200px)' // Move up more to crop top while keeping aspect ratio
+              backgroundPosition: 'center calc(100% + 300px)' // Move up more to match your scroll position
             }}
           />
           {/* Hidden img element to detect load errors */}
