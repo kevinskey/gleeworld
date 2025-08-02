@@ -10,6 +10,18 @@ const UserManagement = () => {
   const { userProfile, loading: profileLoading } = useUserProfile(user);
   const { users, loading: usersLoading, error: usersError, refetch: refetchUsers } = useUsers();
 
+  // Enhanced debugging
+  console.log('UserManagement DEBUG - Current state:', {
+    user: user?.id,
+    userEmail: user?.email,
+    authLoading,
+    profileLoading,
+    usersLoading,
+    userProfile,
+    usersError,
+    usersCount: users?.length
+  });
+
   // Check if user is admin or super admin with more robust logic
   const isAdmin = !!(userProfile?.is_admin || 
                      userProfile?.is_super_admin || 
