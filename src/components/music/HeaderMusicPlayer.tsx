@@ -20,6 +20,7 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
   const { tracks, albums, loading, error } = useMusic();
   console.log('HeaderMusicPlayer Debug:', { tracks: tracks?.length, albums: albums?.length, loading, error });
   const [currentTrack, setCurrentTrack] = useState<any>(null);
+  const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -45,8 +46,19 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
 
   const handleTrackSelect = (track: any) => {
     setCurrentTrack(track);
+    setSelectedAlbum(track.album);
     setIsPlaying(false);
     setCurrentTime(0);
+  };
+
+  const handleAlbumSelect = (album: any) => {
+    setSelectedAlbum(album);
+    // Optionally auto-select first track from album
+    if (album.tracks && album.tracks.length > 0) {
+      setCurrentTrack(album.tracks[0]);
+      setIsPlaying(false);
+      setCurrentTime(0);
+    }
   };
 
   const handleNext = () => {
@@ -112,41 +124,72 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56 max-h-80 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl">
-          {albums.length > 0 ? (
+          {!selectedAlbum ? (
+            // Show album selection first
             <>
+              <div className="px-2 py-1.5 text-xs font-semibold text-gray-600 bg-gray-50/50 border-b">
+                Choose Album
+              </div>
               {albums.map((album) => (
-                <div key={album.id}>
-                  <div className="px-2 py-1.5 text-xs font-semibold text-gray-600 bg-gray-50/50 border-b">
-                    {album.title}
+                <DropdownMenuItem
+                  key={album.id}
+                  onClick={() => handleAlbumSelect(album)}
+                  className="text-xs flex items-center justify-between"
+                >
+                  <div className="flex flex-col">
+                    <span className="font-medium">{album.title}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {album.tracks?.length || 0} tracks
+                    </span>
                   </div>
-                  {album.tracks?.map((track) => (
-                    <DropdownMenuItem
-                      key={track.id}
-                      onClick={() => handleTrackSelect(track)}
-                      className="text-xs pl-4"
-                    >
-                      <div className="flex flex-col">
-                        <span className="font-medium">{track.title}</span>
-                        <span className="text-xs text-muted-foreground">{track.artist}</span>
-                      </div>
-                    </DropdownMenuItem>
-                  ))}
-                </div>
+                  <ChevronDown className="w-3 h-3 rotate-[-90deg]" />
+                </DropdownMenuItem>
               ))}
+              {albums.length > 0 && (
+                <>
+                  <div className="border-t my-1"></div>
+                  <DropdownMenuItem
+                    onClick={() => setSelectedAlbum({ id: 'all', title: 'All Tracks', tracks: tracks })}
+                    className="text-xs flex items-center justify-between"
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium">All Tracks</span>
+                      <span className="text-xs text-muted-foreground">
+                        {tracks.length} tracks
+                      </span>
+                    </div>
+                    <ChevronDown className="w-3 h-3 rotate-[-90deg]" />
+                  </DropdownMenuItem>
+                </>
+              )}
             </>
           ) : (
-            tracks.map((track) => (
-              <DropdownMenuItem
-                key={track.id}
-                onClick={() => handleTrackSelect(track)}
-                className="text-xs"
-              >
-                <div className="flex flex-col">
-                  <span className="font-medium">{track.title}</span>
-                  <span className="text-xs text-muted-foreground">{track.artist}</span>
-                </div>
-              </DropdownMenuItem>
-            ))
+            // Show track selection from selected album
+            <>
+              <div className="px-2 py-1.5 text-xs font-semibold text-gray-600 bg-gray-50/50 border-b flex items-center justify-between">
+                <span>{selectedAlbum.title}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedAlbum(null)}
+                  className="h-4 w-4 p-0 hover:bg-white/30"
+                >
+                  <ChevronDown className="w-2.5 h-2.5 rotate-90" />
+                </Button>
+              </div>
+              {selectedAlbum.tracks?.map((track) => (
+                <DropdownMenuItem
+                  key={track.id}
+                  onClick={() => handleTrackSelect(track)}
+                  className="text-xs"
+                >
+                  <div className="flex flex-col">
+                    <span className="font-medium">{track.title}</span>
+                    <span className="text-xs text-muted-foreground">{track.artist}</span>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
