@@ -82,7 +82,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
       {/* Background Image Layer - Reset to gradient */}
       
       {/* Background Gradient Layer */}
-      <div className="absolute inset-0 bg-gradient-to-r from-spelman-blue-dark via-spelman-blue-light to-spelman-blue-dark" />
+      <div className="absolute inset-0 bg-transparent" />
       
       {/* Content Layer */}
       <div className="relative z-10 text-center w-full px-4 sm:px-6 py-6 sm:py-8 pb-12 sm:pb-16 md:pb-20">
