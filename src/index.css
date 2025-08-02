@@ -416,45 +416,6 @@
 /* Desktop Typography Enhancements */
 @media (min-width: 768px) {
   body {
-    font-size: 18px;
-  }
-  
-  .card h1, .card h2, .card h3 {
-    font-size: 1.5rem;
-  }
-  
-  .card h4, .card h5, .card h6 {
-    font-size: 1.25rem;
-  }
-  
-  .card p, .card span, .card div {
-    font-size: 1.125rem;
-  }
-  
-  .text-sm {
-    font-size: 1rem !important;
-  }
-  
-  .text-xs {
-    font-size: 0.875rem !important;
-  }
-  
-  .text-2xl {
-    font-size: 2rem !important;
-  }
-  
-  .text-3xl {
-    font-size: 2.5rem !important;
-  }
-  
-  .text-4xl {
-    font-size: 3rem !important;
-  }
-}
-
-/* Large Desktop Typography */
-@media (min-width: 1024px) {
-  body {
     font-size: 20px;
   }
   
@@ -470,6 +431,14 @@
     font-size: 1.25rem;
   }
   
+  .text-sm {
+    font-size: 1.125rem !important;
+  }
+  
+  .text-xs {
+    font-size: 1rem !important;
+  }
+  
   .text-2xl {
     font-size: 2.25rem !important;
   }
@@ -480,5 +449,36 @@
   
   .text-4xl {
     font-size: 3.5rem !important;
+  }
+}
+
+/* Large Desktop Typography */
+@media (min-width: 1024px) {
+  body {
+    font-size: 22px;
+  }
+  
+  .card h1, .card h2, .card h3 {
+    font-size: 2rem;
+  }
+  
+  .card h4, .card h5, .card h6 {
+    font-size: 1.75rem;
+  }
+  
+  .card p, .card span, .card div {
+    font-size: 1.5rem;
+  }
+  
+  .text-2xl {
+    font-size: 2.5rem !important;
+  }
+  
+  .text-3xl {
+    font-size: 3.5rem !important;
+  }
+  
+  .text-4xl {
+    font-size: 4rem !important;
   }
 }
