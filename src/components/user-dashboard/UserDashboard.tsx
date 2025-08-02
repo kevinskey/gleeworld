@@ -318,10 +318,7 @@ const UserDashboard = React.memo(() => {
                   <CardTitle className="text-lg">Calendar & Events</CardTitle>
                 </CardHeader>
                 <CardContent className="h-[calc(100%-60px)] overflow-hidden">
-                  {/* Temporarily replace CalendarViews to test */}
-                  <div className="flex items-center justify-center h-full">
-                    <p>Calendar loading...</p>
-                  </div>
+                  <CalendarViews />
                 </CardContent>
               </Card>
             </div>
@@ -346,10 +343,7 @@ const UserDashboard = React.memo(() => {
                     <CardTitle className="text-lg">Calendar & Events</CardTitle>
                   </CardHeader>
                   <CardContent className="h-[calc(100%-60px)] overflow-hidden">
-                    {/* Temporarily replace CalendarViews to test */}
-                    <div className="flex items-center justify-center h-full">
-                      <p>Calendar loading...</p>
-                    </div>
+                    <CalendarViews />
                   </CardContent>
                 </Card>
               </div>

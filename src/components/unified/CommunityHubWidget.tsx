@@ -154,11 +154,17 @@ export const CommunityHubWidget = () => {
   });
 
   useEffect(() => {
-    if (user) {
+    let isMounted = true;
+    
+    if (user && isMounted) {
       fetchNotifications();
       fetchSheetMusic();
       fetchLoveMessages();
     }
+    
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   const fetchNotifications = async () => {
