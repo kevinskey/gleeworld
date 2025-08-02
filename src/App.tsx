@@ -104,8 +104,6 @@ const queryClient = new QueryClient({
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
-  console.log('ProtectedRoute: Auth check', { loading, hasUser: !!user, userEmail: user?.email, currentPath: window.location.pathname });
-  
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
@@ -115,16 +113,19 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!user) {
-    console.log('ProtectedRoute: No user found, redirecting to auth');
     return <Navigate to="/auth" replace />;
   }
   
-  console.log('ProtectedRoute: User authenticated, rendering protected content');
   return <>{children}</>;
 };
 
-// Public route wrapper with role-based redirect
+// Public route wrapper - no auth check needed
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  return <>{children}</>;
+};
+
+// Root route handler - shows public landing page for everyone
+const RootRoute = () => {
   const { user, loading } = useAuth();
   
   if (loading) {
@@ -135,31 +136,12 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
   
-  // Allow public routes to be accessed by anyone
-  return <>{children}</>;
-};
-
-// Root route handler - shows public landing page for everyone
-const RootRoute = () => {
-  const { user, loading } = useAuth();
-  
-  console.log('RootRoute: Loading state and user check', { loading, hasUser: !!user, userEmail: user?.email });
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Initializing authentication..." />
-      </div>
-    );
-  }
-  
   // If user is authenticated, redirect to dashboard
   if (user) {
-    console.log('RootRoute: User authenticated, redirecting to dashboard');
     return <Navigate to="/dashboard" replace />;
   }
   
-  console.log('RootRoute: No user, showing landing page');
+  // Show landing page for non-authenticated users
   return <GleeWorldLanding />;
 };
 
