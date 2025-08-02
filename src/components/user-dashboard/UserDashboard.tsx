@@ -12,7 +12,7 @@ import { WelcomeCard } from "./WelcomeCard";
 import { QuickActionsSection } from "./sections/QuickActionsSection";
 import { GleeClubSpotlightSection } from "./sections/GleeClubSpotlightSection";
 import { CalendarViews } from "@/components/calendar/CalendarViews";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+
 
 import { DashboardModulesSection } from "./sections/DashboardModulesSection";
 import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
@@ -305,44 +305,26 @@ const UserDashboard = React.memo(() => {
         />
 
 
-        {/* Mobile: Resizable height layout, Desktop: 50/50 width split */}
+        {/* Mobile: Stacked layout, Desktop: 50/50 width split */}
         <div className="w-full min-h-[50vh]">
-          {/* Mobile Layout - Resizable Heights */}
-          <div className="md:hidden">
-            <PanelGroup direction="vertical" className="h-[70vh]">
-              <Panel defaultSize={40} minSize={20}>
-                <div className="h-full pr-2">
-                  <CommunityHubWidget />
-                </div>
-              </Panel>
-              
-              <PanelResizeHandle className="h-2 bg-border/50 hover:bg-border transition-colors flex items-center justify-center">
-                <div className="w-8 h-1 bg-muted-foreground/30 rounded-full"></div>
-              </PanelResizeHandle>
-              
-              <Panel defaultSize={35} minSize={20}>
-                <div className="h-full px-2">
-                  <Card className="h-full">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">Calendar & Events</CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-[calc(100%-60px)] overflow-hidden">
-                      <CalendarViews />
-                    </CardContent>
-                  </Card>
-                </div>
-              </Panel>
-              
-              <PanelResizeHandle className="h-2 bg-border/50 hover:bg-border transition-colors flex items-center justify-center">
-                <div className="w-8 h-1 bg-muted-foreground/30 rounded-full"></div>
-              </PanelResizeHandle>
-              
-              <Panel defaultSize={25} minSize={15}>
-                <div className="h-full pl-2">
-                  <QuickActionsSection isAdmin={isAdmin} actionFilter="music" />
-                </div>
-              </Panel>
-            </PanelGroup>
+          {/* Mobile Layout - Simple Stacking */}
+          <div className="flex flex-col md:hidden gap-4">
+            <div className="h-[40vh]">
+              <CommunityHubWidget />
+            </div>
+            <div className="h-[35vh]">
+              <Card className="h-full">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Calendar & Events</CardTitle>
+                </CardHeader>
+                <CardContent className="h-[calc(100%-60px)] overflow-hidden">
+                  <CalendarViews />
+                </CardContent>
+              </Card>
+            </div>
+            <div className="h-[25vh]">
+              <QuickActionsSection isAdmin={isAdmin} actionFilter="music" />
+            </div>
           </div>
 
           {/* Desktop Layout - 50/50 Width Split */}
