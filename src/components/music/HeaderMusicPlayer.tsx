@@ -113,7 +113,7 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
         <DropdownMenuTrigger asChild>
           <div className="flex-1 min-w-0 max-w-[140px] sm:max-w-[180px] md:max-w-[220px] cursor-pointer hover:bg-white/20 rounded px-1 py-0.5 transition-colors">
             <div className="overflow-hidden">
-              <div className="text-xs font-bold text-gray-800 uppercase tracking-wide truncate">
+              <div className="text-[9px] font-bold text-gray-800 uppercase tracking-wide truncate">
                 MUSIC PLAYER
               </div>
             </div>
