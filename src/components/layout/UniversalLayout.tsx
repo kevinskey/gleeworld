@@ -11,6 +11,8 @@ interface UniversalLayoutProps {
   className?: string;
   maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
   containerized?: boolean;
+  viewMode?: 'admin' | 'member';
+  onViewModeChange?: (mode: 'admin' | 'member') => void;
 }
 
 export const UniversalLayout = ({ 
@@ -20,11 +22,15 @@ export const UniversalLayout = ({
   className = "",
   maxWidth = "full",
   containerized = true,
+  viewMode,
+  onViewModeChange,
 }: UniversalLayoutProps) => {
   return (
     <div className={`min-h-screen ${className.includes('bg-transparent') ? 'bg-transparent' : 'bg-background'} flex flex-col`}>
       {showHeader && (
         <UniversalHeader 
+          viewMode={viewMode}
+          onViewModeChange={onViewModeChange}
         />
       )}
       <main className={`flex-1 ${className}`}>

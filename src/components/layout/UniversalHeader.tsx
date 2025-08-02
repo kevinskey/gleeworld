@@ -2,9 +2,9 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -17,9 +17,11 @@ import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { HeaderClock } from "@/components/ui/header-clock";
 
 interface UniversalHeaderProps {
+  viewMode?: 'admin' | 'member';
+  onViewModeChange?: (mode: 'admin' | 'member') => void;
 }
 
-export const UniversalHeader = ({}: UniversalHeaderProps) => {
+export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderProps) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -31,6 +33,8 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
   const isPRCoordinator = userProfile?.exec_board_role === 'pr_coordinator';
   const canAccessPR = isAdmin || isPRCoordinator;
+  const isExecBoardMember = userProfile?.exec_board_role && userProfile.exec_board_role.trim() !== '';
+  const hasExecBoardPerms = isAdmin || isExecBoardMember;
   
   console.log('UniversalHeader: PR Access Debug', { 
     userProfile: userProfile, 
@@ -87,17 +91,66 @@ export const UniversalHeader = ({}: UniversalHeaderProps) => {
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
             {user && (
               <>
-                {/* Dashboard icon for logged-in users */}
-                <EnhancedTooltip content="Go to Dashboard">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => navigate('/dashboard')}
-                    className="h-7 w-7 sm:h-8 sm:w-8 p-1 rounded-md hover:bg-white/20"
-                  >
-                    <LayoutDashboard className="h-3 w-3 sm:h-4 sm:w-4" />
-                  </Button>
-                </EnhancedTooltip>
+                {/* Dashboard Dropdown for logged-in users */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-7 w-7 sm:h-8 sm:w-8 p-1 rounded-md hover:bg-white/20"
+                    >
+                      <LayoutDashboard className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-48 bg-background border border-border shadow-lg" align="end">
+                    <DropdownMenuLabel>Dashboard Views</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    
+                    {/* View Mode Selection for Admins/Executives */}
+                    {(isAdmin || hasExecBoardPerms) && (
+                      <>
+                        <DropdownMenuItem 
+                          onClick={() => {
+                            navigate('/dashboard');
+                            onViewModeChange?.('admin');
+                          }}
+                          className={`cursor-pointer ${viewMode === 'admin' ? 'bg-accent' : ''}`}
+                        >
+                          <Shield className="mr-2 h-4 w-4" />
+                          Admin View
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => {
+                            navigate('/dashboard');
+                            onViewModeChange?.('member');
+                          }}
+                          className={`cursor-pointer ${viewMode === 'member' ? 'bg-accent' : ''}`}
+                        >
+                          <User className="mr-2 h-4 w-4" />
+                          Member View
+                        </DropdownMenuItem>
+                        {(isExecBoardMember || hasExecBoardPerms) && (
+                          <DropdownMenuItem 
+                            onClick={() => navigate('/executive-board')}
+                            className="cursor-pointer"
+                          >
+                            <Crown className="mr-2 h-4 w-4" />
+                            Executive Board
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    
+                    <DropdownMenuItem 
+                      onClick={() => navigate('/dashboard')}
+                      className="cursor-pointer"
+                    >
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Go to Dashboard
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
                 <EnhancedTooltip content="View notifications and tasks">
                   <TaskNotifications />

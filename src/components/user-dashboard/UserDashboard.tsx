@@ -252,51 +252,13 @@ const UserDashboard = React.memo(() => {
       
       {/* Content overlay */}
       <div className="relative z-10">
-        <UniversalLayout containerized={false} className="bg-transparent">
+        <UniversalLayout 
+          containerized={false} 
+          className="bg-transparent"
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+        >
           <div className="w-full max-w-7xl mx-auto px-1 sm:px-2 md:px-4 py-1 sm:py-2 md:py-4 flex flex-col gap-4">
-        
-        {/* View Mode Toggle for Admins/Executives */}
-        {(isAdmin || hasExecBoardPerms) && (
-          <div className="flex justify-center mb-2 sm:mb-3 md:mb-4">
-            <div className="flex items-center justify-between w-full max-w-sm sm:max-w-md md:max-w-lg gap-2 sm:gap-3 md:gap-4 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-secondary/10 rounded-md sm:rounded-lg border">
-              <span className="text-xs sm:text-sm font-medium text-muted-foreground">Views:</span>
-              <div className="flex items-center gap-1 sm:gap-1.5">
-              <Button
-                variant={viewMode === 'admin' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('admin')}
-                className="flex items-center gap-1 text-xs sm:text-sm px-1.5 sm:px-2 md:px-3 h-7 sm:h-8 md:h-9 min-h-[44px] touch-manipulation"
-              >
-                <Shield className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Admin</span>
-                <span className="sm:hidden">A</span>
-              </Button>
-              <Button
-                variant={viewMode === 'member' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('member')}
-                className="flex items-center gap-1 text-xs sm:text-sm px-1.5 sm:px-2 md:px-3 h-7 sm:h-8 md:h-9 min-h-[44px] touch-manipulation"
-              >
-                <User className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Member</span>
-                <span className="sm:hidden">M</span>
-              </Button>
-              {(isExecBoardMember || hasExecBoardPerms) && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate('/executive-board')}
-                  className="flex items-center gap-1 text-xs sm:text-sm px-1.5 sm:px-2 md:px-3 h-7 sm:h-8 md:h-9 min-h-[44px] touch-manipulation"
-                >
-                  <Crown className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Exec</span>
-                  <span className="sm:hidden">E</span>
-                </Button>
-               )}
-             </div>
-            </div>
-          </div>
-        )}
         
         {/* Welcome Card - Full width, extends to top */}
         <div className="w-full -mt-6 sm:-mt-8 md:-mt-10">
