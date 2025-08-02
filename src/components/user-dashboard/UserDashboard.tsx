@@ -269,6 +269,9 @@ const UserDashboard = React.memo(() => {
         </div>
 
 
+        {/* Add spacing between WelcomeCard and Community Hub */}
+        <div className="mb-8 sm:mb-12 md:mb-16"></div>
+
         {/* Mobile: Stacked layout, Desktop: 50/50 width split */}
         <div className="w-full min-h-[50vh]">
           {/* Mobile Layout - Simple Stacking */}
