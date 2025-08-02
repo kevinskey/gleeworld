@@ -96,64 +96,22 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
         />
       )}
       
-      {/* Compact Track Info */}
-      <div className="flex-1 min-w-0 max-w-[120px]">
-        {currentTrack ? (
-          <div className="overflow-hidden">
-            <div className="text-xs font-medium text-gray-700 truncate">
-              {currentTrack.title}
-            </div>
-          </div>
-        ) : (
-          <div className="text-xs text-gray-600">No track</div>
-        )}
-      </div>
-
-      {/* Compact Controls */}
-      <div className="flex items-center gap-0.5">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handlePrevious}
-          disabled={!currentTrack}
-          className="h-5 w-5 p-0 hover:bg-white/30 rounded-full"
-        >
-          <SkipBack className="w-2.5 h-2.5" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handlePlayPause}
-          disabled={!currentTrack}
-          className="h-6 w-6 p-0 hover:bg-white/30 rounded-full"
-        >
-          {isPlaying ? (
-            <Pause className="w-3 h-3" />
-          ) : (
-            <Play className="w-3 h-3" />
-          )}
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleNext}
-          disabled={!currentTrack}
-          className="h-5 w-5 p-0 hover:bg-white/30 rounded-full"
-        >
-          <SkipForward className="w-2.5 h-2.5" />
-        </Button>
-      </div>
-
-      {/* Track Selector */}
+      {/* Compact Track Info - Clickable to open dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-5 w-5 p-0 hover:bg-white/30 rounded-full">
-            <ChevronDown className="w-2.5 h-2.5" />
-          </Button>
+          <div className="flex-1 min-w-0 max-w-[120px] cursor-pointer hover:bg-white/20 rounded px-1 py-0.5 transition-colors">
+            {currentTrack ? (
+              <div className="overflow-hidden">
+                <div className="text-xs font-medium text-gray-700 truncate">
+                  {currentTrack.title}
+                </div>
+              </div>
+            ) : (
+              <div className="text-xs text-gray-600">Select track...</div>
+            )}
+          </div>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56 max-h-80 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl">
+        <DropdownMenuContent align="start" className="w-56 max-h-80 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl">
           {albums.length > 0 ? (
             albums.map((album) => (
               <DropdownMenuSub key={album.id}>
@@ -192,6 +150,44 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Compact Controls */}
+      <div className="flex items-center gap-0.5">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handlePrevious}
+          disabled={!currentTrack}
+          className="h-5 w-5 p-0 hover:bg-white/30 rounded-full"
+        >
+          <SkipBack className="w-2.5 h-2.5" />
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handlePlayPause}
+          disabled={!currentTrack}
+          className="h-6 w-6 p-0 hover:bg-white/30 rounded-full"
+        >
+          {isPlaying ? (
+            <Pause className="w-3 h-3" />
+          ) : (
+            <Play className="w-3 h-3" />
+          )}
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleNext}
+          disabled={!currentTrack}
+          className="h-5 w-5 p-0 hover:bg-white/30 rounded-full"
+        >
+          <SkipForward className="w-2.5 h-2.5" />
+        </Button>
+      </div>
+
 
       {/* Compact Progress indicator */}
       {currentTrack && duration > 0 && (
