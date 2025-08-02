@@ -2,7 +2,9 @@ import { useUsers } from "@/hooks/useUsers";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { EnhancedUserManagement } from "@/components/admin/user-management/EnhancedUserManagement";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Home, Users } from "lucide-react";
 
 const UserManagement = () => {
   console.log('UserManagement: Component starting to load...');
@@ -53,6 +55,33 @@ const UserManagement = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Header Navigation */}
+      <div className="bg-white border-b border-slate-200 shadow-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link to="/dashboard">
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Dashboard
+                </Button>
+              </Link>
+              <div className="flex items-center gap-2 text-slate-600">
+                <Users className="h-5 w-5" />
+                <h1 className="text-xl font-semibold text-slate-800">User Management</h1>
+              </div>
+            </div>
+            <Link to="/">
+              <Button variant="outline" size="sm" className="gap-2">
+                <Home className="h-4 w-4" />
+                Home
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <EnhancedUserManagement 
           users={users}
