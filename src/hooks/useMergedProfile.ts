@@ -109,7 +109,7 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
       // Test specific user query
       const { data: gwProfile, error: gwError, status, statusText } = await supabase
         .from('gw_profiles')
-        .select('user_id, email, full_name, role, is_admin, is_super_admin')
+        .select('user_id, email, full_name, role, is_admin, is_super_admin, class_year, voice_part, exec_board_role')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -138,6 +138,9 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
           role: gwProfile.role || 'user',
           is_admin: gwProfile.is_admin || false,
           is_super_admin: gwProfile.is_super_admin || false,
+          class_year: gwProfile.class_year,
+          voice_part: gwProfile.voice_part,
+          exec_board_role: gwProfile.exec_board_role,
         };
 
         console.log('Basic profile created:', mergedProfile);
