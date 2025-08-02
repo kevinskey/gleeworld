@@ -83,12 +83,11 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
       {hasBackgroundImage && (
         <>
           <div 
-            className="absolute inset-0 bg-no-repeat"
+            className="absolute inset-0 bg-cover bg-no-repeat"
             style={{
               backgroundImage: `url("${welcomeCardSetting?.image_url}")`,
               backgroundAttachment: 'scroll',
-              backgroundSize: '100% 200%', // Make image 100% larger to crop much more from top
-              backgroundPosition: 'center calc(100% + 120px)' // Keep bottom anchored
+              backgroundPosition: 'center calc(100% + 200px)' // Move up more to crop top while keeping aspect ratio
             }}
           />
           {/* Hidden img element to detect load errors */}
