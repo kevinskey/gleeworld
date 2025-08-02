@@ -106,7 +106,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
         </div>
       </div>
       {/* GLEE 100 emblem positioned at bottom left */}
-      <div className="absolute bottom-8 left-8 z-20">
+      <div className="absolute -bottom-4 left-8 z-20">
         <img 
           src="/lovable-uploads/8775a40d-2f4b-486a-b712-f11a753ba969.png"
           alt="GLEE 100 Anniversary Emblem"
