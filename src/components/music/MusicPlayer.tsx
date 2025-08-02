@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -408,27 +409,29 @@ export const MusicPlayer = ({ tracks, className = "" }: MusicPlayerProps) => {
 
         {/* Track List */}
         {tracks.length > 1 && (
-          <div className="mt-3 sm:mt-4 max-h-48 sm:max-h-64 overflow-y-auto scroll-smooth">
+          <div className="mt-3 sm:mt-4">
             <h4 className="text-xs sm:text-sm font-medium text-gray-700 mb-2">Playlist ({tracks.length} tracks)</h4>
-            <div className="space-y-1">
-              {tracks.map((track, index) => (
-                <button
-                  key={track.id}
-                  onClick={() => {
-                    setCurrentTrackIndex(index);
-                    setIsPlaying(false);
-                  }}
-                  className={`w-full text-left p-1.5 sm:p-2 text-xs rounded transition-colors ${
-                    index === currentTrackIndex
-                      ? 'bg-primary/20 text-primary'
-                      : 'hover:bg-white/20 text-gray-600'
-                  }`}
-                >
-                  <div className="truncate text-xs sm:text-sm">{track.title}</div>
-                  <div className="truncate text-gray-500 text-xs">{track.artist}</div>
-                </button>
-              ))}
-            </div>
+            <ScrollArea className="h-48 sm:h-64 w-full rounded-md border border-white/20 p-2">
+              <div className="space-y-1">
+                {tracks.map((track, index) => (
+                  <button
+                    key={track.id}
+                    onClick={() => {
+                      setCurrentTrackIndex(index);
+                      setIsPlaying(false);
+                    }}
+                    className={`w-full text-left p-2 sm:p-3 rounded transition-colors touch-manipulation ${
+                      index === currentTrackIndex
+                        ? 'bg-primary/20 text-primary'
+                        : 'hover:bg-white/20 text-gray-600'
+                    }`}
+                  >
+                    <div className="truncate text-xs sm:text-sm font-medium">{track.title}</div>
+                    <div className="truncate text-gray-500 text-xs">{track.artist}</div>
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
           </div>
         )}
       </CardContent>
