@@ -8,7 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
@@ -466,11 +469,123 @@ export const CommunityHubWidget = () => {
                 }}
               />
               
-              {/* Header text only */}
-              <div className="relative z-10 text-center mb-6">
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Share love, encouragement, and positive vibes with the Glee Club family
-                </p>
+              {/* Header with Send Love button */}
+              <div className="relative z-10 flex justify-between items-start mb-6">
+                <div className="text-center flex-1">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Share love, encouragement, and positive vibes with the Glee Club family
+                  </p>
+                </div>
+                
+                {/* Send Love Button - moved to top right */}
+                <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-xs h-8 ml-2 shrink-0">
+                      <Plus className="h-3 w-3 mr-1" />
+                      Send Love
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2">
+                        <Heart className="h-4 w-4 text-red-500" />
+                        Send a Love Message
+                      </DialogTitle>
+                    </DialogHeader>
+                    <Form {...loveForm}>
+                      <form onSubmit={loveForm.handleSubmit(onSubmitLoveMessage)} className="space-y-4">
+                        <FormField
+                          control={loveForm.control}
+                          name="message"
+                          rules={{ required: "Message is required" }}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Your Love Message</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Share something positive, encouraging, or loving..."
+                                  className="min-h-[80px] text-sm"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={loveForm.control}
+                          name="note_color"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Note Color</FormLabel>
+                              <FormControl>
+                                <RadioGroup
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  className="flex flex-wrap gap-2"
+                                >
+                                  {noteColors.map((color) => (
+                                    <div key={color.value} className="flex items-center space-x-2">
+                                      <RadioGroupItem
+                                        value={color.value}
+                                        id={color.value}
+                                        className="sr-only"
+                                      />
+                                      <Label
+                                        htmlFor={color.value}
+                                        className={`
+                                          w-8 h-8 rounded-lg border-2 cursor-pointer transition-all
+                                          ${color.bg} ${color.border}
+                                          ${field.value === color.value ? 'ring-2 ring-primary ring-offset-2' : ''}
+                                        `}
+                                        title={color.label}
+                                      />
+                                    </div>
+                                  ))}
+                                </RadioGroup>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={loveForm.control}
+                          name="is_anonymous"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                              <div className="space-y-0.5">
+                                <FormLabel className="text-sm font-medium">
+                                  Send Anonymously
+                                </FormLabel>
+                                <FormDescription className="text-xs">
+                                  Your name won't be shown with this message
+                                </FormDescription>
+                              </div>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+
+                        <div className="flex gap-2">
+                          <Button type="button" variant="outline" onClick={() => setLoveDialogOpen(false)} className="flex-1">
+                            Cancel
+                          </Button>
+                          <Button type="submit" className="flex-1">
+                            <Send className="h-4 w-4 mr-2" />
+                            Send Love
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
               </div>
 
               {/* Love Notes Grid */}
@@ -524,136 +639,6 @@ export const CommunityHubWidget = () => {
                 ))}
               </div>
 
-              {/* Add Love Message Button */}
-              <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-full text-xs h-8">
-                    <Plus className="h-3 w-3 mr-1" />
-                    Send Love
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                      <Heart className="h-4 w-4 text-red-500" />
-                      Send a Love Message
-                    </DialogTitle>
-                  </DialogHeader>
-                  <Form {...loveForm}>
-                    <form onSubmit={loveForm.handleSubmit(onSubmitLoveMessage)} className="space-y-4">
-                      <FormField
-                        control={loveForm.control}
-                        name="message"
-                        rules={{ required: "Message is required" }}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Your Message</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Share something positive..."
-                                className="resize-none"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={loveForm.control}
-                        name="note_color"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Note Color</FormLabel>
-                            <FormControl>
-                              <div className="grid grid-cols-5 gap-2">
-                                {noteColors.map((color) => (
-                                  <label key={color.value} className="cursor-pointer">
-                                    <input
-                                      type="radio"
-                                      value={color.value}
-                                      checked={field.value === color.value}
-                                      onChange={field.onChange}
-                                      className="sr-only"
-                                    />
-                                    <div className={`
-                                      w-full h-12 rounded-lg border-2 flex items-center justify-center text-xs font-medium
-                                      ${field.value === color.value ? `${color.border} ring-2 ring-primary` : 'border-gray-200'}
-                                      ${color.bg} hover:opacity-80 transition-opacity
-                                    `}>
-                                      {color.label}
-                                    </div>
-                                  </label>
-                                ))}
-                              </div>
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={loveForm.control}
-                        name="decorations"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Decorations (optional)</FormLabel>
-                            <FormControl>
-                              <div className="space-y-2">
-                                <div className="grid grid-cols-8 gap-1">
-                                  {emojis.slice(0, 8).map((emoji) => (
-                                    <button
-                                      key={emoji}
-                                      type="button"
-                                      onClick={() => field.onChange(field.value + emoji)}
-                                      className="p-2 text-lg hover:bg-muted rounded"
-                                    >
-                                      {emoji}
-                                    </button>
-                                  ))}
-                                </div>
-                                <Input
-                                  placeholder="Or type your own..."
-                                  value={field.value}
-                                  onChange={field.onChange}
-                                />
-                              </div>
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={loveForm.control}
-                        name="is_anonymous"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel>Send anonymously</FormLabel>
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="flex gap-2">
-                        <Button type="button" variant="outline" onClick={() => setLoveDialogOpen(false)} className="flex-1">
-                          Cancel
-                        </Button>
-                        <Button type="submit" className="flex-1">
-                          <Send className="h-4 w-4 mr-2" />
-                          Send Love
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
             </div>
           )}
         </TabsContent>
