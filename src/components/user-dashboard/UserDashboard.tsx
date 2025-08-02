@@ -11,7 +11,7 @@ import { SpotlightManagement } from "@/components/admin/spotlight/SpotlightManag
 import { WelcomeCard } from "./WelcomeCard";
 import { QuickActionsSection } from "./sections/QuickActionsSection";
 import { GleeClubSpotlightSection } from "./sections/GleeClubSpotlightSection";
-import { CalendarViews } from "@/components/calendar/CalendarViews";
+
 
 
 import { DashboardModulesSection } from "./sections/DashboardModulesSection";
@@ -315,17 +315,10 @@ const UserDashboard = React.memo(() => {
               <CommunityHubWidget />
             </div>
             <div className="h-[35vh]">
-              <Card className="h-full">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Calendar & Events</CardTitle>
-                </CardHeader>
-                <CardContent className="h-[calc(100%-60px)] overflow-hidden">
-                  <CalendarViews />
-                </CardContent>
-              </Card>
+              <QuickActionsSection isAdmin={isAdmin} actionFilter="music" />
             </div>
             <div className="h-[25vh]">
-              <QuickActionsSection isAdmin={isAdmin} actionFilter="music" />
+              <QuickActionsSection isAdmin={isAdmin} actionFilter="attendance" />
             </div>
           </div>
 
@@ -335,32 +328,21 @@ const UserDashboard = React.memo(() => {
               <CommunityHubWidget />
             </div>
             
-            {/* Right Side: Calendar and Music - 50% */}
+            {/* Right Side: Music and Attendance - 50% */}
             <div className="w-1/2 flex flex-col gap-4">
-              {/* Calendar */}
-              <div className="flex-1">
-                <Card className="h-full">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Calendar & Events</CardTitle>
-                  </CardHeader>
-                  <CardContent className="h-[calc(100%-60px)] overflow-hidden">
-                    <CalendarViews />
-                  </CardContent>
-                </Card>
-              </div>
-              
               {/* Music Section */}
               <div className="flex-1">
                 <QuickActionsSection isAdmin={isAdmin} actionFilter="music" />
+              </div>
+              
+              {/* Attendance Section */}
+              <div className="flex-1">
+                <QuickActionsSection isAdmin={isAdmin} actionFilter="attendance" />
               </div>
             </div>
           </div>
         </div>
 
-        {/* 3. Attendance */}
-        <div className="w-full">
-          <QuickActionsSection isAdmin={isAdmin} actionFilter="attendance" />
-        </div>
 
         {/* 4. Tasks and Dues */}
         <div className="w-full">
