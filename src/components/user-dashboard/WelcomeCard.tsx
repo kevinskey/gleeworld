@@ -122,7 +122,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
           onClick={() => window.location.href = '/dashboard?section=notifications'}
         >
           <BellDot 
-            className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 drop-shadow-lg animate-pulse" 
+            className="w-6 h-6 sm:w-8 sm:h-8 text-blue-200 drop-shadow-lg animate-pulse" 
           />
         </div>
       )}
