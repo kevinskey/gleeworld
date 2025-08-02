@@ -60,29 +60,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         console.log('AuthContext: Initializing auth state...');
         
-        // Get existing session with retry logic for better reliability
-        let session = null;
-        let retries = 3;
+        // Get existing session quickly without retries to reduce loading time
+        const { data, error } = await supabase.auth.getSession();
         
-        while (retries > 0 && !session) {
-          const { data, error } = await supabase.auth.getSession();
-          
-          if (error) {
-            console.error('AuthContext: Error getting session:', error);
-            retries--;
-            if (retries > 0) {
-              await new Promise(resolve => setTimeout(resolve, 100));
-            }
-          } else {
-            session = data.session;
-            break;
-          }
+        if (error) {
+          console.error('AuthContext: Error getting session:', error);
         }
         
+        const session = data?.session || null;
         console.log('AuthContext: Initial session retrieved:', session?.user?.id || 'no user');
+        
         if (mountedRef.current) {
           setSession(session);
           setUser(session?.user ?? null);
+          // Set loading to false immediately to prevent white screen
+          setLoading(false);
         }
 
         // Set up auth state listener AFTER initial session check
@@ -113,7 +105,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         subscriptionRef.current = subscription;
       } catch (error) {
         console.error('AuthContext: Failed to initialize auth:', error);
-      } finally {
         if (mountedRef.current) {
           setLoading(false);
         }
