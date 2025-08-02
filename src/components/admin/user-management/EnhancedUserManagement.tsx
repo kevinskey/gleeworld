@@ -370,23 +370,51 @@ export const EnhancedUserManagement = ({
             </TabsContent>
 
             <TabsContent value="grid" className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-4">
-              {filteredAndSortedUsers.map((user) => (
-                <UserCard
-                  key={user.id}
-                  user={user}
-                  onEdit={handleUserEdit}
-                  onDelete={handleUserDelete}
-                  onView={handleUserView}
-                  onClick={handleUserClick}
-                  showPaymentStatus={true}
-                  isPaid={userPaymentData.paidStatus[user.id]}
-                  stipendAmount={userPaymentData.stipendAmounts[user.id]}
-                  onPayout={handleUserPayout}
-                  showSelection={showBulkSelect}
-                  isSelected={selectedUsers.includes(user.id)}
-                  onSelectionChange={handleUserSelection}
-                />
-              ))}
+              {filteredAndSortedUsers.length === 0 ? (
+                <div className="col-span-full">
+                  <Card className="border-2 border-slate-300">
+                    <CardContent className="text-center py-12">
+                      <Users className="h-12 w-12 mx-auto mb-4 text-slate-400" />
+                      <h3 className="text-lg font-semibold mb-2 text-slate-800">No users found</h3>
+                      <p className="text-sm text-slate-600 mb-4 font-medium">
+                        {searchTerm || roleFilter !== "all" 
+                          ? "Try adjusting your search or filters" 
+                          : "Get started by adding your first user"
+                        }
+                      </p>
+                      {!searchTerm && roleFilter === "all" && (
+                        <Button 
+                          onClick={() => setShowCreateForm(true)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-medium border-2 border-blue-500"
+                        >
+                          <UserPlus className="h-4 w-4 mr-2" />
+                          Add First User
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : (
+                filteredAndSortedUsers
+                  .filter(user => user && user.id) // Filter out any null/undefined users or users without IDs
+                  .map((user) => (
+                    <UserCard
+                      key={user.id}
+                      user={user}
+                      onEdit={handleUserEdit}
+                      onDelete={handleUserDelete}
+                      onView={handleUserView}
+                      onClick={handleUserClick}
+                      showPaymentStatus={true}
+                      isPaid={userPaymentData.paidStatus[user.id]}
+                      stipendAmount={userPaymentData.stipendAmounts[user.id]}
+                      onPayout={handleUserPayout}
+                      showSelection={showBulkSelect}
+                      isSelected={selectedUsers.includes(user.id)}
+                      onSelectionChange={handleUserSelection}
+                    />
+                  ))
+              )}
             </TabsContent>
           </Tabs>
         </div>
