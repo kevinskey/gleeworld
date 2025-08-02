@@ -78,7 +78,7 @@ export const CalendarViews = () => {
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                {user && (
+                {isExecMember && (
                   <div className="flex justify-center">
                     <Tooltip>
                       <TooltipTrigger asChild>
