@@ -63,20 +63,6 @@ export const EnhancedUserManagement = ({
       const matchesRole = roleFilter === "all" || 
         user.role === roleFilter ||
         (roleFilter === "executive-board" && user.is_exec_board);
-
-      if (searchTerm) {
-        console.log('🔍 SEARCH FILTERING:', {
-          userId: user.id,
-          fullName: user.full_name,
-          email: user.email,
-          searchTerm: `"${searchTerm}"`,
-          matchesSearch,
-          roleFilter,
-          userRole: user.role,
-          matchesRole,
-          finalMatch: matchesSearch && matchesRole
-        });
-      }
         
       return matchesSearch && matchesRole;
     })
