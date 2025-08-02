@@ -127,18 +127,18 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
           {!selectedAlbum ? (
             // Show album selection first
             <>
-              <div className="px-2 py-1.5 text-xs font-semibold text-gray-600 bg-gray-50/50 border-b">
+              <div className="px-2 py-1.5 text-[6px] font-semibold text-gray-600 bg-gray-50/50 border-b">
                 Choose Album
               </div>
               {albums.map((album) => (
                 <DropdownMenuItem
                   key={album.id}
                   onClick={() => handleAlbumSelect(album)}
-                  className="text-xs flex items-center justify-between"
+                  className="text-[6px] flex items-center justify-between"
                 >
                   <div className="flex flex-col">
                     <span className="font-medium">{album.title}</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-[5px] text-muted-foreground">
                       {album.tracks?.length || 0} tracks
                     </span>
                   </div>
@@ -150,11 +150,11 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
                   <div className="border-t my-1"></div>
                   <DropdownMenuItem
                     onClick={() => setSelectedAlbum({ id: 'all', title: 'All Tracks', tracks: tracks })}
-                    className="text-xs flex items-center justify-between"
+                    className="text-[6px] flex items-center justify-between"
                   >
                     <div className="flex flex-col">
                       <span className="font-medium">All Tracks</span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-[5px] text-muted-foreground">
                         {tracks.length} tracks
                       </span>
                     </div>
@@ -166,7 +166,7 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
           ) : (
             // Show track selection from selected album
             <>
-              <div className="px-2 py-1.5 text-xs font-semibold text-gray-600 bg-gray-50/50 border-b flex items-center justify-between">
+              <div className="px-2 py-1.5 text-[6px] font-semibold text-gray-600 bg-gray-50/50 border-b flex items-center justify-between">
                 <span>{selectedAlbum.title}</span>
                 <Button
                   variant="ghost"
@@ -181,11 +181,11 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
                 <DropdownMenuItem
                   key={track.id}
                   onClick={() => handleTrackSelect(track)}
-                  className="text-xs"
+                  className="text-[6px]"
                 >
                   <div className="flex flex-col">
                     <span className="font-medium">{track.title}</span>
-                    <span className="text-xs text-muted-foreground">{track.artist}</span>
+                    <span className="text-[5px] text-muted-foreground">{track.artist}</span>
                   </div>
                 </DropdownMenuItem>
               ))}
