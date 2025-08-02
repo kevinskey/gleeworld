@@ -20,11 +20,11 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
   const { tracks, albums, loading, error } = useMusic();
   console.log('HeaderMusicPlayer Debug:', { tracks: tracks?.length, albums: albums?.length, loading, error });
   const [currentTrack, setCurrentTrack] = useState<any>(null);
-  const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [hoveredAlbum, setHoveredAlbum] = useState<any>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const handlePlayPause = async () => {
@@ -47,7 +47,6 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
 
   const handleTrackSelect = (track: any) => {
     setCurrentTrack(track);
-    setSelectedAlbum(track.album);
     setIsPlaying(false);
     setCurrentTime(0);
     setDropdownOpen(false); // Close dropdown after selection
@@ -123,17 +122,24 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="start" 
-          className="w-56 max-h-80 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl"
+          className="w-56 max-h-80 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl relative"
           onMouseEnter={() => setDropdownOpen(true)}
-          onMouseLeave={() => setDropdownOpen(false)}
+          onMouseLeave={() => {
+            setDropdownOpen(false);
+            setHoveredAlbum(null);
+          }}
         >
-          {/* Show albums with flyout submenus for tracks */}
+          {/* Show albums with custom hover flyouts */}
           <div className="px-2 py-1.5 text-[10px] font-semibold text-gray-600 bg-gray-50/50 border-b">
             Choose Album
           </div>
           {albums.map((album) => (
-            <DropdownMenuSub key={album.id}>
-              <DropdownMenuSubTrigger className="text-[10px] flex items-center gap-2 p-2">
+            <div key={album.id} className="relative">
+              <DropdownMenuItem
+                className="text-[10px] flex items-center gap-2 p-2"
+                onMouseEnter={() => setHoveredAlbum(album)}
+                onMouseLeave={() => setHoveredAlbum(null)}
+              >
                 {/* Album Art */}
                 <div className="w-6 h-6 rounded bg-muted flex items-center justify-center flex-shrink-0">
                   {album.cover_image_url ? (
@@ -153,30 +159,43 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
                     {album.tracks?.length || 0} tracks
                   </span>
                 </div>
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="w-56 max-h-60 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl">
-                {album.tracks?.map((track) => (
-                  <DropdownMenuItem
-                    key={track.id}
-                    onClick={() => handleTrackSelect(track)}
-                    className="text-[10px]"
-                  >
-                    <div className="flex flex-col">
-                      <span className="font-medium">{track.title}</span>
-                      <span className="text-[8px] text-muted-foreground">{track.artist}</span>
+                <ChevronDown className="w-3 h-3 rotate-[-90deg]" />
+              </DropdownMenuItem>
+              
+              {/* Custom Flyout for Album Tracks */}
+              {hoveredAlbum?.id === album.id && (
+                <div 
+                  className="absolute left-full top-0 w-56 max-h-60 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl z-50 rounded-lg"
+                  onMouseEnter={() => setHoveredAlbum(album)}
+                  onMouseLeave={() => setHoveredAlbum(null)}
+                >
+                  {album.tracks?.map((track) => (
+                    <div
+                      key={track.id}
+                      onClick={() => handleTrackSelect(track)}
+                      className="text-[10px] p-2 hover:bg-white/50 cursor-pointer transition-colors"
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-medium">{track.title}</span>
+                        <span className="text-[8px] text-muted-foreground">{track.artist}</span>
+                      </div>
                     </div>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
           
           {/* All Tracks option */}
           {albums.length > 0 && (
             <>
               <div className="border-t my-1"></div>
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="text-[10px] flex items-center gap-2 p-2">
+              <div className="relative">
+                <DropdownMenuItem
+                  className="text-[10px] flex items-center gap-2 p-2"
+                  onMouseEnter={() => setHoveredAlbum({ id: 'all', title: 'All Tracks', tracks: tracks })}
+                  onMouseLeave={() => setHoveredAlbum(null)}
+                >
                   <div className="w-6 h-6 rounded bg-muted flex items-center justify-center flex-shrink-0">
                     <Music className="w-3 h-3 text-muted-foreground" />
                   </div>
@@ -186,22 +205,31 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
                       {tracks.length} tracks
                     </span>
                   </div>
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-56 max-h-60 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl">
-                  {tracks.map((track) => (
-                    <DropdownMenuItem
-                      key={track.id}
-                      onClick={() => handleTrackSelect(track)}
-                      className="text-[10px]"
-                    >
-                      <div className="flex flex-col">
-                        <span className="font-medium">{track.title}</span>
-                        <span className="text-[8px] text-muted-foreground">{track.artist}</span>
+                  <ChevronDown className="w-3 h-3 rotate-[-90deg]" />
+                </DropdownMenuItem>
+                
+                {/* Custom Flyout for All Tracks */}
+                {hoveredAlbum?.id === 'all' && (
+                  <div 
+                    className="absolute left-full top-0 w-56 max-h-60 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl z-50 rounded-lg"
+                    onMouseEnter={() => setHoveredAlbum({ id: 'all', title: 'All Tracks', tracks: tracks })}
+                    onMouseLeave={() => setHoveredAlbum(null)}
+                  >
+                    {tracks.map((track) => (
+                      <div
+                        key={track.id}
+                        onClick={() => handleTrackSelect(track)}
+                        className="text-[10px] p-2 hover:bg-white/50 cursor-pointer transition-colors"
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium">{track.title}</span>
+                          <span className="text-[8px] text-muted-foreground">{track.artist}</span>
+                        </div>
                       </div>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
+                    ))}
+                  </div>
+                )}
+              </div>
             </>
           )}
         </DropdownMenuContent>
