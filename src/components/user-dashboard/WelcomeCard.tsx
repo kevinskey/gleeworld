@@ -87,7 +87,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
             style={{
               backgroundImage: `url("${welcomeCardSetting?.image_url}")`,
               backgroundAttachment: 'scroll',
-              backgroundPosition: 'center bottom' // Keep bottom where it is
+              backgroundPosition: 'center calc(100% - 35px)' // Move up 35px from bottom
             }}
           />
           {/* Hidden img element to detect load errors */}
