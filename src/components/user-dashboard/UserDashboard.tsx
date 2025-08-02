@@ -252,7 +252,7 @@ const UserDashboard = React.memo(() => {
       {/* Content overlay */}
       <div className="relative z-10">
         <UniversalLayout containerized={false} className="bg-transparent">
-          <div className="w-full max-w-7xl mx-auto px-1 sm:px-2 md:px-4 py-1 sm:py-2 md:py-4 space-y-2 sm:space-y-3 md:space-y-4">
+          <div className="w-full max-w-7xl mx-auto px-1 sm:px-2 md:px-4 py-1 sm:py-2 md:py-4 flex flex-col gap-4">
         
         {/* View Mode Toggle for Admins/Executives */}
         {(isAdmin || hasExecBoardPerms) && (
@@ -304,8 +304,10 @@ const UserDashboard = React.memo(() => {
         />
 
         {/* Calendar - Half viewport height */}
-        <div className="w-full h-[50vh] min-h-[400px] mb-4">
-          <CalendarViews />
+        <div className="w-full">
+          <div className="h-[50vh] min-h-[400px] max-h-[600px] overflow-hidden">
+            <CalendarViews />
+          </div>
         </div>
 
         {/* Member Dashboard Elements Only */}
