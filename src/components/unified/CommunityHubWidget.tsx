@@ -446,7 +446,7 @@ export const CommunityHubWidget = () => {
   const LeftColumnContent = () => (
     <div className="space-y-4 relative">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3 relative -top-12 z-30 bg-background/95 backdrop-blur-sm border border-border shadow-lg">
+        <TabsList className="grid w-full grid-cols-3 bg-background border border-border">
           <TabsTrigger value="buckets" className="text-xs">
             <StickyNote className="h-3 w-3 mr-1" />
             Buckets of Love
