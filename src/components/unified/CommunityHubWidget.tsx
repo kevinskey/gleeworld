@@ -457,17 +457,17 @@ export const CommunityHubWidget = () => {
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
             </div>
           ) : (
-            <div className="relative">
+            <div className="relative p-6">
               {/* Background bucket image */}
               <div 
-                className="absolute inset-0 bg-contain bg-no-repeat bg-center opacity-10 pointer-events-none"
+                className="absolute inset-0 bg-contain bg-no-repeat bg-center opacity-30 pointer-events-none"
                 style={{
                   backgroundImage: `url('/lovable-uploads/96533996-2039-4566-887a-67eadeb076f1.png')`
                 }}
               />
               
               {/* Header text only */}
-              <div className="relative z-10 text-center mb-4">
+              <div className="relative z-10 text-center mb-6">
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Share love, encouragement, and positive vibes with the Glee Club family
                 </p>
