@@ -666,8 +666,16 @@ const App = () => {
                                      <TourManagerServices />
                                    </ProtectedRoute>
                                  } 
-                               />
+                                />
                                 <Route 
+                                  path="/tour-manager-services" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <TourManagerServices />
+                                    </ProtectedRoute>
+                                  } 
+                                />
+                                 <Route
                                   path="/executive-services/pr-coordinator" 
                                   element={
                                     <ProtectedRoute>
