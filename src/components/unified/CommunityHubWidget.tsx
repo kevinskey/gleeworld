@@ -444,9 +444,9 @@ export const CommunityHubWidget = () => {
   };
 
   const LeftColumnContent = () => (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-3 relative -top-12 z-30 bg-background/95 backdrop-blur-sm border border-border shadow-lg">
           <TabsTrigger value="buckets" className="text-xs">
             <StickyNote className="h-3 w-3 mr-1" />
             Buckets of Love
@@ -961,10 +961,10 @@ export const CommunityHubWidget = () => {
   );
 
   return (
-    <Card className="col-span-1 md:col-span-2 lg:col-span-3 overflow-hidden">
+    <Card className="col-span-1 md:col-span-2 lg:col-span-3 overflow-visible relative -mt-8">
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
         <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors pb-4">
+          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors pb-4 relative z-20">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Heart className="h-5 w-5 text-red-500" />
