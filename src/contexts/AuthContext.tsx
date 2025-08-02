@@ -157,13 +157,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.error('AuthContext: Error signing out:', error);
       }
       
-      // Force redirect to home page instead of auth page
-      window.location.replace('/');
+      // Force redirect to home page top
+      window.location.href = '/';
     } catch (error) {
       console.error('AuthContext: Sign out failed:', error);
       setUser(null);
       setSession(null);
-      window.location.replace('/');
+      window.location.href = '/';
     }
   };
 
