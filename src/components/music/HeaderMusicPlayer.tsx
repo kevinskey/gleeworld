@@ -99,7 +99,7 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
   }
 
   return (
-    <div className={`flex items-center gap-1 bg-white/20 backdrop-blur-md border border-spelman-blue-light/30 hover:bg-white/30 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md rounded-full px-2 py-1 ${className}`}>
+    <div className={`flex items-center gap-1 bg-white/20 backdrop-blur-md border border-spelman-blue-light/30 hover:bg-white/30 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md rounded-full px-3 py-0.5 w-full max-w-[200px] sm:max-w-[280px] md:max-w-[320px] ${className}`}>
       {currentTrack && (
         <audio
           ref={audioRef}
@@ -111,7 +111,7 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
       {/* Compact Track Info - Clickable to open dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <div className="flex-1 min-w-0 max-w-[120px] cursor-pointer hover:bg-white/20 rounded px-1 py-0.5 transition-colors">
+          <div className="flex-1 min-w-0 max-w-[140px] sm:max-w-[180px] md:max-w-[220px] cursor-pointer hover:bg-white/20 rounded px-1 py-0.5 transition-colors">
             {currentTrack ? (
               <div className="overflow-hidden">
                 <div className="text-xs font-medium text-gray-700 truncate">
