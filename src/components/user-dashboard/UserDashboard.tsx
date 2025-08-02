@@ -261,7 +261,7 @@ const UserDashboard = React.memo(() => {
           <div className="w-full max-w-7xl mx-auto px-1 sm:px-2 md:px-4 py-1 sm:py-2 md:py-4 flex flex-col gap-4">
         
         {/* Welcome Card - Full width, extends to top */}
-        <div className="w-full -mt-6 sm:-mt-8 md:-mt-10">
+        <div className="w-full">
           <WelcomeCard 
             displayName={displayName}
             profile={profile}
