@@ -59,10 +59,10 @@ export const DashboardSwitcher = () => {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link to="/dashboard" className="flex items-center cursor-pointer">
+          <Link to="/user-dashboard" className="flex items-center cursor-pointer">
             <User className="mr-2 h-4 w-4" />
             Personal Dashboard
-            {isOnUserDashboard && (
+            {location.pathname === '/user-dashboard' && (
               <Badge variant="secondary" className="ml-auto text-xs">
                 Current
               </Badge>
