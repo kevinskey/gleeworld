@@ -15,9 +15,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { useForm } from "react-hook-form";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import SendBucketOfLove from '@/components/buckets-of-love/SendBucketOfLove';
 import { 
   Book, 
-  Bell, 
+  Bell,
   Music, 
   Heart, 
   Search, 
@@ -462,6 +463,16 @@ export const CommunityHubWidget = () => {
 
         {/* Buckets of Love Tab */}
         <TabsContent value="buckets" className="space-y-3">
+          <div className="flex justify-between items-center">
+            <SendBucketOfLove 
+              trigger={
+                <Button size="sm" className="gap-2">
+                  <Send className="h-3 w-3" />
+                  Send Love
+                </Button>
+              }
+            />
+          </div>
           {loveMessagesLoading ? (
             <div className="flex justify-center p-4">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
