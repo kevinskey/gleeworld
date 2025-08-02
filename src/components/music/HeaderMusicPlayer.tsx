@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Play, Pause, SkipBack, SkipForward, ChevronDown, Music } from 'lucide-react';
 import { useMusic } from '@/hooks/useMusic';
 import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -14,10 +15,13 @@ import {
 
 interface HeaderMusicPlayerProps {
   className?: string;
+  isExpanded?: boolean;
+  onToggleExpanded?: (expanded: boolean) => void;
 }
 
-export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) => {
+export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggleExpanded }: HeaderMusicPlayerProps) => {
   const { tracks, albums, loading, error } = useMusic();
+  const isMobile = useIsMobile();
   console.log('HeaderMusicPlayer Debug:', { tracks: tracks?.length, albums: albums?.length, loading, error });
   const [currentTrack, setCurrentTrack] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -89,6 +93,130 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
     return null;
   }
 
+  // Mobile view: Show only play button or expanded mini player
+  if (isMobile) {
+    if (!isExpanded) {
+      // Show only play button on mobile
+      return (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            if (!currentTrack && tracks.length > 0) {
+              setCurrentTrack(tracks[0]);
+            }
+            onToggleExpanded?.(true);
+          }}
+          className={`h-8 w-8 p-0 rounded-full bg-white/40 backdrop-blur-md border border-spelman-blue-light/30 hover:bg-white/50 shadow-md ${className}`}
+        >
+          <Play className="w-4 h-4 text-gray-800" />
+        </Button>
+      );
+    }
+
+    // Expanded mobile mini player
+    return (
+      <div className="fixed left-0 right-0 bg-white/95 backdrop-blur-md border-b border-spelman-blue-light/30 shadow-lg z-[90] h-20 flex items-center px-4 gap-3">
+        {currentTrack && (
+          <audio
+            ref={audioRef}
+            src={currentTrack.audio_url}
+            preload="metadata"
+          />
+        )}
+        
+        {/* Track Info */}
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-semibold text-gray-800 truncate">
+            {currentTrack?.title || 'Select Track'}
+          </div>
+          <div className="text-xs text-gray-600 truncate">
+            {currentTrack?.artist || 'No track selected'}
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handlePrevious}
+            disabled={!currentTrack}
+            className="h-8 w-8 p-0 rounded-full"
+          >
+            <SkipBack className="w-4 h-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handlePlayPause}
+            disabled={!currentTrack}
+            className="h-10 w-10 p-0 rounded-full bg-spelman-blue-light/20"
+          >
+            {isPlaying ? (
+              <Pause className="w-5 h-5" />
+            ) : (
+              <Play className="w-5 h-5" />
+            )}
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleNext}
+            disabled={!currentTrack}
+            className="h-8 w-8 p-0 rounded-full"
+          >
+            <SkipForward className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Track Selection */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full">
+              <Music className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 max-h-60 overflow-y-auto">
+            {tracks.map((track) => (
+              <DropdownMenuItem
+                key={track.id}
+                onClick={() => handleTrackSelect(track)}
+                className="flex flex-col items-start"
+              >
+                <span className="font-medium">{track.title}</span>
+                <span className="text-xs text-muted-foreground">{track.artist}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Close Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onToggleExpanded?.(false)}
+          className="h-8 w-8 p-0 rounded-full"
+        >
+          <ChevronDown className="w-4 h-4" />
+        </Button>
+
+        {/* Progress Bar */}
+        {currentTrack && duration > 0 && (
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
+            <div 
+              className="h-full bg-spelman-blue-light transition-all duration-300"
+              style={{ width: `${(currentTime / duration) * 100}%` }}
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Desktop view: Original compact player
   return (
     <div className={`relative flex items-center gap-1 bg-white/40 backdrop-blur-md border border-spelman-blue-light/30 hover:bg-white/50 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md rounded-full px-3 py-0.5 w-full max-w-[200px] sm:max-w-[280px] md:max-w-[320px] overflow-hidden group ${className}`}>
       {/* Animated Background - Only on Hover */}

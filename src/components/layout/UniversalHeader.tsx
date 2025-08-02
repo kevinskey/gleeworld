@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -28,6 +29,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
   const location = useLocation();
   const { userProfile } = useUserProfile(user);
   const { pageName } = usePageTitle();
+  const [musicPlayerExpanded, setMusicPlayerExpanded] = useState(false);
   
   // Check if user has PR access (PR coordinator or admin)
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
@@ -58,9 +60,10 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
   };
 
   return (
-    <header className="bg-gradient-to-r from-white/10 via-white/5 to-white/10 backdrop-blur-lg border-b border-white/30 sticky top-0 z-[100] shadow-xl">
-      <div className="container mx-auto px-2 sm:px-4 lg:px-6">
-        <div className="flex items-center justify-between min-h-10 sm:min-h-14 py-4 sm:py-5">
+    <>
+      <header className="bg-gradient-to-r from-white/10 via-white/5 to-white/10 backdrop-blur-lg border-b border-white/30 sticky top-0 z-[100] shadow-xl">
+        <div className="container mx-auto px-2 sm:px-4 lg:px-6">
+          <div className="flex items-center justify-between min-h-10 sm:min-h-14 py-4 sm:py-5">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 flex-1">
             <EnhancedTooltip content="Go to GleeWorld Home">
@@ -88,7 +91,11 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             {user && (
               <>
                 {console.log('UniversalHeader: User logged in, rendering HeaderMusicPlayer')}
-                <HeaderMusicPlayer className="max-w-md" />
+                <HeaderMusicPlayer 
+                  className="max-w-md" 
+                  isExpanded={musicPlayerExpanded}
+                  onToggleExpanded={setMusicPlayerExpanded}
+                />
               </>
             )}
           </div>
@@ -248,8 +255,19 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
               </EnhancedTooltip>
             )}
           </div>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+      
+      {/* Mobile expanded music player renders outside header */}
+      {user && isMobile && musicPlayerExpanded && (
+        <div className="relative z-[90]">
+          <HeaderMusicPlayer 
+            isExpanded={true}
+            onToggleExpanded={setMusicPlayerExpanded}
+          />
+        </div>
+      )}
+    </>
   );
 };
