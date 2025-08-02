@@ -304,23 +304,32 @@ const UserDashboard = React.memo(() => {
         />
 
 
-        {/* Member Dashboard Elements Only */}
-        
-        {/* Community Hub - Unified spiritual reflections, notifications, and music */}
-        <div className="w-full">
-          <CommunityHubWidget />
-        </div>
-
-        {/* Calendar - Half viewport height */}
-        <div className="w-full h-[50vh] min-h-[400px] max-h-[600px]">
-          <Card className="h-full">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Calendar & Events</CardTitle>
-            </CardHeader>
-            <CardContent className="h-[calc(100%-60px)] overflow-hidden">
-              <CalendarViews />
-            </CardContent>
-          </Card>
+        {/* 50/50 Split Layout */}
+        <div className="w-full flex flex-col lg:flex-row gap-4 min-h-[50vh]">
+          {/* Left Side: Community Hub - 50% */}
+          <div className="w-full lg:w-1/2">
+            <CommunityHubWidget />
+          </div>
+          
+          {/* Right Side: Calendar and Music - 50% */}
+          <div className="w-full lg:w-1/2 flex flex-col gap-4">
+            {/* Calendar */}
+            <div className="flex-1">
+              <Card className="h-full">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Calendar & Events</CardTitle>
+                </CardHeader>
+                <CardContent className="h-[calc(100%-60px)] overflow-hidden">
+                  <CalendarViews />
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Music Section */}
+            <div className="flex-1">
+              <QuickActionsSection isAdmin={isAdmin} actionFilter="music" />
+            </div>
+          </div>
         </div>
 
         {/* 3. Attendance */}
