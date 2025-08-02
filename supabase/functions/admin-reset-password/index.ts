@@ -122,7 +122,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Enhanced admin verification using secure function
     const { data: adminCheck, error: adminError } = await supabaseAdmin
-      .rpc('verify_admin_access', { requesting_user_id: user.id });
+      .rpc('verify_admin_access', { user_id: user.id });
 
     if (adminError || !adminCheck) {
       // Log the unauthorized attempt
