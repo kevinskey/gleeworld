@@ -17,7 +17,8 @@ interface HeaderMusicPlayerProps {
 }
 
 export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) => {
-  const { tracks, albums, loading } = useMusic();
+  const { tracks, albums, loading, error } = useMusic();
+  console.log('HeaderMusicPlayer Debug:', { tracks: tracks?.length, albums: albums?.length, loading, error });
   const [currentTrack, setCurrentTrack] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);

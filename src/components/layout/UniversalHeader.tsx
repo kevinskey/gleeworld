@@ -86,7 +86,12 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
 
           {/* Center area with music player for logged-in users */}
           <div className="flex items-center justify-center flex-1">
-            {user && <HeaderMusicPlayer className="max-w-md" />}
+            {user && (
+              <>
+                {console.log('UniversalHeader: User logged in, rendering HeaderMusicPlayer')}
+                <HeaderMusicPlayer className="max-w-md" />
+              </>
+            )}
           </div>
 
           {/* Right side actions */}
