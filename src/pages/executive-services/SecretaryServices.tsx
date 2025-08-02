@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useArtisticDirectorAvatar } from "@/hooks/useArtisticDirectorAvatar";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { AttendanceDashboard } from "@/components/attendance/AttendanceDashboard";
 import { 
   FileText, 
   Users, 
@@ -217,8 +218,9 @@ const SecretaryServices = () => {
 
         {/* Main Services */}
         <Tabs defaultValue="minutes" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="minutes">Meeting Minutes</TabsTrigger>
+            <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="communications">Communications</TabsTrigger>
             <TabsTrigger value="records">Record Keeping</TabsTrigger>
             <TabsTrigger value="contact">Contact Secretary</TabsTrigger>
@@ -300,6 +302,23 @@ const SecretaryServices = () => {
                     </div>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="attendance" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Attendance Management
+                </CardTitle>
+                <CardDescription>
+                  Manage member attendance, take attendance, and view reports
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AttendanceDashboard />
               </CardContent>
             </Card>
           </TabsContent>
