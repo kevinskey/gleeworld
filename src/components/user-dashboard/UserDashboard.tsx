@@ -299,18 +299,20 @@ const UserDashboard = React.memo(() => {
         )}
         
         {/* Welcome Card */}
-        <WelcomeCard 
-          displayName={displayName}
-          profile={profile}
-        />
+        <div className="w-full mb-6">
+          <WelcomeCard 
+            displayName={displayName}
+            profile={profile}
+          />
+        </div>
 
 
         {/* Mobile: Stacked layout, Desktop: 50/50 width split */}
         <div className="w-full min-h-[50vh]">
           {/* Mobile Layout - Simple Stacking */}
           <div className="flex flex-col md:hidden gap-4">
-            <div className="h-[40vh] flex items-center justify-center border rounded-lg">
-              <p className="text-muted-foreground">Community Hub temporarily disabled for testing</p>
+            <div className="h-[40vh]">
+              <CommunityHubWidget />
             </div>
             <div className="h-[35vh]">
               <Card className="h-full">
@@ -329,8 +331,8 @@ const UserDashboard = React.memo(() => {
 
           {/* Desktop Layout - 50/50 Width Split */}
           <div className="hidden md:flex gap-4">
-            <div className="w-1/2 flex items-center justify-center border rounded-lg">
-              <p className="text-muted-foreground">Community Hub temporarily disabled for testing</p>
+            <div className="w-1/2">
+              <CommunityHubWidget />
             </div>
             
             {/* Right Side: Calendar and Music - 50% */}
