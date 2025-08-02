@@ -50,7 +50,7 @@ export const DashboardTemplate = ({
   if (loading) {
     return (
       <UniversalLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center justify-center min-h-[600px]">
           <LoadingSpinner />
         </div>
       </UniversalLayout>
