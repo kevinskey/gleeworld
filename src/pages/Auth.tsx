@@ -14,8 +14,16 @@ const Auth = () => {
 
   useEffect(() => {
     if (!loading && user) {
-      console.log('Auth: User detected, redirecting to dashboard');
-      navigate('/dashboard', { replace: true });
+      console.log('Auth: User detected, checking for redirect path');
+      const redirectPath = sessionStorage.getItem('redirectAfterAuth');
+      if (redirectPath) {
+        console.log('Auth: Redirecting to stored path:', redirectPath);
+        sessionStorage.removeItem('redirectAfterAuth');
+        navigate(redirectPath, { replace: true });
+      } else {
+        console.log('Auth: No stored path, redirecting to dashboard');
+        navigate('/dashboard', { replace: true });
+      }
     }
   }, [user, loading, navigate]);
 

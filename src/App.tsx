@@ -113,6 +113,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!user) {
+    // Store the current path to redirect back after login
+    const currentPath = window.location.pathname + window.location.search;
+    if (currentPath !== '/auth' && currentPath !== '/') {
+      sessionStorage.setItem('redirectAfterAuth', currentPath);
+    }
     return <Navigate to="/auth" replace />;
   }
   
@@ -136,8 +141,13 @@ const RootRoute = () => {
     );
   }
   
-  // If user is authenticated, redirect to dashboard
+  // If user is authenticated, check for stored redirect path
   if (user) {
+    const redirectPath = sessionStorage.getItem('redirectAfterAuth');
+    if (redirectPath) {
+      sessionStorage.removeItem('redirectAfterAuth');
+      return <Navigate to={redirectPath} replace />;
+    }
     return <Navigate to="/dashboard" replace />;
   }
   
@@ -607,11 +617,10 @@ const App = () => {
                                    </PublicRoute>
                                  } 
                                />
-                 <Route 
-                   path="/" 
-                   element={<RootRoute />} 
-                 />
-                    <Route path="*" element={<NotFound />} />
+                  <Route 
+                    path="/" 
+                    element={<RootRoute />} 
+                  />
                              <Route 
                                path="/admin/bulk-assignment" 
                                element={
