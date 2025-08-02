@@ -129,6 +129,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Clear auth state IMMEDIATELY
       setUser(null);
       setSession(null);
+      setLoading(false); // Ensure loading is false to prevent white screen
       
       // Clear any stored auth tokens
       try {
@@ -141,20 +142,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.warn('Failed to clear localStorage:', e);
       }
       
-      // Sign out from Supabase
-      const { error } = await supabase.auth.signOut({ scope: 'global' });
-      
-      if (error) {
+      // Sign out from Supabase (do this after clearing state to avoid loading screens)
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (error) {
         console.error('AuthContext: Error signing out:', error);
       }
       
-      // Force redirect to home page top
-      window.location.href = '/';
+      // Immediate redirect without reload to prevent white screen
+      window.location.replace('/');
     } catch (error) {
       console.error('AuthContext: Sign out failed:', error);
       setUser(null);
       setSession(null);
-      window.location.href = '/';
+      setLoading(false);
+      window.location.replace('/');
     }
   };
 
