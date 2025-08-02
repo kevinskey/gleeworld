@@ -26,6 +26,7 @@ interface GleeWorldProfile {
   is_super_admin: boolean;
   is_admin: boolean;
   disabled: boolean;
+  verified: boolean;
   role_tags: string[] | null;
   title: string | null;
   special_roles: string[] | null;

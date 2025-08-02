@@ -21,6 +21,7 @@ export const useRoleBasedRedirect = () => {
       isSuperAdmin: userProfile?.is_super_admin,
       isExecBoard: userProfile?.is_exec_board,
       execBoardRole: userProfile?.exec_board_role,
+      verified: userProfile?.verified,
       pathname: location.pathname
     });
 
@@ -78,7 +79,7 @@ export const useRoleBasedRedirect = () => {
       // Check executive board status from profile AND table
       const isExecBoardFromProfile = userProfile.is_exec_board || userProfile.is_admin || userProfile.is_super_admin;
       const execBoardData = await checkExecutiveStatus();
-      const isExecutiveBoard = isExecBoardFromProfile || !!execBoardData;
+      const isExecutiveBoard = (isExecBoardFromProfile || !!execBoardData) && userProfile.verified;
       
       console.log('useRoleBasedRedirect: Redirect logic', {
         userRole: userProfile.role,
