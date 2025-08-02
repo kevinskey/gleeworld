@@ -1,6 +1,9 @@
 
 export const USER_ROLES = {
   USER: 'user',
+  MEMBER: 'member',
+  FAN: 'fan',
+  ALUMNAE: 'alumnae',
   ADMIN: 'admin',
   SUPER_ADMIN: 'super-admin',
   TREASURER: 'treasurer',
@@ -42,6 +45,28 @@ export type Permission = typeof PERMISSIONS[number];
 
 export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
   [USER_ROLES.USER]: [
+    'view_own_contracts',
+    'view_own_payments',
+    'view_own_w9_forms',
+    'sign_contracts',
+    'submit_w9_forms',
+    'access_handbook',
+  ],
+  [USER_ROLES.MEMBER]: [
+    'view_own_contracts',
+    'view_own_payments',
+    'view_own_w9_forms',
+    'sign_contracts',
+    'submit_w9_forms',
+    'access_handbook',
+  ],
+  [USER_ROLES.FAN]: [
+    'view_own_contracts',
+    'view_own_payments',
+    'view_own_w9_forms',
+    'access_handbook',
+  ],
+  [USER_ROLES.ALUMNAE]: [
     'view_own_contracts',
     'view_own_payments',
     'view_own_w9_forms',

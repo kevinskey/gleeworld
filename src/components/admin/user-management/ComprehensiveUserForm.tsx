@@ -308,6 +308,8 @@ export const ComprehensiveUserForm = ({ user, mode, onSuccess, onCancel }: Compr
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value="fan">Fan</SelectItem>
                     <SelectItem value="alumnae">Alumnae</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="super-admin">Super Admin</SelectItem>

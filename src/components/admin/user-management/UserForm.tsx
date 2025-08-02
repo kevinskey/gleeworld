@@ -287,6 +287,8 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="user">User</SelectItem>
+                <SelectItem value="member">Member</SelectItem>
+                <SelectItem value="fan">Fan</SelectItem>
                 <SelectItem value="alumnae">Alumnae</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="super-admin">Super Admin</SelectItem>
