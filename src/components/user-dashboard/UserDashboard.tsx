@@ -314,20 +314,12 @@ const UserDashboard = React.memo(() => {
             <div className="h-[40vh]">
               <CommunityHubWidget />
             </div>
-            <div className="h-[35vh]">
-              <QuickActionsSection isAdmin={isAdmin} actionFilter="attendance" />
-            </div>
           </div>
 
-          {/* Desktop Layout - 50/50 Width Split */}
+          {/* Desktop Layout - Full Width */}
           <div className="hidden md:flex gap-4">
-            <div className="w-1/2">
+            <div className="w-full">
               <CommunityHubWidget />
-            </div>
-            
-            {/* Right Side: Attendance - 50% */}
-            <div className="w-1/2">
-              <QuickActionsSection isAdmin={isAdmin} actionFilter="attendance" />
             </div>
           </div>
         </div>
