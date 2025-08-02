@@ -104,8 +104,8 @@ export const useRoleBasedRedirect = () => {
         navigate('/executive-board', { replace: true });
         window.scrollTo(0, 0);
       } else {
-        console.log('useRoleBasedRedirect: Redirecting regular user to dashboard');
-        navigate('/dashboard', { replace: true });
+        console.log('useRoleBasedRedirect: Redirecting regular user to user dashboard');
+        navigate('/user-dashboard', { replace: true });
         window.scrollTo(0, 0);
       }
     };
