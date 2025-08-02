@@ -113,17 +113,17 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56 max-h-80 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl">
           {albums.length > 0 ? (
-            albums.map((album) => (
-              <DropdownMenuSub key={album.id}>
-                <DropdownMenuSubTrigger className="text-xs">
-                  {album.title}
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-56 max-h-60 overflow-y-auto bg-white/95 backdrop-blur-md">
+            <>
+              {albums.map((album) => (
+                <div key={album.id}>
+                  <div className="px-2 py-1.5 text-xs font-semibold text-gray-600 bg-gray-50/50 border-b">
+                    {album.title}
+                  </div>
                   {album.tracks?.map((track) => (
                     <DropdownMenuItem
                       key={track.id}
                       onClick={() => handleTrackSelect(track)}
-                      className="text-xs"
+                      className="text-xs pl-4"
                     >
                       <div className="flex flex-col">
                         <span className="font-medium">{track.title}</span>
@@ -131,9 +131,9 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
                       </div>
                     </DropdownMenuItem>
                   ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-            ))
+                </div>
+              ))}
+            </>
           ) : (
             tracks.map((track) => (
               <DropdownMenuItem
