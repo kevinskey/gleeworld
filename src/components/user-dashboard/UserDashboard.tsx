@@ -325,10 +325,6 @@ const UserDashboard = React.memo(() => {
         </div>
 
 
-        {/* 4. Tasks and Dues */}
-        <div className="w-full">
-          <TasksSection />
-        </div>
 
 
         {/* Show Dashboard Modules for Admin/Executive Features */}
