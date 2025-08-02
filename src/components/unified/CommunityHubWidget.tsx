@@ -458,20 +458,23 @@ export const CommunityHubWidget = () => {
             </div>
           ) : (
             <div className="relative">
-              {/* Header with cute bucket image */}
-              <div className="flex flex-col items-center mb-4">
-                <img 
-                  src="/lovable-uploads/96533996-2039-4566-887a-67eadeb076f1.png" 
-                  alt="Sending you buckets of love"
-                  className="w-32 h-auto mb-2"
-                />
-                <p className="text-xs text-muted-foreground text-center leading-relaxed">
+              {/* Background bucket image */}
+              <div 
+                className="absolute inset-0 bg-contain bg-no-repeat bg-center opacity-10 pointer-events-none"
+                style={{
+                  backgroundImage: `url('/lovable-uploads/96533996-2039-4566-887a-67eadeb076f1.png')`
+                }}
+              />
+              
+              {/* Header text only */}
+              <div className="relative z-10 text-center mb-4">
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   Share love, encouragement, and positive vibes with the Glee Club family
                 </p>
               </div>
 
               {/* Love Notes Grid */}
-              <div className="grid grid-cols-7 gap-1 mb-4 h-48 overflow-y-auto">
+              <div className="relative z-10 grid grid-cols-7 gap-1 mb-4 h-48 overflow-y-auto">
                 {loveMessages.map((message) => (
                   <div
                     key={message.id}
