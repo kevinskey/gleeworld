@@ -89,6 +89,7 @@ import LibrarianDashboard from "./pages/LibrarianDashboard";
 import HistorianDashboard from "./pages/HistorianDashboard";
 import SetUpCrewManagerServices from "./pages/executive-services/SetUpCrewManagerServices";
 import UserManagement from "./pages/UserManagement";
+import MemberDirectory from "./pages/MemberDirectory";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -504,14 +505,22 @@ const App = () => {
                                </ProtectedRoute>
                              } 
                             />
-                            <Route 
-                              path="/user-management" 
-                              element={
-                                <ProtectedRoute>
-                                  <UserManagement />
-                                </ProtectedRoute>
-                              } 
-                            />
+                             <Route 
+                               path="/user-management" 
+                               element={
+                                 <ProtectedRoute>
+                                   <UserManagement />
+                                 </ProtectedRoute>
+                               } 
+                             />
+                             <Route 
+                               path="/member-directory" 
+                               element={
+                                 <ProtectedRoute>
+                                   <MemberDirectory />
+                                 </ProtectedRoute>
+                               } 
+                             />
                              <Route 
                                path="/executive-board" 
                                element={
