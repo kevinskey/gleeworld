@@ -279,7 +279,7 @@ const UserDashboard = React.memo(() => {
         <div className="w-full min-h-[50vh]">
           {/* Mobile Layout - Simple Stacking */}
           <div className="flex flex-col md:hidden gap-4">
-            <div className="h-[40vh]">
+            <div className="h-[calc(40vh+20px)]">
               <CommunityHubWidget />
             </div>
           </div>
