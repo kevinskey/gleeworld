@@ -51,6 +51,7 @@ import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePublicGleeWorldEvents } from "@/hooks/usePublicGleeWorldEvents";
 import { PublicCalendarViews } from "@/components/calendar/PublicCalendarViews";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 
 interface Notification {
   id: string;
@@ -828,6 +829,18 @@ export const CommunityHubWidget = () => {
               <p className="text-xs text-muted-foreground">No notifications</p>
             </div>
           )}
+          
+          {/* View All Notifications Button */}
+          <div className="mt-3 pt-3 border-t">
+            <NotificationCenter 
+              trigger={
+                <Button variant="outline" size="sm" className="w-full text-xs h-8">
+                  <Bell className="h-3 w-3 mr-1" />
+                  Open Notification Center
+                </Button>
+              }
+            />
+          </div>
         </TabsContent>
       </Tabs>
     </div>
