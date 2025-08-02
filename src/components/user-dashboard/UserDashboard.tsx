@@ -298,6 +298,14 @@ const UserDashboard = React.memo(() => {
           </div>
         )}
         
+        {/* Hero Header Section */}
+        <div className="w-full mb-6 min-h-[1000px] bg-red-500 border-8 border-yellow-500 flex items-center justify-center">
+          <div className="text-center text-white">
+            <h1 className="text-6xl font-bold mb-4">USER DASHBOARD HERO</h1>
+            <p className="text-2xl">Height: 1000px | User: {displayName}</p>
+          </div>
+        </div>
+        
         {/* Welcome Card */}
         <div className="w-full mb-6">
           <WelcomeCard 
