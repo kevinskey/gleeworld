@@ -79,6 +79,7 @@ import TreasurerServices from "./pages/executive-services/TreasurerServices";
 import TourManagerServices from "./pages/executive-services/TourManagerServices";
 import PRCoordinatorServices from "./pages/executive-services/PRCoordinatorServices";
 import PresidentServices from "./pages/executive-services/PresidentServices";
+import VicePresidentServices from "./pages/executive-services/VicePresidentServices";
 import ChaplainServices from "./pages/executive-services/ChaplainServices";
 import StudentConductorServices from "./pages/executive-services/StudentConductorServices";
 import AssistantChaplainServices from "./pages/executive-services/AssistantChaplainServices";
@@ -690,8 +691,16 @@ const App = () => {
                                       <PresidentServices />
                                     </ProtectedRoute>
                                   } 
-                                />
-                                <Route 
+                                 />
+                                 <Route 
+                                   path="/executive-services/vice-president" 
+                                   element={
+                                     <ProtectedRoute>
+                                       <VicePresidentServices />
+                                     </ProtectedRoute>
+                                   } 
+                                 />
+                                 <Route
                                   path="/executive-services/chaplain" 
                                   element={
                                     <ProtectedRoute>
