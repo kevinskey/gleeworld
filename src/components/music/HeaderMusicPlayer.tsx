@@ -112,15 +112,11 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <div className="flex-1 min-w-0 max-w-[140px] sm:max-w-[180px] md:max-w-[220px] cursor-pointer hover:bg-white/20 rounded px-1 py-0.5 transition-colors">
-            {currentTrack ? (
-              <div className="overflow-hidden">
-                <div className="text-xs font-medium text-gray-700 truncate">
-                  {currentTrack.title}
-                </div>
+            <div className="overflow-hidden">
+              <div className="text-[8px] font-bold text-black uppercase tracking-wide truncate">
+                MUSIC PLAYER
               </div>
-            ) : (
-              <div className="text-xs text-gray-600">Select track...</div>
-            )}
+            </div>
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56 max-h-80 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl">
@@ -130,13 +126,26 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
               <div className="px-2 py-1.5 text-[6px] font-semibold text-gray-600 bg-gray-50/50 border-b">
                 Choose Album
               </div>
-              {albums.map((album) => (
+               {albums.map((album) => (
                 <DropdownMenuItem
                   key={album.id}
                   onClick={() => handleAlbumSelect(album)}
-                  className="text-[6px] flex items-center justify-between"
+                  className="text-[6px] flex items-center gap-2 p-2"
                 >
-                  <div className="flex flex-col">
+                  {/* Album Art */}
+                  <div className="w-6 h-6 rounded bg-muted flex items-center justify-center flex-shrink-0">
+                    {album.cover_image_url ? (
+                      <img 
+                        src={album.cover_image_url} 
+                        alt="Album art"
+                        className="w-full h-full rounded object-cover"
+                      />
+                    ) : (
+                      <Music className="w-3 h-3 text-muted-foreground" />
+                    )}
+                  </div>
+                  {/* Album Title */}
+                  <div className="flex flex-col flex-1">
                     <span className="font-medium">{album.title}</span>
                     <span className="text-[5px] text-muted-foreground">
                       {album.tracks?.length || 0} tracks
