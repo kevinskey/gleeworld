@@ -87,7 +87,7 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
   }
 
   return (
-    <div className={`flex items-center gap-2 bg-card/80 backdrop-blur-sm rounded-lg border px-3 py-1.5 ${className}`}>
+    <div className={`flex items-center gap-1 bg-white/20 backdrop-blur-md border border-spelman-blue-light/30 hover:bg-white/30 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md rounded-full px-2 py-1 ${className}`}>
       {currentTrack && (
         <audio
           ref={audioRef}
@@ -96,45 +96,29 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
         />
       )}
       
-      {/* Album Art */}
-      <div className="w-8 h-8 rounded bg-muted flex items-center justify-center flex-shrink-0">
-        {currentTrack?.album?.cover_image_url ? (
-          <img 
-            src={currentTrack.album.cover_image_url} 
-            alt="Album art"
-            className="w-full h-full rounded object-cover"
-          />
-        ) : (
-          <Music className="w-4 h-4 text-muted-foreground" />
-        )}
-      </div>
-
-      {/* Track Info */}
-      <div className="flex-1 min-w-0 max-w-[200px]">
+      {/* Compact Track Info */}
+      <div className="flex-1 min-w-0 max-w-[120px]">
         {currentTrack ? (
           <div className="overflow-hidden">
-            <div className="text-sm font-medium text-foreground truncate animate-pulse">
+            <div className="text-xs font-medium text-gray-700 truncate">
               {currentTrack.title}
-            </div>
-            <div className="text-xs text-muted-foreground truncate">
-              {currentTrack.artist}
             </div>
           </div>
         ) : (
-          <div className="text-sm text-muted-foreground">Select a track</div>
+          <div className="text-xs text-gray-600">No track</div>
         )}
       </div>
 
-      {/* Controls */}
-      <div className="flex items-center gap-1">
+      {/* Compact Controls */}
+      <div className="flex items-center gap-0.5">
         <Button
           variant="ghost"
           size="sm"
           onClick={handlePrevious}
           disabled={!currentTrack}
-          className="h-7 w-7 p-0"
+          className="h-5 w-5 p-0 hover:bg-white/30 rounded-full"
         >
-          <SkipBack className="w-3 h-3" />
+          <SkipBack className="w-2.5 h-2.5" />
         </Button>
 
         <Button
@@ -142,7 +126,7 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
           size="sm"
           onClick={handlePlayPause}
           disabled={!currentTrack}
-          className="h-7 w-7 p-0"
+          className="h-6 w-6 p-0 hover:bg-white/30 rounded-full"
         >
           {isPlaying ? (
             <Pause className="w-3 h-3" />
@@ -156,32 +140,32 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
           size="sm"
           onClick={handleNext}
           disabled={!currentTrack}
-          className="h-7 w-7 p-0"
+          className="h-5 w-5 p-0 hover:bg-white/30 rounded-full"
         >
-          <SkipForward className="w-3 h-3" />
+          <SkipForward className="w-2.5 h-2.5" />
         </Button>
       </div>
 
       {/* Track Selector */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-            <ChevronDown className="w-3 h-3" />
+          <Button variant="ghost" size="sm" className="h-5 w-5 p-0 hover:bg-white/30 rounded-full">
+            <ChevronDown className="w-2.5 h-2.5" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-64 max-h-96 overflow-y-auto">
+        <DropdownMenuContent align="end" className="w-56 max-h-80 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl">
           {albums.length > 0 ? (
             albums.map((album) => (
               <DropdownMenuSub key={album.id}>
-                <DropdownMenuSubTrigger className="text-sm">
+                <DropdownMenuSubTrigger className="text-xs">
                   {album.title}
                 </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-64 max-h-64 overflow-y-auto">
+                <DropdownMenuSubContent className="w-56 max-h-60 overflow-y-auto bg-white/95 backdrop-blur-md">
                   {album.tracks?.map((track) => (
                     <DropdownMenuItem
                       key={track.id}
                       onClick={() => handleTrackSelect(track)}
-                      className="text-sm"
+                      className="text-xs"
                     >
                       <div className="flex flex-col">
                         <span className="font-medium">{track.title}</span>
@@ -197,7 +181,7 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
               <DropdownMenuItem
                 key={track.id}
                 onClick={() => handleTrackSelect(track)}
-                className="text-sm"
+                className="text-xs"
               >
                 <div className="flex flex-col">
                   <span className="font-medium">{track.title}</span>
@@ -209,11 +193,11 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Progress indicator */}
+      {/* Compact Progress indicator */}
       {currentTrack && duration > 0 && (
-        <div className="w-16 h-1 bg-muted rounded-full overflow-hidden">
+        <div className="w-8 h-0.5 bg-white/30 rounded-full overflow-hidden ml-1">
           <div 
-            className="h-full bg-primary transition-all duration-300"
+            className="h-full bg-spelman-blue-light transition-all duration-300"
             style={{ width: `${(currentTime / duration) * 100}%` }}
           />
         </div>
