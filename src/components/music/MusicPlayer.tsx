@@ -408,7 +408,7 @@ export const MusicPlayer = ({ tracks, className = "" }: MusicPlayerProps) => {
 
         {/* Track List */}
         {tracks.length > 1 && (
-          <div className="mt-3 sm:mt-4 max-h-24 sm:max-h-32 overflow-y-auto">
+          <div className="mt-3 sm:mt-4 max-h-48 sm:max-h-64 overflow-y-auto scroll-smooth">
             <h4 className="text-xs sm:text-sm font-medium text-gray-700 mb-2">Playlist ({tracks.length} tracks)</h4>
             <div className="space-y-1">
               {tracks.map((track, index) => (
