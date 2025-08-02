@@ -303,18 +303,24 @@ const UserDashboard = React.memo(() => {
           profile={profile}
         />
 
-        {/* Calendar - Half viewport height */}
-        <div className="w-full">
-          <div className="h-[50vh] min-h-[400px] max-h-[600px] overflow-hidden">
-            <CalendarViews />
-          </div>
-        </div>
 
         {/* Member Dashboard Elements Only */}
         
         {/* Community Hub - Unified spiritual reflections, notifications, and music */}
         <div className="w-full">
           <CommunityHubWidget />
+        </div>
+
+        {/* Calendar - Half viewport height */}
+        <div className="w-full h-[50vh] min-h-[400px] max-h-[600px]">
+          <Card className="h-full">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Calendar & Events</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[calc(100%-60px)] overflow-hidden">
+              <CalendarViews />
+            </CardContent>
+          </Card>
         </div>
 
         {/* 3. Attendance */}
