@@ -3,6 +3,7 @@ import { useDashboardSettings } from "@/hooks/useDashboardSettings";
 import { useState, useMemo } from "react";
 import { BellDot } from "lucide-react";
 import { useUserDashboardContext } from "@/contexts/UserDashboardContext";
+import { useNavigate } from "react-router-dom";
 
 interface WelcomeCardProps {
   displayName: string;
@@ -20,6 +21,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
   const welcomeCardSetting = getSettingByName('welcome_card_background');
   const [imageError, setImageError] = useState(false);
   const { dashboardData } = useUserDashboardContext();
+  const navigate = useNavigate();
 
   const getUserTitle = () => {
     // Check for executive board role first
@@ -119,7 +121,13 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
       {dashboardData?.unread_notifications > 0 && (
         <div 
           className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 cursor-pointer hover:scale-110 transition-transform" 
-          onClick={() => window.location.href = '/dashboard?section=notifications'}
+          onClick={() => {
+            // Scroll to notifications section on the current page
+            const notificationsElement = document.querySelector('[data-section="notifications"]');
+            if (notificationsElement) {
+              notificationsElement.scrollIntoView({ behavior: 'smooth' });
+            }
+          }}
         >
           <BellDot 
             className="w-6 h-6 sm:w-8 sm:h-8 text-blue-200 drop-shadow-lg animate-pulse" 
