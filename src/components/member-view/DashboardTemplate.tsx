@@ -61,7 +61,7 @@ export const DashboardTemplate = ({
     <UniversalLayout>
       <div className="min-h-screen bg-background">
         {/* Header Card */}
-        <Card className="mb-6 relative overflow-hidden min-h-[600px]">
+        <Card className="mb-6 relative overflow-hidden min-h-[600px] flex items-center">
           {backgroundImage && (
             <div 
               className="absolute inset-0 bg-cover bg-center opacity-20"
