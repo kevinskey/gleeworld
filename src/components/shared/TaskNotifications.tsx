@@ -5,8 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { 
-  Bell, 
-  CheckCircle, 
+  CheckCircle,
   Clock, 
   AlertTriangle,
   Check,
@@ -37,7 +36,7 @@ export const TaskNotifications = () => {
       case 'completed': return <CheckCircle className="h-4 w-4 text-green-600" />;
       case 'due_soon': return <Clock className="h-4 w-4 text-yellow-600" />;
       case 'overdue': return <AlertTriangle className="h-4 w-4 text-red-600" />;
-      default: return <Bell className="h-4 w-4 text-gray-600" />;
+      default: return <CheckCircle className="h-4 w-4 text-gray-600" />;
     }
   };
 
@@ -73,7 +72,7 @@ export const TaskNotifications = () => {
   if (loading) {
     return (
       <Button variant="ghost" size="sm" disabled>
-        <Bell className="h-4 w-4" />
+        <CheckCircle className="h-4 w-4" />
       </Button>
     );
   }
@@ -82,7 +81,7 @@ export const TaskNotifications = () => {
     <Dialog open={showDialog} onOpenChange={setShowDialog}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm" className="relative">
-          <Bell className="h-4 w-4" />
+          <CheckCircle className="h-4 w-4" />
           {unreadCount > 0 && (
             <Badge 
               variant="destructive" 
@@ -98,7 +97,7 @@ export const TaskNotifications = () => {
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
+              <CheckCircle className="h-5 w-5" />
               Task Notifications
             </DialogTitle>
             {unreadCount > 0 && (
@@ -117,7 +116,7 @@ export const TaskNotifications = () => {
           <div className="space-y-2">
             {notifications.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                <Bell className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                <CheckCircle className="h-8 w-8 mx-auto mb-2 text-gray-400" />
                 <p>No notifications yet</p>
               </div>
             ) : (

@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { User, Calendar, Bell, Settings } from "lucide-react";
+import { User, Calendar, Settings } from "lucide-react";
 import { ReactNode } from "react";
 
 interface DashboardTemplateProps {
