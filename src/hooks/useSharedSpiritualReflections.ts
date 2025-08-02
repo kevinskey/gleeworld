@@ -59,27 +59,17 @@ export const useSharedSpiritualReflections = () => {
   };
 
   useEffect(() => {
-    fetchSharedReflections();
+    let isMounted = true;
+    
+    if (isMounted) {
+      fetchSharedReflections();
+    }
 
-    // Set up real-time subscription for shared reflections
-    const channel = supabase
-      .channel('shared-spiritual-reflections-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'gw_spiritual_reflections',
-          filter: 'is_shared_to_members=eq.true'
-        },
-        () => {
-          fetchSharedReflections();
-        }
-      )
-      .subscribe();
+    // TEMPORARILY DISABLE SUBSCRIPTIONS TO PREVENT MULTIPLE SUBSCRIPTION ERROR
+    console.log('useSharedSpiritualReflections: Subscriptions disabled for stability');
 
     return () => {
-      supabase.removeChannel(channel);
+      isMounted = false;
     };
   }, []);
 
