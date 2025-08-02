@@ -34,6 +34,7 @@ import TreasurerServices from "@/pages/executive-services/TreasurerServices";
 import TourManagerServices from "@/pages/executive-services/TourManagerServices";
 import PRCoordinatorServices from "@/pages/executive-services/PRCoordinatorServices";
 import ExecutiveServicesDirectory from "@/pages/ExecutiveServicesDirectory";
+import TourManager from "@/pages/TourManager";
 
 
 export const router = createBrowserRouter([
@@ -160,6 +161,10 @@ export const router = createBrowserRouter([
   {
     path: "/executive-services/pr-coordinator",
     element: <PRCoordinatorServices />,
+  },
+  {
+    path: "/tour-manager",
+    element: <TourManager />,
   },
   {
     path: "*",
