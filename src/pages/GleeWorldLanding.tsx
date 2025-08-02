@@ -306,7 +306,11 @@ export const GleeWorldLanding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-spelman-blue-light/10 via-background to-spelman-blue-dark/10 relative overflow-hidden">
+    <div className="min-h-screen bg-yellow-500 p-8">
+      <h1 className="text-black text-4xl font-bold mb-4">DEBUG: GleeWorldLanding IS RENDERING</h1>
+      <p className="text-black text-xl">User: {user ? 'LOGGED IN' : 'NOT LOGGED IN'}</p>
+      <p className="text-black text-xl">heroSlides.length: {heroSlides.length}</p>
+      <div className="min-h-screen bg-gradient-to-br from-spelman-blue-light/10 via-background to-spelman-blue-dark/10 relative overflow-hidden">
       {/* Liquid glass background elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5"></div>
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl"></div>
@@ -812,6 +816,7 @@ export const GleeWorldLanding = () => {
         </div>
       </section>
       </PublicLayout>
+      </div>
     </div>
   );
 };
