@@ -138,37 +138,6 @@ const PresidentServices = () => {
           </Card>
         )}
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Users className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold">75+</div>
-              <div className="text-sm text-muted-foreground">Active Members</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Calendar className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold">12</div>
-              <div className="text-sm text-muted-foreground">Events This Year</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6 text-center">
-              <FileText className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold">8</div>
-              <div className="text-sm text-muted-foreground">Active Initiatives</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Star className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold">100+</div>
-              <div className="text-sm text-muted-foreground">Years of Excellence</div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Main Services */}
         <Tabs defaultValue="leadership" className="space-y-6">
@@ -275,28 +244,8 @@ const PresidentServices = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  {[
-                    { title: "Centennial Celebration Planning", status: "In Progress", priority: "High" },
-                    { title: "Alumni Network Expansion", status: "Planning", priority: "Medium" },
-                    { title: "Community Outreach Program", status: "Active", priority: "High" },
-                    { title: "Digital Archive Project", status: "Review", priority: "Low" },
-                  ].map((initiative, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h4 className="font-semibold">{initiative.title}</h4>
-                        <p className="text-sm text-muted-foreground">Status: {initiative.status}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={initiative.priority === "High" ? "default" : initiative.priority === "Medium" ? "secondary" : "outline"}>
-                          {initiative.priority}
-                        </Badge>
-                        <Button size="sm" variant="outline">
-                          View Details
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No active initiatives to display</p>
                 </div>
               </CardContent>
             </Card>

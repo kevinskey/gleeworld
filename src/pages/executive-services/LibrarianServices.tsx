@@ -68,37 +68,6 @@ const LibrarianServices = () => {
           backTo="/executive-services"
         />
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Music className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold">450+</div>
-              <div className="text-sm text-muted-foreground">Available Scores</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Download className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold">23</div>
-              <div className="text-sm text-muted-foreground">Your Downloads</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Clock className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold">5</div>
-              <div className="text-sm text-muted-foreground">Pending Requests</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Users className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold">85</div>
-              <div className="text-sm text-muted-foreground">Active Members</div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -134,31 +103,8 @@ const LibrarianServices = () => {
                   </Button>
                 </div>
                 
-                {/* Sample music list */}
-                <div className="space-y-3">
-                  {[
-                    { title: "Ave Maria", composer: "Franz Schubert", genre: "Sacred", available: true },
-                    { title: "Swing Low, Sweet Chariot", composer: "Traditional Spiritual", genre: "Spiritual", available: true },
-                    { title: "The Water is Wide", composer: "Traditional", genre: "Folk", available: false },
-                  ].map((piece, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h4 className="font-semibold">{piece.title}</h4>
-                        <p className="text-sm text-muted-foreground">{piece.composer} • {piece.genre}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={piece.available ? "default" : "secondary"}>
-                          {piece.available ? "Available" : "Checked Out"}
-                        </Badge>
-                        {piece.available && (
-                          <Button size="sm">
-                            <Download className="h-4 w-4 mr-2" />
-                            Download
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Use the search above to find music in our library</p>
                 </div>
               </CardContent>
             </Card>
@@ -227,28 +173,8 @@ const LibrarianServices = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {[
-                    { title: "Ave Maria", composer: "Franz Schubert", downloadDate: "2024-01-15", format: "PDF" },
-                    { title: "Swing Low, Sweet Chariot", composer: "Traditional", downloadDate: "2024-01-10", format: "PDF" },
-                    { title: "Amazing Grace", composer: "John Newton", downloadDate: "2024-01-08", format: "PDF" },
-                  ].map((download, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h4 className="font-semibold">{download.title}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {download.composer} • Downloaded {download.downloadDate}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">{download.format}</Badge>
-                        <Button size="sm" variant="outline">
-                          <Download className="h-4 w-4 mr-2" />
-                          Re-download
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No downloads available</p>
                 </div>
               </CardContent>
             </Card>
@@ -271,9 +197,7 @@ const LibrarianServices = () => {
                   <div className="space-y-4">
                     <h4 className="font-semibold">Current Librarian</h4>
                     <div className="space-y-2">
-                      <p className="font-medium">Sarah Johnson</p>
-                      <p className="text-sm text-muted-foreground">librarian@spelman.edu</p>
-                      <p className="text-sm text-muted-foreground">Office Hours: Mon-Fri 2-5 PM</p>
+                      <p className="text-sm text-muted-foreground">Contact information available upon request</p>
                     </div>
                   </div>
                   <div className="space-y-4">

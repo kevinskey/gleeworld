@@ -139,49 +139,6 @@ const VicePresidentServices = () => {
           </Card>
         )}
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">8</div>
-              <p className="text-xs text-muted-foreground">Special initiatives</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Committee Assignments</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">5</div>
-              <p className="text-xs text-muted-foreground">Leadership roles</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Event Coordination</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">12</div>
-              <p className="text-xs text-muted-foreground">Events managed</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Member Support</CardTitle>
-              <Award className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">95%</div>
-              <p className="text-xs text-muted-foreground">Satisfaction rate</p>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Main Services */}
         <Tabs defaultValue="leadership" className="space-y-6">
@@ -238,22 +195,8 @@ const VicePresidentServices = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="p-4 border rounded-lg">
-                    <h4 className="font-semibold">Centennial Celebration Planning</h4>
-                    <p className="text-sm text-muted-foreground">Coordinating 100th anniversary events</p>
-                    <Badge className="mt-2">In Progress</Badge>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <h4 className="font-semibold">Alumni Engagement Initiative</h4>
-                    <p className="text-sm text-muted-foreground">Strengthening alumni connections</p>
-                    <Badge variant="outline" className="mt-2">Planning</Badge>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <h4 className="font-semibold">Digital Transformation Project</h4>
-                    <p className="text-sm text-muted-foreground">Modernizing club operations</p>
-                    <Badge className="mt-2">Active</Badge>
-                  </div>
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No active projects to display</p>
                 </div>
               </CardContent>
             </Card>

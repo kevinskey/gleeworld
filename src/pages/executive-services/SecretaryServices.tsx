@@ -139,49 +139,6 @@ const SecretaryServices = () => {
           </Card>
         )}
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Meeting Minutes</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">24</div>
-              <p className="text-xs text-muted-foreground">This semester</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Communications Sent</CardTitle>
-              <Mail className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">156</div>
-              <p className="text-xs text-muted-foreground">This month</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Records Maintained</CardTitle>
-              <Archive className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">98%</div>
-              <p className="text-xs text-muted-foreground">Completion rate</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Response Time</CardTitle>
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">2.3h</div>
-              <p className="text-xs text-muted-foreground">Average response</p>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Main Services */}
         <Tabs defaultValue="minutes" className="space-y-6">
@@ -223,30 +180,8 @@ const SecretaryServices = () => {
                   </Button>
                 </div>
 
-                <div className="space-y-3">
-                  <h4 className="font-semibold">Recent Meetings</h4>
-                  <div className="space-y-2">
-                    <div className="p-3 border rounded-lg flex justify-between items-center">
-                      <div>
-                        <p className="font-medium">Executive Board Meeting</p>
-                        <p className="text-sm text-muted-foreground">March 15, 2024</p>
-                      </div>
-                      <Button size="sm" variant="outline">
-                        <Download className="h-4 w-4 mr-2" />
-                        Download
-                      </Button>
-                    </div>
-                    <div className="p-3 border rounded-lg flex justify-between items-center">
-                      <div>
-                        <p className="font-medium">General Assembly</p>
-                        <p className="text-sm text-muted-foreground">March 12, 2024</p>
-                      </div>
-                      <Button size="sm" variant="outline">
-                        <Download className="h-4 w-4 mr-2" />
-                        Download
-                      </Button>
-                    </div>
-                  </div>
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No recent meeting minutes to display</p>
                 </div>
               </CardContent>
             </Card>

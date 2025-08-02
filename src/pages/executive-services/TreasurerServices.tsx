@@ -71,37 +71,6 @@ const TreasurerServices = () => {
           backTo="/executive-services"
         />
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
-            <CardContent className="p-6 text-center">
-              <PiggyBank className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold">$85</div>
-              <div className="text-sm text-muted-foreground">Annual Dues</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6 text-center">
-              <CreditCard className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold">$45</div>
-              <div className="text-sm text-muted-foreground">Outstanding Balance</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Clock className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold">$15/mo</div>
-              <div className="text-sm text-muted-foreground">Payment Plan</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6 text-center">
-              <HandHeart className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold">$125</div>
-              <div className="text-sm text-muted-foreground">Available Fund Request</div>
-            </CardContent>
-          </Card>
-        </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
@@ -171,21 +140,6 @@ const TreasurerServices = () => {
                   </div>
                 </form>
 
-                <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-                  <h4 className="font-semibold mb-2">Payment Information</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p><strong>Total Annual Dues:</strong> $85.00</p>
-                      <p><strong>Amount Paid:</strong> $40.00</p>
-                      <p><strong>Remaining Balance:</strong> $45.00</p>
-                    </div>
-                    <div>
-                      <p><strong>Due Date:</strong> March 15, 2024</p>
-                      <p><strong>Late Fee:</strong> $10.00 after due date</p>
-                      <p><strong>Payment Plan Available:</strong> Yes</p>
-                    </div>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -229,19 +183,6 @@ const TreasurerServices = () => {
                   </Card>
                 </div>
 
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <h4 className="font-semibold mb-2">Current Payment Plan</h4>
-                  <div className="space-y-2 text-sm">
-                    <p><strong>Plan:</strong> 3-Month Payment Plan</p>
-                    <p><strong>Monthly Amount:</strong> $15.00</p>
-                    <p><strong>Next Payment:</strong> February 15, 2024</p>
-                    <p><strong>Remaining Payments:</strong> 2 of 3</p>
-                  </div>
-                  <div className="flex gap-2 mt-3">
-                    <Button size="sm" variant="outline">Modify Plan</Button>
-                    <Button size="sm" variant="outline">Cancel Plan</Button>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>

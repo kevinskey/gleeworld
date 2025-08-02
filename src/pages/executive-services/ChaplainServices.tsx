@@ -138,37 +138,6 @@ const ChaplainServices = () => {
           </Card>
         )}
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Heart className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold">45</div>
-              <div className="text-sm text-muted-foreground">Prayer Requests</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6 text-center">
-              <BookOpen className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold">12</div>
-              <div className="text-sm text-muted-foreground">Devotionals Shared</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Users className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold">8</div>
-              <div className="text-sm text-muted-foreground">Spiritual Circles</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Sparkles className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold">25</div>
-              <div className="text-sm text-muted-foreground">Wellness Sessions</div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Main Services */}
         <Tabs defaultValue="spiritual-care" className="space-y-6">
@@ -275,24 +244,8 @@ const ChaplainServices = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  {[
-                    { title: "Mindfulness & Meditation", description: "Weekly guided meditation sessions", time: "Wednesdays 6:00 PM" },
-                    { title: "Stress Relief Workshop", description: "Coping strategies for academic pressure", time: "Fridays 4:00 PM" },
-                    { title: "Spiritual Counseling", description: "One-on-one guidance sessions", time: "By Appointment" },
-                    { title: "Gratitude Journaling", description: "Community gratitude sharing circle", time: "Sundays 7:00 PM" },
-                  ].map((program, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h4 className="font-semibold">{program.title}</h4>
-                        <p className="text-sm text-muted-foreground">{program.description}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{program.time}</p>
-                      </div>
-                      <Button size="sm" variant="outline">
-                        Join Session
-                      </Button>
-                    </div>
-                  ))}
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No active wellness programs to display</p>
                 </div>
               </CardContent>
             </Card>
