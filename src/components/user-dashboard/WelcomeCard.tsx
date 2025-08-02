@@ -79,35 +79,10 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
 
   return (
     <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-lg min-h-[700px] flex items-center">
-      {/* Background Image Layer */}
-      {hasBackgroundImage && (
-        <>
-          <div 
-            className="absolute inset-0 bg-cover bg-no-repeat"
-            style={{
-              backgroundImage: `url("${welcomeCardSetting?.image_url}")`,
-              backgroundAttachment: 'scroll',
-              backgroundPosition: 'center calc(100% + 300px)' // Move up more to match your scroll position
-            }}
-          />
-          {/* Hidden img element to detect load errors */}
-          <img
-            src={welcomeCardSetting?.image_url}
-            alt=""
-            className="hidden"
-            onError={handleImageError}
-            onLoad={handleImageLoad}
-          />
-        </>
-      )}
+      {/* Background Image Layer - Reset to gradient */}
       
-      {/* Background Gradient Layer (fallback or overlay) */}
-      <div 
-        className={`absolute inset-0 ${hasBackgroundImage 
-          ? 'bg-black/50 sm:bg-black/40 md:bg-black/30' 
-          : 'bg-gradient-to-r from-spelman-blue-dark via-spelman-blue-light to-spelman-blue-dark'
-        }`}
-      />
+      {/* Background Gradient Layer */}
+      <div className="absolute inset-0 bg-gradient-to-r from-spelman-blue-dark via-spelman-blue-light to-spelman-blue-dark" />
       
       {/* Content Layer */}
       <div className="relative z-10 text-center w-full px-4 sm:px-6 py-6 sm:py-8 pb-12 sm:pb-16 md:pb-20">
