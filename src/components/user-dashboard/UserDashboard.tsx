@@ -30,7 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Shield, Eye, User, Home, X, Crown } from "lucide-react";
 
 const UserDashboard = React.memo(() => {
-  console.log('UserDashboard component rendering...');
+  console.log('UserDashboard component starting to render...');
   const [viewMode, setViewMode] = useState<'admin' | 'member'>('admin');
   const { user } = useAuth();
   console.log('UserDashboard: User from useAuth:', {
@@ -318,7 +318,10 @@ const UserDashboard = React.memo(() => {
                   <CardTitle className="text-lg">Calendar & Events</CardTitle>
                 </CardHeader>
                 <CardContent className="h-[calc(100%-60px)] overflow-hidden">
-                  <CalendarViews />
+                  {/* Temporarily replace CalendarViews to test */}
+                  <div className="flex items-center justify-center h-full">
+                    <p>Calendar loading...</p>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -343,7 +346,10 @@ const UserDashboard = React.memo(() => {
                     <CardTitle className="text-lg">Calendar & Events</CardTitle>
                   </CardHeader>
                   <CardContent className="h-[calc(100%-60px)] overflow-hidden">
-                    <CalendarViews />
+                    {/* Temporarily replace CalendarViews to test */}
+                    <div className="flex items-center justify-center h-full">
+                      <p>Calendar loading...</p>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
