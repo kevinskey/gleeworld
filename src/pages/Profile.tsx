@@ -71,11 +71,17 @@ const profileSchema = z.object({
   academic_major: z.string().optional(),
   pronouns: z.string().optional(),
   class_year: z.number().min(1900).max(2050).optional().or(z.literal("")),
+  graduation_year: z.number().min(1900).max(2050).optional().or(z.literal("")),
   
   // Health & Safety fields
   emergency_contact: z.string().optional(),
   allergies: z.string().optional(),
   parent_guardian_contact: z.string().optional(),
+  
+  // Glee Club specific fields
+  join_date: z.string().optional(),
+  mentor_opt_in: z.boolean().default(false),
+  reunion_rsvp: z.boolean().default(false),
   
   // Social media
   instagram: z.string().optional(),
@@ -164,9 +170,13 @@ const Profile = () => {
       setValue("academic_major", profile.academic_major || "");
       setValue("pronouns", profile.pronouns || "");
       setValue("class_year", profile.class_year || "");
+      setValue("graduation_year", profile.graduation_year || "");
       setValue("emergency_contact", profile.emergency_contact || "");
       setValue("allergies", profile.allergies || "");
       setValue("parent_guardian_contact", profile.parent_guardian_contact || "");
+      setValue("join_date", profile.join_date || "");
+      setValue("mentor_opt_in", profile.mentor_opt_in || false);
+      setValue("reunion_rsvp", profile.reunion_rsvp || false);
       
       // Set social media links
       const socialLinks = profile.social_media_links || {};
@@ -243,10 +253,14 @@ const Profile = () => {
           academic_major: data.academic_major,
           pronouns: data.pronouns,
           class_year: data.class_year === "" ? null : Number(data.class_year),
+          graduation_year: data.graduation_year === "" ? null : Number(data.graduation_year),
           emergency_contact: data.emergency_contact,
           dietary_restrictions: selectedDietaryRestrictions,
           allergies: data.allergies,
           parent_guardian_contact: data.parent_guardian_contact,
+          join_date: data.join_date,
+          mentor_opt_in: data.mentor_opt_in,
+          reunion_rsvp: data.reunion_rsvp,
           
           updated_at: new Date().toISOString(),
         })
@@ -284,10 +298,14 @@ const Profile = () => {
           academic_major: data.academic_major,
           pronouns: data.pronouns,
           class_year: data.class_year === "" ? null : Number(data.class_year),
+          graduation_year: data.graduation_year === "" ? null : Number(data.graduation_year),
           emergency_contact: data.emergency_contact,
           dietary_restrictions: selectedDietaryRestrictions,
           allergies: data.allergies,
           parent_guardian_contact: data.parent_guardian_contact,
+          join_date: data.join_date,
+          mentor_opt_in: data.mentor_opt_in,
+          reunion_rsvp: data.reunion_rsvp,
           
           updated_at: new Date().toISOString(),
         })
@@ -676,11 +694,24 @@ const Profile = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="class_year">Class Year</Label>
+                  <Label htmlFor="class_year">Current Class Year</Label>
                   <Input
                     id="class_year"
                     type="number"
                     {...register("class_year", { valueAsNumber: true })}
+                    disabled={!isEditing}
+                    className="mt-1"
+                    placeholder="2024"
+                    min="1900"
+                    max="2050"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="graduation_year">Graduation Year</Label>
+                  <Input
+                    id="graduation_year"
+                    type="number"
+                    {...register("graduation_year", { valueAsNumber: true })}
                     disabled={!isEditing}
                     className="mt-1"
                     placeholder="2024"
@@ -696,6 +727,16 @@ const Profile = () => {
                     disabled={!isEditing}
                     className="mt-1"
                     placeholder="Your student ID"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="join_date">Glee Club Join Date</Label>
+                  <Input
+                    id="join_date"
+                    type="date"
+                    {...register("join_date")}
+                    disabled={!isEditing}
+                    className="mt-1"
                   />
                 </div>
               </CardContent>
@@ -984,6 +1025,41 @@ const Profile = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Glee Club Membership */}
+          {shouldShowField('academic') && (
+            <Card className="bg-card border-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-card-foreground">
+                  <Music className="h-5 w-5" />
+                  Glee Club Membership
+                </CardTitle>
+                <CardDescription>Alumni and mentorship information</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="mentor_opt_in"
+                      checked={watch("mentor_opt_in")}
+                      onCheckedChange={(checked) => setValue("mentor_opt_in", checked as boolean)}
+                      disabled={!isEditing}
+                    />
+                    <Label htmlFor="mentor_opt_in">Opt-in to Mentorship Program</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="reunion_rsvp"
+                      checked={watch("reunion_rsvp")}
+                      onCheckedChange={(checked) => setValue("reunion_rsvp", checked as boolean)}
+                      disabled={!isEditing}
+                    />
+                    <Label htmlFor="reunion_rsvp">RSVP for Next Reunion</Label>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Social Media */}
           <Card className="bg-card border-border">

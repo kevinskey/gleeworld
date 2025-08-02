@@ -44,6 +44,12 @@ export interface ProfileData {
   allergies?: string;
   parent_guardian_contact?: string;
   
+  // Glee Club specific fields
+  graduation_year?: number;
+  join_date?: string;
+  mentor_opt_in?: boolean;
+  reunion_rsvp?: boolean;
+  
   role?: string;
   created_at?: string;
   updated_at?: string;
