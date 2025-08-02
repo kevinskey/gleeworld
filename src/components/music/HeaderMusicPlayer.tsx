@@ -99,10 +99,10 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
   }
 
   return (
-    <div className={`relative flex items-center gap-1 bg-white/40 backdrop-blur-md border border-spelman-blue-light/30 hover:bg-white/50 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md rounded-full px-3 py-0.5 w-full max-w-[200px] sm:max-w-[280px] md:max-w-[320px] overflow-hidden ${className}`}>
-      {/* Animated Background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-spelman-blue-light/10 via-white/5 to-spelman-blue-light/10 animate-pulse"></div>
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[slide-in-right_3s_ease-in-out_infinite]"></div>
+    <div className={`relative flex items-center gap-1 bg-white/40 backdrop-blur-md border border-spelman-blue-light/30 hover:bg-white/50 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md rounded-full px-3 py-0.5 w-full max-w-[200px] sm:max-w-[280px] md:max-w-[320px] overflow-hidden group ${className}`}>
+      {/* Animated Background - Only on Hover */}
+      <div className="absolute inset-0 bg-gradient-to-r from-spelman-blue-light/10 via-white/5 to-spelman-blue-light/10 opacity-0 group-hover:opacity-100 group-hover:animate-pulse transition-opacity duration-300"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-[slide-in-right_3s_ease-in-out_infinite] transition-opacity duration-300"></div>
       
       {/* Content overlay */}
       <div className="relative z-10 flex items-center gap-1 w-full">
