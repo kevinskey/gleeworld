@@ -117,7 +117,10 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
       
       {/* Notification Music Note */}
       {dashboardData?.unread_notifications > 0 && (
-        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20">
+        <div 
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 cursor-pointer hover:scale-110 transition-transform" 
+          onClick={() => window.location.href = '/dashboard?section=notifications'}
+        >
           <BellDot 
             className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 drop-shadow-lg animate-pulse" 
           />
