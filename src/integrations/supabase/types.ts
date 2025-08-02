@@ -10670,7 +10670,7 @@ export type Database = {
         Returns: Json
       }
       verify_admin_access: {
-        Args: { user_id: string }
+        Args: { user_id_param: string }
         Returns: boolean
       }
     }
