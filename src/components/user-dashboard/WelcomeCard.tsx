@@ -119,7 +119,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
       {dashboardData?.unread_notifications > 0 && (
         <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20">
           <BellDot 
-            className="w-6 h-6 sm:w-8 sm:h-8 text-white drop-shadow-lg animate-pulse" 
+            className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 drop-shadow-lg animate-pulse" 
           />
         </div>
       )}
