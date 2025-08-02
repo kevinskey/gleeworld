@@ -25,15 +25,22 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const handlePlayPause = () => {
+  const handlePlayPause = async () => {
     if (!currentTrack || !audioRef.current) return;
     
-    if (isPlaying) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play();
+    try {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        await audioRef.current.play();
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      console.error('Audio playback error:', error);
+      setIsPlaying(false);
+      // You could add a toast notification here to inform the user
     }
-    setIsPlaying(!isPlaying);
   };
 
   const handleTrackSelect = (track: any) => {
