@@ -78,7 +78,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
   const hasBackgroundImage = Boolean(welcomeCardSetting?.image_url && !imageError);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-lg min-h-[180px] sm:min-h-[220px] md:min-h-[260px] flex items-center">
+    <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-lg min-h-[800px] sm:min-h-[900px] md:min-h-[1000px] flex items-center">
       {/* Background Image Layer */}
       {hasBackgroundImage && (
         <>
