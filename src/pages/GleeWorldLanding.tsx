@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMusic, Album } from "@/hooks/useMusic";
 import { useYouTubeVideos } from "@/hooks/useYouTubeVideos";
 import { useRoleBasedRedirect } from "@/hooks/useRoleBasedRedirect";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import gleeClubFallback from "@/assets/glee-club-fallback.jpg";
 import { AlbumModal } from "@/components/music/AlbumModal";
 import { YoutubeVideoSection } from "@/components/youtube/YoutubeVideoSection";
@@ -34,7 +34,6 @@ import {
   Play,
   AlertCircle
 } from "lucide-react";
-import { Link } from "react-router-dom";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import {
   NavigationMenu,
@@ -779,10 +778,10 @@ export const GleeWorldLanding = () => {
               <div className="space-y-3 sm:space-y-4">
                 <h4 className="text-base sm:text-lg font-semibold">Quick Links</h4>
                 <div className="space-y-2 text-sm">
-                  <div><a href="#" className="text-gray-400 hover:text-white transition-colors">About</a></div>
+                  <div><Link to="/about" className="text-gray-400 hover:text-white transition-colors">About</Link></div>
                   <div><a href="#events" className="text-gray-400 hover:text-white transition-colors">Events</a></div>
-                  <div><a href="#" className="text-gray-400 hover:text-white transition-colors">Music</a></div>
-                  <div><a href="#" className="text-gray-400 hover:text-white transition-colors">Contact</a></div>
+                  <div><Link to="/music-library" className="text-gray-400 hover:text-white transition-colors">Music</Link></div>
+                  <div><Link to="/press-kit" className="text-gray-400 hover:text-white transition-colors">Contact</Link></div>
                 </div>
               </div>
               <div className="space-y-3 sm:space-y-4">
