@@ -38,63 +38,69 @@ export const useUsers = () => {
       setLoading(true);
       setError(null);
       
-      // First get profiles data including avatar_url
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, role, created_at, avatar_url')
-        .order('created_at', { ascending: false });
-
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-        throw profilesError;
-      }
-
-      // Then get gw_profiles data for comprehensive profile info
+      console.log('useUsers: Starting to fetch users...');
+      
+      // Use a more robust approach - get all user data from gw_profiles first
+      // since it contains the most comprehensive user information
       const { data: gwProfilesData, error: gwProfilesError } = await supabase
         .from('gw_profiles')
         .select(`
-          user_id, exec_board_role, is_exec_board, avatar_url,
-          phone, voice_part, class_year, join_date, status, dues_paid, notes,
-          is_admin, is_super_admin, title, bio, graduation_year
-        `);
+          id, user_id, email, full_name, first_name, last_name, role,
+          exec_board_role, is_exec_board, avatar_url, phone, voice_part, 
+          class_year, join_date, status, dues_paid, notes, is_admin, 
+          is_super_admin, title, bio, graduation_year, created_at
+        `)
+        .order('created_at', { ascending: false });
+
+      console.log('useUsers: gw_profiles query result:', { 
+        dataCount: gwProfilesData?.length, 
+        error: gwProfilesError 
+      });
 
       if (gwProfilesError) {
         console.error('Error fetching gw_profiles:', gwProfilesError);
-        // Don't throw error here, just continue without exec board data
+        throw gwProfilesError;
       }
 
-      // Create a map of gw_profiles data
-      const gwProfilesMap = new Map();
-      (gwProfilesData || []).forEach(gwProfile => {
-        gwProfilesMap.set(gwProfile.user_id, gwProfile);
+      // Transform gw_profiles data into User format
+      const transformedUsers: User[] = (gwProfilesData || []).map(profile => {
+        // Determine the effective role - prioritize admin flags
+        let effectiveRole = profile.role || 'user';
+        if (profile.is_super_admin) {
+          effectiveRole = 'super-admin';
+        } else if (profile.is_admin) {
+          effectiveRole = 'admin';
+        }
+
+        return {
+          id: profile.user_id, // Use user_id as the primary key
+          email: profile.email || null,
+          full_name: profile.full_name || 
+                    (profile.first_name && profile.last_name ? 
+                     `${profile.first_name} ${profile.last_name}` : null),
+          role: effectiveRole,
+          created_at: profile.created_at,
+          exec_board_role: profile.exec_board_role || null,
+          is_exec_board: profile.is_exec_board || false,
+          avatar_url: profile.avatar_url || null,
+          phone: profile.phone || null,
+          voice_part: profile.voice_part || null,
+          class_year: profile.class_year || null,
+          join_date: profile.join_date || null,
+          status: profile.status || null,
+          dues_paid: profile.dues_paid || false,
+          notes: profile.notes || null,
+          is_admin: profile.is_admin || false,
+          is_super_admin: profile.is_super_admin || false,
+          title: profile.title || null,
+          graduation_year: profile.graduation_year || null,
+          bio: profile.bio || null,
+        };
       });
 
-      // Transform and merge data
-      const transformedUsers: User[] = (profilesData || []).map(user => {
-        const gwProfile = gwProfilesMap.get(user.id);
-        return {
-          id: user.id,
-          email: user.email || null,
-          full_name: user.full_name || null,
-          role: user.role || 'user',
-          created_at: user.created_at,
-          exec_board_role: gwProfile?.exec_board_role || null,
-          is_exec_board: gwProfile?.is_exec_board || false,
-          avatar_url: user.avatar_url || gwProfile?.avatar_url || null, // Prioritize profiles table avatar
-          // Additional profile fields
-          phone: gwProfile?.phone || null,
-          voice_part: gwProfile?.voice_part || null,
-          class_year: gwProfile?.class_year || null,
-          join_date: gwProfile?.join_date || null,
-          status: gwProfile?.status || null,
-          dues_paid: gwProfile?.dues_paid || false,
-          notes: gwProfile?.notes || null,
-          is_admin: gwProfile?.is_admin || false,
-          is_super_admin: gwProfile?.is_super_admin || false,
-          title: gwProfile?.title || null,
-          graduation_year: gwProfile?.graduation_year || null,
-          bio: gwProfile?.bio || null,
-        };
+      console.log('useUsers: Transformed users:', { 
+        count: transformedUsers.length,
+        adminUsers: transformedUsers.filter(u => u.is_admin || u.is_super_admin).length
       });
 
       setUsers(transformedUsers);
@@ -103,7 +109,7 @@ export const useUsers = () => {
       setError('Failed to load users');
       toast({
         title: "Error",
-        description: "Failed to load users",
+        description: "Failed to load users. Check console for details.",
         variant: "destructive",
       });
     } finally {

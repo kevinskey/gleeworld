@@ -10,8 +10,11 @@ const UserManagement = () => {
   const { userProfile, loading: profileLoading } = useUserProfile(user);
   const { users, loading: usersLoading, error: usersError, refetch: refetchUsers } = useUsers();
 
-  // Check if user is admin or super admin
-  const isAdmin = userProfile?.is_admin || userProfile?.is_super_admin || userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
+  // Check if user is admin or super admin with more robust logic
+  const isAdmin = !!(userProfile?.is_admin || 
+                     userProfile?.is_super_admin || 
+                     userProfile?.role === 'admin' || 
+                     userProfile?.role === 'super-admin');
   
   console.log('UserManagement page loaded - user:', user?.id, 'isAdmin:', isAdmin, 'userProfile:', userProfile, 'profileLoading:', profileLoading, 'authLoading:', authLoading, 'usersLoading:', usersLoading, 'usersError:', usersError);
   console.log('UserManagement: Admin check details - userProfile?.role:', userProfile?.role, 'userProfile?.is_admin:', userProfile?.is_admin, 'userProfile?.is_super_admin:', userProfile?.is_super_admin, 'isAdmin calculation:', isAdmin, 'authLoading:', authLoading, 'profileLoading:', profileLoading);
