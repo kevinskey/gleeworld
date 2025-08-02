@@ -122,7 +122,7 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="start" 
-          className="w-56 max-h-80 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl relative"
+          className="w-56 max-h-80 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl"
           onMouseEnter={() => setDropdownOpen(true)}
           onMouseLeave={() => {
             setDropdownOpen(false);
@@ -135,10 +135,9 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
           </div>
           {albums.map((album) => (
             <div key={album.id} className="relative">
-              <DropdownMenuItem
-                className="text-[10px] flex items-center gap-2 p-2"
+              <div
+                className="text-[10px] flex items-center gap-2 p-2 hover:bg-white/50 cursor-pointer transition-colors"
                 onMouseEnter={() => setHoveredAlbum(album)}
-                onMouseLeave={() => setHoveredAlbum(null)}
               >
                 {/* Album Art */}
                 <div className="w-6 h-6 rounded bg-muted flex items-center justify-center flex-shrink-0">
@@ -160,20 +159,23 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
                   </span>
                 </div>
                 <ChevronDown className="w-3 h-3 rotate-[-90deg]" />
-              </DropdownMenuItem>
+              </div>
               
               {/* Custom Flyout for Album Tracks */}
               {hoveredAlbum?.id === album.id && (
                 <div 
-                  className="absolute left-full top-0 w-56 max-h-60 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl z-50 rounded-lg"
+                  className="absolute left-full top-0 ml-1 w-56 max-h-60 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl z-[200] rounded-lg"
                   onMouseEnter={() => setHoveredAlbum(album)}
                   onMouseLeave={() => setHoveredAlbum(null)}
                 >
+                  <div className="px-2 py-1.5 text-[8px] font-semibold text-gray-600 bg-gray-50/50 border-b">
+                    {album.title} Tracks
+                  </div>
                   {album.tracks?.map((track) => (
                     <div
                       key={track.id}
                       onClick={() => handleTrackSelect(track)}
-                      className="text-[10px] p-2 hover:bg-white/50 cursor-pointer transition-colors"
+                      className="text-[10px] p-2 hover:bg-white/50 cursor-pointer transition-colors border-b border-gray-100/50 last:border-b-0"
                     >
                       <div className="flex flex-col">
                         <span className="font-medium">{track.title}</span>
@@ -191,10 +193,9 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
             <>
               <div className="border-t my-1"></div>
               <div className="relative">
-                <DropdownMenuItem
-                  className="text-[10px] flex items-center gap-2 p-2"
+                <div
+                  className="text-[10px] flex items-center gap-2 p-2 hover:bg-white/50 cursor-pointer transition-colors"
                   onMouseEnter={() => setHoveredAlbum({ id: 'all', title: 'All Tracks', tracks: tracks })}
-                  onMouseLeave={() => setHoveredAlbum(null)}
                 >
                   <div className="w-6 h-6 rounded bg-muted flex items-center justify-center flex-shrink-0">
                     <Music className="w-3 h-3 text-muted-foreground" />
@@ -206,20 +207,23 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
                     </span>
                   </div>
                   <ChevronDown className="w-3 h-3 rotate-[-90deg]" />
-                </DropdownMenuItem>
+                </div>
                 
                 {/* Custom Flyout for All Tracks */}
                 {hoveredAlbum?.id === 'all' && (
                   <div 
-                    className="absolute left-full top-0 w-56 max-h-60 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl z-50 rounded-lg"
+                    className="absolute left-full top-0 ml-1 w-56 max-h-60 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl z-[200] rounded-lg"
                     onMouseEnter={() => setHoveredAlbum({ id: 'all', title: 'All Tracks', tracks: tracks })}
                     onMouseLeave={() => setHoveredAlbum(null)}
                   >
+                    <div className="px-2 py-1.5 text-[8px] font-semibold text-gray-600 bg-gray-50/50 border-b">
+                      All Tracks
+                    </div>
                     {tracks.map((track) => (
                       <div
                         key={track.id}
                         onClick={() => handleTrackSelect(track)}
-                        className="text-[10px] p-2 hover:bg-white/50 cursor-pointer transition-colors"
+                        className="text-[10px] p-2 hover:bg-white/50 cursor-pointer transition-colors border-b border-gray-100/50 last:border-b-0"
                       >
                         <div className="flex flex-col">
                           <span className="font-medium">{track.title}</span>
