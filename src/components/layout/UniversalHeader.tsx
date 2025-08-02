@@ -15,6 +15,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { TaskNotifications } from "@/components/shared/TaskNotifications";
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { HeaderClock } from "@/components/ui/header-clock";
+import { HeaderMusicPlayer } from "@/components/music/HeaderMusicPlayer";
 
 interface UniversalHeaderProps {
   viewMode?: 'admin' | 'member';
@@ -83,8 +84,9 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             </EnhancedTooltip>
           </div>
 
-          {/* Center area */}
+          {/* Center area with music player for logged-in users */}
           <div className="flex items-center justify-center flex-1">
+            {user && <HeaderMusicPlayer className="max-w-md" />}
           </div>
 
           {/* Right side actions */}
