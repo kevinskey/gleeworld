@@ -245,7 +245,7 @@ const UserDashboard = React.memo(() => {
       {/* Background Image */}
       {backgroundImage && (
         <div 
-          className="fixed inset-0 bg-cover bg-no-repeat z-0 after:absolute after:inset-0 after:bg-white after:opacity-20"
+          className="fixed inset-0 bg-repeat z-0 after:absolute after:inset-0 after:bg-white after:opacity-20"
           style={{ 
             backgroundImage: `url(${backgroundImage})`,
             backgroundPosition: 'center calc(50% - 400px)'
