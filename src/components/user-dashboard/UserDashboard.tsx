@@ -305,14 +305,14 @@ const UserDashboard = React.memo(() => {
 
 
         {/* 50/50 Split Layout */}
-        <div className="w-full flex flex-col lg:flex-row gap-4 min-h-[50vh]">
+        <div className="w-full flex flex-col md:flex-row gap-4 min-h-[50vh]">
           {/* Left Side: Community Hub - 50% */}
-          <div className="w-full lg:w-1/2">
+          <div className="w-full md:w-1/2">
             <CommunityHubWidget />
           </div>
           
           {/* Right Side: Calendar and Music - 50% */}
-          <div className="w-full lg:w-1/2 flex flex-col gap-4">
+          <div className="w-full md:w-1/2 flex flex-col gap-4">
             {/* Calendar */}
             <div className="flex-1">
               <Card className="h-full">
