@@ -210,6 +210,13 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
   return (
     <div className="space-y-6 pb-8">
+      {/* Hero Header Section */}
+      <Card className="mb-6 relative overflow-hidden min-h-[1000px] flex items-center bg-red-500 border-8 border-yellow-500">
+        <CardHeader className="relative z-10 w-full">
+          <CardTitle className="text-4xl text-white">Admin Dashboard</CardTitle>
+          <CardDescription className="text-2xl text-white">System Administration & Management</CardDescription>
+        </CardHeader>
+      </Card>
       {/* Notification Center */}
       <NotificationCenter />
 
