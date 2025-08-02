@@ -22,12 +22,19 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
   const { dashboardData } = useUserDashboardContext();
 
   const getUserTitle = () => {
+    // Check for executive board role first
+    if (profile?.exec_board_role) {
+      return profile.exec_board_role.charAt(0).toUpperCase() + profile.exec_board_role.slice(1);
+    }
+    
     const role = profile?.role;
     switch (role) {
       case 'super-admin':
         return 'Super Admin';
       case 'admin':
         return 'Admin';
+      case 'executive':
+        return 'Executive Board';
       default:
         return 'Member';
     }
