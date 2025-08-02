@@ -24,6 +24,7 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const handlePlayPause = async () => {
@@ -114,10 +115,14 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
         />
       )}
       
-      {/* Compact Track Info - Clickable to open dropdown */}
-      <DropdownMenu>
+      {/* Compact Track Info - Hover to open dropdown */}
+      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
         <DropdownMenuTrigger asChild>
-          <div className="flex-1 min-w-0 max-w-[140px] sm:max-w-[180px] md:max-w-[220px] cursor-pointer hover:bg-white/20 rounded px-1 py-0.5 transition-colors">
+          <div 
+            className="flex-1 min-w-0 max-w-[140px] sm:max-w-[180px] md:max-w-[220px] cursor-pointer hover:bg-white/20 rounded px-1 py-0.5 transition-colors"
+            onMouseEnter={() => setDropdownOpen(true)}
+            onMouseLeave={() => setDropdownOpen(false)}
+          >
             <div className="overflow-hidden">
               <div className="text-sm font-bold text-gray-800 uppercase tracking-wide truncate font-['Bebas_Neue']">
                 MUSIC PLAYER
@@ -125,7 +130,12 @@ export const HeaderMusicPlayer = ({ className = "" }: HeaderMusicPlayerProps) =>
             </div>
           </div>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-56 max-h-80 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl">
+        <DropdownMenuContent 
+          align="start" 
+          className="w-56 max-h-80 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl"
+          onMouseEnter={() => setDropdownOpen(true)}
+          onMouseLeave={() => setDropdownOpen(false)}
+        >
           {!selectedAlbum ? (
             // Show album selection first
             <>
