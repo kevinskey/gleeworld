@@ -54,6 +54,7 @@ export const EnhancedUserManagement = ({
 
   // Filter and sort users
   const filteredAndSortedUsers = users
+    .filter(user => user && user.id) // Filter out any null/undefined users first
     .filter(user => {
       const matchesSearch = !searchTerm || 
         user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -63,17 +64,19 @@ export const EnhancedUserManagement = ({
         user.role === roleFilter ||
         (roleFilter === "executive-board" && user.is_exec_board);
 
-      console.log('Filtering user:', {
-        userId: user.id,
-        fullName: user.full_name,
-        email: user.email,
-        searchTerm,
-        matchesSearch,
-        roleFilter,
-        userRole: user.role,
-        matchesRole,
-        finalMatch: matchesSearch && matchesRole
-      });
+      if (searchTerm) {
+        console.log('🔍 SEARCH FILTERING:', {
+          userId: user.id,
+          fullName: user.full_name,
+          email: user.email,
+          searchTerm: `"${searchTerm}"`,
+          matchesSearch,
+          roleFilter,
+          userRole: user.role,
+          matchesRole,
+          finalMatch: matchesSearch && matchesRole
+        });
+      }
         
       return matchesSearch && matchesRole;
     })
