@@ -315,9 +315,6 @@ const UserDashboard = React.memo(() => {
               <CommunityHubWidget />
             </div>
             <div className="h-[35vh]">
-              <QuickActionsSection isAdmin={isAdmin} actionFilter="music" />
-            </div>
-            <div className="h-[25vh]">
               <QuickActionsSection isAdmin={isAdmin} actionFilter="attendance" />
             </div>
           </div>
@@ -328,17 +325,9 @@ const UserDashboard = React.memo(() => {
               <CommunityHubWidget />
             </div>
             
-            {/* Right Side: Music and Attendance - 50% */}
-            <div className="w-1/2 flex flex-col gap-4">
-              {/* Music Section */}
-              <div className="flex-1">
-                <QuickActionsSection isAdmin={isAdmin} actionFilter="music" />
-              </div>
-              
-              {/* Attendance Section */}
-              <div className="flex-1">
-                <QuickActionsSection isAdmin={isAdmin} actionFilter="attendance" />
-              </div>
+            {/* Right Side: Attendance - 50% */}
+            <div className="w-1/2">
+              <QuickActionsSection isAdmin={isAdmin} actionFilter="attendance" />
             </div>
           </div>
         </div>
