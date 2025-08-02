@@ -98,7 +98,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
       </div>
       
       {/* Role badge positioned at bottom right */}
-      <div className="absolute bottom-[10px] right-4 z-20">
+      <div className="absolute top-1/2 -translate-y-1/2 right-4 z-20">
         <div className="bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5 border border-white/20">
           <p className="text-white text-xs sm:text-sm font-medium drop-shadow">
             {getUserTitle()} • Class of {profile?.class_year || 'Unknown'}
@@ -106,7 +106,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
         </div>
       </div>
       {/* GLEE 100 emblem positioned at bottom left */}
-      <div className="absolute bottom-[10px] left-8 z-20">
+      <div className="absolute top-1/2 -translate-y-1/2 left-8 z-20">
         <img 
           src="/lovable-uploads/8775a40d-2f4b-486a-b712-f11a753ba969.png"
           alt="GLEE 100 Anniversary Emblem"
