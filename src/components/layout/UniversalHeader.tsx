@@ -12,7 +12,6 @@ import { AppNavigation } from "@/components/navigation/AppNavigation";
 
 import { DashboardSwitcher } from "@/components/navigation/DashboardSwitcher";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { TaskNotifications } from "@/components/shared/TaskNotifications";
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { HeaderClock } from "@/components/ui/header-clock";
 import { HeaderMusicPlayer } from "@/components/music/HeaderMusicPlayer";
@@ -159,9 +158,6 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <EnhancedTooltip content="View notifications and tasks">
-                  <TaskNotifications />
-                </EnhancedTooltip>
                 
                 {/* PR Camera Quick Capture */}
                 {canAccessPR && (
