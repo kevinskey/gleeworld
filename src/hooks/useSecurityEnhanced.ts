@@ -5,9 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 // Enhanced security hook for authentication and form validation
 export const useSecurityEnhanced = () => {
   const [rateLimiters] = useState(() => ({
-    login: createRateLimiter(5, 15 * 60 * 1000), // 5 attempts per 15 minutes
-    signup: createRateLimiter(3, 60 * 60 * 1000), // 3 attempts per hour
-    general: createRateLimiter(10, 60 * 1000), // 10 requests per minute
+    login: createRateLimiter(10, 15 * 60 * 1000), // 10 attempts per 15 minutes (less restrictive)
+    signup: createRateLimiter(5, 60 * 60 * 1000), // 5 attempts per hour
+    general: createRateLimiter(15, 60 * 1000), // 15 requests per minute
   }));
 
   const checkRateLimit = useCallback((action: 'login' | 'signup' | 'general', identifier: string) => {
@@ -61,9 +61,9 @@ export const useSecurityEnhanced = () => {
       throw new Error('Please enter a valid email address');
     }
 
-    // Password validation
-    if (!password || password.length < 6) {
-      throw new Error('Password must be at least 6 characters long');
+    // Password validation - match signup requirements
+    if (!password || password.length < 8) {
+      throw new Error('Password must be at least 8 characters long');
     }
 
     try {
