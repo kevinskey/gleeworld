@@ -76,7 +76,13 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
 
     const updateTime = () => setCurrentTime(audio.currentTime);
     const updateDuration = () => setDuration(audio.duration);
-    const handleEnded = () => setIsPlaying(false);
+    const handleEnded = () => {
+      setIsPlaying(false);
+      // Auto-collapse on mobile when music ends
+      if (isMobile && onToggleExpanded) {
+        onToggleExpanded(false);
+      }
+    };
 
     audio.addEventListener('timeupdate', updateTime);
     audio.addEventListener('loadedmetadata', updateDuration);
@@ -87,7 +93,32 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
       audio.removeEventListener('loadedmetadata', updateDuration);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [currentTrack]);
+  }, [currentTrack, isMobile, onToggleExpanded]);
+
+  // Auto-hide on mobile when user clicks outside or interacts with app
+  useEffect(() => {
+    if (!isMobile || !isExpanded) return;
+
+    const handleClickOutside = () => {
+      onToggleExpanded?.(false);
+    };
+
+    const handleScroll = () => {
+      onToggleExpanded?.(false);
+    };
+
+    // Add slight delay to avoid immediate hiding when opening
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+      document.addEventListener('scroll', handleScroll, true);
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('scroll', handleScroll, true);
+    };
+  }, [isMobile, isExpanded, onToggleExpanded]);
 
   if (loading || tracks.length === 0) {
     return null;
@@ -114,9 +145,12 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
       );
     }
 
-    // Expanded mobile mini player
+    // Expanded mobile mini player - replaces entire header
     return (
-      <div className="fixed left-0 right-0 bg-white/95 backdrop-blur-md border-b border-spelman-blue-light/30 shadow-lg z-[90] h-20 flex items-center px-4 gap-3">
+      <div 
+        className="fixed left-0 right-0 top-0 bg-gradient-to-r from-white/95 via-white/90 to-white/95 backdrop-blur-lg border-b border-spelman-blue-light/30 shadow-xl z-[101] min-h-[60px] flex items-center px-4 gap-3"
+        onClick={(e) => e.stopPropagation()} // Prevent auto-hide when clicking player itself
+      >
         {currentTrack && (
           <audio
             ref={audioRef}
@@ -125,26 +159,45 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
           />
         )}
         
+        {/* Logo - small version */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <img 
+            src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
+            alt="Spelman College Glee Club" 
+            className="w-8 h-8 object-contain drop-shadow-md"
+          />
+        </div>
+        
         {/* Track Info */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 mx-2">
           <div className="text-sm font-semibold text-gray-800 truncate">
             {currentTrack?.title || 'Select Track'}
           </div>
           <div className="text-xs text-gray-600 truncate">
             {currentTrack?.artist || 'No track selected'}
           </div>
+          
+          {/* Progress Bar */}
+          {currentTrack && duration > 0 && (
+            <div className="w-full h-1 bg-gray-200 rounded-full mt-1">
+              <div 
+                className="h-full bg-spelman-blue-light rounded-full transition-all duration-300"
+                style={{ width: `${(currentTime / duration) * 100}%` }}
+              />
+            </div>
+          )}
         </div>
 
         {/* Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 flex-shrink-0">
           <Button
             variant="ghost"
             size="sm"
             onClick={handlePrevious}
             disabled={!currentTrack}
-            className="h-8 w-8 p-0 rounded-full"
+            className="h-7 w-7 p-0 rounded-full"
           >
-            <SkipBack className="w-4 h-4" />
+            <SkipBack className="w-3 h-3" />
           </Button>
 
           <Button
@@ -152,12 +205,12 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
             size="sm"
             onClick={handlePlayPause}
             disabled={!currentTrack}
-            className="h-10 w-10 p-0 rounded-full bg-spelman-blue-light/20"
+            className="h-9 w-9 p-0 rounded-full bg-spelman-blue-light/20"
           >
             {isPlaying ? (
-              <Pause className="w-5 h-5" />
+              <Pause className="w-4 h-4" />
             ) : (
-              <Play className="w-5 h-5" />
+              <Play className="w-4 h-4" />
             )}
           </Button>
 
@@ -166,17 +219,17 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
             size="sm"
             onClick={handleNext}
             disabled={!currentTrack}
-            className="h-8 w-8 p-0 rounded-full"
+            className="h-7 w-7 p-0 rounded-full"
           >
-            <SkipForward className="w-4 h-4" />
+            <SkipForward className="w-3 h-3" />
           </Button>
         </div>
 
         {/* Track Selection */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full">
-              <Music className="w-4 h-4" />
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-full">
+              <Music className="w-3 h-3" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 max-h-60 overflow-y-auto">
@@ -186,32 +239,22 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
                 onClick={() => handleTrackSelect(track)}
                 className="flex flex-col items-start"
               >
-                <span className="font-medium">{track.title}</span>
+                <span className="font-medium text-xs">{track.title}</span>
                 <span className="text-xs text-muted-foreground">{track.artist}</span>
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Close Button */}
+        {/* Close/Minimize Button */}
         <Button
           variant="ghost"
           size="sm"
           onClick={() => onToggleExpanded?.(false)}
-          className="h-8 w-8 p-0 rounded-full"
+          className="h-7 w-7 p-0 rounded-full"
         >
-          <ChevronDown className="w-4 h-4" />
+          <ChevronDown className="w-3 h-3" />
         </Button>
-
-        {/* Progress Bar */}
-        {currentTrack && duration > 0 && (
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
-            <div 
-              className="h-full bg-spelman-blue-light transition-all duration-300"
-              style={{ width: `${(currentTime / duration) * 100}%` }}
-            />
-          </div>
-        )}
       </div>
     );
   }
