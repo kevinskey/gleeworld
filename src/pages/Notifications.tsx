@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -12,7 +13,10 @@ import {
   Info,
   Clock,
   Mail,
-  MessageSquare
+  MessageSquare,
+  ChevronDown,
+  ChevronRight,
+  Folder
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -25,6 +29,8 @@ export default function Notifications() {
     markAsRead, 
     markAllAsRead 
   } = useNotifications();
+
+  const [isReadSectionOpen, setIsReadSectionOpen] = useState(false);
 
   useEffect(() => {
     loadNotifications();
@@ -106,60 +112,120 @@ export default function Notifications() {
           </Card>
         ) : (
           <div className="space-y-4">
-            {notifications.map((notification) => (
-              <Card 
-                key={notification.id} 
-                className={`${getNotificationColor(notification.type || 'default')} ${
-                  !notification.is_read ? 'border-l-4 border-l-blue-500' : ''
-                }`}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3 flex-1">
-                      {getNotificationIcon(notification.type || 'default')}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium text-gray-900">
-                            {notification.title}
-                          </h4>
-                          {!notification.is_read && (
-                            <Badge variant="secondary" className="text-xs">
-                              New
-                            </Badge>
-                          )}
-                          {notification.type === 'sms_notification' && (
-                            <Badge variant="outline" className="text-xs">
-                              SMS
-                            </Badge>
-                          )}
+            {/* Unread Notifications */}
+            {notifications.filter(n => !n.is_read).length > 0 && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Unread Notifications</h2>
+                {notifications.filter(n => !n.is_read).map((notification) => (
+                  <Card 
+                    key={notification.id} 
+                    className={`${getNotificationColor(notification.type || 'default')} border-l-4 border-l-blue-500`}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start space-x-3 flex-1">
+                          {getNotificationIcon(notification.type || 'default')}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-medium text-gray-900">
+                                {notification.title}
+                              </h4>
+                              <Badge variant="secondary" className="text-xs">
+                                New
+                              </Badge>
+                              {notification.type === 'sms_notification' && (
+                                <Badge variant="outline" className="text-xs">
+                                  SMS
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-gray-700 mb-2">{notification.message}</p>
+                            {notification.metadata && typeof notification.metadata === 'object' && 'sender_phone' in notification.metadata && (
+                              <p className="text-xs text-gray-500 mb-2">
+                                From: {notification.metadata.sender_phone as string}
+                              </p>
+                            )}
+                            <div className="flex items-center text-xs text-gray-500">
+                              <Clock className="h-3 w-3 mr-1" />
+                              {format(new Date(notification.created_at), 'MMM dd, yyyy h:mm a')}
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-gray-700 mb-2">{notification.message}</p>
-                        {notification.metadata && typeof notification.metadata === 'object' && 'sender_phone' in notification.metadata && (
-                          <p className="text-xs text-gray-500 mb-2">
-                            From: {notification.metadata.sender_phone as string}
-                          </p>
-                        )}
-                        <div className="flex items-center text-xs text-gray-500">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {format(new Date(notification.created_at), 'MMM dd, yyyy h:mm a')}
+                        <div className="flex items-center space-x-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => markAsRead(notification.id)}
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {!notification.is_read && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => markAsRead(notification.id)}
-                        >
-                          <CheckCircle className="h-4 w-4" />
-                        </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+            
+            {/* Read Notifications Folder */}
+            {notifications.filter(n => n.is_read).length > 0 && (
+              <Collapsible open={isReadSectionOpen} onOpenChange={setIsReadSectionOpen}>
+                <div className="mb-4">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg">
+                      <Folder className="h-5 w-5 text-gray-500" />
+                      <span className="font-medium text-gray-700">
+                        Read Notifications ({notifications.filter(n => n.is_read).length})
+                      </span>
+                      {isReadSectionOpen ? (
+                        <ChevronDown className="h-4 w-4 text-gray-500" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 text-gray-500" />
                       )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    </Button>
+                  </CollapsibleTrigger>
+                </div>
+                
+                <CollapsibleContent className="space-y-4">
+                  {notifications.filter(n => n.is_read).map((notification) => (
+                    <Card 
+                      key={notification.id} 
+                      className={`${getNotificationColor(notification.type || 'default')} opacity-75`}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start space-x-3 flex-1">
+                            {getNotificationIcon(notification.type || 'default')}
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-medium text-gray-900">
+                                  {notification.title}
+                                </h4>
+                                {notification.type === 'sms_notification' && (
+                                  <Badge variant="outline" className="text-xs">
+                                    SMS
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-gray-700 mb-2">{notification.message}</p>
+                              {notification.metadata && typeof notification.metadata === 'object' && 'sender_phone' in notification.metadata && (
+                                <p className="text-xs text-gray-500 mb-2">
+                                  From: {notification.metadata.sender_phone as string}
+                                </p>
+                              )}
+                              <div className="flex items-center text-xs text-gray-500">
+                                <Clock className="h-3 w-3 mr-1" />
+                                {format(new Date(notification.created_at), 'MMM dd, yyyy h:mm a')}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </CollapsibleContent>
+              </Collapsible>
+            )}
           </div>
         )}
       </div>
