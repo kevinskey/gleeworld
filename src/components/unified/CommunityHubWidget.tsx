@@ -17,6 +17,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import SendBucketOfLove from '@/components/buckets-of-love/SendBucketOfLove';
 import { SheetMusicViewDialog } from '@/components/music-library/SheetMusicViewDialog';
+import { useUserRole } from '@/hooks/useUserRole';
 import { 
   Book, 
   Bell,
@@ -118,6 +119,7 @@ export const CommunityHubWidget = () => {
   const { sharedReflections, loading: reflectionsLoading } = useSharedSpiritualReflections();
   const { createPrayerRequest } = usePrayerRequests();
   const { events: upcomingEvents, loading: eventsLoading } = usePublicGleeWorldEvents();
+  const { profile } = useUserRole();
   
   // State for notifications
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -462,7 +464,18 @@ export const CommunityHubWidget = () => {
     // Navigate to the full music library to download
     navigate(`/music-library?item=${music.id}`);
   };
-
+  
+  // Check if user can download PDFs based on role
+  const canDownloadPDF = () => {
+    if (!profile) return false;
+    return (
+      profile.is_admin || 
+      profile.is_super_admin || 
+      profile.role === 'librarian' ||
+      profile.exec_board_role === 'student_conductor' ||
+      profile.role === 'section_leader'
+    );
+  };
   const LeftColumnContent = () => (
     <div className="space-y-4 relative">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -926,45 +939,46 @@ export const CommunityHubWidget = () => {
           ) : filteredMusic.length > 0 ? (
             <ScrollArea className="h-[200px]">
               <div className="space-y-2">
-                {filteredMusic.map((music) => (
-                  <div key={music.id} className="border rounded-lg p-2">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-xs leading-tight mb-1 truncate">{music.title}</h4>
-                        <p className="text-xs text-muted-foreground truncate">{music.composer}</p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {music.voice_parts && music.voice_parts.length > 0 && (
-                            <Badge variant="outline" className="text-xs h-4 px-1">
-                              {music.voice_parts.join(", ")}
-                            </Badge>
-                          )}
-                          {music.difficulty_level && (
-                            <Badge variant="outline" className="text-xs h-4 px-1">
-                              {music.difficulty_level}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex gap-1 flex-shrink-0">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-6 w-6 p-0"
-                          onClick={() => handleViewMusic(music)}
-                        >
-                          <Eye className="h-3 w-3" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-6 w-6 p-0"
-                          onClick={() => handleDownloadMusic(music)}
-                        >
-                          <Download className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                 {filteredMusic.map((music) => (
+                   <div 
+                     key={music.id} 
+                     className="border rounded-lg p-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                     onClick={() => handleViewMusic(music)}
+                   >
+                     <div className="flex items-start justify-between">
+                       <div className="flex-1 min-w-0">
+                         <h4 className="font-medium text-xs leading-tight mb-1 truncate">{music.title}</h4>
+                         <p className="text-xs text-muted-foreground truncate">{music.composer}</p>
+                         <div className="flex flex-wrap gap-1 mt-1">
+                           {music.voice_parts && music.voice_parts.length > 0 && (
+                             <Badge variant="outline" className="text-xs h-4 px-1">
+                               {music.voice_parts.join(", ")}
+                             </Badge>
+                           )}
+                           {music.difficulty_level && (
+                             <Badge variant="outline" className="text-xs h-4 px-1">
+                               {music.difficulty_level}
+                             </Badge>
+                           )}
+                         </div>
+                       </div>
+                       {canDownloadPDF() && (
+                         <div className="flex gap-1 flex-shrink-0">
+                           <Button 
+                             variant="ghost" 
+                             size="sm" 
+                             className="h-6 w-6 p-0"
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               handleDownloadMusic(music);
+                             }}
+                           >
+                             <Download className="h-3 w-3" />
+                           </Button>
+                         </div>
+                       )}
+                     </div>
+                   </div>
                 ))}
               </div>
             </ScrollArea>
