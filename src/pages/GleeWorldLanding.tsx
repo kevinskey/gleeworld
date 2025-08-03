@@ -272,8 +272,10 @@ export const GleeWorldLanding = () => {
       
       <PublicLayout>
       {/* Auth state indicator disabled - was showing "You're logged in! Go to Dashboard" badge */}
-      {/* YouTube Video Background Section */}
-      <section className="fixed top-0 left-0 w-full z-0 overflow-hidden h-[300px] sm:h-screen">
+      
+      {/* Hero Container - Complete Hero Section */}
+      <section className="relative w-full h-[300px] sm:h-screen z-0 overflow-hidden">
+        {/* Background Layer */}
         {!showFallbackImage && backgroundVideo ? (
           <>
             {/* YouTube Embed */}
@@ -312,6 +314,109 @@ export const GleeWorldLanding = () => {
         
         {/* Gradient fade to content below - reduced for mobile */}
         <div className="absolute bottom-0 left-0 right-0 h-32 sm:h-48 md:h-64 bg-gradient-to-t from-background via-background/40 to-transparent z-20"></div>
+        
+        {/* Hero Content Layer */}
+        <div className="absolute inset-0 z-30 px-2 sm:px-4 md:px-6 lg:px-8 flex items-center justify-center">
+          <div className="w-full max-w-screen-2xl mx-auto">
+            <Card className="overflow-hidden bg-card/80 backdrop-blur-sm border-2 border-border shadow-xl">
+              <div className="min-h-[200px] sm:min-h-[400px] md:min-h-[500px] lg:min-h-[600px] h-auto overflow-auto relative">
+                {heroSlides.length > 0 ? (
+                  <>
+                    {/* Desktop Image */}
+                    <img 
+                      src={currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
+                      alt="Hero Background"
+                      className="hidden md:block w-full h-full object-contain transition-opacity duration-500 brightness-95 contrast-100"
+                      onError={(e) => {
+                        console.log('Hero image failed to load, using fallback');
+                        // Only fallback if the current src is not already the fallback
+                        if (!e.currentTarget.src.includes('unsplash.com')) {
+                          e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                        }
+                      }}
+                    />
+                    
+                    {/* iPad Image */}
+                    <img 
+                      src={currentHeroSlide?.ipad_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
+                      alt="Hero Background"
+                      className="hidden sm:block md:hidden w-full h-full object-contain transition-opacity duration-500 brightness-95 contrast-100"
+                      onError={(e) => {
+                        console.log('iPad hero image failed to load, using fallback');
+                        if (!e.currentTarget.src.includes('unsplash.com')) {
+                          e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                        }
+                      }}
+                    />
+                    
+                    {/* Mobile Image */}
+                    <img 
+                      src={currentHeroSlide?.mobile_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
+                      alt="Hero Background"
+                      className="block sm:hidden w-full h-full object-contain object-center transition-opacity duration-500 brightness-95 contrast-100"
+                      onError={(e) => {
+                        console.log('Mobile hero image failed to load, using fallback');
+                        if (!e.currentTarget.src.includes('unsplash.com')) {
+                          e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+                        }
+                      }}
+                    />
+
+                    {/* Content overlay - positioned elements */}
+                    <div className="absolute inset-0">
+                      {/* Title Section */}
+                      {currentHeroSlide?.title && (
+                        <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.title_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.title_position_horizontal)} px-3 sm:px-4 md:px-6 lg:px-8 pointer-events-none`}>
+                          <h1 className={`${getTitleSize(currentHeroSlide.title_size)} font-bold text-white max-w-4xl pointer-events-auto drop-shadow-2xl text-center sm:text-left leading-tight`}>
+                            {currentHeroSlide.title}
+                          </h1>
+                        </div>
+                      )}
+                      
+                      {/* Description Section */}
+                      {currentHeroSlide?.description && (
+                        <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.description_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.description_position_horizontal)} px-3 sm:px-4 md:px-6 lg:px-8 pointer-events-none`}>
+                          <p className={`${getDescriptionSize(currentHeroSlide.description_size)} text-white/90 max-w-2xl pointer-events-auto drop-shadow-lg text-center sm:text-left leading-relaxed`}>
+                            {currentHeroSlide.description}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Action Button Section */}
+                      {currentHeroSlide?.action_button_enabled && currentHeroSlide?.action_button_text && currentHeroSlide?.action_button_url && (
+                        <div className="absolute inset-0 flex justify-center items-end pb-4 sm:pb-6 md:pb-8 lg:pb-12 px-3 sm:px-4 md:px-6 pointer-events-none">
+                          <Button size="sm" className="pointer-events-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl font-semibold border-2 border-white/20 text-xs sm:text-sm md:text-base px-3 py-2 sm:px-4 sm:py-2 md:px-6 md:py-3" asChild>
+                            <a href={currentHeroSlide.action_button_url} target="_blank" rel="noopener noreferrer">
+                              {currentHeroSlide.action_button_text}
+                            </a>
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {/* Legacy button support */}
+                      {!currentHeroSlide?.action_button_enabled && currentHeroSlide?.button_text && currentHeroSlide?.link_url && (
+                        <div className="absolute inset-0 flex justify-center items-end pb-4 sm:pb-6 md:pb-8 lg:pb-12 px-3 sm:px-4 md:px-6 pointer-events-none">
+                          <Button size="sm" className="pointer-events-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl font-semibold border-2 border-white/20 text-xs sm:text-sm md:text-base px-3 py-2 sm:px-4 sm:py-2 md:px-6 md:py-3" asChild>
+                            <a href={currentHeroSlide.link_url} target="_blank" rel="noopener noreferrer">
+                              {currentHeroSlide.button_text}
+                            </a>
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <div className="text-center p-4">
+                      <Calendar className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 text-muted-foreground mx-auto mb-3 sm:mb-4" />
+                      <p className="text-muted-foreground text-sm sm:text-base">No hero slides configured</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
+          </div>
+        </div>
       </section>
 
       {/* Audition Hover Card */}
@@ -322,7 +427,7 @@ export const GleeWorldLanding = () => {
         <FAQSlider />
       </div>
 
-      {/* Hero Section */}
+      {/* Main Content Section */}
       <section className="relative z-30 pt-1 pb-14 sm:pt-2 sm:pb-16 md:pt-4 md:pb-18 px-2 sm:px-4 md:px-6 lg:px-8">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="overflow-hidden bg-card border-2 border-border shadow-xl">
