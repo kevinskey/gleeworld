@@ -16,6 +16,7 @@ import { useForm } from "react-hook-form";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import SendBucketOfLove from '@/components/buckets-of-love/SendBucketOfLove';
+import { SheetMusicViewDialog } from '@/components/music-library/SheetMusicViewDialog';
 import { 
   Book, 
   Bell,
@@ -68,14 +69,21 @@ interface Notification {
 interface SheetMusic {
   id: string;
   title: string;
-  composer: string;
-  voice_parts?: string[];
-  difficulty_level: string;
+  composer: string | null;
+  arranger: string | null;
+  key_signature: string | null;
+  time_signature: string | null;
+  tempo_marking: string | null;
+  difficulty_level: string | null;
+  voice_parts: string[] | null;
+  language: string | null;
+  pdf_url: string | null;
+  audio_preview_url: string | null;
+  thumbnail_url: string | null;
+  tags: string[] | null;
   is_public: boolean;
+  created_by: string;
   created_at: string;
-  key_signature?: string;
-  time_signature?: string;
-  tempo?: string;
 }
 
 interface PrayerRequestForm {
@@ -131,6 +139,8 @@ export const CommunityHubWidget = () => {
   const [sheetMusic, setSheetMusic] = useState<SheetMusic[]>([]);
   const [musicLoading, setMusicLoading] = useState(true);
   const [musicSearchTerm, setMusicSearchTerm] = useState("");
+  const [selectedMusicItem, setSelectedMusicItem] = useState<SheetMusic | null>(null);
+  const [musicDialogOpen, setMusicDialogOpen] = useState(false);
   
   // State for collapsible
   const [isExpanded, setIsExpanded] = useState(!isMobile);
@@ -441,6 +451,16 @@ export const CommunityHubWidget = () => {
     } catch (error) {
       console.error('Error toggling like:', error);
     }
+  };
+
+  const handleViewMusic = (music: SheetMusic) => {
+    setSelectedMusicItem(music);
+    setMusicDialogOpen(true);
+  };
+
+  const handleDownloadMusic = (music: SheetMusic) => {
+    // Navigate to the full music library to download
+    navigate(`/music-library?item=${music.id}`);
   };
 
   const LeftColumnContent = () => (
@@ -926,10 +946,20 @@ export const CommunityHubWidget = () => {
                         </div>
                       </div>
                       <div className="flex gap-1 flex-shrink-0">
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 w-6 p-0"
+                          onClick={() => handleViewMusic(music)}
+                        >
                           <Eye className="h-3 w-3" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 w-6 p-0"
+                          onClick={() => handleDownloadMusic(music)}
+                        >
                           <Download className="h-3 w-3" />
                         </Button>
                       </div>
@@ -1015,6 +1045,15 @@ export const CommunityHubWidget = () => {
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
+      
+      {/* Sheet Music View Dialog */}
+      {selectedMusicItem && (
+        <SheetMusicViewDialog 
+          open={musicDialogOpen} 
+          onOpenChange={setMusicDialogOpen} 
+          item={selectedMusicItem} 
+        />
+      )}
     </Card>
   );
 };
