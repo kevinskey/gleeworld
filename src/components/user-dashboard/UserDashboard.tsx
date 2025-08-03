@@ -317,8 +317,8 @@ const UserDashboard = React.memo(() => {
           </div>
         </div>
 
-        {/* Show Permissions Panel for Admin Users */}
-        {(isAdmin || hasExecBoardPerms) && (
+        {/* Show Permissions Panel for Admin Users Only */}
+        {isAdmin && (
           <div className="w-full mb-8">
             <Card>
               <Collapsible open={permissionsOpen} onOpenChange={setPermissionsOpen}>
