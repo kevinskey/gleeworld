@@ -310,8 +310,8 @@ export const GleeWorldLanding = () => {
         {/* Overlay for dimming */}
         <div className="absolute inset-0 bg-black/50 z-10"></div>
         
-        {/* Gradient fade to content below */}
-        <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-background via-background/80 to-transparent z-20"></div>
+        {/* Gradient fade to content below - reduced for mobile */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 sm:h-48 md:h-64 bg-gradient-to-t from-background via-background/40 to-transparent z-20"></div>
       </section>
 
       {/* Audition Hover Card */}
