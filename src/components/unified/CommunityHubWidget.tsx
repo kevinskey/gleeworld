@@ -888,7 +888,7 @@ export const CommunityHubWidget = () => {
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
             </div>
           ) : filteredMusic.length > 0 ? (
-            <ScrollArea className="h-[250px] pr-2">
+            <ScrollArea className="h-[200px] md:h-[250px] pr-2">
               <div className="space-y-2">
                  {filteredMusic.map((music) => (
                    <div 
