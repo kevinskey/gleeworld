@@ -96,7 +96,7 @@ const UserDashboard = React.memo(() => {
   if (!user || profileLoading) {
     console.log('UserDashboard: No user found or profile loading, showing loading spinner');
     return (
-      <UniversalLayout>
+      <UniversalLayout viewMode={viewMode} onViewModeChange={setViewMode}>
         <div className="flex items-center justify-center min-h-[50vh]">
           <LoadingSpinner size="lg" text={profileLoading ? "Loading profile..." : "Loading dashboard..."} />
         </div>
@@ -108,7 +108,7 @@ const UserDashboard = React.memo(() => {
   if (profileError) {
     console.error('UserDashboard: Profile error, showing error state');
     return (
-      <UniversalLayout>
+      <UniversalLayout viewMode={viewMode} onViewModeChange={setViewMode}>
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
             <h2 className="text-xl font-semibold mb-2">Profile Loading Error</h2>
@@ -160,7 +160,7 @@ const UserDashboard = React.memo(() => {
       };
 
       return (
-        <UniversalLayout>
+        <UniversalLayout viewMode={viewMode} onViewModeChange={setViewMode}>
           <div className="container mx-auto px-4 py-6">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -215,7 +215,7 @@ const UserDashboard = React.memo(() => {
   } else if (dashboardLoading) {
     console.log('UserDashboard: Dashboard data still loading, showing loading state');
     return (
-      <UniversalLayout>
+      <UniversalLayout viewMode={viewMode} onViewModeChange={setViewMode}>
         <div className="flex items-center justify-center min-h-[50vh]">
           <LoadingSpinner size="lg" text="Loading dashboard data..." />
         </div>
