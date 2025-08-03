@@ -888,7 +888,7 @@ export const CommunityHubWidget = () => {
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
             </div>
           ) : filteredMusic.length > 0 ? (
-            <ScrollArea className="h-[200px] md:h-[250px] pr-2">
+            <ScrollArea className="h-[200px] md:h-[280px] overflow-auto pr-2">
               <div className="space-y-2">
                  {filteredMusic.map((music) => (
                    <div 
@@ -977,11 +977,9 @@ export const CommunityHubWidget = () => {
                   )}
                 </div>
               </div>
-              {isMobile && (
-                <div className="flex items-center">
-                  {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </div>
-              )}
+              <div className="flex items-center">
+                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </div>
             </div>
           </CardHeader>
         </CollapsibleTrigger>
