@@ -548,7 +548,7 @@
 
 /* Mobile background cropping for landing page */
 .mobile-bg-cropped {
-  background-position: center -300px;
+  background-position: right -300px;
 }
 
 @media (min-width: 768px) {
