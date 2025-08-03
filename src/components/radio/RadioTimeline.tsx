@@ -1,181 +1,388 @@
-import { Card } from '@/components/ui/card';
+import { useState, useEffect, useRef } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Play, Clock, Music } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  Clock, 
+  Play, 
+  Pause, 
+  Music, 
+  Calendar,
+  RotateCcw,
+  Save
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
-interface RadioTrack {
+interface MusicTrack {
   id: string;
   title: string;
   artist: string;
-  album?: string;
   duration: number;
   audio_url: string;
-  category: 'performance' | 'announcement' | 'interlude' | 'alumni_story';
+  category?: string;
+}
+
+interface TimeSlot {
+  id: string;
+  startTime: Date;
+  endTime: Date;
+  track?: MusicTrack;
+  duration: number; // in minutes
 }
 
 interface RadioTimelineProps {
-  currentTrack: RadioTrack | null;
-  upcomingTracks: RadioTrack[];
-  currentTime: number;
-  isPlaying: boolean;
+  playlist: MusicTrack[];
+  onScheduleUpdate?: (schedule: TimeSlot[]) => void;
+  currentTrack?: string;
+  isPlaying?: boolean;
 }
 
 export const RadioTimeline = ({ 
+  playlist, 
+  onScheduleUpdate, 
   currentTrack, 
-  upcomingTracks, 
-  currentTime,
   isPlaying 
 }: RadioTimelineProps) => {
-  const formatTime = (seconds: number) => {
+  const [schedule, setSchedule] = useState<TimeSlot[]>([]);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [draggedTrack, setDraggedTrack] = useState<MusicTrack | null>(null);
+  const [startTime, setStartTime] = useState(new Date());
+  const { toast } = useToast();
+  const timelineRef = useRef<HTMLDivElement>(null);
+
+  // Generate time slots for next 4 hours in 5-minute intervals
+  useEffect(() => {
+    generateTimeSlots();
+  }, [startTime]);
+
+  // Update current time every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const generateTimeSlots = () => {
+    const slots: TimeSlot[] = [];
+    const totalSlots = 48; // 4 hours * 12 slots per hour (5-minute intervals)
+    
+    for (let i = 0; i < totalSlots; i++) {
+      const slotStart = new Date(startTime.getTime() + (i * 5 * 60 * 1000));
+      const slotEnd = new Date(slotStart.getTime() + (5 * 60 * 1000));
+      
+      slots.push({
+        id: `slot-${i}`,
+        startTime: slotStart,
+        endTime: slotEnd,
+        duration: 5
+      });
+    }
+    
+    setSchedule(slots);
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  };
+
+  const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'performance':
-        return 'bg-brand-100 text-brand-800 border-brand-200';
-      case 'announcement':
-        return 'bg-spelman-blue-light/20 text-spelman-blue-dark border-spelman-blue-light';
-      case 'alumni_story':
-        return 'bg-accent/20 text-accent-foreground border-accent/30';
-      default:
-        return 'bg-muted text-muted-foreground border-muted';
-    }
+  const handleDragStart = (track: MusicTrack) => {
+    setDraggedTrack(track);
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'performance':
-        return <Music className="h-3 w-3" />;
-      case 'announcement':
-        return <Clock className="h-3 w-3" />;
-      default:
-        return <Music className="h-3 w-3" />;
-    }
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
   };
 
-  const getTrackImage = (track: RadioTrack) => {
-    // For now, return a placeholder based on category
-    // In the future, this could pull from actual track metadata or album art
-    const colors = {
-      performance: 'from-brand-400 to-brand-600',
-      announcement: 'from-spelman-blue-light to-spelman-blue-dark',
-      alumni_story: 'from-accent to-accent/80',
-      interlude: 'from-muted to-muted-foreground'
-    };
+  const handleDrop = (e: React.DragEvent, slotId: string) => {
+    e.preventDefault();
     
-    return `bg-gradient-to-br ${colors[track.category] || colors.performance}`;
+    if (!draggedTrack) return;
+
+    const updatedSchedule = schedule.map(slot => {
+      if (slot.id === slotId) {
+        return { ...slot, track: draggedTrack };
+      }
+      return slot;
+    });
+
+    setSchedule(updatedSchedule);
+    setDraggedTrack(null);
+    
+    if (onScheduleUpdate) {
+      onScheduleUpdate(updatedSchedule);
+    }
+
+    toast({
+      title: "Track Scheduled",
+      description: `"${draggedTrack.title}" scheduled for ${formatTime(updatedSchedule.find(s => s.id === slotId)?.startTime || new Date())}`,
+    });
   };
 
-  const allTracks = currentTrack ? [currentTrack, ...upcomingTracks.slice(0, 4)] : upcomingTracks.slice(0, 5);
+  const removeTrackFromSlot = (slotId: string) => {
+    const updatedSchedule = schedule.map(slot => {
+      if (slot.id === slotId) {
+        return { ...slot, track: undefined };
+      }
+      return slot;
+    });
+
+    setSchedule(updatedSchedule);
+    
+    if (onScheduleUpdate) {
+      onScheduleUpdate(updatedSchedule);
+    }
+  };
+
+  const isCurrentTimeSlot = (slot: TimeSlot) => {
+    return currentTime >= slot.startTime && currentTime < slot.endTime;
+  };
+
+  const isPastTimeSlot = (slot: TimeSlot) => {
+    return currentTime > slot.endTime;
+  };
+
+  const resetTimeline = () => {
+    setStartTime(new Date());
+    generateTimeSlots();
+    toast({
+      title: "Timeline Reset",
+      description: "Timeline has been reset to current time",
+    });
+  };
+
+  const autoSchedulePlaylist = () => {
+    if (playlist.length === 0) {
+      toast({
+        title: "No Tracks",
+        description: "Add tracks to the playlist first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedSchedule = [...schedule];
+    let trackIndex = 0;
+    
+    // Find the first available slot (current time or later)
+    const availableSlots = updatedSchedule.filter(slot => 
+      !isPastTimeSlot(slot) && !slot.track
+    );
+
+    availableSlots.forEach((slot, index) => {
+      if (trackIndex < playlist.length) {
+        slot.track = playlist[trackIndex];
+        trackIndex++;
+      }
+    });
+
+    setSchedule(updatedSchedule);
+    
+    if (onScheduleUpdate) {
+      onScheduleUpdate(updatedSchedule);
+    }
+
+    toast({
+      title: "Auto-Scheduled",
+      description: `${Math.min(playlist.length, availableSlots.length)} tracks scheduled`,
+    });
+  };
 
   return (
-    <Card className="w-full overflow-hidden bg-gradient-to-r from-background via-brand-50/50 to-background border-brand-200">
-      <div className="p-4">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="flex items-center gap-2">
-            <div className={`h-2 w-2 rounded-full ${isPlaying ? 'bg-red-500 animate-pulse' : 'bg-muted'}`} />
-            <h3 className="text-sm font-semibold text-foreground">Now Broadcasting</h3>
+    <div className="space-y-6">
+      {/* Header Controls */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-brand-600" />
+            Radio Timeline - 5 Minute Intervals
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-3">
+            <Button 
+              onClick={resetTimeline}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Reset to Now
+            </Button>
+            <Button 
+              onClick={autoSchedulePlaylist}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Calendar className="h-4 w-4" />
+              Auto-Schedule Playlist
+            </Button>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Clock className="h-4 w-4" />
+              Current Time: {formatTime(currentTime)}
+            </div>
           </div>
-          {currentTrack && (
-            <Badge variant="outline" className="text-xs">
-              {formatTime(currentTime)} / {formatTime(currentTrack.duration)}
-            </Badge>
-          )}
-        </div>
+        </CardContent>
+      </Card>
 
-        <div className="relative">
-          {/* Timeline */}
-          <div className="flex items-center gap-4 overflow-x-auto pb-2">
-            {allTracks.map((track, index) => {
-              const isCurrent = index === 0 && currentTrack;
-              const progress = isCurrent ? (currentTime / track.duration) * 100 : 0;
-              
-              return (
-                <div key={track.id} className="flex-shrink-0 relative">
-                  {/* Connection Line */}
-                  {index < allTracks.length - 1 && (
-                    <div className="absolute top-12 left-20 w-8 h-0.5 bg-gradient-to-r from-brand-300 to-brand-200" />
-                  )}
-                  
-                  {/* Track Card */}
-                  <div className={`w-24 transition-all duration-300 ${isCurrent ? 'scale-110' : 'scale-100'}`}>
-                    {/* Track Image/Thumbnail */}
-                    <div className={`relative w-20 h-20 rounded-lg ${getTrackImage(track)} mx-auto mb-2 overflow-hidden border-2 ${isCurrent ? 'border-brand-400 shadow-lg' : 'border-transparent'}`}>
-                      {/* Progress overlay for current track */}
-                      {isCurrent && (
-                        <div className="absolute inset-0 bg-black/20">
-                          <div 
-                            className="absolute bottom-0 left-0 h-1 bg-white/80 transition-all duration-300"
-                            style={{ width: `${progress}%` }}
-                          />
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Playlist Tracks */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Music className="h-5 w-5 text-brand-600" />
+              Available Tracks ({playlist.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-96">
+              {playlist.length > 0 ? (
+                <div className="space-y-2">
+                  {playlist.map((track) => (
+                    <div
+                      key={track.id}
+                      draggable
+                      onDragStart={() => handleDragStart(track)}
+                      className="p-3 border border-border rounded-lg cursor-move hover:bg-accent hover:border-brand-300 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Music className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{track.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
                         </div>
-                      )}
-                      
-                      {/* Play indicator */}
-                      {isCurrent && isPlaying && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="bg-white/90 rounded-full p-1">
-                            <Play className="h-3 w-3 text-brand-600 fill-current" />
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Category Icon */}
-                      <div className="absolute top-1 right-1">
-                        <div className={`p-1 rounded-full bg-white/80 ${getCategoryColor(track.category)}`}>
-                          {getCategoryIcon(track.category)}
-                        </div>
-                      </div>
-                      
-                      {/* Default Content */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Music className="h-6 w-6 text-white/70" />
-                      </div>
-                    </div>
-                    
-                    {/* Track Info */}
-                    <div className="text-center">
-                      <p className="text-xs font-medium text-foreground truncate" title={track.title}>
-                        {track.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate" title={track.artist}>
-                        {track.artist}
-                      </p>
-                      <div className="flex items-center justify-center gap-1 mt-1">
-                        <Badge 
-                          variant="outline" 
-                          className={`text-xs px-1 py-0 ${getCategoryColor(track.category)}`}
-                        >
-                          {track.category.replace('_', ' ')}
+                        <Badge variant="outline" className="text-xs">
+                          {formatDuration(track.duration)}
                         </Badge>
                       </div>
                     </div>
-                    
-                    {/* Position indicator */}
-                    <div className="text-center mt-1">
-                      <span className="text-xs text-muted-foreground">
-                        {index === 0 ? 'Now' : `+${index}`}
-                      </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Music className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground">No tracks in playlist</p>
+                  <p className="text-xs text-muted-foreground">Add tracks to start scheduling</p>
+                </div>
+              )}
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        {/* Timeline */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-brand-600" />
+              Schedule Timeline
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-96" ref={timelineRef}>
+              <div className="space-y-1">
+                {schedule.map((slot) => (
+                  <div
+                    key={slot.id}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, slot.id)}
+                    className={`
+                      p-3 border rounded-lg transition-all
+                      ${isCurrentTimeSlot(slot) 
+                        ? 'border-brand-500 bg-brand-50 shadow-md' 
+                        : isPastTimeSlot(slot)
+                        ? 'border-muted bg-muted/50 opacity-60'
+                        : 'border-border hover:border-brand-300 hover:bg-accent/50'
+                      }
+                      ${!slot.track ? 'border-dashed' : ''}
+                    `}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="text-sm font-medium min-w-0">
+                          {formatTime(slot.startTime)}
+                          <span className="text-xs text-muted-foreground ml-1">
+                            - {formatTime(slot.endTime)}
+                          </span>
+                        </div>
+                        
+                        {slot.track ? (
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <Play className="h-3 w-3 text-brand-600" />
+                              <div className="min-w-0">
+                                <p className="font-medium text-sm truncate">{slot.track.title}</p>
+                                <p className="text-xs text-muted-foreground truncate">{slot.track.artist}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex-1 text-center text-muted-foreground text-sm py-2 border-2 border-dashed border-muted rounded">
+                            Drop track here
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {isCurrentTimeSlot(slot) && (
+                          <Badge variant="default" className="bg-brand-500 text-xs">
+                            Now Playing
+                          </Badge>
+                        )}
+                        {slot.track && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => removeTrackFromSlot(slot.id)}
+                            className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                          >
+                            ×
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-            
-            {/* Add more tracks placeholder */}
-            {allTracks.length === 0 && (
-              <div className="flex-shrink-0 text-center py-8">
-                <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center mx-auto mb-2">
-                  <Music className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <p className="text-xs text-muted-foreground">No tracks in playlist</p>
+                ))}
               </div>
-            )}
-          </div>
-        </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
       </div>
-    </Card>
+
+      {/* Timeline Legend */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-wrap gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-dashed border-muted rounded"></div>
+              <span className="text-muted-foreground">Empty Slot</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border border-brand-500 bg-brand-50 rounded"></div>
+              <span className="text-muted-foreground">Current Time</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border border-muted bg-muted/50 rounded"></div>
+              <span className="text-muted-foreground">Past Time</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border border-border rounded"></div>
+              <span className="text-muted-foreground">Scheduled</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };

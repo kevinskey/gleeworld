@@ -363,9 +363,8 @@ export const RadioStationPage = () => {
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         {/* Radio Timeline */}
         <RadioTimeline
-          currentTrack={currentTrack}
-          upcomingTracks={upcomingTracks}
-          currentTime={currentTime}
+          playlist={playlist}
+          currentTrack={currentTrack?.id}
           isPlaying={isPlaying}
         />
 
