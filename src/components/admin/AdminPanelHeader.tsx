@@ -32,12 +32,12 @@ export const AdminPanelHeader = ({ contractsLoading, onSendW9Forms }: AdminPanel
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 md:space-y-4">
       {/* Quick Actions */}
       <Collapsible open={quickActionsOpen} onOpenChange={setQuickActionsOpen}>
         <Card className="glass-card border border-white/10">
           <CollapsibleTrigger asChild>
-            <CardHeader className="cursor-pointer hover:bg-white/5 transition-colors pb-4">
+            <CardHeader className="cursor-pointer hover:bg-white/5 transition-colors pb-3 md:pb-4 p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Button variant="ghost" size="sm" className="p-1 h-8 w-8">
@@ -57,11 +57,11 @@ export const AdminPanelHeader = ({ contractsLoading, onSendW9Forms }: AdminPanel
           </CollapsibleTrigger>
           
           <CollapsibleContent>
-            <CardContent className="pt-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="pt-0 p-4 md:p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <Button
                   onClick={onSendW9Forms}
-                  className="bg-blue-600 hover:bg-blue-700 justify-start h-auto p-4"
+                  className="bg-blue-600 hover:bg-blue-700 justify-start h-auto p-3 md:p-4"
                 >
                   <div className="text-left">
                     <div className="flex items-center gap-2 mb-1">
@@ -74,7 +74,7 @@ export const AdminPanelHeader = ({ contractsLoading, onSendW9Forms }: AdminPanel
                 
                 <Button
                   variant="outline"
-                  className="border-white/20 text-white hover:bg-white/10 justify-start h-auto p-4"
+                  className="border-white/20 text-white hover:bg-white/10 justify-start h-auto p-3 md:p-4"
                   onClick={() => {/* Add contract action */}}
                 >
                   <div className="text-left">

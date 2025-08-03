@@ -124,26 +124,26 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
         return <ReceiptsManagement />;
       case 'accounting':
         return (
-          <div className="space-y-6">
-            <div className="mb-8 glass-card p-6">
-              <h2 className="text-3xl font-bold text-gradient mb-2">Accounting</h2>
-              <p className="text-lg text-white/70">Contract financial overview and stipend tracking.</p>
+          <div className="space-y-4 md:space-y-6">
+            <div className="mb-6 md:mb-8 glass-card p-4 md:p-6">
+              <h2 className="text-2xl md:text-3xl font-bold text-gradient mb-2">Accounting</h2>
+              <p className="text-base md:text-lg text-white/70">Contract financial overview and stipend tracking.</p>
             </div>
             
             <div className="glass-card">
-              <div className="p-6 border-b border-white/10">
+              <div className="p-4 md:p-6 border-b border-white/10">
                 <div className="flex items-center space-x-2">
-                  <Calculator className="h-6 w-6 text-spelman-400" />
-                  <h3 className="text-2xl font-semibold text-white">Contract Accounting</h3>
+                  <Calculator className="h-5 w-5 md:h-6 md:w-6 text-spelman-400" />
+                  <h3 className="text-xl md:text-2xl font-semibold text-white">Contract Accounting</h3>
                 </div>
               </div>
-              <div className="p-6">
+              <div className="p-4 md:p-6 overflow-x-auto">
                 <AccountingSummary 
                   totalStipends={totalStipends}
                   contractCount={contractCount}
                 />
                 
-                <div className="mt-6 space-y-4">
+                <div className="mt-4 md:mt-6 space-y-4">
                   <AccountingFilters
                     sortBy={sortBy}
                     sortOrder={sortOrder}
@@ -200,8 +200,10 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
   };
 
   return (
-    <div className="space-y-6">
-      {renderContent()}
+    <div className="space-y-4 md:space-y-6 p-2 md:p-0">
+      <div className="max-w-full overflow-hidden">
+        {renderContent()}
+      </div>
       
       <BulkW9EmailDialog
         open={bulkW9EmailOpen}
