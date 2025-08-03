@@ -461,6 +461,28 @@ export const CommunityHubWidget = () => {
     }
   };
 
+  const handleDeleteMessage = async (messageId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('gw_buckets_of_love')
+        .delete()
+        .eq('id', messageId)
+        .eq('user_id', user.id); // Ensure user can only delete their own messages
+
+      if (error) throw error;
+
+      // Remove from local state
+      setLoveMessages(prevMessages =>
+        prevMessages.filter(msg => msg.id !== messageId)
+      );
+
+    } catch (error) {
+      console.error('Error deleting message:', error);
+    }
+  };
+
   const handleViewMusic = (music: SheetMusic) => {
     setSelectedMusicItem(music);
     setMusicDialogOpen(true);
@@ -713,8 +735,7 @@ export const CommunityHubWidget = () => {
                   filteredLoveMessages.map((message, index) => (
                     <div
                       key={message.id}
-                      className={`relative p-3 rounded-sm shadow-md cursor-pointer transition-all duration-200 hover:shadow-lg transform hover:scale-105 ${getNoteColorClasses(message.note_color)}`}
-                      onClick={() => handleNoteClick(message)}
+                      className={`relative p-3 rounded-sm shadow-md transition-all duration-200 hover:shadow-lg ${getNoteColorClasses(message.note_color)}`}
                       style={{
                         transform: `rotate(${(index % 3 - 1) * 2}deg)`,
                         marginTop: `${(index % 2) * 4}px`
@@ -729,7 +750,12 @@ export const CommunityHubWidget = () => {
                         'bg-slate-600'
                       }`}></div>
                       
-                      <p className="text-xs leading-relaxed text-gray-800 mb-2 line-clamp-3">{message.message}</p>
+                      <p 
+                        className="text-xs leading-relaxed text-gray-800 mb-2 line-clamp-3 cursor-pointer"
+                        onClick={() => handleNoteClick(message)}
+                      >
+                        {message.message}
+                      </p>
                       
                       <div className="flex justify-between items-center">
                         <span className="text-xs text-gray-600 font-medium">
@@ -748,6 +774,20 @@ export const CommunityHubWidget = () => {
                             <Heart className={`h-3 w-3 ${message.user_liked ? 'fill-current' : ''}`} />
                             {message.likes}
                           </button>
+                          
+                          {/* Delete button - only show for user's own messages */}
+                          {user && message.user_id === user.id && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteMessage(message.id);
+                              }}
+                              className="flex items-center gap-1 text-xs px-2 py-1 rounded-full transition-colors bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600"
+                              title="Delete your message"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
