@@ -26,23 +26,14 @@ export const UniversalLayout = ({
   onViewModeChange,
 }: UniversalLayoutProps) => {
   return (
-    <div className={`h-screen flex flex-col overflow-hidden ${className.includes('bg-transparent') ? 'bg-transparent' : ''}`}>
+    <div className="h-screen flex flex-col overflow-hidden">
       {showHeader && (
         <UniversalHeader 
           viewMode={viewMode}
           onViewModeChange={onViewModeChange}
         />
       )}
-      <main 
-        className={`flex-1 overflow-y-auto ${className}`}
-        style={{
-          backgroundImage: window.innerWidth < 1024 ? 'url(/lovable-uploads/518af829-608a-44fb-9e8d-d94c43e4a543.png)' : undefined,
-          backgroundSize: 'contain',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          backgroundColor: window.innerWidth >= 1024 ? 'hsl(var(--background))' : 'transparent'
-        }}
-      >
+      <main className={`flex-1 overflow-y-auto ${className}`}>
         {containerized ? (
           <ResponsiveContainer maxWidth={maxWidth}>
             <div className="py-1 sm:py-2">
