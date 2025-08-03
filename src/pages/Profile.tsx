@@ -58,7 +58,7 @@ const profileSchema = z.object({
   workplace: z.string().optional(),
   school_address: z.string().optional(),
   home_address: z.string().optional(),
-  voice_part: z.enum(["S1", "S2", "A1", "A2", "T1", "T2", "B1", "B2"]).optional().or(z.literal("")),
+  voice_part: z.enum(["S1", "S2", "A1", "A2", "T1", "T2", "B1", "B2", "DOC"]).optional().or(z.literal("")),
   can_dance: z.boolean().default(false),
   preferred_payment_method: z.enum(["zelle", "cashapp", "venmo", "apple_pay", "check"]).optional().or(z.literal("")),
   
@@ -121,6 +121,7 @@ const voiceParts = [
   { value: "T2", label: "Tenor 2" },
   { value: "B1", label: "Bass 1" },
   { value: "B2", label: "Bass 2" },
+  { value: "DOC", label: "Director of Choirs (DOC)" },
 ];
 
 const Profile = () => {
@@ -258,7 +259,7 @@ const Profile = () => {
           workplace: data.workplace,
           school_address: data.school_address,
           home_address: data.home_address,
-          voice_part: data.voice_part === "" ? null : data.voice_part,
+          voice_part: data.voice_part === "" ? null : (data.voice_part as any),
           can_dance: data.can_dance,
           preferred_payment_method: data.preferred_payment_method === "" ? null : data.preferred_payment_method,
           instruments_played: selectedInstruments,
@@ -750,6 +751,7 @@ const Profile = () => {
                     <SelectItem value="T2" className="text-foreground hover:bg-muted">Tenor 2 (T2)</SelectItem>
                     <SelectItem value="B1" className="text-foreground hover:bg-muted">Bass 1 (B1)</SelectItem>
                     <SelectItem value="B2" className="text-foreground hover:bg-muted">Bass 2 (B2)</SelectItem>
+                    <SelectItem value="DOC" className="text-foreground hover:bg-muted">Director of Choirs (DOC)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
