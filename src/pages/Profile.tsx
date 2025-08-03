@@ -48,7 +48,9 @@ import { AvatarCropDialog } from "@/components/shared/AvatarCropDialog";
 import { ALL_DIETARY_OPTIONS } from "@/constants/dietaryOptions";
 
 const profileSchema = z.object({
-  full_name: z.string().min(1, "Full name is required"),
+  first_name: z.string().min(1, "First name is required"),
+  middle_name: z.string().optional(),
+  last_name: z.string().min(1, "Last name is required"),
   bio: z.string().optional(),
   website_url: z.string().url().optional().or(z.literal("")),
   phone_number: z.string().optional(),
@@ -148,8 +150,18 @@ const Profile = () => {
 
   useEffect(() => {
     if (profile) {
-      // Set form values from profile data
-      setValue("full_name", profile.full_name || "");
+      // Set form values from profile data - split full_name if exists
+      if (profile.full_name) {
+        const nameParts = profile.full_name.split(' ');
+        setValue("first_name", nameParts[0] || "");
+        setValue("middle_name", nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : "");
+        setValue("last_name", nameParts.length > 1 ? nameParts[nameParts.length - 1] : "");
+      } else {
+        setValue("first_name", profile.first_name || "");
+        setValue("middle_name", profile.middle_name || "");
+        setValue("last_name", profile.last_name || "");
+      }
+      
       setValue("bio", profile.bio || "");
       setValue("website_url", profile.website_url || "");
       setValue("phone_number", profile.phone_number || "");
@@ -212,7 +224,9 @@ const Profile = () => {
       };
 
       console.log("Attempting to update profile with:", {
-        full_name: data.full_name,
+        first_name: data.first_name,
+        middle_name: data.middle_name,
+        last_name: data.last_name,
         bio: data.bio,
         website_url: data.website_url,
         phone_number: data.phone_number,
@@ -227,10 +241,16 @@ const Profile = () => {
         social_media_links: socialMediaLinks,
       });
 
+      // Create full_name from separate fields for backward compatibility
+      const fullName = [data.first_name, data.middle_name, data.last_name].filter(Boolean).join(' ');
+
       const { error } = await supabase
         .from("profiles")
         .update({
-          full_name: data.full_name,
+          first_name: data.first_name,
+          middle_name: data.middle_name,
+          last_name: data.last_name,
+          full_name: fullName,
           bio: data.bio,
           website_url: data.website_url,
           phone_number: data.phone_number,
@@ -275,7 +295,10 @@ const Profile = () => {
       const { error: gwError } = await supabase
         .from("gw_profiles")
         .update({
-          full_name: data.full_name,
+          first_name: data.first_name,
+          middle_name: data.middle_name,
+          last_name: data.last_name,
+          full_name: fullName,
           bio: data.bio,
           website_url: data.website_url,
           phone_number: data.phone_number,
@@ -560,17 +583,41 @@ const Profile = () => {
                   )}
                 </div>
                 <div className="flex-1 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="first_name">First Name *</Label>
+                      <Input
+                        id="first_name"
+                        {...register("first_name")}
+                        disabled={!isEditing}
+                        className="mt-1"
+                      />
+                      {errors.first_name && (
+                        <p className="text-destructive text-sm mt-1">{errors.first_name.message}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="last_name">Last Name *</Label>
+                      <Input
+                        id="last_name"
+                        {...register("last_name")}
+                        disabled={!isEditing}
+                        className="mt-1"
+                      />
+                      {errors.last_name && (
+                        <p className="text-destructive text-sm mt-1">{errors.last_name.message}</p>
+                      )}
+                    </div>
+                  </div>
                   <div>
-                    <Label htmlFor="full_name">Full Name *</Label>
+                    <Label htmlFor="middle_name">Middle Name</Label>
                     <Input
-                      id="full_name"
-                      {...register("full_name")}
+                      id="middle_name"
+                      {...register("middle_name")}
                       disabled={!isEditing}
                       className="mt-1"
+                      placeholder="Optional"
                     />
-                    {errors.full_name && (
-                      <p className="text-destructive text-sm mt-1">{errors.full_name.message}</p>
-                    )}
                   </div>
                   <div>
                     <Label htmlFor="pronouns">Pronouns</Label>

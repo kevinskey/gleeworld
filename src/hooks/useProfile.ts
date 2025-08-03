@@ -7,6 +7,9 @@ export interface ProfileData {
   id: string;
   email: string;
   full_name: string;
+  first_name?: string;
+  middle_name?: string;
+  last_name?: string;
   bio?: string;
   avatar_url?: string;
   website_url?: string;

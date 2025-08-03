@@ -76,6 +76,7 @@ export const GleeWorldProfileManager = () => {
     if (userProfile) {
       setFormData({
         first_name: userProfile.first_name || '',
+        middle_name: userProfile.middle_name || '',
         last_name: userProfile.last_name || '',
         phone: userProfile.phone || '',
         voice_part: userProfile.voice_part || '',
@@ -249,6 +250,20 @@ export const GleeWorldProfileManager = () => {
                     <p className="mt-1 text-sm">{userProfile.last_name || 'Not set'}</p>
                   )}
                 </div>
+              </div>
+
+              <div>
+                <Label htmlFor="middle_name">Middle Name</Label>
+                {isEditing ? (
+                  <Input
+                    id="middle_name"
+                    value={formData.middle_name}
+                    onChange={(e) => handleInputChange('middle_name', e.target.value)}
+                    placeholder="Optional"
+                  />
+                ) : (
+                  <p className="mt-1 text-sm">{userProfile.middle_name || 'Not set'}</p>
+                )}
               </div>
 
               <div>

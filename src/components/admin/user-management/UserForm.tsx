@@ -19,7 +19,9 @@ interface UserFormProps {
 
 export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => {
   const [email, setEmail] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [middleName, setMiddleName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [role, setRole] = useState("user");
   const [phone, setPhone] = useState("");
   const [voicePart, setVoicePart] = useState("");
@@ -32,7 +34,13 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
   useEffect(() => {
     if (mode === 'edit' && user) {
       setEmail(user.email || "");
-      setFullName(user.full_name || "");
+      // Split existing full_name if available
+      if (user.full_name) {
+        const nameParts = user.full_name.split(' ');
+        setFirstName(nameParts[0] || "");
+        setMiddleName(nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : "");
+        setLastName(nameParts.length > 1 ? nameParts[nameParts.length - 1] : "");
+      }
       setRole(user.role || "user");
       setPhone((user as any)?.phone || "");
       setVoicePart((user as any)?.voice_part || "");
@@ -42,7 +50,9 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
 
   const resetForm = () => {
     setEmail("");
-    setFullName("");
+    setFirstName("");
+    setMiddleName("");
+    setLastName("");
     setRole("user");
     setPhone("");
     setVoicePart("");
@@ -60,10 +70,10 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
       return false;
     }
 
-    if (!fullName.trim()) {
+    if (!firstName.trim() || !lastName.trim()) {
       toast({
         title: "Validation Error",
-        description: "Full name is required",
+        description: "First name and last name are required",
         variant: "destructive",
       });
       return false;
@@ -87,9 +97,14 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
     console.log('Starting user creation process...');
     setIsLoading(true);
     try {
+      const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
+      
       console.log('Calling import-users function with:', {
         email: email.trim(),
-        full_name: fullName.trim(),
+        full_name: fullName,
+        first_name: firstName.trim(),
+        middle_name: middleName.trim() || null,
+        last_name: lastName.trim(),
         role: role
       });
 
@@ -97,7 +112,10 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
         body: {
           users: [{
             email: email.trim(),
-            full_name: fullName.trim(),
+            full_name: fullName,
+            first_name: firstName.trim(),
+            middle_name: middleName.trim() || null,
+            last_name: lastName.trim(),
             role: role,
             phone: phone.trim(),
             voice_part: voicePart === 'none' ? null : voicePart,
@@ -151,13 +169,16 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
 
     setIsLoading(true);
     try {
+      const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
+      
       // Update gw_profiles if exists
       const { error: gwProfileError } = await supabase
         .from('gw_profiles')
         .update({
-          full_name: fullName.trim(),
-          first_name: fullName.trim().split(' ')[0],
-          last_name: fullName.trim().split(' ').slice(1).join(' ') || null,
+          first_name: firstName.trim(),
+          middle_name: middleName.trim() || null,
+          last_name: lastName.trim(),
+          full_name: fullName,
           phone: phone.trim() || null,
           voice_part: voicePart || null,
           exec_board_role: execBoardRole || null,
@@ -170,7 +191,10 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
         .from('profiles')
         .update({ 
           role: role,
-          full_name: fullName.trim()
+          first_name: firstName.trim(),
+          middle_name: middleName.trim() || null,
+          last_name: lastName.trim(),
+          full_name: fullName
         })
         .eq('id', user.id);
 
@@ -265,15 +289,39 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
             )}
           </div>
 
-          {/* Full Name Field */}
+          {/* Name Fields */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name *</Label>
+              <Input
+                id="firstName"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="John"
+                required
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name *</Label>
+              <Input
+                id="lastName"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Doe"
+                required
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+          
           <div className="space-y-2">
-            <Label htmlFor="fullName">Full Name *</Label>
+            <Label htmlFor="middleName">Middle Name</Label>
             <Input
-              id="fullName"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="John Doe"
-              required
+              id="middleName"
+              value={middleName}
+              onChange={(e) => setMiddleName(e.target.value)}
+              placeholder="Optional"
               disabled={isLoading}
             />
           </div>
