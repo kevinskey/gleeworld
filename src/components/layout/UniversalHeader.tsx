@@ -85,9 +85,6 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                 <HeaderClock className="text-sm ml-3" />
               </div>
             </EnhancedTooltip>
-            
-            {/* Glee Radio */}
-            <RadioPlayer className="ml-2" />
           </div>
 
 
@@ -96,6 +93,8 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
 
           {/* Right side actions */}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
+            {/* Glee Radio */}
+            <RadioPlayer className="mr-2" />
             {user && (
               <>
                 {/* Dashboard Dropdown for logged-in users */}

@@ -81,13 +81,18 @@ export const BulkSelectControls = ({
       }
 
       // Check if the bulk operation was successful
-      if (bulkResult && bulkResult.success) {
-        toast({
-          title: "Success",
-          description: `Updated ${bulkResult.updated_count} user(s) to ${bulkRole} role`,
-        });
+      if (bulkResult && typeof bulkResult === 'object' && 'success' in bulkResult) {
+        const result = bulkResult as { success: boolean; updated_count: number; errors?: Array<{ error: string }> };
+        if (result.success) {
+          toast({
+            title: "Success",
+            description: `Updated ${result.updated_count} user(s) to ${bulkRole} role`,
+          });
+        } else {
+          throw new Error(result.errors?.[0]?.error || 'Bulk update failed');
+        }
       } else {
-        throw new Error(bulkResult?.errors?.[0]?.error || 'Bulk update failed');
+        throw new Error('Invalid response from bulk update function');
       }
 
       onBulkActionComplete();
