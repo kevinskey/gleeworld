@@ -319,9 +319,7 @@ const UserDashboard = React.memo(() => {
 
         {/* Show Permissions Panel for Admin Users */}
         {(isAdmin || hasExecBoardPerms) && (
-          <div className="w-full mb-8 bg-red-500 p-4 border-4 border-yellow-400">
-            <div className="text-white font-bold mb-2">DEBUG: PERMISSIONS PANEL SHOULD BE HERE</div>
-            <div className="text-white text-sm mb-2">isAdmin: {String(isAdmin)}, hasExecBoardPerms: {String(hasExecBoardPerms)}</div>
+          <div className="w-full mb-8">
             <Card>
               <Collapsible open={permissionsOpen} onOpenChange={setPermissionsOpen}>
                 <CollapsibleTrigger asChild>
@@ -345,11 +343,6 @@ const UserDashboard = React.memo(() => {
             </Card>
           </div>
         )}
-        
-        {/* Debug section to check if we reach this point */}
-        <div className="w-full p-4 bg-blue-500 text-white">
-          DEBUG: End of dashboard content reached
-        </div>
           </div>
         </UniversalLayout>
       </div>
