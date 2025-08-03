@@ -8474,6 +8474,77 @@ export type Database = {
         }
         Relationships: []
       }
+      permission_group_permissions: {
+        Row: {
+          created_at: string | null
+          group_id: string
+          id: string
+          permission_id: string
+          permission_level: string
+          permission_scope: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          group_id: string
+          id?: string
+          permission_id: string
+          permission_level?: string
+          permission_scope?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          group_id?: string
+          id?: string
+          permission_id?: string
+          permission_level?: string
+          permission_scope?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permission_group_permissions_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "permission_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      permission_groups: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       playlist_tracks: {
         Row: {
           added_at: string
@@ -9923,6 +9994,44 @@ export type Database = {
           },
         ]
       }
+      user_permission_groups: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          expires_at: string | null
+          group_id: string
+          id: string
+          is_active: boolean | null
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          expires_at?: string | null
+          group_id: string
+          id?: string
+          is_active?: boolean | null
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          expires_at?: string | null
+          group_id?: string
+          id?: string
+          is_active?: boolean | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_permission_groups_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "permission_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_preferences: {
         Row: {
           calendar_controls_enabled: boolean
@@ -10461,6 +10570,15 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: Database["public"]["Enums"]["executive_position"]
       }
+      get_user_group_permissions: {
+        Args: { user_id_param: string }
+        Returns: {
+          permission_id: string
+          permission_level: string
+          permission_scope: string
+          group_name: string
+        }[]
+      }
       get_user_username_permissions: {
         Args: { user_email_param: string }
         Returns: {
@@ -10469,6 +10587,14 @@ export type Database = {
           expires_at: string
           notes: string
         }[]
+      }
+      has_group_permission: {
+        Args: {
+          user_id_param: string
+          permission_id_param: string
+          required_level?: string
+        }
+        Returns: boolean
       }
       has_role: {
         Args: {
