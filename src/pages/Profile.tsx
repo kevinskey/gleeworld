@@ -299,6 +299,7 @@ const Profile = () => {
           middle_name: data.middle_name,
           last_name: data.last_name,
           full_name: fullName,
+          phone: data.phone_number,
           bio: data.bio,
           website_url: data.website_url,
           phone_number: data.phone_number,
