@@ -131,43 +131,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Root route handler - shows public landing page for everyone
 const RootRoute = () => {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading..." />
-      </div>
-    );
-  }
-  
-  // If user is authenticated, check for stored redirect path
-  if (user) {
-    const redirectPath = sessionStorage.getItem('redirectAfterAuth');
-    console.log('🚨 RootRoute: redirectPath from sessionStorage:', redirectPath);
-    
-    // Clear any problematic redirect paths
-    if (redirectPath === '/tour-manager') {
-      console.log('🚨 RootRoute: Clearing tour-manager redirect, going to dashboard');
-      sessionStorage.removeItem('redirectAfterAuth');
-      return <Navigate to="/dashboard" replace />;
-    }
-    
-    if (redirectPath) {
-      console.log('🚨 RootRoute: Found valid redirectPath, removing and redirecting to:', redirectPath);
-      sessionStorage.removeItem('redirectAfterAuth');
-      return <Navigate to={redirectPath} replace />;
-    }
-    
-    console.log('🚨 RootRoute: No redirectPath, going to dashboard');
-    return <Navigate to="/dashboard" replace />;
-  }
-  
-  // Show landing page for non-authenticated users
-  console.log('🚨 RootRoute: No user, showing landing page');
-  return <GleeWorldLanding />;
-  
-  // Show landing page for non-authenticated users
+  // Always show the public landing page for the root route
   return <GleeWorldLanding />;
 };
 
