@@ -76,7 +76,7 @@ export const RadioStationPage = () => {
     episodes: 0,
     subscribers: 892
   });
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
