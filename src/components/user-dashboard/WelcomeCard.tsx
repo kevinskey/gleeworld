@@ -121,11 +121,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
       <div 
         className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 cursor-pointer hover:scale-110 transition-transform" 
         onClick={() => {
-          // Open notifications widget
-          const notificationsElement = document.querySelector('[data-section="notifications"]');
-          if (notificationsElement) {
-            notificationsElement.scrollIntoView({ behavior: 'smooth' });
-          }
+          navigate('/notifications');
         }}
       >
         <BellDot 
