@@ -138,12 +138,12 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
             }
             onToggleExpanded?.(true);
           }}
-          className={`h-10 w-10 p-0 rounded-full bg-gradient-to-br from-amber-800 via-amber-700 to-amber-900 hover:from-amber-700 hover:via-amber-600 hover:to-amber-800 shadow-lg border-2 border-amber-600 mr-2 ${className}`}
+          className={`h-8 w-8 p-0 rounded-full bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 hover:from-blue-500 hover:via-blue-600 hover:to-blue-700 shadow-lg border-2 border-blue-500 mr-2 ${className}`}
           style={{
-            boxShadow: 'inset 0 2px 4px rgba(245, 158, 11, 0.3), 0 4px 8px rgba(0, 0, 0, 0.3)'
+            boxShadow: 'inset 0 2px 4px rgba(59, 130, 246, 0.3), 0 4px 8px rgba(0, 0, 0, 0.3)'
           }}
         >
-          <Play className="w-5 h-5 text-amber-100 drop-shadow-sm" />
+          <Play className="w-4 h-4 text-blue-100 drop-shadow-sm" />
         </Button>
       );
     }

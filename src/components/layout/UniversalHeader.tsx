@@ -88,8 +88,8 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             </EnhancedTooltip>
           </div>
 
-          {/* Center area with music player for logged-in users */}
-          <div className="flex items-center justify-center flex-1">
+          {/* Center area with music player for logged-in users on desktop only */}
+          <div className="hidden md:flex items-center justify-center flex-1">
             {user && (
               <>
                 {console.log('UniversalHeader: User logged in, rendering HeaderMusicPlayer')}
@@ -102,10 +102,21 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             )}
           </div>
 
+          {/* Mobile spacer */}
+          <div className="flex-1 md:hidden"></div>
+
           {/* Right side actions */}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
             {user && (
               <>
+                {/* Mobile Music Player - positioned on the right */}
+                <div className="md:hidden">
+                  <HeaderMusicPlayer 
+                    className="" 
+                    isExpanded={musicPlayerExpanded}
+                    onToggleExpanded={setMusicPlayerExpanded}
+                  />
+                </div>
                 {/* Dashboard Dropdown for logged-in users */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
