@@ -19,13 +19,15 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { SortableTrackItem } from './SortableTrackItem';
+import { MediaLibraryDialog } from './MediaLibraryDialog';
 import { 
   List, 
   Shuffle, 
   RotateCcw, 
   Save,
   AlertTriangle,
-  Music
+  Music,
+  Plus
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -60,6 +62,7 @@ export const PlaylistManager = ({
 }: PlaylistManagerProps) => {
   const [localPlaylist, setLocalPlaylist] = useState<RadioTrack[]>(playlist);
   const [hasChanges, setHasChanges] = useState(false);
+  const [showMediaLibrary, setShowMediaLibrary] = useState(false);
   const { toast } = useToast();
 
   const sensors = useSensors(
@@ -148,6 +151,25 @@ export const PlaylistManager = ({
     return canEdit && track.id !== currentTrack?.id;
   };
 
+  const handleAddToPlaylist = (track: any) => {
+    const radioTrack: RadioTrack = {
+      id: track.id,
+      title: track.title,
+      artist: track.artist || track.artist_info || 'Unknown Artist',
+      album: track.album,
+      duration: track.duration || track.duration_seconds || 0,
+      audio_url: track.audio_url,
+      category: track.category || 'performance'
+    };
+    
+    setLocalPlaylist([...localPlaylist, radioTrack]);
+    setHasChanges(true);
+    toast({
+      title: "Track Added",
+      description: `"${track.title}" has been added to the playlist`,
+    });
+  };
+
   const getTotalDuration = () => {
     const total = localPlaylist.reduce((sum, track) => sum + track.duration, 0);
     const hours = Math.floor(total / 3600);
@@ -199,6 +221,15 @@ export const PlaylistManager = ({
       <CardContent className="space-y-4">
         {/* Control Buttons */}
         <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowMediaLibrary(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add to Playlist
+          </Button>
+          
           <Button
             variant="outline"
             size="sm"
@@ -280,6 +311,13 @@ export const PlaylistManager = ({
             </div>
           </div>
         )}
+
+        {/* Media Library Dialog */}
+        <MediaLibraryDialog
+          open={showMediaLibrary}
+          onOpenChange={setShowMediaLibrary}
+          onAddToPlaylist={handleAddToPlaylist}
+        />
       </CardContent>
     </Card>
   );
