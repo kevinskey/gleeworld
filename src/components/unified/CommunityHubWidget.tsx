@@ -575,9 +575,12 @@ export const CommunityHubWidget = () => {
             <div className="absolute top-2 right-2 z-20">
               <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
                 <DialogTrigger asChild>
-                  <button className="relative bg-yellow-200 hover:bg-yellow-300 border border-yellow-300 rounded-sm p-2 shadow-md transform rotate-1 hover:rotate-0 transition-all duration-200">
+                  <button className="relative bg-blue-100 hover:bg-blue-200 border border-blue-300 rounded-sm p-2 shadow-md transform rotate-1 hover:rotate-0 transition-all duration-200">
                     <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-red-500 rounded-full shadow-sm"></div>
-                    <Plus className="h-4 w-4 text-gray-700" />
+                    <div className="flex items-center gap-1">
+                      <Heart className="h-3 w-3 text-blue-600 fill-current" />
+                      <Plus className="h-3 w-3 text-blue-600" />
+                    </div>
                   </button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[500px]">
