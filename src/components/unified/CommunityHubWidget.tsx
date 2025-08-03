@@ -98,6 +98,7 @@ interface LoveMessage {
   user_id: string;
   message: string;
   note_color: string;
+  voice_part?: string;
   is_anonymous: boolean;
   created_at: string;
   sender_name?: string;
@@ -109,6 +110,7 @@ interface LoveMessage {
 interface LoveMessageForm {
   message: string;
   note_color: string;
+  voice_part: string;
   is_anonymous: boolean;
   decorations: string;
 }
@@ -148,6 +150,7 @@ export const CommunityHubWidget = () => {
   // State for collapsible
   const [isExpanded, setIsExpanded] = useState(!isMobile);
   const [activeTab, setActiveTab] = useState("buckets");
+  const [activeVoiceFilter, setActiveVoiceFilter] = useState('all');
   const [prayerDialogOpen, setPrayerDialogOpen] = useState(false);
 
   // Prayer request form
@@ -163,6 +166,7 @@ export const CommunityHubWidget = () => {
     defaultValues: {
       message: "",
       note_color: "blue",
+      voice_part: "",
       is_anonymous: false,
       decorations: "",
     },
@@ -372,6 +376,7 @@ export const CommunityHubWidget = () => {
           user_id: user.id,
           message: data.message,
           note_color: data.note_color,
+          voice_part: data.voice_part || null,
           is_anonymous: data.is_anonymous,
           decorations: data.decorations || ""
         });
@@ -477,6 +482,12 @@ export const CommunityHubWidget = () => {
       profile.role === 'section_leader'
     );
   };
+
+  // Filter love messages by voice part
+  const filteredLoveMessages = loveMessages.filter(message => {
+    if (activeVoiceFilter === 'all') return true;
+    return message.voice_part === activeVoiceFilter;
+  });
   const LeftColumnContent = () => (
     <div className="space-y-4 relative">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -508,6 +519,36 @@ export const CommunityHubWidget = () => {
                  backgroundSize: '80px 80px, 120px 120px, 100px 100px, 90px 90px'
                }}>
             
+            {/* Voice Part Filter Tabs */}
+            <div className="mb-4">
+              <Tabs value={activeVoiceFilter} onValueChange={setActiveVoiceFilter} className="w-full">
+                <TabsList className="grid w-full grid-cols-5 bg-white/80 backdrop-blur-sm border border-blue-200 rounded-lg shadow-sm h-8">
+                  <TabsTrigger value="all" className="text-xs py-1 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-800">
+                    All
+                  </TabsTrigger>
+                  <TabsTrigger value="S1" className="text-xs py-1 data-[state=active]:bg-pink-100 data-[state=active]:text-pink-800">
+                    S1
+                  </TabsTrigger>
+                  <TabsTrigger value="S2" className="text-xs py-1 data-[state=active]:bg-purple-100 data-[state=active]:text-purple-800">
+                    S2
+                  </TabsTrigger>
+                  <TabsTrigger value="A1" className="text-xs py-1 data-[state=active]:bg-green-100 data-[state=active]:text-green-800">
+                    A1
+                  </TabsTrigger>
+                  <TabsTrigger value="A2" className="text-xs py-1 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-800">
+                    A2
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+            
+            {/* Add Voice Part Field */}
+            <div className="absolute top-2 left-2 z-20">
+              <div className="bg-white/90 backdrop-blur-sm rounded-md px-2 py-1 shadow-sm border border-blue-200">
+                <span className="text-xs text-gray-600">Filter: {activeVoiceFilter === 'all' ? 'All Voices' : activeVoiceFilter}</span>
+              </div>
+            </div>
+
             {/* Add Love Message Button - Pinned Note Style */}
             <div className="absolute top-2 right-2 z-20">
               <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
@@ -591,6 +632,44 @@ export const CommunityHubWidget = () => {
 
                       <FormField
                         control={loveForm.control}
+                        name="voice_part"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Voice Part (Optional)</FormLabel>
+                            <FormControl>
+                              <RadioGroup
+                                onValueChange={field.onChange}
+                                value={field.value}
+                                className="flex flex-row gap-4 flex-wrap"
+                              >
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="" id="no-voice" />
+                                  <Label htmlFor="no-voice" className="text-sm">None</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="S1" id="s1" />
+                                  <Label htmlFor="s1" className="text-sm">S1</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="S2" id="s2" />
+                                  <Label htmlFor="s2" className="text-sm">S2</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="A1" id="a1" />
+                                  <Label htmlFor="a1" className="text-sm">A1</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="A2" id="a2" />
+                                  <Label htmlFor="a2" className="text-sm">A2</Label>
+                                </div>
+                              </RadioGroup>
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={loveForm.control}
                         name="is_anonymous"
                         render={({ field }) => (
                           <FormItem className="flex flex-row items-start space-x-3 space-y-0">
@@ -630,8 +709,8 @@ export const CommunityHubWidget = () => {
                   <div className="col-span-full flex justify-center p-8">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-pink-500"></div>
                   </div>
-                ) : loveMessages.length > 0 ? (
-                  loveMessages.map((message, index) => (
+                ) : filteredLoveMessages.length > 0 ? (
+                  filteredLoveMessages.map((message, index) => (
                     <div
                       key={message.id}
                       className={`relative p-3 rounded-sm shadow-md cursor-pointer transition-all duration-200 hover:shadow-lg transform hover:scale-105 ${getNoteColorClasses(message.note_color)}`}
@@ -675,9 +754,10 @@ export const CommunityHubWidget = () => {
                   ))
                 ) : (
                   <div className="col-span-full text-center p-8">
-                    <Heart className="h-12 w-12 text-pink-300 mx-auto mb-3" />
-                    <p className="text-sm text-gray-500">No love notes yet</p>
-                    <p className="text-xs text-gray-400">Be the first to pin a note!</p>
+                    <Heart className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500 text-sm">
+                      {activeVoiceFilter === 'all' ? 'No love notes yet. Be the first to spread some love!' : `No love notes for ${activeVoiceFilter} yet.`}
+                    </p>
                   </div>
                 )}
               </div>
