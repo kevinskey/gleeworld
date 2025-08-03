@@ -76,6 +76,7 @@ import LibrarianDashboard from "./pages/LibrarianDashboard";
 import HistorianDashboard from "./pages/HistorianDashboard";
 import UserManagement from "./pages/UserManagement";
 import MemberDirectory from "./pages/MemberDirectory";
+import { RadioStationPage } from "./components/radio/RadioStationPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -602,19 +603,19 @@ const App = () => {
                                      <Handbook />
                                    </ProtectedRoute>
                                  } 
-                               />
-                               <Route 
-                                 path="/landing"
-                                 element={
-                                   <PublicRoute>
-                                     <GleeWorldLanding />
-                                   </PublicRoute>
-                                 } 
-                               />
-                  <Route 
-                    path="/" 
-                    element={<RootRoute />} 
-                  />
+                                />
+                                <Route 
+                                  path="/radio" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <RadioStationPage />
+                                    </ProtectedRoute>
+                                  } 
+                                />
+                   <Route 
+                     path="/" 
+                     element={<RootRoute />} 
+                   />
                                 <Route 
                                   path="/mobile-scoring" 
                                   element={

@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Camera, Menu, X, CheckCircle, Clock, MessageSquare, Info, AlertCircle } from "lucide-react";
-import { QuickCameraCapture } from "@/components/camera/QuickCameraCapture";
+import { Menu, X, CheckCircle, Clock, MessageSquare, Info, AlertCircle } from "lucide-react";
+import { RadioPlayer } from "@/components/radio/RadioPlayer";
 import { useNotifications } from "@/hooks/useNotifications";
 import { format } from "date-fns";
 import { 
@@ -44,15 +44,16 @@ import {
 interface HeaderProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  isRadioPlaying?: boolean;
+  onRadioToggle?: () => void;
 }
 
-export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
+export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadioToggle }: HeaderProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { userProfile, displayName } = useUserProfile(user);
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showPRCapture, setShowPRCapture] = useState(false);
   
   // Notifications hook
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
@@ -211,17 +212,8 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
           {/* Right side actions */}
           <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
 
-            {/* PR Camera Quick Capture - Responsive sizing */}
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setShowPRCapture(true)}
-              className="gap-1 sm:gap-2 text-primary hover:bg-primary/10 border-2 border-primary/50 bg-primary/5 h-8 sm:h-10 px-2 sm:px-3 lg:px-4"
-              title="Quick Camera Capture"
-            >
-              <Camera className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline text-xs sm:text-sm">📸 Camera</span>
-            </Button>
+            {/* Radio Player - Replace Camera Capture */}
+            <RadioPlayer className="flex-shrink-0" />
             
             {/* Dashboard Views Dropdown - Only for admins */}
             {isAdmin && (
@@ -409,17 +401,6 @@ export const Header = ({ activeTab, onTabChange }: HeaderProps) => {
           </div>
         </div>
       </div>
-      
-      {/* Quick Camera Capture Modal */}
-      {showPRCapture && (
-        <QuickCameraCapture
-          onClose={() => setShowPRCapture(false)}
-          onCapture={(imageUrl) => {
-            console.log('Photo captured:', imageUrl);
-            setShowPRCapture(false);
-          }}
-        />
-      )}
     </header>
   );
 };
