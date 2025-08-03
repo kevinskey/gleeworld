@@ -9352,6 +9352,77 @@ export type Database = {
           },
         ]
       }
+      radio_playlist_tracks: {
+        Row: {
+          added_at: string | null
+          added_by: string | null
+          id: string
+          playlist_id: string | null
+          position: number
+          track_id: string
+          track_source: string
+        }
+        Insert: {
+          added_at?: string | null
+          added_by?: string | null
+          id?: string
+          playlist_id?: string | null
+          position?: number
+          track_id: string
+          track_source?: string
+        }
+        Update: {
+          added_at?: string | null
+          added_by?: string | null
+          id?: string
+          playlist_id?: string | null
+          position?: number
+          track_id?: string
+          track_source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "radio_playlist_tracks_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "radio_playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      radio_playlists: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          tags: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          tags?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          tags?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       receipts: {
         Row: {
           amount: number

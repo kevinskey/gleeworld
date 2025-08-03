@@ -7,6 +7,8 @@ import { RadioStationHeader } from './RadioStationHeader';
 import { MediaLibraryDialog } from './MediaLibraryDialog';
 import { RadioTimeline } from './RadioTimeline';
 import { PlaylistManager } from './PlaylistManager';
+import { PlaylistSelector } from './PlaylistSelector';
+import { useRadioPlaylists } from '@/hooks/useRadioPlaylists';
 import { 
   Play, 
   Pause, 
@@ -62,9 +64,19 @@ interface AudioArchive {
 }
 
 export const RadioStationPage = () => {
+  const { 
+    playlists, 
+    selectedPlaylist, 
+    playlistTracks, 
+    loading: playlistsLoading,
+    setSelectedPlaylist,
+    fetchPlaylists,
+    addTrackToPlaylist,
+    removeTrackFromPlaylist
+  } = useRadioPlaylists();
+  
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<RadioTrack | null>(null);
-  const [playlist, setPlaylist] = useState<RadioTrack[]>([]);
   const [upcomingTracks, setUpcomingTracks] = useState<RadioTrack[]>([]);
   const [volume, setVolume] = useState(70);
   const [currentTime, setCurrentTime] = useState(0);
@@ -178,30 +190,45 @@ export const RadioStationPage = () => {
     }
   };
 
-  const handleAddToPlaylist = (track: MusicTrack | AudioArchive) => {
-    // Convert track to RadioTrack format
-    const radioTrack: RadioTrack = {
-      id: track.id,
-      title: track.title,
-      artist: 'artist' in track ? track.artist : track.artist_info || 'Unknown Artist',
-      duration: 'duration' in track ? track.duration : track.duration_seconds || 0,
-      audio_url: track.audio_url,
-      category: (track.category as RadioTrack['category']) || 'performance'
-    };
+  // Convert playlist tracks to the format expected by existing components
+  const playlist = playlistTracks.map(pt => ({
+    id: pt.track_data?.id || pt.track_id,
+    title: pt.track_data?.title || 'Unknown Title',
+    artist: pt.track_data?.artist || pt.track_data?.artist_info || 'Unknown Artist',
+    album: pt.track_data?.album,
+    duration: pt.track_data?.duration || pt.track_data?.duration_seconds || 0,
+    audio_url: pt.track_data?.audio_url || '',
+    category: pt.track_data?.category || 'performance'
+  })) as RadioTrack[];
 
-    setPlaylist(prev => [...prev, radioTrack]);
-    
-    // If no current track, start playing this one
-    if (!currentTrack) {
-      setCurrentTrack(radioTrack);
-      setUpcomingTracks(prev => [...prev, ...playlist.slice(1)]);
+  const handleAddToPlaylist = async (track: MusicTrack | AudioArchive) => {
+    if (!selectedPlaylist) {
+      toast({
+        title: "No Playlist Selected",
+        description: "Please select a playlist first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const success = await addTrackToPlaylist(selectedPlaylist.id, track);
+    if (success) {
+      toast({
+        title: "Track Added",
+        description: `"${track.title}" has been added to the playlist`,
+      });
     } else {
-      setUpcomingTracks(prev => [...prev, radioTrack]);
+      toast({
+        title: "Error",
+        description: "Failed to add track to playlist",
+        variant: "destructive",
+      });
     }
   };
 
   const handlePlaylistUpdate = (newPlaylist: RadioTrack[]) => {
-    setPlaylist(newPlaylist);
+    // This would need to be implemented to update the database
+    console.log('Playlist update requested:', newPlaylist);
     // Update upcoming tracks to exclude current track
     const currentIndex = newPlaylist.findIndex(track => track.id === currentTrack?.id);
     if (currentIndex !== -1) {
@@ -211,7 +238,7 @@ export const RadioStationPage = () => {
     }
   };
 
-  const handleRemoveTrack = (trackId: string) => {
+  const handleRemoveTrack = async (trackId: string) => {
     if (currentTrack?.id === trackId) {
       toast({
         title: "Cannot Remove",
@@ -221,14 +248,17 @@ export const RadioStationPage = () => {
       return;
     }
 
-    const newPlaylist = playlist.filter(track => track.id !== trackId);
-    setPlaylist(newPlaylist);
-    setUpcomingTracks(newPlaylist.filter(track => track.id !== currentTrack?.id));
-    
-    toast({
-      title: "Track Removed",
-      description: "Track has been removed from playlist",
-    });
+    const playlistTrack = playlistTracks.find(pt => pt.track_data?.id === trackId);
+    if (playlistTrack) {
+      const success = await removeTrackFromPlaylist(playlistTrack.id);
+      if (success) {
+        setUpcomingTracks(playlist.filter(track => track.id !== currentTrack?.id));
+        toast({
+          title: "Track Removed",
+          description: "Track has been removed from playlist",
+        });
+      }
+    }
   };
 
   const handlePlayTrack = (track: MusicTrack | AudioArchive) => {
@@ -523,8 +553,16 @@ export const RadioStationPage = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Playlist Selector */}
+            <PlaylistSelector
+              selectedPlaylist={selectedPlaylist}
+              onPlaylistSelect={setSelectedPlaylist}
+              playlists={playlists}
+              onPlaylistsUpdate={fetchPlaylists}
+            />
+            
             {/* Playlist Manager - Admin Only */}
-            {isAdmin && (
+            {isAdmin && selectedPlaylist && (
               <PlaylistManager
                 playlist={playlist}
                 currentTrack={currentTrack}
@@ -532,7 +570,9 @@ export const RadioStationPage = () => {
                 onPlaylistUpdate={handlePlaylistUpdate}
                 onPlayTrack={handlePlayRadioTrack}
                 onRemoveTrack={handleRemoveTrack}
+                onAddToPlaylist={selectedPlaylist ? (track) => addTrackToPlaylist(selectedPlaylist.id, track) : undefined}
                 canEdit={isAdmin}
+                selectedPlaylistName={selectedPlaylist?.name}
               />
             )}
 

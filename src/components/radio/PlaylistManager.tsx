@@ -48,7 +48,9 @@ interface PlaylistManagerProps {
   onPlaylistUpdate: (newPlaylist: RadioTrack[]) => void;
   onPlayTrack: (track: RadioTrack) => void;
   onRemoveTrack: (trackId: string) => void;
+  onAddToPlaylist?: (track: any) => Promise<boolean>;
   canEdit: boolean; // Admin permission check
+  selectedPlaylistName?: string;
 }
 
 export const PlaylistManager = ({
@@ -58,7 +60,9 @@ export const PlaylistManager = ({
   onPlaylistUpdate,
   onPlayTrack,
   onRemoveTrack,
-  canEdit
+  onAddToPlaylist,
+  canEdit,
+  selectedPlaylistName
 }: PlaylistManagerProps) => {
   const [localPlaylist, setLocalPlaylist] = useState<RadioTrack[]>(playlist);
   const [hasChanges, setHasChanges] = useState(false);
@@ -151,23 +155,22 @@ export const PlaylistManager = ({
     return canEdit && track.id !== currentTrack?.id;
   };
 
-  const handleAddToPlaylist = (track: any) => {
-    const radioTrack: RadioTrack = {
-      id: track.id,
-      title: track.title,
-      artist: track.artist || track.artist_info || 'Unknown Artist',
-      album: track.album,
-      duration: track.duration || track.duration_seconds || 0,
-      audio_url: track.audio_url,
-      category: track.category || 'performance'
-    };
-    
-    setLocalPlaylist([...localPlaylist, radioTrack]);
-    setHasChanges(true);
-    toast({
-      title: "Track Added",
-      description: `"${track.title}" has been added to the playlist`,
-    });
+  const handleAddToPlaylist = async (track: any) => {
+    if (onAddToPlaylist) {
+      const success = await onAddToPlaylist(track);
+      if (success) {
+        toast({
+          title: "Track Added",
+          description: `"${track.title}" has been added to the playlist`,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to add track to playlist",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   const getTotalDuration = () => {
@@ -204,7 +207,7 @@ export const PlaylistManager = ({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <List className="h-5 w-5" />
-            Playlist Manager
+            {selectedPlaylistName ? `${selectedPlaylistName}` : 'Playlist Manager'}
             <Badge variant="outline">{localPlaylist.length} tracks</Badge>
           </CardTitle>
           <div className="flex items-center gap-2">
@@ -221,14 +224,16 @@ export const PlaylistManager = ({
       <CardContent className="space-y-4">
         {/* Control Buttons */}
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowMediaLibrary(true)}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add to Playlist
-          </Button>
+          {onAddToPlaylist && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowMediaLibrary(true)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add to Playlist
+            </Button>
+          )}
           
           <Button
             variant="outline"
@@ -292,9 +297,14 @@ export const PlaylistManager = ({
           ) : (
             <div className="text-center py-12">
               <Music className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No tracks in playlist</p>
+              <p className="text-muted-foreground">
+                {selectedPlaylistName ? `"${selectedPlaylistName}" is empty` : 'No playlist selected'}
+              </p>
               <p className="text-sm text-muted-foreground/70">
-                Add tracks from the Media Library to get started
+                {selectedPlaylistName 
+                  ? 'Add tracks from the Media Library to get started'
+                  : 'Select a playlist to view and manage tracks'
+                }
               </p>
             </div>
           )}
@@ -313,11 +323,13 @@ export const PlaylistManager = ({
         )}
 
         {/* Media Library Dialog */}
-        <MediaLibraryDialog
-          open={showMediaLibrary}
-          onOpenChange={setShowMediaLibrary}
-          onAddToPlaylist={handleAddToPlaylist}
-        />
+        {onAddToPlaylist && (
+          <MediaLibraryDialog
+            open={showMediaLibrary}
+            onOpenChange={setShowMediaLibrary}
+            onAddToPlaylist={handleAddToPlaylist}
+          />
+        )}
       </CardContent>
     </Card>
   );
