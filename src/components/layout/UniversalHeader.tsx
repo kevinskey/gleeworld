@@ -112,52 +112,33 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     <DropdownMenuLabel>Dashboard Views</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     
-                    {/* View Mode Selection for Admins/Executives */}
+                    {/* Admin View - only for admins/executives */}
                     {(isAdmin || hasExecBoardPerms) && (
-                      <>
-                        <DropdownMenuItem 
-                          onClick={() => {
-                            navigate('/dashboard');
-                            onViewModeChange?.('admin');
-                          }}
-                          className={`cursor-pointer ${viewMode === 'admin' ? 'bg-accent' : ''}`}
-                        >
-                          <Shield className="mr-2 h-4 w-4" />
-                          Admin View
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => {
-                            navigate('/dashboard');
-                            onViewModeChange?.('member');
-                          }}
-                          className={`cursor-pointer ${viewMode === 'member' ? 'bg-accent' : ''}`}
-                        >
-                          <User className="mr-2 h-4 w-4" />
-                          Member View
-                        </DropdownMenuItem>
-                        {(isExecBoardMember || hasExecBoardPerms) && (
-                          <DropdownMenuItem 
-                            onClick={() => navigate('/dashboard')}
-                            className="cursor-pointer"
-                          >
-                            <Crown className="mr-2 h-4 w-4" />
-                            Executive Board
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuSeparator />
-                      </>
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          navigate('/dashboard');
+                          onViewModeChange?.('admin');
+                        }}
+                        className={`cursor-pointer ${viewMode === 'admin' ? 'bg-accent' : ''}`}
+                      >
+                        <Shield className="mr-2 h-4 w-4" />
+                        Admin
+                      </DropdownMenuItem>
                     )}
                     
+                    {/* Member View */}
                     <DropdownMenuItem 
-                      onClick={() => navigate('/dashboard')}
-                      className="cursor-pointer"
+                      onClick={() => {
+                        navigate('/dashboard');
+                        onViewModeChange?.('member');
+                      }}
+                      className={`cursor-pointer ${viewMode === 'member' ? 'bg-accent' : ''}`}
                     >
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      Go to Dashboard
+                      <User className="mr-2 h-4 w-4" />
+                      Member
                     </DropdownMenuItem>
                     
-                    <DropdownMenuSeparator />
-                    
+                    {/* Public View */}
                     <DropdownMenuItem 
                       onClick={() => {
                         console.log('Public View clicked - navigating to /');
@@ -166,7 +147,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       className="cursor-pointer"
                     >
                       <Globe className="mr-2 h-4 w-4" />
-                      Public View
+                      Public
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
