@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { RadioStationHeader } from './RadioStationHeader';
 import { MediaLibraryDialog } from './MediaLibraryDialog';
 import { RadioTimeline } from './RadioTimeline';
+import { PlaylistManager } from './PlaylistManager';
 import { 
   Play, 
   Pause, 
@@ -75,10 +76,12 @@ export const RadioStationPage = () => {
     episodes: 0,
     subscribers: 892
   });
+  const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchRadioData();
+    checkAdminStatus();
     setupAudioEventListeners();
   }, []);
 
@@ -159,6 +162,22 @@ export const RadioStationPage = () => {
     }
   };
 
+  const checkAdminStatus = async () => {
+    try {
+      const { data: profile } = await supabase
+        .from('gw_profiles')
+        .select('is_admin, is_super_admin')
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      if (profile) {
+        setIsAdmin(profile.is_admin || profile.is_super_admin);
+      }
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+    }
+  };
+
   const handleAddToPlaylist = (track: MusicTrack | AudioArchive) => {
     // Convert track to RadioTrack format
     const radioTrack: RadioTrack = {
@@ -179,6 +198,37 @@ export const RadioStationPage = () => {
     } else {
       setUpcomingTracks(prev => [...prev, radioTrack]);
     }
+  };
+
+  const handlePlaylistUpdate = (newPlaylist: RadioTrack[]) => {
+    setPlaylist(newPlaylist);
+    // Update upcoming tracks to exclude current track
+    const currentIndex = newPlaylist.findIndex(track => track.id === currentTrack?.id);
+    if (currentIndex !== -1) {
+      setUpcomingTracks(newPlaylist.slice(currentIndex + 1));
+    } else {
+      setUpcomingTracks(newPlaylist);
+    }
+  };
+
+  const handleRemoveTrack = (trackId: string) => {
+    if (currentTrack?.id === trackId) {
+      toast({
+        title: "Cannot Remove",
+        description: "Cannot remove the currently playing track",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newPlaylist = playlist.filter(track => track.id !== trackId);
+    setPlaylist(newPlaylist);
+    setUpcomingTracks(newPlaylist.filter(track => track.id !== currentTrack?.id));
+    
+    toast({
+      title: "Track Removed",
+      description: "Track has been removed from playlist",
+    });
   };
 
   const handlePlayTrack = (track: MusicTrack | AudioArchive) => {
@@ -234,6 +284,11 @@ export const RadioStationPage = () => {
   const handlePrevTrack = () => {
     // Implementation for previous track
     console.log('Previous track');
+  };
+
+  const handlePlayRadioTrack = (track: RadioTrack) => {
+    setCurrentTrack(track);
+    setIsPlaying(true);
   };
 
   const generateRSSFeed = async () => {
@@ -469,6 +524,19 @@ export const RadioStationPage = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Playlist Manager - Admin Only */}
+            {isAdmin && (
+              <PlaylistManager
+                playlist={playlist}
+                currentTrack={currentTrack}
+                isPlaying={isPlaying}
+                onPlaylistUpdate={handlePlaylistUpdate}
+                onPlayTrack={handlePlayRadioTrack}
+                onRemoveTrack={handleRemoveTrack}
+                canEdit={isAdmin}
+              />
+            )}
+
             {/* Station Info */}
             <Card>
               <CardHeader>
