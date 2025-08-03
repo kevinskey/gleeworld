@@ -276,13 +276,13 @@ const UserDashboard = React.memo(() => {
 
 
         {/* Add spacing between WelcomeCard and Community Hub */}
-        <div className="mb-8 sm:mb-12 md:mb-16"></div>
+        <div className="mb-4 sm:mb-8 md:mb-12"></div>
 
         {/* Community Hub */}
-        <div className="w-full min-h-[50vh]">
+        <div className="w-full min-h-[30vh] md:min-h-[50vh]">
           {/* Mobile Layout */}
           <div className="flex flex-col md:hidden gap-4">
-            <div className="h-[calc(40vh+20px)]">
+            <div className="h-[calc(30vh+20px)]">
               <CommunityHubWidget />
             </div>
           </div>
@@ -294,6 +294,9 @@ const UserDashboard = React.memo(() => {
             </div>
           </div>
         </div>
+
+        {/* Add spacing before admin modules on mobile */}
+        <div className="mb-4 md:mb-8"></div>
 
 
 
