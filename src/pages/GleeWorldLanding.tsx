@@ -264,7 +264,7 @@ export const GleeWorldLanding = () => {
   // };
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden">
       
       <PublicLayout>
       {/* Auth state indicator disabled - was showing "You're logged in! Go to Dashboard" badge */}
