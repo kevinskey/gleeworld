@@ -318,7 +318,14 @@ const UserDashboard = React.memo(() => {
         </div>
 
         {/* Show Permissions Panel for Admin Users Only */}
-        {isAdmin && (
+        {(() => {
+          console.log('UserDashboard: Permissions Panel visibility check:', {
+            isAdmin,
+            profile,
+            showingPanel: isAdmin
+          });
+          return isAdmin;
+        })() && (
           <div className="w-full mb-8">
             <Card>
               <Collapsible open={permissionsOpen} onOpenChange={setPermissionsOpen}>
