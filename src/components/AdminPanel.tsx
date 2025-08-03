@@ -24,6 +24,7 @@ import { ExecutiveBoardManager } from "./admin/ExecutiveBoardManager";
 import { ProductManager } from "./admin/ProductManager";
 import { AnnouncementManagement } from "./admin/AnnouncementManagement";
 import { AdminPanelHeader } from "./admin/AdminPanelHeader";
+import { PermissionsPanel } from "./admin/PermissionsPanel";
 // Square integration removed - using Stripe instead
 
 interface AdminPanelProps {
@@ -181,6 +182,8 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
             onRefetch={refetchUsers}
           />
         );
+      case 'permissions':
+        return <PermissionsPanel />;
       case 'settings':
         return <SystemSettings />;
       default:
