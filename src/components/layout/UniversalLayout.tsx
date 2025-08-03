@@ -42,7 +42,6 @@ export const UniversalLayout = ({
           backgroundRepeat: 'no-repeat'
         }}
       >
-        <div className="lg:hidden absolute inset-0 bg-background/80 backdrop-blur-sm" />
         <div className="relative z-10">
           {containerized ? (
             <ResponsiveContainer maxWidth={maxWidth}>
