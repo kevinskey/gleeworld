@@ -66,7 +66,7 @@ const UserDashboard = React.memo(() => {
   // Get selected module from URL parameter
   const selectedModule = searchParams.get('module');
   
-  const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
+  const isAdmin = profile?.is_admin || profile?.is_super_admin;
   
   const userRole = profile?.role || 'user';
   const userEmail = user?.email || '';
