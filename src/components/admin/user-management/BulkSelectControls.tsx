@@ -69,53 +69,26 @@ export const BulkSelectControls = ({
 
     setIsUpdating(true);
     try {
-      // Use the secure function to update roles
-      const { error: secureUpdateError } = await supabase.rpc('secure_update_user_role', {
-        target_user_id: selectedUsers[0], // For now, handle one at a time for security
+      // Use the new secure bulk function
+      const { data: bulkResult, error: secureUpdateError } = await supabase.rpc('secure_bulk_update_user_roles', {
+        target_user_ids: selectedUsers,
         new_role: bulkRole,
         reason: `Bulk role update to ${bulkRole}`
       });
 
       if (secureUpdateError) {
-        // Fall back to direct update if function doesn't exist, but with additional checks
-        console.warn('Secure function not available, using direct update with enhanced validation');
-        
-        // Get current user's role for validation
-        const { data: currentUserProfile } = await supabase
-          .from('gw_profiles')
-          .select('role, is_admin, is_super_admin')
-          .eq('user_id', user?.id)
-          .single();
-
-        if (!currentUserProfile?.is_admin && !currentUserProfile?.is_super_admin) {
-          throw new Error('Insufficient privileges to update user roles');
-        }
-
-        // Update roles in profiles table
-        const { error: profilesError } = await supabase
-          .from('profiles')
-          .update({ role: bulkRole })
-          .in('id', selectedUsers)
-          .neq('id', user?.id); // Ensure we don't update current user
-
-        if (profilesError) throw profilesError;
-
-        // Also update gw_profiles for consistency
-        const { error: gwProfilesError } = await supabase
-          .from('gw_profiles')
-          .update({ role: bulkRole })
-          .in('user_id', selectedUsers)
-          .neq('user_id', user?.id); // Ensure we don't update current user
-
-        if (gwProfilesError) {
-          console.warn('Warning updating gw_profiles:', gwProfilesError);
-        }
+        throw new Error(`Security function error: ${secureUpdateError.message}`);
       }
 
-      toast({
-        title: "Success",
-        description: `Updated ${selectedUsers.length} user(s) to ${bulkRole} role`,
-      });
+      // Check if the bulk operation was successful
+      if (bulkResult && bulkResult.success) {
+        toast({
+          title: "Success",
+          description: `Updated ${bulkResult.updated_count} user(s) to ${bulkRole} role`,
+        });
+      } else {
+        throw new Error(bulkResult?.errors?.[0]?.error || 'Bulk update failed');
+      }
 
       onBulkActionComplete();
       onSelectionChange([]);

@@ -13,12 +13,54 @@ interface ResetPasswordRequest {
   newPassword: string;
 }
 
-// Password validation function - simplified for admin reset
+// Enhanced password validation function with stronger security requirements
 const validatePassword = (password: string): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
   
-  if (password.length < 6) {
-    errors.push("Password must be at least 6 characters long");
+  // Minimum length increased to 8 characters
+  if (password.length < 8) {
+    errors.push("Password must be at least 8 characters long");
+  }
+  
+  // Maximum length to prevent DoS attacks
+  if (password.length > 128) {
+    errors.push("Password must be less than 128 characters long");
+  }
+  
+  // Check for uppercase letter
+  if (!/[A-Z]/.test(password)) {
+    errors.push("Password must contain at least one uppercase letter");
+  }
+  
+  // Check for lowercase letter
+  if (!/[a-z]/.test(password)) {
+    errors.push("Password must contain at least one lowercase letter");
+  }
+  
+  // Check for number
+  if (!/\d/.test(password)) {
+    errors.push("Password must contain at least one number");
+  }
+  
+  // Check for special character
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    errors.push("Password must contain at least one special character (!@#$%^&*(),.?\":{}|<>)");
+  }
+  
+  // Check for common weak passwords
+  const commonPasswords = [
+    'password', '123456', 'admin', 'guest', 'user', 'qwerty',
+    'password123', 'admin123', 'welcome', 'letmein', 'monkey',
+    '12345678', 'password1', 'welcome123', 'administrator',
+    'spelman', 'glee', 'gleeclub', 'college'
+  ];
+  if (commonPasswords.some(common => password.toLowerCase().includes(common))) {
+    errors.push("Password contains common patterns. Please choose a stronger password.");
+  }
+  
+  // Check for sequential characters
+  if (/123|abc|qwe|987|zyx/i.test(password)) {
+    errors.push("Password cannot contain sequential characters like 123, abc, or qwe");
   }
   
   return {

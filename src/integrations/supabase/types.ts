@@ -11010,6 +11010,10 @@ export type Database = {
         }
         Returns: Json
       }
+      secure_bulk_update_user_roles: {
+        Args: { target_user_ids: string[]; new_role: string; reason?: string }
+        Returns: Json
+      }
       secure_update_user_role: {
         Args: { target_user_id: string; new_role: string; reason?: string }
         Returns: boolean
