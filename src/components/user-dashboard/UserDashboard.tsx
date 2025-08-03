@@ -67,6 +67,13 @@ const UserDashboard = React.memo(() => {
   const selectedModule = searchParams.get('module');
   
   const isAdmin = profile?.is_admin || profile?.is_super_admin;
+  console.log('UserDashboard: Admin check debug:', {
+    profile,
+    is_admin: profile?.is_admin,
+    is_super_admin: profile?.is_super_admin,
+    isAdmin,
+    role: profile?.role
+  });
   
   const userRole = profile?.role || 'user';
   const userEmail = user?.email || '';
@@ -76,6 +83,13 @@ const UserDashboard = React.memo(() => {
   
   // Check if user is an exec board member (assigned by super admin)
   const isExecBoardMember = profile?.exec_board_role && profile.exec_board_role.trim() !== '';
+
+  console.log('UserDashboard: Permissions debug:', {
+    isAdmin,
+    hasExecBoardPerms,
+    isExecBoardMember,
+    shouldShowModules: isAdmin || hasExecBoardPerms
+  });
 
   if (!user || profileLoading) {
     console.log('UserDashboard: No user found or profile loading, showing loading spinner');
