@@ -5979,6 +5979,183 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_radio_episodes: {
+        Row: {
+          audio_url: string
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          duration_seconds: number | null
+          episode_number: number | null
+          id: string
+          is_published: boolean | null
+          published_date: string | null
+          season: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          audio_url: string
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          episode_number?: number | null
+          id?: string
+          is_published?: boolean | null
+          published_date?: string | null
+          season?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          audio_url?: string
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          episode_number?: number | null
+          id?: string
+          is_published?: boolean | null
+          published_date?: string | null
+          season?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      gw_radio_playlist_items: {
+        Row: {
+          audio_archive_id: string | null
+          created_at: string | null
+          episode_id: string | null
+          id: string
+          playlist_id: string | null
+          position: number
+          scheduled_time: string | null
+        }
+        Insert: {
+          audio_archive_id?: string | null
+          created_at?: string | null
+          episode_id?: string | null
+          id?: string
+          playlist_id?: string | null
+          position: number
+          scheduled_time?: string | null
+        }
+        Update: {
+          audio_archive_id?: string | null
+          created_at?: string | null
+          episode_id?: string | null
+          id?: string
+          playlist_id?: string | null
+          position?: number
+          scheduled_time?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_radio_playlist_items_audio_archive_id_fkey"
+            columns: ["audio_archive_id"]
+            isOneToOne: false
+            referencedRelation: "audio_archive"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_radio_playlist_items_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "gw_radio_episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_radio_playlist_items_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "gw_radio_playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_radio_playlists: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_time: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          start_time: string | null
+          updated_at: string | null
+          weekday: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_time?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          start_time?: string | null
+          updated_at?: string | null
+          weekday?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_time?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          start_time?: string | null
+          updated_at?: string | null
+          weekday?: number | null
+        }
+        Relationships: []
+      }
+      gw_radio_stats: {
+        Row: {
+          created_at: string | null
+          date: string | null
+          episode_id: string | null
+          id: string
+          play_count: number | null
+          total_listen_time: number | null
+          unique_listeners: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          date?: string | null
+          episode_id?: string | null
+          id?: string
+          play_count?: number | null
+          total_listen_time?: number | null
+          unique_listeners?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string | null
+          episode_id?: string | null
+          id?: string
+          play_count?: number | null
+          total_listen_time?: number | null
+          unique_listeners?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_radio_stats_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "gw_radio_episodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_receipts: {
         Row: {
           amount: number
