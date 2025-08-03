@@ -317,12 +317,6 @@ const UserDashboard = React.memo(() => {
           </div>
         </div>
 
-        {/* Add spacing before admin modules on mobile */}
-        <div className="mb-4 md:mb-8"></div>
-
-
-
-
         {/* Show Permissions Panel for Admin Users */}
         {(isAdmin || hasExecBoardPerms) && (
           <div className="w-full mb-8">
