@@ -368,7 +368,7 @@ export const GleeWorldLanding = () => {
                       }
                     }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-black/50 to-primary/40"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-primary/20"></div>
                   
                   {/* Content overlay - positioned elements */}
                   <div className="absolute inset-0">
