@@ -272,40 +272,16 @@ export const GleeWorldLanding = () => {
       
       <PublicLayout>
       {/* Auth state indicator disabled - was showing "You're logged in! Go to Dashboard" badge */}
-      {/* YouTube Video Background Section */}
+      {/* Historic Background Image Section */}
       <section className="fixed top-0 left-0 w-full z-0 overflow-hidden h-[300px] sm:h-screen">
-        {!showFallbackImage && backgroundVideo ? (
-          <>
-            {/* YouTube Embed */}
-            <div className="absolute inset-0">
-              <iframe
-                src={getVideoEmbedUrl(backgroundVideo.video_id, true, true, 3861)}
-                className="w-full h-full object-cover"
-                style={{
-                  width: '300%',
-                  height: '300%',
-                  marginLeft: '-100%',
-                  marginTop: '-100%',
-                }}
-                allow="autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture"
-                allowFullScreen
-                title={backgroundVideo.title || "Glee Club Background Video"}
-                onError={() => setShowFallbackImage(true)}
-              />
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Fallback Glee Club Image */}
-            <div className="absolute inset-0">
-              <img 
-                src="/lovable-uploads/1fd284bf-d474-493f-a363-1104a0653923.png"
-                alt="Spelman College Glee Club Group Photo"
-                className="w-full h-full object-cover brightness-75 contrast-105"
-              />
-            </div>
-          </>
-        )}
+        {/* Historic Glee Club Group Photo */}
+        <div className="absolute inset-0">
+          <img 
+            src="/lovable-uploads/1fd284bf-d474-493f-a363-1104a0653923.png"
+            alt="Spelman College Glee Club Historic Group Photo"
+            className="w-full h-full object-cover brightness-75 contrast-105"
+          />
+        </div>
         
         {/* Overlay for dimming */}
         <div className="absolute inset-0 bg-black/50 z-10"></div>
