@@ -302,7 +302,7 @@ const UserDashboard = React.memo(() => {
 
 
         {/* Show Dashboard Modules for Admin/Executive Features */}
-        {(isAdmin || hasExecBoardPerms) && viewMode === 'admin' && (
+        {(isAdmin || hasExecBoardPerms) && (
           <div className="w-full">
             <DashboardModulesSection />
           </div>
