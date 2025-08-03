@@ -206,8 +206,11 @@ const UserDashboard = React.memo(() => {
     loading: dashboardLoading
   });
   
-  // Prevent rendering until dashboard data is ready to avoid blinking
-  if (dashboardLoading) {
+  // For admin users, don't wait for dashboard data to show admin modules
+  if (isAdmin && dashboardLoading) {
+    console.log('UserDashboard: Admin user detected, showing dashboard with loading state for non-critical data');
+    // Show admin dashboard immediately with loading indicators for non-critical sections
+  } else if (dashboardLoading) {
     console.log('UserDashboard: Dashboard data still loading, showing loading state');
     return (
       <UniversalLayout>
