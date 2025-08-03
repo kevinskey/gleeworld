@@ -41,10 +41,18 @@ import {
 } from "lucide-react";
 
 export const DashboardModulesSection = () => {
+  console.log('DashboardModulesSection: Component rendering...');
   const navigate = useNavigate();
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
   const [openCategories, setOpenCategories] = useState<string[]>([]);
+
+  console.log('DashboardModulesSection: User profile debug:', {
+    userProfile,
+    hasUserProfile: !!userProfile,
+    isAdmin: userProfile?.is_admin,
+    isSuperAdmin: userProfile?.is_super_admin
+  });
 
   // Check user permissions
   const isAdmin = userProfile?.is_admin || userProfile?.is_super_admin;
