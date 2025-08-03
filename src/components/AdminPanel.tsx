@@ -20,7 +20,7 @@ import { AccountingFilters } from "./accounting/AccountingFilters";
 import { useAccountingFiltering } from "@/hooks/useAccountingFiltering";
 import { Shield, Users, Settings, FileText, Activity, Receipt, Calculator, Mail, Music, Megaphone } from "lucide-react";
 import { MusicManagement } from "./admin/MusicManagement";
-import { ExecutiveBoardManager } from "./admin/ExecutiveBoardManager";
+
 import { ProductManager } from "./admin/ProductManager";
 import { AnnouncementManagement } from "./admin/AnnouncementManagement";
 import { AdminPanelHeader } from "./admin/AdminPanelHeader";
@@ -80,7 +80,7 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
      currentPath.includes('accounting') ? 'accounting' : 
      currentPath.includes('music') ? 'music' :
      currentPath.includes('announcements') ? 'announcements' :
-     currentPath.includes('executive-board') ? 'executive-board' :
+     currentPath.includes('products') ? 'products' :
      currentPath.includes('settings') ? 'settings' : 'overview');
 
   const handleSort = (column: string) => {
@@ -174,14 +174,6 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
         return <MusicManagement />;
       case 'announcements':
         return <AnnouncementManagement />;
-      case 'executive-board':
-        return (
-          <ExecutiveBoardManager 
-            users={users}
-            loading={usersLoading}
-            onRefetch={refetchUsers}
-          />
-        );
       case 'permissions':
         return <PermissionsPanel />;
       case 'settings':

@@ -61,7 +61,6 @@ import Handbook from "./pages/Handbook";
 import ScholarshipHub from "./pages/ScholarshipHub";
 import AdminScholarships from "./pages/AdminScholarships";
 import AdminProducts from "./pages/AdminProducts";
-import { ExecutiveBoardDashboard } from "./pages/ExecutiveBoardDashboard";
 import { SectionLeaderDashboard } from "./pages/SectionLeaderDashboard";
 import { SectionalManagement } from "./pages/SectionalManagement";
 import { SRFManagement } from "./pages/SRFManagement";
@@ -72,23 +71,9 @@ import Wardrobe from "./pages/Wardrobe";
 import { ProductManagement } from "./pages/ProductManagement";
 import PRHubPage from "./pages/PRHubPage";
 import { SharedAnnotation } from "./pages/SharedAnnotation";
-import BulkAssignmentPage from "./pages/BulkAssignmentPage";
 import MobileScoring from "./pages/MobileScoring";
-import ExecutiveServicesDirectory from "./pages/ExecutiveServicesDirectory";
-import LibrarianServices from "./pages/executive-services/LibrarianServices";
-import TreasurerServices from "./pages/executive-services/TreasurerServices";
-import TourManagerServices from "./pages/executive-services/TourManagerServices";
-import PRCoordinatorServices from "./pages/executive-services/PRCoordinatorServices";
-import PresidentServices from "./pages/executive-services/PresidentServices";
-import VicePresidentServices from "./pages/executive-services/VicePresidentServices";
-import SecretaryServices from "./pages/executive-services/SecretaryServices";
-import ChaplainServices from "./pages/executive-services/ChaplainServices";
-import StudentConductorServices from "./pages/executive-services/StudentConductorServices";
-import AssistantChaplainServices from "./pages/executive-services/AssistantChaplainServices";
-import ExecutiveBoardNavigationPage from "./pages/ExecutiveBoardNavigationHub";
 import LibrarianDashboard from "./pages/LibrarianDashboard";
 import HistorianDashboard from "./pages/HistorianDashboard";
-import SetUpCrewManagerServices from "./pages/executive-services/SetUpCrewManagerServices";
 import UserManagement from "./pages/UserManagement";
 import MemberDirectory from "./pages/MemberDirectory";
 
@@ -539,22 +524,6 @@ const App = () => {
                                } 
                              />
                              <Route 
-                               path="/executive-board" 
-                               element={
-                                 <ProtectedRoute>
-                                   <ExecutiveBoardDashboard />
-                                 </ProtectedRoute>
-                               } 
-                                />
-                              <Route 
-                                path="/executive-board/tour-manager" 
-                                element={
-                                  <ProtectedRoute>
-                                    <TourManager />
-                                  </ProtectedRoute>
-                                } 
-                               />
-                             <Route 
                                path="/dashboard/pr-hub" 
                                element={
                                  <ProtectedRoute>
@@ -646,190 +615,30 @@ const App = () => {
                     path="/" 
                     element={<RootRoute />} 
                   />
-                             <Route 
-                               path="/admin/bulk-assignment" 
-                               element={
-                                 <ProtectedRoute>
-                                   <BulkAssignmentPage />
-                                 </ProtectedRoute>
-                               } 
-                              />
-                               <Route 
-                                 path="/mobile-scoring" 
-                                 element={
-                                   <ProtectedRoute>
-                                     <MobileScoring />
-                                   </ProtectedRoute>
-                                 } 
+                              <Route 
+                                path="/admin/bulk-assignment" 
+                                element={
+                                  <ProtectedRoute>
+                                    <BulkAssignmentPage />
+                                  </ProtectedRoute>
+                                } 
                                />
-                               <Route 
-                                 path="/executive-services" 
-                                 element={
-                                   <ProtectedRoute>
-                                     <ExecutiveServicesDirectory />
-                                   </ProtectedRoute>
-                                 } 
-                               />
-                               <Route 
-                                 path="/executive-services/librarian" 
-                                 element={
-                                   <ProtectedRoute>
-                                     <LibrarianServices />
-                                   </ProtectedRoute>
-                                 } 
-                               />
-                               <Route 
-                                 path="/executive-services/treasurer" 
-                                 element={
-                                   <ProtectedRoute>
-                                     <TreasurerServices />
-                                   </ProtectedRoute>
-                                 } 
-                               />
-                               <Route 
-                                 path="/executive-services/tour-manager" 
-                                 element={
-                                   <ProtectedRoute>
-                                     <TourManagerServices />
-                                   </ProtectedRoute>
-                                 } 
-                                />
                                 <Route 
-                                  path="/tour-manager-services" 
+                                  path="/mobile-scoring" 
                                   element={
                                     <ProtectedRoute>
-                                      <TourManagerServices />
+                                      <MobileScoring />
                                     </ProtectedRoute>
                                   } 
                                 />
-                                 <Route
-                                  path="/executive-services/pr-coordinator" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <PRCoordinatorServices />
-                                    </ProtectedRoute>
-                                  } 
-                                />
-                                <Route 
-                                  path="/executive-services/president" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <PresidentServices />
-                                    </ProtectedRoute>
-                                  } 
-                                 />
                                  <Route 
-                                   path="/executive-services/vice-president" 
+                                   path="/pr-hub" 
                                    element={
                                      <ProtectedRoute>
-                                       <VicePresidentServices />
+                                       <PRHubPage />
                                      </ProtectedRoute>
                                    } 
                                  />
-                                 <Route 
-                                   path="/executive-services/secretary" 
-                                   element={
-                                     <ProtectedRoute>
-                                       <SecretaryServices />
-                                     </ProtectedRoute>
-                                   } 
-                                 />
-                                 <Route
-                                  path="/executive-services/chaplain" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <ChaplainServices />
-                                    </ProtectedRoute>
-                                  } 
-                                />
-                                <Route 
-                                  path="/executive-services/student-conductor" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <StudentConductorServices />
-                                    </ProtectedRoute>
-                                  } 
-                                />
-                                <Route 
-                                  path="/executive-services/assistant-chaplain" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <AssistantChaplainServices />
-                                    </ProtectedRoute>
-                                  } 
-                                />
-                                <Route 
-                                  path="/executive-services/setup-crew-manager" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <SetUpCrewManagerServices />
-                                    </ProtectedRoute>
-                                  } 
-                                 />
-                                <Route 
-                                  path="/executive-navigation" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <ExecutiveBoardNavigationPage />
-                                    </ProtectedRoute>
-                                  } 
-                                />
-                                <Route 
-                                  path="/student-conductor" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <StudentConductorDashboard />
-                                    </ProtectedRoute>
-                                  } 
-                                />
-                                <Route 
-                                  path="/librarian" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <LibrarianDashboard />
-                                    </ProtectedRoute>
-                                  } 
-                                />
-                                <Route 
-                                  path="/historian" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <HistorianDashboard />
-                                    </ProtectedRoute>
-                                  } 
-                                />
-                                <Route 
-                                  path="/chaplain" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <ChaplainServices />
-                                    </ProtectedRoute>
-                                  } 
-                                />
-                                <Route 
-                                  path="/assistant-chaplain" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <AssistantChaplainServices />
-                                    </ProtectedRoute>
-                                  } 
-                                />
-                                <Route 
-                                  path="/set-up-crew-manager" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <SetUpCrewManagerServices />
-                                    </ProtectedRoute>
-                                  } 
-                                />
-                                <Route 
-                                  path="/pr-hub" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <PRHubPage />
-                                    </ProtectedRoute>
-                                  } 
-                                />
                    </Routes>
                    <GlobalMusicPlayer />
                 </div>
