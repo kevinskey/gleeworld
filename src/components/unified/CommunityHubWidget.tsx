@@ -497,13 +497,13 @@ export const CommunityHubWidget = () => {
 
         {/* Buckets of Love Tab - Cork Board Style */}
         <TabsContent value="buckets" className="space-y-3">
-          <div className="relative bg-gradient-to-br from-amber-50 to-orange-100 rounded-lg p-4 min-h-[300px]" 
+          <div className="relative bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-4 min-h-[300px]" 
                style={{
                  backgroundImage: `
-                   radial-gradient(circle at 20% 30%, #d97706 1px, transparent 1px),
-                   radial-gradient(circle at 70% 60%, #d97706 1px, transparent 1px),
-                   radial-gradient(circle at 40% 80%, #d97706 1px, transparent 1px),
-                   radial-gradient(circle at 90% 20%, #d97706 1px, transparent 1px)
+                   radial-gradient(circle at 20% 30%, #1d4ed8 1px, transparent 1px),
+                   radial-gradient(circle at 70% 60%, #1d4ed8 1px, transparent 1px),
+                   radial-gradient(circle at 40% 80%, #1d4ed8 1px, transparent 1px),
+                   radial-gradient(circle at 90% 20%, #1d4ed8 1px, transparent 1px)
                  `,
                  backgroundSize: '80px 80px, 120px 120px, 100px 100px, 90px 90px'
                }}>
@@ -982,10 +982,10 @@ export const CommunityHubWidget = () => {
   );
 
   return (
-    <Card className="col-span-1 md:col-span-2 lg:col-span-3 overflow-visible relative -mt-8 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 border-amber-200" data-section="community-hub">
+    <Card className="col-span-1 md:col-span-2 lg:col-span-3 overflow-visible relative -mt-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-slate-50 border-blue-200" data-section="community-hub">
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
         <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-amber-50/50 transition-colors pb-4 relative z-20 bg-gradient-to-r from-amber-100 to-orange-100 border-b border-amber-200">
+          <CardHeader className="cursor-pointer hover:bg-blue-50/50 transition-colors pb-4 relative z-20 bg-gradient-to-r from-blue-100 to-indigo-100 border-b border-blue-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="relative">
