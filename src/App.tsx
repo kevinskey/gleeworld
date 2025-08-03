@@ -615,14 +615,6 @@ const App = () => {
                     path="/" 
                     element={<RootRoute />} 
                   />
-                              <Route 
-                                path="/admin/bulk-assignment" 
-                                element={
-                                  <ProtectedRoute>
-                                    <BulkAssignmentPage />
-                                  </ProtectedRoute>
-                                } 
-                               />
                                 <Route 
                                   path="/mobile-scoring" 
                                   element={
