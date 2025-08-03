@@ -81,10 +81,19 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
 
   return (
     <div className="relative rounded-2xl sm:rounded-3xl shadow-lg h-[40vh] flex items-center">
-      {/* Background Image Layer - Reset to gradient */}
+      {/* Background Image Layer */}
+      <div 
+        className="absolute inset-0 rounded-2xl sm:rounded-3xl"
+        style={{
+          backgroundImage: 'url("/src/assets/campus-ground-level-wide-mobile.jpg")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      />
       
-      {/* Background Gradient Layer */}
-      <div className="absolute inset-0 bg-transparent" />
+      {/* Background Overlay */}
+      <div className="absolute inset-0 bg-black/40 rounded-2xl sm:rounded-3xl" />
       
       {/* Content Layer */}
       <div className="relative z-10 text-center w-full px-4 sm:px-6 py-6 sm:py-8 pb-12 sm:pb-16 md:pb-20">
