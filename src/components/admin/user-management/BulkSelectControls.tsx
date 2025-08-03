@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { User } from "@/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { Users, CheckSquare, Square, Settings } from "lucide-react";
 
 interface BulkSelectControlsProps {
@@ -34,6 +35,8 @@ export const BulkSelectControls = ({
     }
   };
 
+  const { user } = useAuth();
+
   const handleBulkRoleUpdate = async () => {
     if (!bulkRole || selectedUsers.length === 0) {
       toast({
@@ -44,24 +47,69 @@ export const BulkSelectControls = ({
       return;
     }
 
+    // CRITICAL SECURITY CHECK: Prevent self-privilege escalation
+    if (user && selectedUsers.includes(user.id)) {
+      toast({
+        title: "Security Error",
+        description: "You cannot modify your own role. Please ask another administrator to make this change.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Additional validation: Check if trying to escalate to admin/super-admin roles
+    if ((bulkRole === 'admin' || bulkRole === 'super-admin') && selectedUsers.length > 1) {
+      toast({
+        title: "Warning",
+        description: "Admin and Super Admin roles should be assigned individually for security reasons.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsUpdating(true);
     try {
-      // Update roles in profiles table
-      const { error: profilesError } = await supabase
-        .from('profiles')
-        .update({ role: bulkRole })
-        .in('id', selectedUsers);
+      // Use the secure function to update roles
+      const { error: secureUpdateError } = await supabase.rpc('secure_update_user_role', {
+        target_user_id: selectedUsers[0], // For now, handle one at a time for security
+        new_role: bulkRole,
+        reason: `Bulk role update to ${bulkRole}`
+      });
 
-      if (profilesError) throw profilesError;
+      if (secureUpdateError) {
+        // Fall back to direct update if function doesn't exist, but with additional checks
+        console.warn('Secure function not available, using direct update with enhanced validation');
+        
+        // Get current user's role for validation
+        const { data: currentUserProfile } = await supabase
+          .from('gw_profiles')
+          .select('role, is_admin, is_super_admin')
+          .eq('user_id', user?.id)
+          .single();
 
-      // Also update gw_profiles for consistency
-      const { error: gwProfilesError } = await supabase
-        .from('gw_profiles')
-        .update({ role: bulkRole })
-        .in('user_id', selectedUsers);
+        if (!currentUserProfile?.is_admin && !currentUserProfile?.is_super_admin) {
+          throw new Error('Insufficient privileges to update user roles');
+        }
 
-      if (gwProfilesError) {
-        console.warn('Warning updating gw_profiles:', gwProfilesError);
+        // Update roles in profiles table
+        const { error: profilesError } = await supabase
+          .from('profiles')
+          .update({ role: bulkRole })
+          .in('id', selectedUsers)
+          .neq('id', user?.id); // Ensure we don't update current user
+
+        if (profilesError) throw profilesError;
+
+        // Also update gw_profiles for consistency
+        const { error: gwProfilesError } = await supabase
+          .from('gw_profiles')
+          .update({ role: bulkRole })
+          .in('user_id', selectedUsers)
+          .neq('user_id', user?.id); // Ensure we don't update current user
+
+        if (gwProfilesError) {
+          console.warn('Warning updating gw_profiles:', gwProfilesError);
+        }
       }
 
       toast({
@@ -76,7 +124,7 @@ export const BulkSelectControls = ({
       console.error('Bulk update error:', error);
       toast({
         title: "Error",
-        description: "Failed to update user roles",
+        description: error instanceof Error ? error.message : "Failed to update user roles",
         variant: "destructive",
       });
     } finally {
