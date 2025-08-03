@@ -47,7 +47,7 @@ export const DashboardModulesSection = () => {
   const [openCategories, setOpenCategories] = useState<string[]>([]);
 
   // Check user permissions
-  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
+  const isAdmin = userProfile?.is_admin || userProfile?.is_super_admin;
   const isPRCoordinator = userProfile?.exec_board_role === 'pr_coordinator';
   const canAccessPR = isAdmin || isPRCoordinator;
   const isExecutive = userProfile?.role === 'executive' || userProfile?.is_exec_board || isAdmin;
