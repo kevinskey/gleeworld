@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -136,6 +136,28 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     >
                       <User className="mr-2 h-4 w-4" />
                       Member
+                    </DropdownMenuItem>
+                    
+                    {/* Fan View */}
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        navigate('/fan');
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <Heart className="mr-2 h-4 w-4" />
+                      Fan
+                    </DropdownMenuItem>
+                    
+                    {/* Alumnae View */}
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        navigate('/alumnae');
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <GraduationCap className="mr-2 h-4 w-4" />
+                      Alumnae
                     </DropdownMenuItem>
                     
                     {/* Public View */}
