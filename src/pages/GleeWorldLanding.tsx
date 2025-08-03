@@ -323,10 +323,10 @@ export const GleeWorldLanding = () => {
       </div>
 
       {/* Hero Section */}
-      <section className="relative z-30 pt-1 pb-14 sm:pt-2 sm:pb-16 md:pt-4 md:pb-18 px-2 sm:px-4 md:px-6 lg:px-8">
-        <div className="w-full max-w-screen-2xl mx-auto">
-          <Card className="overflow-hidden bg-card border-2 border-border shadow-xl">
-            <div className="min-h-[500px] sm:min-h-[600px] md:min-h-[700px] lg:min-h-[800px] h-auto overflow-auto relative">
+      <section className="relative z-30 pt-2 pb-8 sm:pt-4 sm:pb-12 md:pt-6 md:pb-16 lg:pt-8 lg:pb-20 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12">
+        <div className="w-full max-w-7xl mx-auto">
+          <Card className="overflow-hidden bg-card border border-border/50 shadow-2xl rounded-lg sm:rounded-xl md:rounded-2xl">
+            <div className="h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] xl:h-[800px] 2xl:h-[900px] relative overflow-hidden">
               {heroSlides.length > 0 ? (
                 <>
                   {/* Desktop Image */}
@@ -374,43 +374,43 @@ export const GleeWorldLanding = () => {
                   <div className="absolute inset-0">
                     {/* Title Section */}
                     {currentHeroSlide?.title && (
-                      <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.title_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.title_position_horizontal)} px-3 sm:px-4 md:px-6 lg:px-8 pointer-events-none`}>
-                        <h1 className={`${getTitleSize(currentHeroSlide.title_size)} font-bold text-white max-w-4xl pointer-events-auto drop-shadow-2xl text-center sm:text-left leading-tight`}>
+                      <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.title_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.title_position_horizontal)} px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pointer-events-none`}>
+                        <h1 className={`${getTitleSize(currentHeroSlide.title_size)} font-bold text-white max-w-5xl pointer-events-auto drop-shadow-2xl text-center sm:text-left leading-tight`}>
                           {currentHeroSlide.title}
                         </h1>
                       </div>
                     )}
                     
                     {/* Description Section */}
-                    {currentHeroSlide?.description && (
-                      <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.description_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.description_position_horizontal)} px-3 sm:px-4 md:px-6 lg:px-8 pointer-events-none`}>
-                        <p className={`${getDescriptionSize(currentHeroSlide.description_size)} text-white/90 max-w-2xl pointer-events-auto drop-shadow-lg text-center sm:text-left leading-relaxed`}>
-                          {currentHeroSlide.description}
-                        </p>
-                      </div>
-                    )}
+                     {currentHeroSlide?.description && (
+                       <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.description_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.description_position_horizontal)} px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pointer-events-none`}>
+                         <p className={`${getDescriptionSize(currentHeroSlide.description_size)} text-white/90 max-w-3xl pointer-events-auto drop-shadow-lg text-center sm:text-left leading-relaxed`}>
+                           {currentHeroSlide.description}
+                         </p>
+                       </div>
+                     )}
                     
-                    {/* Action Button Section */}
-                    {currentHeroSlide?.action_button_enabled && currentHeroSlide?.action_button_text && currentHeroSlide?.action_button_url && (
-                      <div className="absolute inset-0 flex justify-center items-end pb-4 sm:pb-6 md:pb-8 lg:pb-12 px-3 sm:px-4 md:px-6 pointer-events-none">
-                        <Button size="sm" className="pointer-events-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl font-semibold border-2 border-white/20 text-xs sm:text-sm md:text-base px-3 py-2 sm:px-4 sm:py-2 md:px-6 md:py-3" asChild>
-                          <a href={currentHeroSlide.action_button_url} target="_blank" rel="noopener noreferrer">
-                            {currentHeroSlide.action_button_text}
-                          </a>
-                        </Button>
-                      </div>
-                    )}
-                    
-                    {/* Legacy button support */}
-                    {!currentHeroSlide?.action_button_enabled && currentHeroSlide?.button_text && currentHeroSlide?.link_url && (
-                      <div className="absolute inset-0 flex justify-center items-end pb-4 sm:pb-6 md:pb-8 lg:pb-12 px-3 sm:px-4 md:px-6 pointer-events-none">
-                        <Button size="sm" className="pointer-events-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl font-semibold border-2 border-white/20 text-xs sm:text-sm md:text-base px-3 py-2 sm:px-4 sm:py-2 md:px-6 md:py-3" asChild>
-                          <a href={currentHeroSlide.link_url} target="_blank" rel="noopener noreferrer">
-                            {currentHeroSlide.button_text}
-                          </a>
-                        </Button>
-                      </div>
-                    )}
+                     {/* Action Button Section */}
+                     {currentHeroSlide?.action_button_enabled && currentHeroSlide?.action_button_text && currentHeroSlide?.action_button_url && (
+                       <div className="absolute inset-0 flex justify-center items-end pb-6 sm:pb-8 md:pb-10 lg:pb-12 xl:pb-16 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pointer-events-none">
+                         <Button size="lg" className="pointer-events-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl font-semibold border-2 border-white/20 text-sm sm:text-base md:text-lg px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-5" asChild>
+                           <a href={currentHeroSlide.action_button_url} target="_blank" rel="noopener noreferrer">
+                             {currentHeroSlide.action_button_text}
+                           </a>
+                         </Button>
+                       </div>
+                     )}
+                     
+                     {/* Legacy button support */}
+                     {!currentHeroSlide?.action_button_enabled && currentHeroSlide?.button_text && currentHeroSlide?.link_url && (
+                       <div className="absolute inset-0 flex justify-center items-end pb-6 sm:pb-8 md:pb-10 lg:pb-12 xl:pb-16 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pointer-events-none">
+                         <Button size="lg" className="pointer-events-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl font-semibold border-2 border-white/20 text-sm sm:text-base md:text-lg px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-5" asChild>
+                           <a href={currentHeroSlide.link_url} target="_blank" rel="noopener noreferrer">
+                             {currentHeroSlide.button_text}
+                           </a>
+                         </Button>
+                       </div>
+                     )}
                   </div>
                   
                 </>
