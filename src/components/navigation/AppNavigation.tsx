@@ -15,7 +15,8 @@ import {
   Library,
   PenTool,
   Calendar,
-  CalendarDays
+  CalendarDays,
+  Music
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/constants/permissions";
@@ -44,6 +45,12 @@ export const AppNavigation = () => {
       href: "/?tab=finance",
       icon: DollarSign,
       permission: "view_own_payments"
+    },
+    {
+      label: "Music Library",
+      href: "/music-library",
+      icon: Music,
+      permission: null
     },
     {
       label: "Calendar",
