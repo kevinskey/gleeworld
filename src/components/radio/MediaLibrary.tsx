@@ -214,9 +214,9 @@ export const MediaLibrary = ({
               {/* Add to Radio Button */}
               <Button
                 size="sm"
-                variant="ghost"
+                variant="outline"
                 onClick={() => handleAddToRadio(track)}
-                className="text-xs h-6 px-2"
+                className="text-xs h-6 px-2 bg-brand-100 hover:bg-brand-200 border-brand-300 text-brand-700 hover:text-brand-800"
               >
                 <Plus className="h-3 w-3 mr-1" />
                 Add to Radio
