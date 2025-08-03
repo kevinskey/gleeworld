@@ -48,6 +48,7 @@ export const CommercialMaker = ({ onCommercialCreated }: CommercialMakerProps) =
 
     setIsGenerating(true);
     try {
+      console.log('Sending request to generate commercial script...');
       const { data, error } = await supabase.functions.invoke('generate-commercial-script', {
         body: {
           businessName,
@@ -59,13 +60,28 @@ export const CommercialMaker = ({ onCommercialCreated }: CommercialMakerProps) =
         }
       });
 
-      if (error) throw error;
+      console.log('Response received:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
+      if (data?.error) {
+        console.error('Function returned error:', data.error);
+        throw new Error(data.error);
+      }
+
+      if (!data?.script) {
+        console.error('No script in response:', data);
+        throw new Error('No script generated');
+      }
 
       setGeneratedScript(data.script);
       toast.success('Commercial script generated!');
     } catch (error) {
       console.error('Error generating script:', error);
-      toast.error('Failed to generate script. Please try again.');
+      toast.error(`Failed to generate script: ${error.message}`);
     } finally {
       setIsGenerating(false);
     }

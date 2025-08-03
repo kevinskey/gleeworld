@@ -17,7 +17,12 @@ serve(async (req) => {
   try {
     const { businessName, businessType, keyMessage, targetAudience, duration, tone } = await req.json();
 
+    console.log('Request received:', { businessName, businessType, keyMessage, targetAudience, duration, tone });
+    console.log('OpenAI API Key exists:', !!openAIApiKey);
+    console.log('OpenAI API Key length:', openAIApiKey?.length || 0);
+
     if (!businessName || !businessType || !keyMessage) {
+      console.log('Missing required fields');
       return new Response(
         JSON.stringify({ error: 'Business name, type, and key message are required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
