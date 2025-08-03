@@ -942,7 +942,7 @@ export const CommunityHubWidget = () => {
                  {filteredMusic.map((music) => (
                    <div 
                      key={music.id} 
-                     className="border rounded-lg p-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                     className="depth-subtle depth-hover cursor-pointer rounded-lg p-2 transition-all duration-300"
                      onClick={() => handleViewMusic(music)}
                    >
                      <div className="flex items-start justify-between">
@@ -951,12 +951,12 @@ export const CommunityHubWidget = () => {
                          <p className="text-xs text-muted-foreground truncate">{music.composer}</p>
                          <div className="flex flex-wrap gap-1 mt-1">
                            {music.voice_parts && music.voice_parts.length > 0 && (
-                             <Badge variant="outline" className="text-xs h-4 px-1">
+                             <Badge variant="outline" className="text-xs h-4 px-1 depth-1">
                                {music.voice_parts.join(", ")}
                              </Badge>
                            )}
                            {music.difficulty_level && (
-                             <Badge variant="outline" className="text-xs h-4 px-1">
+                             <Badge variant="outline" className="text-xs h-4 px-1 depth-1">
                                {music.difficulty_level}
                              </Badge>
                            )}
@@ -967,7 +967,7 @@ export const CommunityHubWidget = () => {
                            <Button 
                              variant="ghost" 
                              size="sm" 
-                             className="h-6 w-6 p-0"
+                             className="h-6 w-6 p-0 depth-hover"
                              onClick={(e) => {
                                e.stopPropagation();
                                handleDownloadMusic(music);
