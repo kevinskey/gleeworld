@@ -558,9 +558,13 @@ export const RadioStationPage = () => {
                 <Button
                   variant="outline"
                   className="w-full border-amber-300 text-amber-700 hover:bg-amber-50"
-                  onClick={() => setIsAdmin(true)}
+                  onClick={() => {
+                    console.log('Current isAdmin:', isAdmin);
+                    setIsAdmin(true);
+                    console.log('Setting isAdmin to true');
+                  }}
                 >
-                  🔧 {isAdmin ? 'Admin Mode Active' : 'Enable Admin Mode (Testing)'}
+                  🔧 {isAdmin ? 'Admin Mode Active' : 'Enable Admin Mode (Testing)'} - Current: {isAdmin.toString()}
                 </Button>
                 
                 <Button variant="outline" className="w-full">
