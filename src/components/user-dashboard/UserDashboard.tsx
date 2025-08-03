@@ -24,7 +24,7 @@ import { useMergedProfile } from "@/hooks/useMergedProfile";
 import { useUserDashboardContext } from "@/contexts/UserDashboardContext";
 import { useUserContracts } from "@/hooks/useUserContracts";
 import { useUsernamePermissions } from "@/hooks/useUsernamePermissions";
-import { useScrollSticky } from "@/hooks/useScrollSticky";
+
 import { DASHBOARD_MODULES, hasModuleAccess, hasExecutiveBoardPermissions, DashboardModule } from "@/constants/permissions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,8 +34,6 @@ const UserDashboard = React.memo(() => {
   console.log('UserDashboard component starting to render...');
   const [viewMode, setViewMode] = useState<'admin' | 'member'>('admin');
   
-  // Add sticky scroll behavior for community hub (must be at top level)
-  const { isSticky } = useScrollSticky({ threshold: 120, unstickThreshold: 200 });
   
   const { user } = useAuth();
   console.log('UserDashboard: User from useAuth:', {
@@ -280,42 +278,21 @@ const UserDashboard = React.memo(() => {
         {/* Add spacing between WelcomeCard and Community Hub */}
         <div className="mb-8 sm:mb-12 md:mb-16"></div>
 
-        {/* Community Hub with Sticky Behavior */}
-        <div className="w-full min-h-[50vh] relative">
-          {/* Sticky container for Community Hub */}
-          <div 
-            className={`
-              w-full transition-all duration-500 ease-out
-              ${isSticky 
-                ? 'fixed left-0 right-0 z-[80] px-1 sm:px-2 md:px-4 bg-background/95 backdrop-blur-sm border-b border-border/50 shadow-sm top-[66px] sm:top-[84px]' 
-                : 'relative'
-              }
-            `}
-            style={isSticky ? { maxWidth: '100vw' } : {}}
-          >
-            <div className={`
-              ${isSticky ? 'max-w-7xl mx-auto py-2' : 'w-full'}
-            `}>
-              {/* Mobile Layout */}
-              <div className="flex flex-col md:hidden gap-4">
-                <div className="h-[calc(40vh+20px)]">
-                  <CommunityHubWidget />
-                </div>
-              </div>
-
-              {/* Desktop Layout */}
-              <div className="hidden md:flex gap-4">
-                <div className="w-full">
-                  <CommunityHubWidget />
-                </div>
-              </div>
+        {/* Community Hub */}
+        <div className="w-full min-h-[50vh]">
+          {/* Mobile Layout */}
+          <div className="flex flex-col md:hidden gap-4">
+            <div className="h-[calc(40vh+20px)]">
+              <CommunityHubWidget />
             </div>
           </div>
-          
-          {/* Spacer div to maintain layout when sticky */}
-          {isSticky && (
-            <div className="h-[calc(40vh+20px)] md:h-[calc(50vh+20px)]" />
-          )}
+
+          {/* Desktop Layout */}
+          <div className="hidden md:flex gap-4">
+            <div className="w-full">
+              <CommunityHubWidget />
+            </div>
+          </div>
         </div>
 
 
