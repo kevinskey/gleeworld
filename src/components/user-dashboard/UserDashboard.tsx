@@ -287,7 +287,7 @@ const UserDashboard = React.memo(() => {
             className={`
               w-full transition-all duration-500 ease-out
               ${isSticky 
-                ? 'fixed top-[72px] left-0 right-0 z-[80] px-1 sm:px-2 md:px-4 bg-background/95 backdrop-blur-sm border-b border-border/50 shadow-sm' 
+                ? 'fixed left-0 right-0 z-[80] px-1 sm:px-2 md:px-4 bg-background/95 backdrop-blur-sm border-b border-border/50 shadow-sm top-[66px] sm:top-[84px]' 
                 : 'relative'
               }
             `}
