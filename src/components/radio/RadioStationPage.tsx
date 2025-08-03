@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { RadioStationHeader } from './RadioStationHeader';
 import { 
   Play, 
   Pause, 
@@ -170,36 +171,11 @@ export const RadioStationPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-brand-50 to-brand-100 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <img 
-              src="/glee-100-crest.png" 
-              alt="Glee Club 100th Anniversary Crest" 
-              className="h-16 w-16 object-contain"
-            />
-            <div>
-              <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-spelman-blue-dark mb-2 font-playfair">
-                Glee World 101
-              </h1>
-              <p className="text-lg text-muted-foreground font-roboto">
-                The Official Radio Station of Spelman College Glee Club
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center justify-center gap-2 mt-4">
-            <Badge variant="secondary" className="flex items-center gap-1 bg-brand-600 text-white">
-              <Radio className="h-3 w-3" />
-              Live Radio
-            </Badge>
-            <Badge variant="outline" className="flex items-center gap-1 border-brand-400 text-brand-600">
-              <Rss className="h-3 w-3" />
-              Podcast Ready
-            </Badge>
-          </div>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-brand-50 to-brand-100">
+      {/* Radio Station Header */}
+      <RadioStationHeader listenerCount={127} isLive={isPlaying} />
+      
+      <div className="max-w-6xl mx-auto p-6 space-y-6">
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Main Player */}
