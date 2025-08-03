@@ -49,7 +49,7 @@ import MusicLibraryPage from "./pages/MusicLibrary";
 
 import Budgets from "./pages/Budgets";
 import Treasurer from "./pages/Treasurer";
-import TourManager from "./pages/TourManager";
+
 import PerformanceSuite from "./pages/PerformanceSuite";
 import WellnessSuite from "./pages/WellnessSuite";
 import { FeedbackDashboard } from "./modules/rehearsals/feedback-dashboard/FeedbackDashboard";
@@ -428,14 +428,6 @@ const App = () => {
                          </ProtectedRoute>
                        } 
                      />
-                       <Route 
-                         path="/tour-manager" 
-                         element={
-                           <ProtectedRoute>
-                             <TourManager />
-                           </ProtectedRoute>
-                         } 
-                       />
                         <Route 
                           path="/performance" 
                           element={
