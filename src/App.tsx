@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { GlobalMusicPlayer } from "@/components/music/GlobalMusicPlayer";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { supabase } from "@/integrations/supabase/client";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -129,10 +130,54 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Root route handler - shows public landing page for everyone
+// Root route handler - shows admin dashboard for super admins, landing page for others
 const RootRoute = () => {
-  // Always show the public landing page for the root route
-  return <GleeWorldLanding />;
+  const { user } = useAuth();
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkSuperAdminStatus = async () => {
+      if (!user) {
+        setIsSuperAdmin(false);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('gw_profiles')
+          .select('is_super_admin')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error checking super admin status:', error);
+          setIsSuperAdmin(false);
+        } else {
+          setIsSuperAdmin(data?.is_super_admin || false);
+        }
+      } catch (error) {
+        console.error('Error checking super admin status:', error);
+        setIsSuperAdmin(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkSuperAdminStatus();
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <LoadingSpinner size="lg" text="Loading..." />
+      </div>
+    );
+  }
+
+  // Show admin dashboard for super admins, landing page for everyone else
+  return isSuperAdmin ? <UserDashboard /> : <GleeWorldLanding />;
 };
 
 const App = () => {
