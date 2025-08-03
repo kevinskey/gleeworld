@@ -13,7 +13,7 @@ export const AuditionHoverCard = () => {
   // On mobile, show a compact button that fits viewport
   if (isMobile) {
     return (
-      <div className="fixed top-16 left-4 right-4 z-40 max-w-[calc(100vw-2rem)] pt-[10px] h-[812px]">
+      <div className="fixed top-[74px] left-4 right-4 z-40 max-w-[calc(100vw-2rem)] pt-[10px] h-[812px]">
         <Link to="/auditions">
           <Button 
             variant="branded" 
