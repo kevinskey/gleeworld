@@ -553,6 +553,17 @@ export const RadioStationPage = () => {
                   <Music className="h-4 w-4 mr-2" />
                   Open Media Library
                 </Button>
+
+                {/* Temporary Admin Access Button - For Testing */}
+                {!isAdmin && (
+                  <Button
+                    variant="outline"
+                    className="w-full border-amber-300 text-amber-700 hover:bg-amber-50"
+                    onClick={() => setIsAdmin(true)}
+                  >
+                    🔧 Enable Admin Mode (Testing)
+                  </Button>
+                )}
                 
                 <Button variant="outline" className="w-full">
                   <Download className="h-4 w-4 mr-2" />
