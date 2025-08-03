@@ -10,8 +10,10 @@ import { BulkW9EmailDialog } from "@/components/admin/BulkW9EmailDialog";
 import { useFinanceRecords } from "@/hooks/useFinanceRecords";
 import { useUsers } from "@/hooks/useUsers";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export const FinanceManagement = () => {
+  const navigate = useNavigate();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [bulkW9EmailOpen, setBulkW9EmailOpen] = useState(false);
   const { user } = useAuth();
@@ -61,7 +63,7 @@ export const FinanceManagement = () => {
           </div>
           <p className="text-white/70 mb-4">Please sign in to access your financial records and manage your finances.</p>
           <Button 
-            onClick={() => window.location.href = '/auth'}
+            onClick={() => navigate('/auth')}
             className="glass-button text-white font-medium"
           >
             Sign In

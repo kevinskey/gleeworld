@@ -6,10 +6,12 @@ import { useAuditionForm } from "../AuditionFormProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export function RegistrationPage() {
   const { form, setIsNewUser } = useAuditionForm();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isRegistering, setIsRegistering] = useState(false);
 
   // If user is already logged in, skip this page
@@ -20,7 +22,7 @@ export function RegistrationPage() {
   const handleExistingUserLogin = () => {
     setIsNewUser(false);
     // Redirect to login page with audition redirect
-    window.location.href = '/auth?redirect=/auditions';
+    navigate('/auth?redirect=/auditions');
   };
 
   const handleRegisterAndContinue = async () => {

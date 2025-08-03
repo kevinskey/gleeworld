@@ -2,8 +2,10 @@
 import { AlertTriangle, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 
 export const ContractNotFound = () => {
+  const navigate = useNavigate();
   console.log('ContractNotFound: Component rendered');
   
   return (
@@ -23,7 +25,7 @@ export const ContractNotFound = () => {
             Please check the link or contact the sender for a new invitation.
           </p>
           <Button 
-            onClick={() => window.location.href = '/'}
+            onClick={() => navigate('/')}
             className="w-full"
           >
             <Home className="h-4 w-4 mr-2" />

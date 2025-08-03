@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { 
   MessageSquare, 
@@ -91,6 +92,7 @@ const StarRating = ({ rating, onRatingChange, readonly = false }: {
 export const RehearsalFeedback = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [feedback, setFeedback] = useState<FeedbackEntry[]>([]);
   const [reviews, setReviews] = useState<PerformanceReview[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -345,7 +347,7 @@ export const RehearsalFeedback = () => {
         <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
-            onClick={() => window.location.href = '/rehearsals/feedback-dashboard'}
+            onClick={() => navigate('/rehearsals/feedback-dashboard')}
           >
             <BarChart3 className="h-4 w-4 mr-2" />
             Dashboard
