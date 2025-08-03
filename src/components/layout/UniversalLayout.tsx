@@ -37,7 +37,7 @@ export const UniversalLayout = ({
         className={`flex-1 overflow-y-auto ${className} lg:bg-background`}
         style={{
           backgroundImage: 'url(/lovable-uploads/518af829-608a-44fb-9e8d-d94c43e4a543.png)',
-          backgroundSize: 'cover',
+          backgroundSize: 'contain',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
         }}
