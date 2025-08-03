@@ -282,23 +282,6 @@ export const GleeWorldLanding = () => {
       
       <PublicLayout>
       {/* Auth state indicator disabled - was showing "You're logged in! Go to Dashboard" badge */}
-      {/* Historic Background Image Section */}
-      <section className="fixed top-0 left-0 w-full z-0 overflow-hidden h-[300px] sm:h-screen">
-        {/* Historic Glee Club Group Photo */}
-        <div className="absolute inset-0">
-          <img 
-            src="/lovable-uploads/1fd284bf-d474-493f-a363-1104a0653923.png"
-            alt="Spelman College Glee Club Historic Group Photo"
-            className="w-full h-full object-cover brightness-75 contrast-105"
-          />
-        </div>
-        
-        {/* Overlay for dimming */}
-        <div className="absolute inset-0 bg-black/50 z-10"></div>
-        
-        {/* Gradient fade to content below - reduced for mobile */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 sm:h-48 md:h-64 bg-gradient-to-t from-background via-background/40 to-transparent z-20"></div>
-      </section>
 
       {/* Audition Hover Card */}
       <AuditionHoverCard />
