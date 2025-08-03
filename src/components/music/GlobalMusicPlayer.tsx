@@ -114,8 +114,9 @@ export const GlobalMusicPlayer = () => {
                 value={[progressPercentage]}
                 onValueChange={handleSeek}
                 max={100}
-                step={1}
-                className="flex-1"
+                step={0.1}
+                className="flex-1 touch-none"
+                style={{ touchAction: 'none' }}
               />
               <span className="text-xs text-muted-foreground w-10">
                 {formatTime(duration)}
@@ -131,8 +132,9 @@ export const GlobalMusicPlayer = () => {
                 value={[isMuted ? 0 : volume * 100]}
                 onValueChange={handleVolumeChange}
                 max={100}
-                step={1}
-                className="w-20"
+                step={0.1}
+                className="w-20 touch-none"
+                style={{ touchAction: 'none' }}
               />
             </div>
 
@@ -200,8 +202,9 @@ export const GlobalMusicPlayer = () => {
               value={[progressPercentage]}
               onValueChange={handleSeek}
               max={100}
-              step={1}
-              className="w-full"
+              step={0.1}
+              className="w-full touch-none"
+              style={{ touchAction: 'none' }}
             />
             <div className="flex justify-between text-sm text-muted-foreground mt-2">
               <span>{formatTime(currentTime)}</span>
@@ -243,8 +246,9 @@ export const GlobalMusicPlayer = () => {
               value={[isMuted ? 0 : volume * 100]}
               onValueChange={handleVolumeChange}
               max={100}
-              step={1}
-              className="w-32"
+              step={0.1}
+              className="w-32 touch-none"
+              style={{ touchAction: 'none' }}
             />
           </div>
         </CardContent>

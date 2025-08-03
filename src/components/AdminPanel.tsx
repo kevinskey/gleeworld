@@ -200,8 +200,8 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
   };
 
   return (
-    <div className="space-y-4 md:space-y-6 p-2 md:p-0">
-      <div className="max-w-full overflow-hidden">
+    <div className="space-y-4 md:space-y-6 p-4 md:p-6 min-h-screen w-full">
+      <div className="max-w-full overflow-x-hidden">
         {renderContent()}
       </div>
       

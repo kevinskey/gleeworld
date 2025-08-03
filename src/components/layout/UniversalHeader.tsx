@@ -69,22 +69,22 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
           {/* Logo and Navigation */}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 flex-1">
             <EnhancedTooltip content="Go to GleeWorld Home">
-              <Link to="/landing" className="flex items-center gap-1 flex-shrink-0 hover:scale-105 transition-transform duration-200 relative z-[110]">
-                <div className="relative z-[111]">
-                  <img 
-                    src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
-                    alt="Spelman College Glee Club" 
-                    className="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14 object-contain flex-shrink-0 drop-shadow-md relative z-[112]"
-                  />
-                  <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur opacity-50 z-[111]"></div>
-                </div>
-                <div className="flex items-center gap-3 relative z-[111]">
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <Link to="/landing" className="flex items-center gap-1 hover:scale-105 transition-transform duration-200 relative z-[110]">
+                  <div className="relative z-[111]">
+                    <img 
+                      src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
+                      alt="Spelman College Glee Club" 
+                      className="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14 object-contain flex-shrink-0 drop-shadow-md relative z-[112]"
+                    />
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur opacity-50 z-[111]"></div>
+                  </div>
                   <span className="text-gray-900 font-bold text-lg sm:text-xl md:text-2xl whitespace-nowrap drop-shadow-sm relative z-[112]">
                     GleeWorld
                   </span>
-                  <HeaderClock className="text-sm" />
-                </div>
-              </Link>
+                </Link>
+                <HeaderClock className="text-sm ml-3" />
+              </div>
             </EnhancedTooltip>
           </div>
 
