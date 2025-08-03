@@ -265,7 +265,7 @@ export const GleeWorldLanding = () => {
 
   return (
     <div 
-      className="min-h-screen bg-gradient-to-br from-spelman-blue-light/10 via-background to-spelman-blue-dark/10 relative overflow-hidden bg-left-top md:bg-center"
+      className="min-h-screen bg-gradient-to-br from-spelman-blue-light/10 via-background to-spelman-blue-dark/10 relative overflow-hidden bg-bottom md:bg-center"
       style={{
         backgroundImage: "url('/lovable-uploads/1fd284bf-d474-493f-a363-1104a0653923.png')",
         backgroundSize: 'cover',
