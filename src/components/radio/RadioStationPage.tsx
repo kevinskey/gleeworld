@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { RadioStationHeader } from './RadioStationHeader';
 import { MediaLibraryDialog } from './MediaLibraryDialog';
+import { RadioTimeline } from './RadioTimeline';
 import { 
   Play, 
   Pause, 
@@ -305,6 +306,13 @@ export const RadioStationPage = () => {
       />
       
       <div className="max-w-6xl mx-auto p-6 space-y-6">
+        {/* Radio Timeline */}
+        <RadioTimeline
+          currentTrack={currentTrack}
+          upcomingTracks={upcomingTracks}
+          currentTime={currentTime}
+          isPlaying={isPlaying}
+        />
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Main Player */}
