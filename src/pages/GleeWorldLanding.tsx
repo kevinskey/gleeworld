@@ -273,7 +273,7 @@ export const GleeWorldLanding = () => {
       <PublicLayout>
       {/* Auth state indicator disabled - was showing "You're logged in! Go to Dashboard" badge */}
       {/* YouTube Video Background Section */}
-      <section className="fixed top-0 left-0 w-full h-screen z-0 overflow-hidden">
+      <section className="fixed top-0 left-0 w-full z-0 overflow-hidden h-[300px] sm:h-screen">
         {!showFallbackImage && backgroundVideo ? (
           <>
             {/* YouTube Embed */}
