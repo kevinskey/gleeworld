@@ -2,6 +2,7 @@
 export const ROUTES = {
   HOME: '/',
   AUTH: '/auth',
+  ADMIN: '/admin',
   DASHBOARD: '/dashboard',
   
   ACTIVITY_LOGS: '/activity-logs',
@@ -30,7 +31,7 @@ export const ROUTES = {
 } as const;
 
 export const PROTECTED_ROUTES = [
-  ROUTES.HOME,
+  ROUTES.ADMIN,
   ROUTES.DASHBOARD,
   ROUTES.ACTIVITY_LOGS,
   ROUTES.ACCOUNTING,
@@ -49,6 +50,7 @@ export const PROTECTED_ROUTES = [
 ] as const;
 
 export const PUBLIC_ROUTES = [
+  ROUTES.HOME,
   ROUTES.AUTH,
   ROUTES.CONTRACT_SIGNING,
   ROUTES.W9_FORM,

@@ -117,55 +117,6 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Root route handler - shows admin dashboard for super admins, landing page for others
-const RootRoute = () => {
-  const { user } = useAuth();
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const checkSuperAdminStatus = async () => {
-      if (!user) {
-        setIsSuperAdmin(false);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('gw_profiles')
-          .select('is_super_admin')
-          .eq('user_id', user.id)
-          .single();
-
-        if (error) {
-          console.error('Error checking super admin status:', error);
-          setIsSuperAdmin(false);
-        } else {
-          setIsSuperAdmin(data?.is_super_admin || false);
-        }
-      } catch (error) {
-        console.error('Error checking super admin status:', error);
-        setIsSuperAdmin(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkSuperAdminStatus();
-  }, [user]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading..." />
-      </div>
-    );
-  }
-
-  // Show admin dashboard for super admins, landing page for everyone else
-  return isSuperAdmin ? <UserDashboard /> : <GleeWorldLanding />;
-};
 
 const App = () => {
   return (
@@ -613,10 +564,22 @@ const App = () => {
                                     </ProtectedRoute>
                                   } 
                                 />
-                   <Route 
-                     path="/" 
-                     element={<RootRoute />} 
-                   />
+                    <Route 
+                      path="/" 
+                      element={
+                        <PublicRoute>
+                          <GleeWorldLanding />
+                        </PublicRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/admin" 
+                      element={
+                        <ProtectedRoute>
+                          <UserDashboard />
+                        </ProtectedRoute>
+                      } 
+                    />
                                 <Route 
                                   path="/mobile-scoring" 
                                   element={
