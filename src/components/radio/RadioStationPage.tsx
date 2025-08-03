@@ -526,20 +526,15 @@ export const RadioStationPage = () => {
           <div className="space-y-6">
             {/* Playlist Manager - Admin Only */}
             {isAdmin && (
-              <div>
-                <div className="bg-green-100 p-2 mb-2 text-green-800 text-sm">
-                  DEBUG: PlaylistManager should render here. Playlist length: {playlist.length}
-                </div>
-                <PlaylistManager
-                  playlist={playlist}
-                  currentTrack={currentTrack}
-                  isPlaying={isPlaying}
-                  onPlaylistUpdate={handlePlaylistUpdate}
-                  onPlayTrack={handlePlayRadioTrack}
-                  onRemoveTrack={handleRemoveTrack}
-                  canEdit={isAdmin}
-                />
-              </div>
+              <PlaylistManager
+                playlist={playlist}
+                currentTrack={currentTrack}
+                isPlaying={isPlaying}
+                onPlaylistUpdate={handlePlaylistUpdate}
+                onPlayTrack={handlePlayRadioTrack}
+                onRemoveTrack={handleRemoveTrack}
+                canEdit={isAdmin}
+              />
             )}
 
             {/* Station Info */}
