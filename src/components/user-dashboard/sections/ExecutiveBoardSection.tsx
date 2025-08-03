@@ -40,32 +40,32 @@ export const ExecutiveBoardSection = ({ isExecBoardMember }: ExecutiveBoardSecti
       icon: Plus,
       label: "Create",
       description: "Create events, budgets, and other executive board items",
-      route: "/executive-board"
+      route: "/dashboard"
     },
     {
       icon: Settings,
       label: "Manage",
       description: "Manage ongoing events, budgets, and executive board activities",
-      route: "/executive-board"
+      route: "/dashboard"
     },
     {
       icon: FileText,
       label: "Assess",
       description: "Assess performance, review reports, and analyze executive board metrics",
-      route: "/executive-board"
+      route: "/dashboard"
     }
   ];
 
   const execPositions = [
-    { name: "President", icon: Crown, route: "/executive-board" },
-    { name: "Vice President", icon: Shield, route: "/executive-board" },
-    { name: "Secretary", icon: FileText, route: "/executive-board" },
-    { name: "Treasurer", icon: DollarSign, route: "/executive-board" },
-    { name: "Business Manager", icon: ShoppingBag, route: "/executive-board" },
-    { name: "Librarian", icon: BookOpen, route: "/executive-board" },
-    { name: "Chaplain", icon: Star, route: "/executive-board" },
-    { name: "Historian", icon: Calendar, route: "/executive-board" },
-    { name: "Social Chair", icon: Users, route: "/executive-board" },
+    { name: "President", icon: Crown, route: "/dashboard" },
+    { name: "Vice President", icon: Shield, route: "/dashboard" },
+    { name: "Secretary", icon: FileText, route: "/dashboard" },
+    { name: "Treasurer", icon: DollarSign, route: "/dashboard" },
+    { name: "Business Manager", icon: ShoppingBag, route: "/dashboard" },
+    { name: "Librarian", icon: BookOpen, route: "/dashboard" },
+    { name: "Chaplain", icon: Star, route: "/dashboard" },
+    { name: "Historian", icon: Calendar, route: "/dashboard" },
+    { name: "Social Chair", icon: Users, route: "/dashboard" },
     { name: "Section Leader", icon: UserCheck, route: "/dashboard/section-leader" },
     { name: "Student Conductor", icon: Music2, route: "/dashboard/student-conductor" }
   ];

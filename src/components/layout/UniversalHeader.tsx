@@ -157,7 +157,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                         </DropdownMenuItem>
                         {(isExecBoardMember || hasExecBoardPerms) && (
                           <DropdownMenuItem 
-                            onClick={() => navigate('/executive-board')}
+                            onClick={() => navigate('/dashboard')}
                             className="cursor-pointer"
                           >
                             <Crown className="mr-2 h-4 w-4" />

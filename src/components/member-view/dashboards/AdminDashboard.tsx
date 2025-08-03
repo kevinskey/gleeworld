@@ -347,7 +347,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                 variant="outline" 
                 size="sm" 
                 className="w-full justify-start" 
-                onClick={() => navigate('/executive-board')}
+                onClick={() => navigate('/dashboard')}
               >
                 <Shield className="mr-2 h-4 w-4" />
                 Executive Board Dashboard

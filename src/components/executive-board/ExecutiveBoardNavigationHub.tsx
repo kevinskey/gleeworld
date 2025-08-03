@@ -290,7 +290,7 @@ export const ExecutiveBoardNavigationHub = () => {
     if (isAdmin) {
       navigate('/dashboard');
     } else if (userExecutiveRole) {
-      navigate('/executive-board');
+      navigate('/dashboard');
     } else {
       navigate('/dashboard');
     }
