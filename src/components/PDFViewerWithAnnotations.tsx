@@ -81,27 +81,28 @@ export const PDFViewerWithAnnotations = ({
     setError('Failed to load PDF viewer');
   };
 
-  // Initialize drawing canvas to match iframe size
+  // Initialize drawing canvas to match PDF canvas size
   useEffect(() => {
-    if (!drawingCanvasRef.current) return;
+    if (!drawingCanvasRef.current || !canvasRef.current || !annotationMode) return;
     
-    const canvas = drawingCanvasRef.current;
-    const container = canvas.parentElement;
-    if (!container) return;
+    const drawingCanvas = drawingCanvasRef.current;
+    const pdfCanvas = canvasRef.current;
     
-    // Set canvas size to match container
-    const resizeCanvas = () => {
-      const rect = container.getBoundingClientRect();
-      canvas.width = rect.width;
-      canvas.height = rect.height;
+    // Set drawing canvas size to match PDF canvas
+    const matchCanvasSize = () => {
+      drawingCanvas.width = pdfCanvas.width;
+      drawingCanvas.height = pdfCanvas.height;
       redrawAnnotations();
     };
     
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    matchCanvasSize();
     
-    return () => window.removeEventListener('resize', resizeCanvas);
-  }, [annotationMode]);
+    // Watch for PDF canvas size changes
+    const observer = new ResizeObserver(matchCanvasSize);
+    observer.observe(pdfCanvas);
+    
+    return () => observer.disconnect();
+  }, [annotationMode, pdf]);
 
   const redrawAnnotations = (pathsToRedraw?: any[]) => {
     if (!drawingCanvasRef.current) return;
@@ -282,6 +283,50 @@ export const PDFViewerWithAnnotations = ({
       setIsSaving(false);
     }
   };
+
+  // Load PDF directly when annotation mode is active
+  useEffect(() => {
+    if (!annotationMode || !signedUrl || !canvasRef.current) return;
+    
+    const loadPdf = async () => {
+      try {
+        setIsLoading(true);
+        console.log('Loading PDF for annotation:', signedUrl);
+        
+        const pdf = await pdfjsLib.getDocument(signedUrl).promise;
+        setPdf(pdf);
+        setTotalPages(pdf.numPages);
+        
+        // Render first page
+        const page = await pdf.getPage(currentPage);
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
+        const viewport = page.getViewport({ scale });
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        
+        const renderContext = {
+          canvasContext: ctx,
+          viewport: viewport
+        };
+        
+        await page.render(renderContext).promise;
+        console.log('PDF page rendered successfully');
+        setError(null);
+      } catch (error) {
+        console.error('Error loading PDF for annotation:', error);
+        setError('Failed to load PDF for annotation');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadPdf();
+  }, [annotationMode, signedUrl, currentPage, scale]);
 
   // Show loading while getting signed URL
   if (!pdfUrl) {
@@ -502,8 +547,8 @@ export const PDFViewerWithAnnotations = ({
             </div>
           )}
           
-          {/* Google Docs PDF Viewer */}
-          {signedUrl && (
+          {/* Google Docs PDF Viewer - Show when not in annotation mode */}
+          {signedUrl && !annotationMode && (
             <iframe
               src={`https://docs.google.com/gview?url=${encodeURIComponent(signedUrl)}&embedded=true`}
               className="w-full h-full border-0"
@@ -514,13 +559,33 @@ export const PDFViewerWithAnnotations = ({
             />
           )}
 
-          {/* Annotation Overlay Canvas */}
+          {/* PDF Canvas for Annotation Mode */}
+          {annotationMode && (
+            <div className="w-full h-full flex items-center justify-center overflow-auto bg-gray-100">
+              <canvas 
+                ref={canvasRef}
+                className="max-w-full max-h-full shadow-lg bg-white"
+                style={{ 
+                  display: 'block'
+                }}
+              />
+            </div>
+          )}
+
+          {/* Annotation Drawing Canvas */}
           {annotationMode && (
             <canvas 
               ref={drawingCanvasRef}
               className={`absolute inset-0 w-full h-full pointer-events-auto z-20 ${
                 activeTool !== "select" ? "cursor-crosshair" : "cursor-default"
               }`}
+              style={{
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                maxWidth: '100%',
+                maxHeight: '100%'
+              }}
               onMouseDown={handleStart}
               onMouseMove={handleMove}
               onMouseUp={handleEnd}
