@@ -80,7 +80,15 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
   const hasBackgroundImage = Boolean(welcomeCardSetting?.image_url && !imageError);
 
   return (
-    <div className="relative rounded-2xl sm:rounded-3xl shadow-lg h-[40vh] flex items-center bg-transparent">
+    <div 
+      className="relative rounded-2xl sm:rounded-3xl shadow-lg h-[40vh] flex items-center"
+      style={{
+        backgroundImage: 'url("https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/media-library/7f76a692-7ffc-414c-af69-fc6585338524.png")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
       
       {/* Transparent background - no overlay */}
       
