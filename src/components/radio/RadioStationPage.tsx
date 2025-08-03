@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -68,6 +68,7 @@ export const RadioStationPage = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [radioStats, setRadioStats] = useState({
     listeners: 127,
     episodes: 0,
@@ -77,7 +78,40 @@ export const RadioStationPage = () => {
 
   useEffect(() => {
     fetchRadioData();
+    setupAudioEventListeners();
   }, []);
+
+  const setupAudioEventListeners = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const updateTime = () => setCurrentTime(audio.currentTime);
+    const updateDuration = () => setDuration(audio.duration);
+    const handleEnded = () => {
+      setIsPlaying(false);
+      handleNextTrack();
+    };
+
+    audio.addEventListener('timeupdate', updateTime);
+    audio.addEventListener('loadedmetadata', updateDuration);
+    audio.addEventListener('ended', handleEnded);
+
+    return () => {
+      audio.removeEventListener('timeupdate', updateTime);
+      audio.removeEventListener('loadedmetadata', updateDuration);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  };
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (currentTrack?.audio_url) {
+      audio.src = currentTrack.audio_url;
+      audio.volume = volume / 100;
+    }
+  }, [currentTrack, volume]);
 
   const fetchRadioData = async () => {
     try {
@@ -161,12 +195,31 @@ export const RadioStationPage = () => {
     setShowMediaLibrary(false);
   };
 
-  const handlePlay = () => {
-    setIsPlaying(!isPlaying);
-    toast({
-      title: isPlaying ? "Radio Paused" : "Radio Playing",
-      description: `Glee World 101 ${isPlaying ? 'paused' : 'now playing'}`,
-    });
+  const handlePlay = async () => {
+    const audio = audioRef.current;
+    if (!audio || !currentTrack) return;
+
+    try {
+      if (isPlaying) {
+        audio.pause();
+        setIsPlaying(false);
+      } else {
+        await audio.play();
+        setIsPlaying(true);
+      }
+      
+      toast({
+        title: isPlaying ? "Radio Paused" : "Radio Playing",
+        description: `${currentTrack.title} ${isPlaying ? 'paused' : 'now playing'}`,
+      });
+    } catch (error) {
+      console.error('Audio playback error:', error);
+      toast({
+        title: "Playback Error",
+        description: "Unable to play audio. Please check the file format.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleNextTrack = () => {
@@ -235,6 +288,9 @@ export const RadioStationPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-brand-50 to-brand-100">
+      {/* Hidden Audio Element */}
+      <audio ref={audioRef} preload="metadata" />
+      
       {/* Radio Station Header */}
       <RadioStationHeader listenerCount={radioStats.listeners} isLive={isPlaying} />
       
