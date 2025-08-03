@@ -3,8 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioStationHeader } from './RadioStationHeader';
 import { DragDropTimeline } from './DragDropTimeline';
+import { CommercialMaker } from './CommercialMaker';
+import { CommercialLibrary } from './CommercialLibrary';
 import { 
   Play, 
   Pause, 
@@ -33,11 +36,22 @@ interface RadioTrack {
   category: 'performance' | 'announcement' | 'interlude' | 'alumni_story';
 }
 
+interface Commercial {
+  id: string;
+  title: string;
+  script: string;
+  duration: number;
+  voice: string;
+  audioUrl?: string;
+  createdAt: Date;
+}
+
 export const RadioStationPage = () => {
   const getNextTrackRef = useRef<(() => any | null) | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<RadioTrack | null>(null);
   const [upcomingTracks, setUpcomingTracks] = useState<RadioTrack[]>([]);
+  const [commercials, setCommercials] = useState<Commercial[]>([]);
   const [volume, setVolume] = useState(70);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -209,6 +223,34 @@ export const RadioStationPage = () => {
     console.log('Previous track');
   };
 
+  const handleCommercialCreated = (commercial: Commercial) => {
+    setCommercials(prev => [...prev, commercial]);
+  };
+
+  const handleCommercialDelete = (id: string) => {
+    setCommercials(prev => prev.filter(c => c.id !== id));
+  };
+
+  const handleCommercialPlay = (commercial: Commercial) => {
+    if (commercial.audioUrl) {
+      const commercialTrack: RadioTrack = {
+        id: commercial.id,
+        title: commercial.title,
+        artist: 'Commercial',
+        duration: commercial.duration,
+        audio_url: commercial.audioUrl,
+        category: 'announcement'
+      };
+      handlePlayTrack(commercialTrack);
+    }
+  };
+
+  const handleAddToTimeline = (commercial: Commercial) => {
+    // This will be handled by the DragDropTimeline component
+    // For now, we just show a success message
+    console.log('Adding commercial to timeline:', commercial);
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -224,14 +266,46 @@ export const RadioStationPage = () => {
       <RadioStationHeader listenerCount={radioStats.listeners} isLive={isPlaying} />
       
       <div className="max-w-7xl mx-auto p-6 space-y-6">
-        {/* Drag & Drop Timeline */}
-        <DragDropTimeline 
-          onTrackPlay={handlePlayTrack}
-          currentTrack={currentTrack}
-          isPlaying={isPlaying}
-          onGetNextTrack={getNextTrackRef}
-          onUpdateCurrentSlot={handleUpdateCurrentSlot}
-        />
+        {/* Radio Station Tabs */}
+        <Tabs defaultValue="timeline" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="timeline" className="flex items-center gap-2">
+              <Radio className="h-4 w-4" />
+              Radio Timeline
+            </TabsTrigger>
+            <TabsTrigger value="commercial-maker" className="flex items-center gap-2">
+              <Music className="h-4 w-4" />
+              Commercial Maker
+            </TabsTrigger>
+            <TabsTrigger value="commercial-library" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Commercial Library
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="timeline" className="mt-6">
+            <DragDropTimeline 
+              onTrackPlay={handlePlayTrack}
+              currentTrack={currentTrack}
+              isPlaying={isPlaying}
+              onGetNextTrack={getNextTrackRef}
+              onUpdateCurrentSlot={handleUpdateCurrentSlot}
+            />
+          </TabsContent>
+          
+          <TabsContent value="commercial-maker" className="mt-6">
+            <CommercialMaker onCommercialCreated={handleCommercialCreated} />
+          </TabsContent>
+          
+          <TabsContent value="commercial-library" className="mt-6">
+            <CommercialLibrary 
+              commercials={commercials}
+              onCommercialDelete={handleCommercialDelete}
+              onCommercialPlay={handleCommercialPlay}
+              onAddToTimeline={handleAddToTimeline}
+            />
+          </TabsContent>
+        </Tabs>
 
         {/* Now Playing Card */}
         {currentTrack && (
