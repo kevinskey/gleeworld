@@ -263,7 +263,16 @@ export const RadioStationPage = () => {
       <audio ref={audioRef} preload="metadata" />
       
       {/* Radio Station Header */}
-      <RadioStationHeader listenerCount={radioStats.listeners} isLive={isPlaying} />
+      <RadioStationHeader 
+        listenerCount={radioStats.listeners} 
+        isLive={isPlaying}
+        isPlaying={isPlaying}
+        onPlayToggle={handlePlay}
+        currentTrack={currentTrack ? {
+          title: currentTrack.title,
+          artist: currentTrack.artist
+        } : null}
+      />
       
       <div className="max-w-7xl mx-auto p-6 space-y-6">
         {/* Radio Station Tabs */}

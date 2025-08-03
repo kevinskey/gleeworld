@@ -1,14 +1,24 @@
 import { Badge } from '@/components/ui/badge';
-import { Radio, Rss, Mic, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Radio, Rss, Mic, Users, Play, Pause } from 'lucide-react';
 
 interface RadioStationHeaderProps {
   listenerCount?: number;
   isLive?: boolean;
+  isPlaying?: boolean;
+  onPlayToggle?: () => void;
+  currentTrack?: {
+    title: string;
+    artist: string;
+  } | null;
 }
 
 export const RadioStationHeader = ({ 
   listenerCount = 127, 
-  isLive = true 
+  isLive = true,
+  isPlaying = false,
+  onPlayToggle,
+  currentTrack
 }: RadioStationHeaderProps) => {
   return (
     <div className="relative overflow-hidden bg-gradient-to-r from-brand-600 via-spelman-blue-dark to-brand-700 text-white">
@@ -73,6 +83,49 @@ export const RadioStationHeader = ({
                 <div className="font-semibold">Est. 1924</div>
                 <div className="text-white/70">100+ Years Strong</div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Now Playing & Controls */}
+        <div className="mt-8 flex flex-col lg:flex-row items-center justify-between gap-6">
+          {/* Currently Playing Info */}
+          <div className="flex-1">
+            {currentTrack ? (
+              <div className="text-center lg:text-left">
+                <p className="text-sm text-white/70 mb-1">NOW PLAYING</p>
+                <h3 className="text-xl font-semibold text-white">{currentTrack.title}</h3>
+                <p className="text-white/80">{currentTrack.artist}</p>
+              </div>
+            ) : (
+              <div className="text-center lg:text-left">
+                <p className="text-sm text-white/70 mb-1">READY TO PLAY</p>
+                <h3 className="text-xl font-semibold text-white">Select a track to start broadcasting</h3>
+              </div>
+            )}
+          </div>
+
+          {/* Play Button */}
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={onPlayToggle}
+              size="lg"
+              className="h-16 w-16 rounded-full bg-white/20 hover:bg-white/30 border-2 border-white/40 backdrop-blur-sm transition-all duration-300"
+              disabled={!onPlayToggle}
+            >
+              {isPlaying ? (
+                <Pause className="h-8 w-8 text-white" />
+              ) : (
+                <Play className="h-8 w-8 text-white ml-1" />
+              )}
+            </Button>
+            <div className="text-center lg:text-left">
+              <p className="text-sm text-white/70">
+                {isPlaying ? 'BROADCASTING' : 'PAUSED'}
+              </p>
+              <p className="text-xs text-white/60">
+                Click to {isPlaying ? 'pause' : 'play'}
+              </p>
             </div>
           </div>
         </div>
