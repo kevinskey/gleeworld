@@ -249,7 +249,13 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       </div>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild className="py-1.5 text-xs">
-                        <Link to="/profile" className="flex items-center">
+                        <Link 
+                          to="/profile" 
+                          className="flex items-center"
+                          onClick={() => {
+                            console.log('🔗 Profile link clicked in header');
+                          }}
+                        >
                           <User className="mr-1.5 h-3 w-3" />
                           Profile
                         </Link>
