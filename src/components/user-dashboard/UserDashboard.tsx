@@ -301,10 +301,10 @@ const UserDashboard = React.memo(() => {
         <div className="mb-4 sm:mb-8 md:mb-12"></div>
 
         {/* Community Hub */}
-        <div className="w-full min-h-[30vh] md:min-h-[50vh]">
+        <div className="w-full">
           {/* Mobile Layout */}
           <div className="flex flex-col md:hidden gap-4">
-            <div className="h-[calc(30vh+20px)]">
+            <div>
               <CommunityHubWidget />
             </div>
           </div>
