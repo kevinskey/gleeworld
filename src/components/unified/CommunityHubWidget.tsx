@@ -900,17 +900,33 @@ export const CommunityHubWidget = () => {
         </div>
         <ScrollArea className="h-[300px]">
           <PublicCalendarViews />
+          <div className="p-3 border-t mt-2">
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/calendar')}>
+                <Calendar className="h-3 w-3 mr-1" />
+                Full Calendar
+              </Button>
+              <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/events')}>
+                <Clock className="h-3 w-3 mr-1" />
+                All Events
+              </Button>
+            </div>
+          </div>
         </ScrollArea>
-        <div className="p-3 border-t">
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/calendar')}>
-              <Calendar className="h-3 w-3 mr-1" />
-              Full Calendar
-            </Button>
-            <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/events')}>
-              <Clock className="h-3 w-3 mr-1" />
-              All Events
-            </Button>
+        <div className="px-3 py-2 border-t bg-muted/30">
+          <div className="overflow-hidden">
+            <div className="animate-[scroll-left_20s_linear_infinite] whitespace-nowrap text-xs text-muted-foreground">
+              {upcomingEvents.length > 0 ? (
+                upcomingEvents.slice(0, 5).map((event, index) => (
+                  <span key={event.id} className="inline-block">
+                    {event.title} - {format(new Date(event.start_date), 'MMM d')}
+                    {index < Math.min(upcomingEvents.length, 5) - 1 && ' • '}
+                  </span>
+                ))
+              ) : (
+                <span>No upcoming events</span>
+              )}
+            </div>
           </div>
         </div>
       </div>

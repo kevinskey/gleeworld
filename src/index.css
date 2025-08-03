@@ -412,6 +412,16 @@
     border: 1px solid rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
   }
+
+  /* News Ticker Animation */
+  @keyframes scroll-left {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
 }
 
 /* Import spacing reduction utilities */
