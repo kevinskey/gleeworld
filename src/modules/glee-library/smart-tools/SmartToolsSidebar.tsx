@@ -4,7 +4,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Music, Languages, Info, Volume2 } from 'lucide-react';
+import { Brain, Music, Languages, Info, Volume2, AlertCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface SheetMusic {
   id: string;
@@ -26,26 +28,37 @@ export const SmartToolsSidebar = ({ sheetMusic }: SmartToolsSidebarProps) => {
     pronunciation: false,
     historical: false
   });
+  const [error, setError] = useState<string | null>(null);
 
-  // Placeholder for AI integration - to be implemented later
+  // Real AI integration for pronunciation guide
   const generatePronunciation = async () => {
     setLoading({ ...loading, pronunciation: true });
-    // Future integration with AI service for IPA generation
-    setTimeout(() => {
-      setPronunciationData(`
-        IPA Pronunciation Guide for "${sheetMusic.title}":
-        
-        [This is a placeholder for AI-generated pronunciation guide]
-        
-        Common Latin/foreign terms:
-        • Gloria: ['glo.ri.a]
-        • Kyrie: ['ki.ri.e]
-        • Sanctus: ['saŋ.ktus]
-        
-        Note: This will be powered by AI in a future update.
-      `);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-pronunciation', {
+        body: {
+          title: sheetMusic.title,
+          composer: sheetMusic.composer,
+          language: sheetMusic.language
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.pronunciationGuide) {
+        setPronunciationData(data.pronunciationGuide);
+        toast.success('Pronunciation guide generated!');
+      } else {
+        throw new Error('No pronunciation guide received');
+      }
+    } catch (error) {
+      console.error('Error generating pronunciation guide:', error);
+      setError(error.message || 'Failed to generate pronunciation guide');
+      toast.error('Failed to generate pronunciation guide');
+    } finally {
       setLoading({ ...loading, pronunciation: false });
-    }, 1000);
+    }
   };
 
   const generateHistoricalContext = async () => {
@@ -115,6 +128,13 @@ export const SmartToolsSidebar = ({ sheetMusic }: SmartToolsSidebarProps) => {
                 </Badge>
               </div>
               
+              {error && (
+                <div className="flex items-center gap-2 text-xs text-destructive bg-destructive/10 p-2 rounded">
+                  <AlertCircle className="h-3 w-3" />
+                  {error}
+                </div>
+              )}
+
               {!pronunciationData ? (
                 <Button
                   size="sm"
@@ -126,8 +146,21 @@ export const SmartToolsSidebar = ({ sheetMusic }: SmartToolsSidebarProps) => {
                   {loading.pronunciation ? 'Generating...' : 'Generate IPA Guide'}
                 </Button>
               ) : (
-                <div className="text-xs whitespace-pre-line bg-muted p-3 rounded text-muted-foreground">
-                  {pronunciationData}
+                <div className="space-y-2">
+                  <div className="text-xs whitespace-pre-line bg-muted p-3 rounded text-muted-foreground">
+                    {pronunciationData}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setPronunciationData(null);
+                      setError(null);
+                    }}
+                    className="w-full"
+                  >
+                    Generate New Guide
+                  </Button>
                 </div>
               )}
             </CardContent>
