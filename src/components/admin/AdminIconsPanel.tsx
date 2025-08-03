@@ -124,8 +124,8 @@ export const AdminIconsPanel = () => {
           Manage users, products, finances, and system settings
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <CardContent className="p-4 md:p-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4">
           {adminFunctions.map((func) => {
             const IconComponent = func.icon;
             return (
@@ -133,9 +133,9 @@ export const AdminIconsPanel = () => {
                 key={func.id}
                 variant="outline"
                 onClick={() => handleAdminFunction(func.tab)}
-                className={`h-24 flex flex-col items-center justify-center space-y-2 p-4 border-2 hover:border-transparent transition-all duration-200 ${func.color} hover:text-white border-gray-200 hover:shadow-lg`}
+                className={`h-20 md:h-24 flex flex-col items-center justify-center space-y-1 md:space-y-2 p-2 md:p-4 border-2 hover:border-transparent transition-all duration-200 ${func.color} hover:text-white border-gray-200 hover:shadow-lg text-xs md:text-sm`}
               >
-                <IconComponent className="h-6 w-6" />
+                <IconComponent className="h-4 w-4 md:h-6 md:w-6" />
                 <div className="text-center">
                   <div className="font-medium text-xs leading-tight">{func.title}</div>
                 </div>
@@ -144,7 +144,7 @@ export const AdminIconsPanel = () => {
           })}
         </div>
         
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="mt-4 md:mt-6 grid grid-cols-1 gap-2 md:gap-4">
           {adminFunctions.slice(0, 4).map((func) => (
             <div
               key={`desc-${func.id}`}
