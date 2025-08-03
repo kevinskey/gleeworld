@@ -34,6 +34,7 @@ interface RadioTrack {
 }
 
 export const RadioStationPage = () => {
+  const getNextTrackRef = useRef<(() => any | null) | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<RadioTrack | null>(null);
   const [upcomingTracks, setUpcomingTracks] = useState<RadioTrack[]>([]);
@@ -178,11 +179,29 @@ export const RadioStationPage = () => {
   };
 
   const handleNextTrack = () => {
-    if (upcomingTracks.length > 0) {
-      const nextTrack = upcomingTracks[0];
-      setCurrentTrack(nextTrack);
-      setUpcomingTracks(prev => prev.slice(1));
+    // Try to get next track from timeline loop
+    const nextTrack = getNextTrackRef.current?.();
+    
+    if (nextTrack) {
+      handlePlayTrack(nextTrack);
+      toast({
+        title: "Next Track",
+        description: `Now playing: ${nextTrack.title}`,
+      });
+    } else {
+      // No tracks scheduled, stop playing
+      setIsPlaying(false);
+      setCurrentTrack(null);
+      toast({
+        title: "Playlist Empty",
+        description: "No more tracks scheduled. Add tracks to continue.",
+      });
     }
+  };
+
+  const handleUpdateCurrentSlot = (slotId: string) => {
+    // This gets called when the timeline updates the current playing slot
+    console.log('Current slot updated to:', slotId);
   };
 
   const handlePrevTrack = () => {
@@ -210,6 +229,8 @@ export const RadioStationPage = () => {
           onTrackPlay={handlePlayTrack}
           currentTrack={currentTrack}
           isPlaying={isPlaying}
+          onGetNextTrack={getNextTrackRef}
+          onUpdateCurrentSlot={handleUpdateCurrentSlot}
         />
 
         {/* Now Playing Card */}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,12 +17,15 @@ interface DragDropTimelineProps {
   onTrackPlay: (track: any) => void;
   currentTrack: any | null;
   isPlaying: boolean;
+  onGetNextTrack: React.MutableRefObject<(() => any | null) | null>;
+  onUpdateCurrentSlot: (slotId: string) => void;
 }
 
-export const DragDropTimeline = ({ onTrackPlay, currentTrack, isPlaying }: DragDropTimelineProps) => {
+export const DragDropTimeline = ({ onTrackPlay, currentTrack, isPlaying, onGetNextTrack, onUpdateCurrentSlot }: DragDropTimelineProps) => {
   const { tracks, loading } = useMusic();
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [draggedTrack, setDraggedTrack] = useState<any | null>(null);
+  const [currentSlotIndex, setCurrentSlotIndex] = useState(0);
 
   // Generate time slots for the next 3 hours in 5-minute intervals
   useEffect(() => {
@@ -46,6 +49,7 @@ export const DragDropTimeline = ({ onTrackPlay, currentTrack, isPlaying }: DragD
     }
     
     setTimeSlots(slots);
+    setCurrentSlotIndex(0);
   }, []);
 
   const handleDragStart = (e: React.DragEvent, track: any) => {
@@ -75,12 +79,53 @@ export const DragDropTimeline = ({ onTrackPlay, currentTrack, isPlaying }: DragD
     if (slot.track) {
       onTrackPlay(slot.track);
       // Update which slot is currently playing
-      setTimeSlots(prev => prev.map(s => ({
-        ...s,
-        isCurrentlyPlaying: s.id === slot.id
-      })));
+      const slotIndex = timeSlots.findIndex(s => s.id === slot.id);
+      updateCurrentPlayingSlot(slotIndex);
     }
   };
+
+  const updateCurrentPlayingSlot = (index: number) => {
+    setCurrentSlotIndex(index);
+    setTimeSlots(prev => prev.map((s, i) => ({
+      ...s,
+      isCurrentlyPlaying: i === index
+    })));
+    onUpdateCurrentSlot(timeSlots[index]?.id || '');
+  };
+
+  // Function to get the next track in the loop
+  const getNextTrackInLoop = () => {
+    const tracksWithIndexes = timeSlots
+      .map((slot, index) => ({ slot, index }))
+      .filter(({ slot }) => slot.track !== null);
+    
+    if (tracksWithIndexes.length === 0) return null;
+    
+    // Find next track after current slot
+    const nextTrackData = tracksWithIndexes.find(({ index }) => index > currentSlotIndex);
+    
+    // If no next track found, loop back to the first track
+    const trackToPlay = nextTrackData || tracksWithIndexes[0];
+    
+    return {
+      track: trackToPlay.slot.track,
+      slotIndex: trackToPlay.index
+    };
+  };
+
+  // Expose the next track function to parent
+  React.useEffect(() => {
+    if (onGetNextTrack) {
+      onGetNextTrack.current = () => {
+        const nextData = getNextTrackInLoop();
+        if (nextData) {
+          updateCurrentPlayingSlot(nextData.slotIndex);
+          return nextData.track;
+        }
+        return null;
+      };
+    }
+  }, [timeSlots, currentSlotIndex, onGetNextTrack]);
 
   const removeTrackFromSlot = (slotId: string) => {
     setTimeSlots(prev => prev.map(slot => 
