@@ -144,10 +144,18 @@ const RootRoute = () => {
   // If user is authenticated, check for stored redirect path
   if (user) {
     const redirectPath = sessionStorage.getItem('redirectAfterAuth');
+    console.log('🚨 RootRoute: redirectPath from sessionStorage:', redirectPath);
     if (redirectPath) {
+      console.log('🚨 RootRoute: Found redirectPath, removing and redirecting to:', redirectPath);
       sessionStorage.removeItem('redirectAfterAuth');
+      // Only redirect if it's a valid path, otherwise go to dashboard
+      if (redirectPath === '/tour-manager') {
+        console.log('🚨 RootRoute: Preventing redirect to tour-manager, going to dashboard instead');
+        return <Navigate to="/dashboard" replace />;
+      }
       return <Navigate to={redirectPath} replace />;
     }
+    console.log('🚨 RootRoute: No redirectPath, going to dashboard');
     return <Navigate to="/dashboard" replace />;
   }
   
