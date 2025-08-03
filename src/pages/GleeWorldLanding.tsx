@@ -318,7 +318,9 @@ export const GleeWorldLanding = () => {
       <AuditionHoverCard />
 
       {/* FAQ Slider Section */}
-      <FAQSlider />
+      <div className="pt-16 md:pt-0">
+        <FAQSlider />
+      </div>
 
       {/* Hero Section */}
       <section className="relative z-30 pt-1 pb-14 sm:pt-2 sm:pb-16 md:pt-4 md:pb-18 px-2 sm:px-4 md:px-6 lg:px-8">
