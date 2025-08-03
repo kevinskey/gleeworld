@@ -145,19 +145,27 @@ const RootRoute = () => {
   if (user) {
     const redirectPath = sessionStorage.getItem('redirectAfterAuth');
     console.log('🚨 RootRoute: redirectPath from sessionStorage:', redirectPath);
-    if (redirectPath) {
-      console.log('🚨 RootRoute: Found redirectPath, removing and redirecting to:', redirectPath);
+    
+    // Clear any problematic redirect paths
+    if (redirectPath === '/tour-manager') {
+      console.log('🚨 RootRoute: Clearing tour-manager redirect, going to dashboard');
       sessionStorage.removeItem('redirectAfterAuth');
-      // Only redirect if it's a valid path, otherwise go to dashboard
-      if (redirectPath === '/tour-manager') {
-        console.log('🚨 RootRoute: Preventing redirect to tour-manager, going to dashboard instead');
-        return <Navigate to="/dashboard" replace />;
-      }
+      return <Navigate to="/dashboard" replace />;
+    }
+    
+    if (redirectPath) {
+      console.log('🚨 RootRoute: Found valid redirectPath, removing and redirecting to:', redirectPath);
+      sessionStorage.removeItem('redirectAfterAuth');
       return <Navigate to={redirectPath} replace />;
     }
+    
     console.log('🚨 RootRoute: No redirectPath, going to dashboard');
     return <Navigate to="/dashboard" replace />;
   }
+  
+  // Show landing page for non-authenticated users
+  console.log('🚨 RootRoute: No user, showing landing page');
+  return <GleeWorldLanding />;
   
   // Show landing page for non-authenticated users
   return <GleeWorldLanding />;
