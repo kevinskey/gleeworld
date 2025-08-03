@@ -6,6 +6,7 @@ import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { NotificationCenter } from "@/components/admin/NotificationCenter";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GranularPermissionsManager } from "@/components/admin/GranularPermissionsManager";
 import { useAuditionManagement } from "@/hooks/useAuditionManagement";
 import { useSRFAssignments } from "@/hooks/useSRFAssignments";
 import { AuditionDialog } from "@/components/audition/AuditionDialog";
@@ -376,10 +377,11 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
       {/* Tabbed Management Modules */}
       <Tabs defaultValue="auditions" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="auditions">Auditions</TabsTrigger>
           <TabsTrigger value="solos">Solos</TabsTrigger>
           <TabsTrigger value="srf">SRF Management</TabsTrigger>
+          <TabsTrigger value="permissions">Permissions Manager</TabsTrigger>
         </TabsList>
 
         <TabsContent value="auditions" className="mt-6">
@@ -595,6 +597,10 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="permissions" className="mt-6">
+          <GranularPermissionsManager />
         </TabsContent>
       </Tabs>
 
