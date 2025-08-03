@@ -26,7 +26,7 @@ export const UniversalLayout = ({
   onViewModeChange,
 }: UniversalLayoutProps) => {
   return (
-    <div className={`h-screen ${className.includes('bg-transparent') ? 'bg-transparent' : 'bg-background'} flex flex-col overflow-hidden`}>
+    <div className={`h-screen flex flex-col overflow-hidden ${className.includes('bg-transparent') ? 'bg-transparent' : ''}`}>
       {showHeader && (
         <UniversalHeader 
           viewMode={viewMode}
@@ -34,25 +34,24 @@ export const UniversalLayout = ({
         />
       )}
       <main 
-        className={`flex-1 overflow-y-auto ${className} lg:bg-background`}
+        className={`flex-1 overflow-y-auto ${className}`}
         style={{
-          backgroundImage: 'url(/lovable-uploads/518af829-608a-44fb-9e8d-d94c43e4a543.png)',
+          backgroundImage: window.innerWidth < 1024 ? 'url(/lovable-uploads/518af829-608a-44fb-9e8d-d94c43e4a543.png)' : undefined,
           backgroundSize: 'contain',
           backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
+          backgroundRepeat: 'no-repeat',
+          backgroundColor: window.innerWidth >= 1024 ? 'hsl(var(--background))' : 'transparent'
         }}
       >
-        <div className="relative z-10">
-          {containerized ? (
-            <ResponsiveContainer maxWidth={maxWidth}>
-              <div className="py-1 sm:py-2">
-                {children}
-              </div>
-            </ResponsiveContainer>
-          ) : (
-            children
-          )}
-        </div>
+        {containerized ? (
+          <ResponsiveContainer maxWidth={maxWidth}>
+            <div className="py-1 sm:py-2">
+              {children}
+            </div>
+          </ResponsiveContainer>
+        ) : (
+          children
+        )}
       </main>
       {showFooter && <UniversalFooter />}
     </div>
