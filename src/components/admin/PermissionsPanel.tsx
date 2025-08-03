@@ -307,7 +307,10 @@ export const PermissionsPanel = () => {
                         ? 'bg-primary/10 border border-primary/20' 
                         : 'hover:bg-muted/50'
                     }`}
-                    onClick={() => setSelectedUser(user)}
+                    onClick={() => {
+                      console.log('PermissionsPanel: User clicked:', user.email, user.full_name);
+                      setSelectedUser(user);
+                    }}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
