@@ -129,7 +129,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
         }}
       >
         <BellDot 
-          className={`w-6 h-6 sm:w-8 sm:h-8 drop-shadow-lg transition-colors ${
+          className={`w-12 h-12 sm:w-16 sm:h-16 drop-shadow-lg transition-colors ${
             dashboardData?.unread_notifications > 0 
               ? 'text-red-400 animate-pulse' 
               : 'text-blue-200'
