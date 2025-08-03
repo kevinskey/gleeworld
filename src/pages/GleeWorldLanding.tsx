@@ -711,7 +711,7 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Footer */}
-      <section className="relative z-30 pt-4 pb-6 px-2 sm:px-4 md:px-6 lg:px-8">
+      <section className="relative z-30 pt-16 sm:pt-20 md:pt-24 pb-6 px-2 sm:px-4 md:px-6 lg:px-8">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="bg-primary text-primary-foreground p-6 sm:p-8 md:p-12 border-2 border-border shadow-xl">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
