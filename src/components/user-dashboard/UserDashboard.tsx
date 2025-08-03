@@ -285,16 +285,16 @@ const UserDashboard = React.memo(() => {
           {/* Sticky container for Community Hub */}
           <div 
             className={`
-              w-full transition-all duration-300 ease-in-out
+              w-full transition-all duration-500 ease-out
               ${isSticky 
-                ? 'fixed top-[72px] left-0 right-0 z-[90] px-1 sm:px-2 md:px-4' 
+                ? 'fixed top-[72px] left-0 right-0 z-[80] px-1 sm:px-2 md:px-4 bg-background/95 backdrop-blur-sm border-b border-border/50 shadow-sm' 
                 : 'relative'
               }
             `}
             style={isSticky ? { maxWidth: '100vw' } : {}}
           >
             <div className={`
-              ${isSticky ? 'max-w-7xl mx-auto' : 'w-full'}
+              ${isSticky ? 'max-w-7xl mx-auto py-2' : 'w-full'}
             `}>
               {/* Mobile Layout */}
               <div className="flex flex-col md:hidden gap-4">

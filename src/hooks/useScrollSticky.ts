@@ -16,6 +16,11 @@ export const useScrollSticky = ({
 
   const handleScroll = useCallback(() => {
     const currentScrollY = window.scrollY;
+    const scrollDifference = Math.abs(currentScrollY - lastScrollY);
+    
+    // Only process if scroll difference is significant enough (reduces jerkiness)
+    if (scrollDifference < 5) return;
+    
     const direction = currentScrollY > lastScrollY ? 'down' : 'up';
     
     setScrollDirection(direction);
