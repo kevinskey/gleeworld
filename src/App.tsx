@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import FanDashboard from "./pages/FanDashboard";
 
 import { GleeWorldLanding } from "./pages/GleeWorldLanding";
 import { TestLandingPage } from "./components/debug/TestLandingPage";
@@ -226,8 +227,16 @@ const App = () => {
                   <ProtectedRoute>
                     <UserDashboard />
                   </ProtectedRoute>
-                } 
-              />
+                 } 
+               />
+               <Route 
+                 path="/fan" 
+                 element={
+                   <ProtectedRoute>
+                     <FanDashboard />
+                   </ProtectedRoute>
+                 } 
+               />
               <Route 
                 path="/dashboard/member-view/:userId" 
                 element={
