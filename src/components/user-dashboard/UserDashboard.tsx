@@ -38,7 +38,7 @@ const UserDashboard = React.memo(() => {
     userId: user?.id,
     userEmail: user?.email
   });
-  const { profile, loading: profileLoading, error: profileError } = useMergedProfile(user);
+  const { profile, firstName, loading: profileLoading, error: profileError } = useMergedProfile(user);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
@@ -266,7 +266,7 @@ const UserDashboard = React.memo(() => {
         {/* Welcome Card - Full width, extends to top */}
         <div className="w-full">
           <WelcomeCard 
-            displayName={displayName}
+            displayName={firstName}
             profile={profile}
           />
         </div>

@@ -9,6 +9,7 @@ interface GleeWorldProfile {
   email: string;
   full_name: string | null;
   first_name: string | null;
+  middle_name: string | null;
   last_name: string | null;
   phone: string | null;
   avatar_url: string | null;
@@ -84,9 +85,12 @@ export const useUserProfile = (user: User | null) => {
       if (error) throw error;
       
       if (data) {
-        // Create display name
+        // Create display name with proper name handling
         const displayName = data.full_name || 
-                           (data.first_name && data.last_name ? `${data.first_name} ${data.last_name}` : '') ||
+                           (() => {
+                             const parts = [data.first_name, data.middle_name, data.last_name].filter(Boolean);
+                             return parts.length > 0 ? parts.join(' ') : '';
+                           })() ||
                            user?.user_metadata?.full_name || 
                            user?.user_metadata?.name || 
                            user?.email || 
@@ -163,7 +167,10 @@ export const useUserProfile = (user: User | null) => {
       
       if (data) {
         const displayName = data.full_name || 
-                           (data.first_name && data.last_name ? `${data.first_name} ${data.last_name}` : '') ||
+                           (() => {
+                             const parts = [data.first_name, data.middle_name, data.last_name].filter(Boolean);
+                             return parts.length > 0 ? parts.join(' ') : '';
+                           })() ||
                            user?.user_metadata?.full_name || 
                            user?.user_metadata?.name || 
                            user?.email || 
@@ -193,9 +200,16 @@ export const useUserProfile = (user: User | null) => {
                      user?.email || 
                      'User';
 
+  const firstName = userProfile?.first_name || 
+                   user?.user_metadata?.first_name || 
+                   user?.user_metadata?.name?.split(' ')[0] || 
+                   displayName.split(' ')[0] || 
+                   'User';
+
   return { 
     userProfile, 
     displayName, 
+    firstName,
     loading, 
     error, 
     updateProfile, 

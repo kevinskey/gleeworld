@@ -12,6 +12,7 @@ interface MergedProfile {
   
   // Basic profile fields
   first_name?: string;
+  middle_name?: string;
   last_name?: string;
   phone?: string;
   avatar_url?: string;
@@ -57,6 +58,7 @@ interface MergedProfile {
 interface UseProfileReturn {
   profile: MergedProfile | null;
   displayName: string;
+  firstName: string;
   loading: boolean;
   error: string | null;
   updateProfile: (updates: Partial<MergedProfile>) => Promise<{ data: MergedProfile | null; error: string | null }>;
@@ -204,14 +206,22 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
   }, [user?.id]);
 
   const displayName = profile?.full_name || 
-                     profile?.first_name && profile?.last_name ? 
-                     `${profile.first_name} ${profile.last_name}` : 
+                     (() => {
+                       const parts = [profile?.first_name, profile?.middle_name, profile?.last_name].filter(Boolean);
+                       return parts.length > 0 ? parts.join(' ') : '';
+                     })() ||
                      user?.email?.split('@')[0] || 
                      'User';
+
+  const firstName = profile?.first_name || 
+                   user?.email?.split('@')[0] || 
+                   displayName.split(' ')[0] || 
+                   'User';
 
   return {
     profile,
     displayName,
+    firstName,
     loading,
     error,
     updateProfile,

@@ -5765,6 +5765,7 @@ export type Database = {
           last_name: string | null
           last_sign_in_at: string | null
           mentor_opt_in: boolean | null
+          middle_name: string | null
           music_role: string | null
           notes: string | null
           org: string | null
@@ -5831,6 +5832,7 @@ export type Database = {
           last_name?: string | null
           last_sign_in_at?: string | null
           mentor_opt_in?: boolean | null
+          middle_name?: string | null
           music_role?: string | null
           notes?: string | null
           org?: string | null
@@ -5897,6 +5899,7 @@ export type Database = {
           last_name?: string | null
           last_sign_in_at?: string | null
           mentor_opt_in?: boolean | null
+          middle_name?: string | null
           music_role?: string | null
           notes?: string | null
           org?: string | null
