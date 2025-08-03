@@ -159,33 +159,42 @@ export const RadioStationPage = () => {
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'performance':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-brand-100 text-brand-800';
       case 'announcement':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-spelman-blue-light/20 text-spelman-blue-dark';
       case 'alumni_story':
-        return 'bg-green-100 text-green-800';
+        return 'bg-accent/20 text-accent-foreground';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-muted-foreground';
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-brand-50 to-brand-100 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600 mb-2">
-            Glee World 101
-          </h1>
-          <p className="text-lg text-gray-600">
-            The Official Radio Station of Spelman College Glee Club
-          </p>
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <img 
+              src="/glee-100-crest.png" 
+              alt="Glee Club 100th Anniversary Crest" 
+              className="h-16 w-16 object-contain"
+            />
+            <div>
+              <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-spelman-blue-dark mb-2 font-playfair">
+                Glee World 101
+              </h1>
+              <p className="text-lg text-muted-foreground font-roboto">
+                The Official Radio Station of Spelman College Glee Club
+              </p>
+            </div>
+          </div>
           <div className="flex items-center justify-center gap-2 mt-4">
-            <Badge variant="secondary" className="flex items-center gap-1">
+            <Badge variant="secondary" className="flex items-center gap-1 bg-brand-600 text-white">
               <Radio className="h-3 w-3" />
               Live Radio
             </Badge>
-            <Badge variant="outline" className="flex items-center gap-1">
+            <Badge variant="outline" className="flex items-center gap-1 border-brand-400 text-brand-600">
               <Rss className="h-3 w-3" />
               Podcast Ready
             </Badge>
@@ -196,8 +205,8 @@ export const RadioStationPage = () => {
           {/* Main Player */}
           <div className="lg:col-span-2 space-y-6">
             {/* Now Playing */}
-            <Card className="overflow-hidden shadow-lg border-2 border-purple-200">
-              <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+            <Card className="overflow-hidden shadow-lg border-2 border-brand-200">
+              <CardHeader className="bg-gradient-to-r from-brand-600 to-spelman-blue-dark text-white">
                 <CardTitle className="flex items-center gap-2">
                   <Radio className="h-5 w-5" />
                   Now Playing
@@ -206,16 +215,16 @@ export const RadioStationPage = () => {
               <CardContent className="p-6">
                 {currentTrack && (
                   <div className="space-y-6">
-                    {/* Track Info */}
+                     {/* Track Info */}
                     <div className="text-center">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                      <h3 className="text-2xl font-bold text-foreground mb-2 font-playfair">
                         {currentTrack.title}
                       </h3>
-                      <p className="text-lg text-gray-600 mb-1">
+                      <p className="text-lg text-muted-foreground mb-1 font-roboto">
                         {currentTrack.artist}
                       </p>
                       {currentTrack.album && (
-                        <p className="text-sm text-gray-500">{currentTrack.album}</p>
+                        <p className="text-sm text-muted-foreground/70">{currentTrack.album}</p>
                       )}
                       <Badge className={`mt-2 ${getCategoryColor(currentTrack.category)}`}>
                         {getCategoryIcon(currentTrack.category)}
@@ -225,13 +234,13 @@ export const RadioStationPage = () => {
 
                     {/* Progress Bar */}
                     <div className="space-y-2">
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-muted rounded-full h-2">
                         <div 
-                          className="bg-gradient-to-r from-purple-600 to-blue-600 h-2 rounded-full transition-all duration-300"
+                          className="bg-gradient-to-r from-brand-600 to-spelman-blue-dark h-2 rounded-full transition-all duration-300"
                           style={{ width: `${(currentTime / duration) * 100}%` }}
                         ></div>
                       </div>
-                      <div className="flex justify-between text-sm text-gray-500">
+                      <div className="flex justify-between text-sm text-muted-foreground">
                         <span>{formatTime(currentTime)}</span>
                         <span>{formatTime(duration)}</span>
                       </div>
@@ -243,7 +252,7 @@ export const RadioStationPage = () => {
                         variant="outline"
                         size="icon"
                         onClick={handlePrevTrack}
-                        className="hover:bg-purple-50"
+                        className="hover:bg-brand-50 border-brand-200"
                       >
                         <SkipBack className="h-4 w-4" />
                       </Button>
@@ -251,7 +260,7 @@ export const RadioStationPage = () => {
                       <Button
                         size="icon"
                         onClick={handlePlay}
-                        className="h-14 w-14 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                        className="h-14 w-14 bg-gradient-to-r from-brand-600 to-spelman-blue-dark hover:from-brand-700 hover:to-spelman-blue-dark/90"
                       >
                         {isPlaying ? (
                           <Pause className="h-6 w-6" />
@@ -264,7 +273,7 @@ export const RadioStationPage = () => {
                         variant="outline"
                         size="icon"
                         onClick={handleNextTrack}
-                        className="hover:bg-purple-50"
+                        className="hover:bg-brand-50 border-brand-200"
                       >
                         <SkipForward className="h-4 w-4" />
                       </Button>
@@ -272,7 +281,7 @@ export const RadioStationPage = () => {
 
                     {/* Volume Control */}
                     <div className="flex items-center gap-3">
-                      <Volume2 className="h-5 w-5 text-gray-600" />
+                      <Volume2 className="h-5 w-5 text-muted-foreground" />
                       <div className="flex-1">
                         <input
                           type="range"
@@ -280,10 +289,10 @@ export const RadioStationPage = () => {
                           max="100"
                           value={volume}
                           onChange={(e) => setVolume(Number(e.target.value))}
-                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                          className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer"
                         />
                       </div>
-                      <span className="text-sm text-gray-600 w-8">{volume}%</span>
+                      <span className="text-sm text-muted-foreground w-8">{volume}%</span>
                     </div>
                   </div>
                 )}
@@ -306,18 +315,18 @@ export const RadioStationPage = () => {
                         key={track.id}
                         className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
                           currentTrack?.id === track.id 
-                            ? 'bg-purple-50 border-2 border-purple-200' 
-                            : 'bg-gray-50 hover:bg-gray-100'
+                            ? 'bg-brand-50 border-2 border-brand-200' 
+                            : 'bg-muted/50 hover:bg-muted'
                         }`}
                       >
                         <div className="flex-shrink-0">
                           {getCategoryIcon(track.category)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 truncate">
+                          <p className="font-medium text-foreground truncate">
                             {track.title}
                           </p>
-                          <p className="text-sm text-gray-500 truncate">
+                          <p className="text-sm text-muted-foreground truncate">
                             {track.artist}
                           </p>
                         </div>
@@ -325,7 +334,7 @@ export const RadioStationPage = () => {
                           <Badge variant="outline" className={getCategoryColor(track.category)}>
                             {track.category.replace('_', ' ')}
                           </Badge>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             {formatTime(track.duration)}
                           </p>
                         </div>
@@ -378,17 +387,17 @@ export const RadioStationPage = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 gap-3">
-                  <div className="bg-purple-50 p-3 rounded-lg">
-                    <p className="text-sm text-purple-600 font-medium">Current Listeners</p>
-                    <p className="text-2xl font-bold text-purple-700">127</p>
+                  <div className="bg-brand-50 p-3 rounded-lg">
+                    <p className="text-sm text-brand-600 font-medium">Current Listeners</p>
+                    <p className="text-2xl font-bold text-brand-700">127</p>
                   </div>
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm text-blue-600 font-medium">Total Episodes</p>
-                    <p className="text-2xl font-bold text-blue-700">45</p>
+                  <div className="bg-spelman-blue-light/20 p-3 rounded-lg">
+                    <p className="text-sm text-spelman-blue-dark font-medium">Total Episodes</p>
+                    <p className="text-2xl font-bold text-spelman-blue-dark">45</p>
                   </div>
-                  <div className="bg-green-50 p-3 rounded-lg">
-                    <p className="text-sm text-green-600 font-medium">RSS Subscribers</p>
-                    <p className="text-2xl font-bold text-green-700">892</p>
+                  <div className="bg-accent/20 p-3 rounded-lg">
+                    <p className="text-sm text-accent-foreground font-medium">RSS Subscribers</p>
+                    <p className="text-2xl font-bold text-accent-foreground">892</p>
                   </div>
                 </div>
               </CardContent>
@@ -405,21 +414,21 @@ export const RadioStationPage = () => {
               <CardContent>
                 <ScrollArea className="h-48">
                   <div className="space-y-3">
-                    {upcomingTracks.slice(0, 5).map((track, index) => (
-                      <div key={track.id} className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs text-gray-600">
-                          {index + 1}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {track.title}
-                          </p>
-                          <p className="text-xs text-gray-500 truncate">
-                            {track.artist}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                     {upcomingTracks.slice(0, 5).map((track, index) => (
+                       <div key={track.id} className="flex items-center gap-3">
+                         <div className="flex-shrink-0 w-6 h-6 bg-muted rounded-full flex items-center justify-center text-xs text-muted-foreground">
+                           {index + 1}
+                         </div>
+                         <div className="flex-1 min-w-0">
+                           <p className="text-sm font-medium text-foreground truncate">
+                             {track.title}
+                           </p>
+                           <p className="text-xs text-muted-foreground truncate">
+                             {track.artist}
+                           </p>
+                         </div>
+                       </div>
+                     ))}
                   </div>
                 </ScrollArea>
               </CardContent>
