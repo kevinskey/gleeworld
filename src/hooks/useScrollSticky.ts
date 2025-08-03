@@ -3,11 +3,13 @@ import { useState, useEffect, useCallback } from 'react';
 interface UseScrollStickyOptions {
   threshold?: number;
   unstickThreshold?: number;
+  unstickDownThreshold?: number; // New: threshold for unsticking when scrolling down
 }
 
 export const useScrollSticky = ({ 
   threshold = 100, 
-  unstickThreshold = 150 
+  unstickThreshold = 150,
+  unstickDownThreshold = 300
 }: UseScrollStickyOptions = {}) => {
   const [isSticky, setIsSticky] = useState(false);
   const [scrollDirection, setScrollDirection] = useState<'up' | 'down'>('down');
@@ -39,9 +41,18 @@ export const useScrollSticky = ({
         setStickyTriggerY(0);
       }
     }
+    
+    // NEW: If scrolling down significantly past where it became sticky, unstick
+    if (direction === 'down' && isSticky) {
+      const scrolledDownFrom = currentScrollY - stickyTriggerY;
+      if (scrolledDownFrom > unstickDownThreshold) {
+        setIsSticky(false);
+        setStickyTriggerY(0);
+      }
+    }
 
     setLastScrollY(currentScrollY);
-  }, [lastScrollY, threshold, unstickThreshold, isSticky, stickyTriggerY]);
+  }, [lastScrollY, threshold, unstickThreshold, unstickDownThreshold, isSticky, stickyTriggerY]);
 
   useEffect(() => {
     let ticking = false;
