@@ -400,11 +400,102 @@ export const COMPREHENSIVE_FUNCTIONS_LIST: PermissionFunction[] = [
   },
 
   // ========== COMMUNICATION ==========
+  // Email CRUD Operations
+  {
+    id: 'create_email',
+    name: 'Create Email',
+    description: 'Create and compose new emails',
+    location: 'EmailComposer',
+    isActive: true,
+    category: 'Communication'
+  },
+  {
+    id: 'view_emails',
+    name: 'View Emails',
+    description: 'View email history and drafts',
+    location: 'EmailHistory',
+    isActive: true,
+    category: 'Communication'
+  },
+  {
+    id: 'edit_email',
+    name: 'Edit Email',
+    description: 'Edit email drafts and templates',
+    location: 'EmailEditor',
+    isActive: true,
+    category: 'Communication'
+  },
+  {
+    id: 'delete_email',
+    name: 'Delete Email',
+    description: 'Delete email drafts and sent emails',
+    location: 'EmailManagement',
+    isActive: true,
+    category: 'Communication'
+  },
   {
     id: 'send_emails',
     name: 'Send Emails',
     description: 'Send emails to members and groups',
     location: 'useCommunication',
+    isActive: true,
+    category: 'Communication'
+  },
+  {
+    id: 'create_email_template',
+    name: 'Create Email Template',
+    description: 'Create reusable email templates',
+    location: 'EmailTemplateCreator',
+    isActive: true,
+    category: 'Communication'
+  },
+  {
+    id: 'edit_email_template',
+    name: 'Edit Email Template',
+    description: 'Modify existing email templates',
+    location: 'EmailTemplateEditor',
+    isActive: true,
+    category: 'Communication'
+  },
+  {
+    id: 'delete_email_template',
+    name: 'Delete Email Template',
+    description: 'Remove email templates',
+    location: 'EmailTemplateManagement',
+    isActive: true,
+    category: 'Communication'
+  },
+
+  // SMS CRUD Operations
+  {
+    id: 'create_sms',
+    name: 'Create SMS',
+    description: 'Create and compose new SMS messages',
+    location: 'SMSComposer',
+    isActive: true,
+    category: 'Communication'
+  },
+  {
+    id: 'view_sms',
+    name: 'View SMS',
+    description: 'View SMS history and drafts',
+    location: 'SMSHistory',
+    isActive: true,
+    category: 'Communication'
+  },
+  {
+    id: 'edit_sms',
+    name: 'Edit SMS',
+    description: 'Edit SMS drafts and templates',
+    location: 'SMSEditor',
+    isActive: true,
+    category: 'Communication'
+  },
+  {
+    id: 'delete_sms',
+    name: 'Delete SMS',
+    description: 'Delete SMS drafts and sent messages',
+    location: 'SMSManagement',
     isActive: true,
     category: 'Communication'
   },
@@ -416,6 +507,74 @@ export const COMPREHENSIVE_FUNCTIONS_LIST: PermissionFunction[] = [
     isActive: true,
     category: 'Communication'
   },
+  {
+    id: 'create_sms_template',
+    name: 'Create SMS Template',
+    description: 'Create reusable SMS templates',
+    location: 'SMSTemplateCreator',
+    isActive: true,
+    category: 'Communication'
+  },
+  {
+    id: 'edit_sms_template',
+    name: 'Edit SMS Template',
+    description: 'Modify existing SMS templates',
+    location: 'SMSTemplateEditor',
+    isActive: true,
+    category: 'Communication'
+  },
+  {
+    id: 'delete_sms_template',
+    name: 'Delete SMS Template',
+    description: 'Remove SMS templates',
+    location: 'SMSTemplateManagement',
+    isActive: true,
+    category: 'Communication'
+  },
+
+  // Internal Messaging CRUD Operations
+  {
+    id: 'create_message',
+    name: 'Create Message',
+    description: 'Create internal messages',
+    location: 'MessageComposer',
+    isActive: true,
+    category: 'Communication'
+  },
+  {
+    id: 'view_messages',
+    name: 'View Messages',
+    description: 'View received and sent messages',
+    location: 'MessageCenter',
+    isActive: true,
+    category: 'Communication'
+  },
+  {
+    id: 'edit_message',
+    name: 'Edit Message',
+    description: 'Edit draft messages',
+    location: 'MessageEditor',
+    isActive: true,
+    category: 'Communication'
+  },
+  {
+    id: 'delete_message',
+    name: 'Delete Message',
+    description: 'Delete messages and drafts',
+    location: 'MessageManagement',
+    isActive: true,
+    category: 'Communication'
+  },
+  {
+    id: 'view_all_messages',
+    name: 'View All Messages',
+    description: 'Admin access to view all internal messages',
+    location: 'AdminMessageCenter',
+    isActive: true,
+    category: 'Communication'
+  },
+
+  // Legacy Communication Functions
   {
     id: 'create_announcements',
     name: 'Create Announcements',
