@@ -15,6 +15,7 @@ import { DashboardSwitcher } from "@/components/navigation/DashboardSwitcher";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { HeaderClock } from "@/components/ui/header-clock";
+import { RadioPlayer } from "@/components/radio/RadioPlayer";
 
 
 interface UniversalHeaderProps {
@@ -84,6 +85,9 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                 <HeaderClock className="text-sm ml-3" />
               </div>
             </EnhancedTooltip>
+            
+            {/* Glee Radio */}
+            <RadioPlayer className="ml-2" />
           </div>
 
 
