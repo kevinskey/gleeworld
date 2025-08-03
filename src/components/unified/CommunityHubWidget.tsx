@@ -480,272 +480,291 @@ export const CommunityHubWidget = () => {
   const LeftColumnContent = () => (
     <div className="space-y-4 relative">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3 bg-background border border-border">
-          <TabsTrigger value="buckets" className="text-xs">
-            <StickyNote className="h-3 w-3 mr-1" />
-            Buckets of Love
+        <TabsList className="grid w-full grid-cols-3 bg-amber-100 border border-amber-200 rounded-lg shadow-sm">
+          <TabsTrigger value="buckets" className="text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <StickyNote className="h-3 w-3 mr-1 text-pink-600" />
+            Love Notes
           </TabsTrigger>
-          <TabsTrigger value="reflections" className="text-xs">
-            <Book className="h-3 w-3 mr-1" />
-            Wellness
+          <TabsTrigger value="reflections" className="text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <Book className="h-3 w-3 mr-1 text-purple-600" />
+            Wellness Board
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="text-xs" data-value="notifications">
-            <Bell className="h-3 w-3 mr-1" />
-            Notifications
+          <TabsTrigger value="notifications" className="text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <Bell className="h-3 w-3 mr-1 text-blue-600" />
+            Notice Board
           </TabsTrigger>
         </TabsList>
 
-        {/* Buckets of Love Tab */}
+        {/* Buckets of Love Tab - Cork Board Style */}
         <TabsContent value="buckets" className="space-y-3">
-          <div className="flex justify-between items-center">
-            <SendBucketOfLove 
-              trigger={
-                <Button size="sm" className="gap-2">
-                  <Send className="h-3 w-3" />
-                  Send Love
-                </Button>
-              }
-            />
-          </div>
-          {loveMessagesLoading ? (
-            <div className="flex justify-center p-4">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+          <div className="relative bg-gradient-to-br from-amber-50 to-orange-100 rounded-lg p-4 min-h-[300px]" 
+               style={{
+                 backgroundImage: `
+                   radial-gradient(circle at 20% 30%, #d97706 1px, transparent 1px),
+                   radial-gradient(circle at 70% 60%, #d97706 1px, transparent 1px),
+                   radial-gradient(circle at 40% 80%, #d97706 1px, transparent 1px),
+                   radial-gradient(circle at 90% 20%, #d97706 1px, transparent 1px)
+                 `,
+                 backgroundSize: '80px 80px, 120px 120px, 100px 100px, 90px 90px'
+               }}>
+            
+            {/* Add Love Message Button - Pinned Note Style */}
+            <div className="absolute top-2 right-2 z-20">
+              <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
+                <DialogTrigger asChild>
+                  <button className="relative bg-yellow-200 hover:bg-yellow-300 border border-yellow-300 rounded-sm p-2 shadow-md transform rotate-1 hover:rotate-0 transition-all duration-200">
+                    <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-red-500 rounded-full shadow-sm"></div>
+                    <Plus className="h-4 w-4 text-gray-700" />
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Heart className="h-5 w-5 text-pink-500" />
+                      Pin a Love Note
+                    </DialogTitle>
+                  </DialogHeader>
+                  <Form {...loveForm}>
+                    <form onSubmit={loveForm.handleSubmit(onSubmitLoveMessage)} className="space-y-4">
+                      <FormField
+                        control={loveForm.control}
+                        name="message"
+                        rules={{ required: "Message is required" }}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Your Love Note</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Share some love and positivity..."
+                                className="resize-none min-h-[100px] bg-yellow-50 border-yellow-200"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={loveForm.control}
+                        name="note_color"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Note Color & Pushpin</FormLabel>
+                            <FormControl>
+                              <RadioGroup
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                className="grid grid-cols-5 gap-2"
+                              >
+                                {noteColors.map((color) => (
+                                  <div key={color.value} className="flex flex-col items-center">
+                                    <RadioGroupItem
+                                      value={color.value}
+                                      id={color.value}
+                                      className="sr-only"
+                                    />
+                                    <Label
+                                      htmlFor={color.value}
+                                      className={`relative cursor-pointer w-12 h-12 ${color.bg} ${color.border} border-2 rounded-sm shadow-sm hover:shadow-md transition-all transform hover:scale-105`}
+                                    >
+                                      <div className={`absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 rounded-full shadow-sm ${
+                                        color.value === 'sky' ? 'bg-sky-600' :
+                                        color.value === 'blue' ? 'bg-blue-600' :
+                                        color.value === 'indigo' ? 'bg-indigo-600' :
+                                        color.value === 'cyan' ? 'bg-cyan-600' :
+                                        'bg-slate-600'
+                                      }`}></div>
+                                      {field.value === color.value && (
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                          <div className="w-2 h-2 bg-white rounded-full shadow-sm"></div>
+                                        </div>
+                                      )}
+                                    </Label>
+                                    <span className="text-xs mt-1">{color.label}</span>
+                                  </div>
+                                ))}
+                              </RadioGroup>
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={loveForm.control}
+                        name="is_anonymous"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>Post anonymously</FormLabel>
+                              <FormDescription>Your name won't be shown on the note</FormDescription>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="flex gap-2">
+                        <Button type="button" variant="outline" onClick={() => setLoveDialogOpen(false)} className="flex-1">
+                          Cancel
+                        </Button>
+                        <Button type="submit" className="flex-1 bg-pink-500 hover:bg-pink-600 text-white">
+                          <Heart className="h-4 w-4 mr-2" />
+                          Pin Note
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
             </div>
-          ) : (
-            <div className="relative p-6">
-              {/* Background bucket image */}
-              <div 
-                className="absolute inset-0 bg-contain bg-no-repeat bg-center opacity-30 pointer-events-none"
-                style={{
-                  backgroundImage: `url('/lovable-uploads/96533996-2039-4566-887a-67eadeb076f1.png')`
-                }}
-              />
-              
-              {/* Header with Send Love button */}
-              <div className="relative z-10 flex justify-between items-start mb-6">
-                <div className="text-center flex-1">
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Share love, encouragement, and positive vibes with the Glee Club family
-                  </p>
-                </div>
-                
-                {/* Send Love Button - moved to top right */}
-                <Dialog open={loveDialogOpen} onOpenChange={setLoveDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="text-xs h-8 ml-2 shrink-0">
-                      <Plus className="h-3 w-3 mr-1" />
-                      Send Love
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2">
-                        <Heart className="h-4 w-4 text-red-500" />
-                        Send a Love Message
-                      </DialogTitle>
-                    </DialogHeader>
-                    <Form {...loveForm}>
-                      <form onSubmit={loveForm.handleSubmit(onSubmitLoveMessage)} className="space-y-4">
-                        <FormField
-                          control={loveForm.control}
-                          name="message"
-                          rules={{ required: "Message is required" }}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Your Love Message</FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  placeholder="Share something positive, encouraging, or loving..."
-                                  className="min-h-[80px] text-sm"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
 
-                        <FormField
-                          control={loveForm.control}
-                          name="note_color"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Note Color</FormLabel>
-                              <FormControl>
-                                <RadioGroup
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                  className="flex flex-wrap gap-2"
-                                >
-                                  {noteColors.map((color) => (
-                                    <div key={color.value} className="flex items-center space-x-2">
-                                      <RadioGroupItem
-                                        value={color.value}
-                                        id={color.value}
-                                        className="sr-only"
-                                      />
-                                      <Label
-                                        htmlFor={color.value}
-                                        className={`
-                                          w-8 h-8 rounded-lg border-2 cursor-pointer transition-all
-                                          ${color.bg} ${color.border}
-                                          ${field.value === color.value ? 'ring-2 ring-primary ring-offset-2' : ''}
-                                        `}
-                                        title={color.label}
-                                      />
-                                    </div>
-                                  ))}
-                                </RadioGroup>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={loveForm.control}
-                          name="is_anonymous"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                              <div className="space-y-0.5">
-                                <FormLabel className="text-sm font-medium">
-                                  Send Anonymously
-                                </FormLabel>
-                                <FormDescription className="text-xs">
-                                  Your name won't be shown with this message
-                                </FormDescription>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-
-                        <div className="flex gap-2">
-                          <Button type="button" variant="outline" onClick={() => setLoveDialogOpen(false)} className="flex-1">
-                            Cancel
-                          </Button>
-                          <Button type="submit" className="flex-1">
-                            <Send className="h-4 w-4 mr-2" />
-                            Send Love
-                          </Button>
-                        </div>
-                      </form>
-                    </Form>
-                  </DialogContent>
-                </Dialog>
-              </div>
-
-              {/* Love Notes Grid */}
-              <div className="relative z-10 grid grid-cols-7 gap-1 mb-4 h-48 overflow-y-auto">
-                {loveMessages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`
-                      relative w-[101px] h-[72px] p-1.5 rounded-lg border-2 cursor-pointer transition-all duration-200 
-                      ${getNoteColorClasses(message.note_color)}
-                      shadow-sm hover:shadow-md transform hover:scale-105
-                    `}
-                    onClick={() => handleNoteClick(message)}
-                    style={{
-                      background: `linear-gradient(135deg, ${getNoteGradientColors(message.note_color)})`,
-                    }}
-                  >
-                    {/* Message text - truncated */}
-                    <div className="text-[9px] text-gray-800 leading-tight mb-1 overflow-hidden h-8">
-                      {message.message.length > 40 ? `${message.message.substring(0, 40)}...` : message.message}
-                    </div>
-                    
-                    {/* Decorations */}
-                    <div className="text-[9px] mb-0.5">
-                      {message.decorations || '💙'}
-                    </div>
-                    
-                    {/* Bottom section */}
-                    <div className="absolute bottom-0.5 left-1 right-1 flex justify-between items-center">
-                      <div className="text-[9px] text-gray-600 truncate flex-1 mr-1">
-                        {message.sender_name}
-                      </div>
-                      <div className="flex items-center gap-0.5">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleLikeMessage(message.id);
-                          }}
-                          className={`text-[10px] flex items-center gap-0.5 px-1 py-0.5 rounded transition-colors ${
-                            message.user_liked 
-                              ? 'text-red-600 bg-red-100 hover:bg-red-200' 
-                              : 'text-gray-500 hover:text-red-600 hover:bg-red-50'
-                          }`}
-                        >
-                          <Heart className={`h-2 w-2 ${message.user_liked ? 'fill-current' : ''}`} />
-                          <span>{message.likes}</span>
-                        </button>
-                      </div>
-                    </div>
+            {/* Love Messages - Cork Board Display */}
+            <ScrollArea className="h-[250px]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-2">
+                {loveMessagesLoading ? (
+                  <div className="col-span-full flex justify-center p-8">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-pink-500"></div>
                   </div>
-                ))}
+                ) : loveMessages.length > 0 ? (
+                  loveMessages.map((message, index) => (
+                    <div
+                      key={message.id}
+                      className={`relative p-3 rounded-sm shadow-md cursor-pointer transition-all duration-200 hover:shadow-lg transform hover:scale-105 ${getNoteColorClasses(message.note_color)}`}
+                      onClick={() => handleNoteClick(message)}
+                      style={{
+                        transform: `rotate(${(index % 3 - 1) * 2}deg)`,
+                        marginTop: `${(index % 2) * 4}px`
+                      }}
+                    >
+                      {/* Pushpin */}
+                      <div className={`absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 rounded-full shadow-sm ${
+                        message.note_color === 'sky' ? 'bg-sky-600' :
+                        message.note_color === 'blue' ? 'bg-blue-600' :
+                        message.note_color === 'indigo' ? 'bg-indigo-600' :
+                        message.note_color === 'cyan' ? 'bg-cyan-600' :
+                        'bg-slate-600'
+                      }`}></div>
+                      
+                      <p className="text-xs leading-relaxed text-gray-800 mb-2 line-clamp-3">{message.message}</p>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-600 font-medium">
+                          {message.sender_name}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleLikeMessage(message.id);
+                            }}
+                            className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full transition-colors ${
+                              message.user_liked ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600 hover:bg-red-50'
+                            }`}
+                          >
+                            <Heart className={`h-3 w-3 ${message.user_liked ? 'fill-current' : ''}`} />
+                            {message.likes}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-full text-center p-8">
+                    <Heart className="h-12 w-12 text-pink-300 mx-auto mb-3" />
+                    <p className="text-sm text-gray-500">No love notes yet</p>
+                    <p className="text-xs text-gray-400">Be the first to pin a note!</p>
+                  </div>
+                )}
               </div>
-
-            </div>
-          )}
+            </ScrollArea>
+          </div>
         </TabsContent>
 
-        {/* Wellness/Reflections Tab */}
+        {/* Wellness/Reflections Tab - Cork Board Style */}
         <TabsContent value="reflections" className="space-y-3">
-          {reflectionsLoading ? (
-            <div className="flex justify-center p-4">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-            </div>
-          ) : sharedReflections.length > 0 ? (
-            <div className="space-y-3">
-              {/* Latest Reflection */}
-              {latestReflection && (
-                <div className="border rounded-lg p-3">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Book className="h-4 w-4 text-primary" />
-                      <h3 className="font-medium text-sm">{latestReflection.title}</h3>
-                    </div>
-                    <Badge className={`text-xs ${getReflectionTypeColor(latestReflection.reflection_type)}`}>
+          <div className="relative bg-gradient-to-br from-purple-50 to-indigo-100 rounded-lg p-4 min-h-[300px]" 
+               style={{
+                 backgroundImage: `
+                   radial-gradient(circle at 25% 25%, #7c3aed 1px, transparent 1px),
+                   radial-gradient(circle at 75% 75%, #7c3aed 1px, transparent 1px),
+                   radial-gradient(circle at 50% 50%, #7c3aed 1px, transparent 1px)
+                 `,
+                 backgroundSize: '90px 90px, 110px 110px, 70px 70px'
+               }}>
+            
+            {!reflectionsLoading && latestReflection ? (
+              <div className="relative mb-4">
+                <div className="bg-white rounded-sm p-4 shadow-md transform -rotate-1 hover:rotate-0 transition-all duration-200 border border-purple-200">
+                  {/* Purple Pushpin */}
+                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-purple-600 rounded-full shadow-sm"></div>
+                  
+                  <div className="flex items-center gap-2 mb-3">
+                    <Book className="h-4 w-4 text-purple-600" />
+                    <h4 className="font-medium text-sm text-gray-800">{latestReflection.title}</h4>
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs h-4 px-2 ${getReflectionTypeColor(latestReflection.reflection_type)}`}
+                    >
                       {latestReflection.reflection_type?.replace('_', ' ')}
                     </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-2 line-clamp-3">
+                  
+                  <p className="text-xs text-gray-700 leading-relaxed mb-3 line-clamp-4">
                     {latestReflection.content}
                   </p>
-                  <div className="flex justify-between items-center text-xs text-muted-foreground">
-                    <span>By Staff</span>
-                    <span>{format(new Date(), 'MMM d')}</span>
-                  </div>
+                  
+                  {latestReflection.scripture_reference && (
+                    <p className="text-xs italic text-purple-600 mb-2">
+                      "{latestReflection.scripture_reference}"
+                    </p>
+                  )}
+                  
+                  <p className="text-xs text-gray-500">
+                    {format(new Date(latestReflection.created_at), "MMMM d, yyyy")}
+                  </p>
                 </div>
-              )}
+              </div>
+            ) : reflectionsLoading ? (
+              <div className="flex justify-center p-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
+              </div>
+            ) : (
+              <div className="text-center p-8">
+                <Book className="h-12 w-12 text-purple-300 mx-auto mb-3" />
+                <p className="text-sm text-gray-500">No reflections shared yet</p>
+              </div>
+            )}
 
-              {/* Quick Prayer Request */}
-              <div className="border rounded-lg p-3">
+            {/* Prayer Request Section - Note Style */}
+            <div className="absolute bottom-2 right-2">
+              <div className="bg-green-100 rounded-sm p-3 shadow-md transform rotate-1 hover:rotate-0 transition-all duration-200 border border-green-200 max-w-[180px]">
+                {/* Green Pushpin */}
+                <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-green-600 rounded-full shadow-sm"></div>
+                
                 <div className="flex items-center gap-2 mb-2">
-                  <Heart className="h-4 w-4 text-red-500" />
-                  <h3 className="font-medium text-sm">Prayer Requests</h3>
+                  <Heart className="h-3 w-3 text-green-600" />
+                  <h3 className="font-medium text-xs text-gray-800">Prayer Requests</h3>
                 </div>
-                <p className="text-xs text-muted-foreground mb-3">
-                  Submit a prayer request for the community to lift up in prayer.
+                <p className="text-xs text-gray-700 mb-2">
+                  Submit a prayer request for community prayer.
                 </p>
                 
                 <Dialog open={prayerDialogOpen} onOpenChange={setPrayerDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="w-full text-xs h-8">
-                      <Plus className="h-3 w-3 mr-1" />
-                      Add Prayer Request
+                    <Button variant="outline" size="sm" className="w-full text-xs h-6 bg-white hover:bg-green-50 border-green-200">
+                      <Plus className="h-2 w-2 mr-1" />
+                      Add Request
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
                       <DialogTitle className="flex items-center gap-2">
-                        <Heart className="h-4 w-4 text-red-500" />
+                        <Heart className="h-4 w-4 text-green-600" />
                         Submit Prayer Request
                       </DialogTitle>
                     </DialogHeader>
@@ -761,7 +780,7 @@ export const CommunityHubWidget = () => {
                               <FormControl>
                                 <Textarea
                                   placeholder="Please pray for..."
-                                  className="resize-none"
+                                  className="resize-none bg-green-50 border-green-200"
                                   {...field}
                                 />
                               </FormControl>
@@ -792,7 +811,7 @@ export const CommunityHubWidget = () => {
                           <Button type="button" variant="outline" onClick={() => setPrayerDialogOpen(false)} className="flex-1">
                             Cancel
                           </Button>
-                          <Button type="submit" className="flex-1">
+                          <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 text-white">
                             <Send className="h-4 w-4 mr-2" />
                             Submit
                           </Button>
@@ -802,24 +821,31 @@ export const CommunityHubWidget = () => {
                   </DialogContent>
                 </Dialog>
               </div>
-
-              {/* View All Button */}
-              <Button variant="outline" size="sm" className="w-full text-xs h-8" onClick={() => navigate('/wellness')}>
-                <Book className="h-3 w-3 mr-1" />
-                View All Reflections
+            </div>
+            
+            {/* View All Button */}
+            <div className="absolute bottom-2 left-2">
+              <Button variant="outline" size="sm" className="text-xs h-6 bg-white hover:bg-purple-50 border-purple-200" onClick={() => navigate('/wellness')}>
+                <Book className="h-2 w-2 mr-1" />
+                View All
               </Button>
             </div>
-          ) : (
-            <div className="text-center p-4">
-              <Book className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-xs text-muted-foreground">No reflections available</p>
-            </div>
-          )}
+          </div>
         </TabsContent>
 
-        {/* Notifications Tab */}
+        {/* Notifications Tab - Cork Board Style */}
         <TabsContent value="notifications" className="space-y-3">
-          <NotificationsSection />
+          <div className="relative bg-gradient-to-br from-blue-50 to-cyan-100 rounded-lg p-4 min-h-[300px]" 
+               style={{
+                 backgroundImage: `
+                   radial-gradient(circle at 15% 20%, #0284c7 1px, transparent 1px),
+                   radial-gradient(circle at 85% 80%, #0284c7 1px, transparent 1px),
+                   radial-gradient(circle at 50% 60%, #0284c7 1px, transparent 1px)
+                 `,
+                 backgroundSize: '85px 85px, 95px 95px, 75px 75px'
+               }}>
+            <NotificationsSection />
+          </div>
         </TabsContent>
       </Tabs>
     </div>
@@ -956,29 +982,35 @@ export const CommunityHubWidget = () => {
   );
 
   return (
-    <Card className="col-span-1 md:col-span-2 lg:col-span-3 overflow-visible relative -mt-8" data-section="community-hub">
+    <Card className="col-span-1 md:col-span-2 lg:col-span-3 overflow-visible relative -mt-8 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 border-amber-200" data-section="community-hub">
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
         <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors pb-4 relative z-20">
+          <CardHeader className="cursor-pointer hover:bg-amber-50/50 transition-colors pb-4 relative z-20 bg-gradient-to-r from-amber-100 to-orange-100 border-b border-amber-200">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Heart className="h-5 w-5 text-red-500" />
-                <CardTitle className="text-lg">Community Hub</CardTitle>
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Heart className="h-6 w-6 text-red-500" />
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-600 rounded-full shadow-sm"></div>
+                </div>
+                <div>
+                  <CardTitle className="text-lg text-amber-900">Community Cork Board</CardTitle>
+                  <p className="text-xs text-amber-700">A place for love, support, and connection</p>
+                </div>
                 <div className="flex gap-1">
                   {unreadNotificationsCount > 0 && (
-                    <Badge variant="destructive" className="text-xs h-5 px-2">
+                    <Badge variant="destructive" className="text-xs h-5 px-2 bg-red-500">
                       {unreadNotificationsCount}
                     </Badge>
                   )}
                   {sharedReflections.length > 0 && (
-                    <Badge variant="outline" className="text-xs h-5 px-2">
+                    <Badge variant="outline" className="text-xs h-5 px-2 bg-green-100 text-green-700 border-green-300">
                       New
                     </Badge>
                   )}
                 </div>
               </div>
               <div className="flex items-center">
-                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                {isExpanded ? <ChevronUp className="h-4 w-4 text-amber-700" /> : <ChevronDown className="h-4 w-4 text-amber-700" />}
               </div>
             </div>
           </CardHeader>
