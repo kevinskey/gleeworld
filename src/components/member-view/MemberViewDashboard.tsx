@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { useUserById } from "@/hooks/useUserById";
 import { DashboardTemplate } from "./DashboardTemplate";
 import { MemberDashboard } from "./dashboards/MemberDashboard";
-import { ExecutiveBoardDashboard } from "./dashboards/ExecutiveBoardDashboard";
+
 import { AlumnaeDashboard } from "./dashboards/AlumnaeDashboard";
 import { AdminDashboard } from "./dashboards/AdminDashboard";
 import { SuperAdminDashboard } from "./dashboards/SuperAdminDashboard";
@@ -79,10 +79,6 @@ export const MemberViewDashboard = () => {
         console.log('MemberViewDashboard: Loading AlumnaeDashboard');
         return <AlumnaeDashboard user={user} />;
       case 'user':
-        if (user.is_exec_board) {
-          console.log('MemberViewDashboard: Loading ExecutiveBoardDashboard');
-          return <ExecutiveBoardDashboard user={user} />;
-        }
         console.log('MemberViewDashboard: Loading MemberDashboard for user');
         return <MemberDashboard user={user} />;
       default:
@@ -92,9 +88,6 @@ export const MemberViewDashboard = () => {
   };
 
   const getTitle = () => {
-    if (user.is_exec_board && user.exec_board_role) {
-      return `${user.exec_board_role} Dashboard`;
-    }
     switch (user.role) {
       case 'super-admin':
         return 'Super Admin Dashboard';
