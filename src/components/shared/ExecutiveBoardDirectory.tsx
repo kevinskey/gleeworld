@@ -40,15 +40,15 @@ export const ExecutiveBoardDirectory: React.FC<ExecutiveBoardDirectoryProps> = (
   const getServiceRoute = (position: string) => {
     switch (position.toLowerCase()) {
       case 'president':
-        return '/executive-services/president';
+        return '/dashboard';
       case 'vice president':
-        return '/executive-services/vice-president';
+        return '/dashboard';
       case 'secretary':
-        return '/executive-services/secretary';
+        return '/dashboard';
       case 'music director':
-        return '/executive-services/librarian';
+        return '/librarian-dashboard';
       default:
-        return '/executive-services';
+        return '/dashboard';
     }
   };
 
