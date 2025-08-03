@@ -321,10 +321,10 @@ const UserDashboard = React.memo(() => {
 
 
 
-        {/* Show Dashboard Modules for Admin/Executive Features - Always visible for admins */}
+        {/* Show Permissions Panel for Admin Users */}
         {(isAdmin || hasExecBoardPerms) && (
           <div className="w-full mb-8">
-            <DashboardModulesSection />
+            <PermissionsPanel />
           </div>
         )}
           </div>
