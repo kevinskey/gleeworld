@@ -21,12 +21,18 @@ export const useSheetMusicUrl = (pdfUrl: string | null) => {
       setError(null);
 
       try {
-        // Extract bucket and path from the URL
+        // Check if this is a public storage URL (no signed URL needed)
+        if (pdfUrl.includes('/storage/v1/object/public/')) {
+          setSignedUrl(pdfUrl);
+          return;
+        }
+
+        // Extract bucket and path from the URL for private buckets
         const urlParts = pdfUrl.split('/');
         const bucketIndex = urlParts.findIndex(part => part === 'sheet-music');
         
         if (bucketIndex === -1) {
-          // If it's not a sheet-music URL, return as-is (might be a public URL)
+          // If it's not a private sheet-music URL, return as-is
           setSignedUrl(pdfUrl);
           return;
         }
