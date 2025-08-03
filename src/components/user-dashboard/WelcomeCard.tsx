@@ -80,7 +80,15 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
   const hasBackgroundImage = Boolean(welcomeCardSetting?.image_url && !imageError);
 
   return (
-    <div className="relative rounded-2xl sm:rounded-3xl shadow-lg h-[40vh] flex items-center">
+    <div 
+      className="relative rounded-2xl sm:rounded-3xl shadow-lg h-[40vh] flex items-center"
+      style={{
+        backgroundImage: 'url("/src/assets/campus-ground-level-wide-mobile.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
       {/* Background Image Layer */}
       <div 
         className="absolute inset-0 rounded-2xl sm:rounded-3xl"
