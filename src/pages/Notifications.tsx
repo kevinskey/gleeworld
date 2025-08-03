@@ -79,24 +79,40 @@ export default function Notifications() {
   return (
     <UniversalLayout>
       <div className="container mx-auto px-4 py-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Notifications</h1>
-          <p className="text-gray-600 mb-4">Stay updated with your latest notifications including SMS messages</p>
-          <div className="flex items-center gap-2">
-            {unreadCount > 0 && (
-              <Badge variant="destructive">
-                {unreadCount} unread
-              </Badge>
-            )}
-            {unreadCount > 0 && (
-              <Button 
-                onClick={markAllAsRead} 
-                variant="outline"
-              >
-                <Mail className="h-4 w-4 mr-2" />
-                Mark All Read
-              </Button>
-            )}
+        {/* Enhanced Header */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-100 p-3 rounded-full">
+                <Bell className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-1">Notifications</h1>
+                <p className="text-gray-600">Stay updated with your latest notifications including SMS messages</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {unreadCount > 0 && (
+                <>
+                  <Badge variant="destructive" className="text-sm px-3 py-1">
+                    {unreadCount} unread
+                  </Badge>
+                  <Button 
+                    onClick={markAllAsRead} 
+                    variant="outline"
+                    className="bg-white hover:bg-gray-50"
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    Mark All Read
+                  </Button>
+                </>
+              )}
+              {unreadCount === 0 && (
+                <Badge variant="secondary" className="text-sm px-3 py-1">
+                  All caught up!
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
 
