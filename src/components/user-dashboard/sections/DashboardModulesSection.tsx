@@ -189,7 +189,8 @@ export const DashboardModulesSection = () => {
         { name: "System Settings", description: "Global settings", icon: Settings, route: "/settings" },
         { name: "Hero Management", description: "Manage hero content", icon: Star, route: "/hero-management", requiresAdmin: true },
         { name: "YouTube Management", description: "Manage video content", icon: Camera, route: "/youtube-management", requiresAdmin: true },
-        { name: "Spotlight Management", description: "Feature highlights", icon: Star, route: "/spotlight-management", requiresAdmin: true }
+        { name: "Spotlight Management", description: "Feature highlights", icon: Star, route: "/spotlight-management", requiresAdmin: true },
+        { name: "Permissions Panel", description: "Advanced permissions control", icon: ShieldCheck, route: "/dashboard?module=permissions-panel", requiresAdmin: true }
       ]
     },
     {

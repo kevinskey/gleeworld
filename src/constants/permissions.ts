@@ -142,6 +142,11 @@ export const DASHBOARD_MODULES = {
     description: 'Manage username-based module permissions',
     permission: 'manage_username_permissions' as Permission,
   },
+  permissions_panel: {
+    name: 'Permissions Panel',
+    description: 'Advanced dashboard module permissions control',
+    permission: 'manage_username_permissions' as Permission,
+  },
   tour_planner: {
     name: 'Tour Planner',
     description: 'Plan and manage tours, cities, and tasks',

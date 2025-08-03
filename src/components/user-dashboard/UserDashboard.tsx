@@ -8,6 +8,7 @@ import { DashboardSettings } from "@/components/admin/DashboardSettings";
 import { YouTubeManagement } from "@/components/admin/YouTubeManagement";
 import { UsernamePermissionsManager } from "@/components/admin/UsernamePermissionsManager";
 import { SpotlightManagement } from "@/components/admin/spotlight/SpotlightManagement";
+import { PermissionsPanel } from "@/components/admin/PermissionsPanel";
 import { WelcomeCard } from "./WelcomeCard";
 import { QuickActionsSection } from "./sections/QuickActionsSection";
 import { GleeClubSpotlightSection } from "./sections/GleeClubSpotlightSection";
@@ -126,6 +127,8 @@ const UserDashboard = React.memo(() => {
             return <UsernamePermissionsManager />;
           case 'spotlight-management':
             return <SpotlightManagement />;
+          case 'permissions-panel':
+            return <PermissionsPanel />;
           default:
             return (
               <Card>
