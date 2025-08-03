@@ -721,6 +721,41 @@ const Profile = () => {
             </CardContent>
           </Card>
 
+          {/* Voice Part/Section Information */}
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-card-foreground">
+                <Music className="h-5 w-5" />
+                Voice Part/Section
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div>
+                <Label htmlFor="voice_part">Voice Part</Label>
+                <Select 
+                  value={watch("voice_part") || ""} 
+                  onValueChange={(value) => setValue("voice_part", value as any)}
+                  disabled={!isEditing}
+                >
+                  <SelectTrigger className="bg-background border-border text-foreground">
+                    <SelectValue placeholder="Select your voice part" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border-border z-50">
+                    <SelectItem value="" className="text-foreground hover:bg-muted">None</SelectItem>
+                    <SelectItem value="S1" className="text-foreground hover:bg-muted">Soprano 1 (S1)</SelectItem>
+                    <SelectItem value="S2" className="text-foreground hover:bg-muted">Soprano 2 (S2)</SelectItem>
+                    <SelectItem value="A1" className="text-foreground hover:bg-muted">Alto 1 (A1)</SelectItem>
+                    <SelectItem value="A2" className="text-foreground hover:bg-muted">Alto 2 (A2)</SelectItem>
+                    <SelectItem value="T1" className="text-foreground hover:bg-muted">Tenor 1 (T1)</SelectItem>
+                    <SelectItem value="T2" className="text-foreground hover:bg-muted">Tenor 2 (T2)</SelectItem>
+                    <SelectItem value="B1" className="text-foreground hover:bg-muted">Bass 1 (B1)</SelectItem>
+                    <SelectItem value="B2" className="text-foreground hover:bg-muted">Bass 2 (B2)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Academic Information */}
           {shouldShowField('academic') && (
             <Card className="bg-card border-border">
@@ -974,40 +1009,19 @@ const Profile = () => {
           <Card className="bg-card border-border">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-card-foreground">
-                <Music className="h-5 w-5" />
+                <Music2 className="h-5 w-5" />
                 Musical Information
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="voice_part">Voice Part</Label>
-                  <Select
-                    value={watch("voice_part") || ""}
-                    onValueChange={(value) => setValue("voice_part", value as any)}
-                    disabled={!isEditing}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select voice part" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {voiceParts.map((part) => (
-                        <SelectItem key={part.value} value={part.value}>
-                          {part.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-center space-x-2 mt-6">
-                  <Checkbox
-                    id="can_dance"
-                    checked={canDance}
-                    onCheckedChange={(checked) => setValue("can_dance", checked as boolean)}
-                    disabled={!isEditing}
-                  />
-                  <Label htmlFor="can_dance">Can Dance</Label>
-                </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="can_dance"
+                  checked={canDance}
+                  onCheckedChange={(checked) => setValue("can_dance", checked as boolean)}
+                  disabled={!isEditing}
+                />
+                <Label htmlFor="can_dance">Can Dance</Label>
               </div>
 
               <div>
