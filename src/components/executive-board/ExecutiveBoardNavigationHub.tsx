@@ -20,7 +20,8 @@ import {
   Music2,
   UserCheck,
   Shield,
-  Settings
+  Settings,
+  ArrowLeft
 } from 'lucide-react';
 
 export type ExecutivePosition = 
@@ -285,6 +286,16 @@ export const ExecutiveBoardNavigationHub = () => {
     navigate(path);
   };
 
+  const handleBackToDashboard = () => {
+    if (isAdmin) {
+      navigate('/dashboard');
+    } else if (userExecutiveRole) {
+      navigate('/executive-board');
+    } else {
+      navigate('/dashboard');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -299,9 +310,15 @@ export const ExecutiveBoardNavigationHub = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border">
-        <div className="flex items-center gap-3 mb-3">
-          <PositionIcon className="h-8 w-8 text-primary" />
-          <h1 className="text-2xl font-bold">Executive Board Navigation Hub</h1>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <PositionIcon className="h-8 w-8 text-primary" />
+            <h1 className="text-2xl font-bold">Executive Board Navigation Hub</h1>
+          </div>
+          <Button variant="outline" onClick={handleBackToDashboard} className="flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
         </div>
         <p className="text-muted-foreground">
           Select an executive board position to access their dedicated pages and tools
