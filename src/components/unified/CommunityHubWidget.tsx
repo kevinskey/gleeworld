@@ -898,9 +898,9 @@ export const CommunityHubWidget = () => {
           <Calendar className="h-4 w-4 text-primary" />
           <h3 className="font-medium text-sm">Calendar</h3>
         </div>
-        <div className="h-[300px] overflow-hidden">
+        <ScrollArea className="h-[300px]">
           <PublicCalendarViews />
-        </div>
+        </ScrollArea>
         <div className="p-3 border-t">
           <div className="flex gap-2">
             <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/calendar')}>
