@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { NotificationsSection } from "./NotificationsSection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -488,9 +489,9 @@ export const CommunityHubWidget = () => {
             <Book className="h-3 w-3 mr-1" />
             Wellness
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="text-xs">
+          <TabsTrigger value="notifications" className="text-xs" data-value="notifications">
             <Bell className="h-3 w-3 mr-1" />
-            Notifications {unreadNotificationsCount > 0 && `(${unreadNotificationsCount})`}
+            Notifications
           </TabsTrigger>
         </TabsList>
 
@@ -818,73 +819,7 @@ export const CommunityHubWidget = () => {
 
         {/* Notifications Tab */}
         <TabsContent value="notifications" className="space-y-3">
-          {notificationsLoading ? (
-            <div className="flex justify-center p-4">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-            </div>
-          ) : notifications.length > 0 ? (
-            <ScrollArea className="h-[300px]">
-              <div className="space-y-2">
-                {notifications.map((notification) => {
-                  const CategoryIcon = getCategoryIcon(notification.category || '');
-                  return (
-                    <div
-                      key={notification.id}
-                      className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                        notification.is_read ? 'bg-background' : 'bg-blue-50 hover:bg-blue-100'
-                      }`}
-                      onClick={() => markNotificationAsRead(notification.id)}
-                    >
-                      <div className="flex items-start gap-3">
-                        <CategoryIcon className={`h-4 w-4 mt-0.5 ${getCategoryColor(notification.category || '')}`} />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between mb-1">
-                            <h4 className="font-medium text-sm leading-tight">{notification.title}</h4>
-                            <div className="flex items-center gap-1 flex-shrink-0">
-                              <Badge variant={getPriorityColor(notification.priority)} className="text-xs h-4 px-1">
-                                {notification.priority}
-                              </Badge>
-                              {!notification.is_read && (
-                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                              )}
-                            </div>
-                          </div>
-                          <p className="text-xs text-muted-foreground line-clamp-2">
-                            {notification.message}
-                          </p>
-                          <div className="flex items-center justify-between mt-2">
-                            <Badge variant="outline" className="text-xs h-4 px-1">
-                              {notification.category}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {format(new Date(notification.created_at), 'MMM d, h:mm a')}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </ScrollArea>
-          ) : (
-            <div className="text-center p-4">
-              <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-xs text-muted-foreground">No notifications</p>
-            </div>
-          )}
-          
-          {/* View All Notifications Button */}
-          <div className="mt-3 pt-3 border-t">
-            <NotificationCenter 
-              trigger={
-                <Button variant="outline" size="sm" className="w-full text-xs h-8">
-                  <Bell className="h-3 w-3 mr-1" />
-                  Open Notification Center
-                </Button>
-              }
-            />
-          </div>
+          <NotificationsSection />
         </TabsContent>
       </Tabs>
     </div>
@@ -1021,7 +956,7 @@ export const CommunityHubWidget = () => {
   );
 
   return (
-    <Card className="col-span-1 md:col-span-2 lg:col-span-3 overflow-visible relative -mt-8">
+    <Card className="col-span-1 md:col-span-2 lg:col-span-3 overflow-visible relative -mt-8" data-section="community-hub">
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
         <CollapsibleTrigger asChild>
           <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors pb-4 relative z-20">

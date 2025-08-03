@@ -121,7 +121,18 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
       <div 
         className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 cursor-pointer hover:scale-110 transition-transform" 
         onClick={() => {
-          navigate('/notifications');
+          // Open Community Hub notifications tab
+          const communityHub = document.querySelector('[data-section="community-hub"]');
+          if (communityHub) {
+            communityHub.scrollIntoView({ behavior: 'smooth' });
+            // Trigger opening the notifications tab in the Community Hub
+            setTimeout(() => {
+              const notificationsTab = document.querySelector('[data-value="notifications"]') as HTMLButtonElement;
+              if (notificationsTab) {
+                notificationsTab.click();
+              }
+            }, 500);
+          }
         }}
       >
         <BellDot 
