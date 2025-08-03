@@ -33,6 +33,10 @@ import { Shield, Eye, User, Home, X, Crown } from "lucide-react";
 const UserDashboard = React.memo(() => {
   console.log('UserDashboard component starting to render...');
   const [viewMode, setViewMode] = useState<'admin' | 'member'>('admin');
+  
+  // Add sticky scroll behavior for community hub (must be at top level)
+  const { isSticky } = useScrollSticky({ threshold: 120, unstickThreshold: 200 });
+  
   const { user } = useAuth();
   console.log('UserDashboard: User from useAuth:', {
     hasUser: !!user,
@@ -240,9 +244,6 @@ const UserDashboard = React.memo(() => {
 
   // Use the same historic campus background as Executive Board Dashboard
   const backgroundImage = "/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png";
-
-  // Add sticky scroll behavior for community hub
-  const { isSticky } = useScrollSticky({ threshold: 120, unstickThreshold: 200 });
 
   return (
     <div className="min-h-screen relative">
