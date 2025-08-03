@@ -317,14 +317,16 @@ const UserDashboard = React.memo(() => {
           </div>
         </div>
 
-        {/* Show Permissions Panel for Admin Users Only */}
+        {/* Show Permissions Panel for Admin Users in Admin View Only */}
         {(() => {
+          const shouldShow = isAdmin && viewMode === 'admin';
           console.log('UserDashboard: Permissions Panel visibility check:', {
             isAdmin,
-            profile,
-            showingPanel: isAdmin
+            viewMode,
+            shouldShow,
+            profile
           });
-          return isAdmin;
+          return shouldShow;
         })() && (
           <div className="w-full mb-8">
             <Card>
