@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import * as pdfjsLib from 'pdfjs-dist';
+import { useSheetMusicUrl } from '@/hooks/useSheetMusicUrl';
 
 // Set up PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
@@ -33,6 +34,7 @@ export const AnnotationCanvas = ({
   onSave,
   onAnnotationChange 
 }: AnnotationCanvasProps) => {
+  const { signedUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(backgroundImageUrl);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawingCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -50,7 +52,7 @@ export const AnnotationCanvas = ({
 
   // Initialize canvas and load PDF/image
   useEffect(() => {
-    console.log('AnnotationCanvas: Effect triggered', { backgroundImageUrl });
+    console.log('AnnotationCanvas: Effect triggered', { backgroundImageUrl, signedUrl });
     
     if (!canvasRef.current || !drawingCanvasRef.current) {
       console.log('AnnotationCanvas: Canvas refs not ready');
@@ -67,10 +69,13 @@ export const AnnotationCanvas = ({
 
     console.log('AnnotationCanvas: Canvas dimensions set to', CANVAS_WIDTH, 'x', CANVAS_HEIGHT);
 
-    if (backgroundImageUrl) {
-      console.log('AnnotationCanvas: Loading background:', backgroundImageUrl);
+    if (signedUrl && !urlLoading && !urlError) {
+      console.log('AnnotationCanvas: Loading background:', signedUrl);
       loadBackground();
-    } else {
+    } else if (urlError) {
+      console.error('AnnotationCanvas: Error with signed URL:', urlError);
+      toast.error(`Failed to load PDF: ${urlError}`);
+    } else if (!backgroundImageUrl) {
       console.log('AnnotationCanvas: No background URL provided');
     }
 
@@ -85,13 +90,13 @@ export const AnnotationCanvas = ({
         console.error('Error loading initial annotations:', error);
       }
     }
-  }, [backgroundImageUrl]);
+  }, [signedUrl, urlLoading, urlError, initialAnnotations]);
 
   const loadBackground = async () => {
-    console.log('loadBackground called with URL:', backgroundImageUrl);
+    console.log('loadBackground called with signedUrl:', signedUrl);
     
-    if (!backgroundImageUrl || !canvasRef.current) {
-      console.log('loadBackground: No URL or canvas ref');
+    if (!signedUrl || !canvasRef.current) {
+      console.log('loadBackground: No signedUrl or canvas ref');
       return;
     }
 
@@ -104,12 +109,12 @@ export const AnnotationCanvas = ({
     }
 
     try {
-      console.log('loadBackground: Processing URL:', backgroundImageUrl);
+      console.log('loadBackground: Processing signedUrl:', signedUrl);
       
-      if (backgroundImageUrl.toLowerCase().includes('.pdf')) {
+      if (backgroundImageUrl && backgroundImageUrl.toLowerCase().includes('.pdf')) {
         console.log('loadBackground: Detected PDF file, loading with PDF.js');
         // Load PDF and convert first page to image
-        const pdf = await pdfjsLib.getDocument(backgroundImageUrl).promise;
+        const pdf = await pdfjsLib.getDocument(signedUrl).promise;
         console.log('loadBackground: PDF loaded successfully');
         
         const page = await pdf.getPage(1);
@@ -148,7 +153,7 @@ export const AnnotationCanvas = ({
         img.onerror = (error) => {
           console.error('loadBackground: Image failed to load:', error);
         };
-        img.src = backgroundImageUrl;
+        img.src = signedUrl;
       }
     } catch (error) {
       console.error('Error loading background:', error);
@@ -462,10 +467,16 @@ export const AnnotationCanvas = ({
       {/* Canvas */}
       <Card>
         <CardContent className="p-4">
-          {pdfLoading && (
+          {(urlLoading || pdfLoading) && (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin mr-2" />
-              <span>Loading sheet music...</span>
+              <span>{urlLoading ? "Preparing PDF..." : "Loading sheet music..."}</span>
+            </div>
+          )}
+          
+          {urlError && (
+            <div className="flex items-center justify-center py-8 text-destructive">
+              <span>Error loading PDF: {urlError}</span>
             </div>
           )}
           
