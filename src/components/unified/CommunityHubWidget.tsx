@@ -724,9 +724,9 @@ export const CommunityHubWidget = () => {
                     </p>
                   )}
                   
-                  <p className="text-xs text-gray-500">
-                    {format(new Date(latestReflection.created_at), "MMMM d, yyyy")}
-                  </p>
+                   <p className="text-xs text-gray-500">
+                     {format(new Date(latestReflection.shared_at || ''), "MMMM d, yyyy")}
+                   </p>
                 </div>
               </div>
             ) : reflectionsLoading ? (
