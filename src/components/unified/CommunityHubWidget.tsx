@@ -1025,22 +1025,24 @@ export const CommunityHubWidget = () => {
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
         <CollapsibleTrigger asChild>
           <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors pb-4 relative z-20">
+            <div className="flex justify-end mb-2">
+              <div className="flex gap-1">
+                {unreadNotificationsCount > 0 && (
+                  <Badge variant="destructive" className="text-xs h-5 px-2">
+                    {unreadNotificationsCount}
+                  </Badge>
+                )}
+                {sharedReflections.length > 0 && (
+                  <Badge variant="outline" className="text-xs h-5 px-2">
+                    New
+                  </Badge>
+                )}
+              </div>
+            </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Heart className="h-5 w-5 text-red-500" />
                 <CardTitle className="text-lg">Community Hub</CardTitle>
-                <div className="flex gap-1">
-                  {unreadNotificationsCount > 0 && (
-                    <Badge variant="destructive" className="text-xs h-5 px-2">
-                      {unreadNotificationsCount}
-                    </Badge>
-                  )}
-                  {sharedReflections.length > 0 && (
-                    <Badge variant="outline" className="text-xs h-5 px-2">
-                      New
-                    </Badge>
-                  )}
-                </div>
               </div>
               {isMobile && (
                 <div className="flex items-center">
