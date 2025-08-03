@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Clock, Play, Pause, Music, Disc } from 'lucide-react';
 import { useMusic } from '@/hooks/useMusic';
+import { Timeline24Hour } from './Timeline24Hour';
 
 interface TimeSlot {
   id: string;
@@ -184,10 +185,13 @@ export const DragDropTimeline = ({ onTrackPlay, currentTrack, isPlaying, onGetNe
       {/* Timeline - Drop Zone */}
       <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Radio Timeline
-            <Badge variant="secondary">Live Schedule</Badge>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Radio Timeline
+              <Badge variant="secondary">Live Schedule</Badge>
+            </div>
+            <Timeline24Hour timeSlots={timeSlots} />
           </CardTitle>
         </CardHeader>
         <CardContent>
