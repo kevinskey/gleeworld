@@ -179,7 +179,10 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     <DropdownMenuSeparator />
                     
                     <DropdownMenuItem 
-                      onClick={() => navigate('/')}
+                      onClick={() => {
+                        console.log('Public View clicked - navigating to /');
+                        navigate('/');
+                      }}
                       className="cursor-pointer"
                     >
                       <Globe className="mr-2 h-4 w-4" />
