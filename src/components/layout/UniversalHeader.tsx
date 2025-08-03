@@ -15,7 +15,7 @@ import { DashboardSwitcher } from "@/components/navigation/DashboardSwitcher";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { HeaderClock } from "@/components/ui/header-clock";
-import { HeaderMusicPlayer } from "@/components/music/HeaderMusicPlayer";
+
 
 interface UniversalHeaderProps {
   viewMode?: 'admin' | 'member';
@@ -29,7 +29,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
   const location = useLocation();
   const { userProfile } = useUserProfile(user);
   const { pageName } = usePageTitle();
-  const [musicPlayerExpanded, setMusicPlayerExpanded] = useState(false);
+  
   
   // Check if user has PR access (PR coordinator or admin)
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
@@ -61,9 +61,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
 
   return (
     <>
-      {/* Only show header if music player is not expanded on mobile */}
-      {!(user && isMobile && musicPlayerExpanded) && (
-        <header className="bg-gradient-to-r from-white/10 via-white/5 to-white/10 backdrop-blur-lg border-b border-white/30 sticky top-0 z-[100] shadow-xl">
+      <header className="bg-gradient-to-r from-white/10 via-white/5 to-white/10 backdrop-blur-lg border-b border-white/30 sticky top-0 z-[100] shadow-xl">
           <div className="container mx-auto px-2 sm:px-4 lg:px-6">
             <div className="flex items-center justify-between min-h-10 sm:min-h-14 py-4 sm:py-5">
           {/* Logo and Navigation */}
@@ -88,19 +86,6 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             </EnhancedTooltip>
           </div>
 
-          {/* Center area with music player for logged-in users on desktop only */}
-          <div className="hidden md:flex items-center justify-center flex-1">
-            {user && (
-              <>
-                {console.log('UniversalHeader: User logged in, rendering HeaderMusicPlayer')}
-                <HeaderMusicPlayer 
-                  className="max-w-md" 
-                  isExpanded={musicPlayerExpanded}
-                  onToggleExpanded={setMusicPlayerExpanded}
-                />
-              </>
-            )}
-          </div>
 
           {/* Mobile spacer */}
           <div className="flex-1 md:hidden"></div>
@@ -109,14 +94,6 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
             {user && (
               <>
-                {/* Mobile Music Player - positioned on the right */}
-                <div className="md:hidden">
-                  <HeaderMusicPlayer 
-                    className="" 
-                    isExpanded={musicPlayerExpanded}
-                    onToggleExpanded={setMusicPlayerExpanded}
-                  />
-                </div>
                 {/* Dashboard Dropdown for logged-in users */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -290,15 +267,6 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             </div>
           </div>
         </header>
-      )}
-      
-      {/* Mobile expanded music player renders as full header replacement */}
-      {user && isMobile && musicPlayerExpanded && (
-        <HeaderMusicPlayer 
-          isExpanded={true}
-          onToggleExpanded={setMusicPlayerExpanded}
-        />
-      )}
     </>
   );
 };
