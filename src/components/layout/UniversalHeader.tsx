@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -163,6 +163,16 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     >
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       Go to Dashboard
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuSeparator />
+                    
+                    <DropdownMenuItem 
+                      onClick={() => navigate('/')}
+                      className="cursor-pointer"
+                    >
+                      <Globe className="mr-2 h-4 w-4" />
+                      Public View
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
