@@ -545,3 +545,14 @@
     font-size: 4rem !important;
   }
 }
+
+/* Mobile background cropping for landing page */
+.mobile-bg-cropped {
+  background-position: center -300px;
+}
+
+@media (min-width: 768px) {
+  .mobile-bg-cropped {
+    background-position: center center;
+  }
+}
