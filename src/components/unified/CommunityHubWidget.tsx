@@ -494,7 +494,7 @@ export const CommunityHubWidget = () => {
         <TabsList className="grid w-full grid-cols-3 bg-amber-100 border border-amber-200 rounded-lg shadow-sm">
           <TabsTrigger value="buckets" className="text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <StickyNote className="h-3 w-3 mr-1 text-pink-600" />
-            Love Notes
+            Buckets of Love
           </TabsTrigger>
           <TabsTrigger value="reflections" className="text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <Book className="h-3 w-3 mr-1 text-purple-600" />
@@ -756,7 +756,7 @@ export const CommunityHubWidget = () => {
                   <div className="col-span-full text-center p-8">
                     <Heart className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                     <p className="text-gray-500 text-sm">
-                      {activeVoiceFilter === 'all' ? 'No love notes yet. Be the first to spread some love!' : `No love notes for ${activeVoiceFilter} yet.`}
+                      {activeVoiceFilter === 'all' ? "No buckets of love yet. Be the first to spread some love!" : `No buckets of love for ${activeVoiceFilter} yet.`}
                     </p>
                   </div>
                 )}
