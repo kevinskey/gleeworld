@@ -186,14 +186,14 @@ export const PRCoordinatorHub = () => {
       </div>
 
       <Tabs defaultValue="gallery" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="gallery">Gallery</TabsTrigger>
-          <TabsTrigger value="data-manager">Data Manager</TabsTrigger>
-          <TabsTrigger value="export">Export</TabsTrigger>
-          <TabsTrigger value="press-kits">Press Kits</TabsTrigger>
-          <TabsTrigger value="ai-templates">AI Templates</TabsTrigger>
-          <TabsTrigger value="tags">Tags</TabsTrigger>
-          <TabsTrigger value="bulk">Bulk</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-1">
+          <TabsTrigger value="gallery" className="text-xs md:text-sm">Gallery</TabsTrigger>
+          <TabsTrigger value="data-manager" className="text-xs md:text-sm">Data</TabsTrigger>
+          <TabsTrigger value="export" className="text-xs md:text-sm">Export</TabsTrigger>
+          <TabsTrigger value="press-kits" className="text-xs md:text-sm">Press Kits</TabsTrigger>
+          <TabsTrigger value="ai-templates" className="text-xs md:text-sm">AI Templates</TabsTrigger>
+          <TabsTrigger value="tags" className="text-xs md:text-sm">Tags</TabsTrigger>
+          <TabsTrigger value="bulk" className="text-xs md:text-sm">Bulk</TabsTrigger>
         </TabsList>
 
         <TabsContent value="gallery" className="space-y-4">

@@ -264,8 +264,8 @@ export const PRDataManager = () => {
       
       <CardContent>
         {/* Search and Filters */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="relative flex-1">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+          <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search by filename, caption, or username..."
@@ -276,7 +276,7 @@ export const PRDataManager = () => {
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
                 <Filter className="h-4 w-4 mr-2" />
                 Filter
               </Button>
@@ -292,54 +292,55 @@ export const PRDataManager = () => {
 
         {/* Data Table */}
         <div className="border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
-                  <input
-                    type="checkbox"
-                    checked={selectedRows.length === filteredAndSortedImages.length && filteredAndSortedImages.length > 0}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                    className="rounded"
-                  />
-                </TableHead>
-                <TableHead>Preview</TableHead>
-                <TableHead 
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleSort('filename')}
-                >
-                  <div className="flex items-center gap-2">
-                    Filename {getSortIcon('filename')}
-                  </div>
-                </TableHead>
-                <TableHead>Metadata</TableHead>
-                <TableHead 
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleSort('taken_at')}
-                >
-                  <div className="flex items-center gap-2">
-                    Captured {getSortIcon('taken_at')}
-                  </div>
-                </TableHead>
-                <TableHead 
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleSort('uploaded_at')}
-                >
-                  <div className="flex items-center gap-2">
-                    Uploaded {getSortIcon('uploaded_at')}
-                  </div>
-                </TableHead>
-                <TableHead 
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleSort('file_size')}
-                >
-                  <div className="flex items-center gap-2">
-                    Size {getSortIcon('file_size')}
-                  </div>
-                </TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.length === filteredAndSortedImages.length && filteredAndSortedImages.length > 0}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                      className="rounded"
+                    />
+                  </TableHead>
+                  <TableHead className="min-w-[80px]">Preview</TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 min-w-[150px]"
+                    onClick={() => handleSort('filename')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Filename {getSortIcon('filename')}
+                    </div>
+                  </TableHead>
+                  <TableHead className="min-w-[120px] hidden md:table-cell">Metadata</TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 min-w-[120px] hidden lg:table-cell"
+                    onClick={() => handleSort('taken_at')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Captured {getSortIcon('taken_at')}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 min-w-[120px]"
+                    onClick={() => handleSort('uploaded_at')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Uploaded {getSortIcon('uploaded_at')}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 min-w-[80px] hidden md:table-cell"
+                    onClick={() => handleSort('file_size')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Size {getSortIcon('file_size')}
+                    </div>
+                  </TableHead>
+                  <TableHead className="min-w-[80px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
             <TableBody>
               {filteredAndSortedImages.map((image) => {
                 const { location, photographerName, capturedTime } = extractMetadata(image);
@@ -368,7 +369,7 @@ export const PRDataManager = () => {
                         <div className="text-xs text-muted-foreground">{image.mime_type}</div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <div className="space-y-1">
                         <div className="flex items-center gap-1 text-xs">
                           <User className="h-3 w-3" />
@@ -384,7 +385,7 @@ export const PRDataManager = () => {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       <div className="text-xs">
                         {capturedTime || (image.taken_at ? formatDate(image.taken_at) : 'Unknown')}
                       </div>
@@ -394,7 +395,7 @@ export const PRDataManager = () => {
                         {formatDate(image.uploaded_at)}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <div className="text-xs">
                         {formatFileSize(image.file_size)}
                       </div>
@@ -423,7 +424,8 @@ export const PRDataManager = () => {
                 );
               })}
             </TableBody>
-          </Table>
+            </Table>
+          </div>
           
           {filteredAndSortedImages.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">

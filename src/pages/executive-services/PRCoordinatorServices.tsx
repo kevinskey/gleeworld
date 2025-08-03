@@ -137,11 +137,11 @@ const PRCoordinatorServices = () => {
 
         {/* Main Services */}
         <Tabs defaultValue="social" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="social">Social Media</TabsTrigger>
-            <TabsTrigger value="promotion">Event Promotion</TabsTrigger>
-            <TabsTrigger value="media">Media Relations</TabsTrigger>
-            <TabsTrigger value="contact">Contact PR</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1">
+            <TabsTrigger value="social" className="text-xs md:text-sm">Social Media</TabsTrigger>
+            <TabsTrigger value="promotion" className="text-xs md:text-sm">Event Promotion</TabsTrigger>
+            <TabsTrigger value="media" className="text-xs md:text-sm">Media Relations</TabsTrigger>
+            <TabsTrigger value="contact" className="text-xs md:text-sm">Contact PR</TabsTrigger>
           </TabsList>
 
           <TabsContent value="social" className="space-y-6">

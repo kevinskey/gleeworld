@@ -158,8 +158,8 @@ export const PRTagManager = ({ tags, onTagsUpdate }: PRTagManagerProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2">
               <Label htmlFor="tagName">Tag Name</Label>
               <Input
                 id="tagName"
@@ -171,7 +171,7 @@ export const PRTagManager = ({ tags, onTagsUpdate }: PRTagManagerProps) => {
             
             <div>
               <Label>Color</Label>
-              <div className="flex gap-2 mt-2">
+              <div className="flex flex-wrap gap-2 mt-2">
                 {DEFAULT_COLORS.map((color) => (
                   <button
                     key={color}
@@ -236,7 +236,7 @@ export const PRTagManager = ({ tags, onTagsUpdate }: PRTagManagerProps) => {
                         className="max-w-xs"
                       />
                       
-                      <div className="flex gap-1">
+                      <div className="flex flex-wrap gap-1">
                         {DEFAULT_COLORS.map((color) => (
                           <button
                             key={color}
