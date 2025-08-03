@@ -117,23 +117,25 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
         />
       </div>
       
-      {/* Notification Music Note */}
-      {dashboardData?.unread_notifications > 0 && (
-        <div 
-          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 cursor-pointer hover:scale-110 transition-transform" 
-          onClick={() => {
-            // Scroll to notifications section on the current page
-            const notificationsElement = document.querySelector('[data-section="notifications"]');
-            if (notificationsElement) {
-              notificationsElement.scrollIntoView({ behavior: 'smooth' });
-            }
-          }}
-        >
-          <BellDot 
-            className="w-6 h-6 sm:w-8 sm:h-8 text-blue-200 drop-shadow-lg animate-pulse" 
-          />
-        </div>
-      )}
+      {/* Notification Bell */}
+      <div 
+        className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 cursor-pointer hover:scale-110 transition-transform" 
+        onClick={() => {
+          // Open notifications widget
+          const notificationsElement = document.querySelector('[data-section="notifications"]');
+          if (notificationsElement) {
+            notificationsElement.scrollIntoView({ behavior: 'smooth' });
+          }
+        }}
+      >
+        <BellDot 
+          className={`w-6 h-6 sm:w-8 sm:h-8 drop-shadow-lg transition-colors ${
+            dashboardData?.unread_notifications > 0 
+              ? 'text-red-400 animate-pulse' 
+              : 'text-blue-200'
+          }`}
+        />
+      </div>
     </div>
   );
 };
