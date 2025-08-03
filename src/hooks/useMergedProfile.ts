@@ -214,8 +214,8 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
                      'User';
 
   const firstName = profile?.first_name || 
+                   (profile?.full_name ? profile.full_name.split(' ')[0] : '') ||
                    user?.email?.split('@')[0] || 
-                   displayName.split(' ')[0] || 
                    'User';
 
   return {
