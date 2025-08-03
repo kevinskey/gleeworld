@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { RadioStationHeader } from './RadioStationHeader';
+import { MediaLibraryDialog } from './MediaLibraryDialog';
 import { 
   Play, 
   Pause, 
@@ -34,69 +35,131 @@ interface RadioTrack {
   category: 'performance' | 'announcement' | 'interlude' | 'alumni_story';
 }
 
-interface RadioProgram {
+interface MusicTrack {
   id: string;
-  name: string;
-  description: string;
-  start_time: string;
-  end_time: string;
-  tracks: RadioTrack[];
-  is_active: boolean;
+  title: string;
+  artist: string;
+  album?: string;
+  duration: number;
+  audio_url: string;
+  genre?: string;
+  play_count: number;
+  created_at: string;
+  category?: 'performance' | 'announcement' | 'interlude' | 'alumni_story';
+}
+
+interface AudioArchive {
+  id: string;
+  title: string;
+  artist_info?: string;
+  audio_url: string;
+  duration_seconds?: number;
+  category: string;
+  performance_date?: string;
+  created_at: string;
 }
 
 export const RadioStationPage = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<RadioTrack | null>(null);
-  const [currentProgram, setCurrentProgram] = useState<RadioProgram | null>(null);
+  const [playlist, setPlaylist] = useState<RadioTrack[]>([]);
   const [upcomingTracks, setUpcomingTracks] = useState<RadioTrack[]>([]);
   const [volume, setVolume] = useState(70);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [showMediaLibrary, setShowMediaLibrary] = useState(false);
+  const [radioStats, setRadioStats] = useState({
+    listeners: 127,
+    episodes: 0,
+    subscribers: 892
+  });
   const { toast } = useToast();
 
-  // Mock data - in real implementation, this would come from database
-  const mockProgram: RadioProgram = {
-    id: '1',
-    name: 'Glee World 101 - Evening Harmonies',
-    description: 'A curated selection of Spelman Glee Club performances and stories',
-    start_time: '18:00',
-    end_time: '20:00',
-    is_active: true,
-    tracks: [
-      {
-        id: '1',
-        title: 'Lift Every Voice and Sing',
-        artist: 'Spelman College Glee Club',
-        album: 'Spring Concert 2024',
-        duration: 240,
-        audio_url: '/audio/lift-every-voice.mp3',
-        category: 'performance'
-      },
-      {
-        id: '2',
-        title: 'Welcome to Glee World 101',
-        artist: 'Station ID',
-        duration: 30,
-        audio_url: '/audio/station-id.mp3',
-        category: 'announcement'
-      },
-      {
-        id: '3',
-        title: 'Memories from Class of 2010',
-        artist: 'Sarah Johnson',
-        duration: 180,
-        audio_url: '/audio/alumni-story-1.mp3',
-        category: 'alumni_story'
+  useEffect(() => {
+    fetchRadioData();
+  }, []);
+
+  const fetchRadioData = async () => {
+    try {
+      // Fetch current playlist from database - simplified query
+      const { data: playlistData, error: playlistError } = await supabase
+        .from('gw_radio_playlists')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (playlistError) {
+        console.error('Error fetching playlist:', playlistError);
       }
-    ]
+
+      // Fetch radio stats - with explicit typing
+      const { data: episodesData } = await supabase
+        .from('gw_radio_episodes')
+        .select('id') as { data: { id: string }[] | null };
+
+      const { data: statsData } = await supabase
+        .from('gw_radio_stats')
+        .select('*')
+        .order('recorded_at', { ascending: false })
+        .limit(1);
+
+      if (episodesData) {
+        setRadioStats(prev => ({
+          ...prev,
+          episodes: episodesData.length
+        }));
+      }
+
+      if (statsData && statsData.length > 0) {
+        setRadioStats(prev => ({
+          ...prev,
+          listeners: statsData[0].unique_listeners || 127,
+          subscribers: 892 // Keep default value for now
+        }));
+      }
+
+    } catch (error) {
+      console.error('Error fetching radio data:', error);
+    }
   };
 
-  useEffect(() => {
-    // Initialize with mock data
-    setCurrentProgram(mockProgram);
-    setCurrentTrack(mockProgram.tracks[0]);
-    setUpcomingTracks(mockProgram.tracks.slice(1));
-  }, []);
+  const handleAddToPlaylist = (track: MusicTrack | AudioArchive) => {
+    // Convert track to RadioTrack format
+    const radioTrack: RadioTrack = {
+      id: track.id,
+      title: track.title,
+      artist: 'artist' in track ? track.artist : track.artist_info || 'Unknown Artist',
+      duration: 'duration' in track ? track.duration : track.duration_seconds || 0,
+      audio_url: track.audio_url,
+      category: (track.category as RadioTrack['category']) || 'performance'
+    };
+
+    setPlaylist(prev => [...prev, radioTrack]);
+    
+    // If no current track, start playing this one
+    if (!currentTrack) {
+      setCurrentTrack(radioTrack);
+      setUpcomingTracks(prev => [...prev, ...playlist.slice(1)]);
+    } else {
+      setUpcomingTracks(prev => [...prev, radioTrack]);
+    }
+  };
+
+  const handlePlayTrack = (track: MusicTrack | AudioArchive) => {
+    const radioTrack: RadioTrack = {
+      id: track.id,
+      title: track.title,
+      artist: 'artist' in track ? track.artist : track.artist_info || 'Unknown Artist',
+      duration: 'duration' in track ? track.duration : track.duration_seconds || 0,
+      audio_url: track.audio_url,
+      category: (track.category as RadioTrack['category']) || 'performance'
+    };
+
+    setCurrentTrack(radioTrack);
+    setIsPlaying(true);
+    setShowMediaLibrary(false);
+  };
 
   const handlePlay = () => {
     setIsPlaying(!isPlaying);
@@ -173,7 +236,17 @@ export const RadioStationPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-brand-50 to-brand-100">
       {/* Radio Station Header */}
-      <RadioStationHeader listenerCount={127} isLive={isPlaying} />
+      <RadioStationHeader listenerCount={radioStats.listeners} isLive={isPlaying} />
+      
+      {/* Media Library Dialog */}
+      <MediaLibraryDialog
+        open={showMediaLibrary}
+        onOpenChange={setShowMediaLibrary}
+        onAddToPlaylist={handleAddToPlaylist}
+        onPlayTrack={handlePlayTrack}
+        isPlaying={isPlaying}
+        currentTrack={currentTrack?.id}
+      />
       
       <div className="max-w-6xl mx-auto p-6 space-y-6">
 
@@ -286,15 +359,16 @@ export const RadioStationPage = () => {
               <CardContent>
                 <ScrollArea className="h-64">
                   <div className="space-y-3">
-                    {mockProgram.tracks.map((track, index) => (
-                      <div
-                        key={track.id}
-                        className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                          currentTrack?.id === track.id 
-                            ? 'bg-brand-50 border-2 border-brand-200' 
-                            : 'bg-muted/50 hover:bg-muted'
-                        }`}
-                      >
+                    {playlist.length > 0 ? (
+                      playlist.map((track, index) => (
+                        <div
+                          key={track.id}
+                          className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                            currentTrack?.id === track.id 
+                              ? 'bg-brand-50 border-2 border-brand-200' 
+                              : 'bg-muted/50 hover:bg-muted'
+                          }`}
+                        >
                         <div className="flex-shrink-0">
                           {getCategoryIcon(track.category)}
                         </div>
@@ -314,8 +388,15 @@ export const RadioStationPage = () => {
                             {formatTime(track.duration)}
                           </p>
                         </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <Music className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-muted-foreground">No tracks in playlist</p>
+                        <p className="text-sm text-muted-foreground/70">Use the Media Library to add tracks</p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </ScrollArea>
               </CardContent>
@@ -334,11 +415,11 @@ export const RadioStationPage = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <Button
-                  onClick={generateRSSFeed}
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                  onClick={() => setShowMediaLibrary(true)}
+                  className="w-full bg-gradient-to-r from-brand-600 to-spelman-blue-dark hover:from-brand-700 hover:to-spelman-blue-dark/90"
                 >
-                  <Rss className="h-4 w-4 mr-2" />
-                  Generate RSS Feed
+                  <Music className="h-4 w-4 mr-2" />
+                  Open Media Library
                 </Button>
                 
                 <Button variant="outline" className="w-full">
@@ -347,8 +428,8 @@ export const RadioStationPage = () => {
                 </Button>
 
                 <Button variant="outline" className="w-full">
-                  <Music className="h-4 w-4 mr-2" />
-                  Media Library
+                  <Rss className="h-4 w-4 mr-2" />
+                  Generate RSS Feed
                 </Button>
               </CardContent>
             </Card>
@@ -365,15 +446,15 @@ export const RadioStationPage = () => {
                 <div className="grid grid-cols-1 gap-3">
                   <div className="bg-brand-50 p-3 rounded-lg">
                     <p className="text-sm text-brand-600 font-medium">Current Listeners</p>
-                    <p className="text-2xl font-bold text-brand-700">127</p>
+                    <p className="text-2xl font-bold text-brand-700">{radioStats.listeners}</p>
                   </div>
                   <div className="bg-spelman-blue-light/20 p-3 rounded-lg">
                     <p className="text-sm text-spelman-blue-dark font-medium">Total Episodes</p>
-                    <p className="text-2xl font-bold text-spelman-blue-dark">45</p>
+                    <p className="text-2xl font-bold text-spelman-blue-dark">{radioStats.episodes}</p>
                   </div>
                   <div className="bg-accent/20 p-3 rounded-lg">
                     <p className="text-sm text-accent-foreground font-medium">RSS Subscribers</p>
-                    <p className="text-2xl font-bold text-accent-foreground">892</p>
+                    <p className="text-2xl font-bold text-accent-foreground">{radioStats.subscribers}</p>
                   </div>
                 </div>
               </CardContent>
