@@ -47,27 +47,39 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           return;
         }
 
-        // Manual join
-        const formattedMembers = membersData?.map(member => {
-          const profile = profilesData?.find(p => p.user_id === member.user_id);
-          return {
-            id: member.id,
-            user_id: member.user_id,
-            position: member.position,
-            full_name: profile?.full_name || profile?.email || 'Unknown',
-            email: profile?.email || ''
-          };
-        }) || [];
-
-        setExecutiveMembers(formattedMembers);
-        
-        // Set first member as default selection
-        if (formattedMembers.length > 0) {
-          setSelectedMember(formattedMembers[0].id);
-          const selectedPosition = EXECUTIVE_POSITIONS.find(pos => pos.value === formattedMembers[0].position);
-          if (selectedPosition) {
-            setActivePosition(selectedPosition);
+        // Create entries for ALL executive positions
+        const allPositions = EXECUTIVE_POSITIONS.map(position => {
+          // Find if there's a member assigned to this position
+          const assignedMember = membersData?.find(member => member.position === position.value);
+          
+          if (assignedMember) {
+            // If member found, get their profile
+            const profile = profilesData?.find(p => p.user_id === assignedMember.user_id);
+            return {
+              id: assignedMember.id,
+              user_id: assignedMember.user_id,
+              position: position.value,
+              full_name: profile?.full_name || profile?.email || 'Unknown Member',
+              email: profile?.email || ''
+            };
+          } else {
+            // If no member assigned, create placeholder
+            return {
+              id: `empty_${position.value}`,
+              user_id: '',
+              position: position.value,
+              full_name: `${position.label} (No member assigned)`,
+              email: ''
+            };
           }
+        });
+
+        setExecutiveMembers(allPositions);
+        
+        // Set first position as default selection
+        if (allPositions.length > 0) {
+          setSelectedMember(allPositions[0].id);
+          setActivePosition(EXECUTIVE_POSITIONS[0]);
         }
       } catch (error) {
         console.error('Error fetching executive members:', error);
