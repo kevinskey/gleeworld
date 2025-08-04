@@ -280,7 +280,7 @@ export const GleeWorldLanding = () => {
       <div 
         className="relative bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url('/lovable-uploads/38fac420-4c8f-4715-82ca-e0bce6e22995.png')`,
+          backgroundImage: `url('/lovable-uploads/511e38ba-8470-44b3-9476-d0f89b3e837d.png')`,
           backgroundSize: '60%',
           backgroundPosition: 'right bottom'
         }}
