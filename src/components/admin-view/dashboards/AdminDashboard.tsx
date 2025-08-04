@@ -32,41 +32,61 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
   useEffect(() => {
     const fetchExecutiveMembers = async () => {
       try {
-        const { data, error } = await supabase
+        // First, let's check if there are any executive board members at all
+        const { data: membersData, error: membersError } = await supabase
           .from('gw_executive_board_members')
-          .select(`
-            id,
-            user_id,
-            position,
-            gw_profiles(
-              full_name,
-              email
-            )
-          `)
+          .select('*')
           .eq('is_active', true);
 
-        if (error) {
-          console.error('Error fetching executive members:', error);
+        console.log('Executive board members:', membersData, membersError);
+
+        // Then get the profiles separately
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('gw_profiles')
+          .select('user_id, full_name, email');
+
+        console.log('Profiles:', profilesData, profilesError);
+
+        if (membersError || profilesError) {
+          console.error('Error fetching data:', { membersError, profilesError });
           return;
         }
 
-        const formattedMembers = data?.map((member: any) => ({
-          id: member.id,
-          user_id: member.user_id,
-          position: member.position,
-          full_name: member.gw_profiles?.full_name || member.gw_profiles?.email || 'Unknown',
-          email: member.gw_profiles?.email || ''
-        })) || [];
+        // Manual join
+        const formattedMembers = membersData?.map(member => {
+          const profile = profilesData?.find(p => p.user_id === member.user_id);
+          return {
+            id: member.id,
+            user_id: member.user_id,
+            position: member.position,
+            full_name: profile?.full_name || profile?.email || 'Unknown',
+            email: profile?.email || ''
+          };
+        }) || [];
+
+        console.log('Formatted members:', formattedMembers);
 
         setExecutiveMembers(formattedMembers);
         
-        // Set first member as default selection
+        // Set first member as default selection, or fallback to first position
         if (formattedMembers.length > 0) {
           setSelectedMember(formattedMembers[0].id);
           const selectedPosition = EXECUTIVE_POSITIONS.find(pos => pos.value === formattedMembers[0].position);
           if (selectedPosition) {
             setActivePosition(selectedPosition);
           }
+        } else {
+          // If no executive members found, create dummy entries for all positions
+          const dummyMembers = EXECUTIVE_POSITIONS.map(position => ({
+            id: position.value,
+            user_id: 'dummy',
+            position: position.value,
+            full_name: `${position.label} (No member assigned)`,
+            email: ''
+          }));
+          setExecutiveMembers(dummyMembers);
+          setSelectedMember(dummyMembers[0].id);
+          setActivePosition(EXECUTIVE_POSITIONS[0]);
         }
       } catch (error) {
         console.error('Error fetching executive members:', error);
