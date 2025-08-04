@@ -10,7 +10,13 @@ import {
   Calendar,
   BarChart,
   UserCog,
-  Music
+  Music,
+  MessageSquare,
+  Mail,
+  Bell,
+  Heart,
+  Edit3,
+  ChevronRight
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
@@ -40,6 +46,7 @@ interface AdminDashboardProps {
 
 export const AdminDashboard = ({ user }: AdminDashboardProps) => {
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedCategory, setSelectedCategory] = useState("user-management");
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -147,143 +154,256 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           </div>
 
           <TabsContent value="overview" className="mt-4 sm:mt-6">
-            <div className="space-y-4 sm:space-y-6">
-              <AdminSummaryStats users={users} loading={loading || logsLoading} activityLogs={activityLogs} />
-              
-              {/* Admin Functions Grid - Responsive */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
-                <div 
-                  className="p-4 sm:p-6 border rounded-lg hover:shadow-md transition-all cursor-pointer touch-manipulation"
-                  onClick={() => setActiveTab("users")}
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 h-[calc(100vh-200px)]">
+              {/* Left Column - Major Categories */}
+              <div className="lg:col-span-1 bg-card rounded-lg border p-4 sm:p-6 overflow-y-auto">
+                <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 text-foreground">
+                  Admin Functions
+                </h2>
+                
+                <div className="space-y-2 sm:space-y-3">
+                  {/* User Management Category */}
+                  <div 
+                    className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
+                      selectedCategory === "user-management" 
+                        ? "bg-primary/10 border-primary/20 border" 
+                        : "bg-muted/50 hover:bg-muted"
+                    }`}
+                    onClick={() => setSelectedCategory("user-management")}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                        <span className="font-medium text-sm sm:text-base">User Management</span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </div>
-                    <h3 className="font-semibold text-sm sm:text-base">User Management</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
+                      Manage users, auditions, profiles, and permissions
+                    </p>
                   </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-3">
-                    Manage user roles, permissions, and access levels
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg sm:text-xl font-bold">{users.length}</span>
-                    <span className="text-xs text-muted-foreground">Total Users</span>
-                  </div>
-                </div>
 
-                <div 
-                  className="p-4 sm:p-6 border rounded-lg hover:shadow-md transition-all cursor-pointer touch-manipulation"
-                  onClick={() => setActiveTab("contracts")}
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                  {/* Communications Category */}
+                  <div 
+                    className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
+                      selectedCategory === "communications" 
+                        ? "bg-primary/10 border-primary/20 border" 
+                        : "bg-muted/50 hover:bg-muted"
+                    }`}
+                    onClick={() => setSelectedCategory("communications")}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                        <span className="font-medium text-sm sm:text-base">Communications</span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </div>
-                    <h3 className="font-semibold text-sm sm:text-base">Contract Management</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
+                      Community hub, notifications, emails, and writing tools
+                    </p>
                   </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-3">
-                    Create, edit, and manage all contracts and templates
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg sm:text-xl font-bold">Active</span>
-                    <span className="text-xs text-muted-foreground">System</span>
-                  </div>
-                </div>
 
-                <div 
-                  className="p-4 sm:p-6 border rounded-lg hover:shadow-md transition-all cursor-pointer touch-manipulation"
-                  onClick={() => setActiveTab("permissions")}
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 bg-purple-100 rounded-lg">
-                      <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                  {/* System Administration Category */}
+                  <div 
+                    className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
+                      selectedCategory === "system-admin" 
+                        ? "bg-primary/10 border-primary/20 border" 
+                        : "bg-muted/50 hover:bg-muted"
+                    }`}
+                    onClick={() => setSelectedCategory("system-admin")}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <Settings className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                        <span className="font-medium text-sm sm:text-base">System Administration</span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </div>
-                    <h3 className="font-semibold text-sm sm:text-base">Executive Permissions</h3>
-                  </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-3">
-                    Assign and manage executive board permissions
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg sm:text-xl font-bold">Board</span>
-                    <span className="text-xs text-muted-foreground">Management</span>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
+                      Calendar, contracts, activity logs, and system settings
+                    </p>
                   </div>
                 </div>
+              </div>
 
-                <div 
-                  className="p-4 sm:p-6 border rounded-lg hover:shadow-md transition-all cursor-pointer touch-manipulation"
-                  onClick={() => setActiveTab("calendar")}
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 bg-orange-100 rounded-lg">
-                      <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
-                    </div>
-                    <h3 className="font-semibold text-sm sm:text-base">Calendar Controls</h3>
-                  </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-3">
-                    Manage calendar settings and user access
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg sm:text-xl font-bold">Live</span>
-                    <span className="text-xs text-muted-foreground">Calendar</span>
-                  </div>
-                </div>
+              {/* Right Column - Subcategories */}
+              <div className="lg:col-span-2 bg-card rounded-lg border p-4 sm:p-6 overflow-y-auto">
+                <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 text-foreground">
+                  {selectedCategory === "user-management" && "User Management Tools"}
+                  {selectedCategory === "communications" && "Communications Hub"}
+                  {selectedCategory === "system-admin" && "System Administration"}
+                </h2>
 
-                <div 
-                  className="p-4 sm:p-6 border rounded-lg hover:shadow-md transition-all cursor-pointer touch-manipulation"
-                  onClick={() => setActiveTab("auditions")}
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 bg-indigo-100 rounded-lg">
-                      <Music className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+                {/* User Management Subcategories */}
+                {selectedCategory === "user-management" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setActiveTab("auditions")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Music className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Auditions</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Manage audition sessions, applications, and evaluations
+                      </p>
                     </div>
-                    <h3 className="font-semibold text-sm sm:text-base">Audition Management</h3>
-                  </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-3">
-                    Manage audition applications, sessions, and evaluations
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg sm:text-xl font-bold">22</span>
-                    <span className="text-xs text-muted-foreground">Applications</span>
-                  </div>
-                </div>
 
-                <div 
-                  className="p-4 sm:p-6 border rounded-lg hover:shadow-md transition-all cursor-pointer touch-manipulation"
-                  onClick={() => setActiveTab("activity")}
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 bg-red-100 rounded-lg">
-                      <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setActiveTab("users")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Profile Management</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        View and edit user profiles and account information
+                      </p>
                     </div>
-                    <h3 className="font-semibold text-sm sm:text-base">Activity Monitoring</h3>
-                  </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-3">
-                    View system logs and user activity
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg sm:text-xl font-bold">{activityLogs.length}</span>
-                    <span className="text-xs text-muted-foreground">Recent Logs</span>
-                  </div>
-                </div>
 
-                <div 
-                  className="p-4 sm:p-6 border rounded-lg hover:shadow-md transition-all cursor-pointer touch-manipulation"
-                  onClick={() => setActiveTab("settings")}
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 bg-gray-100 rounded-lg">
-                      <Settings className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setActiveTab("permissions")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <UserCog className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Exec Board Assignments</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Manage executive board roles and responsibilities
+                      </p>
                     </div>
-                    <h3 className="font-semibold text-sm sm:text-base">System Settings</h3>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setActiveTab("permissions")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">User Permissions</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Control access levels and system permissions
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-3">
-                    Configure system-wide settings and preferences
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg sm:text-xl font-bold">Config</span>
-                    <span className="text-xs text-muted-foreground">Settings</span>
+                )}
+
+                {/* Communications Subcategories */}
+                {selectedCategory === "communications" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Notifications</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Send system-wide notifications to users
+                      </p>
+                    </div>
+
+                    <div className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-pink-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Buckets of Love</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Manage appreciation messages and recognition
+                      </p>
+                    </div>
+
+                    <div className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Email Management</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Send bulk emails and manage communication lists
+                      </p>
+                    </div>
+
+                    <div className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Internal Communications</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Staff messaging and internal announcements
+                      </p>
+                    </div>
+
+                    <div className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Edit3 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Glee Writing Widget</h3>
+                        <Badge variant="secondary" className="text-xs">New</Badge>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Write letters, create templates, and newsletters via Google Docs
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* System Administration Subcategories */}
+                {selectedCategory === "system-admin" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setActiveTab("calendar")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Calendar Management</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Manage events, rehearsals, and scheduling
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setActiveTab("contracts")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Contract Management</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Create and manage contracts and legal documents
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setActiveTab("activity")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Activity Logs</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Monitor system activity and user actions
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setActiveTab("settings")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Settings className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">System Settings</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Configure system preferences and global settings
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </TabsContent>
