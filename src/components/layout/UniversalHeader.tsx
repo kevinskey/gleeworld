@@ -31,14 +31,6 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
   const { userProfile } = useUserProfile(user);
   const { pageName } = usePageTitle();
   
-  console.log('🔍 UniversalHeader - Render Debug:', {
-    user: !!user,
-    userProfile: !!userProfile,
-    location: location.pathname,
-    viewMode,
-    headerShouldShow: true
-  });
-  
   
   // Check if user has PR access (PR coordinator or admin)
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
@@ -70,11 +62,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
 
   return (
     <>
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-[100] shadow-lg">
-        {/* DEBUG: Header visibility test */}
-        <div className="bg-red-500 text-white p-2 text-center font-bold">
-          🔍 HEADER DEBUG: User: {user?.email} | Path: {location.pathname}
-        </div>
+      <header className="bg-gradient-to-r from-white/10 via-white/5 to-white/10 backdrop-blur-lg border-b border-white/30 sticky top-0 z-[100] shadow-xl">
           <div className="container mx-auto px-2 sm:px-4 lg:px-6">
             <div className="flex items-center justify-between min-h-10 sm:min-h-14 py-4 sm:py-5">
           {/* Logo and Navigation */}

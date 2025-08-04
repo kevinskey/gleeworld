@@ -16,7 +16,13 @@ const Auth = () => {
 
   useEffect(() => {
     if (!loading && !profileLoading && user && profile) {
-      console.log('Auth: User detected, checking for redirect path');
+      console.log('🚀 Auth redirect logic - User authenticated');
+      console.log('Profile data:', profile);
+      console.log('isAdmin() result:', isAdmin());
+      console.log('Profile role:', profile.role);
+      console.log('Profile is_admin:', profile.is_admin);
+      console.log('Profile is_super_admin:', profile.is_super_admin);
+      
       const redirectPath = sessionStorage.getItem('redirectAfterAuth');
       if (redirectPath) {
         console.log('Auth: Redirecting to stored path:', redirectPath);
@@ -24,10 +30,18 @@ const Auth = () => {
         navigate(redirectPath, { replace: true });
       } else {
         // Redirect based on user role
-        const defaultPath = isAdmin() ? '/admin' : '/dashboard';
-        console.log('Auth: No stored path, redirecting to:', defaultPath);
+        const isUserAdmin = isAdmin();
+        const defaultPath = isUserAdmin ? '/admin' : '/dashboard';
+        console.log('Auth: No stored path, isUserAdmin:', isUserAdmin, 'redirecting to:', defaultPath);
         navigate(defaultPath, { replace: true });
       }
+    } else {
+      console.log('Auth redirect conditions not met:', {
+        loading,
+        profileLoading,
+        hasUser: !!user,
+        hasProfile: !!profile
+      });
     }
   }, [user, loading, profile, profileLoading, navigate, isAdmin]);
 
