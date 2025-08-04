@@ -337,7 +337,11 @@ export const UserManagement = () => {
                       {/* Quick Actions Dropdown */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -347,21 +351,30 @@ export const UserManagement = () => {
                           
                           {/* Role Changes */}
                           <DropdownMenuItem 
-                            onClick={() => handleQuickRoleChange(user.id, 'member')}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleQuickRoleChange(user.id, 'member');
+                            }}
                             disabled={user.role === 'member'}
                           >
                             <User className="h-4 w-4 mr-2" />
                             Make Member
                           </DropdownMenuItem>
                           <DropdownMenuItem 
-                            onClick={() => handleQuickRoleChange(user.id, 'admin')}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleQuickRoleChange(user.id, 'admin');
+                            }}
                             disabled={user.role === 'admin'}
                           >
                             <Shield className="h-4 w-4 mr-2" />
                             Make Admin
                           </DropdownMenuItem>
                           <DropdownMenuItem 
-                            onClick={() => handleQuickRoleChange(user.id, 'alumna')}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleQuickRoleChange(user.id, 'alumna');
+                            }}
                             disabled={user.role === 'alumna'}
                           >
                             <UserCheck className="h-4 w-4 mr-2" />
@@ -372,7 +385,10 @@ export const UserManagement = () => {
                           
                           {/* Status Toggle */}
                           <DropdownMenuItem 
-                            onClick={() => handleVerificationToggle(user.id, user.verified || false)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleVerificationToggle(user.id, user.verified || false);
+                            }}
                           >
                             {user.verified ? (
                               <>
