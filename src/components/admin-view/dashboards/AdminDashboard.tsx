@@ -265,52 +265,91 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                 </p>
               </div>
 
-              {/* Executive Board Category */}
-              <div 
-                className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
-                  selectedCategory === "executive-board" 
-                    ? "bg-primary/10 border-primary/20 border" 
-                    : "bg-muted/50 hover:bg-muted"
-                }`}
-                onClick={() => {
-                  setSelectedCategory("executive-board");
-                  setSelectedSubcategory(null);
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <UserCog className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
-                    <span className="font-medium text-sm sm:text-base">Executive Board</span>
+              {/* Member Management Category with Expandable Subcategories */}
+              <div>
+                <div 
+                  className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
+                    selectedCategory === "member-management" 
+                      ? "bg-primary/10 border-primary/20 border" 
+                      : "bg-muted/50 hover:bg-muted"
+                  }`}
+                  onClick={() => {
+                    setSelectedCategory("member-management");
+                    setExpandedCategories(prev => 
+                      prev.includes("member-management") 
+                        ? prev.filter(cat => cat !== "member-management")
+                        : [...prev, "member-management"]
+                    );
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-600" />
+                      <span className="font-medium text-sm sm:text-base">Member Management</span>
+                    </div>
+                    <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${
+                      expandedCategories.includes("member-management") ? "rotate-90" : ""
+                    }`} />
                   </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
+                    User management, executive board, auditions, permissions, and statistics
+                  </p>
                 </div>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
-                  Board management, roles, permissions, and system administration
-                </p>
-              </div>
 
-              {/* Member Management Category */}
-              <div 
-                className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
-                  selectedCategory === "member-management" 
-                    ? "bg-primary/10 border-primary/20 border" 
-                    : "bg-muted/50 hover:bg-muted"
-                }`}
-                onClick={() => {
-                  setSelectedCategory("member-management");
-                  setSelectedSubcategory(null);
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-600" />
-                    <span className="font-medium text-sm sm:text-base">Member Management</span>
+                {/* Member Management Subcategories */}
+                {expandedCategories.includes("member-management") && (
+                  <div className="ml-6 mt-2 space-y-2">
+                    <div 
+                      className="p-2 sm:p-3 rounded-lg cursor-pointer transition-all hover:bg-muted/50 border border-border/30"
+                      onClick={() => setSelectedSubcategory("user-management")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Users className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
+                        <span className="text-xs sm:text-sm font-medium">User Management</span>
+                      </div>
+                    </div>
+                    
+                    <div 
+                      className="p-2 sm:p-3 rounded-lg cursor-pointer transition-all hover:bg-muted/50 border border-border/30"
+                      onClick={() => setSelectedSubcategory("executive-board")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <UserCog className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
+                        <span className="text-xs sm:text-sm font-medium">Executive Board</span>
+                      </div>
+                    </div>
+                    
+                    <div 
+                      className="p-2 sm:p-3 rounded-lg cursor-pointer transition-all hover:bg-muted/50 border border-border/30"
+                      onClick={() => setSelectedSubcategory("auditions")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <ScanLine className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600" />
+                        <span className="text-xs sm:text-sm font-medium">Auditions</span>
+                      </div>
+                    </div>
+                    
+                    <div 
+                      className="p-2 sm:p-3 rounded-lg cursor-pointer transition-all hover:bg-muted/50 border border-border/30"
+                      onClick={() => setSelectedSubcategory("permissions")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-red-600" />
+                        <span className="text-xs sm:text-sm font-medium">Permissions</span>
+                      </div>
+                    </div>
+                    
+                    <div 
+                      className="p-2 sm:p-3 rounded-lg cursor-pointer transition-all hover:bg-muted/50 border border-border/30"
+                      onClick={() => setSelectedSubcategory("member-statistics")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <BarChart className="h-3 w-3 sm:h-4 sm:w-4 text-orange-600" />
+                        <span className="text-xs sm:text-sm font-medium">Member Statistics</span>
+                      </div>
+                    </div>
                   </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
-                  Executive board management, auditions, permissions, and statistics
-                </p>
+                )}
               </div>
 
               {/* Libraries Category */}
@@ -392,7 +431,6 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
             <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 text-foreground">
               {selectedCategory === "communications" && "Communications Hub"}
               {selectedCategory === "wardrobe" && "Wardrobe Management"}
-              {selectedCategory === "executive-board" && "Executive Board Tools"}
               {selectedCategory === "member-management" && "Member Management"}
               {selectedCategory === "libraries" && "Libraries Management"}
               {selectedCategory === "finances" && "Finances Management"}
@@ -681,73 +719,209 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                   </div>
                 )}
 
-                {/* Member Management Functions */}
+                {/* Member Management - Show subcategory content or main overview */}
                 {selectedCategory === "member-management" && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div 
-                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200"
-                      onClick={() => setSelectedSubcategory("exec-board-profile-management")}
-                    >
-                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <UserCog className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
-                        <h3 className="font-semibold text-sm sm:text-base">Executive Board Profile Management</h3>
+                  <div className="space-y-4 sm:space-y-6">
+                    {/* User Management Subcategory */}
+                    {selectedSubcategory === "user-management" && (
+                      <div className="space-y-4">
+                        <div className="border-l-4 border-blue-500 pl-4">
+                          <h3 className="text-lg font-semibold text-blue-700 mb-2">User Management</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Manage user accounts, profiles, and member information
+                          </p>
+                        </div>
+                        <UserManagement />
                       </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        Manage executive board member profiles and role assignments
-                      </p>
-                    </div>
+                    )}
 
-                    <div 
-                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => setSelectedSubcategory("general-profile-editor")}
-                    >
-                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <Edit className="h-4 w-4 sm:h-5 sm:w-5 text-teal-600" />
-                        <h3 className="font-semibold text-sm sm:text-base">General Profile Editor</h3>
+                    {/* Executive Board Subcategory */}
+                    {selectedSubcategory === "executive-board" && (
+                      <div className="space-y-4">
+                        <div className="border-l-4 border-green-500 pl-4">
+                          <h3 className="text-lg font-semibold text-green-700 mb-2">Executive Board Tools</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Board management, roles, permissions, and system administration
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                          <Card className="group hover:shadow-md transition-all cursor-pointer border-l-4 border-l-green-500">
+                            <CardHeader className="pb-2 sm:pb-3">
+                              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                                <ArrowUpDown className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                                Primary Tab Management
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-xs sm:text-sm text-muted-foreground">
+                                Configure default tab assignments for each executive board position
+                              </p>
+                            </CardContent>
+                          </Card>
+                          
+                          <Card className="group hover:shadow-md transition-all cursor-pointer border-l-4 border-l-blue-500">
+                            <CardHeader className="pb-2 sm:pb-3">
+                              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                                <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                                Permissions Grid
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-xs sm:text-sm text-muted-foreground">
+                                Manage executive board member permissions and access controls
+                              </p>
+                            </CardContent>
+                          </Card>
+                          
+                          <Card className="group hover:shadow-md transition-all cursor-pointer border-l-4 border-l-purple-500">
+                            <CardHeader className="pb-2 sm:pb-3">
+                              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                                <ClipboardList className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                                Role Assignment
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-xs sm:text-sm text-muted-foreground">
+                                Assign and manage executive board roles and responsibilities
+                              </p>
+                            </CardContent>
+                          </Card>
+                          
+                          <Card className="group hover:shadow-md transition-all cursor-pointer border-l-4 border-l-orange-500">
+                            <CardHeader className="pb-2 sm:pb-3">
+                              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+                                Board Analytics
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-xs sm:text-sm text-muted-foreground">
+                                View executive board activity and performance metrics
+                              </p>
+                            </CardContent>
+                          </Card>
+                        </div>
                       </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        Edit and manage member profiles and personal information
-                      </p>
-                    </div>
+                    )}
 
-                    <div 
-                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => setSelectedSubcategory("audition-forms")}
-                    >
-                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <ClipboardList className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-                        <h3 className="font-semibold text-sm sm:text-base">Audition Forms</h3>
+                    {/* Auditions Subcategory */}
+                    {selectedSubcategory === "auditions" && (
+                      <div className="space-y-4">
+                        <div className="border-l-4 border-purple-500 pl-4">
+                          <h3 className="text-lg font-semibold text-purple-700 mb-2">Auditions Management</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Manage audition processes, applications, and evaluations
+                          </p>
+                        </div>
+                        <AuditionsManagement />
                       </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        Create and manage audition applications and evaluations
-                      </p>
-                    </div>
+                    )}
 
-                    <div 
-                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => setSelectedSubcategory("permissions-module")}
-                    >
-                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
-                        <h3 className="font-semibold text-sm sm:text-base">Permissions Module</h3>
+                    {/* Permissions Subcategory */}
+                    {selectedSubcategory === "permissions" && (
+                      <div className="space-y-4">
+                        <div className="border-l-4 border-red-500 pl-4">
+                          <h3 className="text-lg font-semibold text-red-700 mb-2">Permissions Management</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Configure user permissions and access control settings
+                          </p>
+                        </div>
+                        <PermissionManagement />
                       </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        Manage user roles, permissions, and access controls
-                      </p>
-                    </div>
+                    )}
 
-                    <div 
-                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => setSelectedSubcategory("member-statistics")}
-                    >
-                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
-                        <h3 className="font-semibold text-sm sm:text-base">Member Statistics</h3>
+                    {/* Member Statistics Subcategory */}
+                    {selectedSubcategory === "member-statistics" && (
+                      <div className="space-y-4">
+                        <div className="border-l-4 border-orange-500 pl-4">
+                          <h3 className="text-lg font-semibold text-orange-700 mb-2">Member Statistics</h3>
+                          <p className="text-sm text-muted-foreground">
+                            View member analytics, statistics, and performance data
+                          </p>
+                        </div>
+                        <AdminSummaryStats users={users} loading={loading} activityLogs={activityLogs} />
                       </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        View analytics and statistics about members and activities
-                      </p>
-                    </div>
+                    )}
+
+                    {/* Default Member Management Overview */}
+                    {!selectedSubcategory && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        <Card className="group hover:shadow-md transition-all cursor-pointer border-l-4 border-l-blue-500"
+                              onClick={() => setSelectedSubcategory("user-management")}>
+                          <CardHeader className="pb-2 sm:pb-3">
+                            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                              <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                              User Management
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-xs sm:text-sm text-muted-foreground">
+                              Manage user accounts, profiles, and member information
+                            </p>
+                          </CardContent>
+                        </Card>
+
+                        <Card className="group hover:shadow-md transition-all cursor-pointer border-l-4 border-l-green-500"
+                              onClick={() => setSelectedSubcategory("executive-board")}>
+                          <CardHeader className="pb-2 sm:pb-3">
+                            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                              <UserCog className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                              Executive Board
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-xs sm:text-sm text-muted-foreground">
+                              Board management, roles, permissions, and system administration
+                            </p>
+                          </CardContent>
+                        </Card>
+
+                        <Card className="group hover:shadow-md transition-all cursor-pointer border-l-4 border-l-purple-500"
+                              onClick={() => setSelectedSubcategory("auditions")}>
+                          <CardHeader className="pb-2 sm:pb-3">
+                            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                              <ScanLine className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                              Auditions
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-xs sm:text-sm text-muted-foreground">
+                              Manage audition processes, applications, and evaluations
+                            </p>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card className="group hover:shadow-md transition-all cursor-pointer border-l-4 border-l-red-500"
+                              onClick={() => setSelectedSubcategory("permissions")}>
+                          <CardHeader className="pb-2 sm:pb-3">
+                            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                              <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
+                              Permissions
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-xs sm:text-sm text-muted-foreground">
+                              Configure user permissions and access control settings
+                            </p>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card className="group hover:shadow-md transition-all cursor-pointer border-l-4 border-l-orange-500"
+                              onClick={() => setSelectedSubcategory("member-statistics")}>
+                          <CardHeader className="pb-2 sm:pb-3">
+                            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                              <BarChart className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+                              Member Statistics
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-xs sm:text-sm text-muted-foreground">
+                              View member analytics, statistics, and performance data
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    )}
                   </div>
                 )}
 
