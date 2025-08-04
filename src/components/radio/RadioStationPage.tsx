@@ -20,8 +20,11 @@ import {
   Music,
   Settings,
   Rss,
-  Download
+  Download,
+  ArrowLeft,
+  Home
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -48,6 +51,7 @@ interface Commercial {
 }
 
 export const RadioStationPage = () => {
+  const navigate = useNavigate();
   const getNextTrackRef = useRef<(() => any | null) | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<RadioTrack | null>(null);
@@ -309,6 +313,57 @@ export const RadioStationPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-brand-50 to-brand-100">
       {/* Hidden Audio Element */}
       <audio ref={audioRef} preload="metadata" />
+      
+      {/* Navigation Header */}
+      <div className="bg-white/95 backdrop-blur-sm border-b border-brand-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            {/* Left side - Navigation */}
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2 text-brand-700 hover:text-brand-800 hover:bg-brand-50"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </Button>
+              <div className="h-6 w-px bg-brand-200" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2 text-brand-700 hover:text-brand-800 hover:bg-brand-50"
+              >
+                <Home className="h-4 w-4" />
+                Home
+              </Button>
+            </div>
+            
+            {/* Center - Radio Station Title */}
+            <div className="flex items-center gap-3">
+              <Radio className="h-6 w-6 text-brand-600" />
+              <h1 className="text-xl font-bold text-brand-800 font-playfair">
+                Glee World Radio
+              </h1>
+              {isPlaying && (
+                <Badge className="bg-green-100 text-green-800 animate-pulse">
+                  LIVE
+                </Badge>
+              )}
+            </div>
+            
+            {/* Right side - Stats */}
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+                {radioStats.listeners} listeners
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       
       {/* Radio Station Header */}
       <RadioStationHeader 
