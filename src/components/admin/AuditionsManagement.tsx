@@ -373,7 +373,7 @@ export const AuditionsManagement = () => {
               <SelectValue placeholder="Filter by session" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Sessions</SelectItem>
+              <SelectItem value="all">All Sessions</SelectItem>
               {sessions.map((session) => (
                 <SelectItem key={session.id} value={session.id}>
                   {session.name}
