@@ -54,36 +54,19 @@ export const AdminViewDashboard = () => {
               try {
                 console.log('Making user admin...', user.id, user.email);
                 
-                // First try to update profiles table
+                // Update profiles table (only use existing columns)
                 const { error: profilesError } = await supabase
                   .from('profiles')
                   .upsert({
                     id: user.id,
                     email: user.email,
                     role: 'admin',
-                    verified: true,
                     full_name: user.email?.split('@')[0] || 'Admin User'
                   });
                 
                 if (profilesError) {
                   console.error('Profiles table error:', profilesError);
                   throw profilesError;
-                }
-                
-                // Also update gw_profiles table if it exists
-                const { error: gwProfilesError } = await supabase
-                  .from('gw_profiles')
-                  .upsert({
-                    user_id: user.id,
-                    email: user.email,
-                    role: 'admin',
-                    is_admin: true,
-                    verified: true,
-                    full_name: user.email?.split('@')[0] || 'Admin User'
-                  });
-                
-                if (gwProfilesError) {
-                  console.log('GW Profiles table error (might not exist):', gwProfilesError);
                 }
                 
                 console.log('Admin role assigned successfully!');
