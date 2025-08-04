@@ -25,13 +25,19 @@ interface MobileScoreWindowProps {
   performerName?: string;
   eventType?: 'audition' | 'performance' | 'competition';
   onScoreSubmitted?: (score: any) => void;
+  performerAvatarUrl?: string;
+  performerEmail?: string;
+  performerApplicationData?: any;
 }
 
 export const MobileScoreWindow = ({ 
   performerId, 
   performerName = "Sarah Johnson", 
   eventType = 'audition',
-  onScoreSubmitted 
+  onScoreSubmitted,
+  performerAvatarUrl,
+  performerEmail,
+  performerApplicationData
 }: MobileScoreWindowProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -125,8 +131,30 @@ export const MobileScoreWindow = ({
     return () => window.removeEventListener('resize', checkIsTablet);
   }, []);
 
-  // Fetch performer profile and avatar
+  // Initialize performer profile with passed data or fetch from profiles
   useEffect(() => {
+    // If we have performer data passed in, use it directly (for audition applications)
+    if (performerAvatarUrl || performerEmail || performerApplicationData) {
+      const names = performerName.split(' ');
+      setPerformerProfile({
+        first_name: names[0] || performerName,
+        last_name: names.slice(1).join(' ') || '',
+        avatar_url: performerAvatarUrl,
+        email: performerEmail,
+        // Extract data from application if available
+        class_year: performerApplicationData?.academic_year || performerApplicationData?.class_year,
+        voice_part: performerApplicationData?.voice_part_preference,
+        ...performerApplicationData
+      });
+      console.log('Using passed performer data:', {
+        name: performerName,
+        avatar_url: performerAvatarUrl,
+        email: performerEmail
+      });
+      return;
+    }
+
+    // Fallback: fetch from gw_profiles if no data passed
     const fetchPerformerProfile = async () => {
       if (!performerId) return;
       
@@ -139,6 +167,7 @@ export const MobileScoreWindow = ({
 
         if (data && !error) {
           setPerformerProfile(data);
+          console.log('Fetched performer profile from gw_profiles:', data);
         }
       } catch (error) {
         console.log('Error fetching performer profile:', error);
@@ -147,7 +176,7 @@ export const MobileScoreWindow = ({
     };
 
     fetchPerformerProfile();
-  }, [performerId]);
+  }, [performerId, performerAvatarUrl, performerEmail, performerApplicationData, performerName]);
 
   // Search for sheet music when song title changes
   useEffect(() => {

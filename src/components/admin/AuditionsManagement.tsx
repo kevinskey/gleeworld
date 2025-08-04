@@ -136,7 +136,13 @@ export const AuditionsManagement = () => {
   // Adjudicator scoring state
   const [showAdjudicatorScoring, setShowAdjudicatorScoring] = useState(false);
   const [adjudicatorType, setAdjudicatorType] = useState<'audition' | 'sight_reading'>('audition');
-  const [selectedPerformer, setSelectedPerformer] = useState<{id: string, name: string} | null>(null);
+  const [selectedPerformer, setSelectedPerformer] = useState<{
+    id: string; 
+    name: string; 
+    avatar_url?: string; 
+    email?: string; 
+    applicationData?: AuditionApplication;
+  } | null>(null);
 
   const [newSession, setNewSession] = useState({
     name: "",
@@ -334,10 +340,18 @@ export const AuditionsManagement = () => {
 
   // Adjudicator scoring handlers
   const startAdjudicatorScoring = (application: AuditionApplication, type: 'audition' | 'sight_reading') => {
-    setSelectedPerformer({
+    const performerData = {
       id: application.user_id,
-      name: application.full_name || `${application.first_name} ${application.last_name}`
-    });
+      name: application.full_name || `${application.first_name} ${application.last_name}`,
+      avatar_url: application.profile_image_url || application.selfie_url,
+      email: application.email,
+      applicationData: application
+    };
+    
+    console.log('Starting adjudicator scoring with performer data:', performerData);
+    console.log('Avatar URL found:', performerData.avatar_url);
+    
+    setSelectedPerformer(performerData);
     setAdjudicatorType(type);
     setShowAdjudicatorScoring(true);
   };
@@ -857,6 +871,9 @@ export const AuditionsManagement = () => {
                 performerName={selectedPerformer.name}
                 eventType="audition"
                 onScoreSubmitted={handleAdjudicatorScoreSubmitted}
+                performerAvatarUrl={selectedPerformer.avatar_url}
+                performerEmail={selectedPerformer.email}
+                performerApplicationData={selectedPerformer.applicationData}
               />
             )
           ) : (
