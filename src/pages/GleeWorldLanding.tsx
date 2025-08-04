@@ -286,11 +286,11 @@ export const GleeWorldLanding = () => {
               <Link to="/auditions">
                 <Button 
                   size="lg"
-                  className="px-8 py-6 text-lg font-bold bg-gradient-to-b from-spelman-blue-light via-spelman-blue-light/90 to-spelman-blue-dark hover:from-spelman-blue-light/80 hover:via-spelman-blue-light/70 hover:to-spelman-blue-dark/90 text-white border-2 border-spelman-blue-light shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+                  className="w-full max-w-xs sm:max-w-sm md:max-w-none px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6 text-sm sm:text-base md:text-lg font-bold bg-gradient-to-b from-spelman-blue-light via-spelman-blue-light/90 to-spelman-blue-dark hover:from-spelman-blue-light/80 hover:via-spelman-blue-light/70 hover:to-spelman-blue-dark/90 text-white border-2 border-spelman-blue-light shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
                 >
-                  <Music className="w-5 h-5 mr-3" />
-                  SIGN UP FOR AUDITIONS
-                  <MusicStaffIcon className="ml-3 text-white" size={20} />
+                  <Music className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
+                  <span className="truncate">SIGN UP FOR AUDITIONS</span>
+                  <MusicStaffIcon className="ml-2 sm:ml-3 text-white" size={16} />
                 </Button>
               </Link>
             </div>
