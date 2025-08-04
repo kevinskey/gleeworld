@@ -9,7 +9,8 @@ import {
   Shield,
   Calendar,
   BarChart,
-  UserCog
+  UserCog,
+  Music
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
@@ -94,7 +95,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-9">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <BarChart className="h-4 w-4" />
               Overview
@@ -114,6 +115,10 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
             <TabsTrigger value="calendar" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               Calendar
+            </TabsTrigger>
+            <TabsTrigger value="auditions" className="flex items-center gap-2">
+              <Music className="h-4 w-4" />
+              Auditions
             </TabsTrigger>
             <TabsTrigger value="activity" className="flex items-center gap-2">
               <Activity className="h-4 w-4" />
@@ -266,6 +271,41 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
           <TabsContent value="calendar" className="mt-6">
             <CalendarControlsAdmin />
+          </TabsContent>
+
+          <TabsContent value="auditions" className="mt-6">
+            <div className="bg-white rounded-lg p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Music className="h-5 w-5" />
+                Audition Management
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="p-4 border rounded-lg">
+                  <h4 className="font-medium mb-2">Applications</h4>
+                  <p className="text-sm text-muted-foreground mb-3">Review and manage audition applications</p>
+                  <div className="text-2xl font-bold">0</div>
+                  <p className="text-xs text-muted-foreground">Total applications</p>
+                </div>
+                <div className="p-4 border rounded-lg">
+                  <h4 className="font-medium mb-2">Active Sessions</h4>
+                  <p className="text-sm text-muted-foreground mb-3">Manage audition periods and scheduling</p>
+                  <div className="text-2xl font-bold">0</div>
+                  <p className="text-xs text-muted-foreground">Open sessions</p>
+                </div>
+                <div className="p-4 border rounded-lg">
+                  <h4 className="font-medium mb-2">Evaluations</h4>
+                  <p className="text-sm text-muted-foreground mb-3">Score and review auditions</p>
+                  <div className="text-2xl font-bold">0</div>
+                  <p className="text-xs text-muted-foreground">Pending reviews</p>
+                </div>
+              </div>
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>Audition Module:</strong> Comprehensive audition management interface coming soon. 
+                  This will include application review, session scheduling, evaluation tools, and analytics.
+                </p>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="activity" className="mt-6">
