@@ -100,7 +100,7 @@ export const FAQSlider = () => {
                      </div>
                      <span className="text-sm md:text-base lg:text-lg text-primary font-medium">QUESTION</span>
                    </div>
-                   <p className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-semibold text-foreground leading-snug transition-all duration-500 ease-in-out flex-1" key={currentFAQ?.id + '-q'}>
+                   <p className="text-base md:text-lg lg:text-xl xl:text-2xl font-semibold text-foreground leading-snug transition-all duration-500 ease-in-out flex-1" key={currentFAQ?.id + '-q'}>
                      {currentFAQ?.question}
                    </p>
                  </div>
@@ -113,10 +113,10 @@ export const FAQSlider = () => {
                      </div>
                      <span className="text-sm md:text-base lg:text-lg text-primary font-medium">ANSWER</span>
                    </div>
-                   <p className={cn(
-                     "text-muted-foreground leading-relaxed transition-all duration-500 ease-in-out flex-1 overflow-hidden",
-                     currentFAQ?.id === "audition-process" ? "text-base md:text-lg lg:text-xl xl:text-2xl" : "text-lg md:text-xl lg:text-2xl xl:text-3xl"
-                   )} key={currentFAQ?.id + '-a'}>
+                    <p className={cn(
+                      "text-muted-foreground leading-relaxed transition-all duration-500 ease-in-out flex-1 overflow-auto",
+                      currentFAQ?.id === "audition-process" ? "text-sm md:text-base lg:text-lg xl:text-xl" : "text-base md:text-lg lg:text-xl xl:text-2xl"
+                    )} key={currentFAQ?.id + '-a'}>
                      {currentFAQ?.answer}
                    </p>
                  </div>
