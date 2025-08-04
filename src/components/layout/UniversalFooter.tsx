@@ -5,44 +5,44 @@ export const UniversalFooter = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-white/5 backdrop-blur-md border-t border-white/20 mt-auto">
-      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+    <footer className="bg-slate-900/95 backdrop-blur-sm border-t border-slate-700/50 mt-auto">
+      <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
           {/* Company Info */}
           <div className="text-center md:text-left col-span-1 md:col-span-1">
-            <h3 className="text-2xl sm:text-lg font-semibold text-white mb-2">Glee World</h3>
-            <p className="text-white/70 text-xs sm:text-sm">
+            <h3 className="text-lg font-semibold text-slate-100 mb-1">Glee World</h3>
+            <p className="text-slate-300 text-xs">
               The home of the Spelman College Glee Club
             </p>
           </div>
 
-          {/* Quick Links - Mobile: 50% width */}
+          {/* Quick Links */}
           <div className="text-center col-span-1 md:col-span-1">
-            <h4 className="text-sm sm:text-md font-medium text-white mb-2">Quick Links</h4>
-            <div className="space-y-1">
+            <h4 className="text-sm font-medium text-slate-100 mb-1">Quick Links</h4>
+            <div className="space-y-0.5">
               <Link 
                 to="/dashboard" 
-                className="block text-white/70 hover:text-white text-xs sm:text-sm transition-colors"
+                className="block text-slate-300 hover:text-slate-100 text-xs transition-colors"
               >
                 Dashboard
               </Link>
               <Link 
                 to="/" 
-                className="block text-white/70 hover:text-white text-xs sm:text-sm transition-colors"
+                className="block text-slate-300 hover:text-slate-100 text-xs transition-colors"
               >
                 HomePage
               </Link>
             </div>
           </div>
 
-          {/* Support - Mobile: 50% width */}
+          {/* Support */}
           <div className="text-center md:text-right col-span-1 md:col-span-1">
-            <h4 className="text-sm sm:text-md font-medium text-white mb-2">Support</h4>
-            <div className="space-y-1">
-              <p className="text-white/70 text-xs sm:text-sm">Need help?</p>
+            <h4 className="text-sm font-medium text-slate-100 mb-1">Support</h4>
+            <div className="space-y-0.5">
+              <p className="text-slate-300 text-xs">Need help?</p>
               <a 
                 href="mailto:admin@gleeworld.org" 
-                className="text-white/70 hover:text-white text-xs sm:text-sm transition-colors"
+                className="text-slate-300 hover:text-slate-100 text-xs transition-colors"
               >
                 Contact Your Administrator
               </a>
@@ -50,8 +50,8 @@ export const UniversalFooter = () => {
           </div>
         </div>
 
-        <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-white/20 text-center">
-          <p className="text-white/50 text-xs sm:text-sm">
+        <div className="mt-2 pt-2 border-t border-slate-700/50 text-center">
+          <p className="text-slate-400 text-xs">
             © {currentYear} Glee World. All rights reserved.
           </p>
         </div>
