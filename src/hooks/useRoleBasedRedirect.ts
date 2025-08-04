@@ -92,8 +92,8 @@ export const useRoleBasedRedirect = () => {
       });
       
       if (isAdmin) {
-        console.log('useRoleBasedRedirect: Redirecting admin to dashboard');
-        navigate('/dashboard', { replace: true });
+        console.log('useRoleBasedRedirect: Redirecting admin to admin dashboard');
+        navigate('/admin', { replace: true });
         window.scrollTo(0, 0);
       } else if (isAlumna) {
         console.log('useRoleBasedRedirect: Redirecting alumna to alumnae portal');
