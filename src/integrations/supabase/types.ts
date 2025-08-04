@@ -11046,7 +11046,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_current_user_admin_safe: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_current_user_gw_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_current_user_super_admin_safe: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
