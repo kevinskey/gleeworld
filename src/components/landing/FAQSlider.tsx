@@ -90,8 +90,8 @@ export const FAQSlider = () => {
            <div className="h-[320px] md:h-[320px] lg:h-[360px] flex flex-col justify-start space-y-4 max-w-4xl mx-auto">
              {!isFooterCard ? (
                <>
-                 {/* Question Card - Smaller */}
-                 <div className="bg-background/60 backdrop-blur-sm border border-border rounded-lg p-4 md:p-6 lg:p-8 shadow-sm flex flex-col justify-start">
+                 {/* Question Card - Fixed height */}
+                 <div className="bg-background/60 backdrop-blur-sm border border-border rounded-lg p-4 md:p-6 lg:p-8 shadow-sm flex flex-col justify-start h-[140px] md:h-[140px] lg:h-[160px]">
                    <div className="flex items-center space-x-2 mb-3">
                      <div className="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 lg:w-10 lg:h-10 bg-primary rounded-full flex items-center justify-center">
                        <span className="text-sm md:text-base lg:text-lg font-bold text-primary-foreground">
@@ -100,23 +100,23 @@ export const FAQSlider = () => {
                      </div>
                      <span className="text-sm md:text-base lg:text-lg text-primary font-medium">QUESTION</span>
                    </div>
-                   <p className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-semibold text-foreground leading-snug transition-all duration-500 ease-in-out" key={currentFAQ?.id + '-q'}>
+                   <p className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-semibold text-foreground leading-snug transition-all duration-500 ease-in-out flex-1" key={currentFAQ?.id + '-q'}>
                      {currentFAQ?.question}
                    </p>
                  </div>
                  
-                 {/* Answer Card - Takes remaining space */}
-                 <div className="bg-primary/5 backdrop-blur-sm border border-primary/20 rounded-lg p-4 md:p-6 lg:p-8 shadow-sm flex flex-col justify-start flex-1">
+                 {/* Answer Card - Fixed height */}
+                 <div className="bg-primary/5 backdrop-blur-sm border border-primary/20 rounded-lg p-4 md:p-6 lg:p-8 shadow-sm flex flex-col justify-start h-[140px] md:h-[140px] lg:h-[160px]">
                    <div className="flex items-center space-x-2 mb-3">
                      <div className="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 lg:w-10 lg:h-10 bg-primary/80 rounded-full flex items-center justify-center">
                        <span className="text-sm md:text-base lg:text-lg font-bold text-primary-foreground">A</span>
                      </div>
                      <span className="text-sm md:text-base lg:text-lg text-primary font-medium">ANSWER</span>
                    </div>
-                    <p className={cn(
-                      "text-muted-foreground leading-relaxed transition-all duration-500 ease-in-out",
-                      currentFAQ?.id === "audition-process" ? "text-base md:text-lg lg:text-xl xl:text-2xl" : "text-lg md:text-xl lg:text-2xl xl:text-3xl"
-                    )} key={currentFAQ?.id + '-a'}>
+                   <p className={cn(
+                     "text-muted-foreground leading-relaxed transition-all duration-500 ease-in-out flex-1 overflow-hidden",
+                     currentFAQ?.id === "audition-process" ? "text-base md:text-lg lg:text-xl xl:text-2xl" : "text-lg md:text-xl lg:text-2xl xl:text-3xl"
+                   )} key={currentFAQ?.id + '-a'}>
                      {currentFAQ?.answer}
                    </p>
                  </div>
