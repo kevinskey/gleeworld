@@ -277,15 +277,16 @@ export const GleeWorldLanding = () => {
       </div>
 
       {/* Main Content with Black and White Background */}
-      <div 
-        className="relative bg-cover bg-no-repeat max-w-screen-2xl mx-auto"
-        style={{
-          backgroundImage: `url('/lovable-uploads/65bf7ca4-6247-46a0-9f8c-3ead6ddf148e.png')`,
-          backgroundPosition: 'center bottom'
-        }}
-      >
-        <div className="absolute inset-0 bg-black/30"></div>
-        <div className="relative z-10">
+      <div className="max-w-screen-2xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12">
+        <div 
+          className="relative bg-cover bg-no-repeat"
+          style={{
+            backgroundImage: `url('/lovable-uploads/65bf7ca4-6247-46a0-9f8c-3ead6ddf148e.png')`,
+            backgroundPosition: 'center bottom'
+          }}
+        >
+          <div className="absolute inset-0 bg-black/30"></div>
+          <div className="relative z-10">
 
       {/* Hero Section */}
       <section className="relative z-30 pt-2 pb-8 sm:pt-4 sm:pb-12 md:pt-6 md:pb-16 lg:pt-8 lg:pb-20 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12">
@@ -733,6 +734,7 @@ export const GleeWorldLanding = () => {
           </Card>
         </div>
       </section>
+          </div>
         </div>
       </div>
       </PublicLayout>
