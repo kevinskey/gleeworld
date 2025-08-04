@@ -129,7 +129,7 @@ export const FAQNavigationCards = () => {
           <span className="text-sm font-medium text-primary">ANSWER</span>
         </div>
 
-        <p className="text-muted-foreground leading-relaxed flex-1">
+        <p className="text-muted-foreground leading-snug flex-1">
           {currentFAQ.answer}
         </p>
       </div>
