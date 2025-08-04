@@ -57,19 +57,25 @@ interface AuditionApplication {
   first_name: string;
   last_name: string;
   email: string;
-  phone?: string;
+  phone: string;
   audition_date: string;
   audition_time: string;
   status: string;
   created_at: string;
-  sang_in_middle_school?: boolean;
-  sang_in_high_school?: boolean;
-  plays_instrument?: boolean;
+  updated_at: string;
+  sang_in_middle_school: boolean;
+  sang_in_high_school: boolean;
+  high_school_years?: string;
+  plays_instrument: boolean;
   instrument_details?: string;
-  is_soloist?: boolean;
-  reads_music?: boolean;
-  interested_in_voice_lessons?: boolean;
-  personality_description?: string;
+  is_soloist: boolean;
+  soloist_rating?: number;
+  high_school_section?: string;
+  reads_music: boolean;
+  interested_in_voice_lessons: boolean;
+  interested_in_music_fundamentals: boolean;
+  personality_description: string;
+  interested_in_leadership: boolean;
   additional_info?: string;
   selfie_url?: string;
   // Computed properties for display
@@ -184,7 +190,7 @@ export const AuditionsManagement = () => {
       if (sessionsError) throw sessionsError;
       setSessions(sessionsData || []);
 
-      // Fetch applications from gw_auditions table
+      // Fetch applications from gw_auditions table with available fields
       const { data: applicationsData, error: applicationsError } = await supabase
         .from('gw_auditions')
         .select(`
@@ -198,14 +204,20 @@ export const AuditionsManagement = () => {
           audition_time,
           status,
           created_at,
+          updated_at,
           sang_in_middle_school,
           sang_in_high_school,
+          high_school_years,
           plays_instrument,
           instrument_details,
           is_soloist,
+          soloist_rating,
+          high_school_section,
           reads_music,
           interested_in_voice_lessons,
+          interested_in_music_fundamentals,
           personality_description,
+          interested_in_leadership,
           additional_info,
           selfie_url
         `)
@@ -225,15 +237,13 @@ export const AuditionsManagement = () => {
       
       setApplications(transformedApplications);
 
+      // Generate analytics from application data
+      const analyticsData = generateAnalytics(transformedApplications);
+      setAnalytics(analyticsData);
+
       // Fetch evaluations - for now, we'll create a placeholder since gw_auditions doesn't have evaluations yet
-      // TODO: Create gw_audition_evaluations table to match the gw_ naming convention
       const evaluationsData: any[] = []; // Empty for now
       setEvaluations(evaluationsData);
-
-      // Fetch analytics - for now, use gw_auditions data for analytics
-      // TODO: Create gw_audition_analytics view or table
-      const analyticsData: any[] = []; // Empty for now  
-      setAnalytics(analyticsData);
 
     } catch (error) {
       console.error('Error fetching audition data:', error);
@@ -245,6 +255,29 @@ export const AuditionsManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const generateAnalytics = (apps: AuditionApplication[]) => {
+    return apps.map(app => ({
+      id: app.id,
+      session_name: 'Current Session', // Default since no session data
+      full_name: app.full_name || `${app.first_name} ${app.last_name}`,
+      email: app.email,
+      academic_year: 'Not specified', // Not available in current schema
+      major: 'Not specified', // Not available in current schema
+      gpa: 0, // Not available in current schema
+      voice_part_preference: app.high_school_section || 'Not specified',
+      years_of_vocal_training: 0, // Not available in current schema
+      sight_reading_level: app.reads_music ? 'Basic' : 'Beginner',
+      status: app.status,
+      profile_image_url: app.profile_image_url,
+      avg_overall_score: 0, // Will be calculated when evaluations exist
+      avg_technical_score: 0,
+      avg_artistic_score: 0,
+      evaluation_count: 0,
+      most_common_recommendation: 'Pending',
+      application_date: app.application_date || app.created_at
+    }));
   };
 
   const createSession = async () => {
@@ -1205,94 +1238,208 @@ export const AuditionsManagement = () => {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Key Analytics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Voice Part Distribution</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Musical Experience</CardTitle>
+                <Music className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  {['S1', 'S2', 'A1', 'A2', 'T1', 'T2', 'B1', 'B2'].map((part) => {
-                    const count = analytics.filter(app => app.voice_part_preference === part).length;
-                    const percentage = analytics.length > 0 ? (count / analytics.length) * 100 : 0;
-                    return (
-                      <div key={part} className="flex items-center justify-between">
-                        <Badge className={getVoicePartColor(part)}>{part}</Badge>
-                        <div className="flex items-center space-x-2">
-                          <Progress value={percentage} className="w-16 h-2" />
-                          <span className="text-xs w-8">{count}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="text-2xl font-bold">
+                  {applications.filter(a => a.sang_in_high_school || a.sang_in_middle_school).length}
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Have choir experience
+                </p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Academic Year Distribution</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Music Literacy</CardTitle>
+                <GraduationCap className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  {['freshman', 'sophomore', 'junior', 'senior', 'graduate'].map((year) => {
-                    const count = analytics.filter(app => app.academic_year === year).length;
-                    const percentage = analytics.length > 0 ? (count / analytics.length) * 100 : 0;
-                    return (
-                      <div key={year} className="flex items-center justify-between">
-                        <span className="text-sm capitalize">{year}</span>
-                        <div className="flex items-center space-x-2">
-                          <Progress value={percentage} className="w-16 h-2" />
-                          <span className="text-xs w-8">{count}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="text-2xl font-bold">
+                  {applications.filter(a => a.reads_music).length}
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Can read music notation
+                </p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Average Scores</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Leadership Interest</CardTitle>
+                <Shield className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm">Technical</span>
-                    <span className="text-sm font-medium">
-                      {analytics.length > 0 
-                        ? (analytics.reduce((sum, app) => sum + (app.avg_technical_score || 0), 0) / analytics.filter(app => app.avg_technical_score).length).toFixed(1)
-                        : 'N/A'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Artistic</span>
-                    <span className="text-sm font-medium">
-                      {analytics.length > 0 
-                        ? (analytics.reduce((sum, app) => sum + (app.avg_artistic_score || 0), 0) / analytics.filter(app => app.avg_artistic_score).length).toFixed(1)
-                        : 'N/A'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Overall</span>
-                    <span className="text-sm font-medium">
-                      {analytics.length > 0 
-                        ? (analytics.reduce((sum, app) => sum + (app.avg_overall_score || 0), 0) / analytics.filter(app => app.avg_overall_score).length).toFixed(1)
-                        : 'N/A'}
-                    </span>
-                  </div>
+                <div className="text-2xl font-bold">
+                  {applications.filter(a => a.interested_in_leadership).length}
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Interested in leadership roles
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">High School Sections</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {applications.filter(a => a.high_school_section).length}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Have voice part experience
+                </p>
               </CardContent>
             </Card>
           </div>
 
+          {/* Experience Distribution Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Choir Experience</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Middle School Only</span>
+                    <div className="flex items-center space-x-2">
+                      <Progress 
+                        value={applications.length > 0 
+                          ? (applications.filter(a => a.sang_in_middle_school && !a.sang_in_high_school).length / applications.length) * 100 
+                          : 0} 
+                        className="w-16 h-2" 
+                      />
+                      <span className="text-xs w-8">
+                        {applications.filter(a => a.sang_in_middle_school && !a.sang_in_high_school).length}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">High School Only</span>
+                    <div className="flex items-center space-x-2">
+                      <Progress 
+                        value={applications.length > 0 
+                          ? (applications.filter(a => !a.sang_in_middle_school && a.sang_in_high_school).length / applications.length) * 100 
+                          : 0} 
+                        className="w-16 h-2" 
+                      />
+                      <span className="text-xs w-8">
+                        {applications.filter(a => !a.sang_in_middle_school && a.sang_in_high_school).length}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Both</span>
+                    <div className="flex items-center space-x-2">
+                      <Progress 
+                        value={applications.length > 0 
+                          ? (applications.filter(a => a.sang_in_middle_school && a.sang_in_high_school).length / applications.length) * 100 
+                          : 0} 
+                        className="w-16 h-2" 
+                      />
+                      <span className="text-xs w-8">
+                        {applications.filter(a => a.sang_in_middle_school && a.sang_in_high_school).length}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">No Experience</span>
+                    <div className="flex items-center space-x-2">
+                      <Progress 
+                        value={applications.length > 0 
+                          ? (applications.filter(a => !a.sang_in_middle_school && !a.sang_in_high_school).length / applications.length) * 100 
+                          : 0} 
+                        className="w-16 h-2" 
+                      />
+                      <span className="text-xs w-8">
+                        {applications.filter(a => !a.sang_in_middle_school && !a.sang_in_high_school).length}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* High School Voice Parts */}
+            {applications.filter(a => a.high_school_section).length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">High School Voice Parts</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {Object.entries(
+                      applications
+                        .filter(a => a.high_school_section)
+                        .reduce((acc: { [key: string]: number }, app) => {
+                          const section = app.high_school_section!.toLowerCase();
+                          acc[section] = (acc[section] || 0) + 1;
+                          return acc;
+                        }, {})
+                    )
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([section, count]) => {
+                      const percentage = applications.length > 0 ? (count / applications.length) * 100 : 0;
+                      return (
+                        <div key={section} className="flex items-center justify-between">
+                          <span className="text-sm capitalize">{section}</span>
+                          <div className="flex items-center space-x-2">
+                            <Progress value={percentage} className="w-16 h-2" />
+                            <span className="text-xs w-8">{count}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Soloist Ratings */}
+            {applications.filter(a => a.is_soloist && a.soloist_rating).length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Soloist Experience Levels</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {Array.from({length: 5}, (_, i) => i + 1).map(rating => {
+                      const count = applications.filter(a => a.soloist_rating === rating).length;
+                      const percentage = applications.length > 0 ? (count / applications.length) * 100 : 0;
+                      return (
+                        <div key={rating} className="flex items-center justify-between">
+                          <span className="text-sm">Level {rating}</span>
+                          <div className="flex items-center space-x-2">
+                            <Progress value={percentage} className="w-16 h-2" />
+                            <span className="text-xs w-8">{count}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Detailed Analytics Table */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Candidate Analytics</CardTitle>
-                  <CardDescription>Detailed data on all audition candidates</CardDescription>
+                  <CardTitle>Candidate Data Center</CardTitle>
+                  <CardDescription>
+                    Comprehensive analytics from {applications.length} applications
+                  </CardDescription>
                 </div>
                 <Button variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
@@ -1302,61 +1449,118 @@ export const AuditionsManagement = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {analytics.map((candidate) => (
-                  <div key={candidate.id} className="border rounded-lg p-4">
+                {applications.map((app) => (
+                  <div key={app.id} className="border rounded-lg p-4">
                     <div className="flex items-start space-x-4">
                       <Avatar>
-                        <AvatarImage src={candidate.profile_image_url} />
+                        <AvatarImage src={app.profile_image_url} />
                         <AvatarFallback>
-                          {candidate.full_name.split(' ').map(n => n[0]).join('')}
+                          {app.full_name ? app.full_name.split(' ').map(n => n[0]).join('') : `${app.first_name[0]}${app.last_name[0]}`}
                         </AvatarFallback>
                       </Avatar>
                       
-                      <div className="flex-1 space-y-2">
+                      <div className="flex-1 space-y-3">
                         <div className="flex items-center justify-between">
-                          <h4 className="font-medium">{candidate.full_name}</h4>
-                          <Badge className={getStatusColor(candidate.status)}>
-                            {candidate.status.replace('_', ' ')}
+                          <h4 className="font-medium">{app.full_name || `${app.first_name} ${app.last_name}`}</h4>
+                          <Badge className={getStatusColor(app.status)}>
+                            {app.status.replace('_', ' ')}
                           </Badge>
                         </div>
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div>
-                            <span className="font-medium">Academic Year:</span>
-                            <p className="capitalize">{candidate.academic_year || 'N/A'}</p>
+                            <span className="font-medium text-muted-foreground">Email:</span>
+                            <p className="text-xs">{app.email}</p>
                           </div>
                           <div>
-                            <span className="font-medium">Major:</span>
-                            <p>{candidate.major || 'N/A'}</p>
+                            <span className="font-medium text-muted-foreground">Phone:</span>
+                            <p className="text-xs">{app.phone || 'Not provided'}</p>
                           </div>
                           <div>
-                            <span className="font-medium">GPA:</span>
-                            <p>{candidate.gpa || 'N/A'}</p>
+                            <span className="font-medium text-muted-foreground">Audition Date:</span>
+                            <p className="text-xs">{new Date(app.audition_date).toLocaleDateString()}</p>
                           </div>
                           <div>
-                            <span className="font-medium">Voice Training:</span>
-                            <p>{candidate.years_of_vocal_training ? `${candidate.years_of_vocal_training} years` : 'N/A'}</p>
+                            <span className="font-medium text-muted-foreground">Time:</span>
+                            <p className="text-xs">{app.audition_time}</p>
                           </div>
                         </div>
 
-                        {candidate.avg_overall_score && (
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between text-sm">
-                              <span>Average Score</span>
-                              <span>{candidate.avg_overall_score.toFixed(1)}/10</span>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="font-medium text-muted-foreground">Middle School Choir:</span>
+                            <p className="text-xs">{app.sang_in_middle_school ? 'Yes' : 'No'}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium text-muted-foreground">High School Choir:</span>
+                            <p className="text-xs">{app.sang_in_high_school ? 'Yes' : 'No'}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium text-muted-foreground">Voice Part:</span>
+                            <p className="text-xs">{app.high_school_section || 'Not specified'}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium text-muted-foreground">Reads Music:</span>
+                            <p className="text-xs">{app.reads_music ? 'Yes' : 'No'}</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="font-medium text-muted-foreground">Plays Instrument:</span>
+                            <p className="text-xs">{app.plays_instrument ? 'Yes' : 'No'}</p>
+                          </div>
+                          {app.plays_instrument && app.instrument_details && (
+                            <div>
+                              <span className="font-medium text-muted-foreground">Instruments:</span>
+                              <p className="text-xs">{app.instrument_details}</p>
                             </div>
-                            <Progress value={candidate.avg_overall_score * 10} className="h-2" />
+                          )}
+                          <div>
+                            <span className="font-medium text-muted-foreground">Soloist:</span>
+                            <p className="text-xs">{app.is_soloist ? 'Yes' : 'No'}</p>
+                          </div>
+                          {app.is_soloist && app.soloist_rating && (
+                            <div>
+                              <span className="font-medium text-muted-foreground">Soloist Level:</span>
+                              <p className="text-xs">{app.soloist_rating}/5</p>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <span className="font-medium text-muted-foreground">Voice Lessons:</span>
+                            <p className="text-xs">{app.interested_in_voice_lessons ? 'Interested' : 'Not interested'}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium text-muted-foreground">Music Fundamentals:</span>
+                            <p className="text-xs">{app.interested_in_music_fundamentals ? 'Interested' : 'Not interested'}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium text-muted-foreground">Leadership:</span>
+                            <p className="text-xs">{app.interested_in_leadership ? 'Interested' : 'Not interested'}</p>
+                          </div>
+                        </div>
+
+                        {app.personality_description && (
+                          <div>
+                            <span className="font-medium text-muted-foreground text-sm">Personality:</span>
+                            <p className="text-xs mt-1">{app.personality_description}</p>
                           </div>
                         )}
 
-                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                          <span>Evaluations: {candidate.evaluation_count}</span>
-                          {candidate.most_common_recommendation && (
-                            <>
-                              <span>•</span>
-                              <span>Recommendation: {candidate.most_common_recommendation.replace('_', ' ')}</span>
-                            </>
-                          )}
+                        {app.additional_info && (
+                          <div>
+                            <span className="font-medium text-muted-foreground text-sm">Additional Info:</span>
+                            <p className="text-xs mt-1">{app.additional_info}</p>
+                          </div>
+                        )}
+
+                        <div className="flex items-center space-x-2 text-xs text-muted-foreground pt-2 border-t">
+                          <span>Applied: {new Date(app.created_at).toLocaleDateString()}</span>
+                          <span>•</span>
+                          <span>Updated: {new Date(app.updated_at).toLocaleDateString()}</span>
                         </div>
                       </div>
                     </div>
