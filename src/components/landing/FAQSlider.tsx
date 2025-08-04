@@ -123,7 +123,7 @@ export const FAQSlider = () => {
                </>
             ) : (
               /* Footer Card in rotation */
-              <div className="bg-gradient-to-r from-primary to-primary/80 rounded-lg p-4 md:p-8 lg:p-10 backdrop-blur-sm border border-white/20 shadow-lg transition-all duration-500 ease-in-out flex flex-col justify-center min-h-full">
+              <div className="bg-gradient-to-r from-primary to-primary/80 rounded-lg p-4 md:p-8 lg:p-10 backdrop-blur-sm border border-white/20 shadow-lg transition-all duration-500 ease-in-out flex flex-col justify-center h-[200px] md:min-h-full">
                 <h3 className="text-xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-primary-foreground mb-3 md:mb-4 text-center leading-tight">
                   Good luck on your auditions ladies!
                 </h3>
