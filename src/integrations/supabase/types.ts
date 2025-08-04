@@ -10644,6 +10644,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_user_admin_simple: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      check_user_exists_simple: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       check_vocal_health_alerts: {
         Args: { target_user_id: string }
         Returns: boolean
