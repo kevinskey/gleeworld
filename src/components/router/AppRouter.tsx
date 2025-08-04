@@ -29,6 +29,7 @@ import { Success } from "@/pages/shop/Success";
 import BookingRequest from "@/pages/BookingRequest";
 import TourPlanner from "@/pages/TourPlanner";
 import SendNotificationPage from "@/pages/SendNotificationPage";
+import AdminUsers from "@/pages/AdminUsers";
 
 
 
@@ -120,6 +121,10 @@ export const router = createBrowserRouter([
   {
     path: "/admin/alumnae",
     element: <AlumnaeAdmin />,
+  },
+  {
+    path: "/admin/users",
+    element: <AdminUsers />,
   },
   {
     path: "/shop",
