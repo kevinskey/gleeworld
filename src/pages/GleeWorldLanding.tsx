@@ -286,7 +286,7 @@ export const GleeWorldLanding = () => {
         <div className="relative z-10 max-w-screen-2xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12">
 
       {/* FAQ Section */}
-      <section className="relative z-30 pt-4 pb-6 sm:pt-6 sm:pb-8 sm:mt-[50px] md:pt-8 md:pb-10 md:mt-[100px] lg:mt-[150px] px-2 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section className="relative z-30 pt-4 pb-6 sm:pt-6 sm:pb-8 sm:mt-[200px] md:pt-8 md:pb-10 md:mt-[100px] lg:mt-[150px] px-2 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
             <div className="text-center mb-4 sm:mb-6 md:mb-8">
