@@ -54,9 +54,9 @@ export const AdminViewDashboard = () => {
               try {
                 console.log('Making user admin...', user.id, user.email);
                 
-                // Use the simple bootstrap function
+                // Use the clean bootstrap function (no triggers to interfere)
                 const { data, error } = await supabase
-                  .rpc('simple_admin_bootstrap');
+                  .rpc('clean_admin_bootstrap');
                 
                 if (error) {
                   console.error('Error bootstrapping admin:', error);

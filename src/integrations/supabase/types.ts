@@ -10827,6 +10827,10 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: boolean
       }
+      clean_admin_bootstrap: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       cleanup_expired_notifications: {
         Args: Record<PropertyKey, never>
         Returns: number
