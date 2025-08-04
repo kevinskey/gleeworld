@@ -22,7 +22,7 @@ export const CongratulationsDialog: React.FC<CongratulationsDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md text-center">
+      <DialogContent className="w-full max-w-sm sm:max-w-md mx-4 text-center">
         <DialogHeader className="text-center space-y-4">
           <div className="mx-auto">
             <CheckCircle className="h-16 w-16 text-emerald-500 mx-auto" />

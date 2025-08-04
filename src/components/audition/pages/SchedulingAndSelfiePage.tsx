@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, Camera, Upload } from "lucide-react";
+import { CalendarIcon, Camera, Upload, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useAuditionForm } from "../AuditionFormProvider";
@@ -26,12 +26,14 @@ export function SchedulingAndSelfiePage() {
   const {
     isCapturing,
     isCameraReady,
+    facingMode,
     videoRef,
     canvasRef,
     startCamera,
     stopCamera,
     capturePhoto,
-    handleFileSelect
+    handleFileSelect,
+    switchCamera
   } = useCameraImport({
     onSuccess: (file) => {
       uploadSelfie(file);
@@ -216,25 +218,40 @@ export function SchedulingAndSelfiePage() {
             </div>
           )}
 
-          <div className="flex gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleTakePhoto}
-              disabled={isCapturing && !isCameraReady}
-              className="px-6 py-3 text-base md:text-lg"
-            >
-              <Camera className="w-5 h-5 mr-2" />
-              {!isCameraReady && !isCapturing ? "Start Camera" : isCameraReady ? "Take Photo" : "Starting..."}
-            </Button>
+          <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleTakePhoto}
+                disabled={isCapturing && !isCameraReady}
+                className="px-4 py-3 text-sm md:text-base"
+              >
+                <Camera className="w-4 h-4 mr-2" />
+                {!isCameraReady && !isCapturing ? "Start Camera" : isCameraReady ? "Take Photo" : "Starting..."}
+              </Button>
+              
+              {isCapturing && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={switchCamera}
+                  disabled={!isCameraReady}
+                  className="px-3 py-3"
+                  title={`Switch to ${facingMode === 'user' ? 'back' : 'front'} camera`}
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
             
             <Button
               type="button"
               variant="outline"
               onClick={() => fileInputRef.current?.click()}
-              className="px-6 py-3 text-base md:text-lg"
+              className="px-4 py-3 text-sm md:text-base"
             >
-              <Upload className="w-5 h-5 mr-2" />
+              <Upload className="w-4 h-4 mr-2" />
               Upload Photo
             </Button>
           </div>

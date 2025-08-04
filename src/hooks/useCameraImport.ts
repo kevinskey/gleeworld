@@ -12,6 +12,7 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
   const [isCapturing, setIsCapturing] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -40,10 +41,10 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
         return;
       }
       
-      // Simplified camera constraints to reduce permission issues
+      // Camera constraints with dynamic facing mode
       const constraints = {
         video: {
-          facingMode: 'environment',
+          facingMode,
           width: { ideal: 1280 },
           height: { ideal: 720 }
         }
@@ -53,7 +54,7 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
       try {
         stream = await navigator.mediaDevices.getUserMedia(constraints);
       } catch (error) {
-        console.log('useCameraImport: Environment camera failed, trying basic camera');
+        console.log(`useCameraImport: ${facingMode} camera failed, trying basic camera`);
         stream = await navigator.mediaDevices.getUserMedia({ video: true });
       }
 
@@ -97,7 +98,7 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
       setIsCapturing(false);
       setIsCameraReady(false);
     }
-  }, [onError, toast]);
+  }, [onError, toast, facingMode]);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -207,15 +208,33 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
     onSuccess?.(file);
   }, [acceptedTypes, onSuccess, onError, toast]);
 
+  const switchCamera = useCallback(async () => {
+    if (isCapturing) {
+      // Stop current camera
+      stopCamera();
+      // Wait a moment for cleanup
+      await new Promise(resolve => setTimeout(resolve, 100));
+      // Switch facing mode
+      setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
+      // Start camera with new facing mode
+      await startCamera();
+    } else {
+      // Just switch the mode if camera is not active
+      setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
+    }
+  }, [isCapturing, stopCamera, startCamera]);
+
   return {
     isCapturing,
     isCameraReady,
     cameraError,
+    facingMode,
     videoRef,
     canvasRef,
     startCamera,
     stopCamera,
     capturePhoto,
     handleFileSelect,
+    switchCamera,
   };
 };
