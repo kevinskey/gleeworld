@@ -2,18 +2,20 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { AuthTabs } from "@/components/auth/AuthTabs";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 const Auth = () => {
   const { user, loading } = useAuth();
+  const { profile, loading: profileLoading, isAdmin } = useUserRole();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isReset = searchParams.get('reset') === 'true';
 
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading && !profileLoading && user && profile) {
       console.log('Auth: User detected, checking for redirect path');
       const redirectPath = sessionStorage.getItem('redirectAfterAuth');
       if (redirectPath) {
@@ -21,13 +23,15 @@ const Auth = () => {
         sessionStorage.removeItem('redirectAfterAuth');
         navigate(redirectPath, { replace: true });
       } else {
-        console.log('Auth: No stored path, redirecting to dashboard');
-        navigate('/dashboard', { replace: true });
+        // Redirect based on user role
+        const defaultPath = isAdmin() ? '/admin' : '/dashboard';
+        console.log('Auth: No stored path, redirecting to:', defaultPath);
+        navigate(defaultPath, { replace: true });
       }
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, profile, profileLoading, navigate, isAdmin]);
 
-  if (loading) {
+  if (loading || profileLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <LoadingSpinner size="lg" text="Loading..." />
