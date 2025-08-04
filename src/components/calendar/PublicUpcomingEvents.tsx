@@ -128,20 +128,35 @@ export const PublicUpcomingEvents = ({ limit = 6, showHeader = true }: PublicUpc
                     </Badge>
                   </div>
                   
-                  {/* Event Header with gradient background */}
-                  <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-6 border-b">
-                    <div className="text-center">
-                      <div className="inline-flex items-center justify-center w-16 h-16 bg-primary text-primary-foreground rounded-full mb-4">
-                        <CalendarIcon className="h-8 w-8" />
-                      </div>
-                      <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                        {event.title}
-                      </h3>
+                  {/* Event Image or Default Header */}
+                  {event.image_url ? (
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={event.image_url}
+                        alt={event.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                     </div>
+                  ) : (
+                    <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-6 border-b">
+                      <div className="text-center">
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-primary text-primary-foreground rounded-full mb-4">
+                          <CalendarIcon className="h-8 w-8" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Event Title */}
+                  <div className="p-4 pb-0">
+                    <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors text-center">
+                      {event.title}
+                    </h3>
                   </div>
                 </div>
                 
-                <CardContent className="p-4 space-y-3">
+                <CardContent className="p-4 pt-0 space-y-3">
                   <div className="space-y-3 text-sm">
                     <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                       <ClockIcon className="h-5 w-5 text-primary flex-shrink-0" />
