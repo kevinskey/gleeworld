@@ -148,7 +148,7 @@ export const PRCoordinatorHub = () => {
             className="gap-2"
           >
             <Upload className="h-4 w-4" />
-            Import from Library
+            Import to Library
           </Button>
           <Button 
             onClick={() => {
