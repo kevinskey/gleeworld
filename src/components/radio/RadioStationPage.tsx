@@ -242,41 +242,22 @@ export const RadioStationPage = () => {
   };
 
   const handleNextTrack = () => {
-    // Try to get next track from timeline loop first
+    // Always prioritize the timeline schedule
     const nextTrack = getNextTrackRef.current?.();
     
     if (nextTrack) {
       handlePlayTrack(nextTrack);
       toast({
         title: "Next Track",
-        description: `Now playing: ${nextTrack.title}`,
+        description: `Now playing: ${nextTrack.title} (from timeline)`,
       });
     } else {
-      // No tracks scheduled in timeline, automatically loop through available tracks
-      if (upcomingTracks.length > 0) {
-        // Find current track index and get next track
-        const currentIndex = currentTrack 
-          ? upcomingTracks.findIndex(track => track.id === currentTrack.id)
-          : -1;
-        
-        // Get next track or loop back to first
-        const nextIndex = (currentIndex + 1) % upcomingTracks.length;
-        const autoNextTrack = upcomingTracks[nextIndex];
-        
-        handlePlayTrack(autoNextTrack);
-        toast({
-          title: "Auto Next Track",
-          description: `Now playing: ${autoNextTrack.title}`,
-        });
-      } else {
-        // Truly no tracks available
-        setIsPlaying(false);
-        setCurrentTrack(null);
-        toast({
-          title: "No Tracks Available",
-          description: "Please add some tracks to the radio station.",
-        });
-      }
+      // Only pause when no timeline tracks are available
+      setIsPlaying(false);
+      toast({
+        title: "End of Timeline",
+        description: "No more tracks scheduled. Please add tracks to the timeline.",
+      });
     }
   };
 
