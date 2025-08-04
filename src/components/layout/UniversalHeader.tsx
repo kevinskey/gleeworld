@@ -303,19 +303,29 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                    <EnhancedTooltip content="Profile menu">
                      <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="relative h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 rounded-full p-0">
-                          <Avatar className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9">
+                          <Avatar className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 border-2 border-white/30">
                             <AvatarImage 
                               src={userProfile?.avatar_url || undefined} 
-                              alt={userProfile?.full_name || user.email || "Profile"}
-                             className="object-cover"
-                           />
-                            <AvatarFallback className="bg-gray-200 text-gray-700">
+                              alt={userProfile?.full_name || user?.email || "Your Profile"}
+                              className="object-cover"
+                              onError={(e) => {
+                                console.log('Avatar image failed to load:', userProfile?.avatar_url);
+                                e.currentTarget.style.display = 'none';
+                              }}
+                              onLoad={() => {
+                                console.log('Avatar image loaded successfully:', userProfile?.avatar_url);
+                              }}
+                            />
+                            <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white font-bold relative">
                               {userProfile?.full_name ? 
                                 userProfile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() :
-                               <User className="h-3 w-3 sm:h-4 sm:w-4" />
-                             }
-                           </AvatarFallback>
-                         </Avatar>
+                                user?.email?.charAt(0).toUpperCase() || 'U'
+                              }
+                              {isAdmin && (
+                                <Crown className="absolute -top-1 -right-1 h-3 w-3 text-yellow-400 drop-shadow-sm" />
+                              )}
+                            </AvatarFallback>
+                          </Avatar>
                        </Button>
                      </DropdownMenuTrigger>
                    </EnhancedTooltip>
