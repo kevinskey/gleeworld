@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { 
@@ -154,75 +153,51 @@ export const PermissionsGrid = ({ selectedPosition }: PermissionsGridProps) => {
             <CardContent>
                 <div className="grid gap-4">
                   {/* Header Row */}
-                  <div className="hidden md:grid grid-cols-10 gap-4 pb-2 border-b font-medium text-sm text-muted-foreground">
-                    <div className="col-span-6">Function</div>
-                    <div className="col-span-2 text-center">Can Access</div>
-                    <div className="col-span-2 text-center">Can Manage</div>
+                  <div className="grid grid-cols-12 gap-4 pb-2 border-b font-medium text-sm text-muted-foreground">
+                    <div className="col-span-8">Function</div>
+                    <div className="col-span-2 text-center">Access</div>
+                    <div className="col-span-2 text-center">Manage</div>
                   </div>
 
-                {/* Function Rows */}
-                {functions.map((func) => {
-                  const permissions = getPermissionForFunction(func.id);
-                  
-                  return (
-                    <div key={func.id} className="md:grid md:grid-cols-10 gap-4 py-3 border-b border-border/50 hover:bg-muted/30 rounded-lg px-2">
-                      {/* Mobile Layout */}
-                      <div className="md:hidden space-y-3">
-                        <div>
+                  {/* Function Rows */}
+                  {functions.map((func) => {
+                    const permissions = getPermissionForFunction(func.id);
+                    
+                    return (
+                      <div key={func.id} className="grid grid-cols-12 gap-4 py-3 border-b border-border/50 hover:bg-muted/30 rounded-lg px-2">
+                        <div className="col-span-8">
                           <h4 className="font-medium text-gray-900">{func.name.replace(/_/g, ' ')}</h4>
-                        </div>
-                        <div className="flex items-center justify-center gap-8">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">Access</span>
-                            <Checkbox
-                              checked={permissions.can_access}
-                              onCheckedChange={(checked) =>
-                                handlePermissionChange(func.id, 'can_access', checked as boolean)
-                              }
-                            />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">Manage</span>
-                            <Checkbox
-                              checked={permissions.can_manage}
-                              onCheckedChange={(checked) =>
-                                handlePermissionChange(func.id, 'can_manage', checked as boolean)
-                              }
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Desktop Layout */}
-                      <div className="hidden md:contents">
-                        <div className="col-span-6">
-                          <div>
-                            <h4 className="font-medium text-gray-900">{func.name.replace(/_/g, ' ')}</h4>
-                            <p className="text-sm text-muted-foreground">{func.description}</p>
-                          </div>
+                          <p className="text-sm text-muted-foreground">{func.description}</p>
                         </div>
                         
                         <div className="col-span-2 flex items-center justify-center">
-                          <Checkbox
-                            checked={permissions.can_access}
-                            onCheckedChange={(checked) =>
-                              handlePermissionChange(func.id, 'can_access', checked as boolean)
+                          <button
+                            onClick={() =>
+                              handlePermissionChange(func.id, 'can_access', !permissions.can_access)
                             }
+                            className={`w-4 h-4 rounded-full border-2 transition-all duration-200 ${
+                              permissions.can_access 
+                                ? 'bg-green-500 border-green-600' 
+                                : 'bg-red-500 border-red-600'
+                            }`}
                           />
                         </div>
                         
                         <div className="col-span-2 flex items-center justify-center">
-                          <Checkbox
-                            checked={permissions.can_manage}
-                            onCheckedChange={(checked) =>
-                              handlePermissionChange(func.id, 'can_manage', checked as boolean)
+                          <button
+                            onClick={() =>
+                              handlePermissionChange(func.id, 'can_manage', !permissions.can_manage)
                             }
+                            className={`w-4 h-4 rounded-full border-2 transition-all duration-200 ${
+                              permissions.can_manage 
+                                ? 'bg-green-500 border-green-600' 
+                                : 'bg-red-500 border-red-600'
+                            }`}
                           />
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
             </CardContent>
           </Card>
