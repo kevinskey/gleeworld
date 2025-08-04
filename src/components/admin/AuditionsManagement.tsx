@@ -35,6 +35,7 @@ import {
 import { MobileScoreWindow } from "@/components/scoring/MobileScoreWindow";
 import { SightReadingScoreWindow } from "@/components/scoring/SightReadingScoreWindow";
 import { useUserRole } from "@/hooks/useUserRole";
+import { AuditionFilters } from "@/components/audition/AuditionFilters";
 
 interface AuditionSession {
   id: string;
@@ -135,6 +136,14 @@ export const AuditionsManagement = () => {
   const [selectedApplication, setSelectedApplication] = useState<AuditionApplication | null>(null);
   const [selectedSession, setSelectedSession] = useState<string>("");
   const [evaluationForm, setEvaluationForm] = useState<Partial<AuditionEvaluation>>({});
+  
+  // Filter and sort state for roster
+  const [sortBy, setSortBy] = useState<string>('full_name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [filterByStatus, setFilterByStatus] = useState<string>('');
+  const [filterByVoicePart, setFilterByVoicePart] = useState<string>('');
+  const [filterByDate, setFilterByDate] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   
   // Adjudicator scoring state
   const [showAdjudicatorScoring, setShowAdjudicatorScoring] = useState(false);
@@ -433,7 +442,77 @@ export const AuditionsManagement = () => {
     }
   };
 
-  const filteredApplications = applications; // Remove session filtering since gw_auditions doesn't have session_id
+  // Filtering and sorting logic
+  const handleSortChange = (newSortBy: string, newSortOrder: 'asc' | 'desc') => {
+    setSortBy(newSortBy);
+    setSortOrder(newSortOrder);
+  };
+
+  const handleFilterChange = (filters: {
+    status: string;
+    voicePart: string;
+    date: string;
+    search: string;
+  }) => {
+    setFilterByStatus(filters.status);
+    setFilterByVoicePart(filters.voicePart);
+    setFilterByDate(filters.date);
+    setSearchQuery(filters.search);
+  };
+
+  const filteredApplications = applications
+    .filter(app => {
+      // Search filter
+      if (searchQuery) {
+        const searchLower = searchQuery.toLowerCase();
+        const nameMatch = app.full_name?.toLowerCase().includes(searchLower);
+        const emailMatch = app.email.toLowerCase().includes(searchLower);
+        if (!nameMatch && !emailMatch) return false;
+      }
+
+      // Status filter
+      if (filterByStatus && app.status !== filterByStatus) return false;
+
+      // Voice part filter
+      if (filterByVoicePart && app.voice_part_preference !== filterByVoicePart) return false;
+
+      // Date filter
+      if (filterByDate) {
+        const appDate = new Date(app.audition_date).toISOString().split('T')[0];
+        if (appDate !== filterByDate) return false;
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      let aValue: any, bValue: any;
+
+      switch (sortBy) {
+        case 'full_name':
+          aValue = a.full_name || `${a.first_name} ${a.last_name}`;
+          bValue = b.full_name || `${b.first_name} ${b.last_name}`;
+          break;
+        case 'audition_date':
+          aValue = new Date(a.audition_date);
+          bValue = new Date(b.audition_date);
+          break;
+        case 'audition_time':
+          aValue = a.audition_time;
+          bValue = b.audition_time;
+          break;
+        case 'status':
+          aValue = a.status;
+          bValue = b.status;
+          break;
+        default:
+          aValue = a.created_at;
+          bValue = b.created_at;
+      }
+
+      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
 
   if (loading) {
     return (
@@ -699,8 +778,28 @@ export const AuditionsManagement = () => {
         </TabsContent>
 
         <TabsContent value="roster" className="space-y-6">
+          <AuditionFilters
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            filterByStatus={filterByStatus}
+            filterByVoicePart={filterByVoicePart}
+            filterByDate={filterByDate}
+            searchQuery={searchQuery}
+            onSortChange={handleSortChange}
+            onFilterChange={handleFilterChange}
+            totalCount={applications.length}
+            filteredCount={filteredApplications.length}
+          />
+          
           <div className="grid gap-4">
-            {filteredApplications.map((application) => (
+            {filteredApplications.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-medium">No applications found</p>
+                <p className="text-sm">Try adjusting your filters to see more results.</p>
+              </div>
+            ) : (
+              filteredApplications.map((application) => (
               <Card key={application.id} className="overflow-hidden">
                 <CardContent className="p-6">
                   <div className="flex items-start space-x-4">
@@ -908,7 +1007,8 @@ export const AuditionsManagement = () => {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              ))
+            )}
           </div>
         </TabsContent>
 
