@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioStationHeader } from './RadioStationHeader';
 import { DragDropTimeline } from './DragDropTimeline';
+import { BulkUploadDialog } from './BulkUploadDialog';
 import { CommercialMaker } from './CommercialMaker';
 import { CommercialLibrary } from './CommercialLibrary';
 import { 
@@ -322,23 +323,28 @@ export const RadioStationPage = () => {
         } : null}
       />
       
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
+        <div className="max-w-7xl mx-auto p-6 space-y-6">
         {/* Radio Station Tabs */}
         <Tabs defaultValue="timeline" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="timeline" className="flex items-center gap-2">
-              <Radio className="h-4 w-4" />
-              Radio Timeline
-            </TabsTrigger>
-            <TabsTrigger value="commercial-maker" className="flex items-center gap-2">
-              <Music className="h-4 w-4" />
-              Commercial Maker
-            </TabsTrigger>
-            <TabsTrigger value="commercial-library" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Commercial Library
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex items-center justify-between mb-4">
+            <TabsList className="grid w-full max-w-md grid-cols-3">
+              <TabsTrigger value="timeline" className="flex items-center gap-2">
+                <Radio className="h-4 w-4" />
+                Radio Timeline
+              </TabsTrigger>
+              <TabsTrigger value="commercial-maker" className="flex items-center gap-2">
+                <Music className="h-4 w-4" />
+                Commercial Maker
+              </TabsTrigger>
+              <TabsTrigger value="commercial-library" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Commercial Library
+              </TabsTrigger>
+            </TabsList>
+            
+            {/* Bulk Upload Button */}
+            <BulkUploadDialog onUploadComplete={fetchRadioData} />
+          </div>
           
           <TabsContent value="timeline" className="mt-6">
             <DragDropTimeline 
