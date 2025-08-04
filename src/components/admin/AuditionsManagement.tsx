@@ -559,15 +559,15 @@ export const AuditionsManagement = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-primary">Auditions Management</h2>
-          <p className="text-muted-foreground">Manage audition sessions, applications, and evaluations</p>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="text-center sm:text-left">
+          <h2 className="text-2xl sm:text-3xl font-bold text-primary">Auditions Management</h2>
+          <p className="text-sm sm:text-base text-muted-foreground">Manage audition sessions, applications, and evaluations</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 justify-center sm:justify-end">
           <Select value={selectedSession} onValueChange={setSelectedSession}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-full sm:w-48">
               <SelectValue placeholder="Filter by session" />
             </SelectTrigger>
             <SelectContent>
@@ -583,13 +583,32 @@ export const AuditionsManagement = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="sessions">Sessions</TabsTrigger>
-          <TabsTrigger value="roster">Applicant Roster</TabsTrigger>
-          <TabsTrigger value="evaluations">Evaluations</TabsTrigger>
-          <TabsTrigger value="analytics">Data Center</TabsTrigger>
-        </TabsList>
+        {/* Mobile optimized tab list */}
+        <div className="overflow-x-auto">
+          <TabsList className="grid w-full min-w-[600px] grid-cols-5 h-auto sm:h-10">
+            <TabsTrigger value="overview" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-4 text-xs sm:text-sm">
+              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Overview</span>
+            </TabsTrigger>
+            <TabsTrigger value="sessions" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-4 text-xs sm:text-sm">
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Sessions</span>
+            </TabsTrigger>
+            <TabsTrigger value="roster" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-4 text-xs sm:text-sm">
+              <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Roster</span>
+            </TabsTrigger>
+            <TabsTrigger value="evaluations" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-4 text-xs sm:text-sm">
+              <Star className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Evaluations</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-4 text-xs sm:text-sm">
+              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Data Center</span>
+              <span className="sm:hidden">Data</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -834,22 +853,24 @@ export const AuditionsManagement = () => {
             ) : (
               filteredApplications.map((application) => (
               <Card key={application.id} className="overflow-hidden">
-                <CardContent className="p-6">
-                  <div className="flex items-start space-x-4">
-                    <Avatar className="h-16 w-16">
+                <CardContent className="p-3 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-4">
+                    <Avatar className="h-12 w-12 sm:h-16 sm:w-16 mx-auto sm:mx-0">
                       <AvatarImage src={application.profile_image_url} />
-                      <AvatarFallback className="text-lg">
-                        {application.full_name.split(' ').map(n => n[0]).join('')}
+                      <AvatarFallback className="text-sm sm:text-lg">
+                        {application.full_name ? application.full_name.split(' ').map(n => n[0]).join('') : `${application.first_name[0]}${application.last_name[0]}`}
                       </AvatarFallback>
                     </Avatar>
                     
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">{application.full_name}</h3>
-                        <div className="flex items-center space-x-2">
-                          {application.voice_part_preference && (
-                            <Badge className={getVoicePartColor(application.voice_part_preference)}>
-                              {application.voice_part_preference}
+                    <div className="flex-1 space-y-2 sm:space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <h3 className="text-base sm:text-lg font-semibold text-center sm:text-left">
+                          {application.full_name || `${application.first_name} ${application.last_name}`}
+                        </h3>
+                        <div className="flex items-center justify-center sm:justify-end space-x-2">
+                          {application.high_school_section && (
+                            <Badge className={getVoicePartColor(application.high_school_section)}>
+                              {application.high_school_section}
                             </Badge>
                           )}
                           <Badge className={getStatusColor(application.status)}>
@@ -858,28 +879,28 @@ export const AuditionsManagement = () => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div className="flex items-center space-x-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 text-xs sm:text-sm">
+                        <div className="flex items-center justify-center sm:justify-start space-x-1">
                           <Mail className="h-3 w-3" />
-                          <span>{application.email}</span>
+                          <span className="truncate">{application.email}</span>
                         </div>
                         {application.phone && (
-                          <div className="flex items-center space-x-1">
+                          <div className="flex items-center justify-center sm:justify-start space-x-1">
                             <Phone className="h-3 w-3" />
                             <span>{application.phone}</span>
                           </div>
                         )}
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center justify-center sm:justify-start space-x-1">
                           <Clock className="h-3 w-3" />
                           <span>{new Date(application.audition_date).toLocaleDateString()}</span>
                         </div>
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center justify-center sm:justify-start space-x-1">
                           <Calendar className="h-3 w-3" />
                           <span>{application.audition_time}</span>
                         </div>
                       </div>
 
-                      <div className="flex items-center space-x-2 pt-2">
+                      <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 pt-2">
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button variant="outline" size="sm" onClick={() => setSelectedApplication(application)}>
