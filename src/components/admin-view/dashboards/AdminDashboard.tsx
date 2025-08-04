@@ -1,8 +1,27 @@
-import { useState, useEffect } from "react";
-import { PermissionsGrid } from "@/components/admin/PermissionsGrid";
-import { EXECUTIVE_POSITIONS, type ExecutivePosition } from "@/hooks/useExecutivePermissions";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Users, 
+  FileText, 
+  Settings, 
+  Activity, 
+  Shield,
+  Calendar,
+  BarChart,
+  UserCog
+} from "lucide-react";
+
+// Import existing admin components
+import { UserManagement } from "@/components/admin/UserManagement";
+import { ContractManagement } from "@/components/admin/ContractManagement";
+import { ActivityLogs } from "@/components/admin/ActivityLogs";
+import { AdminSummaryStats } from "@/components/admin/AdminSummaryStats";
+import { CalendarControlsAdmin } from "@/components/admin/CalendarControlsAdmin";
+
+// Import the new permissions component
+import { ExecutivePermissionsManagement } from "@/components/admin/ExecutivePermissionsManagement";
+
 interface AdminDashboardProps {
   user: {
     id: string;
@@ -15,156 +34,84 @@ interface AdminDashboardProps {
   };
 }
 
-interface ExecutiveBoardMember {
-  id: string;
-  user_id: string;
-  position: string;
-  full_name: string;
-  email: string;
-}
-
 export const AdminDashboard = ({ user }: AdminDashboardProps) => {
-  console.log('AdminDashboard component rendering with user:', user);
-  
-  const [activePosition, setActivePosition] = useState<ExecutivePosition>(EXECUTIVE_POSITIONS[0]);
-  const [executiveMembers, setExecutiveMembers] = useState<ExecutiveBoardMember[]>([]);
-  const [selectedMember, setSelectedMember] = useState<string>("");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchExecutiveMembers = async () => {
-      console.log('AdminDashboard: Starting to fetch executive members...');
-      try {
-        // Get executive board members and profiles separately, then join manually
-        const { data: membersData, error: membersError } = await supabase
-          .from('gw_executive_board_members')
-          .select('*')
-          .eq('is_active', true);
-
-        console.log('AdminDashboard: Members data:', membersData, 'Error:', membersError);
-
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('gw_profiles')
-          .select('user_id, full_name, email');
-
-        console.log('AdminDashboard: Profiles data:', profilesData, 'Error:', profilesError);
-
-        if (membersError || profilesError) {
-          console.error('Error fetching data:', { membersError, profilesError });
-          return;
-        }
-
-        // Create entries for ALL executive positions
-        const allPositions = EXECUTIVE_POSITIONS.map(position => {
-          // Find if there's a member assigned to this position
-          const assignedMember = membersData?.find(member => member.position === position.value);
-          
-          if (assignedMember) {
-            // If member found, get their profile
-            const profile = profilesData?.find(p => p.user_id === assignedMember.user_id);
-            return {
-              id: assignedMember.id,
-              user_id: assignedMember.user_id,
-              position: position.value,
-              full_name: profile?.full_name || profile?.email || 'Unknown Member',
-              email: profile?.email || ''
-            };
-          } else {
-            // If no member assigned, create placeholder
-            return {
-              id: `empty_${position.value}`,
-              user_id: '',
-              position: position.value,
-              full_name: `${position.label} (No member assigned)`,
-              email: ''
-            };
-          }
-        });
-
-        setExecutiveMembers(allPositions);
-        
-        // Set "none" as default selection
-        setSelectedMember("none");
-        setActivePosition(EXECUTIVE_POSITIONS[0]);
-      } catch (error) {
-        console.error('Error fetching executive members:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchExecutiveMembers();
-  }, []);
-
-  const handleMemberChange = (memberId: string) => {
-    setSelectedMember(memberId);
-    const member = executiveMembers.find(m => m.id === memberId);
-    if (member) {
-      const position = EXECUTIVE_POSITIONS.find(pos => pos.value === member.position);
-      if (position) {
-        setActivePosition(position);
-      }
-    }
-  };
-
-  const shouldShowPermissionsGrid = selectedMember && selectedMember !== "none" && !selectedMember.startsWith('empty_');
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-muted/30 p-6 -m-6 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading executive board members...</p>
-        </div>
-      </div>
-    );
-  }
+  const [activeTab, setActiveTab] = useState("overview");
 
   return (
     <div className="min-h-screen bg-muted/30 p-6 -m-6">
       <div className="space-y-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
-          <div className="text-center lg:text-left">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Executive Board Permissions Management
-            </h1>
-            <p className="text-muted-foreground">
-              Assign function permissions to executive board members
-            </p>
-          </div>
-
-          <div className="w-full lg:w-80">
-            <Select value={selectedMember} onValueChange={handleMemberChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select an executive board member" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">
-                  <span className="text-muted-foreground italic">None</span>
-                </SelectItem>
-                {executiveMembers.map((member) => {
-                  const position = EXECUTIVE_POSITIONS.find(pos => pos.value === member.position);
-                  return (
-                    <SelectItem key={member.id} value={member.id}>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{member.full_name}</span>
-                        <span className="text-sm text-muted-foreground">
-                          ({position?.label || member.position})
-                        </span>
-                      </div>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Admin Dashboard
+          </h1>
+          <p className="text-muted-foreground">
+            Manage the Spelman College Glee Club platform
+          </p>
         </div>
 
-        {shouldShowPermissionsGrid && (
-          <div className="mt-6">
-            <PermissionsGrid selectedPosition={activePosition} />
-          </div>
-        )}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-7">
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <BarChart className="h-4 w-4" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Users
+            </TabsTrigger>
+            <TabsTrigger value="contracts" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Contracts
+            </TabsTrigger>
+            <TabsTrigger value="permissions" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Permissions
+            </TabsTrigger>
+            <TabsTrigger value="calendar" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Calendar
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              Activity
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Settings
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="mt-6">
+            <AdminSummaryStats users={[]} loading={false} activityLogs={[]} />
+          </TabsContent>
+
+          <TabsContent value="users" className="mt-6">
+            <UserManagement />
+          </TabsContent>
+
+          <TabsContent value="contracts" className="mt-6">
+            <ContractManagement />
+          </TabsContent>
+
+          <TabsContent value="permissions" className="mt-6">
+            <ExecutivePermissionsManagement />
+          </TabsContent>
+
+          <TabsContent value="calendar" className="mt-6">
+            <CalendarControlsAdmin />
+          </TabsContent>
+
+          <TabsContent value="activity" className="mt-6">
+            <ActivityLogs />
+          </TabsContent>
+
+          <TabsContent value="settings" className="mt-6">
+            <div className="bg-white rounded-lg p-6">
+              <h3 className="text-lg font-semibold mb-4">System Settings</h3>
+              <p className="text-muted-foreground">System configuration options will be available here.</p>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
