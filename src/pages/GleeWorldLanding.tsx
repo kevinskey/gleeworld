@@ -268,20 +268,6 @@ export const GleeWorldLanding = () => {
     <div className="min-h-screen relative overflow-hidden">
       
       <PublicLayout>
-      {/* Auth state indicator disabled - was showing "You're logged in! Go to Dashboard" badge */}
-
-
-
-      {/* Main Content with Black and White Background */}
-      <div className="relative">
-        {/* Mobile Background Image */}
-        <div 
-          className="md:hidden absolute inset-0 bg-repeat bg-contain bg-center"
-          style={{
-            backgroundImage: `url('/lovable-uploads/dd719095-a5a9-4667-a7ca-d37c1b3f2d8f.png')`
-          }}
-        ></div>
-        <div className="relative z-10 max-w-screen-2xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12">
 
       {/* Audition Section */}
       <section className="relative z-30 pt-4 pb-6 mt-[100px] sm:pt-6 sm:pb-8 sm:mt-[100px] md:pt-8 md:pb-10 md:mt-[50px] lg:mt-[75px] px-2 sm:px-4 md:px-6 lg:px-8 w-full">
@@ -783,8 +769,6 @@ export const GleeWorldLanding = () => {
           </Card>
         </div>
       </section>
-        </div>
-      </div>
       </PublicLayout>
     </div>
   );
