@@ -19,7 +19,12 @@ import {
   ChevronRight,
   BookOpen,
   Image,
-  FileAudio
+  FileAudio,
+  Database,
+  StickyNote,
+  CheckCircle,
+  ArrowUpDown,
+  ScanLine
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
@@ -476,6 +481,20 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                 {selectedCategory === "libraries" && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200"
+                      onClick={() => setSelectedSubcategory("music-catalogue")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Database className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Music Catalogue</h3>
+                        <Badge variant="secondary" className="text-xs">Google Sheets</Badge>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Manage music titles and metadata via Google Sheets integration
+                      </p>
+                    </div>
+
+                    <div 
                       className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
                       onClick={() => setSelectedSubcategory("pdf-library")}
                     >
@@ -485,6 +504,46 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                       </div>
                       <p className="text-xs sm:text-sm text-muted-foreground">
                         Sheet music library with PDF scores and arrangements
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("annotation-feature")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <StickyNote className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Annotation Feature</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Add notes and markings to sheet music PDFs
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
+                      onClick={() => setSelectedSubcategory("music-library-module")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Music className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Music Library Module</h3>
+                        <Badge variant="secondary" className="text-xs">Advanced</Badge>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        PDF scanning, inventory management, and check-in/check-out system
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("checkin-checkout")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <ArrowUpDown className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Check-in/Check-out</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Track music borrowing and returns for members
                       </p>
                     </div>
 
@@ -506,7 +565,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                       onClick={() => setSelectedSubcategory("picture-library")}
                     >
                       <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <Image className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                        <Image className="h-4 w-4 sm:h-5 sm:w-5 text-pink-600" />
                         <h3 className="font-semibold text-sm sm:text-base">Picture Library</h3>
                       </div>
                       <p className="text-xs sm:text-sm text-muted-foreground">
@@ -515,11 +574,11 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                     </div>
 
                     <div 
-                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
                       onClick={() => setSelectedSubcategory("docs-collections")}
                     >
                       <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <Edit3 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                        <Edit3 className="h-4 w-4 sm:h-5 sm:w-5 text-teal-600" />
                         <h3 className="font-semibold text-sm sm:text-base">Docs Collections</h3>
                         <Badge variant="secondary" className="text-xs">Google Docs</Badge>
                       </div>
