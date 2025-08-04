@@ -43,7 +43,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
     <div className="min-h-screen bg-muted/30 p-6 -m-6">
       <div className="space-y-6">
         <Tabs value={activeMainTab} onValueChange={setActiveMainTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1">
+          <TabsList className="flex w-full overflow-x-auto lg:grid lg:grid-cols-6 gap-1 scrollbar-hide">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Overview
@@ -94,7 +94,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
           <TabsContent value="management">
             <Tabs value={activeManagementTab} onValueChange={setActiveManagementTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1">
+              <TabsList className="flex w-full overflow-x-auto lg:grid lg:grid-cols-5 gap-1 scrollbar-hide">
                 <TabsTrigger value="auditions" className="flex items-center gap-2">
                   <Music className="h-4 w-4" />
                   Auditions
