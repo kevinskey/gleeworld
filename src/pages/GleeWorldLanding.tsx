@@ -270,7 +270,7 @@ export const GleeWorldLanding = () => {
       <PublicLayout>
 
       {/* Audition Section */}
-      <section className="relative z-30 pt-4 pb-6 mt-[100px] sm:pt-6 sm:pb-8 sm:mt-[100px] md:pt-8 md:pb-10 md:mt-[50px] lg:mt-[75px] px-2 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section className="relative z-30 pt-8 pb-8 mt-[50px] sm:pt-6 sm:pb-8 sm:mt-[100px] md:pt-8 md:pb-10 md:mt-[50px] lg:mt-[75px] px-4 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto text-center">
           <Card className="p-6 sm:p-8 md:p-10 bg-gradient-to-br from-primary/10 via-background to-primary/5 backdrop-blur-sm border-2 border-primary/20 shadow-xl">
             <div className="space-y-6">
