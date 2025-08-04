@@ -2,13 +2,15 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Music } from "lucide-react";
+import { Music, Settings } from "lucide-react";
 import { ResponsiveNavigation } from "@/components/navigation/ResponsiveNavigation";
 import { HeaderClock } from "@/components/ui/header-clock";
 import { MusicStaffMenu } from "@/components/ui/music-staff-menu";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const PublicHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user } = useAuth();
 
   // Add global style to hide sheet overlay
   const overlayStyle = `
@@ -51,10 +53,22 @@ export const PublicHeader = () => {
 
           {/* Right side actions */}
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            {/* Dashboard Link for Authenticated Users */}
+            {user && (
+              <Button asChild variant="outline" size="sm" className="hidden lg:flex text-sm px-4 py-1">
+                <Link to="/dashboard" className="flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  Dashboard
+                </Link>
+              </Button>
+            )}
+            
             {/* Auth Button - Responsive sizing */}
-            <Button asChild variant="default" size="sm" className="hidden lg:flex text-sm px-5 py-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
-              <Link to="/auth">Sign In</Link>
-            </Button>
+            {!user && (
+              <Button asChild variant="default" size="sm" className="hidden lg:flex text-sm px-5 py-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
+                <Link to="/auth">Sign In</Link>
+              </Button>
+            )}
             
             {/* Friendly Mobile Menu - Shows below lg breakpoint */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -84,6 +98,14 @@ export const PublicHeader = () => {
                   </div>
                   
                   <nav className="flex flex-col gap-0">
+                    {user && (
+                      <Button asChild variant="outline" size="sm" className="mb-2 text-sm justify-start">
+                        <Link to="/dashboard" className="flex items-center gap-2" onClick={() => setIsOpen(false)}>
+                          <Settings className="h-4 w-4" />
+                          Dashboard
+                        </Link>
+                      </Button>
+                    )}
                     <ResponsiveNavigation mobile onItemClick={() => setIsOpen(false)} />
                   </nav>
                 </div>

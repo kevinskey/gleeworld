@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import FanDashboard from "./pages/FanDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 
 import { GleeWorldLanding } from "./pages/GleeWorldLanding";
 import { TestLandingPage } from "./components/debug/TestLandingPage";
@@ -576,7 +577,7 @@ const App = () => {
                       path="/admin" 
                       element={
                         <ProtectedRoute>
-                          <UserDashboard />
+                          <AdminDashboard />
                         </ProtectedRoute>
                       } 
                     />
