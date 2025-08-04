@@ -92,6 +92,7 @@ import LibrarianDashboard from "./pages/LibrarianDashboard";
 import HistorianDashboard from "./pages/HistorianDashboard";
 import MemberDirectory from "./pages/MemberDirectory";
 import { RadioStationPage } from "./components/radio/RadioStationPage";
+import { AuditionsManagement } from "./components/admin/AuditionsManagement";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -569,8 +570,16 @@ const App = () => {
                                   <ProtectedRoute>
                                     <DocumentsForms />
                                   </ProtectedRoute>
-                                } 
-                              />
+                                 } 
+                               />
+                               <Route 
+                                 path="/admin/auditions" 
+                                 element={
+                                   <ProtectedRoute>
+                                     <AuditionsManagement />
+                                   </ProtectedRoute>
+                                 } 
+                               />
                              <Route 
                                path="/member-directory" 
                                element={
