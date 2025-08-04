@@ -1,6 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CommunicationCenterModule } from "@/components/admin/CommunicationCenterModule";
 import { RadioManagement } from "@/components/admin/RadioManagement";
+import { DuesManagement } from "@/pages/DuesManagement";
+import { StudentConductorDashboard } from "@/pages/StudentConductorDashboard";
+import AlumnaeAdmin from "@/pages/admin/AlumnaeAdmin";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
@@ -57,6 +60,7 @@ interface AdminDashboardProps {
 
 export const AdminDashboard = ({ user }: AdminDashboardProps) => {
   const navigate = useNavigate();
+  const [activeMainTab, setActiveMainTab] = useState("overview");
   const [showAuditionDialog, setShowAuditionDialog] = useState(false);
   const [editingAudition, setEditingAudition] = useState<AuditionEntry | null>(null);
   
@@ -213,401 +217,425 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
   return (
     <div className="space-y-6 pb-8">
-      {/* Hero Header Section */}
-      <Card className="mb-6 relative overflow-hidden min-h-[1000px] flex items-center bg-red-500 border-8 border-yellow-500">
-        <CardHeader className="relative z-10 w-full">
-          <CardTitle className="text-4xl text-white">Admin Dashboard</CardTitle>
-          <CardDescription className="text-2xl text-white">System Administration & Management</CardDescription>
-        </CardHeader>
-      </Card>
-      {/* Notification Center */}
-      <NotificationCenter />
-
-      {/* Admin Overview Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {/* System Health Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Health</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{adminData.systemStats.systemHealth}%</div>
-            <p className="text-xs text-muted-foreground">All systems operational</p>
-            <Progress value={adminData.systemStats.systemHealth} className="mt-2" />
-          </CardContent>
-        </Card>
-
-        {/* User Management Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">User Management</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{adminData.systemStats.totalUsers}</div>
-            <p className="text-xs text-muted-foreground">
-              Total users ({adminData.systemStats.activeUsers} active)
-            </p>
-            <div className="mt-2 space-y-1">
-              <div className="flex justify-between text-xs">
-                <span>Active</span>
-                <span>{adminData.systemStats.activeUsers}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span>New (This Month)</span>
-                <span>{adminData.userMetrics.newRegistrations}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Auditions Overview */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Auditions Overview</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl md:text-4xl font-bold">{upcomingAuditionsCount}</div>
-            <p className="text-base md:text-lg text-muted-foreground">Upcoming auditions</p>
-            <div className="mt-2 space-y-1">
-              <div className="flex justify-between text-xs">
-                <span>Total Auditions</span>
-                <span>{auditions.length}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span>Solo Auditions</span>
-                <span>{auditions.filter(a => a.type === 'Solo Audition').length}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* SRF Overview */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">SRF Management</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl md:text-4xl font-bold">{averageCompletionRate}%</div>
-            <p className="text-base md:text-lg text-muted-foreground">Average completion rate</p>
-            <div className="mt-2 space-y-1">
-              <div className="flex justify-between text-xs">
-                <span>Active Assignments</span>
-                <span>{srfAssignments.length}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span>Overdue</span>
-                <span>{srfAssignments.filter(a => new Date(a.dueDate) < new Date()).length}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Financial Overview Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Financial Overview</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${adminData.financialOverview.remaining.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Remaining budget</p>
-            <div className="mt-2 space-y-1">
-              <div className="flex justify-between text-xs">
-                <span>Total Budget</span>
-                <span>${adminData.financialOverview.totalBudget.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span>Spent</span>
-                <span>${adminData.financialOverview.spent.toLocaleString()}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
-            <Star className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full justify-start" 
-                onClick={() => navigate('/dues-management')}
-              >
-                <DollarSign className="mr-2 h-4 w-4" />
-                Dues Management
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full justify-start" 
-                onClick={() => navigate('/dashboard')}
-              >
-                <Shield className="mr-2 h-4 w-4" />
-                Executive Board Dashboard
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full justify-start" 
-                onClick={() => navigate('/dashboard/student-conductor')}
-              >
-                <Music className="mr-2 h-4 w-4" />
-                Student Conductor Hub
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full justify-start" 
-                onClick={() => navigate('/admin/alumnae')}
-              >
-                <GraduationCap className="mr-2 h-4 w-4" />
-                Alumnae Portal Admin
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tabbed Management Modules */}
-      <Tabs defaultValue="auditions" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="auditions">Auditions</TabsTrigger>
-          <TabsTrigger value="solos">Solos</TabsTrigger>
-          <TabsTrigger value="srf">SRF Management</TabsTrigger>
-          <TabsTrigger value="radio">Radio</TabsTrigger>
-          <TabsTrigger value="permissions">Permissions</TabsTrigger>
+      {/* Main Admin Dashboard Tabs */}
+      <Tabs value={activeMainTab} onValueChange={setActiveMainTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="dues">Dues Management</TabsTrigger>
+          <TabsTrigger value="conductor">Student Conductor</TabsTrigger>
+          <TabsTrigger value="alumnae">Alumnae Admin</TabsTrigger>
+          <TabsTrigger value="management">Management</TabsTrigger>
+          <TabsTrigger value="executive">Executive Board</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="auditions" className="mt-6">
-          <Card>
-            <CardHeader className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                New Member Auditions
-              </CardTitle>
-              <Button onClick={handleAddAudition}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Audition
-              </Button>
+        {/* Overview Tab - Original Dashboard Content */}
+        <TabsContent value="overview" className="mt-6">
+          {/* Hero Header Section */}
+          <Card className="mb-6 relative overflow-hidden min-h-[200px] flex items-center bg-red-500 border-8 border-yellow-500">
+            <CardHeader className="relative z-10 w-full">
+              <CardTitle className="text-4xl text-white">Admin Dashboard</CardTitle>
+              <CardDescription className="text-2xl text-white">System Administration & Management</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {auditions.filter(audition => audition.type === 'New Member').map((audition) => (
-                  <Card key={audition.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="pt-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                            <h4 className="text-lg md:text-xl font-semibold">{audition.name}</h4>
-                            <p className="text-base md:text-lg text-muted-foreground">{audition.date} at {audition.timeSlot}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Badge variant="outline">{audition.type}</Badge>
-                          <Badge className={`border ${getStatusColor(audition.status)}`}>
-                            {audition.status}
-                          </Badge>
-                        </div>
-                      </div>
-                        <p className="text-base md:text-lg mb-3">Notes: {audition.notes}</p>
-                      <div className="flex gap-2">
-                        <Button size="sm">
-                          <FileText className="h-4 w-4 mr-2" />
-                          Score Sheet
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleEditAudition(audition)}
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="destructive"
-                          onClick={() => deleteAudition(audition.id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                {auditions.filter(audition => audition.type === 'New Member').length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No new member auditions scheduled
-                  </div>
-                )}
-              </div>
-            </CardContent>
           </Card>
+          
+          {/* Notification Center */}
+          <NotificationCenter />
+
+          {/* Admin Overview Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {/* System Health Card */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">System Health</CardTitle>
+                <Shield className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{adminData.systemStats.systemHealth}%</div>
+                <p className="text-xs text-muted-foreground">All systems operational</p>
+                <Progress value={adminData.systemStats.systemHealth} className="mt-2" />
+              </CardContent>
+            </Card>
+
+            {/* User Management Card */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">User Management</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{adminData.systemStats.totalUsers}</div>
+                <p className="text-xs text-muted-foreground">
+                  Total users ({adminData.systemStats.activeUsers} active)
+                </p>
+                <div className="mt-2 space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span>Active</span>
+                    <span>{adminData.systemStats.activeUsers}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span>New (This Month)</span>
+                    <span>{adminData.userMetrics.newRegistrations}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Auditions Overview */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Auditions Overview</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl md:text-4xl font-bold">{upcomingAuditionsCount}</div>
+                <p className="text-base md:text-lg text-muted-foreground">Upcoming auditions</p>
+                <div className="mt-2 space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span>Total Auditions</span>
+                    <span>{auditions.length}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span>Solo Auditions</span>
+                    <span>{auditions.filter(a => a.type === 'Solo Audition').length}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* SRF Overview */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">SRF Management</CardTitle>
+                <BookOpen className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl md:text-4xl font-bold">{averageCompletionRate}%</div>
+                <p className="text-base md:text-lg text-muted-foreground">Average completion rate</p>
+                <div className="mt-2 space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span>Active Assignments</span>
+                    <span>{srfAssignments.length}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span>Overdue</span>
+                    <span>{srfAssignments.filter(a => new Date(a.dueDate) < new Date()).length}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Financial Overview Card */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Financial Overview</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">${adminData.financialOverview.remaining.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">Remaining budget</p>
+                <div className="mt-2 space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span>Total Budget</span>
+                    <span>${adminData.financialOverview.totalBudget.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span>Spent</span>
+                    <span>${adminData.financialOverview.spent.toLocaleString()}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions Card */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
+                <Star className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full justify-start" 
+                    onClick={() => setActiveMainTab('dues')}
+                  >
+                    <DollarSign className="mr-2 h-4 w-4" />
+                    Dues Management
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full justify-start" 
+                    onClick={() => setActiveMainTab('executive')}
+                  >
+                    <Shield className="mr-2 h-4 w-4" />
+                    Executive Board Dashboard
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full justify-start" 
+                    onClick={() => setActiveMainTab('conductor')}
+                  >
+                    <Music className="mr-2 h-4 w-4" />
+                    Student Conductor Hub
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full justify-start" 
+                    onClick={() => setActiveMainTab('alumnae')}
+                  >
+                    <GraduationCap className="mr-2 h-4 w-4" />
+                    Alumnae Portal Admin
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
-        <TabsContent value="solos" className="mt-6">
-          <Card>
-            <CardHeader className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Star className="h-5 w-5" />
-                Solo Auditions
-              </CardTitle>
-              <Button onClick={handleAddAudition}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Solo Audition
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {auditions.filter(audition => audition.type === 'Solo Audition').map((audition) => (
-                  <Card key={audition.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="pt-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                            <h4 className="text-lg md:text-xl font-semibold">{audition.name}</h4>
-                            <p className="text-base md:text-lg text-muted-foreground">{audition.date} at {audition.timeSlot}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Badge variant="outline">{audition.type}</Badge>
-                          <Badge className={`border ${getStatusColor(audition.status)}`}>
-                            {audition.status}
-                          </Badge>
-                        </div>
-                      </div>
-                      <p className="text-base md:text-lg mb-3">Notes: {audition.notes}</p>
-                      <div className="flex gap-2">
-                        <Button size="sm">
-                          <FileText className="h-4 w-4 mr-2" />
-                          Score Sheet
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleEditAudition(audition)}
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="destructive"
-                          onClick={() => deleteAudition(audition.id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                {auditions.filter(audition => audition.type === 'Solo Audition').length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No solo auditions scheduled
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+        {/* Dues Management Tab */}
+        <TabsContent value="dues" className="mt-6">
+          <DuesManagement />
         </TabsContent>
 
-        <TabsContent value="srf" className="mt-6">
+        {/* Student Conductor Tab */}
+        <TabsContent value="conductor" className="mt-6">
+          <StudentConductorDashboard />
+        </TabsContent>
+
+        {/* Alumnae Admin Tab */}
+        <TabsContent value="alumnae" className="mt-6">
+          <AlumnaeAdmin />
+        </TabsContent>
+
+        {/* Management Tab - Original tabbed modules */}
+        <TabsContent value="management" className="mt-6">
+          {/* Tabbed Management Modules */}
+          <Tabs defaultValue="auditions" className="w-full">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="auditions">Auditions</TabsTrigger>
+              <TabsTrigger value="solos">Solos</TabsTrigger>
+              <TabsTrigger value="srf">SRF Management</TabsTrigger>
+              <TabsTrigger value="radio">Radio</TabsTrigger>
+              <TabsTrigger value="permissions">Permissions</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="auditions" className="mt-6">
+              <Card>
+                <CardHeader className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    New Member Auditions
+                  </CardTitle>
+                  <Button onClick={handleAddAudition}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Audition
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {auditions.filter(audition => audition.type === 'New Member').map((audition) => (
+                      <Card key={audition.id} className="hover:shadow-md transition-shadow">
+                        <CardContent className="pt-4">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                                <h4 className="text-lg md:text-xl font-semibold">{audition.name}</h4>
+                                <p className="text-base md:text-lg text-muted-foreground">{audition.date} at {audition.timeSlot}</p>
+                            </div>
+                            <div className="flex gap-2">
+                              <Badge variant="outline">{audition.type}</Badge>
+                              <Badge className={`border ${getStatusColor(audition.status)}`}>
+                                {audition.status}
+                              </Badge>
+                            </div>
+                          </div>
+                            <p className="text-base md:text-lg mb-3">Notes: {audition.notes}</p>
+                          <div className="flex gap-2">
+                            <Button size="sm">
+                              <FileText className="h-4 w-4 mr-2" />
+                              Score Sheet
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleEditAudition(audition)}
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="destructive"
+                              onClick={() => deleteAudition(audition.id)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    {auditions.filter(audition => audition.type === 'New Member').length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No new member auditions scheduled
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="solos" className="mt-6">
+              <Card>
+                <CardHeader className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Star className="h-5 w-5" />
+                    Solo Auditions
+                  </CardTitle>
+                  <Button onClick={handleAddAudition}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Solo Audition
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {auditions.filter(audition => audition.type === 'Solo Audition').map((audition) => (
+                      <Card key={audition.id} className="hover:shadow-md transition-shadow">
+                        <CardContent className="pt-4">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                                <h4 className="text-lg md:text-xl font-semibold">{audition.name}</h4>
+                                <p className="text-base md:text-lg text-muted-foreground">{audition.date} at {audition.timeSlot}</p>
+                            </div>
+                            <div className="flex gap-2">
+                              <Badge variant="outline">{audition.type}</Badge>
+                              <Badge className={`border ${getStatusColor(audition.status)}`}>
+                                {audition.status}
+                              </Badge>
+                            </div>
+                          </div>
+                          <p className="text-base md:text-lg mb-3">Notes: {audition.notes}</p>
+                          <div className="flex gap-2">
+                            <Button size="sm">
+                              <FileText className="h-4 w-4 mr-2" />
+                              Score Sheet
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleEditAudition(audition)}
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="destructive"
+                              onClick={() => deleteAudition(audition.id)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    {auditions.filter(audition => audition.type === 'Solo Audition').length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No solo auditions scheduled
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="srf" className="mt-6">
+              <Card>
+                <CardHeader className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    SRF Assignments
+                  </CardTitle>
+                  <Button onClick={handleCreateSRFAssignment}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Assignment
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {srfAssignments.map((assignment) => (
+                      <Card key={assignment.id} className="hover:shadow-md transition-shadow">
+                        <CardContent className="pt-4">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h4 className="text-lg md:text-xl font-semibold">{assignment.title}</h4>
+                              <p className="text-base md:text-lg text-muted-foreground">Due: {assignment.dueDate}</p>
+                              <Badge variant="outline">{assignment.difficulty}</Badge>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg md:text-xl font-bold">{assignment.completedCount}/{assignment.assignedCount}</div>
+                              <p className="text-xs text-muted-foreground">Completed</p>
+                            </div>
+                          </div>
+                          <Progress 
+                            value={(assignment.completedCount / assignment.assignedCount) * 100} 
+                            className="mb-3" 
+                          />
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline">
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              onClick={() => sendReminder(assignment.id)}
+                            >
+                              <Send className="h-4 w-4 mr-2" />
+                              Send Reminder
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    {srfAssignments.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No SRF assignments created yet
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="radio" className="mt-6">
+              <RadioManagement />
+            </TabsContent>
+
+            <TabsContent value="permissions" className="mt-6">
+              <GranularPermissionsManager />
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
+
+        {/* Executive Board Tab */}
+        <TabsContent value="executive" className="mt-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                Sight Reading Factory Management
+                <Shield className="h-5 w-5" />
+                Executive Board Dashboard
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <Card>
-                  <CardContent className="pt-4">
-                        <div className="text-3xl md:text-4xl font-bold">{srfAssignments.length}</div>
-                        <p className="text-base md:text-lg text-muted-foreground">Active Assignments</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-4">
-                        <div className="text-3xl md:text-4xl font-bold">{averageCompletionRate}%</div>
-                        <p className="text-base md:text-lg text-muted-foreground">Completion Rate</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-4">
-                        <div className="text-3xl md:text-4xl font-bold">
-                          {srfAssignments.filter(a => new Date(a.dueDate) < new Date()).length}
-                        </div>
-                        <p className="text-base md:text-lg text-muted-foreground">Overdue</p>
-                  </CardContent>
-                </Card>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl md:text-2xl font-semibold">Current Assignments</h3>
-                  <Button onClick={handleCreateSRFAssignment}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Assignment
-                  </Button>
-                </div>
-                
-                {srfAssignments.map((assignment) => (
-                  <Card key={assignment.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="pt-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                              <h4 className="text-lg md:text-xl font-semibold">{assignment.title}</h4>
-                              <p className="text-base md:text-lg text-muted-foreground">Due: {assignment.dueDate}</p>
-                        </div>
-                        <Badge variant={new Date(assignment.dueDate) < new Date() ? "destructive" : "default"}>
-                          {assignment.completedCount}/{assignment.assignedCount} Complete
-                        </Badge>
-                      </div>
-                      <Progress 
-                        value={(assignment.completedCount / assignment.assignedCount) * 100} 
-                        className="mb-3"
-                      />
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => sendReminder(assignment.id)}
-                        >
-                          <Send className="h-4 w-4 mr-2" />
-                          Send Reminder
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                
-                {srfAssignments.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No SRF assignments yet. Create your first assignment to get started.
-                  </div>
-                )}
+              <div className="text-center py-8 text-muted-foreground">
+                Executive Board dashboard coming soon
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="radio" className="mt-6">
-          <RadioManagement />
-        </TabsContent>
-
-        <TabsContent value="permissions" className="mt-6">
-          <GranularPermissionsManager />
         </TabsContent>
       </Tabs>
 
