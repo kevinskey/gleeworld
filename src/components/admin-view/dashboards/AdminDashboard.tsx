@@ -31,6 +31,13 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
   const [activeMainTab, setActiveMainTab] = useState("overview");
   const [activeManagementTab, setActiveManagementTab] = useState("radio");
 
+  const handleNavigateToTab = (tab: string, subTab?: string) => {
+    setActiveMainTab(tab);
+    if (subTab) {
+      setActiveManagementTab(subTab);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-muted/30 p-6 -m-6">
       <div className="space-y-6">
@@ -63,7 +70,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           </TabsList>
 
           <TabsContent value="overview">
-            <AdminToolsWidget />
+            <AdminToolsWidget onNavigateToTab={handleNavigateToTab} />
           </TabsContent>
 
           <TabsContent value="dues">

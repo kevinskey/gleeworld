@@ -13,7 +13,8 @@ import {
   Package, 
   BarChart3,
   Database,
-  UserCheck
+  UserCheck,
+  Radio
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -27,7 +28,11 @@ interface AdminModule {
   badge?: string;
 }
 
-export const AdminToolsWidget = () => {
+interface AdminToolsWidgetProps {
+  onNavigateToTab?: (tab: string, subTab?: string) => void;
+}
+
+export const AdminToolsWidget = ({ onNavigateToTab }: AdminToolsWidgetProps = {}) => {
   const navigate = useNavigate();
 
   const adminModules: AdminModule[] = [
@@ -61,6 +66,14 @@ export const AdminToolsWidget = () => {
       icon: Music,
       route: "/admin/media",
       status: 'pending',
+      badge: "Core"
+    },
+    {
+      title: "Radio Management",
+      description: "Manage radio station, playlists, and audio content",
+      icon: Radio,
+      action: () => onNavigateToTab?.('management', 'radio'),
+      status: 'active',
       badge: "Core"
     },
     {
