@@ -10750,6 +10750,10 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: string
       }
+      get_current_user_profile_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -10876,6 +10880,10 @@ export type Database = {
         Returns: boolean
       }
       is_current_user_gw_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_current_user_gw_admin_safe: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
