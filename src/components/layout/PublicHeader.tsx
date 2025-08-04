@@ -24,17 +24,17 @@ export const PublicHeader = () => {
     <>
       <style dangerouslySetInnerHTML={{ __html: overlayStyle }} />
       <header className="bg-background border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
+        <div className="container mx-auto px-4 lg:px-6">
+          <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-3 lg:gap-4">
               <img 
                 src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
                 alt="Spelman College Glee Club" 
-                className="w-10 h-10"
+                className="w-10 h-10 lg:w-12 lg:h-12"
               />
               <div>
-                <h1 className="text-xl font-bold text-foreground">GleeWorld</h1>
+                <h1 className="text-xl lg:text-2xl xl:text-3xl font-bold text-foreground">GleeWorld</h1>
               </div>
             </Link>
             
@@ -44,12 +44,12 @@ export const PublicHeader = () => {
             </div>
 
             {/* Right side actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 lg:gap-3">
               {/* Dashboard Link for Authenticated Users */}
               {user && (
-                <Button asChild variant="outline" size="sm" className="hidden md:flex">
+                <Button asChild variant="outline" className="hidden md:flex lg:text-base">
                   <Link to="/dashboard">
-                    <Settings className="h-4 w-4 mr-2" />
+                    <Settings className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
                     Dashboard
                   </Link>
                 </Button>
@@ -57,7 +57,7 @@ export const PublicHeader = () => {
               
               {/* Auth Button */}
               {!user && (
-                <Button asChild size="sm" className="hidden md:flex">
+                <Button asChild className="hidden md:flex lg:text-base lg:px-6 lg:py-2">
                   <Link to="/auth">Sign In</Link>
                 </Button>
               )}
