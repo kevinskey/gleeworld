@@ -266,7 +266,12 @@ const UserDashboard = React.memo(() => {
   const backgroundImage = "/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png";
 
   return (
-    <div className="min-h-screen relative">
+    <UniversalLayout 
+      containerized={false} 
+      className="min-h-screen relative"
+      viewMode={viewMode}
+      onViewModeChange={setViewMode}
+    >
       {/* Background Image */}
       {backgroundImage && (
         <div 
@@ -279,15 +284,8 @@ const UserDashboard = React.memo(() => {
       )}
       
       {/* Content overlay */}
-      <div className="relative z-10">
-        <UniversalLayout 
-          containerized={false} 
-          className="bg-transparent"
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-        >
-          <div className="w-full max-w-7xl mx-auto px-1 sm:px-2 md:px-4 py-1 sm:py-2 md:py-4 flex flex-col gap-4">
-        
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-1 sm:px-2 md:px-4 py-1 sm:py-2 md:py-4 flex flex-col gap-4">
+    
         {/* Welcome Card - Full width, extends to top */}
         <div className="w-full">
           <WelcomeCard 
@@ -295,7 +293,6 @@ const UserDashboard = React.memo(() => {
             profile={profile}
           />
         </div>
-
 
         {/* Add spacing between WelcomeCard and Community Hub */}
         <div className="mb-4 sm:mb-8 md:mb-12"></div>
@@ -317,10 +314,8 @@ const UserDashboard = React.memo(() => {
           </div>
         </div>
 
-          </div>
-        </UniversalLayout>
       </div>
-    </div>
+    </UniversalLayout>
   );
 });
 
