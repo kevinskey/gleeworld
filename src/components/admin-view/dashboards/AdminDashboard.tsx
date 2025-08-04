@@ -29,7 +29,17 @@ import {
   ClipboardList,
   TrendingUp,
   Clock,
-  Edit
+  Edit,
+  DollarSign,
+  Receipt,
+  CreditCard,
+  Wallet,
+  Calculator,
+  PieChart,
+  Brain,
+  FileCheck,
+  Printer,
+  ShoppingCart
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
@@ -327,6 +337,30 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                 </p>
               </div>
 
+              {/* Finances Category */}
+              <div 
+                className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
+                  selectedCategory === "finances" 
+                    ? "bg-primary/10 border-primary/20 border" 
+                    : "bg-muted/50 hover:bg-muted"
+                }`}
+                onClick={() => {
+                  setSelectedCategory("finances");
+                  setSelectedSubcategory(null);
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                    <span className="font-medium text-sm sm:text-base">Finances</span>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
+                  Contracts, budgets, payments, dues collection, and financial planning
+                </p>
+              </div>
+
               {/* Musical Leadership Category */}
               <div 
                 className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
@@ -361,6 +395,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
               {selectedCategory === "executive-board" && "Executive Board Tools"}
               {selectedCategory === "member-management" && "Member Management"}
               {selectedCategory === "libraries" && "Libraries Management"}
+              {selectedCategory === "finances" && "Finances Management"}
               {selectedCategory === "musical-leadership" && "Musical Leadership"}
               {!selectedCategory && "Select a category to view functions"}
             </h2>
@@ -823,6 +858,156 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                       </div>
                       <p className="text-xs sm:text-sm text-muted-foreground">
                         Document collections generated from Google Docs integration
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Finances Functions */}
+                {selectedCategory === "finances" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
+                      onClick={() => setSelectedSubcategory("contracts-management")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <FileCheck className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Contracts Management</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Create, manage, and track performance contracts
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("budgets-planning")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Calculator className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Budgets & Planning</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Budget creation, tracking, and financial planning with AI
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200"
+                      onClick={() => setSelectedSubcategory("google-ledger")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Database className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Google Ledger</h3>
+                        <Badge variant="secondary" className="text-xs">Google Sheets</Badge>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Maintain financial records using Google Sheets integration
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("dues-collection")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Dues Collection</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Manage member dues collection and payment tracking
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("student-payments")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Student Payments</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Process payments to students with approval system
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("receipts-records")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Receipt className="h-4 w-4 sm:h-5 sm:w-5 text-teal-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Receipts & Records</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Generate receipts, maintain records, and print documents
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200"
+                      onClick={() => setSelectedSubcategory("ai-financial-planning")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">AI Financial Planning</h3>
+                        <Badge variant="secondary" className="text-xs">AI Helper</Badge>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        AI-powered financial planning and budget optimization
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("approval-system")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Approval System</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        User → Rayne Stewart → Final approval workflow
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("monthly-statements")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <PieChart className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Monthly Statements</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Organized monthly financial records for treasurer
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("check-requests")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Printer className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Check Requests</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Request and track check issuance for payments
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200"
+                      onClick={() => setSelectedSubcategory("merch-store-finances")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Glee Merch Store Finances</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Track merchandise sales, expenses, and store profitability
                       </p>
                     </div>
                   </div>
