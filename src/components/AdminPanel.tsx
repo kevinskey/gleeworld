@@ -18,9 +18,9 @@ import { AccountingSummary } from "./accounting/AccountingSummary";
 import { AccountingTable } from "./accounting/AccountingTable";
 import { AccountingFilters } from "./accounting/AccountingFilters";
 import { useAccountingFiltering } from "@/hooks/useAccountingFiltering";
-import { Shield, Users, Settings, FileText, Activity, Receipt, Calculator, Mail, Music, Megaphone } from "lucide-react";
+import { Shield, Users, Settings, FileText, Activity, Receipt, Calculator, Mail, Music, Megaphone, Share2 } from "lucide-react";
 import { MusicManagement } from "./admin/MusicManagement";
-
+import { SocialPushDashboard } from "./admin/SocialPushDashboard";
 import { ProductManager } from "./admin/ProductManager";
 import { AnnouncementManagement } from "./admin/AnnouncementManagement";
 import { AdminPanelHeader } from "./admin/AdminPanelHeader";
@@ -81,6 +81,7 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
      currentPath.includes('music') ? 'music' :
      currentPath.includes('announcements') ? 'announcements' :
      currentPath.includes('products') ? 'products' :
+     currentPath.includes('social') ? 'social' :
      currentPath.includes('settings') ? 'settings' : 'overview');
 
   const handleSort = (column: string) => {
