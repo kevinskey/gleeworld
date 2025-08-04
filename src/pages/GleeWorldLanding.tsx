@@ -270,8 +270,6 @@ export const GleeWorldLanding = () => {
       <PublicLayout>
       {/* Auth state indicator disabled - was showing "You're logged in! Go to Dashboard" badge */}
 
-      {/* Audition Hover Card */}
-      <AuditionHoverCard />
 
 
       {/* Main Content with Black and White Background */}
@@ -284,6 +282,35 @@ export const GleeWorldLanding = () => {
           }}
         ></div>
         <div className="relative z-10 max-w-screen-2xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12">
+
+      {/* Audition Section */}
+      <section className="relative z-30 pt-4 pb-6 mt-[100px] sm:pt-6 sm:pb-8 sm:mt-[100px] md:pt-8 md:pb-10 md:mt-[50px] lg:mt-[75px] px-2 sm:px-4 md:px-6 lg:px-8 w-full">
+        <div className="w-full max-w-screen-2xl mx-auto text-center">
+          <Card className="p-6 sm:p-8 md:p-10 bg-gradient-to-br from-primary/10 via-background to-primary/5 backdrop-blur-sm border-2 border-primary/20 shadow-xl">
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-primary">
+                  Join Our Legacy
+                </h2>
+                <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+                  Ready to be part of something extraordinary? Auditions are now open for the Spelman College Glee Club.
+                </p>
+              </div>
+              
+              <Link to="/auditions">
+                <Button 
+                  size="lg"
+                  className="px-8 py-6 text-lg font-bold bg-gradient-to-b from-spelman-blue-light via-spelman-blue-light/90 to-spelman-blue-dark hover:from-spelman-blue-light/80 hover:via-spelman-blue-light/70 hover:to-spelman-blue-dark/90 text-white border-2 border-spelman-blue-light shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+                >
+                  <Music className="w-5 h-5 mr-3" />
+                  SIGN UP FOR AUDITIONS
+                  <MusicStaffIcon className="ml-3 text-white" size={20} />
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        </div>
+      </section>
 
       {/* FAQ Section */}
       <section className="relative z-30 pt-4 pb-6 mt-[200px] sm:pt-6 sm:pb-8 sm:mt-[200px] md:pt-8 md:pb-10 md:mt-[100px] lg:mt-[150px] px-2 sm:px-4 md:px-6 lg:px-8 w-full">
