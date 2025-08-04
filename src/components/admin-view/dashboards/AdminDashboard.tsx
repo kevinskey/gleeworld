@@ -3,6 +3,7 @@ import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { AdminToolsWidget } from "@/components/unified/AdminToolsWidget";
 import AlumnaeAdmin from "@/pages/admin/AlumnaeAdmin";
 import { RadioManagement } from "@/components/admin/RadioManagement";
+import { AuditionsManagement } from "@/components/admin/AuditionsManagement";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Settings, 
@@ -117,10 +118,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
               </TabsList>
 
               <TabsContent value="auditions">
-                <div className="p-6 text-center">
-                  <h3 className="text-lg font-semibold mb-2">Auditions Management</h3>
-                  <p className="text-muted-foreground">Auditions management coming soon...</p>
-                </div>
+                <AuditionsManagement />
               </TabsContent>
 
               <TabsContent value="solos">

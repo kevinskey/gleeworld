@@ -301,6 +301,251 @@ export type Database = {
         }
         Relationships: []
       }
+      audition_applications: {
+        Row: {
+          academic_year: string | null
+          application_date: string
+          audition_time_slot: string | null
+          availability_conflicts: string | null
+          created_at: string
+          date_of_birth: string | null
+          email: string
+          full_name: string
+          gpa: number | null
+          id: string
+          instruments_played: string[] | null
+          major: string | null
+          minor: string | null
+          music_theory_background: string | null
+          notes: string | null
+          phone_number: string | null
+          prepared_pieces: string | null
+          previous_choir_experience: string | null
+          profile_image_url: string | null
+          session_id: string
+          sight_reading_level: string | null
+          status: string
+          student_id: string | null
+          updated_at: string
+          user_id: string
+          vocal_goals: string | null
+          voice_part_preference: string | null
+          why_glee_club: string | null
+          years_of_vocal_training: number | null
+        }
+        Insert: {
+          academic_year?: string | null
+          application_date?: string
+          audition_time_slot?: string | null
+          availability_conflicts?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email: string
+          full_name: string
+          gpa?: number | null
+          id?: string
+          instruments_played?: string[] | null
+          major?: string | null
+          minor?: string | null
+          music_theory_background?: string | null
+          notes?: string | null
+          phone_number?: string | null
+          prepared_pieces?: string | null
+          previous_choir_experience?: string | null
+          profile_image_url?: string | null
+          session_id: string
+          sight_reading_level?: string | null
+          status?: string
+          student_id?: string | null
+          updated_at?: string
+          user_id: string
+          vocal_goals?: string | null
+          voice_part_preference?: string | null
+          why_glee_club?: string | null
+          years_of_vocal_training?: number | null
+        }
+        Update: {
+          academic_year?: string | null
+          application_date?: string
+          audition_time_slot?: string | null
+          availability_conflicts?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string
+          full_name?: string
+          gpa?: number | null
+          id?: string
+          instruments_played?: string[] | null
+          major?: string | null
+          minor?: string | null
+          music_theory_background?: string | null
+          notes?: string | null
+          phone_number?: string | null
+          prepared_pieces?: string | null
+          previous_choir_experience?: string | null
+          profile_image_url?: string | null
+          session_id?: string
+          sight_reading_level?: string | null
+          status?: string
+          student_id?: string | null
+          updated_at?: string
+          user_id?: string
+          vocal_goals?: string | null
+          voice_part_preference?: string | null
+          why_glee_club?: string | null
+          years_of_vocal_training?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audition_applications_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "audition_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audition_evaluations: {
+        Row: {
+          application_id: string
+          areas_for_improvement: string | null
+          artistic_score: number | null
+          confidence: number | null
+          created_at: string
+          evaluation_date: string
+          evaluator_id: string
+          evaluator_notes: string | null
+          id: string
+          intonation: number | null
+          is_final: boolean
+          musicality: number | null
+          overall_score: number | null
+          preparation_level: number | null
+          recommendation: string | null
+          rhythm: number | null
+          sight_reading: number | null
+          stage_presence: number | null
+          strengths: string | null
+          technical_score: number | null
+          tone_quality: number | null
+          updated_at: string
+          voice_part_suitability: string | null
+        }
+        Insert: {
+          application_id: string
+          areas_for_improvement?: string | null
+          artistic_score?: number | null
+          confidence?: number | null
+          created_at?: string
+          evaluation_date?: string
+          evaluator_id: string
+          evaluator_notes?: string | null
+          id?: string
+          intonation?: number | null
+          is_final?: boolean
+          musicality?: number | null
+          overall_score?: number | null
+          preparation_level?: number | null
+          recommendation?: string | null
+          rhythm?: number | null
+          sight_reading?: number | null
+          stage_presence?: number | null
+          strengths?: string | null
+          technical_score?: number | null
+          tone_quality?: number | null
+          updated_at?: string
+          voice_part_suitability?: string | null
+        }
+        Update: {
+          application_id?: string
+          areas_for_improvement?: string | null
+          artistic_score?: number | null
+          confidence?: number | null
+          created_at?: string
+          evaluation_date?: string
+          evaluator_id?: string
+          evaluator_notes?: string | null
+          id?: string
+          intonation?: number | null
+          is_final?: boolean
+          musicality?: number | null
+          overall_score?: number | null
+          preparation_level?: number | null
+          recommendation?: string | null
+          rhythm?: number | null
+          sight_reading?: number | null
+          stage_presence?: number | null
+          strengths?: string | null
+          technical_score?: number | null
+          tone_quality?: number | null
+          updated_at?: string
+          voice_part_suitability?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audition_evaluations_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "audition_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audition_evaluations_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "audition_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audition_sessions: {
+        Row: {
+          application_deadline: string
+          audition_dates: string[] | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string
+          id: string
+          is_active: boolean
+          max_applicants: number | null
+          name: string
+          requirements: string | null
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          application_deadline: string
+          audition_dates?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date: string
+          id?: string
+          is_active?: boolean
+          max_applicants?: number | null
+          name: string
+          requirements?: string | null
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          application_deadline?: string
+          audition_dates?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          max_applicants?: number | null
+          name?: string
+          requirements?: string | null
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       audition_time_blocks: {
         Row: {
           appointment_duration_minutes: number | null
@@ -10590,6 +10835,42 @@ export type Database = {
       }
     }
     Views: {
+      audition_analytics: {
+        Row: {
+          academic_year: string | null
+          application_date: string | null
+          audition_time_slot: string | null
+          avg_artistic_score: number | null
+          avg_overall_score: number | null
+          avg_technical_score: number | null
+          email: string | null
+          evaluation_count: number | null
+          full_name: string | null
+          gpa: number | null
+          id: string | null
+          major: string | null
+          minor: string | null
+          most_common_recommendation: string | null
+          previous_choir_experience: string | null
+          profile_image_url: string | null
+          session_id: string | null
+          session_name: string | null
+          sight_reading_level: string | null
+          status: string | null
+          user_id: string | null
+          voice_part_preference: string | null
+          years_of_vocal_training: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audition_applications_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "audition_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_dashboard_data: {
         Row: {
           email: string | null
