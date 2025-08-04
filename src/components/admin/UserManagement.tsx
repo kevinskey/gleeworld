@@ -26,6 +26,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
   Search, 
   UserCog, 
@@ -150,6 +158,63 @@ export const UserManagement = () => {
     await fetchUsers(); // Refresh to get latest data
   };
 
+  const handleQuickRoleChange = async (userId: string, newRole: string) => {
+    try {
+      const { error } = await supabase
+        .from('gw_profiles')
+        .update({ role: newRole })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      // Update local state
+      setUsers(users.map(user => 
+        user.id === userId ? { ...user, role: newRole } : user
+      ));
+
+      toast({
+        title: "Role Updated",
+        description: `User role changed to ${newRole}`,
+      });
+    } catch (error) {
+      console.error('Error updating role:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update user role",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleVerificationToggle = async (userId: string, currentStatus: boolean) => {
+    try {
+      const newStatus = !currentStatus;
+      const { error } = await supabase
+        .from('gw_profiles')
+        .update({ verified: newStatus })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      // Update local state
+      setUsers(users.map(user => 
+        user.id === userId ? { ...user, verified: newStatus } : user
+      ));
+
+      toast({
+        title: "Status Updated",
+        description: `User ${newStatus ? 'verified' : 'unverified'}`,
+      });
+    } catch (error) {
+      console.error('Error updating verification:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update verification status",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -268,31 +333,89 @@ export const UserManagement = () => {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Dialog open={editDialogOpen && selectedUser?.id === user.id} onOpenChange={setEditDialogOpen}>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => setSelectedUser(user)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-2xl">
-                        <DialogHeader>
-                          <DialogTitle>Edit User Permissions</DialogTitle>
-                          <DialogDescription>
-                            Modify user role, executive board status, and permissions
-                          </DialogDescription>
-                        </DialogHeader>
-                        {selectedUser && (
-                          <UserRoleEditor 
-                            user={selectedUser}
-                            onUpdate={handleUserUpdate}
-                          />
-                        )}
-                      </DialogContent>
-                    </Dialog>
+                    <div className="flex items-center gap-2 justify-end">
+                      {/* Quick Actions Dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          
+                          {/* Role Changes */}
+                          <DropdownMenuItem 
+                            onClick={() => handleQuickRoleChange(user.id, 'member')}
+                            disabled={user.role === 'member'}
+                          >
+                            <User className="h-4 w-4 mr-2" />
+                            Make Member
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleQuickRoleChange(user.id, 'admin')}
+                            disabled={user.role === 'admin'}
+                          >
+                            <Shield className="h-4 w-4 mr-2" />
+                            Make Admin
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleQuickRoleChange(user.id, 'alumna')}
+                            disabled={user.role === 'alumna'}
+                          >
+                            <UserCheck className="h-4 w-4 mr-2" />
+                            Make Alumna
+                          </DropdownMenuItem>
+                          
+                          <DropdownMenuSeparator />
+                          
+                          {/* Status Toggle */}
+                          <DropdownMenuItem 
+                            onClick={() => handleVerificationToggle(user.id, user.verified || false)}
+                          >
+                            {user.verified ? (
+                              <>
+                                <UserX className="h-4 w-4 mr-2" />
+                                Mark Unverified
+                              </>
+                            ) : (
+                              <>
+                                <UserCheck className="h-4 w-4 mr-2" />
+                                Mark Verified
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      {/* Full Edit Dialog */}
+                      <Dialog open={editDialogOpen && selectedUser?.id === user.id} onOpenChange={setEditDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => setSelectedUser(user)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                          <DialogHeader>
+                            <DialogTitle>Edit User Permissions</DialogTitle>
+                            <DialogDescription>
+                              Modify user role, executive board status, and permissions
+                            </DialogDescription>
+                          </DialogHeader>
+                          {selectedUser && (
+                            <UserRoleEditor 
+                              user={selectedUser}
+                              onUpdate={handleUserUpdate}
+                            />
+                          )}
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
