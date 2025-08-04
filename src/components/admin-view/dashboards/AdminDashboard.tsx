@@ -101,9 +101,9 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 h-[calc(100vh-200px)]">
-          {/* Left Column - Major Categories */}
-          <div className="lg:col-span-1 bg-card rounded-lg border p-4 sm:p-6 overflow-y-auto">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 h-[calc(100vh-200px)]">
+          {/* Left Column - Major Categories (50% on desktop) */}
+          <div className="w-full lg:w-1/2 bg-card rounded-lg border p-4 sm:p-6 overflow-y-auto">
             <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 text-foreground">
               Admin Categories
             </h2>
@@ -207,8 +207,8 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
             </div>
           </div>
 
-          {/* Right Column - Functions List */}
-          <div className="lg:col-span-2 bg-card rounded-lg border p-4 sm:p-6 overflow-y-auto">
+          {/* Right Column - Functions List (50% on desktop) */}
+          <div className="w-full lg:w-1/2 bg-card rounded-lg border p-4 sm:p-6 overflow-y-auto">
             <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 text-foreground">
               {selectedCategory === "communications" && "Communications Hub"}
               {selectedCategory === "wardrobe" && "Wardrobe Management"}
