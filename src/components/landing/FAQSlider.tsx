@@ -69,7 +69,7 @@ export const FAQSlider = () => {
 
       <div className="container mx-auto px-4 max-w-screen-2xl">
         {/* Header - All screens */}
-        <div className="text-center mb-16 md:mb-20 mt-8 md:mt-12 lg:mt-16 relative z-50">
+        <div className="text-center mb-8 md:mb-12 mt-4 md:mt-6 lg:mt-8 relative z-50">
           <div className="relative z-10">
             <div className="inline-flex items-center justify-center space-x-2 mb-4">
               <Music className="w-6 h-6 md:w-8 md:h-8 text-primary" />
