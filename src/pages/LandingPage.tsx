@@ -1,5 +1,6 @@
 import React from 'react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { PublicUpcomingEvents } from '@/components/calendar/PublicUpcomingEvents';
 import { FeaturedProducts } from '@/components/products/FeaturedProducts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -73,6 +74,16 @@ const LandingPage = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+      )
+    },
+    {
+      id: 'events',
+      content: (
+        <section className="py-20 px-4">
+          <div className="container mx-auto">
+            <PublicUpcomingEvents limit={6} showHeader={true} />
           </div>
         </section>
       )
