@@ -123,14 +123,14 @@ export const FAQSlider = () => {
                </>
             ) : (
               /* Footer Card in rotation */
-              <div className="bg-gradient-to-r from-primary to-primary/80 rounded-lg p-4 md:p-8 lg:p-10 backdrop-blur-sm border border-white/20 shadow-lg transition-all duration-500 ease-in-out flex flex-col justify-center h-[200px] md:min-h-full">
-                <h3 className="text-xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-primary-foreground mb-3 md:mb-4 text-center leading-tight">
+              <div className="bg-gradient-to-r from-primary to-primary/80 rounded-lg p-3 md:p-6 lg:p-8 backdrop-blur-sm border border-white/20 shadow-lg transition-all duration-500 ease-in-out flex flex-col justify-center h-[200px] md:min-h-full">
+                <h3 className="text-lg md:text-2xl lg:text-3xl xl:text-4xl font-bold text-primary-foreground mb-2 md:mb-3 text-center leading-tight">
                   Good luck on your auditions ladies!
                 </h3>
-                <p className="text-sm md:text-lg lg:text-xl text-primary-foreground/90 mb-1 md:mb-2 text-center">
+                <p className="text-xs md:text-base lg:text-lg text-primary-foreground/90 mb-1 text-center">
                   To stay up to date, follow us on social media at
                 </p>
-                <p className="text-lg md:text-2xl lg:text-3xl xl:text-4xl font-bold text-primary-foreground text-center">
+                <p className="text-base md:text-xl lg:text-2xl xl:text-3xl font-bold text-primary-foreground text-center">
                   @Spelmanglee
                 </p>
               </div>
