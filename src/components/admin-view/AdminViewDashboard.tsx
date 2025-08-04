@@ -54,36 +54,41 @@ export const AdminViewDashboard = () => {
               try {
                 console.log('Making user admin...', user.id, user.email);
                 
-                // First check if user already exists in profiles
+                // First, ensure user exists in profiles table
                 const { data: existingProfile } = await supabase
                   .from('profiles')
                   .select('*')
                   .eq('id', user.id)
                   .single();
                 
-                if (existingProfile) {
-                  // Update existing profile
-                  const { error: updateError } = await supabase
-                    .from('profiles')
-                    .update({
-                      role: 'admin',
-                      full_name: user.email?.split('@')[0] || 'Admin User'
-                    })
-                    .eq('id', user.id);
-                  
-                  if (updateError) throw updateError;
-                } else {
-                  // Insert new profile
+                if (!existingProfile) {
+                  // Create profile first if it doesn't exist
                   const { error: insertError } = await supabase
                     .from('profiles')
                     .insert({
                       id: user.id,
                       email: user.email,
-                      role: 'admin',
+                      role: 'fan', // Start with basic role
                       full_name: user.email?.split('@')[0] || 'Admin User'
                     });
                   
-                  if (insertError) throw insertError;
+                  if (insertError) {
+                    console.error('Error creating profile:', insertError);
+                    throw insertError;
+                  }
+                }
+                
+                // Use the secure function to update role
+                const { data, error: roleError } = await supabase
+                  .rpc('secure_update_user_role', {
+                    target_user_id: user.id,
+                    new_role: 'admin',
+                    reason: 'Initial admin setup via dashboard'
+                  });
+                
+                if (roleError) {
+                  console.error('Error updating role:', roleError);
+                  throw roleError;
                 }
                 
                 console.log('Admin role assigned successfully!');
