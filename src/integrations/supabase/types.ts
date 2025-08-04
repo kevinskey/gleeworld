@@ -4444,6 +4444,66 @@ export type Database = {
           },
         ]
       }
+      gw_media_library: {
+        Row: {
+          category: string
+          context: string | null
+          created_at: string
+          description: string | null
+          download_count: number
+          file_path: string
+          file_size: number
+          file_type: string
+          file_url: string
+          id: string
+          is_featured: boolean
+          is_public: boolean
+          tags: string[] | null
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+          view_count: number
+        }
+        Insert: {
+          category?: string
+          context?: string | null
+          created_at?: string
+          description?: string | null
+          download_count?: number
+          file_path: string
+          file_size: number
+          file_type: string
+          file_url: string
+          id?: string
+          is_featured?: boolean
+          is_public?: boolean
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+          view_count?: number
+        }
+        Update: {
+          category?: string
+          context?: string | null
+          created_at?: string
+          description?: string | null
+          download_count?: number
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          file_url?: string
+          id?: string
+          is_featured?: boolean
+          is_public?: boolean
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          view_count?: number
+        }
+        Relationships: []
+      }
       gw_meeting_minutes: {
         Row: {
           action_items: string[]
