@@ -33,17 +33,17 @@ export default function FanDashboard() {
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
 
-  // Redirect if not authenticated or not a fan
-  if (!loading && (!user || userProfile?.role !== 'fan')) {
-    return <Navigate to="/auth?role=fan" replace />;
+  // Redirect if not authenticated
+  if (!loading && !user) {
+    return <Navigate to="/auth" replace />;
   }
 
   useEffect(() => {
-    if (user && userProfile?.role === 'fan') {
+    if (user) {
       fetchFanStats();
       fetchUpcomingEvents();
     }
-  }, [user, userProfile]);
+  }, [user]);
 
   const fetchFanStats = async () => {
     try {
@@ -60,9 +60,24 @@ export default function FanDashboard() {
           joinDate: fanData.created_at,
           exclusiveContent: 5 // This would come from content access tracking
         });
+      } else {
+        // Provide default stats for all users
+        setFanStats({
+          eventsAttended: 0,
+          fanLevel: 'Bronze',
+          joinDate: new Date().toISOString(),
+          exclusiveContent: 5
+        });
       }
     } catch (error) {
       console.error('Error fetching fan stats:', error);
+      // Provide default stats on error
+      setFanStats({
+        eventsAttended: 0,
+        fanLevel: 'Bronze',
+        joinDate: new Date().toISOString(),
+        exclusiveContent: 5
+      });
     } finally {
       setLoadingStats(false);
     }
