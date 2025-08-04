@@ -16,7 +16,7 @@ interface UserPreference {
   calendar_controls_enabled: boolean;
   selected_calendars: string[];
   profiles?: {
-    id: string;
+    user_id: string;
     full_name: string;
     email: string;
   } | null;
@@ -49,16 +49,16 @@ export const CalendarControlsAdmin = () => {
 
       // Then get profile data for each user
       const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, full_name, email')
-        .in('id', (preferencesData || []).map(p => p.user_id));
+        .from('gw_profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', (preferencesData || []).map(p => p.user_id));
 
       if (profilesError) throw profilesError;
 
       // Combine the data
       const combinedData = (preferencesData || []).map(pref => ({
         ...pref,
-        profiles: profilesData?.find(profile => profile.id === pref.user_id) || null
+        profiles: profilesData?.find(profile => profile.user_id === pref.user_id) || null
       }));
 
       setUsers(combinedData);

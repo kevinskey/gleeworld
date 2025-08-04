@@ -38,15 +38,15 @@ export const AddBatchStipendDialog = ({ onSuccess }: AddBatchStipendDialogProps)
     try {
       // Fetch users
       const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name, email')
+        .from('gw_profiles')
+        .select('user_id, full_name, email')
         .order('full_name');
 
       if (profiles) {
         const userOptions = profiles.map(profile => ({
-          id: profile.id,
+          id: profile.user_id,
           label: profile.full_name || profile.email || 'Unknown',
-          value: profile.full_name || profile.email || profile.id
+          value: profile.full_name || profile.email || profile.user_id
         }));
         setUsers(userOptions);
       }

@@ -63,8 +63,8 @@ export const UsernamePermissionsManager = () => {
     const fetchUsers = async () => {
       try {
         const { data, error } = await supabase
-          .from('profiles')
-          .select('id, email, full_name, role')
+          .from('gw_profiles')
+          .select('user_id, email, full_name, role')
           .order('full_name', { ascending: true });
 
         if (error) throw error;

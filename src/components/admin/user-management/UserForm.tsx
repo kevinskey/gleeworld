@@ -186,9 +186,9 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
         })
         .eq('user_id', user.id);
 
-      // Update profiles table role
+      // Update gw_profiles table role
       const { error: roleError } = await supabase
-        .from('profiles')
+        .from('gw_profiles')
         .update({ 
           role: role,
           first_name: firstName.trim(),
@@ -196,7 +196,7 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
           last_name: lastName.trim(),
           full_name: fullName
         })
-        .eq('id', user.id);
+        .eq('user_id', user.id);
 
       if (roleError) {
         throw new Error(`Failed to update user: ${roleError.message}`);

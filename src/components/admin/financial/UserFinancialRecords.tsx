@@ -98,8 +98,8 @@ export const UserFinancialRecords = () => {
     try {
       // Get all users first
       const { data: users } = await supabase
-        .from('profiles')
-        .select('id, full_name, email');
+        .from('gw_profiles')
+        .select('user_id, full_name, email');
 
       if (!users) {
         throw new Error('No users found');

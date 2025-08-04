@@ -80,7 +80,7 @@ export const UserRoleEditor = ({ user, onUpdate }: UserRoleEditorProps) => {
 
       // Update user profile
       const { error: profileError } = await supabase
-        .from('profiles')
+        .from('gw_profiles')
         .update({
           full_name: formData.full_name,
           role: formData.role,
@@ -88,7 +88,7 @@ export const UserRoleEditor = ({ user, onUpdate }: UserRoleEditorProps) => {
           exec_board_role: formData.is_exec_board ? formData.exec_board_role : null,
           verified: formData.verified,
         })
-        .eq('id', user.id);
+        .eq('user_id', user.id);
 
       if (profileError) throw profileError;
 

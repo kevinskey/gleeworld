@@ -203,9 +203,9 @@ export const MusicManagement = () => {
 
       try {
         const { data } = await supabase
-          .from('profiles')
+          .from('gw_profiles')
           .select('role')
-          .eq('id', user.id)
+          .eq('user_id', user.id)
           .single();
         
         setUserRole(data?.role || null);

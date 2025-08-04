@@ -51,9 +51,9 @@ export const BudgetApprovalDashboard = () => {
     if (!user) return;
     
     const { data: profile } = await supabase
-      .from('profiles')
+      .from('gw_profiles')
       .select('role')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
     
     setUserRole(profile?.role || '');

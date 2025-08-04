@@ -26,10 +26,10 @@ export const StipendManagement = () => {
         .from('user_payments')
         .insert({
           user_id: stipend.user_id || (await supabase
-            .from('profiles')
-            .select('id')
+            .from('gw_profiles')
+            .select('user_id')
             .eq('email', stipend.user_email)
-            .single()).data?.id,
+            .single()).data?.user_id,
           amount: stipend.amount,
           payment_date: new Date().toISOString().split('T')[0],
           payment_method: 'manual',

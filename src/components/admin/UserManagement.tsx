@@ -75,7 +75,7 @@ export const UserManagement = () => {
       
       // First, get all profiles
       const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
+        .from('gw_profiles')
         .select('*')
         .order('created_at', { ascending: false });
 

@@ -71,13 +71,13 @@ export const ContractManagement = () => {
         const creatorIds = [...new Set(contractsData.map(c => c.created_by).filter(Boolean))];
         if (creatorIds.length > 0) {
           const { data: profilesData } = await supabase
-            .from('profiles')
-            .select('id, full_name, email')
-            .in('id', creatorIds);
+            .from('gw_profiles')
+            .select('user_id, full_name, email')
+            .in('user_id', creatorIds);
 
           contractsWithProfiles = contractsData.map(contract => ({
             ...contract,
-            profiles: profilesData?.find(p => p.id === contract.created_by) || null
+            profiles: profilesData?.find(p => p.user_id === contract.created_by) || null
           }));
         }
       }
@@ -106,15 +106,15 @@ export const ContractManagement = () => {
         
         if (creatorIds.length > 0) {
           const { data: profilesData } = await supabase
-            .from('profiles')
-            .select('id, full_name, email')
-            .in('id', creatorIds);
+            .from('gw_profiles')
+            .select('user_id, full_name, email')
+            .in('user_id', creatorIds);
 
           signaturesWithProfiles = signaturesData.map(signature => ({
             ...signature,
             contracts_v2: signature.contracts_v2 ? {
               ...signature.contracts_v2,
-              profiles: profilesData?.find(p => p.id === signature.contracts_v2.created_by) || null
+              profiles: profilesData?.find(p => p.user_id === signature.contracts_v2.created_by) || null
             } : null
           }));
         }

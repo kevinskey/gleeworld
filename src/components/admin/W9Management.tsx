@@ -65,9 +65,9 @@ export const W9Management = () => {
       
       if (userIds.length > 0) {
         const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, email, full_name')
-          .in('id', userIds);
+          .from('gw_profiles')
+          .select('user_id, email, full_name')
+          .in('user_id', userIds);
 
         console.log('W9Management: Profiles query result:', { data: profiles, error: profilesError });
 
