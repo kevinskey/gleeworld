@@ -66,25 +66,6 @@ export const FAQSlider = () => {
 
   return (
     <section className="w-full relative overflow-hidden pt-[96px] pb-20 md:pt-[116px] md:pb-16 lg:pt-[136px] lg:pb-20 min-h-[250px] md:min-h-[350px] fixed top-0 left-0 z-30">
-      {/* Background Image */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
-        style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&q=80')`
-        }}
-      ></div>
-      
-      {/* Background overlays */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background/80 to-primary/30"></div>
-      <div className="absolute inset-0 bg-gradient-to-tr from-background/60 via-primary/10 to-primary/20"></div>
-      
-      {/* Decorative elements */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-primary/20 rounded-full blur-xl"></div>
-        <div className="absolute top-40 right-20 w-24 h-24 bg-primary/15 rounded-full blur-lg"></div>
-        <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-primary/10 rounded-full blur-2xl"></div>
-        <div className="absolute bottom-10 right-10 w-28 h-28 bg-primary/25 rounded-full blur-xl"></div>
-      </div>
 
       <div className="container mx-auto px-4 max-w-screen-2xl">
         {/* Header - Desktop only */}
