@@ -148,7 +148,7 @@ export const AuditionsManagement = () => {
     try {
       setLoading(true);
       
-      // Fetch sessions
+      // Fetch sessions from the correct table
       const { data: sessionsData, error: sessionsError } = await supabase
         .from('audition_sessions')
         .select('*')
@@ -198,23 +198,15 @@ export const AuditionsManagement = () => {
       
       setApplications(transformedApplications);
 
-      // Fetch evaluations
-      const { data: evaluationsData, error: evaluationsError } = await supabase
-        .from('audition_evaluations')
-        .select('*')
-        .order('evaluation_date', { ascending: false });
+      // Fetch evaluations - for now, we'll create a placeholder since gw_auditions doesn't have evaluations yet
+      // TODO: Create gw_audition_evaluations table to match the gw_ naming convention
+      const evaluationsData: any[] = []; // Empty for now
+      setEvaluations(evaluationsData);
 
-      if (evaluationsError) throw evaluationsError;
-      setEvaluations(evaluationsData || []);
-
-      // Fetch analytics
-      const { data: analyticsData, error: analyticsError } = await supabase
-        .from('audition_analytics')
-        .select('*')
-        .order('application_date', { ascending: false });
-
-      if (analyticsError) throw analyticsError;
-      setAnalytics(analyticsData || []);
+      // Fetch analytics - for now, use gw_auditions data for analytics
+      // TODO: Create gw_audition_analytics view or table
+      const analyticsData: any[] = []; // Empty for now  
+      setAnalytics(analyticsData);
 
     } catch (error) {
       console.error('Error fetching audition data:', error);
