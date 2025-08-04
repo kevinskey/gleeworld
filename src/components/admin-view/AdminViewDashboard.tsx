@@ -13,14 +13,15 @@ export const AdminViewDashboard = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if not admin
-  useEffect(() => {
-    if (!loading && user && user.role !== 'admin' && user.role !== 'super-admin') {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [user, loading, navigate]);
+  // Debug logging
+  console.log('AdminViewDashboard - loading:', loading);
+  console.log('AdminViewDashboard - user:', user);
+  console.log('AdminViewDashboard - user role:', user?.role);
+
+  // Note: Removed automatic redirect to allow admin setup
 
   if (loading) {
+    console.log('AdminViewDashboard - showing loading spinner');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <LoadingSpinner size="lg" text="Loading admin dashboard..." />
@@ -29,6 +30,7 @@ export const AdminViewDashboard = () => {
   }
 
   if (!user) {
+    console.log('AdminViewDashboard - no user, showing auth required');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <ErrorState
@@ -41,6 +43,7 @@ export const AdminViewDashboard = () => {
   }
 
   if (user.role !== 'admin' && user.role !== 'super-admin') {
+    console.log('AdminViewDashboard - user not admin, showing make admin button');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center space-y-4">
