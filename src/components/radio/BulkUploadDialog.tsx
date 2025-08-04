@@ -146,7 +146,6 @@ export const BulkUploadDialog = ({ onUploadComplete }: BulkUploadDialogProps) =>
           audio_url: publicUrl,
           duration: 180, // Default duration, could be calculated from audio
           created_by: user?.id,
-          is_featured: false,
           play_count: 0
         })
         .select()
