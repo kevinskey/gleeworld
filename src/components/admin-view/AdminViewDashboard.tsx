@@ -47,48 +47,9 @@ export const AdminViewDashboard = () => {
     );
   }
 
-  if (!isAdmin() && !isSuperAdmin()) {
-    console.log('AdminViewDashboard - user not admin, showing make admin button');
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <h2 className="text-2xl font-bold mb-4">Become Admin</h2>
-          <p className="text-muted-foreground mb-4">Click below to grant yourself admin privileges.</p>
-          <Button 
-            onClick={async () => {
-              try {
-                console.log('Making user admin...', user.id, user.email);
-                
-                // Use the clean bootstrap function (no triggers to interfere)
-                const { data, error } = await supabase
-                  .rpc('clean_admin_bootstrap');
-                
-                if (error) {
-                  console.error('Error bootstrapping admin:', error);
-                  throw error;
-                }
-                
-                console.log('Admin role assigned successfully!', data);
-                alert('Admin role assigned successfully! Reloading page...');
-                window.location.reload();
-              } catch (error) {
-                console.error('Error making admin:', error);
-                alert('Error: ' + (error as any).message);
-              }
-            }}
-            className="mr-4"
-          >
-            <Shield className="mr-2 h-4 w-4" />
-            Make Me Admin
-          </Button>
-          <Button onClick={() => navigate('/dashboard')} variant="outline">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  // Since we've fixed the RLS policies, users with admin/super-admin roles should proceed directly to dashboard
+  // No need for the "Make Me Admin" interface anymore
+  console.log('AdminViewDashboard - user authenticated, proceeding to dashboard');
 
   // Use admin background
   const backgroundImage = "/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png";
