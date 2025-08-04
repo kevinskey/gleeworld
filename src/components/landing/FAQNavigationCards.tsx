@@ -48,7 +48,7 @@ export const FAQNavigationCards = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % faqData.length);
-    }, 6000);
+    }, 10000); // Changed from 6000 to 10000 milliseconds (10 seconds)
 
     return () => clearInterval(interval);
   }, []);
