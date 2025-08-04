@@ -30,6 +30,7 @@ import BookingRequest from "@/pages/BookingRequest";
 import TourPlanner from "@/pages/TourPlanner";
 import SendNotificationPage from "@/pages/SendNotificationPage";
 import AdminUsers from "@/pages/AdminUsers";
+import SetupAdmin from "@/pages/SetupAdmin";
 
 
 
@@ -125,6 +126,10 @@ export const router = createBrowserRouter([
   {
     path: "/admin/users",
     element: <AdminUsers />,
+  },
+  {
+    path: "/setup-admin",
+    element: <SetupAdmin />,
   },
   {
     path: "/shop",
