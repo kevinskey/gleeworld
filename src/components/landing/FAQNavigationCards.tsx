@@ -86,7 +86,7 @@ export const FAQNavigationCards = () => {
       </div>
 
       {/* FAQ Card */}
-      <div className="bg-background/80 backdrop-blur-sm rounded-lg border border-border/50 p-6 md:p-8 h-[280px] flex flex-col">
+      <div className="bg-background/80 backdrop-blur-sm rounded-lg border border-border/50 p-6 md:p-8 h-[310px] md:h-[280px] flex flex-col">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
