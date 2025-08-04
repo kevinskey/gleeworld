@@ -7,20 +7,25 @@ import { DashboardTemplate } from "./DashboardTemplate";
 import { AdminDashboard } from "./dashboards/AdminDashboard";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ErrorState } from "@/components/shared/ErrorState";
+import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from '@/integrations/supabase/client';
 
 export const AdminViewDashboard = () => {
   const { user, loading } = useAuth();
+  const { profile, loading: profileLoading, isAdmin, isSuperAdmin } = useUserRole();
   const navigate = useNavigate();
 
   // Debug logging
   console.log('AdminViewDashboard - loading:', loading);
+  console.log('AdminViewDashboard - profileLoading:', profileLoading);
   console.log('AdminViewDashboard - user:', user);
-  console.log('AdminViewDashboard - user role:', user?.role);
+  console.log('AdminViewDashboard - profile:', profile);
+  console.log('AdminViewDashboard - isAdmin:', isAdmin());
+  console.log('AdminViewDashboard - isSuperAdmin:', isSuperAdmin());
 
   // Note: Removed automatic redirect to allow admin setup
 
-  if (loading) {
+  if (loading || profileLoading) {
     console.log('AdminViewDashboard - showing loading spinner');
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -42,7 +47,7 @@ export const AdminViewDashboard = () => {
     );
   }
 
-  if (user.role !== 'admin' && user.role !== 'super-admin') {
+  if (!isAdmin() && !isSuperAdmin()) {
     console.log('AdminViewDashboard - user not admin, showing make admin button');
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -89,7 +94,7 @@ export const AdminViewDashboard = () => {
   const backgroundImage = "/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png";
 
   const getTitle = () => {
-    return user.role === 'super-admin' ? 'Super Admin Dashboard' : 'Admin Dashboard';
+    return isSuperAdmin() ? 'Super Admin Dashboard' : 'Admin Dashboard';
   };
 
   const getSubtitle = () => {
