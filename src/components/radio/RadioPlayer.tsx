@@ -224,39 +224,19 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
       />
       
       {/* Radio Player Button */}
-      <div className={`flex items-center gap-2 ${className}`}>
+      <div className={`flex items-center ${className}`}>
         <Button
           variant="ghost"
           onClick={handleTogglePlay}
-          className="gap-2 text-primary hover:bg-primary/10 border-2 border-primary/50 bg-primary/5 h-8 sm:h-10 px-2 sm:px-3 lg:px-4"
+          className="h-8 w-8 sm:h-10 sm:w-10 p-0 hover:bg-transparent"
           title={isPlaying ? 'Pause Radio' : 'Play Radio'}
         >
-          <Radio className="h-3 w-3 sm:h-4 sm:w-4" />
           {isPlaying ? (
-            <Pause className="h-3 w-3 sm:h-4 sm:w-4" />
+            <Pause className="h-4 w-4 sm:h-5 sm:w-5 text-black stroke-2" />
           ) : (
-            <Play className="h-3 w-3 sm:h-4 sm:w-4" />
+            <Play className="h-4 w-4 sm:h-5 sm:w-5 text-black stroke-2" />
           )}
-          <span className="hidden sm:inline text-xs sm:text-sm">
-            {isPlaying ? '📻 Live' : '📻 Radio'}
-          </span>
         </Button>
-        
-        {/* Volume Control for larger screens */}
-        <div className="hidden lg:flex items-center gap-2">
-          <Volume2 className="h-4 w-4 text-primary" />
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={volume}
-            onChange={handleVolumeChange}
-            className="w-16 h-1 bg-primary/20 rounded-lg appearance-none cursor-pointer slider"
-            style={{
-              background: `linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--primary)) ${volume}%, hsl(var(--primary) / 0.2) ${volume}%, hsl(var(--primary) / 0.2) 100%)`
-            }}
-          />
-        </div>
       </div>
     </>
   );
