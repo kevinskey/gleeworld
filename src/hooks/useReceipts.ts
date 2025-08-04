@@ -44,8 +44,7 @@ export const useReceipts = () => {
         .select(`
           *,
           template:contract_templates(name),
-          event:events(title),
-          profile:profiles(full_name)
+          event:events(title)
         `)
         .order('created_at', { ascending: false });
 
@@ -55,7 +54,21 @@ export const useReceipts = () => {
         return;
       }
 
-      setReceipts(data || []);
+      // Manually fetch profile data for each receipt
+      const receiptsWithProfiles = await Promise.all((data || []).map(async (receipt) => {
+        const { data: profileData } = await supabase
+          .from('gw_profiles')
+          .select('full_name')
+          .eq('user_id', receipt.created_by)
+          .single();
+        
+        return {
+          ...receipt,
+          profile: profileData ? { full_name: profileData.full_name } : { full_name: 'Unknown User' }
+        };
+      }));
+      
+      setReceipts(receiptsWithProfiles);
     } catch (err) {
       console.error('Error fetching receipts:', err);
       setError('Failed to fetch receipts');

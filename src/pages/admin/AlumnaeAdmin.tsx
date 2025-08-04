@@ -98,9 +98,9 @@ export default function AlumnaeAdmin() {
     try {
       // Check if user is admin - look at the profiles table
       const { data: profileData } = await supabase
-        .from('profiles')
+        .from('gw_profiles')
         .select('role')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .single();
 
       const adminStatus = profileData?.role === 'admin' || profileData?.role === 'super-admin';
@@ -142,33 +142,13 @@ export default function AlumnaeAdmin() {
 
       // Fetch users with 'alumnae' role from main profiles table
       const { data: alumnaeUsers } = await supabase
-        .from('profiles')
+        .from('gw_profiles')
         .select('*')
         .eq('role', 'alumnae')
         .order('created_at', { ascending: false });
 
-      // Combine both datasets - convert profiles to gw_profiles format
-      const combinedProfiles = [
-        ...(gwProfilesData || []),
-        ...(alumnaeUsers || []).map(user => ({
-          id: user.id,
-          user_id: user.id,
-          email: user.email,
-          full_name: user.full_name,
-          first_name: user.full_name ? user.full_name.split(' ')[0] : '',
-          last_name: user.full_name ? user.full_name.split(' ').slice(1).join(' ') : '',
-          phone: user.phone_number,
-          role: 'alumna', // Normalize to 'alumna' for consistency
-          created_at: user.created_at,
-          updated_at: user.updated_at,
-          verified: true, // Assume users with alumnae role are verified
-          mentor_opt_in: false, // Default values for gw_profiles fields
-          reunion_rsvp: false,
-          graduation_year: null,
-          is_admin: false,
-          is_super_admin: false
-        }))
-      ];
+      // Use only gw_profiles data since we're now querying from the same table
+      const combinedProfiles = gwProfilesData || [];
 
       // Calculate mentor stats
       const mentors = combinedProfiles?.filter(p => p.mentor_opt_in) || [];
@@ -278,33 +258,8 @@ export default function AlumnaeAdmin() {
 
         if (error) throw error;
       } else {
-        // This is a user from the main profiles table with 'alumnae' role
-        // We could create a gw_profile record for them or handle verification differently
-        // For now, let's create a basic gw_profile record
-        const { data: userProfile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
-          .single();
-
-        if (userProfile) {
-          const { error } = await supabase
-            .from('gw_profiles')
-            .insert({
-              user_id: userId,
-              email: userProfile.email,
-              full_name: userProfile.full_name,
-              first_name: userProfile.full_name ? userProfile.full_name.split(' ')[0] : '',
-              last_name: userProfile.full_name ? userProfile.full_name.split(' ').slice(1).join(' ') : '',
-              phone: userProfile.phone_number,
-              role: 'alumna',
-              verified: verify,
-              mentor_opt_in: false,
-              reunion_rsvp: false
-            });
-
-          if (error) throw error;
-        }
+        // User doesn't exist in gw_profiles, skip for now
+        throw new Error('User not found in gw_profiles');
       }
       
       toast.success(`Alumna ${verify ? 'verified' : 'unverified'}!`);

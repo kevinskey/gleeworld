@@ -85,7 +85,8 @@ export const useProfile = () => {
         ...data,
         id: data.user_id, // Map user_id to id for interface compatibility
         voice_part: data.voice_part as "S1" | "S2" | "A1" | "A2" | "T1" | "T2" | "B1" | "B2" | null,
-        social_media_links: (data.social_media_links as any) || {}
+        social_media_links: (data.social_media_links as any) || {},
+        preferred_payment_method: data.preferred_payment_method as "zelle" | "cashapp" | "venmo" | "apple_pay" | "check" | null
       });
     } catch (error) {
       toast({
