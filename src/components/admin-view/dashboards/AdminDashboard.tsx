@@ -102,6 +102,8 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
     }
   };
 
+  const shouldShowPermissionsGrid = selectedMember && !selectedMember.startsWith('empty_');
+
   if (loading) {
     return (
       <div className="min-h-screen bg-muted/30 p-6 -m-6 flex items-center justify-center">
@@ -150,7 +152,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           </div>
         </div>
 
-        {selectedMember && (
+        {shouldShowPermissionsGrid && (
           <div className="mt-6">
             <PermissionsGrid selectedPosition={activePosition} />
           </div>
