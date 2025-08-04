@@ -95,7 +95,7 @@ export const PermissionsGrid = ({ selectedPosition }: PermissionsGridProps) => {
     if (selectedPosition.value) {
       loadPositionData();
     }
-  }, [selectedPosition.value, fetchPositionFunctions]);
+  }, [selectedPosition.value]);
 
   const groupedFunctions = appFunctions.reduce((acc, func) => {
     if (!acc[func.category]) {
