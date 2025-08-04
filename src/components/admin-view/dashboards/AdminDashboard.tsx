@@ -24,6 +24,8 @@ interface ExecutiveBoardMember {
 }
 
 export const AdminDashboard = ({ user }: AdminDashboardProps) => {
+  console.log('AdminDashboard component rendering with user:', user);
+  
   const [activePosition, setActivePosition] = useState<ExecutivePosition>(EXECUTIVE_POSITIONS[0]);
   const [executiveMembers, setExecutiveMembers] = useState<ExecutiveBoardMember[]>([]);
   const [selectedMember, setSelectedMember] = useState<string>("");
@@ -31,6 +33,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
   useEffect(() => {
     const fetchExecutiveMembers = async () => {
+      console.log('AdminDashboard: Starting to fetch executive members...');
       try {
         // Get executive board members and profiles separately, then join manually
         const { data: membersData, error: membersError } = await supabase
@@ -38,9 +41,13 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           .select('*')
           .eq('is_active', true);
 
+        console.log('AdminDashboard: Members data:', membersData, 'Error:', membersError);
+
         const { data: profilesData, error: profilesError } = await supabase
           .from('gw_profiles')
           .select('user_id, full_name, email');
+
+        console.log('AdminDashboard: Profiles data:', profilesData, 'Error:', profilesError);
 
         if (membersError || profilesError) {
           console.error('Error fetching data:', { membersError, profilesError });
