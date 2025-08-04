@@ -13,7 +13,7 @@ import { useNavigate, Link } from "react-router-dom";
 import gleeClubFallback from "@/assets/glee-club-fallback.jpg";
 import { AlbumModal } from "@/components/music/AlbumModal";
 import { YoutubeVideoSection } from "@/components/youtube/YoutubeVideoSection";
-import { FAQSlider } from "@/components/landing/FAQSlider";
+
 import { CountdownTimer } from "@/components/landing/CountdownTimer";
 import { FeaturedProducts } from "@/components/products/FeaturedProducts";
 import { AuditionHoverCard } from "@/components/audition/AuditionHoverCard";
@@ -272,10 +272,6 @@ export const GleeWorldLanding = () => {
       {/* Audition Hover Card */}
       <AuditionHoverCard />
 
-      {/* FAQ Slider Section */}
-      <div className="pt-3 md:pt-0">
-        <FAQSlider />
-      </div>
 
       {/* Main Content with Black and White Background */}
       <div className="relative">
