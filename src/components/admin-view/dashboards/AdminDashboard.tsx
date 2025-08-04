@@ -27,7 +27,9 @@ import {
   ScanLine,
   UserCheck,
   ClipboardList,
-  TrendingUp
+  TrendingUp,
+  Clock,
+  Edit
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
@@ -348,8 +350,21 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                       <p className="text-xs sm:text-sm text-muted-foreground">
                         Staff messaging and internal announcements
                       </p>
+                      </div>
+
+                      <div 
+                        className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                        onClick={() => setSelectedSubcategory("scheduling-module")}
+                      >
+                        <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                          <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-600" />
+                          <h3 className="font-semibold text-sm sm:text-base">Scheduling Module</h3>
+                        </div>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          Manage rehearsal schedules, events, and member availability
+                        </p>
+                      </div>
                     </div>
-                  </div>
                 )}
 
                 {/* Wardrobe Functions */}
@@ -375,11 +390,12 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                       <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
                         <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
                         <h3 className="font-semibold text-sm sm:text-base">Fitting Schedules</h3>
-                      </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        Schedule and manage costume fittings
-                      </p>
-                    </div>
+                       </div>
+                       <p className="text-xs sm:text-sm text-muted-foreground">
+                         Schedule and manage costume fittings
+                       </p>
+                     </div>
+
 
                     <div 
                       className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
@@ -518,6 +534,19 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                       </div>
                       <p className="text-xs sm:text-sm text-muted-foreground">
                         Manage executive board member profiles and role assignments
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("general-profile-editor")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Edit className="h-4 w-4 sm:h-5 sm:w-5 text-teal-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">General Profile Editor</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Edit and manage member profiles and personal information
                       </p>
                     </div>
 
