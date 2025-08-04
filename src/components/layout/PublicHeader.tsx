@@ -58,7 +58,7 @@ export const PublicHeader = () => {
               <Button asChild variant="outline" size="sm" className="hidden lg:flex text-sm px-4 py-1">
                 <Link to="/dashboard" className="flex items-center gap-2">
                   <Settings className="h-4 w-4" />
-                  Dashboard
+                  My Dashboard
                 </Link>
               </Button>
             )}
@@ -102,7 +102,7 @@ export const PublicHeader = () => {
                       <Button asChild variant="outline" size="sm" className="mb-2 text-sm justify-start">
                         <Link to="/dashboard" className="flex items-center gap-2" onClick={() => setIsOpen(false)}>
                           <Settings className="h-4 w-4" />
-                          Dashboard
+                          My Dashboard
                         </Link>
                       </Button>
                     )}
