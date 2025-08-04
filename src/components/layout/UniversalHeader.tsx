@@ -97,6 +97,101 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             <RadioPlayer className="mr-2" />
             {user && (
               <>
+                {/* Super Admin Monitoring Dashboard */}
+                {isAdmin && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="bg-white/10 hover:bg-white/20 border border-white/20">
+                        <Crown className="h-4 w-4 mr-2 text-yellow-500" />
+                        <span className="hidden sm:inline">Super Monitor</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto bg-white/95 backdrop-blur-lg border border-white/30">
+                      <DropdownMenuLabel className="text-center font-bold text-lg">🔥 Super Admin Monitor</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      
+                      {/* Public Modules */}
+                      <DropdownMenuLabel className="flex items-center gap-2 text-blue-600">
+                        <Globe className="h-4 w-4" />
+                        Public Modules
+                      </DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => navigate('/landing')}>🏠 Public Landing</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/about')}>ℹ️ About Page</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/shop')}>🛍️ Public Shop</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/public-calendar')}>📅 Public Calendar</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/auditions')}>🎵 Auditions Portal</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/press-kit')}>📰 Press Kit</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/booking-request')}>📋 Booking Requests</DropdownMenuItem>
+                      
+                      <DropdownMenuSeparator />
+                      
+                      {/* Fan Portal */}
+                      <DropdownMenuLabel className="flex items-center gap-2 text-pink-600">
+                        <Heart className="h-4 w-4" />
+                        Fan Portal
+                      </DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => navigate('/fan')}>💖 Fan Dashboard</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/notifications')}>🔔 Fan Notifications</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/events')}>🎭 Fan Events</DropdownMenuItem>
+                      
+                      <DropdownMenuSeparator />
+                      
+                      {/* Alumni Portal */}
+                      <DropdownMenuLabel className="flex items-center gap-2 text-purple-600">
+                        <GraduationCap className="h-4 w-4" />
+                        Alumni Portal
+                      </DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => navigate('/alumnae')}>🎓 Alumnae Landing</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/admin/alumnae')}>⚙️ Alumnae Admin</DropdownMenuItem>
+                      
+                      <DropdownMenuSeparator />
+                      
+                      {/* Member Modules */}
+                      <DropdownMenuLabel className="flex items-center gap-2 text-green-600">
+                        <User className="h-4 w-4" />
+                        Member Modules
+                      </DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => navigate('/dashboard')}>🏡 Member Dashboard</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/music-library')}>🎼 Music Library</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/calendar')}>📅 Member Calendar</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/attendance')}>✅ Attendance</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/performance')}>🎭 Performance Suite</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/wellness')}>🧘 Wellness Suite</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/wardrobe')}>👗 Wardrobe</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/contracts')}>📄 Contracts</DropdownMenuItem>
+                      
+                      <DropdownMenuSeparator />
+                      
+                      {/* Executive Modules */}
+                      <DropdownMenuLabel className="flex items-center gap-2 text-orange-600">
+                        <Crown className="h-4 w-4" />
+                        Executive Board
+                      </DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => navigate('/accounting')}>💰 Accounting</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/budgets')}>📊 Budgets</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/tour-planner')}>🚌 Tour Planner</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/event-planner')}>🎪 Event Planner</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/pr-hub')}>📺 PR Hub</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/scholarships')}>🎓 Scholarships</DropdownMenuItem>
+                      
+                      <DropdownMenuSeparator />
+                      
+                      {/* Admin Modules */}
+                      <DropdownMenuLabel className="flex items-center gap-2 text-red-600">
+                        <Shield className="h-4 w-4" />
+                        Admin Controls
+                      </DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => navigate('/admin')}>⚙️ Admin Dashboard</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/admin/users')}>👥 User Management</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/admin/financial')}>💳 Financial Management</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/admin/communications')}>📧 Communications</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/admin/analytics')}>📈 Analytics</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/admin/settings')}>⚙️ System Settings</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/activity-logs')}>📝 Activity Logs</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+
                 {/* Dashboard Dropdown for logged-in users */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
