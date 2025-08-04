@@ -270,7 +270,7 @@ export const GleeWorldLanding = () => {
       <PublicLayout>
 
       {/* Audition Section */}
-      <section className="relative z-30 py-12 sm:py-16 md:py-20 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section className="relative z-30 py-[27.5px] sm:py-16 md:py-20 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto text-center">
           <Card className="p-6 sm:p-8 md:p-10 bg-gradient-to-br from-primary/10 via-background to-primary/5 backdrop-blur-sm border-2 border-primary/20 shadow-xl">
             <div className="space-y-6">
@@ -299,7 +299,7 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="relative z-30 py-12 sm:py-16 md:py-20 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section className="relative z-30 py-[27.5px] sm:py-16 md:py-20 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
             <div className="text-center mb-4 sm:mb-6 md:mb-8">
@@ -322,7 +322,7 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Hero Section */}
-      <section className="relative z-30 py-12 sm:py-16 md:py-20 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section className="relative z-30 py-[27.5px] sm:py-16 md:py-20 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl rounded-lg sm:rounded-xl md:rounded-2xl">
             <div className="h-[350px] sm:h-[500px] md:h-[600px] lg:h-[700px] xl:h-[800px] 2xl:h-[900px] relative overflow-hidden">
@@ -428,7 +428,7 @@ export const GleeWorldLanding = () => {
 
 
       {/* Upcoming Events Section */}
-      <section className="relative z-30 py-12 sm:py-16 md:py-20 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section className="relative z-30 py-[27.5px] sm:py-16 md:py-20 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
             <div className="text-center mb-4 sm:mb-6 md:mb-8">
@@ -605,7 +605,7 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Featured Products Section */}
-      <section className="relative z-30 py-12 sm:py-16 md:py-20 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section className="relative z-30 py-[27.5px] sm:py-16 md:py-20 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
             {/* The Glee Store Title */}
@@ -626,7 +626,7 @@ export const GleeWorldLanding = () => {
 
       {/* Albums Section */}
       {albums.length > 0 && (
-        <section className="relative z-30 py-12 sm:py-16 md:py-20 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
+        <section className="relative z-30 py-[27.5px] sm:py-16 md:py-20 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
           <div className="w-full max-w-screen-2xl mx-auto">
             <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
               <div className="text-center mb-4 sm:mb-6 md:mb-8">
@@ -705,7 +705,7 @@ export const GleeWorldLanding = () => {
       />
 
       {/* YouTube Section */}
-      <section className="relative z-30 py-12 sm:py-16 md:py-20 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section className="relative z-30 py-[27.5px] sm:py-16 md:py-20 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
             <div className="text-center mb-4 sm:mb-6 md:mb-8">
