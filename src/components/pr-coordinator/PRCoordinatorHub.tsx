@@ -260,55 +260,59 @@ export const PRCoordinatorHub = () => {
         <TabsContent value="gallery" className="space-y-6">
           {/* Enhanced Filters and Controls */}
           <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
-                <div className="flex flex-col sm:flex-row gap-4 flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <CardContent className="p-4 md:p-6">
+              <div className="space-y-4">
+                {/* Search and Tag Filters */}
+                <div className="flex flex-col xl:flex-row gap-4 items-start">
+                  <div className="relative flex-1 min-w-0">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Search images by name or caption..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9 w-full sm:w-80 bg-background/80"
+                      className="pl-9 w-full bg-background/80 h-10"
                     />
                   </div>
                   
-                  <div className="flex gap-2 flex-wrap">
-                    {tags.slice(0, 6).map(tag => (
+                  <div className="flex gap-2 flex-wrap min-w-0">
+                    {tags.slice(0, 4).map(tag => (
                       <Badge
                         key={tag.id}
                         variant={selectedTags.includes(tag.id) ? "default" : "outline"}
-                        className="cursor-pointer hover:scale-105 transition-transform"
+                        className="cursor-pointer hover:scale-105 transition-transform text-xs whitespace-nowrap"
                         onClick={() => handleTagFilter(tag.id)}
                       >
                         {tag.name}
                       </Badge>
                     ))}
-                    {tags.length > 6 && (
-                      <Badge variant="secondary" className="cursor-pointer">
-                        +{tags.length - 6} more
+                    {tags.length > 4 && (
+                      <Badge variant="secondary" className="cursor-pointer text-xs whitespace-nowrap">
+                        +{tags.length - 4} more
                       </Badge>
                     )}
                   </div>
                 </div>
 
-                <div className="flex gap-3 items-center">
+                {/* View Controls */}
+                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
                   <div className="flex gap-1">
                     <Button
                       variant={viewMode === 'grid' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setViewMode('grid')}
-                      className="rounded-r-none"
+                      className="rounded-r-none h-9"
                     >
                       <Grid className="h-4 w-4" />
+                      <span className="hidden sm:inline ml-2">Grid</span>
                     </Button>
                     <Button
                       variant={viewMode === 'list' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setViewMode('list')}
-                      className="rounded-l-none"
+                      className="rounded-l-none h-9"
                     >
                       <List className="h-4 w-4" />
+                      <span className="hidden sm:inline ml-2">List</span>
                     </Button>
                   </div>
                   
@@ -317,7 +321,7 @@ export const PRCoordinatorHub = () => {
                       variant="outline" 
                       size="sm" 
                       onClick={handleSelectAll}
-                      className="bg-gradient-to-r from-primary/10 to-secondary/10"
+                      className="bg-gradient-to-r from-primary/10 to-secondary/10 h-9 whitespace-nowrap"
                     >
                       {selectedImages.length === filteredImages.length ? 'Deselect All' : 'Select All'}
                     </Button>
