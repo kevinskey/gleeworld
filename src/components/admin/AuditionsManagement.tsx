@@ -892,49 +892,72 @@ export const AuditionsManagement = () => {
                 <CardContent>
                   <div className="grid gap-4">
                     {filteredApplications.map((application) => (
-                      <div key={application.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center space-x-4">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={application.profile_image_url} />
-                            <AvatarFallback className="font-semibold">
-                              {application.full_name.split(' ').map(n => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">{application.full_name}</p>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <span>{application.email}</span>
-                              <span>•</span>
-                              <span>{new Date(application.audition_date).toLocaleDateString()}</span>
-                              <span>•</span>
-                              <span>{application.audition_time}</span>
+                      <div key={application.id} className="flex items-center justify-between p-6 border rounded-lg hover:bg-muted/50 transition-colors shadow-sm hover:shadow-md">
+                        <div className="flex items-center space-x-6">
+                          <div className="relative">
+                            <Avatar className="h-16 w-16 border-2 border-primary/20">
+                              <AvatarImage 
+                                src={application.profile_image_url || application.selfie_url} 
+                                alt={application.full_name}
+                                className="object-cover"
+                              />
+                              <AvatarFallback className="font-semibold text-lg bg-gradient-to-br from-primary/10 to-secondary/10">
+                                {application.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            {/* Online status indicator */}
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full flex items-center justify-center">
+                              <UserCheck className="h-3 w-3 text-white" />
+                            </div>
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="font-semibold text-lg">{application.full_name}</h3>
+                              <Badge className={getStatusColor(application.status)}>
+                                {application.status.replace('_', ' ')}
+                              </Badge>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Mail className="h-3 w-3" />
+                                <span>{application.email}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                <span>{new Date(application.audition_date).toLocaleDateString()}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                <span>{application.audition_time}</span>
+                              </div>
+                              {application.phone && (
+                                <div className="flex items-center gap-1">
+                                  <Phone className="h-3 w-3" />
+                                  <span>{application.phone}</span>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge className={getStatusColor(application.status)}>
-                            {application.status.replace('_', ' ')}
-                          </Badge>
-                          <div className="flex gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => startAdjudicatorScoring(application, 'audition')}
-                              className="flex items-center gap-1"
-                            >
-                              <Star className="h-3 w-3" />
-                              Audition Score
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => startAdjudicatorScoring(application, 'sight_reading')}
-                              className="flex items-center gap-1"
-                            >
-                              <Music className="h-3 w-3" />
-                              Sight Reading
-                            </Button>
-                          </div>
+                        <div className="flex flex-col gap-2">
+                          <Button 
+                            variant="default" 
+                            size="sm"
+                            onClick={() => startAdjudicatorScoring(application, 'audition')}
+                            className="flex items-center gap-2 min-w-[140px]"
+                          >
+                            <Star className="h-4 w-4" />
+                            Audition Score
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => startAdjudicatorScoring(application, 'sight_reading')}
+                            className="flex items-center gap-2 min-w-[140px]"
+                          >
+                            <Music className="h-4 w-4" />
+                            Sight Reading
+                          </Button>
                         </div>
                       </div>
                     ))}
