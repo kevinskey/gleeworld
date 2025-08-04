@@ -290,7 +290,7 @@ export const GleeWorldLanding = () => {
       {/* Hero Section */}
       <section className="relative z-30 pt-2 pb-8 sm:pt-4 sm:pb-12 md:pt-6 md:pb-16 lg:pt-8 lg:pb-20 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12">
         <div className="w-full max-w-7xl mx-auto">
-          <Card className="overflow-hidden bg-card border border-border/50 shadow-2xl rounded-lg sm:rounded-xl md:rounded-2xl">
+          <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border border-border/50 shadow-2xl rounded-lg sm:rounded-xl md:rounded-2xl">
             <div className="h-[350px] sm:h-[500px] md:h-[600px] lg:h-[700px] xl:h-[800px] 2xl:h-[900px] relative overflow-hidden">
               {heroSlides.length > 0 ? (
                 <>
@@ -395,7 +395,7 @@ export const GleeWorldLanding = () => {
       {/* Upcoming Events Section */}
       <section className="relative z-30 pt-4 pb-6 sm:pt-6 sm:pb-8 md:pt-8 md:pb-10 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
-          <Card className="p-4 sm:p-6 md:p-8 bg-card border-2 border-border shadow-xl">
+          <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
             <div className="text-center mb-4 sm:mb-6 md:mb-8">
               <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
                 <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-secondary animate-pulse" />
@@ -572,7 +572,7 @@ export const GleeWorldLanding = () => {
       {/* Featured Products Section */}
       <section className="relative z-30 pt-4 pb-6 sm:pt-6 sm:pb-8 md:pt-8 md:pb-10 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
-          <Card className="p-4 sm:p-6 md:p-8 bg-card border-2 border-border shadow-xl">
+          <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
             {/* The Glee Store Title */}
             <div className="text-center mb-4 sm:mb-6 md:mb-8">
               <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
@@ -593,7 +593,7 @@ export const GleeWorldLanding = () => {
       {albums.length > 0 && (
         <section className="relative z-30 pt-4 pb-6 sm:pt-6 sm:pb-8 md:pt-8 md:pb-10 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
           <div className="w-full max-w-screen-2xl mx-auto">
-            <Card className="p-4 sm:p-6 md:p-8 bg-card border-2 border-border shadow-xl">
+            <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
               <div className="text-center mb-4 sm:mb-6 md:mb-8">
                 <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
                   <AlbumIcon className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-secondary animate-pulse" />
@@ -672,7 +672,7 @@ export const GleeWorldLanding = () => {
       {/* YouTube Section */}
       <section className="relative z-30 pt-4 pb-6 sm:pt-6 sm:pb-8 md:pt-8 md:pb-10 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
-          <Card className="p-4 sm:p-6 md:p-8 bg-card border-2 border-border shadow-xl">
+          <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
             <div className="text-center mb-4 sm:mb-6 md:mb-8">
               <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
                 <Youtube className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-red-500 animate-pulse" />
