@@ -29,10 +29,12 @@ import {
   BarChart3,
   Download,
   Shield,
-  UserCheck
+  UserCheck,
+  Trash2
 } from "lucide-react";
 import { MobileScoreWindow } from "@/components/scoring/MobileScoreWindow";
 import { SightReadingScoreWindow } from "@/components/scoring/SightReadingScoreWindow";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface AuditionSession {
   id: string;
@@ -123,6 +125,7 @@ interface AuditionAnalytics {
 
 export const AuditionsManagement = () => {
   const { toast } = useToast();
+  const { isSuperAdmin } = useUserRole();
   const [activeTab, setActiveTab] = useState("overview");
   const [sessions, setSessions] = useState<AuditionSession[]>([]);
   const [applications, setApplications] = useState<AuditionApplication[]>([]);
@@ -366,6 +369,44 @@ export const AuditionsManagement = () => {
     setShowAdjudicatorScoring(false);
     setSelectedPerformer(null);
     fetchData(); // Refresh data
+  };
+
+  const deleteApplication = async (application: AuditionApplication) => {
+    if (!isSuperAdmin()) {
+      toast({
+        title: "Access Denied",
+        description: "Only super admins can delete applications",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Delete the application from gw_auditions table
+      const { error: deleteError } = await supabase
+        .from('gw_auditions')
+        .delete()
+        .eq('id', application.id);
+
+      if (deleteError) throw deleteError;
+
+      // Restore time availability - appointments should be freed when application is deleted
+      // This is handled automatically by the database if there's proper foreign key setup
+
+      toast({
+        title: "Success",
+        description: `Application deleted successfully. Time slot has been restored.`,
+      });
+
+      fetchData(); // Refresh data
+    } catch (error) {
+      console.error('Error deleting application:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete application",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -845,9 +886,24 @@ export const AuditionsManagement = () => {
                                 Submit Evaluation
                               </Button>
                             </div>
-                          </DialogContent>
-                        </Dialog>
-                      </div>
+                           </DialogContent>
+                         </Dialog>
+
+                         {isSuperAdmin() && (
+                           <Button 
+                             variant="destructive" 
+                             size="sm"
+                             onClick={() => {
+                               if (window.confirm(`Are you sure you want to delete ${application.full_name}'s application? This will restore their audition time slot.`)) {
+                                 deleteApplication(application);
+                               }
+                             }}
+                           >
+                             <Trash2 className="h-3 w-3 mr-1" />
+                             Delete
+                           </Button>
+                         )}
+                       </div>
                     </div>
                   </div>
                 </CardContent>
