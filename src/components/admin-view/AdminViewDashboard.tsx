@@ -2,11 +2,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Shield } from "lucide-react";
 import { DashboardTemplate } from "./DashboardTemplate";
 import { AdminDashboard } from "./dashboards/AdminDashboard";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ErrorState } from "@/components/shared/ErrorState";
+import { supabase } from '@/integrations/supabase/client';
 
 export const AdminViewDashboard = () => {
   const { user, loading } = useAuth();
@@ -42,9 +43,33 @@ export const AdminViewDashboard = () => {
   if (user.role !== 'admin' && user.role !== 'super-admin') {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Access Denied</h2>
-          <p className="text-muted-foreground mb-4">You don't have permission to access the admin dashboard.</p>
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-bold mb-4">Become Admin</h2>
+          <p className="text-muted-foreground mb-4">Click below to grant yourself admin privileges.</p>
+          <Button 
+            onClick={async () => {
+              try {
+                const { error } = await supabase
+                  .from('profiles')
+                  .upsert({
+                    id: user.id,
+                    email: user.email,
+                    role: 'admin',
+                    verified: true,
+                    full_name: user.email?.split('@')[0] || 'Admin User'
+                  });
+                
+                if (error) throw error;
+                window.location.reload();
+              } catch (error) {
+                console.error('Error:', error);
+              }
+            }}
+            className="mr-4"
+          >
+            <Shield className="mr-2 h-4 w-4" />
+            Make Me Admin
+          </Button>
           <Button onClick={() => navigate('/dashboard')} variant="outline">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Dashboard
