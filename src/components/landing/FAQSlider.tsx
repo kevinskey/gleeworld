@@ -98,7 +98,7 @@ export const FAQSlider = () => {
         {/* Rotating Question/Answer Cards - All screen sizes */}
         <div>
           {/* Fixed height container for consistent sizing */}
-           <div className="h-[280px] md:h-[320px] lg:h-[360px] flex flex-col justify-start space-y-4 max-w-4xl mx-auto">
+           <div className="h-[320px] md:h-[320px] lg:h-[360px] flex flex-col justify-start space-y-4 max-w-4xl mx-auto">
              {!isFooterCard ? (
                <>
                  {/* Question Card - Smaller */}
