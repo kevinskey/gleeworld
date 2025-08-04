@@ -32,20 +32,15 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
   useEffect(() => {
     const fetchExecutiveMembers = async () => {
       try {
-        // First, let's check if there are any executive board members at all
+        // Get executive board members and profiles separately, then join manually
         const { data: membersData, error: membersError } = await supabase
           .from('gw_executive_board_members')
           .select('*')
           .eq('is_active', true);
 
-        console.log('Executive board members:', membersData, membersError);
-
-        // Then get the profiles separately
         const { data: profilesData, error: profilesError } = await supabase
           .from('gw_profiles')
           .select('user_id, full_name, email');
-
-        console.log('Profiles:', profilesData, profilesError);
 
         if (membersError || profilesError) {
           console.error('Error fetching data:', { membersError, profilesError });
@@ -64,29 +59,15 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           };
         }) || [];
 
-        console.log('Formatted members:', formattedMembers);
-
         setExecutiveMembers(formattedMembers);
         
-        // Set first member as default selection, or fallback to first position
+        // Set first member as default selection
         if (formattedMembers.length > 0) {
           setSelectedMember(formattedMembers[0].id);
           const selectedPosition = EXECUTIVE_POSITIONS.find(pos => pos.value === formattedMembers[0].position);
           if (selectedPosition) {
             setActivePosition(selectedPosition);
           }
-        } else {
-          // If no executive members found, create dummy entries for all positions
-          const dummyMembers = EXECUTIVE_POSITIONS.map(position => ({
-            id: position.value,
-            user_id: 'dummy',
-            position: position.value,
-            full_name: `${position.label} (No member assigned)`,
-            email: ''
-          }));
-          setExecutiveMembers(dummyMembers);
-          setSelectedMember(dummyMembers[0].id);
-          setActivePosition(EXECUTIVE_POSITIONS[0]);
         }
       } catch (error) {
         console.error('Error fetching executive members:', error);
