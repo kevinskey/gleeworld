@@ -1,21 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PermissionsGrid } from "@/components/admin/PermissionsGrid";
 import { EXECUTIVE_POSITIONS, type ExecutivePosition } from "@/hooks/useExecutivePermissions";
-import { 
-  Crown,
-  FileText,
-  DollarSign,
-  MapPin,
-  Shirt,
-  BookOpen,
-  Clock,
-  MessageSquare,
-  Heart,
-  BarChart,
-  Users,
-  Mic
-} from "lucide-react";
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 interface AdminDashboardProps {
   user: {
     id: string;
@@ -28,24 +15,90 @@ interface AdminDashboardProps {
   };
 }
 
-const getPositionIcon = (position: string) => {
-  switch (position) {
-    case 'president': return Crown;
-    case 'secretary': return FileText;
-    case 'treasurer': return DollarSign;
-    case 'tour_manager': return MapPin;
-    case 'wardrobe_manager': return Shirt;
-    case 'librarian': return BookOpen;
-    case 'historian': return Clock;
-    case 'pr_coordinator': case 'pr_manager': return MessageSquare;
-    case 'chaplain': case 'assistant_chaplain': return Heart;
-    case 'data_analyst': return BarChart;
-    default: return Users;
-  }
-};
+interface ExecutiveBoardMember {
+  id: string;
+  user_id: string;
+  position: string;
+  full_name: string;
+  email: string;
+}
 
 export const AdminDashboard = ({ user }: AdminDashboardProps) => {
   const [activePosition, setActivePosition] = useState<ExecutivePosition>(EXECUTIVE_POSITIONS[0]);
+  const [executiveMembers, setExecutiveMembers] = useState<ExecutiveBoardMember[]>([]);
+  const [selectedMember, setSelectedMember] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchExecutiveMembers = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('gw_executive_board_members')
+          .select(`
+            id,
+            user_id,
+            position,
+            gw_profiles(
+              full_name,
+              email
+            )
+          `)
+          .eq('is_active', true);
+
+        if (error) {
+          console.error('Error fetching executive members:', error);
+          return;
+        }
+
+        const formattedMembers = data?.map((member: any) => ({
+          id: member.id,
+          user_id: member.user_id,
+          position: member.position,
+          full_name: member.gw_profiles?.full_name || member.gw_profiles?.email || 'Unknown',
+          email: member.gw_profiles?.email || ''
+        })) || [];
+
+        setExecutiveMembers(formattedMembers);
+        
+        // Set first member as default selection
+        if (formattedMembers.length > 0) {
+          setSelectedMember(formattedMembers[0].id);
+          const selectedPosition = EXECUTIVE_POSITIONS.find(pos => pos.value === formattedMembers[0].position);
+          if (selectedPosition) {
+            setActivePosition(selectedPosition);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching executive members:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchExecutiveMembers();
+  }, []);
+
+  const handleMemberChange = (memberId: string) => {
+    setSelectedMember(memberId);
+    const member = executiveMembers.find(m => m.id === memberId);
+    if (member) {
+      const position = EXECUTIVE_POSITIONS.find(pos => pos.value === member.position);
+      if (position) {
+        setActivePosition(position);
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-muted/30 p-6 -m-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading executive board members...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-muted/30 p-6 -m-6">
@@ -56,35 +109,39 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
               Executive Board Permissions Management
             </h1>
             <p className="text-muted-foreground">
-              Assign function permissions to executive board positions
+              Assign function permissions to executive board members
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            {EXECUTIVE_POSITIONS.map((position) => {
-              const Icon = getPositionIcon(position.value);
-              const isSelected = activePosition.value === position.value;
-              
-              return (
-                <button
-                  key={position.value}
-                  onClick={() => setActivePosition(position)}
-                  className={`p-3 rounded-full border-2 transition-all duration-200 ${
-                    isSelected 
-                      ? 'bg-green-500 border-green-600 text-white' 
-                      : 'bg-red-500 border-red-600 text-white hover:bg-red-400'
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                </button>
-              );
-            })}
+          <div className="w-full lg:w-80">
+            <Select value={selectedMember} onValueChange={handleMemberChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select an executive board member" />
+              </SelectTrigger>
+              <SelectContent>
+                {executiveMembers.map((member) => {
+                  const position = EXECUTIVE_POSITIONS.find(pos => pos.value === member.position);
+                  return (
+                    <SelectItem key={member.id} value={member.id}>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{member.full_name}</span>
+                        <span className="text-sm text-muted-foreground">
+                          ({position?.label || member.position})
+                        </span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
-        <div className="mt-6">
-          <PermissionsGrid selectedPosition={activePosition} />
-        </div>
+        {selectedMember && (
+          <div className="mt-6">
+            <PermissionsGrid selectedPosition={activePosition} />
+          </div>
+        )}
       </div>
     </div>
   );
