@@ -76,11 +76,9 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
         setExecutiveMembers(allPositions);
         
-        // Set first position as default selection
-        if (allPositions.length > 0) {
-          setSelectedMember(allPositions[0].id);
-          setActivePosition(EXECUTIVE_POSITIONS[0]);
-        }
+        // Set no selection by default
+        setSelectedMember("");
+        setActivePosition(EXECUTIVE_POSITIONS[0]);
       } catch (error) {
         console.error('Error fetching executive members:', error);
       } finally {
@@ -134,6 +132,9 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                 <SelectValue placeholder="Select an executive board member" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">
+                  <span className="text-muted-foreground italic">None</span>
+                </SelectItem>
                 {executiveMembers.map((member) => {
                   const position = EXECUTIVE_POSITIONS.find(pos => pos.value === member.position);
                   return (
