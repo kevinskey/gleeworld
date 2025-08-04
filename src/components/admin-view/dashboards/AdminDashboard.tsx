@@ -364,6 +364,19 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                           Manage rehearsal schedules, events, and member availability
                         </p>
                       </div>
+
+                      <div 
+                        className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                        onClick={() => setSelectedSubcategory("calendar-management")}
+                      >
+                        <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                          <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                          <h3 className="font-semibold text-sm sm:text-base">Calendar Management</h3>
+                        </div>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          View, edit, and manage all events and rehearsals
+                        </p>
+                      </div>
                     </div>
                 )}
 
