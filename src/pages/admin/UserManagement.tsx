@@ -82,40 +82,63 @@ const UserManagement = () => {
 
   const assignExecutivePosition = async (userId: string, position: typeof EXECUTIVE_POSITIONS[number]) => {
     try {
-      // First, check if position is already taken
+      const currentYear = new Date().getFullYear().toString();
+
+      // First, check if position is already taken for this year
       const { data: existingMember } = await supabase
         .from('gw_executive_board_members')
         .select('*')
         .eq('position', position)
+        .eq('academic_year', currentYear)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       if (existingMember) {
         toast({
           title: "Position Taken",
-          description: `The ${position.replace(/_/g, ' ')} position is already occupied`,
+          description: `The ${position.replace(/_/g, ' ')} position is already occupied for ${currentYear}`,
           variant: "destructive",
         });
         return;
       }
 
-      // Remove user from any existing executive board positions
+      // Remove user from any existing executive board positions for this year
       await supabase
         .from('gw_executive_board_members')
         .update({ is_active: false })
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .eq('academic_year', currentYear);
 
-      // Add to executive board
-      const { error: boardError } = await supabase
+      // Check if user already has this exact position for this year (inactive)
+      const { data: existingRecord } = await supabase
         .from('gw_executive_board_members')
-        .insert({
-          user_id: userId,
-          position: position,
-          academic_year: new Date().getFullYear().toString(),
-          is_active: true
-        });
+        .select('*')
+        .eq('user_id', userId)
+        .eq('position', position)
+        .eq('academic_year', currentYear)
+        .maybeSingle();
 
-      if (boardError) throw boardError;
+      if (existingRecord) {
+        // Reactivate existing record
+        const { error: updateError } = await supabase
+          .from('gw_executive_board_members')
+          .update({ is_active: true })
+          .eq('id', existingRecord.id);
+
+        if (updateError) throw updateError;
+      } else {
+        // Create new record
+        const { error: insertError } = await supabase
+          .from('gw_executive_board_members')
+          .insert({
+            user_id: userId,
+            position: position,
+            academic_year: currentYear,
+            is_active: true
+          });
+
+        if (insertError) throw insertError;
+      }
 
       // Update profile
       const { error: profileError } = await supabase
