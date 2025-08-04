@@ -8,11 +8,13 @@ import { AdminDashboard } from "./dashboards/AdminDashboard";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from '@/integrations/supabase/client';
 
 export const AdminViewDashboard = () => {
   const { user, loading } = useAuth();
   const { profile, loading: profileLoading, isAdmin, isSuperAdmin } = useUserRole();
+  const { userProfile } = useUserProfile(user);
   const navigate = useNavigate();
 
   // Debug logging
@@ -64,7 +66,10 @@ export const AdminViewDashboard = () => {
 
   return (
     <DashboardTemplate
-      user={user}
+      user={{
+        ...user,
+        avatar_url: userProfile?.avatar_url
+      }}
       title={getTitle()}
       subtitle={getSubtitle()}
       backgroundImage={backgroundImage}

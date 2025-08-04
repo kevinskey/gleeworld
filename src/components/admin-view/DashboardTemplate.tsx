@@ -14,6 +14,7 @@ interface DashboardTemplateProps {
     exec_board_role?: string;
     is_exec_board?: boolean;
     created_at?: string;
+    avatar_url?: string;
   };
   title: string;
   subtitle: string;
@@ -71,7 +72,7 @@ export const DashboardTemplate = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-4">
               <Avatar className="h-12 w-12 sm:h-16 sm:w-16">
-                <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.full_name || user.email || 'Admin'}`} />
+                <AvatarImage src={user.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.full_name || user.email || 'Admin'}`} />
                 <AvatarFallback className="text-sm sm:text-lg font-semibold">
                   {getInitials(user.full_name || user.email || 'Admin')}
                 </AvatarFallback>
