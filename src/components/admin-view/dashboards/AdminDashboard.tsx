@@ -44,7 +44,7 @@ interface AdminDashboardProps {
 }
 
 export const AdminDashboard = ({ user }: AdminDashboardProps) => {
-  const [selectedCategory, setSelectedCategory] = useState("user-management");
+  const [selectedCategory, setSelectedCategory] = useState("communications");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,34 +105,10 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           {/* Left Column - Major Categories */}
           <div className="lg:col-span-1 bg-card rounded-lg border p-4 sm:p-6 overflow-y-auto">
             <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 text-foreground">
-              Admin Functions
+              Admin Categories
             </h2>
                 
             <div className="space-y-2 sm:space-y-3">
-              {/* User Management Category */}
-              <div 
-                className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
-                  selectedCategory === "user-management" 
-                    ? "bg-primary/10 border-primary/20 border" 
-                    : "bg-muted/50 hover:bg-muted"
-                }`}
-                onClick={() => {
-                  setSelectedCategory("user-management");
-                  setSelectedSubcategory(null);
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                    <span className="font-medium text-sm sm:text-base">User Management</span>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
-                  Manage users, auditions, profiles, and permissions
-                </p>
-              </div>
-
               {/* Communications Category */}
               <div 
                 className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
@@ -147,111 +123,104 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                    <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                     <span className="font-medium text-sm sm:text-base">Communications</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
-                  Community hub, notifications, emails, and writing tools
+                  Notifications, emails, community hub, and messaging tools
                 </p>
               </div>
 
-              {/* System Administration Category */}
+              {/* Wardrobe Category */}
               <div 
                 className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
-                  selectedCategory === "system-admin" 
+                  selectedCategory === "wardrobe" 
                     ? "bg-primary/10 border-primary/20 border" 
                     : "bg-muted/50 hover:bg-muted"
                 }`}
                 onClick={() => {
-                  setSelectedCategory("system-admin");
+                  setSelectedCategory("wardrobe");
                   setSelectedSubcategory(null);
                 }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <Settings className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                    <span className="font-medium text-sm sm:text-base">System Administration</span>
+                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                    <span className="font-medium text-sm sm:text-base">Wardrobe</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
-                  Calendar, contracts, activity logs, and system settings
+                  Costume management, fitting schedules, and inventory
+                </p>
+              </div>
+
+              {/* Executive Board Category */}
+              <div 
+                className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
+                  selectedCategory === "executive-board" 
+                    ? "bg-primary/10 border-primary/20 border" 
+                    : "bg-muted/50 hover:bg-muted"
+                }`}
+                onClick={() => {
+                  setSelectedCategory("executive-board");
+                  setSelectedSubcategory(null);
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <UserCog className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                    <span className="font-medium text-sm sm:text-base">Executive Board</span>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
+                  Board management, roles, permissions, and system administration
+                </p>
+              </div>
+
+              {/* Musical Leadership Category */}
+              <div 
+                className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
+                  selectedCategory === "musical-leadership" 
+                    ? "bg-primary/10 border-primary/20 border" 
+                    : "bg-muted/50 hover:bg-muted"
+                }`}
+                onClick={() => {
+                  setSelectedCategory("musical-leadership");
+                  setSelectedSubcategory(null);
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Music className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+                    <span className="font-medium text-sm sm:text-base">Musical Leadership</span>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
+                  Auditions, music library, rehearsals, and performance management
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Right Column - Subcategories and Content */}
+          {/* Right Column - Functions List */}
           <div className="lg:col-span-2 bg-card rounded-lg border p-4 sm:p-6 overflow-y-auto">
             <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 text-foreground">
-              {selectedCategory === "user-management" && "User Management Tools"}
               {selectedCategory === "communications" && "Communications Hub"}
-              {selectedCategory === "system-admin" && "System Administration"}
+              {selectedCategory === "wardrobe" && "Wardrobe Management"}
+              {selectedCategory === "executive-board" && "Executive Board Tools"}
+              {selectedCategory === "musical-leadership" && "Musical Leadership"}
+              {!selectedCategory && "Select a category to view functions"}
             </h2>
 
-            {/* Show subcategories or actual content based on selection */}
+            {/* Show functions based on selected category */}
             {!selectedSubcategory && (
               <>
-                {/* User Management Subcategories */}
-                {selectedCategory === "user-management" && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div 
-                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => setSelectedSubcategory("auditions")}
-                    >
-                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <Music className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
-                        <h3 className="font-semibold text-sm sm:text-base">Auditions</h3>
-                      </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        Manage audition sessions, applications, and evaluations
-                      </p>
-                    </div>
-
-                    <div 
-                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => setSelectedSubcategory("profile-management")}
-                    >
-                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-                        <h3 className="font-semibold text-sm sm:text-base">Profile Management</h3>
-                      </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        View and edit user profiles and account information
-                      </p>
-                    </div>
-
-                    <div 
-                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => setSelectedSubcategory("exec-board")}
-                    >
-                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <UserCog className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
-                        <h3 className="font-semibold text-sm sm:text-base">Exec Board Assignments</h3>
-                      </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        Manage executive board roles and responsibilities
-                      </p>
-                    </div>
-
-                    <div 
-                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => setSelectedSubcategory("permissions")}
-                    >
-                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
-                        <h3 className="font-semibold text-sm sm:text-base">User Permissions</h3>
-                      </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        Control access levels and system permissions
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Communications Subcategories */}
+                {/* Communications Functions */}
                 {selectedCategory === "communications" && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div 
@@ -264,19 +233,6 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                       </div>
                       <p className="text-xs sm:text-sm text-muted-foreground">
                         Send system-wide notifications to users
-                      </p>
-                    </div>
-
-                    <div 
-                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => setSelectedSubcategory("buckets-of-love")}
-                    >
-                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-pink-600" />
-                        <h3 className="font-semibold text-sm sm:text-base">Buckets of Love</h3>
-                      </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        Manage appreciation messages and recognition
                       </p>
                     </div>
 
@@ -295,14 +251,14 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
                     <div 
                       className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => setSelectedSubcategory("internal-communications")}
+                      onClick={() => setSelectedSubcategory("buckets-of-love")}
                     >
                       <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
-                        <h3 className="font-semibold text-sm sm:text-base">Internal Communications</h3>
+                        <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-pink-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Buckets of Love</h3>
                       </div>
                       <p className="text-xs sm:text-sm text-muted-foreground">
-                        Staff messaging and internal announcements
+                        Manage appreciation messages and recognition
                       </p>
                     </div>
 
@@ -319,22 +275,118 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                         Write letters, create templates, and newsletters via Google Docs
                       </p>
                     </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("internal-communications")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Internal Communications</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Staff messaging and internal announcements
+                      </p>
+                    </div>
                   </div>
                 )}
 
-                {/* System Administration Subcategories */}
-                {selectedCategory === "system-admin" && (
+                {/* Wardrobe Functions */}
+                {selectedCategory === "wardrobe" && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div 
                       className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => setSelectedSubcategory("calendar")}
+                      onClick={() => setSelectedSubcategory("costume-inventory")}
                     >
                       <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-                        <h3 className="font-semibold text-sm sm:text-base">Calendar Management</h3>
+                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Costume Inventory</h3>
                       </div>
                       <p className="text-xs sm:text-sm text-muted-foreground">
-                        Manage events, rehearsals, and performances
+                        Track costumes, sizes, and availability
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("fitting-schedules")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Fitting Schedules</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Schedule and manage costume fittings
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("costume-assignments")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Costume Assignments</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Assign costumes to members for performances
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("maintenance-repairs")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Settings className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Maintenance & Repairs</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Track costume condition and repairs needed
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Executive Board Functions */}
+                {selectedCategory === "executive-board" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("exec-board")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <UserCog className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Board Assignments</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Manage executive board roles and responsibilities
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("profile-management")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">User Management</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        View and edit user profiles and account information
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("permissions")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Permissions</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Control access levels and system permissions
                       </p>
                     </div>
 
@@ -373,7 +425,118 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                         <h3 className="font-semibold text-sm sm:text-base">System Settings</h3>
                       </div>
                       <p className="text-xs sm:text-sm text-muted-foreground">
-                        Configure system preferences and options
+                        Configure system-wide settings and preferences
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("calendar")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Calendar Management</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Manage events, rehearsals, and performances
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Musical Leadership Functions */}
+                {selectedCategory === "musical-leadership" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("auditions")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Music className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Auditions</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Manage audition sessions, applications, and evaluations
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("music-library")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Music Library</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Organize sheet music, recordings, and arrangements
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("rehearsal-management")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Rehearsal Management</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Schedule rehearsals and track attendance
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("performance-planning")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Music className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Performance Planning</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Plan concerts, tours, and special events
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("voice-parts")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Voice Parts</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Assign voice parts and manage section leaders
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("repertoire")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <BarChart className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Repertoire Planning</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Plan concert programs and song selections
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Default state - no category selected */}
+                {!selectedCategory && (
+                  <div className="flex items-center justify-center h-64 text-center">
+                    <div>
+                      <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-medium text-foreground mb-2">
+                        Select a Category
+                      </h3>
+                      <p className="text-muted-foreground">
+                        Choose a category from the left panel to view available functions
                       </p>
                     </div>
                   </div>
@@ -389,7 +552,12 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                     onClick={() => setSelectedSubcategory(null)}
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    ← Back to {selectedCategory === "user-management" ? "User Management" : selectedCategory === "communications" ? "Communications" : "System Administration"}
+                    ← Back to {
+                      selectedCategory === "communications" ? "Communications" : 
+                      selectedCategory === "wardrobe" ? "Wardrobe" :
+                      selectedCategory === "executive-board" ? "Executive Board" :
+                      selectedCategory === "musical-leadership" ? "Musical Leadership" : "Dashboard"
+                    }
                   </button>
                 </div>
 
