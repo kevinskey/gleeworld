@@ -115,6 +115,15 @@ export const RadioStationPage = () => {
         .order('recorded_at', { ascending: false })
         .limit(1);
 
+      // Fetch available audio tracks for the radio
+      const { data: tracksData } = await supabase
+        .from('audio_archive')
+        .select('id, title, artist_info, audio_url, duration_seconds, category')
+        .eq('is_public', true)
+        .not('audio_url', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
       if (episodesData) {
         setRadioStats(prev => ({
           ...prev,
@@ -128,6 +137,27 @@ export const RadioStationPage = () => {
           listeners: statsData[0].unique_listeners || 127,
           subscribers: 892 // Keep default value for now
         }));
+      }
+
+      // Set up default tracks and current track
+      if (tracksData && tracksData.length > 0) {
+        const radioTracks: RadioTrack[] = tracksData.map(track => ({
+          id: track.id,
+          title: track.title,
+          artist: track.artist_info || 'Glee Club',
+          duration: track.duration_seconds || 180,
+          audio_url: track.audio_url,
+          category: (track.category === 'performance' || track.category === 'announcement' || track.category === 'interlude' || track.category === 'alumni_story') 
+            ? track.category 
+            : 'performance'
+        }));
+        
+        setUpcomingTracks(radioTracks);
+        
+        // Set the first track as current if no track is playing
+        if (!currentTrack && radioTracks.length > 0) {
+          setCurrentTrack(radioTracks[0]);
+        }
       }
 
     } catch (error) {
