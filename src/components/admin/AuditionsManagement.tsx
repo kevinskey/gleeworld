@@ -46,32 +46,30 @@ interface AuditionSession {
 
 interface AuditionApplication {
   id: string;
-  session_id: string;
   user_id: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  phone_number?: string;
-  date_of_birth?: string;
-  profile_image_url?: string;
-  student_id?: string;
-  academic_year?: string;
-  major?: string;
-  minor?: string;
-  gpa?: number;
-  previous_choir_experience?: string;
-  voice_part_preference?: string;
-  years_of_vocal_training?: number;
-  instruments_played?: string[];
-  music_theory_background?: string;
-  prepared_pieces?: string;
-  sight_reading_level?: string;
-  why_glee_club?: string;
-  vocal_goals?: string;
-  availability_conflicts?: string;
+  phone?: string;
+  audition_date: string;
+  audition_time: string;
   status: string;
-  application_date: string;
-  audition_time_slot?: string;
-  notes?: string;
+  created_at: string;
+  sang_in_middle_school?: boolean;
+  sang_in_high_school?: boolean;
+  plays_instrument?: boolean;
+  instrument_details?: string;
+  is_soloist?: boolean;
+  reads_music?: boolean;
+  interested_in_voice_lessons?: boolean;
+  personality_description?: string;
+  additional_info?: string;
+  selfie_url?: string;
+  // Computed properties for display
+  full_name?: string;
+  application_date?: string;
+  profile_image_url?: string;
+  voice_part_preference?: string;
 }
 
 interface AuditionEvaluation {
@@ -159,14 +157,46 @@ export const AuditionsManagement = () => {
       if (sessionsError) throw sessionsError;
       setSessions(sessionsData || []);
 
-      // Fetch applications
+      // Fetch applications from gw_auditions table
       const { data: applicationsData, error: applicationsError } = await supabase
-        .from('audition_applications')
-        .select('*')
-        .order('application_date', { ascending: false });
+        .from('gw_auditions')
+        .select(`
+          id,
+          user_id,
+          first_name,
+          last_name,
+          email,
+          phone,
+          audition_date,
+          audition_time,
+          status,
+          created_at,
+          sang_in_middle_school,
+          sang_in_high_school,
+          plays_instrument,
+          instrument_details,
+          is_soloist,
+          reads_music,
+          interested_in_voice_lessons,
+          personality_description,
+          additional_info,
+          selfie_url
+        `)
+        .order('created_at', { ascending: false });
 
       if (applicationsError) throw applicationsError;
-      setApplications(applicationsData || []);
+      
+      // Transform data to match interface expectations
+      const transformedApplications = (applicationsData || []).map(app => ({
+        ...app,
+        full_name: `${app.first_name} ${app.last_name}`,
+        application_date: app.created_at,
+        profile_image_url: app.selfie_url,
+        phone_number: app.phone,
+        audition_time_slot: app.audition_time
+      }));
+      
+      setApplications(transformedApplications);
 
       // Fetch evaluations
       const { data: evaluationsData, error: evaluationsError } = await supabase
@@ -325,9 +355,7 @@ export const AuditionsManagement = () => {
     }
   };
 
-  const filteredApplications = selectedSession 
-    ? applications.filter(app => app.session_id === selectedSession)
-    : applications;
+  const filteredApplications = applications; // Remove session filtering since gw_auditions doesn't have session_id
 
   if (loading) {
     return (
@@ -396,7 +424,7 @@ export const AuditionsManagement = () => {
               <CardContent>
                 <div className="text-2xl font-bold">{filteredApplications.length}</div>
                 <p className="text-xs text-muted-foreground">
-                  {filteredApplications.filter(a => a.status === 'submitted').length} pending review
+                  {filteredApplications.filter(a => a.status === 'submitted' || a.status === 'pending').length} pending review
                 </p>
               </CardContent>
             </Card>
@@ -583,7 +611,7 @@ export const AuditionsManagement = () => {
                     </div>
                     <div>
                       <p className="font-medium">Applications</p>
-                      <p>{applications.filter(app => app.session_id === session.id).length}</p>
+                      <p>{applications.length}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -625,39 +653,21 @@ export const AuditionsManagement = () => {
                           <Mail className="h-3 w-3" />
                           <span>{application.email}</span>
                         </div>
-                        {application.phone_number && (
+                        {application.phone && (
                           <div className="flex items-center space-x-1">
                             <Phone className="h-3 w-3" />
-                            <span>{application.phone_number}</span>
+                            <span>{application.phone}</span>
                           </div>
                         )}
-                        {application.academic_year && (
-                          <div className="flex items-center space-x-1">
-                            <GraduationCap className="h-3 w-3" />
-                            <span className="capitalize">{application.academic_year}</span>
-                          </div>
-                        )}
-                        {application.major && (
-                          <div className="flex items-center space-x-1">
-                            <MapPin className="h-3 w-3" />
-                            <span>{application.major}</span>
-                          </div>
-                        )}
+                        <div className="flex items-center space-x-1">
+                          <Clock className="h-3 w-3" />
+                          <span>{new Date(application.audition_date).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>{application.audition_time}</span>
+                        </div>
                       </div>
-
-                      {application.gpa && (
-                        <div className="text-sm">
-                          <span className="font-medium">GPA: </span>
-                          <span>{application.gpa}</span>
-                        </div>
-                      )}
-
-                      {application.years_of_vocal_training && (
-                        <div className="text-sm">
-                          <span className="font-medium">Vocal Training: </span>
-                          <span>{application.years_of_vocal_training} years</span>
-                        </div>
-                      )}
 
                       <div className="flex items-center space-x-2 pt-2">
                         <Dialog>
@@ -675,34 +685,34 @@ export const AuditionsManagement = () => {
                               {/* Application details content */}
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                  <Label>Academic Year</Label>
-                                  <p className="capitalize">{application.academic_year || 'Not specified'}</p>
+                                  <Label>Audition Date</Label>
+                                  <p>{new Date(application.audition_date).toLocaleDateString()}</p>
                                 </div>
                                 <div>
-                                  <Label>Major</Label>
-                                  <p>{application.major || 'Not specified'}</p>
+                                  <Label>Audition Time</Label>
+                                  <p>{application.audition_time}</p>
                                 </div>
                                 <div>
-                                  <Label>GPA</Label>
-                                  <p>{application.gpa || 'Not provided'}</p>
+                                  <Label>Phone</Label>
+                                  <p>{application.phone || 'Not provided'}</p>
                                 </div>
                                 <div>
-                                  <Label>Voice Part Preference</Label>
-                                  <p>{application.voice_part_preference || 'Not specified'}</p>
+                                  <Label>Instrument Player</Label>
+                                  <p>{application.plays_instrument ? 'Yes' : 'No'}</p>
                                 </div>
                               </div>
                               
-                              {application.why_glee_club && (
+                              {application.personality_description && (
                                 <div>
-                                  <Label>Why Glee Club?</Label>
-                                  <p className="text-sm mt-1">{application.why_glee_club}</p>
+                                  <Label>Personality Description</Label>
+                                  <p className="text-sm mt-1">{application.personality_description}</p>
                                 </div>
                               )}
                               
-                              {application.vocal_goals && (
+                              {application.additional_info && (
                                 <div>
-                                  <Label>Vocal Goals</Label>
-                                  <p className="text-sm mt-1">{application.vocal_goals}</p>
+                                  <Label>Additional Information</Label>
+                                  <p className="text-sm mt-1">{application.additional_info}</p>
                                 </div>
                               )}
                             </div>
