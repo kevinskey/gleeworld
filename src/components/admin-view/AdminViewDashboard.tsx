@@ -54,19 +54,36 @@ export const AdminViewDashboard = () => {
               try {
                 console.log('Making user admin...', user.id, user.email);
                 
-                // Update profiles table (only use existing columns)
-                const { error: profilesError } = await supabase
+                // First check if user already exists in profiles
+                const { data: existingProfile } = await supabase
                   .from('profiles')
-                  .upsert({
-                    id: user.id,
-                    email: user.email,
-                    role: 'admin',
-                    full_name: user.email?.split('@')[0] || 'Admin User'
-                  });
+                  .select('*')
+                  .eq('id', user.id)
+                  .single();
                 
-                if (profilesError) {
-                  console.error('Profiles table error:', profilesError);
-                  throw profilesError;
+                if (existingProfile) {
+                  // Update existing profile
+                  const { error: updateError } = await supabase
+                    .from('profiles')
+                    .update({
+                      role: 'admin',
+                      full_name: user.email?.split('@')[0] || 'Admin User'
+                    })
+                    .eq('id', user.id);
+                  
+                  if (updateError) throw updateError;
+                } else {
+                  // Insert new profile
+                  const { error: insertError } = await supabase
+                    .from('profiles')
+                    .insert({
+                      id: user.id,
+                      email: user.email,
+                      role: 'admin',
+                      full_name: user.email?.split('@')[0] || 'Admin User'
+                    });
+                  
+                  if (insertError) throw insertError;
                 }
                 
                 console.log('Admin role assigned successfully!');
