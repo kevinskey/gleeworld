@@ -54,44 +54,18 @@ export const AdminViewDashboard = () => {
               try {
                 console.log('Making user admin...', user.id, user.email);
                 
-                // First, ensure user exists in profiles table
-                const { data: existingProfile } = await supabase
-                  .from('profiles')
-                  .select('*')
-                  .eq('id', user.id)
-                  .single();
-                
-                if (!existingProfile) {
-                  // Create profile first if it doesn't exist
-                  const { error: insertError } = await supabase
-                    .from('profiles')
-                    .insert({
-                      id: user.id,
-                      email: user.email,
-                      role: 'fan', // Start with basic role
-                      full_name: user.email?.split('@')[0] || 'Admin User'
-                    });
-                  
-                  if (insertError) {
-                    console.error('Error creating profile:', insertError);
-                    throw insertError;
-                  }
-                }
-                
-                // Use the secure function to update role
-                const { data, error: roleError } = await supabase
-                  .rpc('secure_update_user_role', {
-                    target_user_id: user.id,
-                    new_role: 'admin',
-                    reason: 'Initial admin setup via dashboard'
+                // Use the bootstrap function to make user admin
+                const { data, error } = await supabase
+                  .rpc('bootstrap_initial_admin', {
+                    user_email_param: user.email
                   });
                 
-                if (roleError) {
-                  console.error('Error updating role:', roleError);
-                  throw roleError;
+                if (error) {
+                  console.error('Error bootstrapping admin:', error);
+                  throw error;
                 }
                 
-                console.log('Admin role assigned successfully!');
+                console.log('Admin role assigned successfully!', data);
                 alert('Admin role assigned successfully! Reloading page...');
                 window.location.reload();
               } catch (error) {

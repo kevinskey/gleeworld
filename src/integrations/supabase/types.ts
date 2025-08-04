@@ -10793,6 +10793,10 @@ export type Database = {
         }
         Returns: Json
       }
+      bootstrap_initial_admin: {
+        Args: { user_email_param: string }
+        Returns: boolean
+      }
       calculate_event_budget_totals: {
         Args: { event_id_param: string }
         Returns: undefined
