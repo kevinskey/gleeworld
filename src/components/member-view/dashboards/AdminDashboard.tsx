@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CommunicationCenterModule } from "@/components/admin/CommunicationCenterModule";
+import { RadioManagement } from "@/components/admin/RadioManagement";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
@@ -21,6 +22,7 @@ import {
   Bell, 
   Music, 
   BookOpen,
+  Radio,
   Clock,
   Award,
   Users,
@@ -377,11 +379,12 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
       {/* Tabbed Management Modules */}
       <Tabs defaultValue="auditions" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="auditions">Auditions</TabsTrigger>
           <TabsTrigger value="solos">Solos</TabsTrigger>
           <TabsTrigger value="srf">SRF Management</TabsTrigger>
-          <TabsTrigger value="permissions">Permissions Manager</TabsTrigger>
+          <TabsTrigger value="radio">Radio</TabsTrigger>
+          <TabsTrigger value="permissions">Permissions</TabsTrigger>
         </TabsList>
 
         <TabsContent value="auditions" className="mt-6">
@@ -597,6 +600,10 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="radio" className="mt-6">
+          <RadioManagement />
         </TabsContent>
 
         <TabsContent value="permissions" className="mt-6">
