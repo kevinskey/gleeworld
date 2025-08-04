@@ -22,7 +22,7 @@ import { AdminSummaryStats } from "@/components/admin/AdminSummaryStats";
 import { CalendarControlsAdmin } from "@/components/admin/CalendarControlsAdmin";
 import { SystemSettings } from "@/components/admin/SystemSettings";
 import { PermissionManagement } from "@/components/admin/PermissionManagement";
-import { FinancialSystem } from "@/components/admin/FinancialSystem";
+// import { FinancialSystem } from "@/components/admin/FinancialSystem";
 
 interface AdminDashboardProps {
   user: {
@@ -273,7 +273,10 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           </TabsContent>
 
           <TabsContent value="financial" className="mt-6">
-            <FinancialSystem />
+            <div className="bg-white rounded-lg p-6">
+              <h3 className="text-lg font-semibold mb-4">Financial System</h3>
+              <p className="text-muted-foreground">Financial management tools will be available here.</p>
+            </div>
           </TabsContent>
 
           <TabsContent value="settings" className="mt-6">
