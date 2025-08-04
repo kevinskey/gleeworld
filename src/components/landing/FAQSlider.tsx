@@ -84,17 +84,6 @@ export const FAQSlider = () => {
           </div>
         </div>
 
-        {/* Mobile: News ticker header */}
-        <div className="md:hidden mb-4">
-          <div className="bg-background/40 backdrop-blur-sm border border-border/50 rounded-lg py-3 px-4 overflow-hidden">
-            <div className="whitespace-nowrap animate-[marquee_15s_linear_infinite]">
-              <span className="text-sm font-semibold text-foreground">
-                Frequently Asked Questions • Spelman Glee Club • Frequently Asked Questions • Spelman Glee Club • 
-              </span>
-            </div>
-          </div>
-        </div>
-
         {/* Rotating Question/Answer Cards - All screen sizes */}
         <div>
           {/* Fixed height container for consistent sizing */}
