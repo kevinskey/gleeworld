@@ -58,6 +58,7 @@ interface AdminDashboardProps {
 
 export const AdminDashboard = ({ user }: AdminDashboardProps) => {
   const [selectedCategory, setSelectedCategory] = useState("communications");
+  const [expandedCategories, setExpandedCategories] = useState<string[]>(["communications"]);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -122,28 +123,112 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
             </h2>
                 
             <div className="space-y-2 sm:space-y-3">
-              {/* Communications Category */}
-              <div 
-                className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
-                  selectedCategory === "communications" 
-                    ? "bg-primary/10 border-primary/20 border" 
-                    : "bg-muted/50 hover:bg-muted"
-                }`}
-                onClick={() => {
-                  setSelectedCategory("communications");
-                  setSelectedSubcategory(null);
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-                    <span className="font-medium text-sm sm:text-base">Communications</span>
+              {/* Communications Category with Expandable Subcategories */}
+              <div>
+                <div 
+                  className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
+                    selectedCategory === "communications" 
+                      ? "bg-primary/10 border-primary/20 border" 
+                      : "bg-muted/50 hover:bg-muted"
+                  }`}
+                  onClick={() => {
+                    setSelectedCategory("communications");
+                    setExpandedCategories(prev => 
+                      prev.includes("communications") 
+                        ? prev.filter(cat => cat !== "communications")
+                        : [...prev, "communications"]
+                    );
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                      <span className="font-medium text-sm sm:text-base">Communications</span>
+                    </div>
+                    <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${
+                      expandedCategories.includes("communications") ? "rotate-90" : ""
+                    }`} />
                   </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
+                    Notifications, emails, community hub, and messaging tools
+                  </p>
                 </div>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
-                  Notifications, emails, community hub, and messaging tools
-                </p>
+
+                {/* Communications Subcategories */}
+                {expandedCategories.includes("communications") && (
+                  <div className="ml-6 mt-2 space-y-2">
+                    <div 
+                      className="p-2 sm:p-3 rounded-lg cursor-pointer transition-all hover:bg-muted/50 border border-border/30"
+                      onClick={() => setSelectedSubcategory("notifications")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Bell className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-600" />
+                        <span className="text-xs sm:text-sm font-medium">Notifications</span>
+                      </div>
+                    </div>
+                    
+                    <div 
+                      className="p-2 sm:p-3 rounded-lg cursor-pointer transition-all hover:bg-muted/50 border border-border/30"
+                      onClick={() => setSelectedSubcategory("email-management")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
+                        <span className="text-xs sm:text-sm font-medium">Email Management</span>
+                      </div>
+                    </div>
+                    
+                    <div 
+                      className="p-2 sm:p-3 rounded-lg cursor-pointer transition-all hover:bg-muted/50 border border-border/30"
+                      onClick={() => setSelectedSubcategory("buckets-of-love")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Heart className="h-3 w-3 sm:h-4 sm:w-4 text-pink-600" />
+                        <span className="text-xs sm:text-sm font-medium">Buckets of Love</span>
+                      </div>
+                    </div>
+                    
+                    <div 
+                      className="p-2 sm:p-3 rounded-lg cursor-pointer transition-all hover:bg-muted/50 border border-border/30 bg-gradient-to-r from-blue-50 to-indigo-50"
+                      onClick={() => setSelectedSubcategory("glee-writing")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Edit3 className="h-3 w-3 sm:h-4 sm:w-4 text-indigo-600" />
+                        <span className="text-xs sm:text-sm font-medium">Glee Writing Widget</span>
+                        <Badge variant="secondary" className="text-xs ml-1">New</Badge>
+                      </div>
+                    </div>
+                    
+                    <div 
+                      className="p-2 sm:p-3 rounded-lg cursor-pointer transition-all hover:bg-muted/50 border border-border/30"
+                      onClick={() => setSelectedSubcategory("internal-communications")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
+                        <span className="text-xs sm:text-sm font-medium">Internal Communications</span>
+                      </div>
+                    </div>
+                    
+                    <div 
+                      className="p-2 sm:p-3 rounded-lg cursor-pointer transition-all hover:bg-muted/50 border border-border/30"
+                      onClick={() => setSelectedSubcategory("scheduling-module")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-cyan-600" />
+                        <span className="text-xs sm:text-sm font-medium">Scheduling Module</span>
+                      </div>
+                    </div>
+                    
+                    <div 
+                      className="p-2 sm:p-3 rounded-lg cursor-pointer transition-all hover:bg-muted/50 border border-border/30"
+                      onClick={() => setSelectedSubcategory("calendar-management")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600" />
+                        <span className="text-xs sm:text-sm font-medium">Calendar Management</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Wardrobe Category */}
@@ -280,106 +365,133 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
               {!selectedCategory && "Select a category to view functions"}
             </h2>
 
-            {/* Show functions based on selected category */}
-            {!selectedSubcategory && (
-              <>
-                {/* Communications Functions */}
-                {selectedCategory === "communications" && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div 
-                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => setSelectedSubcategory("notifications")}
-                    >
-                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
-                        <h3 className="font-semibold text-sm sm:text-base">Notifications</h3>
-                      </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        Send system-wide notifications to users
-                      </p>
-                    </div>
+            {/* Show current selection content or default message */}
+            {selectedSubcategory ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <button 
+                    onClick={() => setSelectedSubcategory(null)}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    ← Back to {
+                      selectedCategory === "communications" ? "Communications" : 
+                      selectedCategory === "wardrobe" ? "Wardrobe" :
+                      selectedCategory === "executive-board" ? "Executive Board" :
+                      selectedCategory === "member-management" ? "Member Management" :
+                      selectedCategory === "libraries" ? "Libraries" :
+                      selectedCategory === "musical-leadership" ? "Musical Leadership" : "Dashboard"
+                    }
+                  </button>
+                </div>
 
-                    <div 
-                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => setSelectedSubcategory("email-management")}
-                    >
-                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-                        <h3 className="font-semibold text-sm sm:text-base">Email Management</h3>
-                      </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        Send bulk emails and manage communication lists
-                      </p>
-                    </div>
+                {/* User Management Components */}
+                {selectedSubcategory === "auditions" && <AuditionsManagement />}
+                {selectedSubcategory === "profile-management" && <UserManagement />}
+                {selectedSubcategory === "exec-board" && <PermissionManagement />}
+                {selectedSubcategory === "permissions" && <PermissionManagement />}
 
-                    <div 
-                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => setSelectedSubcategory("buckets-of-love")}
-                    >
-                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-pink-600" />
-                        <h3 className="font-semibold text-sm sm:text-base">Buckets of Love</h3>
-                      </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        Manage appreciation messages and recognition
-                      </p>
-                    </div>
-
-                    <div 
-                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200"
-                      onClick={() => setSelectedSubcategory("glee-writing")}
-                    >
-                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <Edit3 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
-                        <h3 className="font-semibold text-sm sm:text-base">Glee Writing Widget</h3>
-                        <Badge variant="secondary" className="text-xs">New</Badge>
-                      </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        Write letters, create templates, and newsletters via Google Docs
-                      </p>
-                    </div>
-
-                    <div 
-                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => setSelectedSubcategory("internal-communications")}
-                    >
-                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
-                        <h3 className="font-semibold text-sm sm:text-base">Internal Communications</h3>
-                      </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        Staff messaging and internal announcements
-                      </p>
-                      </div>
-
-                      <div 
-                        className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
-                        onClick={() => setSelectedSubcategory("scheduling-module")}
-                      >
-                        <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                          <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-600" />
-                          <h3 className="font-semibold text-sm sm:text-base">Scheduling Module</h3>
-                        </div>
-                        <p className="text-xs sm:text-sm text-muted-foreground">
-                          Manage rehearsal schedules, events, and member availability
+                {/* Communications Components */}
+                {selectedSubcategory === "notifications" && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Notifications Management</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground">Coming soon - System notification management interface</p>
+                    </CardContent>
+                  </Card>
+                )}
+                {selectedSubcategory === "buckets-of-love" && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Buckets of Love</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground">Coming soon - Appreciation message management</p>
+                    </CardContent>
+                  </Card>
+                )}
+                {selectedSubcategory === "email-management" && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Email Management</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground">Coming soon - Bulk email and communication tools</p>
+                    </CardContent>
+                  </Card>
+                )}
+                {selectedSubcategory === "internal-communications" && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Internal Communications</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground">Coming soon - Staff messaging and internal announcements</p>
+                    </CardContent>
+                  </Card>
+                )}
+                {selectedSubcategory === "glee-writing" && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Edit3 className="h-5 w-5 text-indigo-600" />
+                        Glee Writing Widget
+                        <Badge variant="secondary">New</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground">
+                          Create and manage letters, templates, and newsletters through Google Docs integration.
                         </p>
-                      </div>
-
-                      <div 
-                        className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
-                        onClick={() => setSelectedSubcategory("calendar-management")}
-                      >
-                        <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                          <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
-                          <h3 className="font-semibold text-sm sm:text-base">Calendar Management</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-base">Letter Writing</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-sm text-muted-foreground">Create official Glee Club correspondence</p>
+                            </CardContent>
+                          </Card>
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-base">Template Manager</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-sm text-muted-foreground">Manage reusable document templates</p>
+                            </CardContent>
+                          </Card>
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-base">Newsletter Creation</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-sm text-muted-foreground">Design and distribute newsletters</p>
+                            </CardContent>
+                          </Card>
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-base">Google Docs Sync</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-sm text-muted-foreground">Seamless integration with Google Workspace</p>
+                            </CardContent>
+                          </Card>
                         </div>
-                        <p className="text-xs sm:text-sm text-muted-foreground">
-                          View, edit, and manage all events and rehearsals
-                        </p>
                       </div>
-                    </div>
+                    </CardContent>
+                  </Card>
                 )}
 
+                {/* System Administration Components */}
+                {selectedSubcategory === "calendar" && <CalendarControlsAdmin />}
+                {selectedSubcategory === "contracts" && <ContractManagement />}
+                {selectedSubcategory === "activity" && <ActivityLogs />}
+                {selectedSubcategory === "settings" && <SystemSettings />}
+              </div>
+            ) : (
+              <>
                 {/* Wardrobe Functions */}
                 {selectedCategory === "wardrobe" && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -814,133 +926,6 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                   </div>
                 )}
               </>
-            )}
-
-            {/* Actual content components */}
-            {selectedSubcategory && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <button 
-                    onClick={() => setSelectedSubcategory(null)}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    ← Back to {
-                      selectedCategory === "communications" ? "Communications" : 
-                      selectedCategory === "wardrobe" ? "Wardrobe" :
-                      selectedCategory === "executive-board" ? "Executive Board" :
-                      selectedCategory === "member-management" ? "Member Management" :
-                      selectedCategory === "libraries" ? "Libraries" :
-                      selectedCategory === "musical-leadership" ? "Musical Leadership" : "Dashboard"
-                    }
-                  </button>
-                </div>
-
-                {/* User Management Components */}
-                {selectedSubcategory === "auditions" && <AuditionsManagement />}
-                {selectedSubcategory === "profile-management" && <UserManagement />}
-                {selectedSubcategory === "exec-board" && <PermissionManagement />}
-                {selectedSubcategory === "permissions" && <PermissionManagement />}
-
-                {/* Communications Components */}
-                {selectedSubcategory === "notifications" && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Notifications Management</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-muted-foreground">Coming soon - System notification management interface</p>
-                    </CardContent>
-                  </Card>
-                )}
-                {selectedSubcategory === "buckets-of-love" && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Buckets of Love</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-muted-foreground">Coming soon - Appreciation message management</p>
-                    </CardContent>
-                  </Card>
-                )}
-                {selectedSubcategory === "email-management" && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Email Management</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-muted-foreground">Coming soon - Bulk email and communication tools</p>
-                    </CardContent>
-                  </Card>
-                )}
-                {selectedSubcategory === "internal-communications" && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Internal Communications</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-muted-foreground">Coming soon - Staff messaging and internal announcements</p>
-                    </CardContent>
-                  </Card>
-                )}
-                {selectedSubcategory === "glee-writing" && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Edit3 className="h-5 w-5 text-indigo-600" />
-                        Glee Writing Widget
-                        <Badge variant="secondary">New</Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <p className="text-muted-foreground">
-                          Create and manage letters, templates, and newsletters through Google Docs integration.
-                        </p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <Card>
-                            <CardHeader>
-                              <CardTitle className="text-base">Letter Writing</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <p className="text-sm text-muted-foreground">Create official Glee Club correspondence</p>
-                            </CardContent>
-                          </Card>
-                          <Card>
-                            <CardHeader>
-                              <CardTitle className="text-base">Template Manager</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <p className="text-sm text-muted-foreground">Manage reusable document templates</p>
-                            </CardContent>
-                          </Card>
-                          <Card>
-                            <CardHeader>
-                              <CardTitle className="text-base">Newsletter Creation</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <p className="text-sm text-muted-foreground">Design and distribute newsletters</p>
-                            </CardContent>
-                          </Card>
-                          <Card>
-                            <CardHeader>
-                              <CardTitle className="text-base">Google Docs Sync</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <p className="text-sm text-muted-foreground">Seamless integration with Google Workspace</p>
-                            </CardContent>
-                          </Card>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* System Administration Components */}
-                {selectedSubcategory === "calendar" && <CalendarControlsAdmin />}
-                {selectedSubcategory === "contracts" && <ContractManagement />}
-                {selectedSubcategory === "activity" && <ActivityLogs />}
-                {selectedSubcategory === "settings" && <SystemSettings />}
-              </div>
             )}
           </div>
         </div>
