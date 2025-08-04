@@ -311,7 +311,7 @@ export const GleeWorldLanding = () => {
       {/* Hero Section */}
       <section className="relative z-30 pt-2 pb-8 sm:pt-4 sm:pb-12 md:pt-6 md:pb-16 lg:pt-8 lg:pb-20 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12">
         <div className="w-full max-w-screen-2xl mx-auto">
-          <Card className="overflow-hidden border-none shadow-none bg-transparent rounded-lg sm:rounded-xl md:rounded-2xl">
+          <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl rounded-lg sm:rounded-xl md:rounded-2xl">
             <div className="h-[350px] sm:h-[500px] md:h-[600px] lg:h-[700px] xl:h-[800px] 2xl:h-[900px] relative overflow-hidden">
               {heroSlides.length > 0 ? (
                 <>
