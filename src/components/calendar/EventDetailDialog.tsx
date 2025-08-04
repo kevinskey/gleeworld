@@ -125,6 +125,24 @@ export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }:
         </DialogHeader>
         
         <div className="space-y-6">
+          {/* Event Image */}
+          {event.image_url && (
+            <div>
+              <h4 className="font-semibold mb-2">Event Image</h4>
+              <div className="w-full max-w-md mx-auto">
+                <img 
+                  src={event.image_url} 
+                  alt={event.title}
+                  className="w-full h-48 object-cover rounded-lg border shadow-sm"
+                  onError={(e) => {
+                    console.log('Failed to load event image:', event.image_url);
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+            </div>
+          )}
+          
           {event.description && (
             <div>
               <h4 className="font-semibold mb-2">Description</h4>

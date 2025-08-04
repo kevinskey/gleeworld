@@ -102,6 +102,21 @@ export const EventsList = ({ events, onEventUpdated }: EventsListProps) => {
               onClick={() => handleEventClick(event)}
             >
             <CardContent className="p-4">
+              {/* Event Image */}
+              {event.image_url && (
+                <div className="mb-3">
+                  <img 
+                    src={event.image_url} 
+                    alt={event.title}
+                    className="w-full h-32 object-cover rounded-md border"
+                    onError={(e) => {
+                      console.log('Failed to load event image:', event.image_url);
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+              
               {/* Mobile-optimized layout */}
               <div className="space-y-3">
                 {/* Header Section */}
