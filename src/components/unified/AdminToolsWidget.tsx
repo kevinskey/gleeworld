@@ -36,7 +36,7 @@ export const AdminToolsWidget = () => {
       description: "Manage member accounts, roles, and permissions",
       icon: Users,
       route: "/admin/users",
-      status: 'pending',
+      status: 'active',
       badge: "Core"
     },
     {
