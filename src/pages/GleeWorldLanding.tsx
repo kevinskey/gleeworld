@@ -285,28 +285,6 @@ export const GleeWorldLanding = () => {
         ></div>
         <div className="relative z-10 max-w-screen-2xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12">
 
-      {/* FAQ Section - First */}
-      <section className="relative z-30 pt-[100px] sm:pt-6 sm:pb-8 md:pt-8 md:pb-10 md:mt-5 lg:mt-10 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
-        <div className="w-full max-w-screen-2xl mx-auto">
-          <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
-            <div className="text-center mb-4 sm:mb-6 md:mb-8">
-              <div className="inline-flex items-center justify-center space-x-2 mb-4">
-                <Music className="w-6 h-6 md:w-8 md:h-8 text-primary" />
-                <MessageCircleQuestion className="w-6 h-6 md:w-8 md:h-8 text-primary" />
-              </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-gray-900 mb-2">
-                Frequently Asked Questions
-              </h2>
-              <p className="text-base md:text-xl text-muted-foreground">
-                Spelman College Glee Club
-              </p>
-            </div>
-            
-            {/* FAQ Navigation and Content */}
-            <FAQNavigationCards />
-          </Card>
-        </div>
-      </section>
 
       {/* Hero Section */}
       <section className="relative z-30 pt-2 pb-8 sm:pt-4 sm:pb-12 md:pt-6 md:pb-16 lg:pt-8 lg:pb-20 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12">
@@ -707,6 +685,29 @@ export const GleeWorldLanding = () => {
             </div>
             
             <YoutubeVideoSection />
+          </Card>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="relative z-30 pt-4 pb-6 sm:pt-6 sm:pb-8 md:pt-8 md:pb-10 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
+        <div className="w-full max-w-screen-2xl mx-auto">
+          <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
+            <div className="text-center mb-4 sm:mb-6 md:mb-8">
+              <div className="inline-flex items-center justify-center space-x-2 mb-4">
+                <Music className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+                <MessageCircleQuestion className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-gray-900 mb-2">
+                Frequently Asked Questions
+              </h2>
+              <p className="text-base md:text-xl text-muted-foreground">
+                Spelman College Glee Club
+              </p>
+            </div>
+            
+            {/* FAQ Navigation and Content */}
+            <FAQNavigationCards />
           </Card>
         </div>
       </section>
