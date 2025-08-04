@@ -97,14 +97,29 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
       case 'overview':
         return (
           <div className="space-y-6">
-            <AdminSummaryStats 
-              users={users}
-              loading={usersLoading}
-              activityLogs={activityLogs}
-            />
-            <AdminPanelHeader 
-              onSendW9Forms={() => setBulkW9EmailOpen(true)}
-            />
+            {/* Community Hub */}
+            <Card className="bg-gradient-to-br from-secondary/10 via-primary/10 to-accent/10 border-secondary/20 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-secondary-foreground">
+                  <Users className="h-5 w-5" />
+                  Community Hub
+                </CardTitle>
+                <CardDescription>
+                  Connect with the Spelman Glee Club community
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* Placeholder for community features */}
+                  <div className="text-center py-8 col-span-full">
+                    <Users className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      Community features will be added here
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
             
             {/* Admin Tools Window */}
             <Card className="bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 border-primary/20 shadow-lg">
