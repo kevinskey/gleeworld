@@ -6,6 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface RadioPlayerProps {
   className?: string;
+  isPlaying?: boolean;
+  onToggle?: () => void;
 }
 
 interface CurrentTrack {
@@ -22,8 +24,8 @@ interface AudioTrack {
   audio_url: string;
 }
 
-export const RadioPlayer = ({ className = '' }: RadioPlayerProps) => {
-  const [isPlaying, setIsPlaying] = useState(false);
+export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onToggle }: RadioPlayerProps) => {
+  const [isPlaying, setIsPlaying] = useState(externalIsPlaying || false);
   const [currentTrack, setCurrentTrack] = useState<CurrentTrack>({
     title: 'Glee World Radio',
     artist: 'Loading...',
@@ -70,6 +72,12 @@ export const RadioPlayer = ({ className = '' }: RadioPlayerProps) => {
   };
 
   useEffect(() => {
+    // Sync with external state if provided
+    if (externalIsPlaying !== undefined) {
+      setIsPlaying(externalIsPlaying);
+      return;
+    }
+
     // Check initial radio state from localStorage
     const radioState = localStorage.getItem('gleeworld-radio-playing');
     const initialIsPlaying = radioState === 'true';
@@ -127,6 +135,12 @@ export const RadioPlayer = ({ className = '' }: RadioPlayerProps) => {
         description: "No tracks available to play",
         variant: "destructive",
       });
+      return;
+    }
+
+    // Call external toggle if provided
+    if (onToggle) {
+      onToggle();
       return;
     }
 
