@@ -83,8 +83,8 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
         setExecutiveMembers(allPositions);
         
-        // Set no selection by default
-        setSelectedMember("");
+        // Set "none" as default selection
+        setSelectedMember("none");
         setActivePosition(EXECUTIVE_POSITIONS[0]);
       } catch (error) {
         console.error('Error fetching executive members:', error);
@@ -107,7 +107,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
     }
   };
 
-  const shouldShowPermissionsGrid = selectedMember && !selectedMember.startsWith('empty_');
+  const shouldShowPermissionsGrid = selectedMember && selectedMember !== "none" && !selectedMember.startsWith('empty_');
 
   if (loading) {
     return (
@@ -139,7 +139,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                 <SelectValue placeholder="Select an executive board member" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">
+                <SelectItem value="none">
                   <span className="text-muted-foreground italic">None</span>
                 </SelectItem>
                 {executiveMembers.map((member) => {
