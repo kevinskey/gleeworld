@@ -237,10 +237,15 @@ const UserManagement = () => {
 
   const toggleAdminStatus = async (userId: string, isAdmin: boolean) => {
     try {
-      const { error } = await supabase
+      console.log('Toggling admin status:', { userId, isAdmin, newStatus: !isAdmin });
+      
+      const { data, error } = await supabase
         .from('gw_profiles')
         .update({ is_admin: !isAdmin })
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .select();
+
+      console.log('Admin toggle result:', { data, error });
 
       if (error) throw error;
 
@@ -254,7 +259,7 @@ const UserManagement = () => {
       console.error('Error updating admin status:', error);
       toast({
         title: "Error",
-        description: "Failed to update admin status",
+        description: `Failed to update admin status: ${error.message}`,
         variant: "destructive",
       });
     }
@@ -281,6 +286,7 @@ const UserManagement = () => {
       'member': 'bg-blue-500/20 text-blue-600',
       'alumna': 'bg-green-500/20 text-green-600',
       'fan': 'bg-gray-500/20 text-gray-600',
+      'auditioner': 'bg-yellow-500/20 text-yellow-600',
     };
     
     return <Badge className={roleColors[user.role] || 'bg-gray-500/20 text-gray-600'}>
@@ -336,6 +342,7 @@ const UserManagement = () => {
                     <SelectItem value="member">Member</SelectItem>
                     <SelectItem value="alumna">Alumna</SelectItem>
                     <SelectItem value="fan">Fan</SelectItem>
+                    <SelectItem value="auditioner">Auditioner</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -392,15 +399,15 @@ const UserManagement = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Crown className="h-5 w-5" />
-              Executive Board
+              <UserCheck className="h-5 w-5" />
+              Auditioners
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {users.filter(u => u.is_exec_board).length}
+              {users.filter(u => u.role === 'auditioner').length}
             </div>
-            <p className="text-sm text-muted-foreground">Board members</p>
+            <p className="text-sm text-muted-foreground">Audition applicants</p>
           </CardContent>
         </Card>
       </div>
@@ -431,6 +438,7 @@ const UserManagement = () => {
                 <SelectItem value="member">Members</SelectItem>
                 <SelectItem value="alumna">Alumni</SelectItem>
                 <SelectItem value="fan">Fans</SelectItem>
+                <SelectItem value="auditioner">Auditioners</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -471,6 +479,7 @@ const UserManagement = () => {
                       <SelectItem value="member">Member</SelectItem>
                       <SelectItem value="alumna">Alumna</SelectItem>
                       <SelectItem value="fan">Fan</SelectItem>
+                      <SelectItem value="auditioner">Auditioner</SelectItem>
                     </SelectContent>
                   </Select>
                   
