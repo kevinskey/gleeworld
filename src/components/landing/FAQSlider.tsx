@@ -65,20 +65,20 @@ export const FAQSlider = () => {
   const isFooterCard = currentQuestionIndex >= faqData.length;
 
   return (
-    <section className="w-full relative overflow-hidden pt-[96px] pb-20 md:pt-[116px] md:pb-16 lg:pt-[136px] lg:pb-20 min-h-[250px] md:min-h-[350px] fixed top-0 left-0 z-30">
+    <section className="w-full relative overflow-hidden pt-[96px] pb-12 md:pt-[116px] md:pb-16 lg:pt-[136px] lg:pb-20 min-h-[200px] md:min-h-[350px] fixed top-0 left-0 z-30">
 
       <div className="container mx-auto px-4 max-w-screen-2xl">
         {/* Header - All screens */}
-        <div className="text-center mb-8 md:mb-12 mt-4 md:mt-6 lg:mt-8 relative z-50">
+        <div className="text-center mb-4 md:mb-12 mt-2 md:mt-6 lg:mt-8 relative z-50">
           <div className="relative z-10">
-            <div className="inline-flex items-center justify-center space-x-2 mb-4">
-              <Music className="w-6 h-6 md:w-8 md:h-8 text-primary" />
-              <MessageCircleQuestion className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+            <div className="inline-flex items-center justify-center space-x-2 mb-2 md:mb-4">
+              <Music className="w-5 h-5 md:w-8 md:h-8 text-primary" />
+              <MessageCircleQuestion className="w-5 h-5 md:w-8 md:h-8 text-primary" />
             </div>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
+            <h2 className="text-2xl md:text-5xl lg:text-6xl font-bold text-foreground mb-2 md:mb-4">
               Frequently Asked Questions
             </h2>
-            <p className="text-lg md:text-xl text-muted-foreground">
+            <p className="text-base md:text-xl text-muted-foreground">
               Spelman College Glee Club
             </p>
           </div>
@@ -87,39 +87,39 @@ export const FAQSlider = () => {
         {/* Rotating Question/Answer Cards - All screen sizes */}
         <div>
           {/* Fixed height container for consistent sizing */}
-           <div className="h-[320px] md:h-[320px] lg:h-[360px] flex flex-col justify-start space-y-4 max-w-4xl mx-auto">
+           <div className="h-[240px] md:h-[320px] lg:h-[360px] flex flex-col justify-start space-y-2 md:space-y-4 max-w-4xl mx-auto">
              {!isFooterCard ? (
                <>
                  {/* Question Card - Fixed height */}
-                 <div className="bg-transparent border border-border/30 rounded-lg p-4 md:p-6 lg:p-8 shadow-sm flex flex-col justify-start h-[100px] md:h-[100px] lg:h-[120px]">
-                   <div className="flex items-center space-x-2 mb-3">
-                     <div className="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 lg:w-10 lg:h-10 bg-primary rounded-full flex items-center justify-center">
-                       <span className="text-sm md:text-base lg:text-lg font-bold text-primary-foreground">
-                         {String(currentQuestionIndex + 1).padStart(2, '0')}
-                       </span>
-                     </div>
-                     <span className="text-sm md:text-base lg:text-lg text-primary font-medium">QUESTION</span>
-                   </div>
-                   <p className="text-base md:text-lg lg:text-xl xl:text-2xl font-semibold text-foreground leading-snug transition-all duration-500 ease-in-out flex-1" key={currentFAQ?.id + '-q'}>
-                     {currentFAQ?.question}
-                   </p>
-                 </div>
-                 
-                 {/* Answer Card - Fixed height */}
-                 <div className="bg-transparent border border-primary/20 rounded-lg p-4 md:p-6 lg:p-8 shadow-sm flex flex-col justify-start h-[200px] md:h-[200px] lg:h-[220px]">
-                   <div className="flex items-center space-x-2 mb-3">
-                     <div className="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 lg:w-10 lg:h-10 bg-primary/80 rounded-full flex items-center justify-center">
-                       <span className="text-sm md:text-base lg:text-lg font-bold text-primary-foreground">A</span>
-                     </div>
-                     <span className="text-sm md:text-base lg:text-lg text-primary font-medium">ANSWER</span>
-                   </div>
-                    <p className={cn(
-                      "text-muted-foreground leading-relaxed transition-all duration-500 ease-in-out flex-1 overflow-auto",
-                      currentFAQ?.id === "audition-process" ? "text-sm md:text-base lg:text-lg xl:text-xl" : "text-base md:text-lg lg:text-xl xl:text-2xl"
-                    )} key={currentFAQ?.id + '-a'}>
-                     {currentFAQ?.answer}
-                   </p>
-                 </div>
+                  <div className="bg-transparent border border-border/30 rounded-lg p-3 md:p-6 lg:p-8 shadow-sm flex flex-col justify-start h-[80px] md:h-[100px] lg:h-[120px]">
+                    <div className="flex items-center space-x-2 mb-2 md:mb-3">
+                      <div className="flex-shrink-0 w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 bg-primary rounded-full flex items-center justify-center">
+                        <span className="text-xs md:text-base lg:text-lg font-bold text-primary-foreground">
+                          {String(currentQuestionIndex + 1).padStart(2, '0')}
+                        </span>
+                      </div>
+                      <span className="text-xs md:text-base lg:text-lg text-primary font-medium">QUESTION</span>
+                    </div>
+                    <p className="text-sm md:text-lg lg:text-xl xl:text-2xl font-semibold text-foreground leading-snug transition-all duration-500 ease-in-out flex-1" key={currentFAQ?.id + '-q'}>
+                      {currentFAQ?.question}
+                    </p>
+                  </div>
+                  
+                  {/* Answer Card - Fixed height */}
+                  <div className="bg-transparent border border-primary/20 rounded-lg p-3 md:p-6 lg:p-8 shadow-sm flex flex-col justify-start h-[140px] md:h-[200px] lg:h-[220px]">
+                    <div className="flex items-center space-x-2 mb-2 md:mb-3">
+                      <div className="flex-shrink-0 w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 bg-primary/80 rounded-full flex items-center justify-center">
+                        <span className="text-xs md:text-base lg:text-lg font-bold text-primary-foreground">A</span>
+                      </div>
+                      <span className="text-xs md:text-base lg:text-lg text-primary font-medium">ANSWER</span>
+                    </div>
+                     <p className={cn(
+                       "text-muted-foreground leading-relaxed transition-all duration-500 ease-in-out flex-1 overflow-auto",
+                       currentFAQ?.id === "audition-process" ? "text-xs md:text-base lg:text-lg xl:text-xl" : "text-sm md:text-lg lg:text-xl xl:text-2xl"
+                     )} key={currentFAQ?.id + '-a'}>
+                      {currentFAQ?.answer}
+                    </p>
+                  </div>
                </>
             ) : (
               /* Footer Card in rotation */
