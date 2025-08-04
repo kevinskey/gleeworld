@@ -29,7 +29,7 @@ export const CalendarControlsAdmin = () => {
   const { toast } = useToast();
   const { profile } = useProfile();
 
-  const isSuperAdmin = profile?.role === 'super-admin';
+  const isSuperAdmin = profile?.role === 'super-admin' || profile?.role === 'admin';
 
   useEffect(() => {
     if (isSuperAdmin) {

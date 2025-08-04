@@ -56,6 +56,7 @@ export const ContractManagement = () => {
   // Fetch all contracts data for admin view
   const fetchAllContractsData = async () => {
     try {
+      console.log('ContractManagement: Starting fetchAllContractsData...');
       setLoading(true);
       setError(null);
 
@@ -82,7 +83,11 @@ export const ContractManagement = () => {
         }
       }
 
-      if (contractsError) throw contractsError;
+      if (contractsError) {
+        console.error('ContractManagement: contracts_v2 error:', contractsError);
+        throw contractsError;
+      }
+      console.log('ContractManagement: Fetched', contractsData?.length || 0, 'contracts');
 
       // Fetch contract signatures with contract details
       const { data: signaturesData, error: signaturesError } = await supabase
@@ -134,7 +139,7 @@ export const ContractManagement = () => {
       setContractSignatures(signaturesWithProfiles || []);
       setContractTemplates(templatesData || []);
     } catch (error) {
-      console.error('Error fetching contracts data:', error);
+      console.error('ContractManagement: Error fetching contracts data:', error);
       setError('Failed to load contracts data');
       toast({
         title: "Error",

@@ -52,11 +52,11 @@ export const useActivityLogs = (enabled: boolean = true) => {
       
       let profiles: any[] = [];
       if (userIds.length > 0) {
-        // Fetch profiles for these users
+      // Fetch profiles for these users
         const { data: profilesData, error: profilesError } = await supabase
           .from('gw_profiles')
           .select('user_id, full_name, email')
-          .in('id', userIds);
+          .in('user_id', userIds);
 
         if (profilesError) {
           console.warn('Error fetching profiles:', profilesError);
@@ -68,7 +68,7 @@ export const useActivityLogs = (enabled: boolean = true) => {
 
       // Combine logs with profile data
       const transformedLogs: ActivityLog[] = (logsData || []).map(log => {
-        const profile = profiles.find(p => p.id === log.user_id);
+        const profile = profiles.find(p => p.user_id === log.user_id);
         return {
           id: log.id,
           user_id: log.user_id,
