@@ -8,7 +8,7 @@ import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useMusic, Album } from "@/hooks/useMusic";
 import { useYouTubeVideos } from "@/hooks/useYouTubeVideos";
-import { useRoleBasedRedirect } from "@/hooks/useRoleBasedRedirect";
+
 import { useNavigate, Link } from "react-router-dom";
 import gleeClubFallback from "@/assets/glee-club-fallback.jpg";
 import { AlbumModal } from "@/components/music/AlbumModal";
@@ -81,7 +81,6 @@ interface HeroSlide {
 
 export const GleeWorldLanding = () => {
   const { user, loading: authLoading } = useAuth();
-  const { userProfile, loading: profileLoading } = useRoleBasedRedirect();
   const navigate = useNavigate();
   const { albums } = useMusic();
   const { videos, getVideoEmbedUrl } = useYouTubeVideos();
