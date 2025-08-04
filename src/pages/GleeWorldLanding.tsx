@@ -102,8 +102,42 @@ export const GleeWorldLanding = () => {
 
   // Remove hardcoded sample tracks - they're now handled by the edge function
 
+  // Redirect logged-in admins to admin dashboard
   useEffect(() => {
-    console.log('GleeWorldLanding: Component mounted, starting useEffect');
+    if (!authLoading && user) {
+      console.log('🔍 GleeWorldLanding: User is logged in, checking profile for redirect');
+      
+      const checkUserRoleAndRedirect = async () => {
+        try {
+          const { data: profile, error } = await supabase
+            .from('gw_profiles')
+            .select('role, is_admin, is_super_admin')
+            .eq('user_id', user.id)
+            .single();
+          
+          console.log('🔍 GleeWorldLanding: User profile:', profile);
+          
+          if (profile && (profile.is_admin || profile.is_super_admin || profile.role === 'admin' || profile.role === 'super-admin')) {
+            console.log('🚀 GleeWorldLanding: Redirecting admin user to /admin');
+            navigate('/admin', { replace: true });
+            return;
+          }
+          
+          if (profile) {
+            console.log('🔄 GleeWorldLanding: Redirecting authenticated user to /dashboard');
+            navigate('/dashboard', { replace: true });
+            return;
+          }
+        } catch (error) {
+          console.error('GleeWorldLanding: Error checking user role:', error);
+        }
+      };
+      
+      checkUserRoleAndRedirect();
+    }
+  }, [user, authLoading, navigate]);
+
+  useEffect(() => {
     
     // Set a maximum loading time to prevent infinite stuck state
     const maxLoadingTimer = setTimeout(() => {

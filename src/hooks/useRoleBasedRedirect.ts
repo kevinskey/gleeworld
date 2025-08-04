@@ -12,7 +12,7 @@ export const useRoleBasedRedirect = () => {
   const location = useLocation();
 
   useEffect(() => {
-    console.log('useRoleBasedRedirect: Effect triggered', {
+    console.log('🔍 useRoleBasedRedirect: Effect triggered', {
       loading,
       hasUser: !!user,
       hasUserProfile: !!userProfile,
@@ -22,12 +22,13 @@ export const useRoleBasedRedirect = () => {
       isExecBoard: userProfile?.is_exec_board,
       execBoardRole: userProfile?.exec_board_role,
       verified: userProfile?.verified,
-      pathname: location.pathname
+      pathname: location.pathname,
+      timestamp: new Date().toISOString()
     });
 
     // Early return if still loading
     if (loading) {
-      console.log('useRoleBasedRedirect: Still loading auth or profile');
+      console.log('🔍 useRoleBasedRedirect: Still loading auth or profile');
       return;
     }
 
@@ -76,12 +77,21 @@ export const useRoleBasedRedirect = () => {
       const isAdmin = userProfile.role === 'admin' || userProfile.role === 'super-admin';
       const isAlumna = userProfile.role === 'alumna';
       
+      console.log('🎯 useRoleBasedRedirect: Role detection', {
+        userProfileRole: userProfile.role,
+        isAdminCheck: isAdmin,
+        isAdminFromRole: userProfile.role === 'admin',
+        isSuperAdminFromRole: userProfile.role === 'super-admin',
+        isAdminFlag: userProfile.is_admin,
+        isSuperAdminFlag: userProfile.is_super_admin
+      });
+      
       // Check executive board status from profile AND table
       const isExecBoardFromProfile = userProfile.is_exec_board || userProfile.is_admin || userProfile.is_super_admin;
       const execBoardData = await checkExecutiveStatus();
       const isExecutiveBoard = (isExecBoardFromProfile || !!execBoardData) && userProfile.verified;
       
-      console.log('useRoleBasedRedirect: Redirect logic', {
+      console.log('🔍 useRoleBasedRedirect: Redirect logic', {
         userRole: userProfile.role,
         isAdmin,
         isAlumna,
@@ -92,7 +102,7 @@ export const useRoleBasedRedirect = () => {
       });
       
       if (isAdmin) {
-        console.log('useRoleBasedRedirect: Redirecting admin to admin dashboard');
+        console.log('🚀 useRoleBasedRedirect: Redirecting admin to ADMIN dashboard');
         navigate('/admin', { replace: true });
         window.scrollTo(0, 0);
       } else if (isAlumna) {
