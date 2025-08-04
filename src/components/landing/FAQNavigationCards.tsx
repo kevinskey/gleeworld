@@ -12,12 +12,12 @@ const faqData = [
   {
     id: "audition-process",
     question: "What happens at a Glee Club Audition?",
-    answer: "We ask you to prepare thirty seconds to a minute of any song that best showcases your voice. In addition, we'll ask you to attempt a Glee song that will be provided to you in advance. Lastly, we will test your sight-reading ability to gauge your existing musical knowledge. Sight-reading is not required to be a member of the Glee Club."
+    answer: "We ask you to prepare thirty seconds to a minute of any song that best showcases your voice. You'll also attempt a Glee song provided in advance and take a sight-reading test to gauge your musical knowledge."
   },
   {
     id: "music-genre",
     question: "What genre of music does the glee club sing?",
-    answer: "The Glee Club repertoire consists of sacred and secular choral literature for women's voices, with a particular focus on traditional spirituals, music by African American composers and music from many cultures."
+    answer: "The Glee Club repertoire consists of sacred and secular choral literature for women's voices, with a focus on traditional spirituals and music by African American composers."
   },
   {
     id: "rehearsal-schedule",
@@ -27,7 +27,7 @@ const faqData = [
   {
     id: "performance-frequency",
     question: "How often does the Glee Club perform?",
-    answer: "The Glee Club performs on campus and in the Atlanta area throughout the entire year, as well as a tour of multiple states during spring break."
+    answer: "The Glee Club performs on campus and in the Atlanta area throughout the year, plus a tour during spring break."
   },
   {
     id: "class-credit",
@@ -86,7 +86,7 @@ export const FAQNavigationCards = () => {
       </div>
 
       {/* FAQ Card */}
-      <div className="bg-background/80 backdrop-blur-sm rounded-lg border border-border/50 p-6 md:p-8 min-h-[300px] flex flex-col">
+      <div className="bg-background/80 backdrop-blur-sm rounded-lg border border-border/50 p-6 md:p-8 h-[280px] flex flex-col">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
