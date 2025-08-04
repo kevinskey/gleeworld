@@ -17,6 +17,7 @@ import { PRMetadataExporter } from './PRMetadataExporter';
 import PressKitTemplateGenerator from './PressKitTemplateGenerator';
 import { TaskNotifications } from '@/components/shared/TaskNotifications';
 import { MediaLibraryDialog } from '@/components/radio/MediaLibraryDialog';
+import { HeroManagement } from '@/components/admin/HeroManagement';
 
 export const PRCoordinatorHub = () => {
   const {
@@ -236,7 +237,7 @@ export const PRCoordinatorHub = () => {
 
       {/* Enhanced Tabs */}
       <Tabs defaultValue="gallery" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-1 bg-muted/50 p-1">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-1 bg-muted/50 p-1">
           <TabsTrigger value="gallery" className="flex items-center gap-2 text-xs md:text-sm">
             <Grid className="w-4 h-4" />
             Gallery
@@ -264,6 +265,10 @@ export const PRCoordinatorHub = () => {
           <TabsTrigger value="bulk" className="flex items-center gap-2 text-xs md:text-sm">
             <Upload className="w-4 h-4" />
             Bulk Actions
+          </TabsTrigger>
+          <TabsTrigger value="hero-manager" className="flex items-center gap-2 text-xs md:text-sm">
+            <Star className="w-4 h-4" />
+            Hero Manager
           </TabsTrigger>
         </TabsList>
 
@@ -433,6 +438,12 @@ export const PRCoordinatorHub = () => {
               onUpdateTags={updateImageTags}
               getImageUrl={getImageUrl}
             />
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="hero-manager">
+          <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6">
+            <HeroManagement />
           </div>
         </TabsContent>
       </Tabs>
