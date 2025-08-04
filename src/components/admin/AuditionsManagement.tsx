@@ -27,8 +27,12 @@ import {
   Eye,
   Edit,
   BarChart3,
-  Download
+  Download,
+  Shield,
+  UserCheck
 } from "lucide-react";
+import { MobileScoreWindow } from "@/components/scoring/MobileScoreWindow";
+import { SightReadingScoreWindow } from "@/components/scoring/SightReadingScoreWindow";
 
 interface AuditionSession {
   id: string;
@@ -128,6 +132,11 @@ export const AuditionsManagement = () => {
   const [selectedApplication, setSelectedApplication] = useState<AuditionApplication | null>(null);
   const [selectedSession, setSelectedSession] = useState<string>("");
   const [evaluationForm, setEvaluationForm] = useState<Partial<AuditionEvaluation>>({});
+  
+  // Adjudicator scoring state
+  const [showAdjudicatorScoring, setShowAdjudicatorScoring] = useState(false);
+  const [adjudicatorType, setAdjudicatorType] = useState<'audition' | 'sight_reading'>('audition');
+  const [selectedPerformer, setSelectedPerformer] = useState<{id: string, name: string} | null>(null);
 
   const [newSession, setNewSession] = useState({
     name: "",
@@ -321,6 +330,28 @@ export const AuditionsManagement = () => {
         variant: "destructive",
       });
     }
+  };
+
+  // Adjudicator scoring handlers
+  const startAdjudicatorScoring = (application: AuditionApplication, type: 'audition' | 'sight_reading') => {
+    setSelectedPerformer({
+      id: application.user_id,
+      name: application.full_name || `${application.first_name} ${application.last_name}`
+    });
+    setAdjudicatorType(type);
+    setShowAdjudicatorScoring(true);
+  };
+
+  const handleAdjudicatorScoreSubmitted = (scoreData: any) => {
+    if (scoreData) {
+      toast({
+        title: "Score Saved",
+        description: `Adjudicator evaluation completed successfully.`
+      });
+    }
+    setShowAdjudicatorScoring(false);
+    setSelectedPerformer(null);
+    fetchData(); // Refresh data
   };
 
   const getStatusColor = (status: string) => {
@@ -812,59 +843,169 @@ export const AuditionsManagement = () => {
         </TabsContent>
 
         <TabsContent value="evaluations" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Evaluation Summary</CardTitle>
-              <CardDescription>Overview of all audition evaluations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {evaluations.map((evaluation) => {
-                  const application = applications.find(app => app.id === evaluation.application_id);
-                  return (
-                    <div key={evaluation.id} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium">{application?.full_name}</h4>
+          {/* Show Adjudicator Scoring Interface if active */}
+          {showAdjudicatorScoring && selectedPerformer ? (
+            adjudicatorType === 'sight_reading' ? (
+              <SightReadingScoreWindow
+                performerId={selectedPerformer.id}
+                performerName={selectedPerformer.name}
+                onScoreSubmitted={handleAdjudicatorScoreSubmitted}
+              />
+            ) : (
+              <MobileScoreWindow
+                performerId={selectedPerformer.id}
+                performerName={selectedPerformer.name}
+                eventType="audition"
+                onScoreSubmitted={handleAdjudicatorScoreSubmitted}
+              />
+            )
+          ) : (
+            <>
+              {/* Adjudicator Panel Header */}
+              <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 border-2 border-primary/20">
+                      <Shield className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="flex items-center gap-2">
+                        <UserCheck className="h-5 w-5 text-primary" />
+                        Professional Adjudicator Interface
+                      </CardTitle>
+                      <CardDescription>
+                        Select an applicant below to begin professional evaluation using the comprehensive scoring system
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
+
+              {/* Applicant Selection for Adjudication */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Select Applicant for Professional Evaluation</CardTitle>
+                  <CardDescription>
+                    Choose an applicant to evaluate using the professional adjudicator scoring interface
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4">
+                    {filteredApplications.map((application) => (
+                      <div key={application.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center space-x-4">
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={application.profile_image_url} />
+                            <AvatarFallback className="font-semibold">
+                              {application.full_name.split(' ').map(n => n[0]).join('')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{application.full_name}</p>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <span>{application.email}</span>
+                              <span>•</span>
+                              <span>{new Date(application.audition_date).toLocaleDateString()}</span>
+                              <span>•</span>
+                              <span>{application.audition_time}</span>
+                            </div>
+                          </div>
+                        </div>
                         <div className="flex items-center space-x-2">
-                          <Badge className={evaluation.recommendation === 'strong_accept' ? 'bg-green-100 text-green-800' : 
-                                          evaluation.recommendation === 'accept' ? 'bg-blue-100 text-blue-800' :
-                                          evaluation.recommendation === 'conditional' ? 'bg-yellow-100 text-yellow-800' :
-                                          'bg-red-100 text-red-800'}>
-                            {evaluation.recommendation?.replace('_', ' ')}
+                          <Badge className={getStatusColor(application.status)}>
+                            {application.status.replace('_', ' ')}
                           </Badge>
-                          {evaluation.is_final && (
-                            <Badge className="bg-purple-100 text-purple-800">Final</Badge>
-                          )}
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => startAdjudicatorScoring(application, 'audition')}
+                              className="flex items-center gap-1"
+                            >
+                              <Star className="h-3 w-3" />
+                              Audition Score
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => startAdjudicatorScoring(application, 'sight_reading')}
+                              className="flex items-center gap-1"
+                            >
+                              <Music className="h-3 w-3" />
+                              Sight Reading
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                      
-                      {evaluation.overall_score && (
-                        <div className="mb-2">
-                          <div className="flex items-center justify-between text-sm">
-                            <span>Overall Score</span>
-                            <span>{evaluation.overall_score.toFixed(1)}/10</span>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Evaluation Summary */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Completed Evaluations</CardTitle>
+                  <CardDescription>Summary of professional adjudicator evaluations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {evaluations.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Music className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No professional evaluations completed yet.</p>
+                        <p className="text-sm">Use the adjudicator interface above to begin scoring applicants.</p>
+                      </div>
+                    ) : (
+                      evaluations.map((evaluation) => {
+                        const application = applications.find(app => app.id === evaluation.application_id);
+                        return (
+                          <div key={evaluation.id} className="border rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="font-medium">{application?.full_name}</h4>
+                              <div className="flex items-center space-x-2">
+                                <Badge className={evaluation.recommendation === 'strong_accept' ? 'bg-green-100 text-green-800' : 
+                                                evaluation.recommendation === 'accept' ? 'bg-blue-100 text-blue-800' :
+                                                evaluation.recommendation === 'conditional' ? 'bg-yellow-100 text-yellow-800' :
+                                                'bg-red-100 text-red-800'}>
+                                  {evaluation.recommendation?.replace('_', ' ')}
+                                </Badge>
+                                {evaluation.is_final && (
+                                  <Badge className="bg-purple-100 text-purple-800">Final</Badge>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {evaluation.overall_score && (
+                              <div className="mb-2">
+                                <div className="flex items-center justify-between text-sm">
+                                  <span>Overall Score</span>
+                                  <span>{evaluation.overall_score.toFixed(1)}/10</span>
+                                </div>
+                                <Progress value={evaluation.overall_score * 10} className="h-2" />
+                              </div>
+                            )}
+
+                            {evaluation.voice_part_suitability && (
+                              <p className="text-sm text-muted-foreground">
+                                Recommended for: <Badge className={getVoicePartColor(evaluation.voice_part_suitability)}>
+                                  {evaluation.voice_part_suitability}
+                                </Badge>
+                              </p>
+                            )}
+
+                            {evaluation.evaluator_notes && (
+                              <p className="text-sm mt-2 italic">"{evaluation.evaluator_notes}"</p>
+                            )}
                           </div>
-                          <Progress value={evaluation.overall_score * 10} className="h-2" />
-                        </div>
-                      )}
-
-                      {evaluation.voice_part_suitability && (
-                        <p className="text-sm text-muted-foreground">
-                          Recommended for: <Badge className={getVoicePartColor(evaluation.voice_part_suitability)}>
-                            {evaluation.voice_part_suitability}
-                          </Badge>
-                        </p>
-                      )}
-
-                      {evaluation.evaluator_notes && (
-                        <p className="text-sm mt-2 italic">"{evaluation.evaluator_notes}"</p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+                        );
+                      })
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
