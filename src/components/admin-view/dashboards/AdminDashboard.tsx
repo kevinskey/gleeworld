@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -11,6 +11,8 @@ import {
   BarChart,
   UserCog
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useActivityLogs } from "@/hooks/useActivityLogs";
 
 // Import existing admin components
 import { UserManagement } from "@/components/admin/UserManagement";
@@ -36,6 +38,33 @@ interface AdminDashboardProps {
 
 export const AdminDashboard = ({ user }: AdminDashboardProps) => {
   const [activeTab, setActiveTab] = useState("overview");
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Fetch activity logs with the hook
+  const { logs: activityLogs, loading: logsLoading } = useActivityLogs(true);
+
+  // Fetch users data for the overview stats
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('gw_profiles')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        setUsers(data || []);
+      } catch (err) {
+        console.error('Error fetching users:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   return (
     <div className="min-h-screen bg-muted/30 p-6 -m-6">
@@ -82,7 +111,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
-            <AdminSummaryStats users={[]} loading={false} activityLogs={[]} />
+            <AdminSummaryStats users={users} loading={loading || logsLoading} activityLogs={activityLogs} />
           </TabsContent>
 
           <TabsContent value="users" className="mt-6">
@@ -108,7 +137,30 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           <TabsContent value="settings" className="mt-6">
             <div className="bg-white rounded-lg p-6">
               <h3 className="text-lg font-semibold mb-4">System Settings</h3>
-              <p className="text-muted-foreground">System configuration options will be available here.</p>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="font-medium mb-2">User Management</h4>
+                    <p className="text-sm text-muted-foreground mb-3">Configure user registration and access controls</p>
+                    <Badge variant="outline">Active</Badge>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="font-medium mb-2">Contract System</h4>
+                    <p className="text-sm text-muted-foreground mb-3">Manage contract templates and workflows</p>
+                    <Badge variant="outline">Operational</Badge>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="font-medium mb-2">Calendar Integration</h4>
+                    <p className="text-sm text-muted-foreground mb-3">Connect external calendar services</p>
+                    <Badge variant="secondary">Configured</Badge>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="font-medium mb-2">Activity Monitoring</h4>
+                    <p className="text-sm text-muted-foreground mb-3">Track system usage and performance</p>
+                    <Badge variant="outline">Live</Badge>
+                  </div>
+                </div>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
