@@ -1,26 +1,215 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wrench } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Users, 
+  Settings, 
+  Calendar, 
+  FileText, 
+  Mail, 
+  Shield, 
+  DollarSign, 
+  Music, 
+  Package, 
+  BarChart3,
+  Database,
+  UserCheck
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
+interface AdminModule {
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  route?: string;
+  action?: () => void;
+  status?: 'active' | 'pending' | 'disabled';
+  badge?: string;
+}
 
 export const AdminToolsWidget = () => {
+  const navigate = useNavigate();
+
+  const adminModules: AdminModule[] = [
+    {
+      title: "User Management",
+      description: "Manage member accounts, roles, and permissions",
+      icon: Users,
+      route: "/admin/users",
+      status: 'pending',
+      badge: "Core"
+    },
+    {
+      title: "Financial Management", 
+      description: "Payments, stipends, dues, and budgets",
+      icon: DollarSign,
+      route: "/admin/finance",
+      status: 'pending',
+      badge: "Critical"
+    },
+    {
+      title: "Event & Calendar",
+      description: "Manage performances, rehearsals, and tours",
+      icon: Calendar,
+      route: "/admin/events",
+      status: 'pending',
+      badge: "Core"
+    },
+    {
+      title: "Media Library",
+      description: "Manage audio files, sheet music, and photos",
+      icon: Music,
+      route: "/admin/media",
+      status: 'pending',
+      badge: "Core"
+    },
+    {
+      title: "Communications",
+      description: "Newsletters, SMS, and member notifications",
+      icon: Mail,
+      route: "/admin/communications",
+      status: 'pending',
+      badge: "Core"
+    },
+    {
+      title: "Inventory & Shop",
+      description: "Merchandise, concert items, and sales",
+      icon: Package,
+      route: "/admin/inventory",
+      status: 'pending',
+      badge: "Business"
+    },
+    {
+      title: "Analytics & Reports",
+      description: "Usage stats, financial reports, and insights",
+      icon: BarChart3,
+      route: "/admin/analytics",
+      status: 'pending',
+      badge: "Insights"
+    },
+    {
+      title: "System Settings",
+      description: "Platform configuration and preferences",
+      icon: Settings,
+      route: "/admin/settings",
+      status: 'pending',
+      badge: "Config"
+    },
+    {
+      title: "Access Control",
+      description: "Role assignments and security policies",
+      icon: Shield,
+      route: "/admin/access",
+      status: 'pending',
+      badge: "Security"
+    },
+    {
+      title: "Database Admin",
+      description: "Advanced database operations and backups",
+      icon: Database,
+      route: "/admin/database",
+      status: 'pending',
+      badge: "Technical"
+    },
+    {
+      title: "Executive Board",
+      description: "Board-specific tools and oversight",
+      icon: UserCheck,
+      route: "/admin/executive",
+      status: 'pending',
+      badge: "Leadership"
+    },
+    {
+      title: "Documents & Forms",
+      description: "Contracts, W9s, and official paperwork",
+      icon: FileText,
+      route: "/admin/documents",
+      status: 'pending',
+      badge: "Legal"
+    }
+  ];
+
+  const handleModuleClick = (module: AdminModule) => {
+    if (module.route) {
+      navigate(module.route);
+    } else if (module.action) {
+      module.action();
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'bg-green-500/20 text-green-600';
+      case 'pending': return 'bg-yellow-500/20 text-yellow-600';
+      case 'disabled': return 'bg-red-500/20 text-red-600';
+      default: return 'bg-gray-500/20 text-gray-600';
+    }
+  };
+
+  const getBadgeColor = (badge: string) => {
+    switch (badge) {
+      case 'Core': return 'bg-blue-500/20 text-blue-600';
+      case 'Critical': return 'bg-red-500/20 text-red-600';
+      case 'Business': return 'bg-green-500/20 text-green-600';
+      case 'Security': return 'bg-purple-500/20 text-purple-600';
+      case 'Technical': return 'bg-orange-500/20 text-orange-600';
+      case 'Leadership': return 'bg-indigo-500/20 text-indigo-600';
+      default: return 'bg-gray-500/20 text-gray-600';
+    }
+  };
+
   return (
-    <Card className="bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 border-primary/20 shadow-lg">
+    <Card className="bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 border-primary/20 shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-primary">
-          <Wrench className="h-5 w-5" />
-          Admin Tools
+          <Shield className="h-5 w-5" />
+          Administrative Control Center
         </CardTitle>
         <CardDescription>
-          Specialized administrative modules and tools
+          Comprehensive tools for managing the Spelman College Glee Club platform
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Placeholder for future modules */}
-          <div className="text-center py-8 col-span-full">
-            <Wrench className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">
-              Admin tools modules will be added here
-            </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {adminModules.map((module, index) => {
+            const IconComponent = module.icon;
+            return (
+              <Button
+                key={index}
+                variant="ghost"
+                className="h-auto p-4 flex flex-col items-start text-left border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-all duration-200"
+                onClick={() => handleModuleClick(module)}
+              >
+                <div className="flex items-center justify-between w-full mb-2">
+                  <IconComponent className="h-5 w-5 text-primary" />
+                  <div className="flex gap-1">
+                    {module.badge && (
+                      <Badge className={`${getBadgeColor(module.badge)} text-xs px-1.5 py-0.5`}>
+                        {module.badge}
+                      </Badge>
+                    )}
+                    {module.status && (
+                      <Badge className={`${getStatusColor(module.status)} text-xs px-1.5 py-0.5`}>
+                        {module.status}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <h4 className="font-semibold text-sm mb-1">{module.title}</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {module.description}
+                </p>
+              </Button>
+            );
+          })}
+        </div>
+        
+        <div className="mt-6 pt-4 border-t border-border/50">
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>Admin Backbone Status: Development Phase</span>
+            <Badge variant="outline" className="text-xs">
+              12 Modules Planned
+            </Badge>
           </div>
         </div>
       </CardContent>
