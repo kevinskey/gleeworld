@@ -207,10 +207,15 @@ const UserManagement = () => {
 
   const updateUserRole = async (userId: string, newRole: string) => {
     try {
-      const { error } = await supabase
+      console.log('Updating user role:', { userId, newRole });
+      
+      const { data, error } = await supabase
         .from('gw_profiles')
         .update({ role: newRole })
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .select();
+
+      console.log('Update result:', { data, error });
 
       if (error) throw error;
 
@@ -224,7 +229,7 @@ const UserManagement = () => {
       console.error('Error updating user role:', error);
       toast({
         title: "Error",
-        description: "Failed to update user role",
+        description: `Failed to update user role: ${error.message}`,
         variant: "destructive",
       });
     }
