@@ -123,6 +123,7 @@ export const UserManagement = () => {
       case 'member': return 'bg-green-500/20 text-green-600';
       case 'alumna': return 'bg-gold-500/20 text-gold-600';
       case 'fan': return 'bg-gray-500/20 text-gray-600';
+      case 'auditioner': return 'bg-yellow-500/20 text-yellow-600';
       default: return 'bg-gray-500/20 text-gray-600';
     }
   };
@@ -135,6 +136,7 @@ export const UserManagement = () => {
       case 'member': return <User className="h-4 w-4" />;
       case 'alumna': return <UserCheck className="h-4 w-4" />;
       case 'fan': return <UserX className="h-4 w-4" />;
+      case 'auditioner': return <Calendar className="h-4 w-4" />;
       default: return <User className="h-4 w-4" />;
     }
   };
@@ -194,6 +196,7 @@ export const UserManagement = () => {
                 <SelectItem value="member">Member</SelectItem>
                 <SelectItem value="alumna">Alumna</SelectItem>
                 <SelectItem value="fan">Fan</SelectItem>
+                <SelectItem value="auditioner">Auditioner</SelectItem>
               </SelectContent>
             </Select>
           </div>
