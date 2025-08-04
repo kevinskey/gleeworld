@@ -139,22 +139,22 @@ export const AdminToolsWidget = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-500/20 text-green-600';
-      case 'pending': return 'bg-yellow-500/20 text-yellow-600';
-      case 'disabled': return 'bg-red-500/20 text-red-600';
-      default: return 'bg-gray-500/20 text-gray-600';
+      case 'active': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300';
+      case 'pending': return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300';
+      case 'disabled': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
   const getBadgeColor = (badge: string) => {
     switch (badge) {
-      case 'Core': return 'bg-blue-500/20 text-blue-600';
-      case 'Critical': return 'bg-red-500/20 text-red-600';
-      case 'Business': return 'bg-green-500/20 text-green-600';
-      case 'Security': return 'bg-purple-500/20 text-purple-600';
-      case 'Technical': return 'bg-orange-500/20 text-orange-600';
-      case 'Leadership': return 'bg-indigo-500/20 text-indigo-600';
-      default: return 'bg-gray-500/20 text-gray-600';
+      case 'Core': return 'bg-primary/10 text-primary';
+      case 'Critical': return 'bg-destructive/10 text-destructive';
+      case 'Business': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300';
+      case 'Security': return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300';
+      case 'Technical': return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300';
+      case 'Leadership': return 'bg-secondary/20 text-secondary-foreground';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
