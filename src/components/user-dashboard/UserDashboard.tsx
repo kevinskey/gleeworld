@@ -317,41 +317,6 @@ const UserDashboard = React.memo(() => {
           </div>
         </div>
 
-        {/* Show Permissions Panel for Admin Users in Admin View Only */}
-        {(() => {
-          const shouldShow = isAdmin && viewMode === 'admin';
-          console.log('UserDashboard: Permissions Panel visibility check:', {
-            isAdmin,
-            viewMode,
-            shouldShow,
-            profile
-          });
-          return shouldShow;
-        })() && (
-          <div className="w-full mb-8">
-            <Card>
-              <Collapsible open={permissionsOpen} onOpenChange={setPermissionsOpen}>
-                <CollapsibleTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-between p-4 h-auto font-semibold text-lg"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-5 w-5" />
-                      Permissions Panel
-                    </div>
-                    {permissionsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="px-4 pb-4">
-                    <PermissionsPanel />
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            </Card>
-          </div>
-        )}
           </div>
         </UniversalLayout>
       </div>
