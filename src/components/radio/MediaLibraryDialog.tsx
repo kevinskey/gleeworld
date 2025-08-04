@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { MediaLibrary } from './MediaLibrary';
+import { MediaUploadButton } from '@/components/media/MediaUploadButton';
 
 interface MusicTrack {
   id: string;
@@ -46,8 +47,16 @@ export const MediaLibraryDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center justify-between">
             <span>Media Library</span>
+            <MediaUploadButton 
+              context="pr-hub"
+              className="gap-2"
+              onUploadComplete={() => {
+                // Refresh the media library when upload completes
+                window.location.reload();
+              }}
+            />
           </DialogTitle>
         </DialogHeader>
         <div className="overflow-y-auto">
