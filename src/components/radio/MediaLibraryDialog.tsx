@@ -2,35 +2,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { MediaLibrary } from './MediaLibrary';
 import { MediaUploadButton } from '@/components/media/MediaUploadButton';
 
-interface MusicTrack {
+interface MediaFile {
   id: string;
   title: string;
-  artist: string;
-  album?: string;
-  duration: number;
-  audio_url: string;
-  genre?: string;
-  play_count: number;
+  description?: string;
+  file_url: string;
+  file_type: string;
+  file_size?: number;
+  tags?: string[];
+  category?: string;
   created_at: string;
-  category?: 'performance' | 'announcement' | 'interlude' | 'alumni_story';
-}
-
-interface AudioArchive {
-  id: string;
-  title: string;
-  artist_info?: string;
-  audio_url: string;
-  duration_seconds?: number;
-  category: string;
-  performance_date?: string;
-  created_at: string;
+  created_by?: string;
+  is_public?: boolean;
 }
 
 interface MediaLibraryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddToPlaylist?: (track: MusicTrack | AudioArchive) => void;
-  onPlayTrack?: (track: MusicTrack | AudioArchive) => void;
+  onAddToPlaylist?: (track: MediaFile) => void;
+  onPlayTrack?: (track: MediaFile) => void;
   isPlaying?: boolean;
   currentTrack?: string;
 }
