@@ -16,7 +16,10 @@ import {
   Bell,
   Heart,
   Edit3,
-  ChevronRight
+  ChevronRight,
+  BookOpen,
+  Image,
+  FileAudio
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
@@ -181,6 +184,30 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                 </p>
               </div>
 
+              {/* Libraries Category */}
+              <div 
+                className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
+                  selectedCategory === "libraries" 
+                    ? "bg-primary/10 border-primary/20 border" 
+                    : "bg-muted/50 hover:bg-muted"
+                }`}
+                onClick={() => {
+                  setSelectedCategory("libraries");
+                  setSelectedSubcategory(null);
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
+                    <span className="font-medium text-sm sm:text-base">Libraries</span>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
+                  PDF sheet music, MP3 audio files, and picture collections
+                </p>
+              </div>
+
               {/* Musical Leadership Category */}
               <div 
                 className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
@@ -201,7 +228,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
-                  Auditions, music library, rehearsals, and performance management
+                  Auditions, rehearsals, and performance management
                 </p>
               </div>
             </div>
@@ -213,6 +240,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
               {selectedCategory === "communications" && "Communications Hub"}
               {selectedCategory === "wardrobe" && "Wardrobe Management"}
               {selectedCategory === "executive-board" && "Executive Board Tools"}
+              {selectedCategory === "libraries" && "Libraries Management"}
               {selectedCategory === "musical-leadership" && "Musical Leadership"}
               {!selectedCategory && "Select a category to view functions"}
             </h2>
@@ -444,6 +472,64 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                   </div>
                 )}
 
+                {/* Libraries Functions */}
+                {selectedCategory === "libraries" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("pdf-library")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">PDF Library</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Sheet music library with PDF scores and arrangements
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("mp3-library")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <FileAudio className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">MP3 Library</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Audio recordings and performance tracks
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("picture-library")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Image className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Picture Library</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Photo collections from PR coordinator and events
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
+                      onClick={() => setSelectedSubcategory("docs-collections")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Edit3 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Docs Collections</h3>
+                        <Badge variant="secondary" className="text-xs">Google Docs</Badge>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Document collections generated from Google Docs integration
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Musical Leadership Functions */}
                 {selectedCategory === "musical-leadership" && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -556,6 +642,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                       selectedCategory === "communications" ? "Communications" : 
                       selectedCategory === "wardrobe" ? "Wardrobe" :
                       selectedCategory === "executive-board" ? "Executive Board" :
+                      selectedCategory === "libraries" ? "Libraries" :
                       selectedCategory === "musical-leadership" ? "Musical Leadership" : "Dashboard"
                     }
                   </button>
