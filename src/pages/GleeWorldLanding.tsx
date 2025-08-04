@@ -280,7 +280,7 @@ export const GleeWorldLanding = () => {
       <div className="relative">
         {/* Mobile Background Image */}
         <div 
-          className="md:hidden absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
+          className="md:hidden absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: `url('/lovable-uploads/dd719095-a5a9-4667-a7ca-d37c1b3f2d8f.png')`
           }}
