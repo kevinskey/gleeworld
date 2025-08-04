@@ -71,53 +71,36 @@ export const useRoleBasedRedirect = () => {
       return;
     }
 
-    // Async function to handle executive board check and redirect
+    // Streamlined redirect logic with admin priority
     const handleRedirect = async () => {
-      // Role-based redirect logic
-      const isAdmin = userProfile.role === 'admin' || userProfile.role === 'super-admin';
-      const isAlumna = userProfile.role === 'alumna';
-      
-      console.log('🎯 useRoleBasedRedirect: Role detection', {
-        userProfileRole: userProfile.role,
-        isAdminCheck: isAdmin,
-        isAdminFromRole: userProfile.role === 'admin',
-        isSuperAdminFromRole: userProfile.role === 'super-admin',
-        isAdminFlag: userProfile.is_admin,
-        isSuperAdminFlag: userProfile.is_super_admin
-      });
-      
-      // Check executive board status from profile AND table
-      const isExecBoardFromProfile = userProfile.is_exec_board || userProfile.is_admin || userProfile.is_super_admin;
-      const execBoardData = await checkExecutiveStatus();
-      const isExecutiveBoard = (isExecBoardFromProfile || !!execBoardData) && userProfile.verified;
-      
-      console.log('🔍 useRoleBasedRedirect: Redirect logic', {
-        userRole: userProfile.role,
-        isAdmin,
-        isAlumna,
-        isExecutiveBoard,
-        isExecBoardFromProfile,
-        execBoardData,
-        currentPath: location.pathname
-      });
+      // PRIORITY 1: Admin/Super Admin (direct check)
+      const isAdmin = userProfile.is_admin || userProfile.is_super_admin || 
+                     userProfile.role === 'admin' || userProfile.role === 'super-admin';
       
       if (isAdmin) {
-        console.log('🚀 useRoleBasedRedirect: Redirecting admin to ADMIN dashboard');
+        console.log('🚀 useRoleBasedRedirect: ADMIN detected - direct redirect to /admin');
         navigate('/admin', { replace: true });
-        window.scrollTo(0, 0);
-      } else if (isAlumna) {
-        console.log('useRoleBasedRedirect: Redirecting alumna to alumnae portal');
-        navigate('/alumnae', { replace: true });
-        window.scrollTo(0, 0);
-      } else if (isExecutiveBoard) {
-        console.log('useRoleBasedRedirect: Redirecting exec board member to executive board dashboard');
-        navigate('/dashboard', { replace: true });
-        window.scrollTo(0, 0);
-      } else {
-        console.log('useRoleBasedRedirect: Redirecting regular user to user dashboard');
-        navigate('/user-dashboard', { replace: true });
-        window.scrollTo(0, 0);
+        return;
       }
+      
+      // PRIORITY 2: Alumna
+      if (userProfile.role === 'alumna') {
+        console.log('🎓 useRoleBasedRedirect: Alumna redirect to /alumnae');
+        navigate('/alumnae', { replace: true });
+        return;
+      }
+      
+      // PRIORITY 3: Executive Board (with verification)
+      const isExecBoard = userProfile.is_exec_board && userProfile.verified;
+      if (isExecBoard) {
+        console.log('👔 useRoleBasedRedirect: Executive Board redirect to /dashboard');
+        navigate('/dashboard', { replace: true });
+        return;
+      }
+      
+      // PRIORITY 4: Regular users
+      console.log('👤 useRoleBasedRedirect: Regular user redirect to /user-dashboard');
+      navigate('/user-dashboard', { replace: true });
     };
 
     handleRedirect();
