@@ -4752,6 +4752,80 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_module_permissions: {
+        Row: {
+          expires_at: string | null
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          is_active: boolean | null
+          module_id: string
+          permission_type: string
+          user_id: string
+        }
+        Insert: {
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          module_id: string
+          permission_type: string
+          user_id: string
+        }
+        Update: {
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          module_id?: string
+          permission_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_module_permissions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "gw_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_modules: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          default_permissions: Json | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          default_permissions?: Json | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          default_permissions?: Json | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       gw_music_analytics: {
         Row: {
           device_info: Json | null
@@ -10894,6 +10968,13 @@ export type Database = {
           group_name: string
         }[]
       }
+      get_user_modules: {
+        Args: { user_id_param: string }
+        Returns: {
+          module_name: string
+          permissions: string[]
+        }[]
+      }
       get_user_username_permissions: {
         Args: { user_email_param: string }
         Returns: {
@@ -11111,6 +11192,10 @@ export type Database = {
       }
       user_has_budget_permission: {
         Args: { budget_id_param: string; permission_type_param: string }
+        Returns: boolean
+      }
+      user_has_module_permission: {
+        Args: { module_name_param: string; permission_type_param?: string }
         Returns: boolean
       }
       validate_password_strength: {

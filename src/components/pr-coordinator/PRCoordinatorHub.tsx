@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePRImages } from '@/hooks/usePRImages';
+import { useModulePermissions } from '@/hooks/useModulePermissions';
 import { PRImageGallery } from './PRImageGallery';
 import { PRImageDetails } from './PRImageDetails';
 import { PRQuickCapture } from './PRQuickCapture';
@@ -31,6 +32,8 @@ export const PRCoordinatorHub = () => {
     refreshImages,
     refreshTags,
   } = usePRImages();
+
+  const { hasPermission } = useModulePermissions();
 
   console.log('PRCoordinatorHub: Component rendered with:', { 
     imagesCount: images.length, 
@@ -143,14 +146,16 @@ export const PRCoordinatorHub = () => {
             <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
-          <Button 
-            onClick={() => setShowMediaLibrary(true)} 
-            variant="outline"
-            className="gap-2"
-          >
-            <Upload className="h-4 w-4" />
-            Import to Library
-          </Button>
+          {hasPermission('media_library') && (
+            <Button 
+              onClick={() => setShowMediaLibrary(true)} 
+              variant="outline"
+              className="gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Import to Library
+            </Button>
+          )}
           <Button 
             onClick={() => {
               console.log('PR Quick Capture button clicked');
@@ -237,39 +242,63 @@ export const PRCoordinatorHub = () => {
 
       {/* Enhanced Tabs */}
       <Tabs defaultValue="gallery" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-1 bg-muted/50 p-1">
+        <TabsList className="grid w-full gap-1 bg-muted/50 p-1" style={{ gridTemplateColumns: `repeat(${1 + 
+          (hasPermission('pr_manager') ? 2 : 0) + 
+          (hasPermission('press_kits') ? 1 : 0) + 
+          (hasPermission('ai_tools') ? 1 : 0) + 
+          (hasPermission('hero_manager') ? 1 : 0) + 
+          (hasPermission('media_library') ? 2 : 0)
+        }, 1fr)` }}>
           <TabsTrigger value="gallery" className="flex items-center gap-2 text-xs md:text-sm">
             <Grid className="w-4 h-4" />
             Gallery
           </TabsTrigger>
-          <TabsTrigger value="data-manager" className="flex items-center gap-2 text-xs md:text-sm">
-            <TrendingUp className="w-4 h-4" />
-            Analytics
-          </TabsTrigger>
-          <TabsTrigger value="export" className="flex items-center gap-2 text-xs md:text-sm">
-            <Download className="w-4 h-4" />
-            Export
-          </TabsTrigger>
-          <TabsTrigger value="press-kits" className="flex items-center gap-2 text-xs md:text-sm">
-            <Zap className="w-4 h-4" />
-            Press Kits
-          </TabsTrigger>
-          <TabsTrigger value="ai-templates" className="flex items-center gap-2 text-xs md:text-sm">
-            <Sparkles className="w-4 h-4" />
-            AI Tools
-          </TabsTrigger>
+          
+          {hasPermission('pr_manager') && (
+            <>
+              <TabsTrigger value="data-manager" className="flex items-center gap-2 text-xs md:text-sm">
+                <TrendingUp className="w-4 h-4" />
+                Analytics
+              </TabsTrigger>
+              <TabsTrigger value="export" className="flex items-center gap-2 text-xs md:text-sm">
+                <Download className="w-4 h-4" />
+                Export
+              </TabsTrigger>
+            </>
+          )}
+          
+          {hasPermission('press_kits') && (
+            <TabsTrigger value="press-kits" className="flex items-center gap-2 text-xs md:text-sm">
+              <Zap className="w-4 h-4" />
+              Press Kits
+            </TabsTrigger>
+          )}
+          
+          {hasPermission('ai_tools') && (
+            <TabsTrigger value="ai-templates" className="flex items-center gap-2 text-xs md:text-sm">
+              <Sparkles className="w-4 h-4" />
+              AI Tools
+            </TabsTrigger>
+          )}
+          
           <TabsTrigger value="tags" className="flex items-center gap-2 text-xs md:text-sm">
             <Filter className="w-4 h-4" />
             Tags
           </TabsTrigger>
-          <TabsTrigger value="bulk" className="flex items-center gap-2 text-xs md:text-sm">
-            <Upload className="w-4 h-4" />
-            Bulk Actions
-          </TabsTrigger>
-          <TabsTrigger value="hero-manager" className="flex items-center gap-2 text-xs md:text-sm">
-            <Star className="w-4 h-4" />
-            Hero Manager
-          </TabsTrigger>
+          
+          {hasPermission('media_library') && (
+            <TabsTrigger value="bulk" className="flex items-center gap-2 text-xs md:text-sm">
+              <Upload className="w-4 h-4" />
+              Bulk Actions
+            </TabsTrigger>
+          )}
+          
+          {hasPermission('hero_manager') && (
+            <TabsTrigger value="hero-manager" className="flex items-center gap-2 text-xs md:text-sm">
+              <Star className="w-4 h-4" />
+              Hero Manager
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="gallery" className="space-y-6">
@@ -391,29 +420,37 @@ export const PRCoordinatorHub = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="data-manager">
-          <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6">
-            <PRDataManager />
-          </div>
-        </TabsContent>
+        {hasPermission('pr_manager') && (
+          <>
+            <TabsContent value="data-manager">
+              <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6">
+                <PRDataManager />
+              </div>
+            </TabsContent>
 
-        <TabsContent value="export">
-          <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6">
-            <PRMetadataExporter />
-          </div>
-        </TabsContent>
+            <TabsContent value="export">
+              <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6">
+                <PRMetadataExporter />
+              </div>
+            </TabsContent>
+          </>
+        )}
 
-        <TabsContent value="press-kits">
-          <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6">
-            <PressKitManager />
-          </div>
-        </TabsContent>
+        {hasPermission('press_kits') && (
+          <TabsContent value="press-kits">
+            <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6">
+              <PressKitManager />
+            </div>
+          </TabsContent>
+        )}
 
-        <TabsContent value="ai-templates">
-          <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6">
-            <PressKitTemplateGenerator />
-          </div>
-        </TabsContent>
+        {hasPermission('ai_tools') && (
+          <TabsContent value="ai-templates">
+            <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6">
+              <PressKitTemplateGenerator />
+            </div>
+          </TabsContent>
+        )}
 
         <TabsContent value="tags">
           <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6">
@@ -424,51 +461,55 @@ export const PRCoordinatorHub = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="bulk">
-          <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6 space-y-6">
-            {/* Media Upload Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Upload className="h-5 w-5" />
-                  Bulk Media Upload to Library
-                </CardTitle>
-                <CardDescription>
-                  Upload multiple media files (images, videos, audio, PDFs) to the main media library
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  onClick={() => setShowMediaLibrary(true)}
-                  className="w-full gap-2 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
-                >
-                  <Upload className="h-4 w-4" />
-                  Open Media Library Uploader
-                </Button>
-              </CardContent>
-            </Card>
-            
-            {/* Existing Bulk Actions */}
-            <PRBulkActions
-              selectedImages={selectedImages}
-              images={images}
-              tags={tags}
-              onAction={() => {
-                setSelectedImages([]);
-                refreshImages();
-              }}
-              onDelete={deleteImage}
-              onUpdateTags={updateImageTags}
-              getImageUrl={getImageUrl}
-            />
-          </div>
-        </TabsContent>
+        {hasPermission('media_library') && (
+          <TabsContent value="bulk">
+            <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6 space-y-6">
+              {/* Media Upload Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Upload className="h-5 w-5" />
+                    Bulk Media Upload to Library
+                  </CardTitle>
+                  <CardDescription>
+                    Upload multiple media files (images, videos, audio, PDFs) to the main media library
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    onClick={() => setShowMediaLibrary(true)}
+                    className="w-full gap-2 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
+                  >
+                    <Upload className="h-4 w-4" />
+                    Open Media Library Uploader
+                  </Button>
+                </CardContent>
+              </Card>
+              
+              {/* Existing Bulk Actions */}
+              <PRBulkActions
+                selectedImages={selectedImages}
+                images={images}
+                tags={tags}
+                onAction={() => {
+                  setSelectedImages([]);
+                  refreshImages();
+                }}
+                onDelete={deleteImage}
+                onUpdateTags={updateImageTags}
+                getImageUrl={getImageUrl}
+              />
+            </div>
+          </TabsContent>
+        )}
         
-        <TabsContent value="hero-manager">
-          <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6">
-            <HeroManagement />
-          </div>
-        </TabsContent>
+        {hasPermission('hero_manager') && (
+          <TabsContent value="hero-manager">
+            <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6">
+              <HeroManagement />
+            </div>
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* Quick Capture Modal */}
