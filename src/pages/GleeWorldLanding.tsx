@@ -289,7 +289,7 @@ export const GleeWorldLanding = () => {
 
       {/* Hero Section */}
       <section className="relative z-30 pt-2 pb-8 sm:pt-4 sm:pb-12 md:pt-6 md:pb-16 lg:pt-8 lg:pb-20 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12">
-        <div className="w-full max-w-7xl mx-auto">
+        <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border border-border/50 shadow-2xl rounded-lg sm:rounded-xl md:rounded-2xl">
             <div className="h-[350px] sm:h-[500px] md:h-[600px] lg:h-[700px] xl:h-[800px] 2xl:h-[900px] relative overflow-hidden">
               {heroSlides.length > 0 ? (
@@ -298,7 +298,7 @@ export const GleeWorldLanding = () => {
                   <img 
                     src={currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
                     alt="Hero Background"
-                    className="hidden md:block w-full h-full object-contain transition-opacity duration-500 brightness-95 contrast-100"
+                    className="hidden md:block w-full h-full object-cover transition-opacity duration-500 brightness-95 contrast-100"
                     onError={(e) => {
                       console.log('Hero image failed to load, using fallback');
                       // Only fallback if the current src is not already the fallback
@@ -312,7 +312,7 @@ export const GleeWorldLanding = () => {
                   <img 
                     src={currentHeroSlide?.ipad_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
                     alt="Hero Background"
-                    className="hidden sm:block md:hidden w-full h-full object-contain transition-opacity duration-500 brightness-95 contrast-100"
+                    className="hidden sm:block md:hidden w-full h-full object-cover transition-opacity duration-500 brightness-95 contrast-100"
                     onError={(e) => {
                       console.log('iPad hero image failed to load, using fallback');
                       if (!e.currentTarget.src.includes('unsplash.com')) {
@@ -325,7 +325,7 @@ export const GleeWorldLanding = () => {
                   <img 
                     src={currentHeroSlide?.mobile_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
                     alt="Hero Background"
-                    className="block sm:hidden w-full h-full object-contain object-center transition-opacity duration-500 brightness-95 contrast-100"
+                    className="block sm:hidden w-full h-full object-cover object-center transition-opacity duration-500 brightness-95 contrast-100"
                     onError={(e) => {
                       console.log('Mobile hero image failed to load, using fallback');
                       if (!e.currentTarget.src.includes('unsplash.com')) {
