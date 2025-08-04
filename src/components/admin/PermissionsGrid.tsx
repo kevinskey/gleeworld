@@ -164,9 +164,9 @@ export const PermissionsGrid = ({ selectedPosition }: PermissionsGridProps) => {
                     const permissions = getPermissionForFunction(func.id);
                     
                     return (
-                      <div key={func.id} className="grid grid-cols-12 gap-4 py-3 border-b border-border/50 hover:bg-muted/30 rounded-lg px-2">
-                        <div className="col-span-8">
-                          <h4 className="font-medium text-gray-900">{func.name.replace(/_/g, ' ')}</h4>
+                      <div key={func.id} className="grid grid-cols-12 gap-4 py-1 border-b border-border/50 hover:bg-muted/30 px-2">
+                        <div className="col-span-8 flex items-center">
+                          <h4 className="font-medium text-gray-900 text-sm">{func.name.replace(/_/g, ' ')}</h4>
                         </div>
                         
                         <div className="col-span-2 flex items-center justify-center">
@@ -174,7 +174,7 @@ export const PermissionsGrid = ({ selectedPosition }: PermissionsGridProps) => {
                             onClick={() =>
                               handlePermissionChange(func.id, 'can_access', !permissions.can_access)
                             }
-                            className={`w-4 h-4 rounded-full border-2 transition-all duration-200 ${
+                            className={`w-3 h-3 rounded-full border transition-all duration-200 ${
                               permissions.can_access 
                                 ? 'bg-green-500 border-green-600' 
                                 : 'bg-red-500 border-red-600'
@@ -187,7 +187,7 @@ export const PermissionsGrid = ({ selectedPosition }: PermissionsGridProps) => {
                             onClick={() =>
                               handlePermissionChange(func.id, 'can_manage', !permissions.can_manage)
                             }
-                            className={`w-4 h-4 rounded-full border-2 transition-all duration-200 ${
+                            className={`w-3 h-3 rounded-full border transition-all duration-200 ${
                               permissions.can_manage 
                                 ? 'bg-green-500 border-green-600' 
                                 : 'bg-red-500 border-red-600'
