@@ -23,52 +23,44 @@ export const PublicHeader = () => {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: overlayStyle }} />
-      <header className="bg-card border-b-2 border-border sticky top-0 z-[100] shadow-lg">
-      <div className="container mx-auto px-2 sm:px-4 lg:px-6">
-        <div className="flex items-center justify-between h-14 sm:h-16 py-3">
-          {/* Logo with Clock - Restored beautiful design */}
-          <Link to="/" className="flex items-center gap-2 sm:gap-3 flex-shrink-0 min-w-0 relative z-[110] hover:scale-105 transition-transform duration-200">
-            <img 
-              src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
-              alt="Spelman College Glee Club" 
-              className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0 relative z-[111]"
-            />
-            <div className="flex items-center gap-4 relative z-[111]">
-              <div className="flex flex-col">
-                <span className="text-foreground font-bold text-lg sm:text-xl lg:text-2xl whitespace-nowrap leading-tight">
-                  GleeWorld
-                </span>
-                <span className="text-muted-foreground text-xs sm:text-sm font-medium whitespace-nowrap leading-tight -mt-1">
-                  Spelman Glee Club
-                </span>
+      <header className="bg-background border-b border-border sticky top-0 z-50">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-3">
+              <img 
+                src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
+                alt="Spelman College Glee Club" 
+                className="w-10 h-10"
+              />
+              <div>
+                <h1 className="text-xl font-bold text-foreground">GleeWorld</h1>
               </div>
-              <HeaderClock />
-            </div>
-          </Link>
-          
-          {/* Center Navigation */}
-          <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-center max-w-2xl mx-4">
-            <ResponsiveNavigation />
-          </div>
-
-          {/* Right side actions */}
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-            {/* Dashboard Link for Authenticated Users */}
-            {user && (
-              <Button asChild variant="outline" size="sm" className="hidden lg:flex text-sm px-4 py-1">
-                <Link to="/dashboard" className="flex items-center gap-2">
-                  <Settings className="h-4 w-4" />
-                  My Dashboard
-                </Link>
-              </Button>
-            )}
+            </Link>
             
-            {/* Auth Button - Responsive sizing */}
-            {!user && (
-              <Button asChild variant="default" size="sm" className="hidden lg:flex text-sm px-5 py-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
-                <Link to="/auth">Sign In</Link>
-              </Button>
-            )}
+            {/* Center Navigation */}
+            <div className="hidden md:flex">
+              <ResponsiveNavigation />
+            </div>
+
+            {/* Right side actions */}
+            <div className="flex items-center gap-2">
+              {/* Dashboard Link for Authenticated Users */}
+              {user && (
+                <Button asChild variant="outline" size="sm" className="hidden md:flex">
+                  <Link to="/dashboard">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Dashboard
+                  </Link>
+                </Button>
+              )}
+              
+              {/* Auth Button */}
+              {!user && (
+                <Button asChild size="sm" className="hidden md:flex">
+                  <Link to="/auth">Sign In</Link>
+                </Button>
+              )}
             
             {/* Friendly Mobile Menu - Shows below lg breakpoint */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
