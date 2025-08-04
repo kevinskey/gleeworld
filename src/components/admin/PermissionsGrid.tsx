@@ -152,50 +152,83 @@ export const PermissionsGrid = ({ selectedPosition }: PermissionsGridProps) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4">
-                {/* Header Row */}
-                <div className="grid grid-cols-12 gap-4 pb-2 border-b font-medium text-sm text-muted-foreground">
-                  <div className="col-span-6">Function</div>
-                  <div className="col-span-2">Module</div>
-                  <div className="col-span-2 text-center">Can Access</div>
-                  <div className="col-span-2 text-center">Can Manage</div>
-                </div>
+                <div className="grid gap-4">
+                  {/* Header Row */}
+                  <div className="hidden md:grid grid-cols-12 gap-4 pb-2 border-b font-medium text-sm text-muted-foreground">
+                    <div className="col-span-6">Function</div>
+                    <div className="col-span-2">Module</div>
+                    <div className="col-span-2 text-center">Can Access</div>
+                    <div className="col-span-2 text-center">Can Manage</div>
+                  </div>
 
                 {/* Function Rows */}
                 {functions.map((func) => {
                   const permissions = getPermissionForFunction(func.id);
                   
                   return (
-                    <div key={func.id} className="grid grid-cols-12 gap-4 py-3 border-b border-border/50 hover:bg-muted/30 rounded-lg px-2">
-                      <div className="col-span-6">
-                        <div>
-                          <h4 className="font-medium text-gray-900">{func.name.replace(/_/g, ' ')}</h4>
-                          <p className="text-sm text-muted-foreground">{func.description}</p>
+                    <div key={func.id} className="md:grid md:grid-cols-12 gap-4 py-3 border-b border-border/50 hover:bg-muted/30 rounded-lg px-2">
+                      {/* Mobile Layout */}
+                      <div className="md:hidden space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium text-gray-900 flex-1">{func.name.replace(/_/g, ' ')}</h4>
+                          <Badge variant="outline" className="text-xs ml-2">
+                            {func.module}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-center gap-8">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">Access</span>
+                            <Checkbox
+                              checked={permissions.can_access}
+                              onCheckedChange={(checked) =>
+                                handlePermissionChange(func.id, 'can_access', checked as boolean)
+                              }
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">Manage</span>
+                            <Checkbox
+                              checked={permissions.can_manage}
+                              onCheckedChange={(checked) =>
+                                handlePermissionChange(func.id, 'can_manage', checked as boolean)
+                              }
+                            />
+                          </div>
                         </div>
                       </div>
-                      
-                      <div className="col-span-2 flex items-center">
-                        <Badge variant="outline" className="text-xs">
-                          {func.module}
-                        </Badge>
-                      </div>
-                      
-                      <div className="col-span-2 flex items-center justify-center">
-                        <Checkbox
-                          checked={permissions.can_access}
-                          onCheckedChange={(checked) =>
-                            handlePermissionChange(func.id, 'can_access', checked as boolean)
-                          }
-                        />
-                      </div>
-                      
-                      <div className="col-span-2 flex items-center justify-center">
-                        <Checkbox
-                          checked={permissions.can_manage}
-                          onCheckedChange={(checked) =>
-                            handlePermissionChange(func.id, 'can_manage', checked as boolean)
-                          }
-                        />
+
+                      {/* Desktop Layout */}
+                      <div className="hidden md:contents">
+                        <div className="col-span-6">
+                          <div>
+                            <h4 className="font-medium text-gray-900">{func.name.replace(/_/g, ' ')}</h4>
+                            <p className="text-sm text-muted-foreground">{func.description}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="col-span-2 flex items-center">
+                          <Badge variant="outline" className="text-xs">
+                            {func.module}
+                          </Badge>
+                        </div>
+                        
+                        <div className="col-span-2 flex items-center justify-center">
+                          <Checkbox
+                            checked={permissions.can_access}
+                            onCheckedChange={(checked) =>
+                              handlePermissionChange(func.id, 'can_access', checked as boolean)
+                            }
+                          />
+                        </div>
+                        
+                        <div className="col-span-2 flex items-center justify-center">
+                          <Checkbox
+                            checked={permissions.can_manage}
+                            onCheckedChange={(checked) =>
+                              handlePermissionChange(func.id, 'can_manage', checked as boolean)
+                            }
+                          />
+                        </div>
                       </div>
                     </div>
                   );
