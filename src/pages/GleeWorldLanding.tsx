@@ -276,6 +276,16 @@ export const GleeWorldLanding = () => {
         <FAQSlider />
       </div>
 
+      {/* Main Content with Black and White Background */}
+      <div 
+        className="relative bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url('https://images.unsplash.com/photo-1461749280684-dccba630e2f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&q=80')`
+        }}
+      >
+        <div className="absolute inset-0 bg-black/40"></div>
+        <div className="relative z-10">
+
       {/* Hero Section */}
       <section className="relative z-30 pt-2 pb-8 sm:pt-4 sm:pb-12 md:pt-6 md:pb-16 lg:pt-8 lg:pb-20 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12">
         <div className="w-full max-w-7xl mx-auto">
@@ -722,6 +732,8 @@ export const GleeWorldLanding = () => {
           </Card>
         </div>
       </section>
+        </div>
+      </div>
       </PublicLayout>
     </div>
   );
