@@ -66,6 +66,20 @@ import AdminProducts from "./pages/AdminProducts";
 import { SectionLeaderDashboard } from "./pages/SectionLeaderDashboard";
 import { SectionalManagement } from "./pages/SectionalManagement";
 import { SRFManagement } from "./pages/SRFManagement";
+
+// Admin module pages
+import UserManagement from "./pages/admin/UserManagement";
+import FinancialManagement from "./pages/admin/FinancialManagement";
+import EventManagement from "./pages/admin/EventManagement";
+import MediaLibrary from "./pages/admin/MediaLibrary";
+import Communications from "./pages/admin/Communications";
+import InventoryShop from "./pages/admin/InventoryShop";
+import Analytics from "./pages/admin/Analytics";
+import SystemSettings from "./pages/admin/SystemSettings";
+import AccessControl from "./pages/admin/AccessControl";
+import DatabaseAdmin from "./pages/admin/DatabaseAdmin";
+import ExecutiveBoard from "./pages/admin/ExecutiveBoard";
+import DocumentsForms from "./pages/admin/DocumentsForms";
 import { StudentConductorDashboard } from "./pages/StudentConductorDashboard";
 import TourPlanner from "./pages/TourPlanner";
 import BookingRequest from "./pages/BookingRequest";
@@ -76,7 +90,6 @@ import { SharedAnnotation } from "./pages/SharedAnnotation";
 import MobileScoring from "./pages/MobileScoring";
 import LibrarianDashboard from "./pages/LibrarianDashboard";
 import HistorianDashboard from "./pages/HistorianDashboard";
-import UserManagement from "./pages/UserManagement";
 import MemberDirectory from "./pages/MemberDirectory";
 import { RadioStationPage } from "./components/radio/RadioStationPage";
 
@@ -461,14 +474,103 @@ const App = () => {
                                </ProtectedRoute>
                              } 
                             />
-                             <Route 
-                               path="/user-management" 
-                               element={
-                                 <ProtectedRoute>
-                                   <UserManagement />
-                                 </ProtectedRoute>
-                               } 
-                             />
+                              {/* Admin module routes */}
+                              <Route 
+                                path="/admin/users" 
+                                element={
+                                  <ProtectedRoute>
+                                    <UserManagement />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/admin/finance" 
+                                element={
+                                  <ProtectedRoute>
+                                    <FinancialManagement />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/admin/events" 
+                                element={
+                                  <ProtectedRoute>
+                                    <EventManagement />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/admin/media" 
+                                element={
+                                  <ProtectedRoute>
+                                    <MediaLibrary />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/admin/communications" 
+                                element={
+                                  <ProtectedRoute>
+                                    <Communications />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/admin/inventory" 
+                                element={
+                                  <ProtectedRoute>
+                                    <InventoryShop />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/admin/analytics" 
+                                element={
+                                  <ProtectedRoute>
+                                    <Analytics />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/admin/settings" 
+                                element={
+                                  <ProtectedRoute>
+                                    <SystemSettings />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/admin/access" 
+                                element={
+                                  <ProtectedRoute>
+                                    <AccessControl />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/admin/database" 
+                                element={
+                                  <ProtectedRoute>
+                                    <DatabaseAdmin />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/admin/executive" 
+                                element={
+                                  <ProtectedRoute>
+                                    <ExecutiveBoard />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/admin/documents" 
+                                element={
+                                  <ProtectedRoute>
+                                    <DocumentsForms />
+                                  </ProtectedRoute>
+                                } 
+                              />
                              <Route 
                                path="/member-directory" 
                                element={
