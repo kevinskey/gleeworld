@@ -157,9 +157,9 @@ export const UserDetailPanel = ({
     try {
       // Get comprehensive profile data
       const { data: profileData } = await supabase
-        .from("profiles")
+        .from("gw_profiles")
         .select("*")
-        .eq("id", user.id)
+        .eq("user_id", user.id)
         .single();
 
       if (profileData) {
@@ -282,9 +282,9 @@ export const UserDetailPanel = ({
         youtube,
       };
 
-      // Update profiles table with comprehensive data
+      // Update gw_profiles table with comprehensive data
       const { error: profileError } = await supabase
-        .from('profiles')
+        .from('gw_profiles')
         .update({
           full_name: fullName.trim(),
           role: role,
@@ -327,7 +327,7 @@ export const UserDetailPanel = ({
           
           updated_at: new Date().toISOString(),
         })
-        .eq('id', user.id);
+        .eq('user_id', user.id);
 
       if (profileError) {
         throw new Error(`Failed to update user profile: ${profileError.message}`);

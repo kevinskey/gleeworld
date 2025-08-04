@@ -134,19 +134,14 @@ export const ExcuseRequestManager = () => {
       let profilesData: any[] = [];
       if (missingUserIds.length > 0) {
         const { data: fallbackProfiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, email, full_name')
-          .in('id', missingUserIds);
+          .from('gw_profiles')
+          .select('user_id, email, full_name')
+          .in('user_id', missingUserIds);
 
         if (profilesError) {
           console.error('Error loading profiles:', profilesError);
         } else {
-          // Convert profiles format to match gw_profiles
-          profilesData = fallbackProfiles?.map(p => ({
-            user_id: p.id,
-            full_name: p.full_name,
-            email: p.email
-          })) || [];
+          profilesData = fallbackProfiles || [];
         }
       }
 

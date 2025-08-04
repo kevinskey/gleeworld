@@ -68,7 +68,12 @@ export const UsernamePermissionsManager = () => {
           .order('full_name', { ascending: true });
 
         if (error) throw error;
-        setUsers(data || []);
+        // Map user_id to id for UserProfile interface compatibility
+        const usersWithId = (data || []).map(user => ({
+          ...user,
+          id: user.user_id
+        }));
+        setUsers(usersWithId);
       } catch (err: any) {
         console.error('Error fetching users:', err);
         toast({

@@ -114,7 +114,7 @@ export const UserFinancialRecords = () => {
           const { data: userContracts } = await supabase
             .from('contracts_v2')
             .select('*')
-            .eq('created_by', user.id)
+            .eq('created_by', user.user_id)
             .not('stipend_amount', 'is', null)
             .gt('stipend_amount', 0);
 
@@ -124,7 +124,7 @@ export const UserFinancialRecords = () => {
               const { data: existingRecord } = await supabase
                 .from('finance_records')
                 .select('id')
-                .eq('user_id', user.id)
+                .eq('user_id', user.user_id)
                 .eq('reference', `Contract ID: ${contract.id}`)
                 .single();
 
@@ -134,7 +134,7 @@ export const UserFinancialRecords = () => {
                 const { error: insertError } = await supabase
                   .from('finance_records')
                   .insert({
-                    user_id: user.id,
+                    user_id: user.user_id,
                     date: recordDate,
                     type: 'stipend',
                     category: 'Performance',
@@ -161,7 +161,7 @@ export const UserFinancialRecords = () => {
         const { data: userRecords } = await supabase
           .from('finance_records')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', user.user_id)
           .order('date', { ascending: true })
           .order('created_at', { ascending: true });
 
