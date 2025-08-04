@@ -2359,6 +2359,39 @@ export type Database = {
           },
         ]
       }
+      gw_app_functions: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          module: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          module?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          module?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_appointment_availability: {
         Row: {
           created_at: string
@@ -4215,6 +4248,47 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_executive_position_functions: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          can_access: boolean
+          can_manage: boolean
+          function_id: string
+          id: string
+          position: Database["public"]["Enums"]["executive_position"]
+          updated_at: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          can_access?: boolean
+          can_manage?: boolean
+          function_id: string
+          id?: string
+          position: Database["public"]["Enums"]["executive_position"]
+          updated_at?: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          can_access?: boolean
+          can_manage?: boolean
+          function_id?: string
+          id?: string
+          position?: Database["public"]["Enums"]["executive_position"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_executive_position_functions_function_id_fkey"
+            columns: ["function_id"]
+            isOneToOne: false
+            referencedRelation: "gw_app_functions"
             referencedColumns: ["id"]
           },
         ]
@@ -11338,6 +11412,14 @@ export type Database = {
       }
       user_has_budget_permission: {
         Args: { budget_id_param: string; permission_type_param: string }
+        Returns: boolean
+      }
+      user_has_function_permission: {
+        Args: {
+          user_id_param: string
+          function_name_param: string
+          permission_type?: string
+        }
         Returns: boolean
       }
       user_has_module_permission: {
