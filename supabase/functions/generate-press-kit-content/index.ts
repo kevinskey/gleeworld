@@ -44,7 +44,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           { 
             role: 'system', 
@@ -58,7 +58,18 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`OpenAI API error ${response.status}:`, errorText);
+      
+      if (response.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again in a few moments.');
+      } else if (response.status === 401) {
+        throw new Error('Invalid API key. Please check your OpenAI API key configuration.');
+      } else if (response.status === 403) {
+        throw new Error('Access forbidden. Please check your OpenAI API key permissions.');
+      } else {
+        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      }
     }
 
     const data = await response.json();
