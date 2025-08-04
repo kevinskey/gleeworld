@@ -56,6 +56,15 @@ export const NextEventCard = () => {
             className="flex items-start gap-4 p-4 border border-border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-primary/50 active:scale-[0.99] glass-upload-zone"
             onClick={() => setSelectedEvent(nextEvent)}
           >
+            {nextEvent.image_url && (
+              <div className="w-16 h-16 flex-shrink-0">
+                <img
+                  src={nextEvent.image_url}
+                  alt={nextEvent.title}
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              </div>
+            )}
             <div className="text-center min-w-[48px]">
               <div className="text-2xl font-bold text-primary">
                 {format(parseISO(nextEvent.start_date), 'd')}

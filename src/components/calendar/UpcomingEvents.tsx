@@ -62,7 +62,7 @@ export const UpcomingEvents = ({ limit = 6, showHeader = true }: UpcomingEventsP
               const isSelected = selectedEvent?.id === event.id;
               return (
                 <EventHoverCard key={event.id} event={event} canEdit={false}>
-                  <div
+                   <div
                     className={`
                       flex items-start gap-2 p-2 border border-border rounded 
                       cursor-pointer transition-all duration-200 touch-manipulation
@@ -73,6 +73,15 @@ export const UpcomingEvents = ({ limit = 6, showHeader = true }: UpcomingEventsP
                     `}
                     onClick={() => setSelectedEvent(event)}
                   >
+                {event.image_url && (
+                  <div className="w-10 h-10 flex-shrink-0">
+                    <img
+                      src={event.image_url}
+                      alt={event.title}
+                      className="w-full h-full object-cover rounded"
+                    />
+                  </div>
+                )}
                 <div className="text-center min-w-[24px]">
                   <div className="text-sm font-bold text-primary">
                     {format(parseISO(event.start_date), 'd')}
