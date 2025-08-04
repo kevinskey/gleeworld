@@ -71,7 +71,12 @@ export const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
+      console.log('UserManagement: Starting fetchUsers...');
       setLoading(true);
+      
+      // Check authentication first
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('UserManagement: Current session user:', session?.user?.id);
       
       // First, get all profiles
       const { data: profiles, error: profilesError } = await supabase
@@ -79,11 +84,17 @@ export const UserManagement = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (profilesError) throw profilesError;
+      console.log('UserManagement: Query result:', { profiles, profilesError });
 
+      if (profilesError) {
+        console.error('UserManagement: Database error:', profilesError);
+        throw profilesError;
+      }
+
+      console.log('UserManagement: Successfully fetched', profiles?.length || 0, 'profiles');
       setUsers(profiles || []);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('UserManagement: Error fetching users:', error);
       toast({
         title: "Error",
         description: "Failed to load users. Please try again.",

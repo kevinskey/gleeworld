@@ -48,23 +48,38 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
+        console.log('AdminDashboard: Fetching users...');
         setLoading(true);
+        
+        // First check if we're authenticated
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('AdminDashboard: Current session:', session?.user?.id);
+        
         const { data, error } = await supabase
           .from('gw_profiles')
           .select('*')
           .order('created_at', { ascending: false });
         
-        if (error) throw error;
+        console.log('AdminDashboard: Query result:', { data, error });
+        
+        if (error) {
+          console.error('AdminDashboard: Error fetching users:', error);
+          throw error;
+        }
+        
+        console.log('AdminDashboard: Successfully fetched', data?.length || 0, 'users');
         setUsers(data || []);
       } catch (err) {
-        console.error('Error fetching users:', err);
+        console.error('AdminDashboard: Error in fetchUsers:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUsers();
-  }, []);
+    if (user) {
+      fetchUsers();
+    }
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-muted/30 p-6 -m-6">
