@@ -125,13 +125,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "admin_notifications_admin_id_fkey"
-            columns: ["admin_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "admin_notifications_contract_signature_id_fkey"
             columns: ["contract_signature_id"]
             isOneToOne: false
@@ -805,13 +798,6 @@ export type Database = {
             referencedRelation: "contracts_v2"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "contract_recipients_v2_sent_by_fkey"
-            columns: ["sent_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       contract_signatures: {
@@ -859,24 +845,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "contract_signatures_admin_id_fkey"
-            columns: ["admin_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "contract_signatures_contract_id_fkey"
             columns: ["contract_id"]
             isOneToOne: false
             referencedRelation: "contracts_v2"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "contract_signatures_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1042,15 +1014,7 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "contracts_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       contracts_v2: {
         Row: {
@@ -1171,24 +1135,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "event_class_list_members_added_by_fkey"
-            columns: ["added_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "event_class_list_members_class_list_id_fkey"
             columns: ["class_list_id"]
             isOneToOne: false
             referencedRelation: "event_class_lists"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "event_class_list_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1225,13 +1175,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "event_class_lists_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "event_class_lists_event_id_fkey"
             columns: ["event_id"]
@@ -9344,114 +9287,6 @@ export type Database = {
           },
         ]
       }
-      profiles: {
-        Row: {
-          academic_major: string | null
-          allergies: string | null
-          avatar_url: string | null
-          bio: string | null
-          can_dance: boolean | null
-          class_year: number | null
-          created_at: string | null
-          dietary_restrictions: string[] | null
-          dress_size: string | null
-          email: string | null
-          emergency_contact: string | null
-          full_name: string | null
-          hair_color: string | null
-          has_tattoos: boolean | null
-          home_address: string | null
-          id: string
-          instruments_played: string[] | null
-          parent_guardian_contact: string | null
-          phone_number: string | null
-          preferred_payment_method:
-            | Database["public"]["Enums"]["payment_method_enum"]
-            | null
-          pronouns: string | null
-          role: string | null
-          school_address: string | null
-          shoe_size: string | null
-          social_media_links: Json | null
-          student_number: string | null
-          updated_at: string | null
-          visible_piercings: boolean | null
-          voice_part: Database["public"]["Enums"]["voice_part_enum"] | null
-          website_url: string | null
-          workplace: string | null
-        }
-        Insert: {
-          academic_major?: string | null
-          allergies?: string | null
-          avatar_url?: string | null
-          bio?: string | null
-          can_dance?: boolean | null
-          class_year?: number | null
-          created_at?: string | null
-          dietary_restrictions?: string[] | null
-          dress_size?: string | null
-          email?: string | null
-          emergency_contact?: string | null
-          full_name?: string | null
-          hair_color?: string | null
-          has_tattoos?: boolean | null
-          home_address?: string | null
-          id: string
-          instruments_played?: string[] | null
-          parent_guardian_contact?: string | null
-          phone_number?: string | null
-          preferred_payment_method?:
-            | Database["public"]["Enums"]["payment_method_enum"]
-            | null
-          pronouns?: string | null
-          role?: string | null
-          school_address?: string | null
-          shoe_size?: string | null
-          social_media_links?: Json | null
-          student_number?: string | null
-          updated_at?: string | null
-          visible_piercings?: boolean | null
-          voice_part?: Database["public"]["Enums"]["voice_part_enum"] | null
-          website_url?: string | null
-          workplace?: string | null
-        }
-        Update: {
-          academic_major?: string | null
-          allergies?: string | null
-          avatar_url?: string | null
-          bio?: string | null
-          can_dance?: boolean | null
-          class_year?: number | null
-          created_at?: string | null
-          dietary_restrictions?: string[] | null
-          dress_size?: string | null
-          email?: string | null
-          emergency_contact?: string | null
-          full_name?: string | null
-          hair_color?: string | null
-          has_tattoos?: boolean | null
-          home_address?: string | null
-          id?: string
-          instruments_played?: string[] | null
-          parent_guardian_contact?: string | null
-          phone_number?: string | null
-          preferred_payment_method?:
-            | Database["public"]["Enums"]["payment_method_enum"]
-            | null
-          pronouns?: string | null
-          role?: string | null
-          school_address?: string | null
-          shoe_size?: string | null
-          social_media_links?: Json | null
-          student_number?: string | null
-          updated_at?: string | null
-          visible_piercings?: boolean | null
-          voice_part?: Database["public"]["Enums"]["voice_part_enum"] | null
-          website_url?: string | null
-          workplace?: string | null
-        }
-        Relationships: []
-      }
       promo_budget: {
         Row: {
           cost: number | null
@@ -9614,13 +9449,6 @@ export type Database = {
           vendor_name?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "receipts_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "receipts_event_id_fkey"
             columns: ["event_id"]
@@ -9944,13 +9772,6 @@ export type Database = {
             columns: ["contract_id"]
             isOneToOne: false
             referencedRelation: "contracts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "singer_contract_assignments_singer_id_fkey"
-            columns: ["singer_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

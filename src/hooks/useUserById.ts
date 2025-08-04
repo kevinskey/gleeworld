@@ -31,11 +31,11 @@ export const useUserById = (userId: string | undefined) => {
         setLoading(true);
         setError(null);
 
-        // Fetch from profiles table
+        // Fetch from gw_profiles table
         const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('id, email, full_name, role, created_at, avatar_url')
-          .eq('id', userId)
+          .from('gw_profiles')
+          .select('user_id as id, email, full_name, role, created_at, avatar_url, exec_board_role, is_exec_board')
+          .eq('user_id', userId)
           .maybeSingle();
 
         if (profileError) {
@@ -51,14 +51,7 @@ export const useUserById = (userId: string | undefined) => {
           return;
         }
 
-        // Fetch executive board info from gw_profiles
-        const { data: gwProfileData } = await supabase
-          .from('gw_profiles')
-          .select('exec_board_role, is_exec_board')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-        // Combine the data
+        // Data is already combined from gw_profiles
         const combinedUser: User = {
           id: profileData.id,
           email: profileData.email,
@@ -66,8 +59,8 @@ export const useUserById = (userId: string | undefined) => {
           role: profileData.role,
           created_at: profileData.created_at,
           avatar_url: profileData.avatar_url,
-          exec_board_role: gwProfileData?.exec_board_role || undefined,
-          is_exec_board: gwProfileData?.is_exec_board || false,
+          exec_board_role: profileData.exec_board_role || undefined,
+          is_exec_board: profileData.is_exec_board || false,
         };
 
         setUser(combinedUser);
