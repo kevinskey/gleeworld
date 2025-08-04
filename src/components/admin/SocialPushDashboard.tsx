@@ -29,24 +29,6 @@ interface GeneratedContent {
   linkedin: PlatformContent;
 }
 
-interface SocialPost {
-  id: string;
-  raw_content: string;
-  caption_facebook?: string;
-  caption_instagram?: string;
-  caption_twitter?: string;
-  caption_linkedin?: string;
-  tone: string;
-  image_urls: string[];
-  event_url?: string;
-  scheduled_time?: string;
-  status: string;
-  platform_flags: any;
-  hashtags: string[];
-  created_at: string;
-  updated_at: string;
-}
-
 export const SocialPushDashboard = () => {
   const { toast } = useToast();
   const [rawContent, setRawContent] = useState('');
@@ -65,7 +47,7 @@ export const SocialPushDashboard = () => {
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
-  const [socialPosts, setSocialPosts] = useState<SocialPost[]>([]);
+  const [socialPosts, setSocialPosts] = useState<any[]>([]);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
 
   useEffect(() => {

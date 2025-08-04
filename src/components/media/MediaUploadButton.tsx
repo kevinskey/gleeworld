@@ -148,20 +148,24 @@ export const MediaUploadButton = ({
           .from('media-library')
           .getPublicUrl(filePath);
 
-        // Store metadata in database using RPC
-        const { data: mediaData, error: dbError } = await supabase.rpc('insert_media_library_item', {
-          p_title: selectedFiles.length === 1 ? title : `${title} - ${file.name}`,
-          p_description: description || null,
-          p_file_url: urlData.publicUrl,
-          p_file_path: filePath,
-          p_file_type: file.type,
-          p_file_size: file.size,
-          p_category: category,
-          p_tags: tags.length > 0 ? tags : null,
-          p_context: context,
-          p_uploaded_by: user.id,
-          p_is_public: category === 'hero' || category === 'promotional'
-        });
+        // Store metadata in database using direct insert
+        const { data: mediaData, error: dbError } = await supabase
+          .from('gw_media_library')
+          .insert({
+            title: selectedFiles.length === 1 ? title : `${title} - ${file.name}`,
+            description: description || null,
+            file_url: urlData.publicUrl,
+            file_path: filePath,
+            file_type: file.type,
+            file_size: file.size,
+            category: category,
+            tags: tags.length > 0 ? tags : null,
+            context: context,
+            uploaded_by: user.id,
+            is_public: category === 'hero' || category === 'promotional'
+          })
+          .select()
+          .single();
 
         if (dbError) {
           console.error('Database error:', dbError);

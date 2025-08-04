@@ -175,6 +175,8 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
         return <MusicManagement />;
       case 'announcements':
         return <AnnouncementManagement />;
+      case 'social':
+        return <SocialPushDashboard />;
       case 'permissions':
         return <PermissionsPanel />;
       case 'settings':

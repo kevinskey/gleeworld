@@ -7067,62 +7067,69 @@ export type Database = {
       }
       gw_social_media_posts: {
         Row: {
-          announcement_id: string | null
-          content: string
-          created_at: string
+          approved_by: string | null
+          caption_facebook: string | null
+          caption_instagram: string | null
+          caption_linkedin: string | null
+          caption_twitter: string | null
+          created_at: string | null
           created_by: string | null
-          engagement_metrics: Json | null
           error_message: string | null
-          external_post_id: string | null
+          event_url: string | null
+          hashtags: string[] | null
           id: string
-          media_urls: string[] | null
-          platform: string
+          image_urls: string[] | null
+          platform_flags: Json | null
           posted_at: string | null
-          scheduled_at: string | null
-          status: string
-          updated_at: string
+          raw_content: string
+          scheduled_time: string | null
+          status: string | null
+          tone: string | null
+          updated_at: string | null
         }
         Insert: {
-          announcement_id?: string | null
-          content: string
-          created_at?: string
+          approved_by?: string | null
+          caption_facebook?: string | null
+          caption_instagram?: string | null
+          caption_linkedin?: string | null
+          caption_twitter?: string | null
+          created_at?: string | null
           created_by?: string | null
-          engagement_metrics?: Json | null
           error_message?: string | null
-          external_post_id?: string | null
+          event_url?: string | null
+          hashtags?: string[] | null
           id?: string
-          media_urls?: string[] | null
-          platform: string
+          image_urls?: string[] | null
+          platform_flags?: Json | null
           posted_at?: string | null
-          scheduled_at?: string | null
-          status?: string
-          updated_at?: string
+          raw_content: string
+          scheduled_time?: string | null
+          status?: string | null
+          tone?: string | null
+          updated_at?: string | null
         }
         Update: {
-          announcement_id?: string | null
-          content?: string
-          created_at?: string
+          approved_by?: string | null
+          caption_facebook?: string | null
+          caption_instagram?: string | null
+          caption_linkedin?: string | null
+          caption_twitter?: string | null
+          created_at?: string | null
           created_by?: string | null
-          engagement_metrics?: Json | null
           error_message?: string | null
-          external_post_id?: string | null
+          event_url?: string | null
+          hashtags?: string[] | null
           id?: string
-          media_urls?: string[] | null
-          platform?: string
+          image_urls?: string[] | null
+          platform_flags?: Json | null
           posted_at?: string | null
-          scheduled_at?: string | null
-          status?: string
-          updated_at?: string
+          raw_content?: string
+          scheduled_time?: string | null
+          status?: string | null
+          tone?: string | null
+          updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "gw_social_media_posts_announcement_id_fkey"
-            columns: ["announcement_id"]
-            isOneToOne: false
-            referencedRelation: "gw_announcements"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       gw_spiritual_reflections: {
         Row: {

@@ -210,8 +210,60 @@ const Index = () => {
 
   return (
     <UniversalLayout containerized={false}>
-      <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3">
-        {renderContent()}
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
+        <div className="container mx-auto px-4 py-8">
+          {/* Brand Header */}
+          <div className="mb-8">
+            <div className="bg-card/80 backdrop-blur-sm rounded-lg p-6 border border-border shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-primary mb-2">
+                    GleeWorld Dashboard
+                  </h1>
+                  <p className="text-muted-foreground">
+                    Spelman College Glee Club Management Platform
+                  </p>
+                </div>
+                <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-xl">GW</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation Tabs */}
+          <div className="mb-8">
+            <div className="bg-card/60 backdrop-blur-sm rounded-lg p-2 border border-border shadow-md">
+              <div className="flex gap-2">
+                {[
+                  { id: 'dashboard', label: 'Dashboard', icon: '🏠' },
+                  { id: 'library', label: 'Library', icon: '📚' },
+                  { id: 'finance', label: 'Finance', icon: '💰' },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`
+                      flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all
+                      ${activeTab === tab.id 
+                        ? 'bg-primary text-primary-foreground shadow-md' 
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                      }
+                    `}
+                  >
+                    <span>{tab.icon}</span>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="bg-card/60 backdrop-blur-sm rounded-lg border border-border shadow-lg p-6">
+            {renderContent()}
+          </div>
+        </div>
       </div>
       
       {/* Contract Viewer Modal */}
