@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -43,6 +43,15 @@ const faqData = [
 
 export const FAQNavigationCards = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Auto-scroll every 6 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % faqData.length);
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleNext = () => {
     setCurrentIndex((prev) => (prev + 1) % faqData.length);
