@@ -425,7 +425,30 @@ export const PRCoordinatorHub = () => {
         </TabsContent>
 
         <TabsContent value="bulk">
-          <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6">
+          <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6 space-y-6">
+            {/* Media Upload Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Upload className="h-5 w-5" />
+                  Bulk Media Upload to Library
+                </CardTitle>
+                <CardDescription>
+                  Upload multiple media files (images, videos, audio, PDFs) to the main media library
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={() => setShowMediaLibrary(true)}
+                  className="w-full gap-2 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
+                >
+                  <Upload className="h-4 w-4" />
+                  Open Media Library Uploader
+                </Button>
+              </CardContent>
+            </Card>
+            
+            {/* Existing Bulk Actions */}
             <PRBulkActions
               selectedImages={selectedImages}
               images={images}
