@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Users, UserPlus, Shield, Settings, Search, Filter, Mail, Calendar } from "lucide-react";
+import { Users, UserPlus, Shield, Settings, Search, Filter, Mail, Calendar, Crown, UserCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,9 +19,31 @@ interface UserProfile {
   is_admin: boolean;
   is_super_admin: boolean;
   is_exec_board: boolean;
+  exec_board_role: string | null;
   verified: boolean;
   created_at: string;
 }
+
+const EXECUTIVE_POSITIONS = [
+  'president',
+  'secretary', 
+  'treasurer',
+  'tour_manager',
+  'wardrobe_manager',
+  'librarian',
+  'historian',
+  'pr_coordinator',
+  'chaplain',
+  'data_analyst',
+  'assistant_chaplain',
+  'student_conductor',
+  'section_leader_s1',
+  'section_leader_s2', 
+  'section_leader_a1',
+  'section_leader_a2',
+  'set_up_crew_manager',
+  'pr_manager'
+] as const;
 
 const UserManagement = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -30,6 +52,7 @@ const UserManagement = () => {
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [execBoardDialogOpen, setExecBoardDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -54,6 +77,108 @@ const UserManagement = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const assignExecutivePosition = async (userId: string, position: typeof EXECUTIVE_POSITIONS[number]) => {
+    try {
+      // First, check if position is already taken
+      const { data: existingMember } = await supabase
+        .from('gw_executive_board_members')
+        .select('*')
+        .eq('position', position)
+        .eq('is_active', true)
+        .single();
+
+      if (existingMember) {
+        toast({
+          title: "Position Taken",
+          description: `The ${position.replace(/_/g, ' ')} position is already occupied`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Remove user from any existing executive board positions
+      await supabase
+        .from('gw_executive_board_members')
+        .update({ is_active: false })
+        .eq('user_id', userId);
+
+      // Add to executive board
+      const { error: boardError } = await supabase
+        .from('gw_executive_board_members')
+        .insert({
+          user_id: userId,
+          position: position,
+          academic_year: new Date().getFullYear().toString(),
+          is_active: true
+        });
+
+      if (boardError) throw boardError;
+
+      // Update profile
+      const { error: profileError } = await supabase
+        .from('gw_profiles')
+        .update({ 
+          is_exec_board: true,
+          exec_board_role: position
+        })
+        .eq('user_id', userId);
+
+      if (profileError) throw profileError;
+
+      toast({
+        title: "Success",
+        description: `Executive position assigned successfully`,
+      });
+      
+      fetchUsers();
+      setExecBoardDialogOpen(false);
+    } catch (error) {
+      console.error('Error assigning executive position:', error);
+      toast({
+        title: "Error",
+        description: "Failed to assign executive position",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const removeFromExecutiveBoard = async (userId: string) => {
+    try {
+      // Deactivate from executive board
+      const { error: boardError } = await supabase
+        .from('gw_executive_board_members')
+        .update({ is_active: false })
+        .eq('user_id', userId);
+
+      if (boardError) throw boardError;
+
+      // Update profile
+      const { error: profileError } = await supabase
+        .from('gw_profiles')
+        .update({ 
+          is_exec_board: false,
+          exec_board_role: null
+        })
+        .eq('user_id', userId);
+
+      if (profileError) throw profileError;
+
+      toast({
+        title: "Success",
+        description: "Removed from executive board successfully",
+      });
+      
+      fetchUsers();
+    } catch (error) {
+      console.error('Error removing from executive board:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove from executive board",
+        variant: "destructive",
+      });
     }
   };
 
@@ -117,7 +242,12 @@ const UserManagement = () => {
   const getRoleBadge = (user: UserProfile) => {
     if (user.is_super_admin) return <Badge className="bg-red-500/20 text-red-600">Super Admin</Badge>;
     if (user.is_admin) return <Badge className="bg-orange-500/20 text-orange-600">Admin</Badge>;
-    if (user.is_exec_board) return <Badge className="bg-purple-500/20 text-purple-600">Executive</Badge>;
+    if (user.is_exec_board && user.exec_board_role) {
+      return <Badge className="bg-purple-500/20 text-purple-600">
+        <Crown className="h-3 w-3 mr-1" />
+        {user.exec_board_role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+      </Badge>;
+    }
     
     const roleColors: Record<string, string> = {
       'member': 'bg-blue-500/20 text-blue-600',
@@ -234,15 +364,15 @@ const UserManagement = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Alumni
+              <Crown className="h-5 w-5" />
+              Executive Board
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {users.filter(u => u.role === 'alumna').length}
+              {users.filter(u => u.is_exec_board).length}
             </div>
-            <p className="text-sm text-muted-foreground">Alumni members</p>
+            <p className="text-sm text-muted-foreground">Board members</p>
           </CardContent>
         </Card>
       </div>
@@ -324,6 +454,29 @@ const UserManagement = () => {
                     <Shield className="h-4 w-4 mr-1" />
                     {user.is_admin ? 'Remove Admin' : 'Make Admin'}
                   </Button>
+
+                  {user.is_exec_board ? (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => removeFromExecutiveBoard(user.user_id)}
+                    >
+                      <Crown className="h-4 w-4 mr-1" />
+                      Remove Board
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setExecBoardDialogOpen(true);
+                      }}
+                    >
+                      <Crown className="h-4 w-4 mr-1" />
+                      Assign Board
+                    </Button>
+                  )}
                   
                   <Button
                     variant="outline"
@@ -341,6 +494,39 @@ const UserManagement = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Executive Board Assignment Dialog */}
+      <Dialog open={execBoardDialogOpen} onOpenChange={setExecBoardDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Executive Board Position</DialogTitle>
+            <DialogDescription>
+              Assign {selectedUser?.full_name || selectedUser?.email} to an executive board position.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Executive Position</Label>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                {EXECUTIVE_POSITIONS.map((position) => (
+                  <Button
+                    key={position}
+                    variant="outline"
+                    className="justify-start"
+                    onClick={() => selectedUser && assignExecutivePosition(selectedUser.user_id, position)}
+                  >
+                    <Crown className="h-4 w-4 mr-2" />
+                    {position.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Note: Assigning a new position will remove any existing executive board position.
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
