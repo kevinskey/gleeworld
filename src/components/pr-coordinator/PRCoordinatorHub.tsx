@@ -16,6 +16,7 @@ import { PRDataManager } from './PRDataManager';
 import { PRMetadataExporter } from './PRMetadataExporter';
 import PressKitTemplateGenerator from './PressKitTemplateGenerator';
 import { TaskNotifications } from '@/components/shared/TaskNotifications';
+import { MediaLibraryDialog } from '@/components/radio/MediaLibraryDialog';
 
 export const PRCoordinatorHub = () => {
   const {
@@ -42,6 +43,7 @@ export const PRCoordinatorHub = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showQuickCapture, setShowQuickCapture] = useState(false);
+  const [showMediaLibrary, setShowMediaLibrary] = useState(false);
 
   // Debug showQuickCapture state changes
   useEffect(() => {
@@ -139,6 +141,14 @@ export const PRCoordinatorHub = () => {
           >
             <RefreshCw className="h-4 w-4" />
             Refresh
+          </Button>
+          <Button 
+            onClick={() => setShowMediaLibrary(true)} 
+            variant="outline"
+            className="gap-2"
+          >
+            <Upload className="h-4 w-4" />
+            Import from Library
           </Button>
           <Button 
             onClick={() => {
@@ -435,6 +445,12 @@ export const PRCoordinatorHub = () => {
           onCapture={uploadImage}
         />
       )}
+
+      {/* Media Library Dialog */}
+      <MediaLibraryDialog
+        open={showMediaLibrary}
+        onOpenChange={setShowMediaLibrary}
+      />
 
       {/* Image Details Modal */}
       {selectedImage && (
