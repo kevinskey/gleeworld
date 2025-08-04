@@ -18,6 +18,10 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
     <div className="min-h-screen bg-muted/30 p-6 -m-6">
       <div className="space-y-6">
         <CommunityHubWidget />
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h2 className="text-xl font-bold mb-4">Admin Tools</h2>
+          <p>Testing admin tools visibility...</p>
+        </div>
         <AdminToolsWidget />
       </div>
     </div>
