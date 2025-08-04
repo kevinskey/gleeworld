@@ -228,8 +228,8 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
         <Button
           variant="ghost"
           onClick={handleTogglePlay}
-          className="h-8 w-8 sm:h-10 sm:w-10 p-0 hover:bg-transparent"
-          title={isPlaying ? 'Pause Radio' : 'Play Radio'}
+          className="h-8 w-8 sm:h-10 sm:w-10 p-0 hover:bg-transparent border border-black rounded"
+          title="Glee Radio"
         >
           {isPlaying ? (
             <Pause className="h-4 w-4 sm:h-5 sm:w-5 text-black stroke-2" />
