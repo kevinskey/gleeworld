@@ -277,14 +277,7 @@ export const GleeWorldLanding = () => {
       </div>
 
       {/* Main Content with Black and White Background */}
-      <div 
-        className="relative bg-cover bg-no-repeat"
-        style={{
-          backgroundImage: `url('/lovable-uploads/65bf7ca4-6247-46a0-9f8c-3ead6ddf148e.png')`,
-          backgroundPosition: 'center bottom'
-        }}
-      >
-        <div className="absolute inset-0 bg-black/30"></div>
+      <div className="relative">
         <div className="relative z-10 max-w-screen-2xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12">
 
       {/* Hero Section */}
