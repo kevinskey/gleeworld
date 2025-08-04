@@ -23,6 +23,7 @@ import { AdminSummaryStats } from "@/components/admin/AdminSummaryStats";
 import { CalendarControlsAdmin } from "@/components/admin/CalendarControlsAdmin";
 import { SystemSettings } from "@/components/admin/SystemSettings";
 import { PermissionManagement } from "@/components/admin/PermissionManagement";
+import { AuditionsManagement } from "@/components/admin/AuditionsManagement";
 // import { FinancialSystem } from "@/components/admin/FinancialSystem";
 
 interface AdminDashboardProps {
@@ -218,6 +219,25 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
                 <div 
                   className="p-6 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                  onClick={() => setActiveTab("auditions")}
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 bg-indigo-100 rounded-lg">
+                      <Music className="h-5 w-5 text-indigo-600" />
+                    </div>
+                    <h3 className="font-semibold">Audition Management</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Manage audition applications, sessions, and evaluations
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-bold">22</span>
+                    <span className="text-xs text-muted-foreground">Applications</span>
+                  </div>
+                </div>
+
+                <div 
+                  className="p-6 border rounded-lg hover:shadow-md transition-all cursor-pointer"
                   onClick={() => setActiveTab("activity")}
                 >
                   <div className="flex items-center gap-3 mb-3">
@@ -274,38 +294,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           </TabsContent>
 
           <TabsContent value="auditions" className="mt-6">
-            <div className="bg-white rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Music className="h-5 w-5" />
-                Audition Management
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-4 border rounded-lg">
-                  <h4 className="font-medium mb-2">Applications</h4>
-                  <p className="text-sm text-muted-foreground mb-3">Review and manage audition applications</p>
-                  <div className="text-2xl font-bold">0</div>
-                  <p className="text-xs text-muted-foreground">Total applications</p>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <h4 className="font-medium mb-2">Active Sessions</h4>
-                  <p className="text-sm text-muted-foreground mb-3">Manage audition periods and scheduling</p>
-                  <div className="text-2xl font-bold">0</div>
-                  <p className="text-xs text-muted-foreground">Open sessions</p>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <h4 className="font-medium mb-2">Evaluations</h4>
-                  <p className="text-sm text-muted-foreground mb-3">Score and review auditions</p>
-                  <div className="text-2xl font-bold">0</div>
-                  <p className="text-xs text-muted-foreground">Pending reviews</p>
-                </div>
-              </div>
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <strong>Audition Module:</strong> Comprehensive audition management interface coming soon. 
-                  This will include application review, session scheduling, evaluation tools, and analytics.
-                </p>
-              </div>
-            </div>
+            <AuditionsManagement />
           </TabsContent>
 
           <TabsContent value="activity" className="mt-6">
