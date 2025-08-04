@@ -154,9 +154,8 @@ export const PermissionsGrid = ({ selectedPosition }: PermissionsGridProps) => {
             <CardContent>
                 <div className="grid gap-4">
                   {/* Header Row */}
-                  <div className="hidden md:grid grid-cols-12 gap-4 pb-2 border-b font-medium text-sm text-muted-foreground">
+                  <div className="hidden md:grid grid-cols-10 gap-4 pb-2 border-b font-medium text-sm text-muted-foreground">
                     <div className="col-span-6">Function</div>
-                    <div className="col-span-2">Module</div>
                     <div className="col-span-2 text-center">Can Access</div>
                     <div className="col-span-2 text-center">Can Manage</div>
                   </div>
@@ -166,14 +165,11 @@ export const PermissionsGrid = ({ selectedPosition }: PermissionsGridProps) => {
                   const permissions = getPermissionForFunction(func.id);
                   
                   return (
-                    <div key={func.id} className="md:grid md:grid-cols-12 gap-4 py-3 border-b border-border/50 hover:bg-muted/30 rounded-lg px-2">
+                    <div key={func.id} className="md:grid md:grid-cols-10 gap-4 py-3 border-b border-border/50 hover:bg-muted/30 rounded-lg px-2">
                       {/* Mobile Layout */}
                       <div className="md:hidden space-y-3">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-gray-900 flex-1">{func.name.replace(/_/g, ' ')}</h4>
-                          <Badge variant="outline" className="text-xs ml-2">
-                            {func.module}
-                          </Badge>
+                        <div>
+                          <h4 className="font-medium text-gray-900">{func.name.replace(/_/g, ' ')}</h4>
                         </div>
                         <div className="flex items-center justify-center gap-8">
                           <div className="flex items-center gap-2">
@@ -204,12 +200,6 @@ export const PermissionsGrid = ({ selectedPosition }: PermissionsGridProps) => {
                             <h4 className="font-medium text-gray-900">{func.name.replace(/_/g, ' ')}</h4>
                             <p className="text-sm text-muted-foreground">{func.description}</p>
                           </div>
-                        </div>
-                        
-                        <div className="col-span-2 flex items-center">
-                          <Badge variant="outline" className="text-xs">
-                            {func.module}
-                          </Badge>
                         </div>
                         
                         <div className="col-span-2 flex items-center justify-center">
