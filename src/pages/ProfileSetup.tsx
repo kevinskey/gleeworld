@@ -234,7 +234,7 @@ const ProfileSetup = () => {
       };
 
       const { error } = await supabase
-        .from("profiles")
+        .from("gw_profiles")
         .update({
           full_name: data.full_name,
           bio: data.bio,

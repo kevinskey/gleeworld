@@ -47,7 +47,7 @@ export const useAdminFinancialOverview = () => {
 
       // Check if user is admin
       const { data: profile } = await supabase
-        .from('profiles')
+        .from('gw_profiles')
         .select('role')
         .eq('id', user.id)
         .single();
@@ -89,10 +89,10 @@ export const useAdminFinancialOverview = () => {
 
       // Fetch user profiles for names
       const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name, email');
+        .from('gw_profiles')
+        .select('user_id, full_name, email');
 
-      const userMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const userMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
       // Calculate totals
       const totalPayments = payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;

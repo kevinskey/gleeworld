@@ -124,11 +124,11 @@ export const WardrobeAnnouncements = () => {
       if (announcementForm.target_audience === 'specific_checkout' && announcementForm.target_emails) {
         const emails = announcementForm.target_emails.split(',').map(email => email.trim());
         const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id')
+          .from('gw_profiles')
+          .select('user_id')
           .in('email', emails);
         
-        targetUserIds = profiles?.map(p => p.id) || [];
+        targetUserIds = profiles?.map(p => p.user_id) || [];
       }
 
       const { error } = await supabase

@@ -106,9 +106,9 @@ export const TeamsList = () => {
           const memberProfiles = teamMembers ? await Promise.all(
             teamMembers.map(async (member) => {
               const { data: profile } = await supabase
-                .from('profiles')
+                .from('gw_profiles')
                 .select('full_name, email')
-                .eq('id', member.user_id)
+                .eq('user_id', member.user_id)
                 .single();
 
               return {

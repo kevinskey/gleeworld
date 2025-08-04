@@ -37,8 +37,8 @@ export const useContractRecipientProfile = (contractId: string) => {
 
         // Then get the profile for that email
         const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url, email')
+          .from('gw_profiles')
+          .select('user_id, full_name, avatar_url, email')
           .eq('email', recipientData.recipient_email)
           .maybeSingle();
 
@@ -46,7 +46,7 @@ export const useContractRecipientProfile = (contractId: string) => {
           console.error('Error fetching recipient profile:', profileError);
         }
 
-        setProfile(profileData || null);
+        setProfile(profileData ? { ...profileData, id: profileData.user_id } : null);
       } catch (error) {
         console.error('Error in useContractRecipientProfile:', error);
         setProfile(null);

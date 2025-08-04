@@ -54,8 +54,8 @@ export const useActivityLogs = (enabled: boolean = true) => {
       if (userIds.length > 0) {
         // Fetch profiles for these users
         const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, full_name, email')
+          .from('gw_profiles')
+          .select('user_id, full_name, email')
           .in('id', userIds);
 
         if (profilesError) {

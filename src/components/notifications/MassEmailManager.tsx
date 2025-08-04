@@ -53,12 +53,17 @@ export const MassEmailManager = () => {
   const loadRecipients = async () => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, role')
+        .from('gw_profiles')
+        .select('user_id, email, full_name, role')
         .order('full_name');
 
       if (error) throw error;
-      setRecipients(data || []);
+      // Map user_id to id for component compatibility
+      const recipientsWithId = (data || []).map(user => ({
+        ...user,
+        id: user.user_id
+      }));
+      setRecipients(recipientsWithId);
     } catch (error) {
       console.error('Error loading recipients:', error);
       toast({

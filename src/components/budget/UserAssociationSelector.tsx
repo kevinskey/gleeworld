@@ -47,16 +47,20 @@ export const UserAssociationSelector: React.FC<UserAssociationSelectorProps> = (
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, email, full_name')
+        .from('gw_profiles')
+        .select('user_id, email, full_name')
         .or(`email.ilike.%${query}%,full_name.ilike.%${query}%`)
         .limit(10);
 
       if (error) throw error;
 
-      // Filter out already associated users
+      // Filter out already associated users and map user_id to id
       const associatedUserIds = associations.map(a => a.user.id);
-      const filtered = (data || []).filter(user => !associatedUserIds.includes(user.id));
+      const usersWithId = (data || []).map(user => ({
+        ...user,
+        id: user.user_id
+      }));
+      const filtered = usersWithId.filter(user => !associatedUserIds.includes(user.id));
       
       setAvailableUsers(filtered);
     } catch (error) {

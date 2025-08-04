@@ -54,9 +54,9 @@ export const useContracts = () => {
       
       if (contractsData && contractsData.length > 0 && user.id) {
         const { data: profileData } = await supabase
-          .from('profiles')
+          .from('gw_profiles')
           .select('full_name, email')
-          .eq('id', user.id)
+          .eq('user_id', user.id)
           .single();
 
         // Transform the data to include creator information
@@ -143,9 +143,9 @@ export const useContracts = () => {
 
       // Check if user is super admin
       const { data: profile } = await supabase
-        .from('profiles')
+        .from('gw_profiles')
         .select('role')
-        .eq('id', user?.id)
+        .eq('user_id', user?.id)
         .single();
 
       const isSuperAdmin = profile?.role === 'super-admin';

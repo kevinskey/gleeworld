@@ -84,8 +84,8 @@ export const MemberCommunications = () => {
   const loadMembers = async () => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, role')
+        .from('gw_profiles')
+        .select('user_id, full_name, email, role')
         .order('full_name');
 
       if (error) throw error;

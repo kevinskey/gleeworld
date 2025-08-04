@@ -218,13 +218,18 @@ export const W9CameraCapture = () => {
     setLoadingUsers(true);
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, email')
+        .from('gw_profiles')
+        .select('user_id, full_name, email')
         .order('full_name');
 
       if (error) throw error;
 
-      setUsers(data || []);
+      // Map user_id to id for component compatibility
+      const usersWithId = (data || []).map(user => ({
+        ...user,
+        id: user.user_id
+      }));
+      setUsers(usersWithId);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({

@@ -246,7 +246,7 @@ const Profile = () => {
       const fullName = [data.first_name, data.middle_name, data.last_name].filter(Boolean).join(' ');
 
       const { error } = await supabase
-        .from("profiles")
+        .from("gw_profiles")
         .update({
           first_name: data.first_name,
           middle_name: data.middle_name,

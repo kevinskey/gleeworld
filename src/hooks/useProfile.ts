@@ -74,15 +74,17 @@ export const useProfile = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from("profiles")
+        .from("gw_profiles")
         .select("*")
-        .eq("id", user.id)
+        .eq("user_id", user.id)
         .single();
 
       if (error) throw error;
 
       setProfile({
         ...data,
+        id: data.user_id, // Map user_id to id for interface compatibility
+        voice_part: data.voice_part as "S1" | "S2" | "A1" | "A2" | "T1" | "T2" | "B1" | "B2" | null,
         social_media_links: (data.social_media_links as any) || {}
       });
     } catch (error) {
@@ -102,12 +104,12 @@ export const useProfile = () => {
     try {
       setUpdating(true);
       const { error } = await supabase
-        .from("profiles")
+        .from("gw_profiles")
         .update({
           ...updates,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", user.id);
+        .eq("user_id", user.id);
 
       if (error) throw error;
 
@@ -178,12 +180,12 @@ export const useProfile = () => {
       setUpdating(true);
       
       const { error } = await supabase
-        .from("profiles")
+        .from("gw_profiles")
         .update({
           avatar_url: avatarUrl,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", user.id);
+        .eq("user_id", user.id);
 
       if (error) {
         throw error;

@@ -28,7 +28,7 @@ const SetupAdmin = () => {
 
       // First, check if user exists in profiles table
       const { data: existingProfile, error: fetchError } = await supabase
-        .from('profiles')
+        .from('gw_profiles')
         .select('*')
         .eq('id', user.id)
         .single();
@@ -40,7 +40,7 @@ const SetupAdmin = () => {
       if (existingProfile) {
         // Update existing profile
         const { error: updateError } = await supabase
-          .from('profiles')
+          .from('gw_profiles')
           .update({
             role: 'admin',
             verified: true,
@@ -52,7 +52,7 @@ const SetupAdmin = () => {
       } else {
         // Create new profile
         const { error: insertError } = await supabase
-          .from('profiles')
+          .from('gw_profiles')
           .insert({
             id: user.id,
             email: user.email,

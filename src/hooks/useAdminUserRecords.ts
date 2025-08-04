@@ -30,7 +30,7 @@ export const useAdminUserRecords = () => {
 
       // Check if user is admin
       const { data: profile } = await supabase
-        .from('profiles')
+        .from('gw_profiles')
         .select('role')
         .eq('id', user.id)
         .single();
@@ -42,8 +42,8 @@ export const useAdminUserRecords = () => {
 
       // Fetch all users
       const { data: users } = await supabase
-        .from('profiles')
-        .select('id, full_name, email');
+        .from('gw_profiles')
+        .select('user_id, full_name, email');
 
       // Fetch all finance records  
       const { data: financeRecords, error: financeError } = await supabase
@@ -58,8 +58,8 @@ export const useAdminUserRecords = () => {
 
       // Initialize all users
       users?.forEach(user => {
-        userRecordsMap.set(user.id, {
-          user_id: user.id,
+        userRecordsMap.set(user.user_id, {
+          user_id: user.user_id,
           user_name: user.full_name,
           user_email: user.email,
           totalRecords: 0,

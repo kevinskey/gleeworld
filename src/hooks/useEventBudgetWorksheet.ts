@@ -141,7 +141,7 @@ export const useEventBudgetWorksheet = (eventId?: string) => {
         supabase.from('media_budget').select('*').eq('event_id', eventId).order('created_at'),
         supabase.from('promo_budget').select('*').eq('event_id', eventId).order('created_at'),
         supabase.from('budget_attachments').select('*').eq('event_id', eventId).order('created_at'),
-        supabase.from('profiles').select('id, full_name, email').order('full_name'),
+        supabase.from('gw_profiles').select('user_id, full_name, email').order('full_name'),
         supabase.from('event_team_members').select('*, profiles(id, full_name, email)').eq('event_id', eventId)
       ]);
 
