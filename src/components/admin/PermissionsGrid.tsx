@@ -167,7 +167,6 @@ export const PermissionsGrid = ({ selectedPosition }: PermissionsGridProps) => {
                       <div key={func.id} className="grid grid-cols-12 gap-4 py-3 border-b border-border/50 hover:bg-muted/30 rounded-lg px-2">
                         <div className="col-span-8">
                           <h4 className="font-medium text-gray-900">{func.name.replace(/_/g, ' ')}</h4>
-                          <p className="text-sm text-muted-foreground">{func.description}</p>
                         </div>
                         
                         <div className="col-span-2 flex items-center justify-center">
