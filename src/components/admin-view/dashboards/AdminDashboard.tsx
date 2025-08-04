@@ -68,47 +68,49 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
   return (
     <div className="min-h-screen bg-muted/30 p-6 -m-6">
       <div className="space-y-6">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Executive Board Permissions Management
-          </h1>
-          <p className="text-muted-foreground">
-            Assign function permissions to executive board positions
-          </p>
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+          <div className="text-center lg:text-left">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Executive Board Permissions Management
+            </h1>
+            <p className="text-muted-foreground">
+              Assign function permissions to executive board positions
+            </p>
+          </div>
+
+          <Tabs value={activePosition.value} onValueChange={(value) => {
+            const position = EXECUTIVE_POSITIONS.find(p => p.value === value);
+            if (position) setActivePosition(position);
+          }} className="lg:w-auto">
+            <TabsList className="flex w-full overflow-x-auto lg:grid lg:grid-cols-6 gap-1 scrollbar-hide p-1 h-auto">
+              {EXECUTIVE_POSITIONS.map((position) => {
+                const Icon = getPositionIcon(position.value);
+                const colorClass = getPositionColor(position.value);
+                
+                return (
+                  <TabsTrigger 
+                    key={position.value} 
+                    value={position.value} 
+                    className="flex-shrink-0 flex flex-col items-center gap-2 p-3 h-auto data-[state=active]:bg-primary/10"
+                  >
+                    <div className={`p-2 rounded-lg ${colorClass}`}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="text-center">
+                      <div className="font-medium text-xs">{position.label}</div>
+                    </div>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+
+            {EXECUTIVE_POSITIONS.map((position) => (
+              <TabsContent key={position.value} value={position.value} className="mt-6">
+                <PermissionsGrid selectedPosition={position} />
+              </TabsContent>
+            ))}
+          </Tabs>
         </div>
-
-        <Tabs value={activePosition.value} onValueChange={(value) => {
-          const position = EXECUTIVE_POSITIONS.find(p => p.value === value);
-          if (position) setActivePosition(position);
-        }} className="w-full">
-          <TabsList className="flex w-full overflow-x-auto lg:grid lg:grid-cols-6 gap-1 scrollbar-hide p-1 h-auto">
-            {EXECUTIVE_POSITIONS.map((position) => {
-              const Icon = getPositionIcon(position.value);
-              const colorClass = getPositionColor(position.value);
-              
-              return (
-                <TabsTrigger 
-                  key={position.value} 
-                  value={position.value} 
-                  className="flex-shrink-0 flex flex-col items-center gap-2 p-3 h-auto data-[state=active]:bg-primary/10"
-                >
-                  <div className={`p-2 rounded-lg ${colorClass}`}>
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div className="text-center">
-                    <div className="font-medium text-xs">{position.label}</div>
-                  </div>
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
-
-          {EXECUTIVE_POSITIONS.map((position) => (
-            <TabsContent key={position.value} value={position.value} className="mt-6">
-              <PermissionsGrid selectedPosition={position} />
-            </TabsContent>
-          ))}
-        </Tabs>
       </div>
     </div>
   );
