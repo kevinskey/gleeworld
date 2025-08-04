@@ -115,14 +115,13 @@ export const RadioStationPage = () => {
         .order('recorded_at', { ascending: false })
         .limit(1);
 
-      // Fetch available audio tracks for the radio
+      // Fetch available audio tracks for the radio from music_tracks table
       const { data: tracksData } = await supabase
-        .from('audio_archive')
-        .select('id, title, artist_info, audio_url, duration_seconds, category')
-        .eq('is_public', true)
+        .from('music_tracks')
+        .select('id, title, artist, audio_url, duration, play_count')
         .not('audio_url', 'is', null)
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(20);
 
       if (episodesData) {
         setRadioStats(prev => ({
@@ -144,12 +143,10 @@ export const RadioStationPage = () => {
         const radioTracks: RadioTrack[] = tracksData.map(track => ({
           id: track.id,
           title: track.title,
-          artist: track.artist_info || 'Glee Club',
-          duration: track.duration_seconds || 180,
+          artist: track.artist || 'Glee Club',
+          duration: track.duration || 180,
           audio_url: track.audio_url,
-          category: (track.category === 'performance' || track.category === 'announcement' || track.category === 'interlude' || track.category === 'alumni_story') 
-            ? track.category 
-            : 'performance'
+          category: 'performance' as const
         }));
         
         setUpcomingTracks(radioTracks);
@@ -157,7 +154,10 @@ export const RadioStationPage = () => {
         // Set the first track as current if no track is playing
         if (!currentTrack && radioTracks.length > 0) {
           setCurrentTrack(radioTracks[0]);
+          console.log('Set default current track:', radioTracks[0]);
         }
+      } else {
+        console.log('No tracks found for radio');
       }
 
     } catch (error) {
@@ -197,13 +197,30 @@ export const RadioStationPage = () => {
 
   const handlePlay = async () => {
     const audio = audioRef.current;
-    if (!audio || !currentTrack) return;
+    console.log('handlePlay called:', { audio: !!audio, currentTrack: !!currentTrack, isPlaying });
+    
+    if (!audio || !currentTrack) {
+      console.log('Cannot play: missing audio element or current track');
+      toast({
+        title: "Cannot Play",
+        description: "No audio track available. Please select a track first.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       if (isPlaying) {
+        console.log('Pausing audio');
         audio.pause();
         setIsPlaying(false);
       } else {
+        console.log('Playing audio:', currentTrack.audio_url);
+        // Make sure the audio source is set
+        if (audio.src !== currentTrack.audio_url) {
+          audio.src = currentTrack.audio_url;
+          console.log('Set audio source to:', currentTrack.audio_url);
+        }
         await audio.play();
         setIsPlaying(true);
       }
@@ -214,6 +231,7 @@ export const RadioStationPage = () => {
       });
     } catch (error) {
       console.error('Audio playback error:', error);
+      setIsPlaying(false);
       toast({
         title: "Playback Error",
         description: "Unable to play audio. Please check the file format.",
