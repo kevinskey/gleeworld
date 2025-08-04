@@ -24,7 +24,10 @@ import {
   StickyNote,
   CheckCircle,
   ArrowUpDown,
-  ScanLine
+  ScanLine,
+  UserCheck,
+  ClipboardList,
+  TrendingUp
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
@@ -189,6 +192,30 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                 </p>
               </div>
 
+              {/* Member Management Category */}
+              <div 
+                className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
+                  selectedCategory === "member-management" 
+                    ? "bg-primary/10 border-primary/20 border" 
+                    : "bg-muted/50 hover:bg-muted"
+                }`}
+                onClick={() => {
+                  setSelectedCategory("member-management");
+                  setSelectedSubcategory(null);
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-600" />
+                    <span className="font-medium text-sm sm:text-base">Member Management</span>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
+                  Executive board management, auditions, permissions, and statistics
+                </p>
+              </div>
+
               {/* Libraries Category */}
               <div 
                 className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
@@ -245,6 +272,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
               {selectedCategory === "communications" && "Communications Hub"}
               {selectedCategory === "wardrobe" && "Wardrobe Management"}
               {selectedCategory === "executive-board" && "Executive Board Tools"}
+              {selectedCategory === "member-management" && "Member Management"}
               {selectedCategory === "libraries" && "Libraries Management"}
               {selectedCategory === "musical-leadership" && "Musical Leadership"}
               {!selectedCategory && "Select a category to view functions"}
@@ -477,6 +505,63 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                   </div>
                 )}
 
+                {/* Member Management Functions */}
+                {selectedCategory === "member-management" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200"
+                      onClick={() => setSelectedSubcategory("exec-board-profile-management")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <UserCog className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Executive Board Profile Management</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Manage executive board member profiles and role assignments
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("audition-forms")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <ClipboardList className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Audition Forms</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Create and manage audition applications and evaluations
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("permissions-module")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Permissions Module</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Manage user roles, permissions, and access controls
+                      </p>
+                    </div>
+
+                    <div 
+                      className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedSubcategory("member-statistics")}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                        <h3 className="font-semibold text-sm sm:text-base">Member Statistics</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        View analytics and statistics about members and activities
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Libraries Functions */}
                 {selectedCategory === "libraries" && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -701,6 +786,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                       selectedCategory === "communications" ? "Communications" : 
                       selectedCategory === "wardrobe" ? "Wardrobe" :
                       selectedCategory === "executive-board" ? "Executive Board" :
+                      selectedCategory === "member-management" ? "Member Management" :
                       selectedCategory === "libraries" ? "Libraries" :
                       selectedCategory === "musical-leadership" ? "Musical Leadership" : "Dashboard"
                     }
