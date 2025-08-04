@@ -10890,6 +10890,10 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: boolean
       }
+      emergency_admin_bootstrap: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       encrypt_square_token: {
         Args: { token: string }
         Returns: string
