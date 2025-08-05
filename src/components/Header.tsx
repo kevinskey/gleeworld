@@ -5,7 +5,6 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Menu, X, CheckCircle, Clock, MessageSquare, Info, AlertCircle } from "lucide-react";
-import { RadioPlayer } from "@/components/radio/RadioPlayer";
 import { useNotifications } from "@/hooks/useNotifications";
 import { format } from "date-fns";
 import { 
@@ -212,14 +211,6 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
           {/* Right side actions */}
           <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
 
-            {/* Radio Player - Personal Radio */}
-            <RadioPlayer 
-              className="flex-shrink-0" 
-              isPlaying={isRadioPlaying}
-              onToggle={onRadioToggle}
-              isPersonalRadio={true}
-            />
-            
             {/* Dashboard Views Dropdown - Only for admins */}
             {isAdmin && (
               <DropdownMenu>

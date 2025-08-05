@@ -95,6 +95,7 @@ import MemberDirectory from "./pages/MemberDirectory";
 import { AmazonShoppingModule } from "./components/shopping/AmazonShoppingModule";
 import { RadioStationPage } from "./components/radio/RadioStationPage";
 import { AuditionsManagement } from "./components/admin/AuditionsManagement";
+import { ShoutcastManagement } from "./pages/admin/ShoutcastManagement";
 import { ReceiptsPage } from "./pages/ReceiptsPage";
 import ApprovalSystemPage from "./pages/ApprovalSystemPage";
 
@@ -712,15 +713,23 @@ const App = () => {
                                         <ApprovalSystemPage />
                                       </ProtectedRoute>
                                     } 
-                                  />
+                                   />
+                                   <Route 
+                                     path="/admin/shoutcast" 
+                                     element={
+                                       <ProtectedRoute>
+                                         <ShoutcastManagement />
+                                       </ProtectedRoute>
+                                     } 
+                                    />
                      <Route 
-                       path="/" 
-                       element={
-                         <PublicRoute>
-                           <GleeWorldLanding />
-                         </PublicRoute>
-                       } 
-                     />
+                        path="/" 
+                        element={
+                          <PublicRoute>
+                            <GleeWorldLanding />
+                          </PublicRoute>
+                        } 
+                      />
                     <Route 
                       path="/admin" 
                       element={

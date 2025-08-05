@@ -15,7 +15,6 @@ import { DashboardSwitcher } from "@/components/navigation/DashboardSwitcher";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { HeaderClock } from "@/components/ui/header-clock";
-import { RadioPlayer } from "@/components/radio/RadioPlayer";
 
 
 interface UniversalHeaderProps {
@@ -93,8 +92,6 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
 
           {/* Right side actions */}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
-            {/* Glee Radio */}
-            <RadioPlayer className="mr-2" />
             {user && (
               <>
                 {/* Super Admin Monitoring Dashboard */}

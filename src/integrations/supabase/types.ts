@@ -7696,6 +7696,207 @@ export type Database = {
           },
         ]
       }
+      gw_shoutcast_playlist_tracks: {
+        Row: {
+          created_at: string | null
+          duration_seconds: number | null
+          file_path: string
+          id: string
+          is_enabled: boolean | null
+          play_order: number | null
+          playlist_id: string | null
+          track_album: string | null
+          track_artist: string | null
+          track_title: string
+        }
+        Insert: {
+          created_at?: string | null
+          duration_seconds?: number | null
+          file_path: string
+          id?: string
+          is_enabled?: boolean | null
+          play_order?: number | null
+          playlist_id?: string | null
+          track_album?: string | null
+          track_artist?: string | null
+          track_title: string
+        }
+        Update: {
+          created_at?: string | null
+          duration_seconds?: number | null
+          file_path?: string
+          id?: string
+          is_enabled?: boolean | null
+          play_order?: number | null
+          playlist_id?: string | null
+          track_album?: string | null
+          track_artist?: string | null
+          track_title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_shoutcast_playlist_tracks_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "gw_shoutcast_playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_shoutcast_playlists: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          repeat_enabled: boolean | null
+          shuffle_enabled: boolean | null
+          stream_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          repeat_enabled?: boolean | null
+          shuffle_enabled?: boolean | null
+          stream_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          repeat_enabled?: boolean | null
+          shuffle_enabled?: boolean | null
+          stream_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_shoutcast_playlists_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "gw_shoutcast_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_shoutcast_stats: {
+        Row: {
+          bitrate: number | null
+          current_listeners: number | null
+          current_song: string | null
+          id: string
+          peak_listeners: number | null
+          recorded_at: string | null
+          sample_rate: number | null
+          stream_id: string | null
+          stream_start_time: string | null
+          stream_status: string | null
+          total_listeners: number | null
+        }
+        Insert: {
+          bitrate?: number | null
+          current_listeners?: number | null
+          current_song?: string | null
+          id?: string
+          peak_listeners?: number | null
+          recorded_at?: string | null
+          sample_rate?: number | null
+          stream_id?: string | null
+          stream_start_time?: string | null
+          stream_status?: string | null
+          total_listeners?: number | null
+        }
+        Update: {
+          bitrate?: number | null
+          current_listeners?: number | null
+          current_song?: string | null
+          id?: string
+          peak_listeners?: number | null
+          recorded_at?: string | null
+          sample_rate?: number | null
+          stream_id?: string | null
+          stream_start_time?: string | null
+          stream_status?: string | null
+          total_listeners?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_shoutcast_stats_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "gw_shoutcast_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_shoutcast_streams: {
+        Row: {
+          admin_password: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          dj_password: string | null
+          genre: string | null
+          id: string
+          is_active: boolean | null
+          is_public: boolean | null
+          max_listeners: number | null
+          mount_point: string
+          name: string
+          port: number | null
+          source_password: string | null
+          stream_url: string
+          updated_at: string | null
+        }
+        Insert: {
+          admin_password?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          dj_password?: string | null
+          genre?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_public?: boolean | null
+          max_listeners?: number | null
+          mount_point: string
+          name: string
+          port?: number | null
+          source_password?: string | null
+          stream_url: string
+          updated_at?: string | null
+        }
+        Update: {
+          admin_password?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          dj_password?: string | null
+          genre?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_public?: boolean | null
+          max_listeners?: number | null
+          mount_point?: string
+          name?: string
+          port?: number | null
+          source_password?: string | null
+          stream_url?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       gw_site_settings: {
         Row: {
           description: string | null
