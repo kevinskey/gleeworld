@@ -25,7 +25,8 @@ import {
   ShoppingCart,
   BookOpen,
   Settings,
-  ClipboardCheck
+  ClipboardCheck,
+  Route
 } from 'lucide-react';
 
 import { UserManagementModule } from '@/components/modules/UserManagementModule';
@@ -35,6 +36,7 @@ import { PermissionsModule } from '@/components/modules/PermissionsModule';
 import { StudentIntakeModule } from '@/components/modules/StudentIntakeModule';
 import { AttendanceModule } from '@/components/modules/AttendanceModule';
 import { TermManagerModule } from '@/components/modules/TermManagerModule';
+import { TourManagerModule } from '@/components/modules/TourManagerModule';
 import { ModuleCategory } from '@/types/modules';
 
 export const moduleCategories: ModuleCategory[] = [
@@ -126,6 +128,24 @@ export const moduleCategories: ModuleCategory[] = [
         iconColor: "green",
         category: "attendance",
         component: AttendanceModule,
+      }
+    ]
+  },
+  {
+    id: "tours",
+    title: "Tours",
+    icon: Route,
+    color: "blue",
+    description: "Tour planning, logistics, scheduling, and management",
+    modules: [
+      {
+        id: "tour-management",
+        title: "Tour Manager",
+        description: "Comprehensive tour planning, logistics, and management system",
+        icon: Route,
+        iconColor: "blue",
+        category: "tours",
+        component: TourManagerModule,
       }
     ]
   },
