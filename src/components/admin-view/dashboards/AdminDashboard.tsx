@@ -477,21 +477,25 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           </div>
         </div>
 
-        {/* Tablet and Desktop Layout - Two Columns */}
-        <div className="hidden md:flex gap-6 h-[calc(100vh-200px)]">
-          {/* Left Column - Categories */}
-          <div className="w-1/2 bg-card rounded-lg border p-6 overflow-y-auto">
-            <h2 className="text-xl font-semibold mb-6 text-foreground">
-              Admin Categories
-            </h2>
-            <div className="space-y-3">
-              {categories.map(category => renderCategoryButton(category, false))}
-            </div>
-          </div>
+        {/* Tablet and Desktop Layout - Two Columns in One Card */}
+        <div className="hidden md:block">
+          <div className="bg-card rounded-lg border h-[calc(100vh-200px)]">
+            <div className="flex h-full">
+              {/* Left Column - Categories */}
+              <div className="w-1/2 p-6 border-r border-border overflow-y-auto">
+                <h2 className="text-xl font-semibold mb-6 text-foreground">
+                  Admin Categories
+                </h2>
+                <div className="space-y-3">
+                  {categories.map(category => renderCategoryButton(category, false))}
+                </div>
+              </div>
 
-          {/* Right Column - Content */}
-          <div className="w-1/2 bg-card rounded-lg border p-6 overflow-y-auto">
-            {renderRightPanelContent()}
+              {/* Right Column - Content */}
+              <div className="w-1/2 p-6 overflow-y-auto">
+                {renderRightPanelContent()}
+              </div>
+            </div>
           </div>
         </div>
       </div>
