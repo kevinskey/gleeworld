@@ -21,6 +21,7 @@ import { StreamlinedFilterBar, FilterState } from './StreamlinedFilterBar';
 import { LibraryStats, LibraryStatsData } from '@/modules/glee-library/stats/LibraryStats';
 import { logSheetMusicAction, getDeviceType } from '@/lib/music-library/analytics';
 import { BulkPDFCroppingTool } from '@/components/glee-library/BulkPDFCroppingTool';
+import { MusicFlowEditor } from './MusicFlowEditor';
 
 interface ExtendedSheetMusic {
   id: string;
@@ -224,7 +225,7 @@ export const LibraryManagement = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full h-auto p-1 
           grid-cols-2 gap-1 sm:grid-cols-4 
-          md:grid-cols-5 md:gap-2">
+          md:grid-cols-6 md:gap-2">
           <TabsTrigger value="all" className="text-xs px-1 py-2 min-w-0 sm:text-sm sm:px-2">
             <span className="hidden sm:inline">All Items</span>
             <span className="sm:hidden truncate">All</span>
@@ -240,6 +241,10 @@ export const LibraryManagement = () => {
           <TabsTrigger value="inventory" className="text-xs px-1 py-2 min-w-0 sm:text-sm sm:px-2">
             <span className="hidden md:inline">Needs Inventory</span>
             <span className="md:hidden truncate">Inventory</span>
+          </TabsTrigger>
+          <TabsTrigger value="flow-editor" className="text-xs px-1 py-2 min-w-0 sm:text-sm sm:px-2">
+            <span className="hidden sm:inline">Flow Editor</span>
+            <span className="sm:hidden truncate">Flow</span>
           </TabsTrigger>
           {canAccessImportTools && (
             <TabsTrigger value="ai-tools" className="text-xs px-1 py-2 min-w-0 sm:text-sm sm:px-2 
@@ -285,6 +290,10 @@ export const LibraryManagement = () => {
             )} 
             onRefresh={fetchSheetMusic} 
           />
+        </TabsContent>
+        
+        <TabsContent value="flow-editor" className="space-y-4">
+          <MusicFlowEditor />
         </TabsContent>
         
         {canAccessImportTools && (
