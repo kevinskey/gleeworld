@@ -213,6 +213,14 @@ export const DashboardModulesSection = () => {
   ];
 
   const filterModule = (module: Module) => {
+    console.log('DashboardModulesSection: Filtering module:', module.name, {
+      requiresPRAccess: module.requiresPRAccess,
+      canAccessPR,
+      requiresAdmin: module.requiresAdmin,
+      isAdmin,
+      requiresExecutive: module.requiresExecutive,
+      isExecutive
+    });
     if (module.requiresPRAccess && !canAccessPR) return false;
     if (module.requiresAdmin && !isAdmin) return false;
     if (module.requiresExecutive && !isExecutive && !isAdmin) return false;
