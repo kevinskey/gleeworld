@@ -4,10 +4,10 @@ export const RequestTracker = () => {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Track requests from initial inquiry through completion and payment
+        Track reimbursement requests from submission through approval and payment
       </p>
       <div className="text-center py-8 text-muted-foreground">
-        Request tracking system coming soon...
+        Reimbursement tracking system coming soon...
       </div>
     </div>
   );
