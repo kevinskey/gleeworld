@@ -127,3 +127,6 @@ verify_jwt = false
 
 [functions.generate-musicxml]
 verify_jwt = true
+
+[functions.test-openai]
+verify_jwt = true

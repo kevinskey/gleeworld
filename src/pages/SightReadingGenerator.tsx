@@ -131,6 +131,37 @@ const SightReadingGeneratorPage = () => {
     return true;
   };
 
+  const testOpenAI = async () => {
+    try {
+      console.log('Testing OpenAI connection...');
+      const { data, error } = await supabase.functions.invoke('test-openai');
+      
+      if (error) {
+        console.error('Test function error:', error);
+        toast({
+          title: "Test Failed",
+          description: `Error: ${error.message}`,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      console.log('Test function response:', data);
+      toast({
+        title: data.success ? "OpenAI Test Successful" : "OpenAI Test Failed",
+        description: data.message || JSON.stringify(data),
+        variant: data.success ? "default" : "destructive"
+      });
+    } catch (error) {
+      console.error('Test error:', error);
+      toast({
+        title: "Test Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
   const generateExercise = async () => {
     setIsGenerating(true);
     setGeneratedMusicXML('');
@@ -319,6 +350,15 @@ const SightReadingGeneratorPage = () => {
                 >
                   <RefreshCw className={`h-4 w-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
                   {isGenerating ? "Generating..." : "Generate Exercise"}
+                </Button>
+                
+                <Button
+                  onClick={testOpenAI}
+                  variant="outline"
+                  className="w-full"
+                  size="sm"
+                >
+                  Test OpenAI Connection
                 </Button>
               </CardContent>
             </Card>
