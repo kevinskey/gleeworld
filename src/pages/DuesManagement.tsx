@@ -77,6 +77,10 @@ export const DuesManagement = () => {
 
   const fetchDuesRecords = async () => {
     try {
+      console.log('DuesManagement: Fetching dues records...');
+      console.log('DuesManagement: Current user:', user);
+      console.log('DuesManagement: User ID:', user?.id);
+      
       const { data, error } = await supabase
         .from('gw_dues_records')
         .select(`
@@ -88,13 +92,20 @@ export const DuesManagement = () => {
         `)
         .order('due_date', { ascending: false });
 
-      if (error) throw error;
+      console.log('DuesManagement: Dues query result:', { data, error, recordCount: data?.length });
+
+      if (error) {
+        console.error('DuesManagement: Error fetching dues records:', error);
+        throw error;
+      }
+      
+      console.log('DuesManagement: Successfully set dues records:', data?.length || 0);
       setDuesRecords(data || []);
-    } catch (error) {
-      console.error('Error fetching dues records:', error);
+    } catch (error: any) {
+      console.error('DuesManagement: Catch block - Error fetching dues records:', error);
       toast({
         title: "Error",
-        description: "Failed to load dues records",
+        description: `Failed to load dues records: ${error.message || 'Unknown error'}`,
         variant: "destructive"
       });
     }
