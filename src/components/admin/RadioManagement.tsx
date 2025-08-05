@@ -28,6 +28,7 @@ import {
   Filter,
   ArrowUpDown
 } from 'lucide-react';
+import { RadioTimeline } from '../radio/RadioTimeline';
 
 interface AudioTrack {
   id: string;
@@ -451,13 +452,25 @@ export const RadioManagement = () => {
       </div>
 
       {/* Radio Management Tabs */}
-      <Tabs defaultValue="tracks" className="w-full">
+      <Tabs defaultValue="schedule" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="tracks">Track Library</TabsTrigger>
           <TabsTrigger value="schedule">Schedule</TabsTrigger>
+          <TabsTrigger value="tracks">Track Library</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="schedule" className="mt-6">
+          <RadioTimeline 
+            onTrackScheduled={(track) => {
+              console.log('Track scheduled:', track);
+              toast({
+                title: "Track Scheduled",
+                description: `"${track.title}" scheduled for ${track.scheduledTime}`,
+              });
+            }}
+          />
+        </TabsContent>
 
         <TabsContent value="tracks" className="mt-6">
           <Card>
@@ -537,7 +550,15 @@ export const RadioManagement = () => {
               <ScrollArea className="h-[400px]">
                 <div className="space-y-3">
                   {filteredTracks.map((track) => (
-                    <Card key={track.id} className="hover:shadow-md transition-shadow">
+                    <Card 
+                      key={track.id} 
+                      className="hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing"
+                      draggable={true}
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('application/json', JSON.stringify(track));
+                        e.dataTransfer.effectAllowed = 'copy';
+                      }}
+                    >
                       <CardContent className="pt-4">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -608,22 +629,6 @@ export const RadioManagement = () => {
                   )}
                 </div>
               </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="schedule" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Broadcast Schedule
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                Broadcast scheduling feature coming soon
-              </div>
             </CardContent>
           </Card>
         </TabsContent>

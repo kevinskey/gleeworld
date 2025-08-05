@@ -1,386 +1,228 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Clock, 
+  Calendar, 
   Play, 
-  Pause, 
-  Music, 
-  Calendar,
-  RotateCcw,
-  Save
+  Trash2,
+  Volume2
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 
-interface MusicTrack {
+interface AudioTrack {
   id: string;
   title: string;
-  artist: string;
-  duration: number;
+  artist_info: string | null;
   audio_url: string;
-  category?: string;
+  category: string;
+  duration_seconds: number | null;
+  play_count: number;
+  is_public: boolean;
+  created_at: string;
 }
 
-interface TimeSlot {
-  id: string;
-  startTime: Date;
-  endTime: Date;
-  track?: MusicTrack;
-  duration: number; // in minutes
+interface ScheduledTrack extends AudioTrack {
+  scheduledTime: string;
+  scheduledDate: string;
 }
 
 interface RadioTimelineProps {
-  playlist: MusicTrack[];
-  onScheduleUpdate?: (schedule: TimeSlot[]) => void;
-  currentTrack?: string;
-  isPlaying?: boolean;
+  onTrackScheduled?: (track: ScheduledTrack) => void;
 }
 
-export const RadioTimeline = ({ 
-  playlist, 
-  onScheduleUpdate, 
-  currentTrack, 
-  isPlaying 
-}: RadioTimelineProps) => {
-  const [schedule, setSchedule] = useState<TimeSlot[]>([]);
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [draggedTrack, setDraggedTrack] = useState<MusicTrack | null>(null);
-  const [startTime, setStartTime] = useState(new Date());
-  const { toast } = useToast();
-  const timelineRef = useRef<HTMLDivElement>(null);
+export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
+  const [scheduledTracks, setScheduledTracks] = useState<ScheduledTrack[]>([]);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // Generate time slots for next 4 hours in 5-minute intervals
-  useEffect(() => {
-    generateTimeSlots();
-  }, [startTime]);
-
-  // Update current time every minute
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
-    return () => clearInterval(interval);
-  }, []);
-
+  // Generate time slots for 24 hours (every 30 minutes)
   const generateTimeSlots = () => {
-    const slots: TimeSlot[] = [];
-    const totalSlots = 48; // 4 hours * 12 slots per hour (5-minute intervals)
-    
-    for (let i = 0; i < totalSlots; i++) {
-      const slotStart = new Date(startTime.getTime() + (i * 5 * 60 * 1000));
-      const slotEnd = new Date(slotStart.getTime() + (5 * 60 * 1000));
-      
-      slots.push({
-        id: `slot-${i}`,
-        startTime: slotStart,
-        endTime: slotEnd,
-        duration: 5
-      });
+    const slots = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        slots.push(timeString);
+      }
     }
+    return slots;
+  };
+
+  const timeSlots = generateTimeSlots();
+
+  const handleDrop = (e: React.DragEvent, timeSlot: string) => {
+    e.preventDefault();
+    const trackData = e.dataTransfer.getData('application/json');
     
-    setSchedule(slots);
-  };
+    if (trackData) {
+      try {
+        const track: AudioTrack = JSON.parse(trackData);
+        const scheduledTrack: ScheduledTrack = {
+          ...track,
+          scheduledTime: timeSlot,
+          scheduledDate: selectedDate
+        };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: true 
-    });
-  };
+        // Check if slot is already occupied
+        const existingTrack = scheduledTracks.find(
+          t => t.scheduledTime === timeSlot && t.scheduledDate === selectedDate
+        );
 
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
+        if (existingTrack) {
+          // Replace existing track
+          setScheduledTracks(prev => prev.map(t => 
+            t.scheduledTime === timeSlot && t.scheduledDate === selectedDate 
+              ? scheduledTrack 
+              : t
+          ));
+        } else {
+          // Add new track
+          setScheduledTracks(prev => [...prev, scheduledTrack]);
+        }
 
-  const handleDragStart = (track: MusicTrack) => {
-    setDraggedTrack(track);
+        onTrackScheduled?.(scheduledTrack);
+      } catch (error) {
+        console.error('Error parsing dropped track data:', error);
+      }
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
 
-  const handleDrop = (e: React.DragEvent, slotId: string) => {
-    e.preventDefault();
-    
-    if (!draggedTrack) return;
-
-    const updatedSchedule = schedule.map(slot => {
-      if (slot.id === slotId) {
-        return { ...slot, track: draggedTrack };
-      }
-      return slot;
-    });
-
-    setSchedule(updatedSchedule);
-    setDraggedTrack(null);
-    
-    if (onScheduleUpdate) {
-      onScheduleUpdate(updatedSchedule);
-    }
-
-    toast({
-      title: "Track Scheduled",
-      description: `"${draggedTrack.title}" scheduled for ${formatTime(updatedSchedule.find(s => s.id === slotId)?.startTime || new Date())}`,
-    });
-  };
-
-  const removeTrackFromSlot = (slotId: string) => {
-    const updatedSchedule = schedule.map(slot => {
-      if (slot.id === slotId) {
-        return { ...slot, track: undefined };
-      }
-      return slot;
-    });
-
-    setSchedule(updatedSchedule);
-    
-    if (onScheduleUpdate) {
-      onScheduleUpdate(updatedSchedule);
-    }
-  };
-
-  const isCurrentTimeSlot = (slot: TimeSlot) => {
-    return currentTime >= slot.startTime && currentTime < slot.endTime;
-  };
-
-  const isPastTimeSlot = (slot: TimeSlot) => {
-    return currentTime > slot.endTime;
-  };
-
-  const resetTimeline = () => {
-    setStartTime(new Date());
-    generateTimeSlots();
-    toast({
-      title: "Timeline Reset",
-      description: "Timeline has been reset to current time",
-    });
-  };
-
-  const autoSchedulePlaylist = () => {
-    if (playlist.length === 0) {
-      toast({
-        title: "No Tracks",
-        description: "Add tracks to the playlist first",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const updatedSchedule = [...schedule];
-    let trackIndex = 0;
-    
-    // Find the first available slot (current time or later)
-    const availableSlots = updatedSchedule.filter(slot => 
-      !isPastTimeSlot(slot) && !slot.track
+  const removeScheduledTrack = (timeSlot: string) => {
+    setScheduledTracks(prev => 
+      prev.filter(track => !(track.scheduledTime === timeSlot && track.scheduledDate === selectedDate))
     );
+  };
 
-    availableSlots.forEach((slot, index) => {
-      if (trackIndex < playlist.length) {
-        slot.track = playlist[trackIndex];
-        trackIndex++;
-      }
-    });
+  const getScheduledTrack = (timeSlot: string) => {
+    return scheduledTracks.find(
+      track => track.scheduledTime === timeSlot && track.scheduledDate === selectedDate
+    );
+  };
 
-    setSchedule(updatedSchedule);
-    
-    if (onScheduleUpdate) {
-      onScheduleUpdate(updatedSchedule);
+  const formatDuration = (seconds: number | null) => {
+    if (!seconds) return 'Unknown';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'performance': return 'bg-blue-100 text-blue-800';
+      case 'announcement': return 'bg-green-100 text-green-800';
+      case 'interlude': return 'bg-purple-100 text-purple-800';
+      case 'alumni_story': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
-
-    toast({
-      title: "Auto-Scheduled",
-      description: `${Math.min(playlist.length, availableSlots.length)} tracks scheduled`,
-    });
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header Controls */}
+    <div className="space-y-4">
+      {/* Date Selector */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-brand-600" />
-            Radio Timeline - 5 Minute Intervals
+            <Calendar className="h-5 w-5" />
+            Broadcast Schedule
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-3">
-            <Button 
-              onClick={resetTimeline}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <RotateCcw className="h-4 w-4" />
-              Reset to Now
-            </Button>
-            <Button 
-              onClick={autoSchedulePlaylist}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <Calendar className="h-4 w-4" />
-              Auto-Schedule Playlist
-            </Button>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              Current Time: {formatTime(currentTime)}
-            </div>
+          <div className="flex items-center gap-4">
+            <label className="text-sm font-medium">Date:</label>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="px-3 py-2 border border-border rounded-md bg-background"
+            />
+            <Badge variant="outline" className="flex items-center gap-1">
+              <Volume2 className="h-3 w-3" />
+              {scheduledTracks.filter(t => t.scheduledDate === selectedDate).length} tracks scheduled
+            </Badge>
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Playlist Tracks */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Music className="h-5 w-5 text-brand-600" />
-              Available Tracks ({playlist.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-96">
-              {playlist.length > 0 ? (
-                <div className="space-y-2">
-                  {playlist.map((track) => (
-                    <div
-                      key={track.id}
-                      draggable
-                      onDragStart={() => handleDragStart(track)}
-                      className="p-3 border border-border rounded-lg cursor-move hover:bg-accent hover:border-brand-300 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Music className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{track.title}</p>
-                          <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
-                        </div>
-                        <Badge variant="outline" className="text-xs">
-                          {formatDuration(track.duration)}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Music className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground">No tracks in playlist</p>
-                  <p className="text-xs text-muted-foreground">Add tracks to start scheduling</p>
-                </div>
-              )}
-            </ScrollArea>
-          </CardContent>
-        </Card>
-
-        {/* Timeline */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-brand-600" />
-              Schedule Timeline
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-96" ref={timelineRef}>
-              <div className="space-y-1">
-                {schedule.map((slot) => (
+      {/* Timeline */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            Timeline - {selectedDate}
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Drag MP3 tracks from the library above to schedule them on the timeline
+          </p>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[500px]">
+            <div className="space-y-2">
+              {timeSlots.map((timeSlot) => {
+                const scheduledTrack = getScheduledTrack(timeSlot);
+                
+                return (
                   <div
-                    key={slot.id}
+                    key={timeSlot}
+                    className={`flex items-center gap-4 p-3 border border-dashed border-border/50 rounded-lg transition-colors ${
+                      scheduledTrack 
+                        ? 'bg-primary/5 border-primary/30' 
+                        : 'hover:bg-muted/30 hover:border-primary/20'
+                    }`}
+                    onDrop={(e) => handleDrop(e, timeSlot)}
                     onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, slot.id)}
-                    className={`
-                      p-3 border rounded-lg transition-all
-                      ${isCurrentTimeSlot(slot) 
-                        ? 'border-brand-500 bg-brand-50 shadow-md' 
-                        : isPastTimeSlot(slot)
-                        ? 'border-muted bg-muted/50 opacity-60'
-                        : 'border-border hover:border-brand-300 hover:bg-accent/50'
-                      }
-                      ${!slot.track ? 'border-dashed' : ''}
-                    `}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="text-sm font-medium min-w-0">
-                          {formatTime(slot.startTime)}
-                          <span className="text-xs text-muted-foreground ml-1">
-                            - {formatTime(slot.endTime)}
-                          </span>
-                        </div>
-                        
-                        {slot.track ? (
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <Play className="h-3 w-3 text-brand-600" />
-                              <div className="min-w-0">
-                                <p className="font-medium text-sm truncate">{slot.track.title}</p>
-                                <p className="text-xs text-muted-foreground truncate">{slot.track.artist}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex-1 text-center text-muted-foreground text-sm py-2 border-2 border-dashed border-muted rounded">
-                            Drop track here
-                          </div>
-                        )}
-                      </div>
+                    {/* Time Label */}
+                    <div className="w-16 flex-shrink-0">
+                      <Badge variant="outline" className="font-mono">
+                        {timeSlot}
+                      </Badge>
+                    </div>
 
-                      <div className="flex items-center gap-2">
-                        {isCurrentTimeSlot(slot) && (
-                          <Badge variant="default" className="bg-brand-500 text-xs">
-                            Now Playing
-                          </Badge>
-                        )}
-                        {slot.track && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => removeTrackFromSlot(slot.id)}
-                            className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                          >
-                            ×
-                          </Button>
-                        )}
-                      </div>
+                    {/* Track Slot */}
+                    <div className="flex-1">
+                      {scheduledTrack ? (
+                        <div className="flex items-center justify-between bg-card/50 p-3 rounded-md border">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-medium text-sm">{scheduledTrack.title}</h4>
+                              <Badge className={getCategoryColor(scheduledTrack.category)}>
+                                {scheduledTrack.category}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Artist: {scheduledTrack.artist_info || 'Unknown'} • 
+                              Duration: {formatDuration(scheduledTrack.duration_seconds)}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="ghost">
+                              <Play className="h-3 w-3" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => removeScheduledTrack(timeSlot)}
+                              className="hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-8 text-center text-muted-foreground text-sm border-2 border-dashed border-border/30 rounded-md">
+                          Drop MP3 track here to schedule for {timeSlot}
+                        </div>
+                      )}
                     </div>
                   </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Timeline Legend */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-wrap gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-dashed border-muted rounded"></div>
-              <span className="text-muted-foreground">Empty Slot</span>
+                );
+              })}
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border border-brand-500 bg-brand-50 rounded"></div>
-              <span className="text-muted-foreground">Current Time</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border border-muted bg-muted/50 rounded"></div>
-              <span className="text-muted-foreground">Past Time</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border border-border rounded"></div>
-              <span className="text-muted-foreground">Scheduled</span>
-            </div>
-          </div>
+          </ScrollArea>
         </CardContent>
       </Card>
     </div>
