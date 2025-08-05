@@ -21,6 +21,14 @@ export const SightReadingUploader = () => {
     }
   };
 
+  const referenceMelody = [
+    { "note": "C4", "time": 0.0 },
+    { "note": "D4", "time": 0.5 },
+    { "note": "E4", "time": 1.0 },
+    { "note": "F4", "time": 1.5 },
+    { "note": "G4", "time": 2.0 }
+  ];
+
   const handleSubmit = async () => {
     if (!selectedFile) return;
 
@@ -32,6 +40,7 @@ export const SightReadingUploader = () => {
       
       const formData = new FormData();
       formData.append('audio', selectedFile);
+      formData.append('reference', JSON.stringify(referenceMelody));
 
       // Use Supabase Edge Function instead of direct call to droplet
       const { data, error } = await supabase.functions.invoke('analyze-audio', {

@@ -44,12 +44,14 @@ serve(async (req) => {
     }
 
     const audioFile = formData.get('audio') as File
+    const referenceData = formData.get('reference') as string
     
     console.log('Form data parsed:', {
       audioFileName: audioFile?.name,
       audioFileSize: audioFile?.size,
       audioFileType: audioFile?.type,
-      hasAudioFile: !!audioFile
+      hasAudioFile: !!audioFile,
+      hasReference: !!referenceData
     })
 
     if (!audioFile) {
@@ -66,6 +68,10 @@ serve(async (req) => {
     // Create new FormData for the droplet server
     const serverFormData = new FormData()
     serverFormData.append('file', audioFile, audioFile.name)
+    
+    if (referenceData) {
+      serverFormData.append('reference', referenceData)
+    }
 
     console.log('Forwarding to droplet server at 134.199.204.155:4000/analyze...')
 
