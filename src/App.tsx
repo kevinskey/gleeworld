@@ -120,9 +120,10 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!user) {
-    // Store the current path to redirect back after login
+    // Store the current path to redirect back after login, but only if it's not the root path
     const currentPath = window.location.pathname + window.location.search;
-    if (currentPath !== '/auth' && currentPath !== '/') {
+    if (currentPath !== '/auth' && currentPath !== '/' && !currentPath.startsWith('/auth')) {
+      console.log('ProtectedRoute: Storing redirect path:', currentPath);
       sessionStorage.setItem('redirectAfterAuth', currentPath);
     }
     return <Navigate to="/auth" replace />;

@@ -29,11 +29,20 @@ const Auth = () => {
         sessionStorage.removeItem('redirectAfterAuth');
         navigate(redirectPath, { replace: true });
       } else {
-        // Redirect based on user role
-        const isUserAdmin = isAdmin();
-        const defaultPath = isUserAdmin ? '/admin' : '/dashboard';
-        console.log('Auth: No stored path, isUserAdmin:', isUserAdmin, 'redirecting to:', defaultPath);
-        navigate(defaultPath, { replace: true });
+        // Only redirect to default dashboard if user directly navigated to /auth
+        // Check if the current path is exactly /auth and not a refresh of another page
+        const currentPath = window.location.pathname;
+        const referrer = document.referrer;
+        
+        // If user is on /auth page specifically (not a refresh of another page)
+        if (currentPath === '/auth') {
+          const isUserAdmin = isAdmin();
+          const defaultPath = isUserAdmin ? '/admin' : '/dashboard';
+          console.log('Auth: User on /auth directly, isUserAdmin:', isUserAdmin, 'redirecting to:', defaultPath);
+          navigate(defaultPath, { replace: true });
+        }
+        // If they're on any other route and got redirected here due to auth check,
+        // let them stay on their intended route after authentication
       }
     } else {
       console.log('Auth redirect conditions not met:', {
