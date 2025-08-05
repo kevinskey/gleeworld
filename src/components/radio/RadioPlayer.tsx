@@ -72,6 +72,44 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
     }
   };
 
+  // Effect to handle audio source changes
+  useEffect(() => {
+    if (audioRef.current && currentTrack.audio_url) {
+      audioRef.current.src = currentTrack.audio_url;
+      audioRef.current.volume = volume / 100;
+      audioRef.current.load();
+      
+      // If radio was playing, continue playing the new track
+      if (isPlaying) {
+        // Small delay to allow the new source to load
+        setTimeout(() => {
+          if (audioRef.current) {
+            audioRef.current.play().catch(error => {
+              console.error('Error playing track:', error);
+              toast({
+                title: "Playback Error",
+                description: "Unable to play track. Trying next...",
+                variant: "destructive",
+              });
+              // Try next track on error
+              if (audioTracks.length > 1) {
+                const nextIndex = (currentTrackIndex + 1) % audioTracks.length;
+                const nextTrack = audioTracks[nextIndex];
+                setCurrentTrackIndex(nextIndex);
+                setCurrentTrack({
+                  title: nextTrack.title,
+                  artist: nextTrack.artist_info || 'Glee Club',
+                  category: 'Radio Stream',
+                  audio_url: nextTrack.audio_url
+                });
+              }
+            });
+          }
+        }, 100);
+      }
+    }
+  }, [currentTrack.audio_url, volume, isPlaying, audioTracks, currentTrackIndex, toast]);
+
   useEffect(() => {
     // Sync with external state if provided
     if (externalIsPlaying !== undefined) {
@@ -86,14 +124,8 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
     setIsPlaying(initialIsPlaying);
 
     // Initialize audio element
-    if (audioRef.current) {
-      audioRef.current.volume = volume / 100;
-      if (currentTrack.audio_url) {
-        audioRef.current.src = currentTrack.audio_url;
-        if (initialIsPlaying) {
-          audioRef.current.play().catch(console.error);
-        }
-      }
+    if (audioRef.current && currentTrack.audio_url && initialIsPlaying) {
+      audioRef.current.play().catch(console.error);
     }
 
     // Listen for radio state changes - use different event names
@@ -114,7 +146,7 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
     return () => {
       window.removeEventListener(eventName, handleRadioToggle as EventListener);
     };
-  }, [volume, currentTrack.audio_url, isPersonalRadio]);
+  }, [isPersonalRadio]);
 
   const playNextTrack = () => {
     if (audioTracks.length === 0) return;
@@ -123,12 +155,15 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
     const nextTrack = audioTracks[nextIndex];
     
     setCurrentTrackIndex(nextIndex);
-    setCurrentTrack({
+    const newTrack = {
       title: nextTrack.title,
       artist: nextTrack.artist_info || 'Glee Club',
       category: 'Radio Stream',
       audio_url: nextTrack.audio_url
-    });
+    };
+    setCurrentTrack(newTrack);
+    
+    // The useEffect will handle loading the new audio source automatically
   };
 
   const handleTogglePlay = () => {
@@ -199,20 +234,11 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
       {/* Hidden audio element */}
       <audio
         ref={audioRef}
-        src={currentTrack.audio_url}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onEnded={() => {
           // Auto play next track when current one ends
           playNextTrack();
-          if (isPlaying) {
-            // Small delay to allow track to change, then resume playing
-            setTimeout(() => {
-              if (audioRef.current) {
-                audioRef.current.play().catch(console.error);
-              }
-            }, 100);
-          }
         }}
         onError={(e) => {
           console.error('Audio error:', e);
