@@ -3,8 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Download, Music, Play } from 'lucide-react';
-import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
+import { Download, Music, Play, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Note {
@@ -29,8 +28,6 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
   const [musicXML, setMusicXML] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   
-  const sheetMusicRef = useRef<HTMLDivElement>(null);
-  const osmdRef = useRef<OpenSheetMusicDisplay | null>(null);
   const { toast } = useToast();
 
   const keys = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'F', 'Bb', 'Eb', 'Ab', 'Db'];
@@ -38,20 +35,103 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
     'C4-G4', 'C4-C5', 'G3-G4', 'F4-F5', 'E4-E5'
   ];
 
-  useEffect(() => {
-    if (sheetMusicRef.current && !osmdRef.current) {
-      osmdRef.current = new OpenSheetMusicDisplay(sheetMusicRef.current, {
-        autoResize: true,
-        backend: 'svg',
-        drawTitle: false,
-        drawComposer: false,
-        drawCredits: false,
-        pageFormat: 'A4_P',
-        pageBackgroundColor: '#FFFFFF',
-        renderSingleHorizontalStaffline: true
-      });
+  // Simple SVG music notation renderer
+  const renderMusicNotation = (melody: Note[]) => {
+    if (melody.length === 0) return null;
+    
+    const svgWidth = 800;
+    const svgHeight = 200;
+    const noteSpacing = 80;
+    const startX = 60;
+    const startY = 100;
+    
+    // Staff lines
+    const staffLines = [];
+    for (let i = 0; i < 5; i++) {
+      staffLines.push(
+        <line
+          key={`staff-${i}`}
+          x1={20}
+          y1={startY + i * 10}
+          x2={svgWidth - 20}
+          y2={startY + i * 10}
+          stroke="#000"
+          strokeWidth={1}
+        />
+      );
     }
-  }, []);
+    
+    // Clef (simplified treble clef symbol)
+    const trebleClef = (
+      <text
+        key="clef"
+        x={30}
+        y={startY + 20}
+        fontSize="24"
+        fontFamily="serif"
+        fill="#000"
+      >
+        𝄞
+      </text>
+    );
+    
+    // Note positions mapping
+    const notePositions: { [key: string]: number } = {
+      'G5': startY - 20, 'F5': startY - 15, 'E5': startY - 10, 'D5': startY - 5, 'C5': startY,
+      'B4': startY + 5, 'A4': startY + 10, 'G4': startY + 15, 'F4': startY + 20, 'E4': startY + 25,
+      'D4': startY + 30, 'C4': startY + 35, 'B3': startY + 40, 'A3': startY + 45, 'G3': startY + 50
+    };
+    
+    // Render notes
+    const notes = melody.slice(0, 16).map((note, index) => {
+      const x = startX + (index % 8) * noteSpacing;
+      const y = notePositions[note.note] || startY + 15;
+      const bar = Math.floor(index / 4);
+      const barX = x + (bar * 20); // Add spacing between bars
+      
+      return (
+        <g key={`note-${index}`}>
+          {/* Note head */}
+          <ellipse
+            cx={barX}
+            cy={y}
+            rx={6}
+            ry={4}
+            fill="#000"
+            transform={`rotate(-20 ${barX} ${y})`}
+          />
+          {/* Stem */}
+          <line
+            x1={barX + 5}
+            y1={y}
+            x2={barX + 5}
+            y2={y - 25}
+            stroke="#000"
+            strokeWidth={1.5}
+          />
+          {/* Ledger lines for notes outside staff */}
+          {(y < startY - 10 || y > startY + 50) && (
+            <line
+              x1={barX - 10}
+              y1={y}
+              x2={barX + 10}
+              y2={y}
+              stroke="#000"
+              strokeWidth={1}
+            />
+          )}
+        </g>
+      );
+    });
+    
+    return (
+      <svg width={svgWidth} height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`}>
+        {staffLines}
+        {trebleClef}
+        {notes}
+      </svg>
+    );
+  };
 
   const getNoteSequence = (range: string, key: string): string[] => {
     const notes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
@@ -138,7 +218,6 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
 </score-partwise>`;
     
     setMusicXML(xml);
-    displayMusic(xml);
   };
 
   const generateBars = (melody: Note[]) => {
@@ -180,22 +259,6 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
     return bars;
   };
 
-  const displayMusic = async (xml: string) => {
-    if (osmdRef.current && sheetMusicRef.current) {
-      try {
-        await osmdRef.current.load(xml);
-        osmdRef.current.render();
-      } catch (error) {
-        console.error('Error displaying music:', error);
-        toast({
-          title: "Display Error",
-          description: "Failed to display the generated music notation",
-          variant: "destructive"
-        });
-      }
-    }
-  };
-
   const downloadMusicXML = () => {
     if (!musicXML) return;
     
@@ -211,13 +274,14 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
   };
 
   const downloadPDF = async () => {
-    if (!sheetMusicRef.current) return;
+    const notation = document.querySelector('#music-notation-svg');
+    if (!notation) return;
     
     try {
       const { jsPDF } = await import('jspdf');
       const html2canvas = await import('html2canvas');
       
-      const canvas = await html2canvas.default(sheetMusicRef.current, {
+      const canvas = await html2canvas.default(notation as HTMLElement, {
         backgroundColor: '#ffffff',
         scale: 2
       });
@@ -227,20 +291,8 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
       const imgWidth = 210;
       const pageHeight = 295;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
       
-      let position = 0;
-      
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-      
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-      
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
       pdf.save(`sight-reading-${params.key}-${params.difficulty}.pdf`);
       
       toast({
@@ -346,6 +398,7 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
             disabled={isGenerating}
             className="w-full"
           >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
             {isGenerating ? "Generating..." : "Generate Melody"}
           </Button>
         </CardContent>
@@ -359,10 +412,11 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
             </CardHeader>
             <CardContent>
               <div 
-                ref={sheetMusicRef} 
-                className="bg-white p-4 rounded-md min-h-[300px] border"
-                style={{ minHeight: '300px' }}
-              />
+                id="music-notation-svg"
+                className="bg-white p-4 rounded-md border flex justify-center"
+              >
+                {renderMusicNotation(generatedMelody)}
+              </div>
               
               <div className="flex gap-2 mt-4">
                 <Button variant="outline" onClick={downloadMusicXML}>
