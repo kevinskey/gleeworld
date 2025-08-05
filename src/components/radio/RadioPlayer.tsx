@@ -141,12 +141,6 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
       return;
     }
 
-    // Call external toggle if provided
-    if (onToggle) {
-      onToggle();
-      return;
-    }
-
     const newState = !isPlaying;
     setIsPlaying(newState);
     
@@ -159,6 +153,11 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
     window.dispatchEvent(new CustomEvent(eventName, { 
       detail: { isPlaying: newState } 
     }));
+
+    // Call external toggle if provided (for parent state sync)
+    if (onToggle) {
+      onToggle();
+    }
 
     if (audioRef.current) {
       if (newState) {
