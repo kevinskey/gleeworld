@@ -39,18 +39,37 @@ export const usePublicGleeWorldEvents = () => {
       console.log('usePublicGleeWorldEvents: Starting fetch...');
       setLoading(true);
       
+      // Get current date and log it for debugging
+      const now = new Date();
+      const currentDate = now.toISOString();
+      console.log('Current date for filtering:', currentDate);
+      
       // Always filter to only show public events for the public calendar
+      // Use a date that's slightly in the past to account for timezone issues
+      const filterDate = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(); // 24 hours ago
+      
       const { data, error } = await supabase
         .from('gw_events')
-        .select('*')
+        .select(`
+          *,
+          gw_calendars (
+            name,
+            color,
+            is_visible
+          )
+        `)
         .eq('is_public', true)
-        .gte('start_date', new Date().toISOString())
+        .gte('start_date', filterDate)
         .order('start_date', { ascending: true });
 
       console.log('usePublicGleeWorldEvents: Query result', { 
         data: data?.length || 0, 
         error, 
-        firstEvent: data?.[0]?.title 
+        firstEvent: data?.[0]?.title,
+        query: {
+          is_public: true,
+          start_date_gte: new Date().toISOString()
+        }
       });
 
       if (error) throw error;

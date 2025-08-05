@@ -11,6 +11,9 @@ export const PublicCalendarViews = () => {
   const [activeView, setActiveView] = useState("month");
   const { events, loading, fetchEvents } = usePublicGleeWorldEvents();
 
+  // Debug logging
+  console.log('PublicCalendarViews render:', { events: events.length, loading });
+
   if (loading) {
     return (
       <Card>
@@ -20,6 +23,32 @@ export const PublicCalendarViews = () => {
         <CardContent>
           <div className="flex items-center justify-center py-8">
             <div className="animate-pulse">Loading public events...</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show events count for debugging
+  if (events.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Public Events Calendar</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <CalendarIcon className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No Public Events Found</h3>
+            <p className="text-muted-foreground">
+              There are currently no upcoming public events to display.
+            </p>
+            <button 
+              onClick={() => fetchEvents()} 
+              className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
+            >
+              Refresh Events
+            </button>
           </div>
         </CardContent>
       </Card>
