@@ -5,6 +5,7 @@ import { ContractsList } from '@/components/ContractsList';
 import { UserContractsList } from '@/components/user-dashboard/UserContractsList';
 import { ContractViewer } from '@/components/ContractViewer';
 import { DocumentUpload } from '@/components/DocumentUpload';
+import { ContractTemplates } from '@/components/ContractTemplates';
 import { useContracts } from '@/hooks/useContracts';
 import { FileText, Plus } from 'lucide-react';
 import type { Contract } from '@/hooks/useContracts';
@@ -50,9 +51,10 @@ export const ContractManager = ({ user }: ContractManagerProps) => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="all">All Contracts</TabsTrigger>
           <TabsTrigger value="user">My Contracts</TabsTrigger>
+          <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="create">Create New</TabsTrigger>
         </TabsList>
 
@@ -81,6 +83,12 @@ export const ContractManager = ({ user }: ContractManagerProps) => {
               <UserContractsList />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="templates" className="space-y-6">
+          <ContractTemplates 
+            onContractCreated={refetch}
+          />
         </TabsContent>
 
         <TabsContent value="create" className="space-y-6">
