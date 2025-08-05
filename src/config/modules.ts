@@ -37,6 +37,7 @@ import { StudentIntakeModule } from '@/components/modules/StudentIntakeModule';
 import { AttendanceModule } from '@/components/modules/AttendanceModule';
 import { TermManagerModule } from '@/components/modules/TermManagerModule';
 import { TourManagerModule } from '@/components/modules/TourManagerModule';
+import { BookingFormsModule } from '@/components/modules/BookingFormsModule';
 import { ModuleCategory } from '@/types/modules';
 
 export const moduleCategories: ModuleCategory[] = [
@@ -146,6 +147,15 @@ export const moduleCategories: ModuleCategory[] = [
         iconColor: "blue",
         category: "tours",
         component: TourManagerModule,
+      },
+      {
+        id: "booking-forms",
+        title: "Booking Forms",
+        description: "Manage performance requests and booking inquiries from external organizations",
+        icon: FileText,
+        iconColor: "cyan",
+        category: "tours",
+        component: BookingFormsModule,
       }
     ]
   },
