@@ -356,6 +356,53 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
     }
   };
 
+  // Add function to load custom melody
+  const loadCustomMelody = () => {
+    const customMelody: Note[] = [
+      { "note": "D4", "time": 0, "duration": 0.5 },
+      { "note": "F4", "time": 0.5, "duration": 0.5 },
+      { "note": "G4", "time": 1, "duration": 0.5 },
+      { "note": "E4", "time": 1.5, "duration": 0.5 },
+      { "note": "D4", "time": 2, "duration": 0.5 },
+      { "note": "E4", "time": 2.5, "duration": 0.5 },
+      { "note": "F4", "time": 3, "duration": 0.5 },
+      { "note": "E4", "time": 3.5, "duration": 0.5 },
+      { "note": "G4", "time": 4, "duration": 0.5 },
+      { "note": "F4", "time": 4.5, "duration": 0.5 },
+      { "note": "D4", "time": 5, "duration": 0.5 },
+      { "note": "C4", "time": 5.5, "duration": 0.5 },
+      { "note": "C4", "time": 6, "duration": 0.5 },
+      { "note": "C4", "time": 6.5, "duration": 0.5 },
+      { "note": "D4", "time": 7, "duration": 0.5 },
+      { "note": "E4", "time": 7.5, "duration": 0.5 },
+      { "note": "F4", "time": 8, "duration": 0.5 },
+      { "note": "D4", "time": 8.5, "duration": 0.5 },
+      { "note": "C4", "time": 9, "duration": 0.5 },
+      { "note": "E4", "time": 9.5, "duration": 0.5 },
+      { "note": "D4", "time": 10, "duration": 0.5 },
+      { "note": "C4", "time": 10.5, "duration": 0.5 },
+      { "note": "C4", "time": 11, "duration": 0.5 },
+      { "note": "C4", "time": 11.5, "duration": 0.5 },
+      { "note": "C4", "time": 12, "duration": 0.5 },
+      { "note": "C4", "time": 12.5, "duration": 0.5 },
+      { "note": "C4", "time": 13, "duration": 0.5 },
+      { "note": "E4", "time": 13.5, "duration": 0.5 },
+      { "note": "D4", "time": 14, "duration": 0.5 },
+      { "note": "C4", "time": 14.5, "duration": 0.5 },
+      { "note": "C4", "time": 15, "duration": 0.5 },
+      { "note": "C4", "time": 15.5, "duration": 0.5 }
+    ];
+    
+    console.log('Loading custom melody with', customMelody.length, 'notes');
+    setGeneratedMelody(customMelody);
+    generateMusicXML(customMelody);
+    
+    toast({
+      title: "Custom Melody Loaded",
+      description: `Loaded ${customMelody.length} notes from reference melody`
+    });
+  };
+
   const handleStartSightReading = () => {
     if (generatedMelody.length === 0) {
       toast({
@@ -440,14 +487,26 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
             </div>
           </div>
 
-          <Button
-            onClick={generateMelody}
-            disabled={isGenerating}
-            className="w-full"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
-            {isGenerating ? "Generating..." : "Generate Melody"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={generateMelody}
+              disabled={isGenerating}
+              className="flex-1"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
+              {isGenerating ? "Generating..." : "Generate Random Melody"}
+            </Button>
+            
+            <Button
+              onClick={loadCustomMelody}
+              disabled={isGenerating}
+              variant="outline"
+              className="flex-1"
+            >
+              <Music className="h-4 w-4 mr-2" />
+              Load Reference Melody
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
