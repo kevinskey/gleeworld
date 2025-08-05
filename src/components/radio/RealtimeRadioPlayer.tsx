@@ -241,7 +241,12 @@ export const RealtimeRadioPlayer = ({ className = '' }: RealtimeRadioPlayerProps
   };
 
   const handleTogglePlay = async () => {
+    console.log('RealtimeRadioPlayer: Toggle play clicked, current state:', radioState?.is_playing);
+    console.log('RealtimeRadioPlayer: Audio tracks available:', audioTracks.length);
+    console.log('RealtimeRadioPlayer: Current radio state:', radioState);
+    
     if (!radioState || !audioTracks.length) {
+      console.log('RealtimeRadioPlayer: No radio state or tracks available');
       toast({
         title: "No Audio Available",
         description: "No tracks available to play",
