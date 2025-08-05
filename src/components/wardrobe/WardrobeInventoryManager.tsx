@@ -187,30 +187,30 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 lg:space-y-8">
       {/* Header */}
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 lg:gap-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Wardrobe Inventory</h2>
-            <p className="text-muted-foreground">Manage dresses, accessories, and garment bags</p>
+            <h2 className="text-xl lg:text-3xl font-bold tracking-tight">Wardrobe Inventory</h2>
+            <p className="text-sm lg:text-base text-muted-foreground">Manage dresses, accessories, and garment bags</p>
           </div>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="lg" className="shadow-sm">
-                <Plus className="h-5 w-5 mr-2" />
+              <Button size="sm" className="shadow-sm lg:size-lg w-full lg:w-auto">
+                <Plus className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
                 Add New Item
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-[95vw] lg:max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-2xl">Add New Inventory Item</DialogTitle>
-                <DialogDescription className="text-base">
+                <DialogTitle className="text-lg lg:text-2xl">Add New Inventory Item</DialogTitle>
+                <DialogDescription className="text-sm lg:text-base">
                   Add a new item to the wardrobe inventory with detailed specifications
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="category">Category</Label>
                     <Select name="category" required>
@@ -270,7 +270,7 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
                   <Label htmlFor="notes">Notes</Label>
                   <Textarea name="notes" placeholder="Additional notes..." />
                 </div>
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-col lg:flex-row justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                     Cancel
                   </Button>
@@ -284,10 +284,10 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
         </div>
 
         {/* Filter and Actions Bar */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-6 bg-muted/30 rounded-lg border">
-          <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 p-4 lg:p-6 bg-muted/30 rounded-lg border">
+          <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-64">
+              <SelectTrigger className="w-full sm:w-64">
                 <SelectValue placeholder="Filter by category" />
               </SelectTrigger>
               <SelectContent>
@@ -304,31 +304,35 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
             </Select>
           </div>
 
-          <div className="flex gap-3">
-            <Button variant="outline" className="shadow-sm">
+          <div className="flex flex-col sm:flex-row gap-2 lg:gap-3 w-full sm:w-auto">
+            <Button variant="outline" className="shadow-sm text-sm lg:text-base">
               <Upload className="h-4 w-4 mr-2" />
-              Import CSV
+              <span className="hidden sm:inline">Import CSV</span>
+              <span className="sm:hidden">Import</span>
             </Button>
-            <Button variant="outline" className="shadow-sm">
+            <Button variant="outline" className="shadow-sm text-sm lg:text-base">
               <Download className="h-4 w-4 mr-2" />
-              Export Data
+              <span className="hidden sm:inline">Export Data</span>
+              <span className="sm:hidden">Export</span>
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Inventory Grid */}
+      {/* Inventory Table */}
       <Card className="shadow-sm border-0 bg-background">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-3 text-xl">
-            <Package className="h-6 w-6 text-primary" />
-            Inventory Items
-            <Badge variant="secondary" className="ml-2 px-3 py-1">
+        <CardHeader className="pb-2 lg:pb-4 px-4 lg:px-6">
+          <CardTitle className="flex flex-col sm:flex-row sm:items-center gap-2 lg:gap-3 text-lg lg:text-xl">
+            <div className="flex items-center gap-2 lg:gap-3">
+              <Package className="h-5 w-5 lg:h-6 lg:w-6 text-primary" />
+              <span>Inventory Items</span>
+            </div>
+            <Badge variant="secondary" className="px-2 lg:px-3 py-1 text-xs lg:text-sm w-fit">
               {filteredItems.length} items
             </Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-0">
+        <CardContent className="p-0">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <Package className="h-12 w-12 mb-4 animate-pulse" />
@@ -343,13 +347,13 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader>
+                <TableHeader className="hidden lg:table-header-group">
                   <TableRow className="border-b">
-                    <TableHead className="font-semibold text-foreground pl-6">Category & Item</TableHead>
+                    <TableHead className="font-semibold text-foreground pl-4 lg:pl-6">Category & Item</TableHead>
                     <TableHead className="font-semibold text-foreground">Specifications</TableHead>
                     <TableHead className="font-semibold text-foreground">Stock</TableHead>
                     <TableHead className="font-semibold text-foreground">Condition</TableHead>
-                    <TableHead className="font-semibold text-foreground pr-6">Actions</TableHead>
+                    <TableHead className="font-semibold text-foreground pr-4 lg:pr-6">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -358,7 +362,92 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
                     const stockStatus = getStockStatus(item);
                     return (
                       <TableRow key={item.id} className="hover:bg-muted/30 transition-colors">
-                        <TableCell className="pl-6">
+                        {/* Mobile Card Layout */}
+                        <TableCell className="lg:hidden p-4 border-b" colSpan={5}>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-lg bg-muted/50">
+                                <CategoryIcon className="h-4 w-4 text-primary" />
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-semibold text-foreground text-sm">{item.item_name}</p>
+                                <p className="text-xs text-muted-foreground capitalize">
+                                  {item.category.replace('-', ' ')}
+                                </p>
+                              </div>
+                              <div className="flex gap-1">
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted">
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive">
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                            
+                            {/* Mobile specs */}
+                            {(item.size_available && item.size_available.length > 0) || (item.color_available && item.color_available.length > 0) ? (
+                              <div className="space-y-2">
+                                {item.size_available && item.size_available.length > 0 && (
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-medium text-muted-foreground w-12">Sizes:</span>
+                                    <div className="flex gap-1 flex-wrap">
+                                      {item.size_available.slice(0, 3).map((size, idx) => (
+                                        <Badge key={idx} variant="outline" className="text-xs px-1.5 py-0">
+                                          {size}
+                                        </Badge>
+                                      ))}
+                                      {item.size_available.length > 3 && (
+                                        <Badge variant="outline" className="text-xs px-1.5 py-0">
+                                          +{item.size_available.length - 3}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                                {item.color_available && item.color_available.length > 0 && (
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-medium text-muted-foreground w-12">Colors:</span>
+                                    <div className="flex gap-1 flex-wrap">
+                                      {item.color_available.slice(0, 2).map((color, idx) => (
+                                        <Badge key={idx} variant="outline" className="text-xs px-1.5 py-0">
+                                          {color}
+                                        </Badge>
+                                      ))}
+                                      {item.color_available.length > 2 && (
+                                        <Badge variant="outline" className="text-xs px-1.5 py-0">
+                                          +{item.color_available.length - 2}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ) : null}
+                            
+                            {/* Mobile stock and condition */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Badge className={`${stockStatus.color} border font-medium px-2 py-1 text-xs`}>
+                                  {stockStatus.status}
+                                </Badge>
+                                <div className="text-xs">
+                                  <span className="font-medium">{item.quantity_available}</span>
+                                  <span className="text-muted-foreground">/{item.quantity_total}</span>
+                                </div>
+                                {(stockStatus.status === "Low Stock" || stockStatus.status === "Out of Stock") && (
+                                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                                )}
+                              </div>
+                              <Badge className={`${getConditionColor(item.condition)} border font-medium px-2 py-1 text-xs capitalize`}>
+                                {item.condition}
+                              </Badge>
+                            </div>
+                          </div>
+                        </TableCell>
+                        
+                        {/* Desktop Table Layout */}
+                        <TableCell className="hidden lg:table-cell pl-6">
                           <div className="flex items-center gap-4">
                             <div className="p-2 rounded-lg bg-muted/50">
                               <CategoryIcon className="h-5 w-5 text-primary" />
@@ -371,7 +460,7 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <div className="space-y-1">
                             {item.size_available && item.size_available.length > 0 && (
                               <div className="flex items-center gap-2">
@@ -409,7 +498,7 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <div className="flex items-center gap-3">
                             <Badge className={`${stockStatus.color} border font-medium px-3 py-1`}>
                               {stockStatus.status}
@@ -423,12 +512,12 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <Badge className={`${getConditionColor(item.condition)} border font-medium px-3 py-1 capitalize`}>
                             {item.condition}
                           </Badge>
                         </TableCell>
-                        <TableCell className="pr-6">
+                        <TableCell className="hidden lg:table-cell pr-6">
                           <div className="flex items-center gap-2">
                             <Button variant="ghost" size="sm" className="h-9 w-9 p-0 hover:bg-muted">
                               <Edit className="h-4 w-4" />
