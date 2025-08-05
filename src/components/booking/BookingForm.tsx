@@ -188,13 +188,16 @@ export const BookingForm: React.FC = () => {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8 relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-brand-400/10 via-brand-600/5 to-brand-400/10 rounded-2xl blur-3xl"></div>
-          <div className="relative bg-card/80 backdrop-blur-sm border border-brand-200 rounded-2xl p-8 shadow-glass">
-            <h1 className="text-4xl font-dancing font-bold text-brand-600 mb-4">
-              Spelman College Glee Club
-            </h1>
-            <h2 className="text-2xl font-bold text-brand-500 mb-4">Performance Booking Request</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          <div className="absolute inset-0 bg-gradient-to-r from-brand-400/20 via-brand-600/10 to-brand-400/20 rounded-3xl blur-3xl"></div>
+          <div className="relative bg-card/90 backdrop-blur-sm border-2 border-brand-300 rounded-3xl p-10 shadow-glass">
+            <div className="mb-6">
+              <h1 className="text-5xl font-dancing font-bold text-brand-600 mb-2">
+                Spelman College Glee Club
+              </h1>
+              <div className="w-24 h-1 bg-gradient-to-r from-brand-400 to-brand-600 mx-auto rounded-full"></div>
+            </div>
+            <h2 className="text-3xl font-bold text-brand-500 mb-6">Book Our Performance</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed text-lg">
               Thank you for your interest in booking the Spelman College Glee Club. 
               Please complete this form with as much detail as possible to help us 
               provide you with the best possible experience.
