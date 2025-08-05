@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Upload, FileAudio } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export const SightReadingUploader = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -30,16 +31,15 @@ export const SightReadingUploader = () => {
       const formData = new FormData();
       formData.append('audio', selectedFile);
 
-      const response = await fetch('http://134.199.204.155:4000/analyze', {
-        method: 'POST',
+      // Use Supabase Edge Function instead of direct call to droplet
+      const { data, error } = await supabase.functions.invoke('analyze-audio', {
         body: formData,
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (error) {
+        throw new Error(error.message);
       }
 
-      const data = await response.json();
       setResults(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
