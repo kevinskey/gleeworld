@@ -58,9 +58,35 @@ export const RealtimeRadioPlayer = ({ className = '' }: RealtimeRadioPlayerProps
 
       if (tracks && tracks.length > 0) {
         setAudioTracks(tracks);
+        
+        // Initialize radio state if no current track is set
+        await initializeRadioIfNeeded(tracks[0]);
       }
     } catch (error) {
       console.error('Error fetching tracks:', error);
+    }
+  };
+
+  const initializeRadioIfNeeded = async (firstTrack: AudioTrack) => {
+    // Check if radio state needs initialization
+    const { data } = await supabase
+      .from('radio_state')
+      .select('current_track_id')
+      .eq('id', '00000000-0000-0000-0000-000000000001')
+      .maybeSingle();
+
+    if (data && !data.current_track_id) {
+      // Initialize with first track
+      await supabase
+        .from('radio_state')
+        .update({
+          current_track_id: firstTrack.id,
+          current_track_title: firstTrack.title,
+          current_track_artist: firstTrack.artist_info || 'Glee Club',
+          playback_position_seconds: 0,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', '00000000-0000-0000-0000-000000000001');
     }
   };
 
@@ -151,12 +177,35 @@ export const RealtimeRadioPlayer = ({ className = '' }: RealtimeRadioPlayerProps
 
     // Find the current track
     const currentTrack = audioTracks.find(track => track.id === state.current_track_id);
-    if (!currentTrack) return;
+    if (!currentTrack) {
+      console.log('No current track found, initializing...');
+      if (audioTracks.length > 0) {
+        initializeRadioIfNeeded(audioTracks[0]);
+      }
+      return;
+    }
+
+    console.log('Syncing audio with track:', currentTrack.title, currentTrack.audio_url);
 
     // Set audio source if different
     if (audioRef.current.src !== currentTrack.audio_url) {
       audioRef.current.src = currentTrack.audio_url;
+      audioRef.current.volume = 0.7;
       audioRef.current.load();
+      
+      // Test if audio URL is accessible
+      audioRef.current.addEventListener('loadeddata', () => {
+        console.log('Audio loaded successfully');
+      }, { once: true });
+      
+      audioRef.current.addEventListener('error', (e) => {
+        console.error('Audio load error:', e);
+        toast({
+          title: "Audio Error",
+          description: "Unable to load audio track",
+          variant: "destructive",
+        });
+      }, { once: true });
     }
 
     // Calculate correct playback position based on server time
@@ -171,13 +220,22 @@ export const RealtimeRadioPlayer = ({ className = '' }: RealtimeRadioPlayerProps
     const positionDiff = Math.abs(currentPos - targetPosition);
     
     if (positionDiff > 2) { // 2 second tolerance
-      audioRef.current.currentTime = targetPosition;
+      audioRef.current.currentTime = Math.max(0, targetPosition);
     }
 
     // Sync play/pause state
     if (state.is_playing && audioRef.current.paused) {
-      audioRef.current.play().catch(console.error);
+      console.log('Starting playback...');
+      audioRef.current.play().catch((error) => {
+        console.error('Playback error:', error);
+        toast({
+          title: "Playback Error",
+          description: "Unable to start playback. Check audio permissions.",
+          variant: "destructive",
+        });
+      });
     } else if (!state.is_playing && !audioRef.current.paused) {
+      console.log('Pausing playback...');
       audioRef.current.pause();
     }
   };
