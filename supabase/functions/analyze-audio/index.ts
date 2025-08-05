@@ -31,12 +31,13 @@ serve(async (req) => {
     console.log('Form data received:', {
       audioFileName: audioFile?.name,
       audioFileSize: audioFile?.size,
-      audioFileType: audioFile?.type
+      audioFileType: audioFile?.type,
+      hasAudioFile: !!audioFile
     })
 
     if (!audioFile) {
       return new Response(
-        JSON.stringify({ error: 'No audio file provided' }),
+        JSON.stringify({ error: 'No audio file provided in form data' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -44,10 +45,16 @@ serve(async (req) => {
       )
     }
 
+    // Create new FormData for the droplet server
+    const serverFormData = new FormData()
+    serverFormData.append('audio', audioFile, audioFile.name)
+
+    console.log('Forwarding to analysis server...')
+
     // Forward the request to your droplet server
     const response = await fetch('http://134.199.204.155:4000/analyze', {
       method: 'POST',
-      body: formData,
+      body: serverFormData,
     })
 
     console.log('Response received from analysis server:', {
@@ -74,7 +81,7 @@ serve(async (req) => {
           status: response.status
         }),
         { 
-          status: response.status, 
+          status: 400, // Return 400 instead of proxying the server's error status
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       )
