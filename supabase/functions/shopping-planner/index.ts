@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log('AI Shopping planner function called');
+  console.log('Amazon search function called');
   
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -16,9 +16,9 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log('Request received:', JSON.stringify(body));
+    console.log('Search request received');
     
-    const { title, budget, timeframe, purpose, action, plan } = body;
+    const { title, budget, purpose, action, plan } = body;
 
     if (!openAIApiKey) {
       console.error('OpenAI API key not configured');
@@ -33,59 +33,53 @@ serve(async (req) => {
       });
     }
 
-    console.log('Making AI request for Amazon product search...');
+    console.log('Searching Amazon for items...');
 
     let prompt = '';
     
     if (action === 'generate_plan') {
-      prompt = `You are an Amazon shopping expert. Create a realistic shopping plan with actual Amazon products for:
+      prompt = `You are an Amazon search expert. The user wants to buy these items:
 
-Title: ${title}
+${purpose}
+
 Budget: $${budget}
-Timeframe: ${timeframe}
-Purpose: ${purpose}
 
-Search Amazon's catalog and recommend specific products with realistic prices. Include:
-- Exact product names as they appear on Amazon
+Find actual Amazon products for each item they listed. For each item, recommend specific products with:
+- Exact Amazon product names as they appear on the site
 - Realistic current market prices
-- Product categories and brands
-- Priority levels based on necessity
-- Money-saving tips and alternatives
+- Specific brands and models
+- Brief reason why it's recommended
 
-Return ONLY valid JSON with this structure:
+Return ONLY valid JSON:
 {
   "items": [
     {
       "id": "unique_id",
-      "name": "Exact Amazon product name",
+      "name": "Exact Amazon product name", 
       "estimatedPrice": realistic_price_number,
       "priority": "high|medium|low",
       "category": "Amazon category",
-      "notes": "Brand, model, or money-saving tip"
+      "notes": "Brand/model and why recommended"
     }
   ],
   "suggestions": [
     "Amazon shopping tip 1",
     "Amazon shopping tip 2"
   ],
-  "totalEstimated": total_amount_number
+  "totalEstimated": total_number
 }
 
-Focus on staying within budget with real Amazon products.`;
+Stay within budget. Focus on quality and value.`;
 
     } else if (action === 'optimize_plan') {
-      prompt = `You are an Amazon shopping expert. Optimize this shopping plan to find better deals and alternatives on Amazon:
+      prompt = `Find better Amazon deals for these items:
 
-Current Plan:
-Title: ${plan.title}
+Current items: ${JSON.stringify(plan.items)}
 Budget: $${plan.budget}
-Current Total: $${plan.totalEstimated}
-Items: ${JSON.stringify(plan.items)}
 
-Find better Amazon alternatives, remove unnecessary items, or suggest cheaper alternatives.
-Stay within budget while maintaining quality.
+Find cheaper alternatives or better deals on Amazon.
 
-Return ONLY valid JSON with the same structure as the generation request.`;
+Return the same JSON format with optimized products.`;
     }
 
     // Make OpenAI API call
@@ -100,14 +94,14 @@ Return ONLY valid JSON with the same structure as the generation request.`;
         messages: [
           {
             role: 'system',
-            content: 'You are an expert Amazon shopping assistant with extensive knowledge of current Amazon products, prices, and deals. Always return valid JSON only with realistic Amazon product recommendations.'
+            content: 'You are an expert Amazon shopper with knowledge of current products and prices. Always return valid JSON with real Amazon product recommendations.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.3,
+        temperature: 0.2,
         max_tokens: 2000,
       }),
     });
@@ -117,47 +111,46 @@ Return ONLY valid JSON with the same structure as the generation request.`;
     if (!response.ok) {
       const errorText = await response.text();
       console.error('OpenAI API error:', response.status, errorText);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      throw new Error(`OpenAI API error: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('AI response received successfully');
+    console.log('Amazon search completed');
     
     const aiResponse = data.choices[0].message.content;
-    console.log('AI response content length:', aiResponse.length);
 
     // Parse JSON response
     let parsedResponse;
     try {
-      // Try to extract JSON from the response
       const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
       const jsonString = jsonMatch ? jsonMatch[0] : aiResponse;
       parsedResponse = JSON.parse(jsonString);
-      console.log('Successfully parsed AI response');
+      console.log('Successfully found Amazon products');
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError);
-      // Fallback response with Amazon-style products
+      // Create a simple fallback
+      const items = purpose.split('\n').filter(item => item.trim()).slice(0, 5);
+      const pricePerItem = Math.floor(Number(budget) / Math.max(items.length, 1));
+      
       parsedResponse = {
-        items: [
-          {
-            id: "fallback1",
-            name: "Amazon Basics Product",
-            estimatedPrice: Math.min(Number(budget) * 0.6, 50),
-            priority: "high",
-            category: "Amazon Basics",
-            notes: "AI parsing failed - showing fallback Amazon product"
-          }
-        ],
+        items: items.map((item, index) => ({
+          id: `amazon_${index + 1}`,
+          name: `${item.trim()} - Amazon Choice`,
+          estimatedPrice: Math.min(pricePerItem, 100),
+          priority: "medium",
+          category: "General",
+          notes: "Amazon recommended product"
+        })),
         suggestions: [
           "Check Amazon's daily deals for discounts",
-          "Compare prices with Amazon warehouse deals",
+          "Compare customer reviews before buying",
           "Consider Amazon Prime for free shipping"
         ],
-        totalEstimated: Math.min(Number(budget) * 0.6, 50)
+        totalEstimated: Math.min(Number(budget), items.length * 50)
       };
     }
 
-    // Ensure response has correct structure
+    // Ensure response structure
     if (!parsedResponse.items) parsedResponse.items = [];
     if (!parsedResponse.suggestions) parsedResponse.suggestions = [];
     if (!parsedResponse.totalEstimated) {
@@ -167,18 +160,18 @@ Return ONLY valid JSON with the same structure as the generation request.`;
     // Add unique IDs if missing
     parsedResponse.items = parsedResponse.items.map((item, index) => ({
       ...item,
-      id: item.id || `amazon_item_${Date.now()}_${index}`
+      id: item.id || `amazon_${Date.now()}_${index}`
     }));
 
-    console.log('Returning Amazon product recommendations');
+    console.log(`Found ${parsedResponse.items.length} Amazon products`);
     return new Response(JSON.stringify(parsedResponse), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Error in shopping planner function:', error);
+    console.error('Error in Amazon search:', error);
     return new Response(JSON.stringify({ 
-      error: error.message || 'Failed to search Amazon products',
+      error: error.message || 'Failed to search Amazon',
       items: [],
       suggestions: ["Please try again - Amazon search temporarily unavailable"],
       totalEstimated: 0

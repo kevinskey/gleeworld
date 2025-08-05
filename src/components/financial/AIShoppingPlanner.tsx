@@ -65,10 +65,10 @@ export const AIShoppingPlanner = () => {
   });
 
   const generateAIPlan = async () => {
-    if (!planTitle || !budget || !purpose) {
+    if (!purpose.trim() || !budget) {
       toast({
         title: "Missing Information",
-        description: "Please fill in the plan title, budget, and purpose.",
+        description: "Please enter what you need and your budget.",
         variant: "destructive"
       });
       return;
@@ -252,68 +252,63 @@ export const AIShoppingPlanner = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Plus className="w-5 h-5" />
-                Create New Shopping Plan
+                <ShoppingCart className="w-5 h-5" />
+                Amazon Product Search
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="itemsList">What do you need? (one item per line)</Label>
+                <Textarea
+                  id="itemsList"
+                  placeholder={`Wireless headphones
+Office chair
+USB-C cable
+Coffee mug
+Laptop stand`}
+                  value={purpose}
+                  onChange={(e) => setPurpose(e.target.value)}
+                  rows={6}
+                  className="resize-none"
+                />
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="planTitle">Plan Title</Label>
-                  <Input
-                    id="planTitle"
-                    placeholder="e.g., Spring Concert Equipment"
-                    value={planTitle}
-                    onChange={(e) => setPlanTitle(e.target.value)}
-                  />
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="budget">Budget ($)</Label>
                   <Input
                     id="budget"
                     type="number"
-                    placeholder="1000"
+                    placeholder="500"
                     value={budget}
                     onChange={(e) => setBudget(e.target.value)}
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="timeframe">Timeframe</Label>
+                  <Label htmlFor="planTitle">List Name (optional)</Label>
                   <Input
-                    id="timeframe"
-                    placeholder="e.g., Next 2 weeks"
-                    value={timeframe}
-                    onChange={(e) => setTimeframe(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="purpose">Purpose/Event</Label>
-                  <Input
-                    id="purpose"
-                    placeholder="e.g., Spring Concert performance"
-                    value={purpose}
-                    onChange={(e) => setPurpose(e.target.value)}
+                    id="planTitle"
+                    placeholder="e.g., Office Setup"
+                    value={planTitle}
+                    onChange={(e) => setPlanTitle(e.target.value)}
                   />
                 </div>
               </div>
 
               <Button 
                 onClick={generateAIPlan} 
-                disabled={loading}
+                disabled={loading || !purpose.trim()}
                 className="w-full bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary/90 hover:to-brand-secondary/90"
               >
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Generating AI Plan...
+                    Searching Amazon...
                   </>
                 ) : (
                   <>
                     <Brain className="w-4 h-4 mr-2" />
-                    Generate AI Shopping Plan
+                    Search Amazon with AI
                   </>
                 )}
               </Button>
