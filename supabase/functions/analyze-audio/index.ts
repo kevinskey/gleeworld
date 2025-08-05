@@ -26,7 +26,23 @@ serve(async (req) => {
 
     // Get the form data from the request
     const formData = await req.formData()
-    console.log('Form data received, forwarding to analysis server...')
+    const audioFile = formData.get('audio') as File
+    
+    console.log('Form data received:', {
+      audioFileName: audioFile?.name,
+      audioFileSize: audioFile?.size,
+      audioFileType: audioFile?.type
+    })
+
+    if (!audioFile) {
+      return new Response(
+        JSON.stringify({ error: 'No audio file provided' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
 
     // Forward the request to your droplet server
     const response = await fetch('http://134.199.204.155:4000/analyze', {
@@ -34,10 +50,34 @@ serve(async (req) => {
       body: formData,
     })
 
-    console.log('Response received from analysis server:', response.status)
+    console.log('Response received from analysis server:', {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries())
+    })
 
     if (!response.ok) {
-      throw new Error(`Analysis server responded with status: ${response.status}`)
+      // Get the error response body for better debugging
+      let errorDetails = 'Unknown error'
+      try {
+        const errorText = await response.text()
+        console.log('Error response body:', errorText)
+        errorDetails = errorText
+      } catch (e) {
+        console.log('Could not read error response body')
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          error: `Analysis server error (${response.status})`,
+          details: errorDetails,
+          status: response.status
+        }),
+        { 
+          status: response.status, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
     }
 
     const result = await response.json()
