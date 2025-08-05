@@ -15,13 +15,10 @@ const Auth = () => {
   const isReset = searchParams.get('reset') === 'true';
 
   useEffect(() => {
-    if (!loading && !profileLoading && user && profile) {
+    if (!loading && !profileLoading && user) {
       console.log('🚀 Auth redirect logic - User authenticated');
+      console.log('User data:', user);
       console.log('Profile data:', profile);
-      console.log('isAdmin() result:', isAdmin());
-      console.log('Profile role:', profile.role);
-      console.log('Profile is_admin:', profile.is_admin);
-      console.log('Profile is_super_admin:', profile.is_super_admin);
       
       const redirectPath = sessionStorage.getItem('redirectAfterAuth');
       if (redirectPath) {
@@ -29,20 +26,9 @@ const Auth = () => {
         sessionStorage.removeItem('redirectAfterAuth');
         navigate(redirectPath, { replace: true });
       } else {
-        // Only redirect to default dashboard if user directly navigated to /auth
-        // Check if the current path is exactly /auth and not a refresh of another page
-        const currentPath = window.location.pathname;
-        const referrer = document.referrer;
-        
-        // If user is on /auth page specifically (not a refresh of another page)
-        if (currentPath === '/auth') {
-          const isUserAdmin = isAdmin();
-          const defaultPath = isUserAdmin ? '/admin' : '/dashboard';
-          console.log('Auth: User on /auth directly, isUserAdmin:', isUserAdmin, 'redirecting to:', defaultPath);
-          navigate(defaultPath, { replace: true });
-        }
-        // If they're on any other route and got redirected here due to auth check,
-        // let them stay on their intended route after authentication
+        // Always redirect to dashboard for authenticated users
+        console.log('Auth: Redirecting to dashboard');
+        navigate('/dashboard', { replace: true });
       }
     } else {
       console.log('Auth redirect conditions not met:', {
@@ -52,7 +38,7 @@ const Auth = () => {
         hasProfile: !!profile
       });
     }
-  }, [user, loading, profile, profileLoading, navigate, isAdmin]);
+  }, [user, loading, profile, profileLoading, navigate]);
 
   if (loading || profileLoading) {
     return (
