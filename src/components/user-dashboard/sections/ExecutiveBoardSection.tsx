@@ -23,7 +23,8 @@ import {
   Star,
   Calendar,
   UserCheck,
-  Music2
+  Music2,
+  FileAudio
 } from "lucide-react";
 
 interface ExecutiveBoardSectionProps {
@@ -67,7 +68,8 @@ export const ExecutiveBoardSection = ({ isExecBoardMember }: ExecutiveBoardSecti
     { name: "Historian", icon: Calendar, route: "/dashboard" },
     { name: "Social Chair", icon: Users, route: "/dashboard" },
     { name: "Section Leader", icon: UserCheck, route: "/dashboard/section-leader" },
-    { name: "Student Conductor", icon: Music2, route: "/dashboard/student-conductor" }
+    { name: "Student Conductor", icon: Music2, route: "/dashboard/student-conductor" },
+    { name: "Sight Reading Submission", icon: FileAudio, route: "/sight-reading-submission" }
   ];
 
   return (

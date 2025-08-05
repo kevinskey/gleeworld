@@ -98,6 +98,7 @@ import { AuditionsManagement } from "./components/admin/AuditionsManagement";
 import { ShoutcastManagement } from "./pages/admin/ShoutcastManagement";
 import { ReceiptsPage } from "./pages/ReceiptsPage";
 import ApprovalSystemPage from "./pages/ApprovalSystemPage";
+import SightReadingSubmission from "./pages/SightReadingSubmission";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -746,15 +747,23 @@ const App = () => {
                                     </ProtectedRoute>
                                   } 
                                 />
-                                 <Route 
-                                   path="/pr-hub" 
-                                   element={
-                                     <ProtectedRoute>
-                                       <PRHubPage />
-                                     </ProtectedRoute>
-                                   } 
-                                 />
-                   </Routes>
+                                  <Route 
+                                    path="/pr-hub" 
+                                    element={
+                                      <ProtectedRoute>
+                                        <PRHubPage />
+                                      </ProtectedRoute>
+                                    } 
+                                  />
+                                  <Route 
+                                    path="/sight-reading-submission" 
+                                    element={
+                                      <ProtectedRoute>
+                                        <SightReadingSubmission />
+                                      </ProtectedRoute>
+                                    } 
+                                  />
+                    </Routes>
                    <GlobalMusicPlayer />
                 </div>
               </MusicPlayerProvider>

@@ -1,4 +1,3 @@
-
 export const ROUTES = {
   HOME: '/',
   AUTH: '/auth',
@@ -27,7 +26,8 @@ export const ROUTES = {
   
   TOUR_PLANNER: '/tour-planner',
   APPOINTMENTS: '/appointments',
-  PR_HUB: '/dashboard/pr-hub'
+  PR_HUB: '/dashboard/pr-hub',
+  SIGHT_READING_SUBMISSION: '/sight-reading-submission'
 } as const;
 
 export const PROTECTED_ROUTES = [
@@ -46,7 +46,8 @@ export const PROTECTED_ROUTES = [
   ROUTES.ADMIN_SCHOLARSHIPS,
   ROUTES.TOUR_PLANNER,
   ROUTES.APPOINTMENTS,
-  ROUTES.PR_HUB
+  ROUTES.PR_HUB,
+  ROUTES.SIGHT_READING_SUBMISSION
 ] as const;
 
 export const PUBLIC_ROUTES = [
