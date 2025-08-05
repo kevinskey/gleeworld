@@ -53,6 +53,8 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
     const saved = localStorage.getItem('timeline-paused-position');
     return saved ? parseFloat(saved) : 0;
   });
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
@@ -247,6 +249,29 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
       const audio = new Audio(track.audio_url);
       audioRef.current = audio;
       
+      // Add event listeners for time tracking
+      audio.addEventListener('timeupdate', () => {
+        setCurrentTime(audio.currentTime);
+      });
+      
+      audio.addEventListener('loadedmetadata', () => {
+        setDuration(audio.duration);
+      });
+      
+      audio.addEventListener('ended', () => {
+        playNextTrack(track.id);
+      });
+      
+      audio.addEventListener('error', () => {
+        setCurrentlyPlaying(null);
+        localStorage.removeItem('timeline-currently-playing');
+        toast({
+          title: "Audio Error",
+          description: "Failed to load the audio file",
+          variant: "destructive"
+        });
+      });
+      
       audio.play().then(() => {
         setCurrentlyPlaying(track.id);
         localStorage.setItem('timeline-currently-playing', track.id);
@@ -258,22 +283,6 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
           variant: "destructive"
         });
       });
-      
-      // Handle audio end - play next track or stop
-      audio.onended = () => {
-        playNextTrack(track.id);
-      };
-      
-      // Handle audio error
-      audio.onerror = () => {
-        setCurrentlyPlaying(null);
-        localStorage.removeItem('timeline-currently-playing');
-        toast({
-          title: "Audio Error",
-          description: "Failed to load the audio file",
-          variant: "destructive"
-        });
-      };
     }
   };
 
@@ -574,6 +583,28 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
           <p className="text-sm text-muted-foreground">
             Drag MP3 tracks from the library above to schedule them on the timeline. Use the master play button to control timeline playback.
           </p>
+          {currentlyPlaying && (
+            <div className="flex items-center gap-4 mt-3 p-3 bg-primary/5 rounded-md border border-primary/20">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                <span className="text-sm font-medium">Now Playing</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span className="font-mono">
+                  {formatDuration(Math.floor(currentTime))} / {formatDuration(Math.floor(duration))}
+                </span>
+              </div>
+              {duration > 0 && (
+                <div className="flex-1 bg-muted rounded-full h-2 mx-2">
+                  <div 
+                    className="bg-primary h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${(currentTime / duration) * 100}%` }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {isLoading ? (
