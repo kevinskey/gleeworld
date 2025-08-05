@@ -92,6 +92,7 @@ import MobileScoring from "./pages/MobileScoring";
 import LibrarianDashboard from "./pages/LibrarianDashboard";
 import HistorianDashboard from "./pages/HistorianDashboard";
 import MemberDirectory from "./pages/MemberDirectory";
+import { AmazonShoppingModule } from "./components/shopping/AmazonShoppingModule";
 import { RadioStationPage } from "./components/radio/RadioStationPage";
 import { AuditionsManagement } from "./components/admin/AuditionsManagement";
 
@@ -589,15 +590,23 @@ const App = () => {
                                    </ProtectedRoute>
                                  } 
                                />
-                             <Route 
-                               path="/member-directory" 
-                               element={
-                                 <ProtectedRoute>
-                                   <MemberDirectory />
-                                 </ProtectedRoute>
-                               } 
-                             />
-                             <Route 
+                              <Route 
+                                path="/member-directory" 
+                                element={
+                                  <ProtectedRoute>
+                                    <MemberDirectory />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/amazon-shopping" 
+                                element={
+                                  <ProtectedRoute>
+                                    <AmazonShoppingModule />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route
                                path="/dashboard/pr-hub" 
                                element={
                                  <ProtectedRoute>

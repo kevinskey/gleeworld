@@ -16,7 +16,9 @@ import {
   PenTool,
   Calendar,
   CalendarDays,
-  Music
+  Music,
+  ShoppingCart,
+  ShoppingBag
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/constants/permissions";
@@ -45,6 +47,12 @@ export const AppNavigation = () => {
       href: "/?tab=finance",
       icon: DollarSign,
       permission: "view_own_payments"
+    },
+    {
+      label: "Amazon Shopping",
+      href: "/amazon-shopping",
+      icon: ShoppingCart,
+      permission: null
     },
     {
       label: "Music Library",
