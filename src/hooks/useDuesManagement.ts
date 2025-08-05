@@ -172,9 +172,10 @@ export const useDuesManagement = () => {
       return members.length;
     } catch (error) {
       console.error('Error creating dues for semester:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       toast({
         title: "Error",
-        description: "Failed to create dues records",
+        description: `Failed to create dues records: ${error.message || 'Unknown error'}`,
         variant: "destructive",
       });
       throw error;
