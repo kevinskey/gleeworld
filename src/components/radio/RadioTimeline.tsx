@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import {
   Clock, 
   Calendar, 
   Play, 
+  Pause,
   Trash2,
   Volume2,
   Save,
@@ -41,6 +42,8 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
   // Load scheduled tracks for the selected date
@@ -189,6 +192,61 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
     }
     return slots;
   };
+
+  const handlePlayToggle = (track: ScheduledTrack) => {
+    if (currentlyPlaying === track.id) {
+      // Stop current track
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+      setCurrentlyPlaying(null);
+    } else {
+      // Play new track
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      
+      const audio = new Audio(track.audio_url);
+      audioRef.current = audio;
+      
+      audio.play().then(() => {
+        setCurrentlyPlaying(track.id);
+      }).catch((error) => {
+        console.error('Error playing audio:', error);
+        toast({
+          title: "Playback Error",
+          description: "Failed to play the audio track",
+          variant: "destructive"
+        });
+      });
+      
+      // Handle audio end
+      audio.onended = () => {
+        setCurrentlyPlaying(null);
+      };
+      
+      // Handle audio error
+      audio.onerror = () => {
+        setCurrentlyPlaying(null);
+        toast({
+          title: "Audio Error",
+          description: "Failed to load the audio file",
+          variant: "destructive"
+        });
+      };
+    }
+  };
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   const timeSlots = generateTimeSlots();
 
@@ -440,8 +498,17 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
                             </p>
                           </div>
                           <div className="flex gap-2 pointer-events-auto">
-                            <Button size="sm" variant="ghost">
-                              <Play className="h-3 w-3" />
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => handlePlayToggle(scheduledTrack)}
+                              className={currentlyPlaying === scheduledTrack.id ? "bg-primary/10 text-primary" : ""}
+                            >
+                              {currentlyPlaying === scheduledTrack.id ? (
+                                <Pause className="h-3 w-3" />
+                              ) : (
+                                <Play className="h-3 w-3" />
+                              )}
                             </Button>
                             <Button 
                               size="sm" 
