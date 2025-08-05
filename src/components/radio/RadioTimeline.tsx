@@ -207,6 +207,8 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
   };
 
   const playNextTrack = (currentTrackId: string) => {
+    console.log('playNextTrack called with ID:', currentTrackId);
+    
     // Get all scheduled tracks sorted by their track slot position
     const sortedTracks = scheduledTracks
       .filter(t => t.scheduledDate === selectedDate)
@@ -217,6 +219,8 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
         return aNum - bNum;
       });
     
+    console.log('Sorted tracks:', sortedTracks.map(t => ({ id: t.id, title: t.title, slot: t.scheduledTime })));
+    
     if (sortedTracks.length === 0) {
       setCurrentlyPlaying(null);
       localStorage.removeItem('timeline-currently-playing');
@@ -226,11 +230,13 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
     }
 
     const currentTrackIndex = sortedTracks.findIndex(t => t.id === currentTrackId);
+    console.log('Current track index:', currentTrackIndex, 'out of', sortedTracks.length);
     
     // Check if there's a next track
     if (currentTrackIndex >= 0 && currentTrackIndex < sortedTracks.length - 1) {
       // Play next track
       const nextTrack = sortedTracks[currentTrackIndex + 1];
+      console.log('Playing next track:', nextTrack.title, 'ID:', nextTrack.id);
       handlePlayToggle(nextTrack);
       toast({
         title: "Next Track",
@@ -239,6 +245,7 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
     } else {
       // Loop back to the beginning
       const firstTrack = sortedTracks[0];
+      console.log('Looping to first track:', firstTrack.title, 'ID:', firstTrack.id);
       handlePlayToggle(firstTrack);
       toast({
         title: "Playlist Looped",
@@ -275,6 +282,7 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
       });
       
       audio.addEventListener('ended', () => {
+        // Use the track ID that will be set as currently playing
         playNextTrack(track.id);
       });
       
