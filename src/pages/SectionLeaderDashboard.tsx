@@ -26,43 +26,25 @@ export const SectionLeaderDashboard = () => {
   const navigate = useNavigate();
   const [selectedSection, setSelectedSection] = useState("soprano");
 
-  // Mock data for section members
+  // Remove mock data - replace with real data from database
   const sectionData = {
     soprano: {
-      members: [
-        { id: 1, name: "Sarah Johnson", attendance: 95, performance: "Excellent", status: "active" },
-        { id: 2, name: "Maya Patel", attendance: 88, performance: "Good", status: "active" },
-        { id: 3, name: "Emily Chen", attendance: 92, performance: "Very Good", status: "active" },
-        { id: 4, name: "Jessica Williams", attendance: 85, performance: "Good", status: "concern" },
-      ],
-      total: 4,
-      avgAttendance: 90
+      members: [],
+      total: 0,
+      avgAttendance: 0
     },
     alto: {
-      members: [
-        { id: 5, name: "Alicia Davis", attendance: 97, performance: "Excellent", status: "active" },
-        { id: 6, name: "Rachel Green", attendance: 89, performance: "Good", status: "active" },
-        { id: 7, name: "Nina Rodriguez", attendance: 91, performance: "Very Good", status: "active" },
-      ],
-      total: 3,
-      avgAttendance: 92
+      members: [],
+      total: 0,
+      avgAttendance: 0
     }
   };
 
   const currentSectionData = sectionData[selectedSection as keyof typeof sectionData] || sectionData.soprano;
 
-  const upcomingTasks = [
-    { id: 1, task: "Sectional Rehearsal - Soprano", date: "Today, 3:00 PM", priority: "high" },
-    { id: 2, task: "Voice Part Check - Alto", date: "Tomorrow, 2:00 PM", priority: "medium" },
-    { id: 3, task: "Performance Evaluation", date: "Friday, 4:00 PM", priority: "high" },
-    { id: 4, task: "Section Meeting", date: "Monday, 1:00 PM", priority: "low" },
-  ];
+  const upcomingTasks: any[] = [];
 
-  const recentActivity = [
-    { id: 1, activity: "Jessica Williams marked absent for Tuesday rehearsal", time: "2 hours ago", type: "attendance" },
-    { id: 2, activity: "Soprano sectional completed successfully", time: "1 day ago", type: "rehearsal" },
-    { id: 3, activity: "Performance notes submitted for Sarah Johnson", time: "2 days ago", type: "evaluation" },
-  ];
+  const recentActivity: any[] = [];
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -169,7 +151,7 @@ export const SectionLeaderDashboard = () => {
                     {/* Section Members */}
                     <div className="space-y-3">
                       <h4 className="font-semibold text-lg">Section Members</h4>
-                      {currentSectionData.members.map((member) => (
+                      {currentSectionData.members.length > 0 ? currentSectionData.members.map((member) => (
                         <Card key={member.id} className="hover:shadow-md transition-shadow">
                           <CardContent className="pt-4">
                             <div className="flex items-center justify-between">
@@ -198,7 +180,11 @@ export const SectionLeaderDashboard = () => {
                             </div>
                           </CardContent>
                         </Card>
-                      ))}
+                      )) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          No section members found
+                        </div>
+                      )}
                     </div>
                   </TabsContent>
                 </Tabs>
@@ -219,7 +205,7 @@ export const SectionLeaderDashboard = () => {
               <CardContent>
                 <ScrollArea className="h-64">
                   <div className="space-y-3">
-                    {upcomingTasks.map((task) => (
+                    {upcomingTasks.length > 0 ? upcomingTasks.map((task) => (
                       <div key={task.id} className="border rounded-lg p-3 hover:bg-muted/50 transition-colors">
                         <div className="flex items-start justify-between mb-2">
                           <h5 className="font-medium text-sm">{task.task}</h5>
@@ -229,7 +215,11 @@ export const SectionLeaderDashboard = () => {
                         </div>
                         <p className="text-xs text-muted-foreground">{task.date}</p>
                       </div>
-                    ))}
+                    )) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No upcoming tasks
+                      </div>
+                    )}
                   </div>
                 </ScrollArea>
               </CardContent>
@@ -274,12 +264,16 @@ export const SectionLeaderDashboard = () => {
               <CardContent>
                 <ScrollArea className="h-48">
                   <div className="space-y-3">
-                    {recentActivity.map((activity) => (
+                    {recentActivity.length > 0 ? recentActivity.map((activity) => (
                       <div key={activity.id} className="text-sm">
                         <p className="text-foreground">{activity.activity}</p>
                         <p className="text-xs text-muted-foreground">{activity.time}</p>
                       </div>
-                    ))}
+                    )) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No recent activity
+                      </div>
+                    )}
                   </div>
                 </ScrollArea>
               </CardContent>

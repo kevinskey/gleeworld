@@ -37,26 +37,17 @@ export const SectionLeaderDashboard = ({ user }: SectionLeaderDashboardProps) =>
   const [activeTab, setActiveTab] = useState('overview');
   const [userSection] = useState(user?.section || 'Soprano'); // This would come from user profile
   const [stats, setStats] = useState({
-    sectionMembers: 12,
-    upcomingSectionals: 3,
-    completedSectionals: 8,
-    pendingTasks: 2,
-    attendanceRate: 92,
-    preparednessLevel: 85
+    sectionMembers: 0,
+    upcomingSectionals: 0,
+    completedSectionals: 0,
+    pendingTasks: 0,
+    attendanceRate: 0,
+    preparednessLevel: 0
   });
 
-  const recentActivity = [
-    { id: '1', type: 'sectional', description: 'Sectional completed - All members present', time: '2 hours ago', status: 'completed' },
-    { id: '2', type: 'communication', description: 'Reminder sent for Wednesday rehearsal', time: '1 day ago', status: 'sent' },
-    { id: '3', type: 'setlist', description: 'Updated setlist for winter concert sectional', time: '2 days ago', status: 'updated' },
-    { id: '4', type: 'notes', description: 'Added practice notes for "Silent Night"', time: '3 days ago', status: 'added' }
-  ];
+  const recentActivity: any[] = [];
 
-  const upcomingEvents = [
-    { id: '1', title: 'Section Rehearsal - Breathing Techniques', date: '2024-01-20', time: '10:00 AM', location: 'Music Room 201' },
-    { id: '2', title: 'Individual Voice Checks', date: '2024-01-22', time: '2:00 PM', location: 'Practice Room 3' },
-    { id: '3', title: 'Pre-Concert Sectional', date: '2024-01-25', time: '6:00 PM', location: 'Auditorium' }
-  ];
+  const upcomingEvents: any[] = [];
 
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -153,7 +144,7 @@ export const SectionLeaderDashboard = ({ user }: SectionLeaderDashboardProps) =>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {upcomingEvents.map((event) => (
+                {upcomingEvents.length > 0 ? upcomingEvents.map((event) => (
                   <div key={event.id} className="flex items-start gap-3 p-3 border rounded-lg">
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-1">
                       <Calendar className="h-4 w-4 text-primary" />
@@ -166,7 +157,11 @@ export const SectionLeaderDashboard = ({ user }: SectionLeaderDashboardProps) =>
                       <div className="text-xs text-muted-foreground">{event.location}</div>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No upcoming events scheduled
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -179,7 +174,7 @@ export const SectionLeaderDashboard = ({ user }: SectionLeaderDashboardProps) =>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {recentActivity.map((activity) => (
+                {recentActivity.length > 0 ? recentActivity.map((activity) => (
                   <div key={activity.id} className="flex items-start gap-3 p-3 border rounded-lg">
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-1">
                       {getActivityIcon(activity.type)}
@@ -192,7 +187,11 @@ export const SectionLeaderDashboard = ({ user }: SectionLeaderDashboardProps) =>
                       <div className="text-xs text-muted-foreground">{activity.time}</div>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No recent activity
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

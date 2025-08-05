@@ -36,27 +36,17 @@ interface StudentConductorDashboardProps {
 export const StudentConductorDashboard = ({ user }: StudentConductorDashboardProps) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState({
-    totalSectionLeaders: 4,
-    activeSectionals: 12,
-    completedSightSinging: 85,
-    pendingCommunications: 3,
-    averageSectionProgress: 78,
-    upcomingRehearsals: 5
+    totalSectionLeaders: 0,
+    activeSectionals: 0,
+    completedSightSinging: 0,
+    pendingCommunications: 0,
+    averageSectionProgress: 0,
+    upcomingRehearsals: 0
   });
 
-  const sectionLeaders = [
-    { id: '1', name: 'Sarah Williams', section: 'Soprano', status: 'active', lastActivity: '2 hours ago' },
-    { id: '2', name: 'Michelle Johnson', section: 'Alto', status: 'active', lastActivity: '1 hour ago' },
-    { id: '3', name: 'Angela Davis', section: 'Tenor', status: 'busy', lastActivity: '30 minutes ago' },
-    { id: '4', name: 'Jessica Brown', section: 'Bass', status: 'active', lastActivity: '15 minutes ago' }
-  ];
+  const sectionLeaders: any[] = [];
 
-  const recentActivity = [
-    { id: '1', type: 'sectional', description: 'Alto sectional completed - 95% attendance', time: '2 hours ago' },
-    { id: '2', type: 'sight_singing', description: 'New sight singing exercise assigned to all sections', time: '4 hours ago' },
-    { id: '3', type: 'communication', description: 'Message sent to Soprano section leaders', time: '1 day ago' },
-    { id: '4', type: 'annotation', description: 'Sheet music annotations updated for "Amazing Grace"', time: '1 day ago' }
-  ];
+  const recentActivity: any[] = [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -152,7 +142,7 @@ export const StudentConductorDashboard = ({ user }: StudentConductorDashboardPro
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {sectionLeaders.map((leader) => (
+                {sectionLeaders.length > 0 ? sectionLeaders.map((leader) => (
                   <div key={leader.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -172,7 +162,11 @@ export const StudentConductorDashboard = ({ user }: StudentConductorDashboardPro
                       </div>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No section leaders assigned
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -185,7 +179,7 @@ export const StudentConductorDashboard = ({ user }: StudentConductorDashboardPro
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {recentActivity.map((activity) => (
+                {recentActivity.length > 0 ? recentActivity.map((activity) => (
                   <div key={activity.id} className="flex items-start gap-3 p-3 border rounded-lg">
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-1">
                       {getActivityIcon(activity.type)}
@@ -195,7 +189,11 @@ export const StudentConductorDashboard = ({ user }: StudentConductorDashboardPro
                       <div className="text-xs text-muted-foreground">{activity.time}</div>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No recent activity
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
