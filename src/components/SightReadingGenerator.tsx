@@ -46,6 +46,9 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
     if (sheetMusicRef.current && !osmdRef.current) {
       try {
         console.log('Attempting to create OSMD instance...');
+        // Clear any existing content
+        sheetMusicRef.current.innerHTML = '';
+        
         osmdRef.current = new OpenSheetMusicDisplay(sheetMusicRef.current, {
           autoResize: true,
           backend: 'svg',
@@ -61,6 +64,8 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
           pageBackgroundColor: '#FFFFFF',
           renderSingleHorizontalStaffline: false,
           defaultFontFamily: 'Times New Roman',
+          // Ensure proper rendering
+          drawingParameters: 'default'
         });
         console.log('OSMD initialized successfully:', !!osmdRef.current);
       } catch (error) {
@@ -238,17 +243,47 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
     if (osmdRef.current && sheetMusicRef.current) {
       try {
         console.log('Loading MusicXML into OSMD...');
+        
+        // Clear the container first
+        sheetMusicRef.current.innerHTML = '';
+        
+        // Load and render the music
         await osmdRef.current.load(xml);
         console.log('MusicXML loaded successfully, now rendering...');
-        osmdRef.current.render();
+        
+        await osmdRef.current.render();
         console.log('Music rendered successfully');
         
         // Check if content was actually rendered
         const svgElements = sheetMusicRef.current.querySelectorAll('svg');
         console.log('SVG elements found after render:', svgElements.length);
         
+        if (svgElements.length === 0) {
+          console.error('No SVG elements found after render');
+          // Fallback: show a message instead of code
+          sheetMusicRef.current.innerHTML = `
+            <div class="flex items-center justify-center h-64 text-muted-foreground">
+              <div class="text-center">
+                <p>Music notation failed to render</p>
+                <p class="text-sm mt-2">OSMD rendering issue detected</p>
+              </div>
+            </div>
+          `;
+        }
+        
       } catch (error) {
         console.error('Error displaying music:', error);
+        
+        // Clear any partial content and show error
+        sheetMusicRef.current.innerHTML = `
+          <div class="flex items-center justify-center h-64 text-destructive">
+            <div class="text-center">
+              <p>Failed to render sheet music</p>
+              <p class="text-sm mt-2">${error.message}</p>
+            </div>
+          </div>
+        `;
+        
         toast({
           title: "Display Error",
           description: "Failed to display the generated music notation: " + error.message,
@@ -425,8 +460,11 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
             <CardContent>
               <div 
                 ref={sheetMusicRef} 
-                className="bg-white p-4 rounded-md border min-h-[400px]"
-                style={{ minHeight: '400px' }}
+                className="bg-white p-4 rounded-md border min-h-[400px] overflow-auto"
+                style={{ 
+                  minHeight: '400px',
+                  maxWidth: '100%'
+                }}
               />
               
               <div className="flex gap-2 mt-4">
