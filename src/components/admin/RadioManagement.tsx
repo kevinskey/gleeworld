@@ -56,6 +56,8 @@ export const RadioManagement = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'title' | 'artist' | 'date' | 'plays'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   const [radioStats, setRadioStats] = useState<RadioStats>({
     totalTracks: 0,
     totalListeners: 127,
@@ -225,6 +227,75 @@ export const RadioManagement = () => {
     setFilteredTracks(filtered);
   };
 
+  const handlePlayTrack = async (track: AudioTrack) => {
+    try {
+      // Stop current audio if playing
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.currentTime = 0;
+      }
+
+      if (currentlyPlaying === track.id) {
+        // If same track is playing, stop it
+        setCurrentlyPlaying(null);
+        setAudioElement(null);
+        setRadioStats(prev => ({ ...prev, currentlyPlaying: null }));
+        return;
+      }
+
+      // Create new audio element
+      const audio = new Audio(track.audio_url);
+      
+      audio.addEventListener('loadstart', () => {
+        console.log('Loading audio:', track.title);
+      });
+
+      audio.addEventListener('canplay', () => {
+        console.log('Audio ready to play:', track.title);
+      });
+
+      audio.addEventListener('error', (e) => {
+        console.error('Audio error:', e);
+        toast({
+          title: "Playback Error",
+          description: "Failed to play audio track",
+          variant: "destructive",
+        });
+        setCurrentlyPlaying(null);
+        setAudioElement(null);
+      });
+
+      audio.addEventListener('ended', () => {
+        setCurrentlyPlaying(null);
+        setAudioElement(null);
+        setRadioStats(prev => ({ ...prev, currentlyPlaying: null }));
+      });
+
+      // Set state before playing
+      setCurrentlyPlaying(track.id);
+      setAudioElement(audio);
+      setRadioStats(prev => ({ ...prev, currentlyPlaying: track.title }));
+
+      // Start playback
+      await audio.play();
+      
+      toast({
+        title: "Now Playing",
+        description: `${track.title} by ${track.artist_info || 'Unknown Artist'}`,
+      });
+
+    } catch (error) {
+      console.error('Error playing track:', error);
+      toast({
+        title: "Playback Error",
+        description: "Failed to play audio track",
+        variant: "destructive",
+      });
+      setCurrentlyPlaying(null);
+      setAudioElement(null);
+    }
+  };
+
   // Get unique categories for filter dropdown
   const getCategories = () => {
     const categories = new Set(tracks.map(track => track.category).filter(Boolean));
@@ -243,7 +314,21 @@ export const RadioManagement = () => {
   };
 
   const handleDeleteTrack = async (trackId: string) => {
+    if (!confirm('Are you sure you want to delete this track?')) {
+      return;
+    }
+
     try {
+      // Stop playback if this track is currently playing
+      if (currentlyPlaying === trackId) {
+        if (audioElement) {
+          audioElement.pause();
+          audioElement.currentTime = 0;
+        }
+        setCurrentlyPlaying(null);
+        setAudioElement(null);
+      }
+
       const { error } = await supabase
         .from('audio_archive')
         .delete()
@@ -258,6 +343,7 @@ export const RadioManagement = () => {
       
       fetchTracks();
     } catch (error) {
+      console.error('Delete error:', error);
       toast({
         title: "Error",
         description: "Failed to delete track",
@@ -482,13 +568,23 @@ export const RadioManagement = () => {
                             </div>
                           </div>
                           <div className="flex gap-2 ml-4">
-                            <Button size="sm" variant="ghost">
-                              <Play className="h-4 w-4" />
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => handlePlayTrack(track)}
+                              className={currentlyPlaying === track.id ? "bg-primary/10 text-primary" : ""}
+                            >
+                              {currentlyPlaying === track.id ? (
+                                <Pause className="h-4 w-4" />
+                              ) : (
+                                <Play className="h-4 w-4" />
+                              )}
                             </Button>
                             <Button 
                               size="sm" 
                               variant="ghost"
                               onClick={() => handleEditTrack(track)}
+                              className="hover:bg-muted/50"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -496,6 +592,7 @@ export const RadioManagement = () => {
                               size="sm" 
                               variant="ghost"
                               onClick={() => handleDeleteTrack(track.id)}
+                              className="hover:bg-destructive/10 hover:text-destructive"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
