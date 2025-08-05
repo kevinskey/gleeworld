@@ -40,11 +40,13 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
   // Effect to handle audio source changes
   useEffect(() => {
     if (audioRef.current) {
+      console.log('Setting audio source:', currentTrack.audio_url);
       audioRef.current.src = currentTrack.audio_url!;
       audioRef.current.volume = 0.7;
       audioRef.current.crossOrigin = "anonymous"; // Handle CORS
       audioRef.current.load();
       setStreamError(null);
+      console.log('Audio element loaded, volume:', audioRef.current.volume);
     }
   }, [currentTrack.audio_url]);
 
@@ -143,12 +145,17 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
       <audio
         ref={audioRef}
         onPlay={() => {
+          console.log('Audio started playing');
           setIsPlaying(true);
           setStreamError(null);
         }}
-        onPause={() => setIsPlaying(false)}
+        onPause={() => {
+          console.log('Audio paused');
+          setIsPlaying(false);
+        }}
         onError={(e) => {
           console.error('Stream error:', e);
+          console.log('Error details:', e.currentTarget.error);
           setIsPlaying(false);
           const errorMsg = "Radio stream unavailable - server may be offline";
           setStreamError(errorMsg);
@@ -159,8 +166,13 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
           });
         }}
         onCanPlay={() => {
+          console.log('Audio can play, readyState:', audioRef.current?.readyState);
           setStreamError(null);
         }}
+        onLoadStart={() => console.log('Audio load started')}
+        onLoadedData={() => console.log('Audio data loaded')}
+        onWaiting={() => console.log('Audio waiting for data')}
+        onStalled={() => console.log('Audio stalled')}
       />
       
       {/* Radio Player Button */}
