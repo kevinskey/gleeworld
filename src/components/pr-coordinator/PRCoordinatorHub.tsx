@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Search, Grid, List, Sparkles, TrendingUp, Star, Filter, RefreshCw, Download, Upload, Zap } from 'lucide-react';
+import { Camera, Search, Grid, List, Sparkles, TrendingUp, Star, Filter, RefreshCw, Download, Upload, Zap, BarChart3, Share, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +19,9 @@ import PressKitTemplateGenerator from './PressKitTemplateGenerator';
 import { TaskNotifications } from '@/components/shared/TaskNotifications';
 import { MediaLibraryDialog } from '@/components/radio/MediaLibraryDialog';
 import { HeroManagement } from '@/components/admin/HeroManagement';
+import { PRAnalytics } from './PRAnalytics';
+import { SocialMediaManager } from './SocialMediaManager';
+import { PressReleaseManager } from './PressReleaseManager';
 
 export const PRCoordinatorHub = () => {
   const {
@@ -242,7 +245,7 @@ export const PRCoordinatorHub = () => {
 
       {/* Enhanced Tabs */}
       <Tabs defaultValue="gallery" className="space-y-6">
-        <TabsList className="grid w-full gap-1 bg-muted/50 p-1" style={{ gridTemplateColumns: `repeat(${1 + 
+        <TabsList className="grid w-full gap-1 bg-muted/50 p-1" style={{ gridTemplateColumns: `repeat(${4 + 
           (hasPermission('pr_manager') ? 2 : 0) + 
           (hasPermission('press_kits') ? 1 : 0) + 
           (hasPermission('ai_tools') ? 1 : 0) + 
@@ -252,6 +255,21 @@ export const PRCoordinatorHub = () => {
           <TabsTrigger value="gallery" className="flex items-center gap-2 text-xs md:text-sm">
             <Grid className="w-4 h-4" />
             Gallery
+          </TabsTrigger>
+          
+          <TabsTrigger value="analytics" className="flex items-center gap-2 text-xs md:text-sm">
+            <BarChart3 className="w-4 h-4" />
+            Analytics
+          </TabsTrigger>
+          
+          <TabsTrigger value="social" className="flex items-center gap-2 text-xs md:text-sm">
+            <Share className="w-4 h-4" />
+            Social Media
+          </TabsTrigger>
+          
+          <TabsTrigger value="press-releases" className="flex items-center gap-2 text-xs md:text-sm">
+            <FileText className="w-4 h-4" />
+            Press Releases
           </TabsTrigger>
           
           {hasPermission('pr_manager') && (
@@ -510,6 +528,24 @@ export const PRCoordinatorHub = () => {
             </div>
           </TabsContent>
         )}
+        
+        <TabsContent value="analytics">
+          <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6">
+            <PRAnalytics />
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="social">
+          <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6">
+            <SocialMediaManager />
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="press-releases">
+          <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6">
+            <PressReleaseManager />
+          </div>
+        </TabsContent>
       </Tabs>
 
       {/* Quick Capture Modal */}
