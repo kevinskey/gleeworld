@@ -26,6 +26,10 @@ interface AudioTrack {
   play_count: number;
   is_public: boolean;
   created_at: string;
+  album?: {
+    title: string;
+    cover_image_url?: string;
+  };
 }
 
 interface ScheduledTrack extends AudioTrack {
@@ -652,23 +656,53 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
                     <div className="flex-1">
                       {scheduledTrack ? (
                         <div 
-                          className={`flex items-center justify-between bg-card/50 p-3 rounded-md border cursor-move hover:bg-card/70 transition-colors ${
-                            currentlyPlaying === scheduledTrack.id ? 'pulse ring-2 ring-primary/50 bg-primary/10' : ''
+                          className={`flex items-center justify-between bg-card/50 rounded-md border cursor-move hover:bg-card/70 transition-all duration-300 ${
+                            currentlyPlaying === scheduledTrack.id 
+                              ? 'pulse ring-2 ring-primary/50 bg-primary/10 p-4 scale-105 shadow-lg' 
+                              : 'p-3'
                           }`}
                           draggable
                           onDragStart={(e) => handleScheduledTrackDragStart(e, scheduledTrack)}
                         >
-                          <div className="flex-1 pointer-events-none">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-medium text-sm">{scheduledTrack.title}</h4>
-                              <Badge className={getCategoryColor(scheduledTrack.category)}>
-                                {scheduledTrack.category}
-                              </Badge>
+                          <div className="flex items-center gap-3 flex-1 pointer-events-none">
+                            {/* Album Art */}
+                            <div className={`bg-gradient-to-br from-primary/20 to-primary/40 rounded-md overflow-hidden flex-shrink-0 ${
+                              currentlyPlaying === scheduledTrack.id ? 'w-16 h-16' : 'w-12 h-12'
+                            }`}>
+                              {scheduledTrack.album?.cover_image_url ? (
+                                <img
+                                  src={scheduledTrack.album.cover_image_url}
+                                  alt={`${scheduledTrack.title} cover`}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <img
+                                  src="https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?w=400&h=400&fit=crop"
+                                  alt="Default album art"
+                                  className="w-full h-full object-cover opacity-60"
+                                />
+                              )}
                             </div>
-                            <p className="text-xs text-muted-foreground">
-                              Artist: {scheduledTrack.artist_info || 'Unknown'} • 
-                              Duration: {formatDuration(scheduledTrack.duration_seconds)}
-                            </p>
+                            
+                            {/* Track Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className={`font-medium truncate ${
+                                  currentlyPlaying === scheduledTrack.id ? 'text-base' : 'text-sm'
+                                }`}>
+                                  {scheduledTrack.title}
+                                </h4>
+                                <Badge className={getCategoryColor(scheduledTrack.category)}>
+                                  {scheduledTrack.category}
+                                </Badge>
+                              </div>
+                              <p className={`text-muted-foreground truncate ${
+                                currentlyPlaying === scheduledTrack.id ? 'text-sm' : 'text-xs'
+                              }`}>
+                                Artist: {scheduledTrack.artist_info || 'Unknown'} • 
+                                Duration: {formatDuration(scheduledTrack.duration_seconds)}
+                              </p>
+                            </div>
                           </div>
                           <div className="flex gap-2 pointer-events-auto">
                             <Button 
