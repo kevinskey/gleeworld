@@ -48,36 +48,7 @@ interface ContractManagerProps {
 }
 
 export const ContractManager = ({ user }: ContractManagerProps) => {
-  const [contracts, setContracts] = useState<Contract[]>([
-    {
-      id: '1',
-      title: 'Solo Performance Contract - Spring Gala',
-      performer_name: 'Maria Johnson',
-      performer_email: 'maria.johnson@example.com',
-      event_name: 'Spring Gala 2024',
-      event_date: '2024-04-15',
-      event_location: 'Atlanta Convention Center',
-      fee_amount: 2500,
-      status: 'draft',
-      created_at: '2024-01-15T10:00:00Z',
-      updated_at: '2024-01-15T10:00:00Z',
-      contract_type: 'performer'
-    },
-    {
-      id: '2',
-      title: 'Featured Artist Contract - Homecoming',
-      performer_name: 'Dr. Angela Davis',
-      performer_email: 'angela.davis@music.edu',
-      event_name: 'Homecoming Concert',
-      event_date: '2024-10-20',
-      event_location: 'Spelman College Auditorium',
-      fee_amount: 5000,
-      status: 'sent',
-      created_at: '2024-01-10T14:30:00Z',
-      updated_at: '2024-01-12T09:15:00Z',
-      contract_type: 'performer'
-    }
-  ]);
+  const [contracts, setContracts] = useState<Contract[]>([]);
 
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [isCreating, setIsCreating] = useState(false);

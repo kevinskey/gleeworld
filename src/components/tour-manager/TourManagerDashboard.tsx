@@ -44,7 +44,7 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
               <div className="flex items-center space-x-2">
                 <Mail className="h-5 w-5 text-blue-600" />
                 <div>
-                  <p className="text-2xl font-bold">12</p>
+                  <p className="text-2xl font-bold">0</p>
                   <p className="text-xs text-muted-foreground">New Requests</p>
                 </div>
               </div>
@@ -55,7 +55,7 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
               <div className="flex items-center space-x-2">
                 <FileText className="h-5 w-5 text-green-600" />
                 <div>
-                  <p className="text-2xl font-bold">8</p>
+                  <p className="text-2xl font-bold">0</p>
                   <p className="text-xs text-muted-foreground">Active Contracts</p>
                 </div>
               </div>
@@ -66,7 +66,7 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
               <div className="flex items-center space-x-2">
                 <MapPin className="h-5 w-5 text-purple-600" />
                 <div>
-                  <p className="text-2xl font-bold">5</p>
+                  <p className="text-2xl font-bold">0</p>
                   <p className="text-xs text-muted-foreground">Planned Routes</p>
                 </div>
               </div>
@@ -77,7 +77,7 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
               <div className="flex items-center space-x-2">
                 <Calendar className="h-5 w-5 text-orange-600" />
                 <div>
-                  <p className="text-2xl font-bold">3</p>
+                  <p className="text-2xl font-bold">0</p>
                   <p className="text-xs text-muted-foreground">Upcoming Tours</p>
                 </div>
               </div>

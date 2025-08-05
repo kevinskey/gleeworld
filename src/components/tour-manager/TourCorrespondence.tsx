@@ -47,49 +47,7 @@ interface TourCorrespondenceProps {
 }
 
 export const TourCorrespondence = ({ user }: TourCorrespondenceProps) => {
-  const [correspondence, setCorrespondence] = useState<Correspondence[]>([
-    {
-      id: '1',
-      subject: 'Performance Inquiry - Corporate Event',
-      from_name: 'Sarah Mitchell',
-      from_email: 'sarah@techcorp.com',
-      organization: 'TechCorp Atlanta',
-      message: 'We would like to inquire about having the Spelman Glee Club perform at our annual corporate retreat...',
-      priority: 'high',
-      status: 'unread',
-      category: 'booking',
-      created_at: '2024-01-20T14:30:00Z',
-      thread_count: 1
-    },
-    {
-      id: '2',
-      subject: 'Media Interview Request',
-      from_name: 'Marcus Johnson',
-      from_email: 'marcus@atlantanews.com',
-      organization: 'Atlanta News Network',
-      message: 'I am a journalist with Atlanta News Network and would love to feature the Glee Club in an upcoming story...',
-      priority: 'medium',
-      status: 'read',
-      category: 'media',
-      created_at: '2024-01-19T10:15:00Z',
-      last_reply: '2024-01-19T16:30:00Z',
-      thread_count: 3
-    },
-    {
-      id: '3',
-      subject: 'Collaboration Opportunity - Music Festival',
-      from_name: 'Dr. Angela Davis',
-      from_email: 'angela@musicfest.org',
-      organization: 'Atlanta Music Festival',
-      message: 'We would love to discuss a potential collaboration for this year\'s Atlanta Music Festival...',
-      priority: 'high',
-      status: 'replied',
-      category: 'collaboration',
-      created_at: '2024-01-18T09:00:00Z',
-      last_reply: '2024-01-18T14:45:00Z',
-      thread_count: 5
-    }
-  ]);
+  const [correspondence, setCorrespondence] = useState<Correspondence[]>([]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
