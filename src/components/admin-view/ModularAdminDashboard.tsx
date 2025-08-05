@@ -118,6 +118,7 @@ export const ModularAdminDashboard = ({ user }: ModularAdminDashboardProps) => {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {ModuleRegistry.getCategories().map((category) => {
+          console.log('ModularAdminDashboard: Rendering category:', category.title, 'modules:', category.modules.length);
           const CategoryIcon = category.icon;
           return (
             <ModuleCard
