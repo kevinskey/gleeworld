@@ -38,6 +38,7 @@ import { AttendanceModule } from '@/components/modules/AttendanceModule';
 import { TermManagerModule } from '@/components/modules/TermManagerModule';
 import { TourManagerModule } from '@/components/modules/TourManagerModule';
 import { BookingFormsModule } from '@/components/modules/BookingFormsModule';
+import { SetupCrewManagerModule } from '@/components/modules/SetupCrewManagerModule';
 import { ModuleCategory } from '@/types/modules';
 
 export const moduleCategories: ModuleCategory[] = [
@@ -228,6 +229,15 @@ export const moduleCategories: ModuleCategory[] = [
         iconColor: "red",
         category: "member-management",
         component: PermissionsModule,
+      },
+      {
+        id: "setup-crew-manager",
+        title: "Setup Crew Manager",
+        description: "Manage auditions as they become members, coordinate crews, equipment, and first-year communications",
+        icon: Settings,
+        iconColor: "orange",
+        category: "member-management",
+        component: SetupCrewManagerModule,
       }
     ]
   },
