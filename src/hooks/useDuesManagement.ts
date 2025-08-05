@@ -114,12 +114,41 @@ export const useDuesManagement = () => {
       const { data: members, error: membersError } = await supabase
         .from('gw_profiles')
         .select('user_id')
-        .in('role', ['member', 'executive']);
+        .in('role', ['member', 'executive'])
+        .not('user_id', 'is', null);
 
       if (membersError) throw membersError;
 
+      if (!members || members.length === 0) {
+        toast({
+          title: "No Members Found",
+          description: "No members or executives found to create dues records for",
+          variant: "destructive",
+        });
+        return 0;
+      }
+
+      // Filter out any existing dues records for this semester
+      const { data: existingDues } = await supabase
+        .from('gw_dues_records')
+        .select('user_id')
+        .eq('semester', semester);
+
+      const existingUserIds = new Set(existingDues?.map(d => d.user_id) || []);
+      const membersToCreate = members.filter(member => 
+        member.user_id && !existingUserIds.has(member.user_id)
+      );
+
+      if (membersToCreate.length === 0) {
+        toast({
+          title: "No New Records Needed",
+          description: `All members already have dues records for ${semester}`,
+        });
+        return 0;
+      }
+
       // Create dues records for each member
-      const duesRecords = members.map(member => ({
+      const duesRecords = membersToCreate.map(member => ({
         user_id: member.user_id,
         amount: amount,
         due_date: dueDate,
