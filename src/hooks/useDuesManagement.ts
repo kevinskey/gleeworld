@@ -77,9 +77,10 @@ export const useDuesManagement = () => {
       setDuesRecords((data || []) as any);
     } catch (error) {
       console.error('Error fetching dues records:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       toast({
         title: "Error",
-        description: "Failed to fetch dues records",
+        description: `Failed to fetch dues records: ${error.message || 'Unknown error'}`,
         variant: "destructive",
       });
     }
