@@ -31,8 +31,8 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
     title: 'Glee World Radio',
     artist: 'Spelman College Glee Club',
     category: 'Live Radio',
-    // Try the stream with explicit format
-    audio_url: 'http://134.199.204.155/public/glee_world_radio'
+    // Use proper Shoutcast streaming format
+    audio_url: 'http://134.199.204.155/public/glee_world_radio/stream'
   });
   const [streamError, setStreamError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
