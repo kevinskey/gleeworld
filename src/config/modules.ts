@@ -47,6 +47,10 @@ import { StudentConductorModule } from '@/components/modules/StudentConductorMod
 import { SectionLeaderModule } from '@/components/modules/SectionLeaderModule';
 import { SightSingingModule } from '@/components/modules/SightSingingModule';
 import { PRCoordinatorHub } from '@/components/pr-coordinator/PRCoordinatorHub';
+import { NotificationsModule } from '@/components/modules/NotificationsModule';
+import { EmailManagementModule } from '@/components/modules/EmailManagementModule';
+import { BucketsOfLoveModule } from '@/components/modules/BucketsOfLoveModule';
+import { SchedulingModule } from '@/components/modules/SchedulingModule';
 import { ModuleCategory } from '@/types/modules';
 
 export const moduleCategories: ModuleCategory[] = [
@@ -64,7 +68,7 @@ export const moduleCategories: ModuleCategory[] = [
         icon: Bell,
         iconColor: "yellow",
         category: "communications",
-        component: UserManagementModule, // Placeholder - replace with actual component
+        component: NotificationsModule,
       },
       {
         id: "email-management",
@@ -73,7 +77,7 @@ export const moduleCategories: ModuleCategory[] = [
         icon: Mail,
         iconColor: "blue",
         category: "communications",
-        component: UserManagementModule, // Placeholder - replace with actual component
+        component: EmailManagementModule,
       },
       {
         id: "buckets-of-love",
@@ -82,7 +86,7 @@ export const moduleCategories: ModuleCategory[] = [
         icon: Heart,
         iconColor: "pink",
         category: "communications",
-        component: UserManagementModule, // Placeholder - replace with actual component
+        component: BucketsOfLoveModule,
       },
       {
         id: "glee-writing",
@@ -120,7 +124,7 @@ export const moduleCategories: ModuleCategory[] = [
         icon: Clock,
         iconColor: "cyan",
         category: "communications",
-        component: UserManagementModule, // Placeholder - replace with actual component
+        component: SchedulingModule,
       },
       {
         id: "calendar-management",
