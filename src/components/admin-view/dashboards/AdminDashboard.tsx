@@ -218,7 +218,24 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
   const renderRightPanelContent = () => {
     // Handle subcategory content first
     if (selectedSubcategory) {
-      return renderSubcategoryContent(selectedSubcategory);
+      return (
+        <div className="space-y-4">
+          {/* Breadcrumb-style header showing navigation */}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+            <span 
+              className="cursor-pointer hover:text-foreground"
+              onClick={() => setSelectedSubcategory(null)}
+            >
+              {categories.find(cat => cat.id === selectedCategory)?.title}
+            </span>
+            <ChevronRight className="h-4 w-4" />
+            <span className="text-foreground font-medium">
+              {categories.find(cat => cat.id === selectedCategory)?.subcategories?.find(sub => sub.id === selectedSubcategory)?.title}
+            </span>
+          </div>
+          {renderSubcategoryContent(selectedSubcategory)}
+        </div>
+      );
     }
 
     // Get the selected category
@@ -228,12 +245,13 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
     if (currentCategory?.subcategories) {
       return (
         <div className="space-y-4">
-          <div>
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <currentCategory.icon className="h-5 w-5" />
+          {/* Header showing selected category */}
+          <div className="border-l-4 border-primary pl-4">
+            <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
+              <currentCategory.icon className={`h-5 w-5 text-${currentCategory.color}-600`} />
               {currentCategory.title}
             </h2>
-            <p className="text-muted-foreground mb-6">{currentCategory.description}</p>
+            <p className="text-muted-foreground">{currentCategory.description}</p>
           </div>
           
           <div className="grid gap-3 md:grid-cols-2">
@@ -242,7 +260,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
               return (
                 <div 
                   key={subcategory.id}
-                  className="p-4 rounded-lg cursor-pointer transition-all hover:bg-muted/50 border border-border/50 hover:border-primary/20"
+                  className="p-4 rounded-lg cursor-pointer transition-all hover:bg-muted/50 border border-border/50 hover:border-primary/20 hover:shadow-sm"
                   onClick={() => setSelectedSubcategory(subcategory.id)}
                 >
                   <div className="flex items-center gap-3 mb-2">
@@ -264,16 +282,32 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
     }
 
     // Handle main category content when no subcategories
-    switch (selectedCategory) {
-      case "wardrobe":
-        return renderWardrobeContent();
-      case "libraries":
-        return renderLibrariesContent();
-      case "system":
-        return renderSystemContent();
-      default:
-        return renderOverviewContent();
-    }
+    const CategoryIcon = currentCategory?.icon || Settings;
+    return (
+      <div className="space-y-4">
+        {/* Header showing selected category */}
+        <div className="border-l-4 border-primary pl-4">
+          <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
+            <CategoryIcon className={`h-5 w-5 text-${currentCategory?.color}-600`} />
+            {currentCategory?.title}
+          </h2>
+          <p className="text-muted-foreground">{currentCategory?.description}</p>
+        </div>
+        
+        {(() => {
+          switch (selectedCategory) {
+            case "wardrobe":
+              return renderWardrobeContent();
+            case "libraries":
+              return renderLibrariesContent();
+            case "system":
+              return renderSystemContent();
+            default:
+              return renderOverviewContent();
+          }
+        })()}
+      </div>
+    );
   };
 
   const renderSubcategoryContent = (subcategory: string) => {
