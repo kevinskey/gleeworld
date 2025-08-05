@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, BookOpen, TrendingUp, Target, Users } from 'lucide-react';
+import { SightReadingUploader } from '@/components/SightReadingUploader';
 
 interface SightSingingManagerProps {
   user?: {
@@ -106,6 +107,16 @@ export const SightSingingManager = ({ user }: SightSingingManagerProps) => {
               No sight singing exercises assigned
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Sight Reading Upload Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Audio Submission & Analysis</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <SightReadingUploader />
         </CardContent>
       </Card>
 
