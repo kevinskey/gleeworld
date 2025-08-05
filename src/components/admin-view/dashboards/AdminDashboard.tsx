@@ -522,8 +522,8 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
         <div className="hidden md:block">
           <div className="bg-card rounded-lg border h-[calc(100vh-200px)]">
             <div className="flex h-full">
-              {/* Left Column - Categories */}
-              <div className="w-1/2 p-6 border-r border-border overflow-y-auto">
+              {/* Left Column - Categories (40%) */}
+              <div className="w-2/5 p-6 border-r border-border overflow-y-auto">
                 <h2 className="text-xl font-semibold mb-6 text-foreground">
                   Admin Categories
                 </h2>
@@ -532,8 +532,8 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                 </div>
               </div>
 
-              {/* Right Column - Content */}
-              <div className="w-1/2 p-6 overflow-y-auto">
+              {/* Right Column - Content (60%) */}
+              <div className="w-3/5 p-6 overflow-y-auto">
                 {renderRightPanelContent()}
               </div>
             </div>
