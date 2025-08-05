@@ -325,7 +325,6 @@ const LandingPage = () => {
           className="relative bg-cover bg-right bg-no-repeat min-h-screen"
           style={{ backgroundImage: `url(${historicBackground})` }}
         >
-          <div className="absolute inset-0 bg-background/40"></div>
           <div className="relative z-10">
             <Carousel className="w-full" opts={{ align: "start", loop: true }}>
               <CarouselContent>
@@ -350,7 +349,6 @@ const LandingPage = () => {
         className="relative bg-cover bg-right bg-no-repeat min-h-screen"
         style={{ backgroundImage: `url(${historicBackground})` }}
       >
-        <div className="absolute inset-0 bg-background/40"></div>
         <div className="relative z-10">
           {sections.map((section) => section.content)}
         </div>
