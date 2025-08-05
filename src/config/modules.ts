@@ -50,6 +50,7 @@ import { BookingFormsModule } from '@/components/modules/BookingFormsModule';
 import { StudentConductorModule } from '@/components/modules/StudentConductorModule';
 import { SectionLeaderModule } from '@/components/modules/SectionLeaderModule';
 import { SightSingingModule } from '@/components/modules/SightSingingModule';
+import { SightReadingPreviewModule } from '@/components/modules/SightReadingPreviewModule';
 import { PRCoordinatorHub } from '@/components/pr-coordinator/PRCoordinatorHub';
 import { NotificationsModule } from '@/components/modules/NotificationsModule';
 import { EmailManagementModule } from '@/components/modules/EmailManagementModule';
@@ -289,6 +290,15 @@ export const moduleCategories: ModuleCategory[] = [
         iconColor: "blue",
         category: "musical-leadership",
         component: SightSingingModule,
+      },
+      {
+        id: "sight-reading-preview",
+        title: "Sight Reading Preview",
+        description: "Preview and analyze MusicXML sheet music with professional notation",
+        icon: Music,
+        iconColor: "purple",
+        category: "musical-leadership",
+        component: SightReadingPreviewModule,
       }
     ]
   },
