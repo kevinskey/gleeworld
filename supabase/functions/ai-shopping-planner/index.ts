@@ -24,11 +24,19 @@ serve(async (req) => {
   }
 
   try {
-    const { title, budget, timeframe, purpose, action, plan } = await req.json();
+    console.log('AI Shopping Planner function called');
+    
+    const body = await req.json();
+    console.log('Request body:', JSON.stringify(body));
+    
+    const { title, budget, timeframe, purpose, action, plan } = body;
 
     if (!openAIApiKey) {
+      console.error('OpenAI API key not configured');
       throw new Error('OpenAI API key not configured');
     }
+
+    console.log('OpenAI API key found, proceeding with request');
 
     let prompt = '';
     
@@ -89,6 +97,7 @@ serve(async (req) => {
       `;
     }
 
+    console.log('Making OpenAI API request...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -112,11 +121,16 @@ serve(async (req) => {
       }),
     });
 
+    console.log('OpenAI API response status:', response.status);
+    
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('OpenAI API error response:', errorText);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('OpenAI API response received successfully');
     const aiResponse = data.choices[0].message.content;
 
     // Try to parse the JSON response
