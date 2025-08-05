@@ -47,7 +47,7 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
     return localStorage.getItem('timeline-currently-playing') || null;
   });
   const [isTimelinePlaying, setIsTimelinePlaying] = useState<boolean>(() => {
-    return localStorage.getItem('timeline-is-playing') === 'true';
+    return localStorage.getItem('gleeworld-timeline-radio-playing') === 'true';
   });
   const [pausedPosition, setPausedPosition] = useState<number>(() => {
     const saved = localStorage.getItem('timeline-paused-position');
@@ -215,7 +215,7 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
       setCurrentlyPlaying(null);
       localStorage.removeItem('timeline-currently-playing');
       setIsTimelinePlaying(false);
-      localStorage.setItem('timeline-is-playing', 'false');
+      localStorage.setItem('gleeworld-timeline-radio-playing', 'false');
       return;
     }
 
@@ -310,9 +310,9 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
         audioRef.current.pause();
       }
       setIsTimelinePlaying(false);
-      localStorage.setItem('timeline-is-playing', 'false');
+      localStorage.setItem('gleeworld-timeline-radio-playing', 'false');
       toast({
-        title: "Glee Radio Paused",
+        title: "Timeline Radio Paused",
         description: "Timeline playback paused. Your position is saved.",
       });
     } else {
@@ -322,9 +322,9 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
         audioRef.current.currentTime = pausedPosition;
         audioRef.current.play().then(() => {
           setIsTimelinePlaying(true);
-          localStorage.setItem('timeline-is-playing', 'true');
+          localStorage.setItem('gleeworld-timeline-radio-playing', 'true');
           toast({
-            title: "Glee Radio Resumed",
+            title: "Timeline Radio Resumed",
             description: "Timeline playback resumed from where you left off.",
           });
         }).catch((error) => {
@@ -336,7 +336,7 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
           const firstTrack = sortedTracks[0];
           handlePlayToggle(firstTrack);
           setIsTimelinePlaying(true);
-          localStorage.setItem('timeline-is-playing', 'true');
+          localStorage.setItem('gleeworld-timeline-radio-playing', 'true');
           setPausedPosition(0);
           localStorage.setItem('timeline-paused-position', '0');
           toast({
@@ -358,10 +358,10 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
   useEffect(() => {
     if (currentlyPlaying) {
       setIsTimelinePlaying(true);
-      localStorage.setItem('timeline-is-playing', 'true');
+      localStorage.setItem('gleeworld-timeline-radio-playing', 'true');
     } else {
       setIsTimelinePlaying(false);
-      localStorage.setItem('timeline-is-playing', 'false');
+      localStorage.setItem('gleeworld-timeline-radio-playing', 'false');
     }
   }, [currentlyPlaying]);
 

@@ -212,11 +212,12 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
           {/* Right side actions */}
           <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
 
-            {/* Radio Player - Replace Camera Capture */}
+            {/* Radio Player - Personal Radio */}
             <RadioPlayer 
               className="flex-shrink-0" 
               isPlaying={isRadioPlaying}
               onToggle={onRadioToggle}
+              isPersonalRadio={true}
             />
             
             {/* Dashboard Views Dropdown - Only for admins */}

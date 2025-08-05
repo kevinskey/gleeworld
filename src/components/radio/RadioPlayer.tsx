@@ -8,6 +8,7 @@ interface RadioPlayerProps {
   className?: string;
   isPlaying?: boolean;
   onToggle?: () => void;
+  isPersonalRadio?: boolean; // Distinguish between personal radio (header) and timeline radio
 }
 
 interface CurrentTrack {
@@ -24,7 +25,7 @@ interface AudioTrack {
   audio_url: string;
 }
 
-export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onToggle }: RadioPlayerProps) => {
+export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onToggle, isPersonalRadio = true }: RadioPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(externalIsPlaying || false);
   const [currentTrack, setCurrentTrack] = useState<CurrentTrack>({
     title: 'Glee World Radio',
@@ -78,8 +79,9 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
       return;
     }
 
-    // Check initial radio state from localStorage
-    const radioState = localStorage.getItem('gleeworld-radio-playing');
+    // Use different localStorage keys for personal vs timeline radio
+    const storageKey = isPersonalRadio ? 'gleeworld-personal-radio-playing' : 'gleeworld-timeline-radio-playing';
+    const radioState = localStorage.getItem(storageKey);
     const initialIsPlaying = radioState === 'true';
     setIsPlaying(initialIsPlaying);
 
@@ -94,7 +96,8 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
       }
     }
 
-    // Listen for radio state changes
+    // Listen for radio state changes - use different event names
+    const eventName = isPersonalRadio ? 'personal-radio-toggle' : 'timeline-radio-toggle';
     const handleRadioToggle = (event: CustomEvent) => {
       setIsPlaying(event.detail.isPlaying);
       if (audioRef.current) {
@@ -106,12 +109,12 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
       }
     };
 
-    window.addEventListener('radio-toggle', handleRadioToggle as EventListener);
+    window.addEventListener(eventName, handleRadioToggle as EventListener);
 
     return () => {
-      window.removeEventListener('radio-toggle', handleRadioToggle as EventListener);
+      window.removeEventListener(eventName, handleRadioToggle as EventListener);
     };
-  }, [volume, currentTrack.audio_url]);
+  }, [volume, currentTrack.audio_url, isPersonalRadio]);
 
   const playNextTrack = () => {
     if (audioTracks.length === 0) return;
@@ -147,11 +150,13 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
     const newState = !isPlaying;
     setIsPlaying(newState);
     
-    // Update localStorage
-    localStorage.setItem('gleeworld-radio-playing', newState.toString());
+    // Update localStorage with appropriate key
+    const storageKey = isPersonalRadio ? 'gleeworld-personal-radio-playing' : 'gleeworld-timeline-radio-playing';
+    localStorage.setItem(storageKey, newState.toString());
     
-    // Dispatch custom event for other components
-    window.dispatchEvent(new CustomEvent('radio-toggle', { 
+    // Dispatch custom event for other components with appropriate event name
+    const eventName = isPersonalRadio ? 'personal-radio-toggle' : 'timeline-radio-toggle';
+    window.dispatchEvent(new CustomEvent(eventName, { 
       detail: { isPlaying: newState } 
     }));
 
