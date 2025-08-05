@@ -71,6 +71,8 @@ export const StreamlinedFilterBar = ({
       'composer-desc': 'Composer Z-A',
       'created_at-desc': 'Newest First',
       'created_at-asc': 'Oldest First',
+      'duration_seconds-asc': 'Shortest First',
+      'duration_seconds-desc': 'Longest First',
     };
     return sortOptions[key as keyof typeof sortOptions] || 'Title A-Z';
   };
@@ -198,6 +200,13 @@ export const StreamlinedFilterBar = ({
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onFiltersChange({ sortBy: 'created_at', sortOrder: 'asc' })}>
               Oldest First
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onFiltersChange({ sortBy: 'duration_seconds', sortOrder: 'asc' })}>
+              Shortest First
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onFiltersChange({ sortBy: 'duration_seconds', sortOrder: 'desc' })}>
+              Longest First
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
