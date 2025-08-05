@@ -319,16 +319,16 @@ const App = () => {
                  path="/calendar" 
                  element={
                    <PublicRoute>
-                     <Calendar />
+                     <PublicCalendar />
                    </PublicRoute>
                  } 
                />
                <Route 
-                 path="/public-calendar" 
+                 path="/events" 
                  element={
-                   <PublicRoute>
-                     <PublicCalendar />
-                   </PublicRoute>
+                   <ProtectedRoute>
+                     <Calendar />
+                   </ProtectedRoute>
                  } 
                />
                <Route 
