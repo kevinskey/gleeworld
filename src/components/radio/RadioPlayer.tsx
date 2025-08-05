@@ -33,6 +33,7 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
     category: 'Live Radio',
     audio_url: 'http://134.199.204.155/public/glee_world_radio'
   });
+  const [streamError, setStreamError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
 
@@ -40,8 +41,10 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.src = currentTrack.audio_url!;
-      audioRef.current.volume = 0.7; // Fixed volume for radio stream
+      audioRef.current.volume = 0.7;
+      audioRef.current.crossOrigin = "anonymous"; // Handle CORS
       audioRef.current.load();
+      setStreamError(null);
     }
   }, [currentTrack.audio_url]);
 
@@ -49,15 +52,19 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
   useEffect(() => {
     if (audioRef.current && currentTrack.audio_url) {
       if (isPlaying) {
-        audioRef.current.play().catch(error => {
-          console.error('Error playing track:', error);
-          setIsPlaying(false);
-          toast({
-            title: "Playback Error", 
-            description: "Unable to play track",
-            variant: "destructive",
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error('Error playing stream:', error);
+            setIsPlaying(false);
+            setStreamError("Unable to play stream. Check if stream is online and try again.");
+            toast({
+              title: "Playback Error", 
+              description: "Stream may be offline. Please try again.",
+              variant: "destructive",
+            });
           });
-        });
+        }
       } else {
         audioRef.current.pause();
       }
@@ -110,10 +117,17 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
     }
 
     if (newState) {
-      toast({
-        title: "Radio Playing",
-        description: "Glee World Radio Live Stream",
-      });
+      if (streamError) {
+        toast({
+          title: "Stream Status",
+          description: "Attempting to reconnect to radio stream...",
+        });
+      } else {
+        toast({
+          title: "Radio Playing",
+          description: "Glee World Radio Live Stream",
+        });
+      }
     } else {
       toast({
         title: "Radio Paused", 
@@ -128,16 +142,24 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
       {/* Hidden audio element */}
       <audio
         ref={audioRef}
-        onPlay={() => setIsPlaying(true)}
+        onPlay={() => {
+          setIsPlaying(true);
+          setStreamError(null);
+        }}
         onPause={() => setIsPlaying(false)}
         onError={(e) => {
           console.error('Stream error:', e);
           setIsPlaying(false);
+          const errorMsg = "Radio stream unavailable - server may be offline";
+          setStreamError(errorMsg);
           toast({
             title: "Stream Error",
-            description: "Unable to connect to radio stream",
+            description: errorMsg,
             variant: "destructive",
           });
+        }}
+        onCanPlay={() => {
+          setStreamError(null);
         }}
       />
       
