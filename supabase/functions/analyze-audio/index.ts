@@ -65,7 +65,7 @@ serve(async (req) => {
 
     // Create new FormData for the droplet server
     const serverFormData = new FormData()
-    serverFormData.append('audio', audioFile, audioFile.name)
+    serverFormData.append('file', audioFile, audioFile.name)
 
     console.log('Forwarding to droplet server at 134.199.204.155:4000/analyze...')
 
