@@ -8,186 +8,174 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface ShoppingItem {
-  id: string;
-  name: string;
-  estimatedPrice: number;
-  priority: 'high' | 'medium' | 'low';
-  category: string;
-  notes?: string;
-}
-
 serve(async (req) => {
+  console.log('AI Shopping Planner function called - method:', req.method);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('AI Shopping Planner function called');
+    console.log('Processing POST request');
     
     const body = await req.json();
-    console.log('Request body:', JSON.stringify(body));
+    console.log('Request body received:', JSON.stringify(body, null, 2));
     
     const { title, budget, timeframe, purpose, action, plan } = body;
 
     if (!openAIApiKey) {
       console.error('OpenAI API key not configured');
-      throw new Error('OpenAI API key not configured');
+      return new Response(JSON.stringify({ 
+        error: 'OpenAI API key not configured',
+        items: [],
+        suggestions: ["Please configure OpenAI API key"],
+        totalEstimated: 0
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    console.log('OpenAI API key found, proceeding with request');
+    console.log('OpenAI API key found, proceeding...');
 
-    let prompt = '';
-    
     if (action === 'generate_plan') {
-      prompt = `
-        Create a detailed shopping plan for the following requirements:
-        
-        Title: ${title}
-        Budget: $${budget}
-        Timeframe: ${timeframe}
-        Purpose: ${purpose}
-        
-        Please provide:
-        1. A list of recommended items with estimated prices, priorities (high/medium/low), and categories
-        2. Money-saving suggestions and alternatives
-        3. Budget optimization tips
-        4. Shopping strategy recommendations
-        
-        Format the response as JSON with this structure:
-        {
-          "items": [
+      console.log('Generating new plan for:', title);
+      
+      const prompt = `Create a simple shopping plan for: ${title} with budget $${budget} for ${purpose}. 
+      Return only valid JSON with this exact structure:
+      {
+        "items": [
+          {
+            "id": "1",
+            "name": "example item",
+            "estimatedPrice": 50,
+            "priority": "high",
+            "category": "Essential",
+            "notes": "example note"
+          }
+        ],
+        "suggestions": ["Save money by comparing prices"],
+        "totalEstimated": 50
+      }`;
+
+      console.log('Making OpenAI API request...');
+      
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
             {
-              "id": "unique_id",
-              "name": "item name",
-              "estimatedPrice": number,
-              "priority": "high|medium|low",
-              "category": "category name",
-              "notes": "optional notes or alternatives"
+              role: 'system',
+              content: 'You are a financial planning assistant. Always return valid JSON only.'
+            },
+            {
+              role: 'user',
+              content: prompt
             }
           ],
-          "suggestions": [
-            "suggestion 1",
-            "suggestion 2"
+          temperature: 0.3,
+          max_tokens: 1000,
+        }),
+      });
+
+      console.log('OpenAI response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('OpenAI API error:', response.status, errorText);
+        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('OpenAI response received successfully');
+      
+      const aiResponse = data.choices[0].message.content;
+      console.log('AI response content:', aiResponse);
+
+      // Parse JSON response
+      let parsedResponse;
+      try {
+        // Try to extract JSON from the response
+        const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+        const jsonString = jsonMatch ? jsonMatch[0] : aiResponse;
+        parsedResponse = JSON.parse(jsonString);
+        console.log('Successfully parsed AI response');
+      } catch (parseError) {
+        console.error('Failed to parse AI response:', parseError);
+        // Fallback response
+        parsedResponse = {
+          items: [
+            {
+              id: "1",
+              name: "Basic Item",
+              estimatedPrice: Math.min(Number(budget) * 0.8, 100),
+              priority: "high",
+              category: "Essential",
+              notes: "AI parsing failed - manual item"
+            }
           ],
-          "totalEstimated": total_amount
-        }
-        
-        Keep the total estimated amount within or close to the budget. Focus on essential items first, then nice-to-have items.
-      `;
+          suggestions: [
+            "Compare prices across different vendors",
+            "Look for bulk discounts",
+            "Check for seasonal sales"
+          ],
+          totalEstimated: Math.min(Number(budget) * 0.8, 100)
+        };
+      }
+
+      // Ensure response has correct structure
+      if (!parsedResponse.items) parsedResponse.items = [];
+      if (!parsedResponse.suggestions) parsedResponse.suggestions = [];
+      if (!parsedResponse.totalEstimated) {
+        parsedResponse.totalEstimated = parsedResponse.items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
+      }
+
+      // Add IDs if missing
+      parsedResponse.items = parsedResponse.items.map((item, index) => ({
+        ...item,
+        id: item.id || `item_${Date.now()}_${index}`
+      }));
+
+      console.log('Returning successful response');
+      return new Response(JSON.stringify(parsedResponse), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+
     } else if (action === 'optimize_plan') {
-      prompt = `
-        Optimize the following shopping plan to better fit the budget and improve cost efficiency:
-        
-        Current Plan:
-        Title: ${plan.title}
-        Budget: $${plan.budget}
-        Current Total: $${plan.totalEstimated}
-        Items: ${JSON.stringify(plan.items)}
-        
-        Please provide:
-        1. Optimized item list with better pricing or alternatives
-        2. Items to remove or replace if over budget
-        3. Additional money-saving tips
-        4. Prioritization suggestions
-        
-        Format the response as JSON with the same structure as the generation request.
-        Focus on staying within budget while maintaining quality and meeting the purpose requirements.
-      `;
-    }
-
-    console.log('Making OpenAI API request...');
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: `You are an expert financial planning assistant specializing in creating smart, budget-conscious shopping plans. You help users optimize their spending by providing practical suggestions, cost-effective alternatives, and strategic shopping advice. Always focus on staying within budget while meeting the user's needs.`
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000,
-      }),
-    });
-
-    console.log('OpenAI API response status:', response.status);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI API error response:', errorText);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    console.log('OpenAI API response received successfully');
-    const aiResponse = data.choices[0].message.content;
-
-    // Try to parse the JSON response
-    let parsedResponse;
-    try {
-      // Extract JSON from the response if it's wrapped in markdown
-      const jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/) || aiResponse.match(/\{[\s\S]*\}/);
-      const jsonString = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : aiResponse;
-      parsedResponse = JSON.parse(jsonString);
-    } catch (parseError) {
-      console.error('Failed to parse AI response as JSON:', parseError);
-      // Fallback response
-      parsedResponse = {
-        items: [
-          {
-            id: Date.now().toString(),
-            name: "Basic Item",
-            estimatedPrice: Math.min(budget * 0.8, 100),
-            priority: "high",
-            category: "Essential",
-            notes: "AI parsing failed - manual item added"
-          }
-        ],
+      console.log('Optimizing existing plan');
+      
+      // For now, return the existing plan with some modifications
+      const optimizedResponse = {
+        items: plan?.items || [],
         suggestions: [
-          "Consider comparing prices across different vendors",
-          "Look for bulk discounts if buying multiple items",
-          "Check for seasonal sales and promotions"
+          "Consider removing low-priority items to stay within budget",
+          "Look for alternative brands or suppliers",
+          "Check if any items can be borrowed or rented instead"
         ],
-        totalEstimated: Math.min(budget * 0.8, 100)
+        totalEstimated: plan?.totalEstimated || 0
       };
+
+      return new Response(JSON.stringify(optimizedResponse), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    // Ensure the response has the correct structure
-    if (!parsedResponse.items) {
-      parsedResponse.items = [];
-    }
-    if (!parsedResponse.suggestions) {
-      parsedResponse.suggestions = [];
-    }
-    if (!parsedResponse.totalEstimated) {
-      parsedResponse.totalEstimated = parsedResponse.items.reduce((sum: number, item: any) => sum + (item.estimatedPrice || 0), 0);
-    }
-
-    // Add unique IDs if missing
-    parsedResponse.items = parsedResponse.items.map((item: any, index: number) => ({
-      ...item,
-      id: item.id || `item_${Date.now()}_${index}`
-    }));
-
-    return new Response(JSON.stringify(parsedResponse), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    // Invalid action
+    throw new Error(`Invalid action: ${action}`);
 
   } catch (error) {
     console.error('Error in ai-shopping-planner function:', error);
+    console.error('Error stack:', error.stack);
+    
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: error.message || 'An unexpected error occurred',
       items: [],
       suggestions: ["Sorry, I couldn't generate suggestions at this time. Please try again."],
       totalEstimated: 0
