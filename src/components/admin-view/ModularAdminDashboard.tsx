@@ -107,10 +107,6 @@ export const ModularAdminDashboard = ({ user }: ModularAdminDashboardProps) => {
   }
 
   // Main dashboard view - show categories
-  console.log('=== ModularAdminDashboard Main View ===');
-  console.log('ModuleRegistry.getCategories():', ModuleRegistry.getCategories());
-  console.log('Categories length:', ModuleRegistry.getCategories().length);
-  console.log('=== End ModularAdminDashboard Debug ===');
   
   return (
     <div className="space-y-6">

@@ -1,15 +1,12 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Shield } from "lucide-react";
 import { DashboardTemplate } from "./DashboardTemplate";
 import { ModularAdminDashboard } from "./ModularAdminDashboard";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { supabase } from '@/integrations/supabase/client';
 
 export const AdminViewDashboard = () => {
   const { user, loading } = useAuth();
@@ -17,21 +14,33 @@ export const AdminViewDashboard = () => {
   const { userProfile } = useUserProfile(user);
   const navigate = useNavigate();
 
-  // Debug logging
-  console.log('=== AdminViewDashboard Debug ===');
-  console.log('loading:', loading);
-  console.log('profileLoading:', profileLoading);
-  console.log('user:', user);
-  console.log('profile:', profile);
-  console.log('userProfile:', userProfile);
-  console.log('isAdmin():', isAdmin());
-  console.log('isSuperAdmin():', isSuperAdmin());
-  console.log('=== End Debug ===');
+  // Error boundary to catch component errors
+  const [error, setError] = React.useState<Error | null>(null);
 
-  // Note: Removed automatic redirect to allow admin setup
+  React.useEffect(() => {
+    const handleError = (error: ErrorEvent) => {
+      console.error('AdminViewDashboard caught error:', error);
+      setError(new Error(error.message));
+    };
+
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
+
+  if (error) {
+    console.error('AdminViewDashboard Error:', error);
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <ErrorState
+          title="Dashboard Error"
+          message={error.message}
+          onRetry={() => setError(null)}
+        />
+      </div>
+    );
+  }
 
   if (loading || profileLoading) {
-    console.log('AdminViewDashboard - showing loading spinner');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <LoadingSpinner size="lg" text="Loading admin dashboard..." />
@@ -40,7 +49,6 @@ export const AdminViewDashboard = () => {
   }
 
   if (!user) {
-    console.log('AdminViewDashboard - no user, showing auth required');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <ErrorState
@@ -51,10 +59,6 @@ export const AdminViewDashboard = () => {
       </div>
     );
   }
-
-  // Since we've fixed the RLS policies, users with admin/super-admin roles should proceed directly to dashboard
-  // No need for the "Make Me Admin" interface anymore
-  console.log('AdminViewDashboard - user authenticated, proceeding to dashboard');
 
   // Use admin background
   const backgroundImage = "/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png";
