@@ -193,6 +193,31 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
     return slots;
   };
 
+  const playNextTrack = (currentTrackId: string) => {
+    // Find current track in timeline
+    const currentTrackIndex = scheduledTracks
+      .filter(t => t.scheduledDate === selectedDate)
+      .sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime))
+      .findIndex(t => t.id === currentTrackId);
+    
+    const sortedTracks = scheduledTracks
+      .filter(t => t.scheduledDate === selectedDate)
+      .sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime));
+    
+    // Check if there's a next track
+    if (currentTrackIndex >= 0 && currentTrackIndex < sortedTracks.length - 1) {
+      const nextTrack = sortedTracks[currentTrackIndex + 1];
+      handlePlayToggle(nextTrack);
+    } else {
+      // No more tracks, stop playback
+      setCurrentlyPlaying(null);
+      toast({
+        title: "Playlist Complete",
+        description: "All scheduled tracks have finished playing",
+      });
+    }
+  };
+
   const handlePlayToggle = (track: ScheduledTrack) => {
     if (currentlyPlaying === track.id) {
       // Stop current track
@@ -221,9 +246,9 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
         });
       });
       
-      // Handle audio end
+      // Handle audio end - play next track or stop
       audio.onended = () => {
-        setCurrentlyPlaying(null);
+        playNextTrack(track.id);
       };
       
       // Handle audio error
