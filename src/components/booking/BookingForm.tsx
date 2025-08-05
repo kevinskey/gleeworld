@@ -184,8 +184,8 @@ export const BookingForm: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-background to-brand-100 p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="bg-gradient-to-br from-brand-50 via-background to-brand-100 py-6 px-4 min-h-[calc(100vh-64px)]">
+      <div className="max-w-4xl mx-auto pb-8">
         {/* Header */}
         <div className="text-center mb-8 relative">
           <div className="absolute inset-0 bg-gradient-to-r from-brand-400/20 via-brand-600/10 to-brand-400/20 rounded-3xl blur-3xl"></div>
