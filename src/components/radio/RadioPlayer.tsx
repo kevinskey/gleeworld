@@ -34,6 +34,8 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
   });
   const [audioTracks, setAudioTracks] = useState<AudioTrack[]>([]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const [errorCount, setErrorCount] = useState(0);
+  const [hasTriedAllTracks, setHasTriedAllTracks] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
 
@@ -134,6 +136,21 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
     const nextIndex = (currentTrackIndex + 1) % audioTracks.length;
     const nextTrack = audioTracks[nextIndex];
     
+    // Check if we've tried all tracks already
+    if (nextIndex === 0 && hasTriedAllTracks) {
+      setIsPlaying(false);
+      toast({
+        title: "No Audio Available",
+        description: "All tracks failed to load. Please try again later.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (nextIndex === 0) {
+      setHasTriedAllTracks(true);
+    }
+    
     setCurrentTrackIndex(nextIndex);
     const newTrack = {
       title: nextTrack.title,
@@ -194,7 +211,12 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
       {/* Hidden audio element */}
       <audio
         ref={audioRef}
-        onPlay={() => setIsPlaying(true)}
+        onPlay={() => {
+          setIsPlaying(true);
+          // Reset error tracking when audio plays successfully
+          setErrorCount(0);
+          setHasTriedAllTracks(false);
+        }}
         onPause={() => setIsPlaying(false)}
         onEnded={() => {
           // Auto play next track when current one ends
@@ -203,12 +225,28 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
         onError={(e) => {
           console.error('Audio error:', e);
           setIsPlaying(false);
+          
+          // Increment error count and check if we should stop trying
+          const newErrorCount = errorCount + 1;
+          setErrorCount(newErrorCount);
+          
+          if (newErrorCount >= audioTracks.length || hasTriedAllTracks) {
+            toast({
+              title: "Audio Unavailable",
+              description: "All audio tracks failed to load.",
+              variant: "destructive",
+            });
+            setHasTriedAllTracks(true);
+            return;
+          }
+
           toast({
             title: "Playback Error",
             description: "Switching to next track...",
             variant: "destructive",
           });
-          // Try next track on error
+          
+          // Try next track on error only if we haven't exhausted all options
           playNextTrack();
         }}
       />
